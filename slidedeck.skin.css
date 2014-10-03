@@ -1,0 +1,275 @@
+/*
+Skin Name: SlideDeck Website Skin
+Skin URI: http://www.slidedeck.com/
+Description: The skin used at slidedeck.com
+Version: 1.5
+Author: digital-telepathy
+Author URI: http://www.dtelepathy.com/
+Tags: flexible, white, black, multi-color
+*/
+
+/*
+ * The frame surrounding the SlideDeck.
+ * 
+ * Customize the width, height, padding and background to customize the area 
+ * surrounding your SlideDeck.
+ */
+.skin-slidedeck {
+    position: relative;
+	padding: 11px 11px 11px;
+    background: url('back.png') 0 0 #d7d7d7;
+    border: 14px solid #fff;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    -moz-box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    -webkit-box-shadow: 0 0 5px rgba(0,0,0,0.2);
+}
+
+/*
+ * The SlideDeck element itself.
+ * 
+ * Customize the width and height to increase or decrease the size of
+ * your SlideDeck. 
+ */
+.skin-slidedeck dl.slidedeck {
+    position: relative;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+    padding: 0;
+}
+
+/*
+ * The SlideDeck slide area.
+ * 
+ * You can specify a height for the slide area, but it is not required, width
+ * will automatically be defined for the slide area and will vary depending on
+ * how many slides you have in your SlideDeck.
+ * 
+ * To add space between a slide and the next slide's spine (slide title bar),
+ * increase the border-right definition. To remove the space, just remove the
+ * border definition.
+ * 
+ * SlideDeck slides are all given a unique class, so you can customize the
+ * appearance of each slide individually by referencing a slide by its
+ * numbered class name. For example:
+ *    .slidedeck dd.slide_1
+ *    .slidedeck dd.slide_2
+ *    .slidedeck dd.slide_3
+ *    etc...
+ */
+.skin-slidedeck dl.slidedeck > dd {
+    position: relative;
+	height: 294px;
+	padding: 10px 15px;
+    margin: 0;
+	border-right: 5px solid #d7d7d7;
+	background: url('slides.png') bottom left #d7d7d7;    /* Note: you should position the background with pixel measurements in IE7 as it improperly calculates the height of the DD element when containing vertical slides */
+    overflow: hidden;
+}
+
+/*
+ * The SlideDeck spine (slide title bar).
+ * 
+ * SlideDeck spines are rotated, so you will need to swap your directions. To
+ * change the width of the spine, you will need to modify the spine height.
+ * You will also need to make sure that any background imagery used is rotated
+ * horizontally.
+ * 
+ * Like slides, spines are also given a unique class allowing for custom
+ * appearance for each spine. This follows a similar naming convention:
+ *     .slidedeck dt.slide_1
+ *     .slidedeck dt.slide_2
+ *     .slidedeck dt.slide_3
+ *     etc...
+ */
+.skin-slidedeck dl.slidedeck > dt {
+    position: relative;
+	cursor: pointer;
+	height: 43px;
+	line-height: 38px;
+	font-size: 12px;
+	font-weight: bold;
+	font-family: "Futura Bold", Arial, Helvetica, sans-serif;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	background: url('spines.png') top left #d7d7d7;
+	color: #505050;
+    margin: 0;
+    padding: 0;
+}
+
+/*
+ * The hovered state of a SlideDeck spine.
+ */
+.skin-slidedeck dl.slidedeck dt.spine:hover {
+	color: #000;
+	background-position: center left;
+}
+
+/*
+ * The active state of a SlideDeck spine.
+ */
+.skin-slidedeck dl.slidedeck dt.spine.active,
+.skin-slidedeck dl.slidedeck dt.spine.active:hover {
+	cursor: default;
+	color: #fff;
+	background-position: bottom left;
+}
+
+/*
+ * The SlideDeck spine index labels.
+ * 
+ * This is to style the numbers (or letters if you have customized it so)
+ * that appear at the bottom of each SlideDeck spine.
+ */
+.skin-slidedeck dl.slidedeck dt.spine .index {
+	margin-bottom: 2px;
+    font-size: 24px;
+	font-weight: normal;
+	font-family: Arial, Helvetica, sans-serif;
+	color: #505050;
+}
+.skin-slidedeck dl.slidedeck dt.spine.active .index { margin-bottom: 0; }
+
+/*
+ * The hovered state of a SlideDeck spine index label.
+ */
+.skin-slidedeck dl.slidedeck dt.spine:hover .index { color: #000000; }
+
+/*
+ * The active state of a SlideDeck spine index label.
+ */
+.skin-slidedeck dl.slidedeck dt.spine.active .index { color: #ffffff; }
+
+/*
+ * The SlideDeck "active corner".
+ * 
+ * This is the small triangle that appears in the upper left of the active
+ * slide. This can be made any size and positioned differently by modifying
+ * the margin values. By default the left margin is inset to prevent any
+ * gap from appearing as the SlideDeck animates.
+ */
+.skin-slidedeck dl.slidedeck .activeCorner {
+	margin-left: -6px;
+	background-image: url('corner.png');
+	width: 12px;
+	height: 25px;
+}
+
+/*
+ * The SlideDeck vertical slide style.
+ * 
+ * Veritcal slides will take over the entire content area of a horizontal slide
+ * automatically. Padding will automatically be accommodated for. You can also
+ * eliminate the padding definition to have your vertical slide content line
+ * up flush against the containing slide content area edges.
+ */
+.skin-slidedeck dl.slidedeck dd.slide ul.slidesVertical > li {
+    overflow: hidden;
+    padding: 10px;
+}
+
+/*
+ * The SlideDeck vertical slide navigation container.
+ * 
+ * This is the container for the vertical slide navigation. You can position
+ * this anywhere you want within the containing slide's area. If you try to
+ * position it outside of the slide area it will not appear.
+ */
+.skin-slidedeck dl.slidedeck ul.verticalSlideNav {
+	height: 70px;
+	width: 25px;
+	background: none;
+	position: relative;
+	overflow: hidden;
+	padding: 15px 0 0;
+	margin: 0;
+    top: 0;
+	left: 125px;
+	-webkit-transform: rotate(90deg);
+	-webkit-transform-origin: -7px 0;
+	-moz-transform: rotate(90deg);
+	-moz-transform-origin: -7px 0;
+	-o-transform: rotate(90deg);
+	-o-transform-origin: -7px 0;
+}
+
+/*
+ * The SlideDeck vertical slide navigation link containers.
+ * 
+ * This is the container for a navigation link in the vertical slide navigation
+ * element. You can adjust the width and height of this element to accommodate
+ * for a larger vertical navigation button.
+ * 
+ * To increase the space between vertical navigation links, increase the bottom
+ * and/or top padding of this element.
+ */
+.skin-slidedeck dl.slidedeck ul.verticalSlideNav li {
+	position: relative;
+    width: 25px;
+    height: 12px;
+    line-height: 12px;
+	padding: 0;
+	margin: 0;
+    overflow: hidden;
+    float: left;
+    clear: left;
+}
+
+/*
+ * The SlideDeck vertical slide position indicator.
+ * 
+ * This is the element that slides behind the default navigation link list to
+ * show which is the current vertical slide being viewed. This should be given
+ * similar dimensions to the vertical slide navigation links.
+ * 
+ * NOTE: This element is not used in this skin, so it is hidden
+ */
+.skin-slidedeck dl.slidedeck dd.slide ul.verticalSlideNav li.arrow { display: none; }
+
+/*
+ * The SlideDeck veritcal slide navigation links.
+ * 
+ * These are the vertical slide navigation links. By default these are a small
+ * square that uses a sprite background image replacement method to hide the
+ * default text that is placed in the link ("Nav 1", "Nav 2", "Nav 3").
+ * 
+ * To change the appearance of the navigation elements, you will need to use a
+ * background image replacement as the text for the links cannot be changed.
+ * Each vertical slide navigation link is given a unique class so they can be
+ * styled individually. For example:
+ *     dl.slidedeck dd.slide ul.verticalSlideNav li a.nav_1
+ *     dl.slidedeck dd.slide ul.verticalSlideNav li a.nav_2
+ *     dl.slidedeck dd.slide ul.verticalSlideNav li a.nav_3
+ *     etc....
+ */
+.skin-slidedeck dl.slidedeck ul.verticalSlideNav li a {
+	position: relative;
+	display: block;
+	padding: 12px 0 0 0;
+	margin: 0;
+	width: 25px;
+	height: 0;
+	overflow: hidden;
+    line-height: 12px;
+}
+/* Vertical slide navigation style for the currently active vertical slide navigation link */
+.skin-slidedeck dl.slidedeck ul.verticalSlideNav li.active a {
+    background-position: 0 -24px;
+}
+/* Vertical slide navigation link style when the parent horizontal slide is active */
+.skin-slidedeck dl.slidedeck dt.active ul.verticalSlideNav li.active a {
+	background-position: 0 -12px;
+}
+
+/*
+ * The SlideDeck vertical slide navigation link hover state.
+ */
+dl.slidedeck dd.slide ul.verticalSlideNav li a:hover {
+    opacity: 0.75;
+    -moz-opacity: 0.75;
+    -webkit-opacity: 0.75;
+    -khtml-opacity: 0.75;
+    -ms-filter: "Alpha(opacity=75)";
+    filter: Alpha(opacity=75); 
+}
