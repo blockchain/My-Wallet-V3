@@ -3,6 +3,15 @@ function HDAccount(wallet, label) {
         wallet : wallet,
         label : label,
         archived : false,
+        getAccountJsonData : function() {
+            var accountJsonData = {
+                label : this.getLabel(),
+                archived : this.isArchived(),
+                external_addresses : this.getAddressesCount(),
+                change_addresses : this.getChangeAddressesCount()
+            };
+            return accountJsonData;
+        },
         getLabel : function() {
             return this.label;
         },
@@ -56,10 +65,16 @@ function HDAccount(wallet, label) {
     return accountObject;
 }
 
-function HDWallet(seed) {
+function HDWallet(passphrase) {
+    var seed = Bitcoin.crypto.sha256(passphrase);
+
     var walletObject = {
-        accountArray : [],
+        passphrase : passphrase,
         seed : seed,
+        accountArray : [],
+        getPassphrase : function() {
+            return this.passphrase;
+        },
         getAccountsCount : function() {
             return this.accountArray.length;
         },
@@ -85,8 +100,7 @@ function HDWallet(seed) {
 }
 
 function buildHDWallet(passphrase, accountsArrayPayload) {
-    var seed = Bitcoin.crypto.sha256(passphrase);
-    var hdwallet = HDWallet(seed);   
+    var hdwallet = HDWallet(passphrase);
 
     for (var i = 0; i < accountsArrayPayload.length; i++) {
         if (archived == true)
@@ -148,5 +162,3 @@ function test() {
     console.log("getAccountChangeKey: ", hdwallet.getAccount(0).getAccountChangeKey());
 
 }
-
-test();

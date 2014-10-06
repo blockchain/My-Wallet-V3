@@ -114,6 +114,7 @@ var MyWallet = new function() {
     var ECKey = Bitcoin.ECKey;
     var buffer = Bitcoin.Buffer;
 
+    var myHDWallet = null;
 
     var wallet_options = {
         pbkdf2_iterations : default_pbkdf2_iterations, //Number of pbkdf2 iterations to default to for second password and dpasswordhash
@@ -1026,6 +1027,11 @@ var MyWallet = new function() {
         return MyWallet.pkBytesToSipa(MyWallet.decodePK(x), addr);
     }
 
+
+    this.initializeHDWallet = function(passphrase) {
+        myHDWallet = buildHDWallet(passphrase, []);
+    }
+
     this.makeWalletJSON = function(format) {
         return MyWallet.makeCustomWalletJSON(format, guid, sharedKey);
     }
@@ -1104,6 +1110,29 @@ var MyWallet = new function() {
         if (nKeys(tx_notes) > 0) {
             out += ',\n	"tx_notes" : ' + JSON.stringify(tx_notes)
         }
+
+
+        out += ',\n	"hd_wallets" : [\n';
+
+        if (myHDWallet != null) {
+            for (var key in address_book) {
+                out += '	{"passphrase" : "'+ myHDWallet.getPassphrase() +'",\n';
+                out += '	"accounts" : [\n';
+
+                for (var i = 0; i < myHDWallet.getAccountsCount(); i++) {
+                    var account = myHDWallet.getAccount(i);
+
+                    var accountJsonData = account.getAccountJsonData();
+                    out += JSON.stringify(accountJsonData);
+                }
+                out += "\n	]";
+
+
+                out += '\n	}';
+            }
+        }
+
+        out += "\n	]";
 
         out += '\n}';
 
@@ -2334,6 +2363,11 @@ var MyWallet = new function() {
                             MyWallet.addAddressBookEntry(entry.addr, entry.label);
                         }
                     }
+                }
+
+                if (obj.hd_wallets) {
+                    var defaultHDWallet = obj.hd_wallets[0];
+                    myHDWallet = buildHDWallet(defaultHDWallet.passphrase, defaultHDWallet.accounts);
                 }
 
                 if (obj.tx_notes) {
