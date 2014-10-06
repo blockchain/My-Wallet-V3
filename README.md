@@ -63,7 +63,6 @@ Documentation
 
     /*
      * @returns {Bitcoin.ECKey}
-     * @returns {Bitcoin.ECKey}
      */
     MyWallet.generateNewKey();
 
@@ -141,7 +140,6 @@ Documentation
      * @param {function} success callback function
      * @param {function} error callback function
      */
-
     MyWallet.decryptWallet(data, password, success, error);
 
     /*
@@ -209,3 +207,15 @@ Documentation
      * @returns {Bitcoin.ECKey}
      */
     MyWallet.privateKeyStringToKey(value, format);
+
+    /*
+     * @param {string} bitcoin address
+     * @returns {string} label
+     */
+    MyWallet.getAddressBookLabel(address);
+
+    /*
+     * @param {string} bitcoin address
+     * @param {string} label
+     */
+    MyWallet.MyWallet.addAddressBookEntry(addr, label);    
