@@ -3,10 +3,12 @@ function HDAccount(wallet, label) {
         wallet : wallet,
         label : label,
         archived : false,
+        paymentRequests : [],
         getAccountJsonData : function() {
             var accountJsonData = {
                 label : this.getLabel(),
                 archived : this.isArchived(),
+                paymentRequests : this.paymentRequests,
                 external_addresses : this.getAddressesCount(),
                 change_addresses : this.getChangeAddressesCount()
             };
@@ -59,6 +61,39 @@ function HDAccount(wallet, label) {
         },                
         getBalance : function() {
             return this.wallet.getBalance();
+        },
+        getPaymentRequests : function() {
+            return this.paymentRequests;
+        },
+        setPaymentRequests : function(paymentRequests) {
+            this.paymentRequests = paymentRequests;
+        },
+        generatePaymentRequest : function(amount) {
+            var address = this.generateAddress();
+            var paymentRequest = {address: address, amount: amount}
+            this.paymentRequests.push(paymentRequest);
+            // returns {address: address, amount: amount}
+            return paymentRequest;
+        },
+        updatePaymentRequest : function(address, amount) {
+            for (var i in this.paymentRequests) {
+                var paymentRequest = this.paymentRequests[i];
+                if (paymentRequest.address == address) {
+                    paymentRequest.amount = amount;
+                    return true;
+                }
+            }
+            return false;
+        },
+        cancelPaymentRequest : function(address) {
+            for (var i in this.paymentRequests) {
+                var paymentRequest = this.paymentRequests[i];
+                if (paymentRequest.address == address) {
+                    this.paymentRequests.splice(i, 1);
+                    return true;
+                }
+            }
+            return false;
         }
     };
 
@@ -80,6 +115,9 @@ function HDWallet(passphrase) {
         },
         getAccount : function(accountIdx) {
             return this.accountArray[accountIdx];
+        },
+        getAccounts : function() {
+            return this.accountArray;
         },
         createAccount : function(label) {
             var accountIdx = this.accountArray.length;
@@ -111,11 +149,15 @@ function buildHDWallet(passphrase, accountsArrayPayload) {
         var archived = accountPayload.archived;
         var external_addresses = accountPayload.external_addresses;
         var change_addresses = accountPayload.change_addresses;
-        
+        var paymentRequests = accountPayload.paymentRequests;
+
         console.log("label: ", label);
 
         var hdaccount = hdwallet.createAccount(label);
         hdaccount.setIsArchived(archived);
+        if (paymentRequests != null) {
+            hdaccount.setPaymentRequests(paymentRequests);
+        }
 
         for (var j = 0; j < external_addresses; j++) {
             var address = hdaccount.generateAddress();
@@ -158,7 +200,14 @@ function test() {
 
     var hdwallet = buildHDWallet(passphrase, accountsArrayPayload);
     hdwallet.createAccount("Rothbard");
-    console.log("getAccountMainKey: ", hdwallet.getAccount(0).getAccountMainKey());
-    console.log("getAccountChangeKey: ", hdwallet.getAccount(0).getAccountChangeKey());
 
+    var account = hdwallet.getAccount(0);
+    console.log("getAccountMainKey: ", account.getAccountMainKey());
+    console.log("getAccountChangeKey: ", account.getAccountChangeKey());
+
+    var paymentRequest1 = account.generatePaymentRequest(100);
+    var paymentRequest2 = account.generatePaymentRequest(200);
+    account.cancelPaymentRequest(paymentRequest1.address);
+    account.updatePaymentRequest(paymentRequest1.address, 300);
+    console.log("getPaymentRequests: ", JSON.stringify(account.getPaymentRequests()));
 }

@@ -354,6 +354,10 @@ var MyWallet = new function() {
         address_book[addr] = label;
     }
 
+    this.getHDWallet = function() {
+        return myHDWallet;
+    }
+
     //TODO Depreciate this. Need to restructure signer.js
     this.getPrivateKey = function(address) {
         return addresses[address].priv;
@@ -1126,8 +1130,6 @@ var MyWallet = new function() {
                     out += JSON.stringify(accountJsonData);
                 }
                 out += "\n	]";
-
-
                 out += '\n	}';
             }
         }
