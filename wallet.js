@@ -1062,6 +1062,9 @@ var MyWallet = new function() {
 
     this.generatePaymentRequest = function(accountIdx, amount) {
         var paymentRequest = myHDWallet.getAccount(accountIdx).generatePaymentRequest(amount);
+        try {
+            ws.send('{"op":"addr_sub", "addr":"'+paymentRequest.address+'"}');
+        } catch (e) { }
     }
 
     this.updatePaymentRequest = function(accountIdx, address, amount) {
@@ -1084,9 +1087,34 @@ var MyWallet = new function() {
         return myHDWallet;
     }
 
+    this.listenToHDWalletAccountAddresses = function(accountIdx) {
+        var account = myHDWallet.getAccount(accountIdx);
+        var addresses = account.getAddresses();
+        for (var i in addresses) {
+            var address = addresses[i];
+            try {
+                ws.send('{"op":"addr_sub", "addr":"'+address+'"}');
+            } catch (e) { }
+        }
+
+        var changeAdresses = account.getChangeAddresses();
+        for (var i in changeAdresses) {
+            var address = changeAdresses[i];
+            try {
+                ws.send('{"op":"addr_sub", "addr":"'+address+'"}');
+            } catch (e) { }
+        }
+    }
+
+    this.listenToHDWalletAccounts = function() {
+        for (var i = 0; i < myHDWallet.getAccountsCount(); i++) {
+            MyWallet.listenToHDWalletAccountAddresses(i);
+        }
+    }
 
     this.buildHDWallet = function(passphrase, accountsArrayPayload) {
         myHDWallet = buildHDWallet(passphrase, accountsArrayPayload);
+        MyWallet.listenToHDWalletAccounts();
     }
 
     this.getHDWalletPassphrase = function() {
