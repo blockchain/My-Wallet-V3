@@ -354,10 +354,6 @@ var MyWallet = new function() {
         address_book[addr] = label;
     }
 
-    this.getHDWallet = function() {
-        return myHDWallet;
-    }
-
     //TODO Depreciate this. Need to restructure signer.js
     this.getPrivateKey = function(address) {
         return addresses[address].priv;
@@ -1031,13 +1027,75 @@ var MyWallet = new function() {
         return MyWallet.pkBytesToSipa(MyWallet.decodePK(x), addr);
     }
 
+
+    this.getLabel = function(accountIdx) {
+        return myHDWallet.getAccount(accountIdx).getLabel();
+    }
+
+    this.setLabel = function(accountIdx, label) {
+        myHDWallet.getAccount(accountIdx).setLabel(label);
+    }
+
+    this.isArchived = function(accountIdx) {
+        return myHDWallet.getAccount(accountIdx).isArchived();
+    }
+
+    this.setIsArchived = function(accountIdx, isArchived) {
+        myHDWallet.getAccount(accountIdx).setIsArchived(isArchived);
+    }
+
+    this.getAddresses = function(accountIdx) {
+        return myHDWallet.getAccount(accountIdx).getAddresses();
+    }
+
+    this.getChangeAddresses = function(accountIdx) {
+        return myHDWallet.getAccount(accountIdx).getChangeAddresses();
+    }
+
+    this.getBalance = function(accountIdx) {
+        return myHDWallet.getAccount(accountIdx).getBalance();
+    }
+
+    this.getPaymentRequests = function(accountIdx) {
+        return myHDWallet.getAccount(accountIdx).getPaymentRequests();
+    }
+
+    this.generatePaymentRequest = function(accountIdx, amount) {
+        var paymentRequest = myHDWallet.getAccount(accountIdx).generatePaymentRequest(amount);
+    }
+
+    this.updatePaymentRequest = function(accountIdx, address, amount) {
+        return myHDWallet.getAccount(accountIdx).updatePaymentRequest(address, amount);
+    }
+
+    this.cancelPaymentRequest = function(accountIdx, address) {
+        return myHDWallet.getAccount(accountIdx).cancelPaymentRequest(address);
+    }
+
+    this.getAccountsCount = function() {
+        return myHDWallet.getAccountsCount();
+    }
+
+    this.createAccount = function(label) {
+        myHDWallet.createAccount(label);
+    }
+
+    this.getHDWallet = function() {
+        return myHDWallet;
+    }
+
+
+    this.buildHDWallet = function(passphrase, accountsArrayPayload) {
+        myHDWallet = buildHDWallet(passphrase, accountsArrayPayload);
+    }
+
     this.getHDWalletPassphrase = function() {
         return "don't use a string seed like this in real life";
     }
 
     this.initializeHDWallet = function(passphrase) {
-        myHDWallet = buildHDWallet(passphrase, []);
-        myHDWallet.createAccount("Spending");
+        MyWallet.buildHDWallet(passphrase, []);
+        MyWallet.createAccount("Spending");
     }
 
     this.makeWalletJSON = function(format) {
@@ -2373,7 +2431,7 @@ var MyWallet = new function() {
 
                 if (obj.hd_wallets) {
                     var defaultHDWallet = obj.hd_wallets[0];
-                    myHDWallet = buildHDWallet(defaultHDWallet.passphrase, defaultHDWallet.accounts);
+                    MyWallet.buildHDWallet(defaultHDWallet.passphrase, defaultHDWallet.accounts);
                 } else {
                     MyWallet.initializeHDWallet(MyWallet.getHDWalletPassphrase());
                 }
