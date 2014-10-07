@@ -1034,6 +1034,7 @@ var MyWallet = new function() {
 
     this.initializeHDWallet = function(passphrase) {
         myHDWallet = buildHDWallet(passphrase, []);
+        myHDWallet.createAccount("Spending");
     }
 
     this.makeWalletJSON = function(format) {
