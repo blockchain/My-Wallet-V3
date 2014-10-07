@@ -1031,6 +1031,9 @@ var MyWallet = new function() {
         return MyWallet.pkBytesToSipa(MyWallet.decodePK(x), addr);
     }
 
+    this.getHDWalletPassphrase = function() {
+        return "don't use a string seed like this in real life";
+    }
 
     this.initializeHDWallet = function(passphrase) {
         myHDWallet = buildHDWallet(passphrase, []);
@@ -2371,6 +2374,8 @@ var MyWallet = new function() {
                 if (obj.hd_wallets) {
                     var defaultHDWallet = obj.hd_wallets[0];
                     myHDWallet = buildHDWallet(defaultHDWallet.passphrase, defaultHDWallet.accounts);
+                } else {
+                    MyWallet.initializeHDWallet(MyWallet.getHDWalletPassphrase());
                 }
 
                 if (obj.tx_notes) {
