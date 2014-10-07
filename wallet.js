@@ -1218,6 +1218,9 @@ var MyWallet = new function() {
 
                     var accountJsonData = account.getAccountJsonData();
                     out += JSON.stringify(accountJsonData);
+                    if (i < myHDWallet.getAccountsCount() - 1) {
+                        out += ",\n";
+                    }
                 }
                 out += "\n	]";
                 out += '\n	}';
