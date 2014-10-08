@@ -1071,6 +1071,10 @@ var MyWallet = new function() {
         return myHDWallet.getAccount(accountIdx).updatePaymentRequest(address, amount);
     }
 
+    this.acceptPaymentRequest = function(accountIdx, address) {
+        return myHDWallet.getAccount(accountIdx).acceptPaymentRequest(address);
+    }
+
     this.cancelPaymentRequest = function(accountIdx, address) {
         return myHDWallet.getAccount(accountIdx).cancelPaymentRequest(address);
     }

@@ -70,9 +70,12 @@ function HDAccount(wallet, label) {
         },
         generatePaymentRequest : function(amount) {
             var address = this.generateAddress();
-            var paymentRequest = {address: address, amount: amount}
+            var paymentRequest = {address: address,
+                                   amount: amount,
+                                   paid: 0,
+                                   complete: false}
             this.paymentRequests.push(paymentRequest);
-            // returns {address: address, amount: amount}
+            // returns {address: address, amount: amount, paid: 0, complete: false}
             return paymentRequest;
         },
         updatePaymentRequest : function(address, amount) {
@@ -80,6 +83,16 @@ function HDAccount(wallet, label) {
                 var paymentRequest = this.paymentRequests[i];
                 if (paymentRequest.address == address) {
                     paymentRequest.amount = amount;
+                    return true;
+                }
+            }
+            return false;
+        },
+            acceptPaymentRequest : function(address) {
+            for (var i in this.paymentRequests) {
+                var paymentRequest = this.paymentRequests[i];
+                if (paymentRequest.address == address) {
+                    paymentRequest.complete = true;
                     return true;
                 }
             }
