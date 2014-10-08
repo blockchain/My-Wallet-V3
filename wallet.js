@@ -1028,54 +1028,54 @@ var MyWallet = new function() {
     }
 
 
-    this.getLabel = function(accountIdx) {
+    this.getLabelForAccount = function(accountIdx) {
         return myHDWallet.getAccount(accountIdx).getLabel();
     }
 
-    this.setLabel = function(accountIdx, label) {
+    this.setLabelForAccount = function(accountIdx, label) {
         myHDWallet.getAccount(accountIdx).setLabel(label);
     }
 
-    this.isArchived = function(accountIdx) {
+    this.isArchivedForAccount = function(accountIdx) {
         return myHDWallet.getAccount(accountIdx).isArchived();
     }
 
-    this.setIsArchived = function(accountIdx, isArchived) {
+    this.setIsArchivedForAccount = function(accountIdx, isArchived) {
         myHDWallet.getAccount(accountIdx).setIsArchived(isArchived);
     }
 
-    this.getAddresses = function(accountIdx) {
+    this.getAddressesForAccount = function(accountIdx) {
         return myHDWallet.getAccount(accountIdx).getAddresses();
     }
 
-    this.getChangeAddresses = function(accountIdx) {
+    this.getChangeAddressesForAccount = function(accountIdx) {
         return myHDWallet.getAccount(accountIdx).getChangeAddresses();
     }
 
-    this.getBalance = function(accountIdx) {
+    this.getBalanceForAccount = function(accountIdx) {
         return myHDWallet.getAccount(accountIdx).getBalance();
     }
 
-    this.getPaymentRequests = function(accountIdx) {
+    this.getPaymentRequestsForAccount = function(accountIdx) {
         return myHDWallet.getAccount(accountIdx).getPaymentRequests();
     }
 
-    this.generatePaymentRequest = function(accountIdx, amount) {
+    this.generatePaymentRequestForAccount = function(accountIdx, amount) {
         var paymentRequest = myHDWallet.getAccount(accountIdx).generatePaymentRequest(amount);
         try {
             ws.send('{"op":"addr_sub", "addr":"'+paymentRequest.address+'"}');
         } catch (e) { }
     }
 
-    this.updatePaymentRequest = function(accountIdx, address, amount) {
+    this.updatePaymentRequestForAccount = function(accountIdx, address, amount) {
         return myHDWallet.getAccount(accountIdx).updatePaymentRequest(address, amount);
     }
 
-    this.acceptPaymentRequest = function(accountIdx, address) {
+    this.acceptPaymentRequestForAccount = function(accountIdx, address) {
         return myHDWallet.getAccount(accountIdx).acceptPaymentRequest(address);
     }
 
-    this.cancelPaymentRequest = function(accountIdx, address) {
+    this.cancelPaymentRequestForAccount = function(accountIdx, address) {
         return myHDWallet.getAccount(accountIdx).cancelPaymentRequest(address);
     }
 
