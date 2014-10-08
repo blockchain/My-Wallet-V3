@@ -1079,6 +1079,26 @@ var MyWallet = new function() {
         return myHDWallet.getAccount(accountIdx).cancelPaymentRequest(address);
     }
 
+    this.asyncGetAndSetUnspentOutputsForAccount = function(accountIdx) {
+        var account = myHDWallet.getAccount(accountIdx);
+        var addresses = account.getAddresses();
+        addresses.concat(account.getChangeAddresses());
+
+        BlockchainAPI.get_unspent(addresses, function (obj) {
+
+            obj.unspent_outputs.forEach(function(utxo) {
+                utxo.hash = utxo.tx_hash;
+                utxo.index = utxo.tx_output_n;
+                var script = Bitcoin.Script.fromHex(utxo.script);
+                utxo.address = Bitcoin.Address.fromOutputScript(script).toString();
+            });
+
+            account.setUnspentOutputs(obj.unspent_outputs);
+        }, function(e) {
+            MyWallet.sendMonitorEvent({type: "error", message: e, code: 0});
+        }, 0, false);
+    }
+
     this.getAccountsCount = function() {
         return myHDWallet.getAccountsCount();
     }
