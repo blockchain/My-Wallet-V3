@@ -52,8 +52,20 @@ var BlockchainAPI = new function() {
         if (!offset) offset = 0;
         if (!n) n = 0;
 
+        var allAddresses = MyWallet.getActiveAddresses();
+        var myHDWallet = MyWallet.getHDWallet();
+        if (myHDWallet != null) {
+            for (var i = 0; i < myHDWallet.getAccountsCount(); i++) {
+                var account = myHDWallet.getAccount(i);
+                if (! account.isArchived()) {
+                    allAddresses.concat(account.getAddresses());
+                    allAddresses.concat(account.getChangeAddresses());
+                }
+            }
+        }
+
         var data = {
-            active : MyWallet.getActiveAddresses().join('|'),
+            active : allAddresses.join('|'),
             format : 'json',
             filter : tx_filter,
             offset : offset,
