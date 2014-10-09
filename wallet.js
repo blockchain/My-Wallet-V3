@@ -1067,8 +1067,8 @@ var MyWallet = new function() {
         } catch (e) { }
     }
 
-    this.updatePaymentRequestForAccount = function(accountIdx, address, amount) {
-        return myHDWallet.getAccount(accountIdx).updatePaymentRequest(address, amount);
+    this.updatePaymentRequestForAccount = function(accountIdx, updatedPaymentRequest) {
+        return myHDWallet.getAccount(accountIdx).updatePaymentRequest(updatedPaymentRequest);
     }
 
     this.acceptPaymentRequestForAccount = function(accountIdx, address) {

@@ -78,11 +78,14 @@ function HDAccount(wallet, label) {
             // returns {address: address, amount: amount, paid: 0, complete: false}
             return paymentRequest;
         },
-        updatePaymentRequest : function(address, amount) {
+        updatePaymentRequest : function(updatedPaymentRequest) {
+
             for (var i in this.paymentRequests) {
                 var paymentRequest = this.paymentRequests[i];
-                if (paymentRequest.address == address) {
-                    paymentRequest.amount = amount;
+                if (paymentRequest.address == updatedPaymentRequest.address) {
+                    paymentRequest.amount = updatedPaymentRequest.amount;
+                    paymentRequest.paid = updatedPaymentRequest.paid;
+                    paymentRequest.complete = updatedPaymentRequest.complete;
                     return true;
                 }
             }
@@ -221,6 +224,8 @@ function test() {
     var paymentRequest1 = account.generatePaymentRequest(100);
     var paymentRequest2 = account.generatePaymentRequest(200);
     account.cancelPaymentRequest(paymentRequest1.address);
-    account.updatePaymentRequest(paymentRequest1.address, 300);
+    paymentRequest2.complete = true;
+    paymentRequest2.amount = 500;
+    account.updatePaymentRequest(paymentRequest2);
     console.log("getPaymentRequests: ", JSON.stringify(account.getPaymentRequests()));
 }
