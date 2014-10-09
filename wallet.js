@@ -914,6 +914,7 @@ var MyWallet = new function() {
                 for (var key in addrs) {
                     msg += '{"op":"addr_sub", "addr":"'+ addrs[key] +'"}'; //Subscribe to transactions updates through websockets
                 }
+                MyWallet.listenToHDWalletAccounts();
             } catch (e) {
                 alert(e);
             }
@@ -1138,7 +1139,6 @@ var MyWallet = new function() {
 
     this.buildHDWallet = function(passphrase, accountsArrayPayload) {
         myHDWallet = buildHDWallet(passphrase, accountsArrayPayload);
-        MyWallet.listenToHDWalletAccounts();
     }
 
     this.getHDWalletPassphrase = function() {
