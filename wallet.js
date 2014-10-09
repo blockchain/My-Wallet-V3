@@ -1035,6 +1035,7 @@ var MyWallet = new function() {
 
     this.setLabelForAccount = function(accountIdx, label) {
         myHDWallet.getAccount(accountIdx).setLabel(label);
+        MyWallet.backupWalletDelayed();
     }
 
     this.isArchivedForAccount = function(accountIdx) {
@@ -1043,6 +1044,9 @@ var MyWallet = new function() {
 
     this.setIsArchivedForAccount = function(accountIdx, isArchived) {
         myHDWallet.getAccount(accountIdx).setIsArchived(isArchived);
+        MyWallet.backupWalletDelayed('update', function() {
+            MyWallet.get_history();
+        });
     }
 
     this.getAddressesForAccount = function(accountIdx) {
@@ -1069,15 +1073,27 @@ var MyWallet = new function() {
     }
 
     this.updatePaymentRequestForAccount = function(accountIdx, updatedPaymentRequest) {
-        return myHDWallet.getAccount(accountIdx).updatePaymentRequest(updatedPaymentRequest);
+        var success = myHDWallet.getAccount(accountIdx).updatePaymentRequest(updatedPaymentRequest);
+        if (success) {
+            MyWallet.backupWalletDelayed();
+        }
+        return success;
     }
 
     this.acceptPaymentRequestForAccount = function(accountIdx, address) {
-        return myHDWallet.getAccount(accountIdx).acceptPaymentRequest(address);
+        var success = myHDWallet.getAccount(accountIdx).acceptPaymentRequest(address);
+        if (success) {
+            MyWallet.backupWalletDelayed();
+        }
+        return success;
     }
 
     this.cancelPaymentRequestForAccount = function(accountIdx, address) {
-        return myHDWallet.getAccount(accountIdx).cancelPaymentRequest(address);
+        var success = myHDWallet.getAccount(accountIdx).cancelPaymentRequest(address);
+        if (success) {
+            MyWallet.backupWalletDelayed();
+        }
+        return success;
     }
 
     this.asyncGetAndSetUnspentOutputsForAccount = function(accountIdx) {
@@ -1106,6 +1122,7 @@ var MyWallet = new function() {
 
     this.createAccount = function(label) {
         myHDWallet.createAccount(label);
+        MyWallet.backupWalletDelayed();
     }
 
     this.getHDWallet = function() {
