@@ -219,3 +219,9 @@ Documentation
      * @param {string} label
      */
     MyWallet.MyWallet.addAddressBookEntry(addr, label);    
+
+    /*
+    * @param {function} success Callback function
+    * @param {function} error Callback function
+    */
+    MyWallet.get_ticker(successCallback, errorCallback);
