@@ -88,7 +88,7 @@ function HDAccount(wallet, label) {
             }
             return false;
         },
-            acceptPaymentRequest : function(address) {
+        acceptPaymentRequest : function(address) {
             for (var i in this.paymentRequests) {
                 var paymentRequest = this.paymentRequests[i];
                 if (paymentRequest.address == address) {
