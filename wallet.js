@@ -1175,11 +1175,12 @@ var MyWallet = new function() {
 
     this.listenToHDWalletAccountAddresses = function(accountIdx) {
         var account = myHDWallet.getAccount(accountIdx);
+        var msg = "";
         var addresses = account.getAddresses();
         for (var i in addresses) {
             var address = addresses[i];
             try {
-                ws.send('{"op":"addr_sub", "addr":"'+address+'"}');
+                msg += '{"op":"addr_sub", "addr":"'+ address +'"}';
             } catch (e) { }
         }
 
@@ -1187,9 +1188,11 @@ var MyWallet = new function() {
         for (var i in changeAdresses) {
             var address = changeAdresses[i];
             try {
-                ws.send('{"op":"addr_sub", "addr":"'+address+'"}');
+                msg += '{"op":"addr_sub", "addr":"'+ address +'"}';
             } catch (e) { }
         }
+
+        ws.send(msg);
     }
 
     this.listenToHDWalletAccounts = function() {
