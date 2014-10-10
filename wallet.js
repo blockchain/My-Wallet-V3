@@ -1072,8 +1072,8 @@ var MyWallet = new function() {
         } catch (e) { }
     }
 
-    this.updatePaymentRequestForAccount = function(accountIdx, updatedPaymentRequest) {
-        var success = myHDWallet.getAccount(accountIdx).updatePaymentRequest(updatedPaymentRequest);
+    this.updatePaymentRequestForAccount = function(accountIdx, address, amount) {
+        var success = myHDWallet.getAccount(accountIdx).updatePaymentRequest(address, amount);
         if (success) {
             MyWallet.backupWalletDelayed();
         }
