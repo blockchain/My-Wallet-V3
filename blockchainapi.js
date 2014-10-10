@@ -164,6 +164,7 @@ var BlockchainAPI = new function() {
             data: {format : 'json'},
             timeout: AjaxTimeout,
             success: function(data) {
+                MyWallet.sendEvent('ticker_updated');
                 successCallback(data);
             },
             error : function(e) {
