@@ -110,6 +110,9 @@ function HDAccount(wallet, label) {
                 }
             }
             return false;
+        },
+        createTx : function(to, value, fixedFee) {
+            return this.wallet.createTx(to, value, fixedFee, null);
         }
     };
 

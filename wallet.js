@@ -1096,7 +1096,7 @@ var MyWallet = new function() {
         return success;
     }
 
-    this.asyncGetAndSetUnspentOutputsForAccount = function(accountIdx) {
+    this.asyncGetAndSetUnspentOutputsForAccount = function(accountIdx, successCallback, errorCallback) {
         var account = myHDWallet.getAccount(accountIdx);
         var addresses = account.getAddresses();
         addresses.concat(account.getChangeAddresses());
@@ -1104,16 +1104,39 @@ var MyWallet = new function() {
         BlockchainAPI.get_unspent(addresses, function (obj) {
 
             obj.unspent_outputs.forEach(function(utxo) {
-                utxo.hash = utxo.tx_hash;
+                var txBuffer = new Bitcoin.Buffer.Buffer(utxo.tx_hash, "hex");
+                Array.prototype.reverse.call(txBuffer)
+                utxo.hash = txBuffer.toString("hex");
                 utxo.index = utxo.tx_output_n;
                 var script = Bitcoin.Script.fromHex(utxo.script);
                 utxo.address = Bitcoin.Address.fromOutputScript(script).toString();
             });
 
             account.setUnspentOutputs(obj.unspent_outputs);
+            successCallback();
         }, function(e) {
+            errorCallback(e);
             MyWallet.sendMonitorEvent({type: "error", message: e, code: 0});
         }, 0, false);
+    }
+
+
+    this.sendBitcoinsForAccount = function(accountIdx, to, value, fixedFee, note, successCallback, errorCallback) {
+        MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
+            var tx = myHDWallet.getAccount(accountIdx).createTx(to, value, fixedFee);
+
+            BlockchainAPI.push_tx(tx, note, function(response) {
+                if (successCallback)
+                    successCallback(response);
+            }, function(response) {
+                if (errorCallback)
+                    errorCallback(response);
+            });
+
+        }, function(e) {
+            if (errorCallback)
+                errorCallback(e);
+        });
     }
 
     this.getAccountsCount = function() {
