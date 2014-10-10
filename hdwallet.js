@@ -78,14 +78,11 @@ function HDAccount(wallet, label) {
             // returns {address: address, amount: amount, paid: 0, complete: false}
             return paymentRequest;
         },
-        updatePaymentRequest : function(updatedPaymentRequest) {
-
-            for (var i in this.paymentRequests) {
+        updatePaymentRequest : function(address, amount) {
+            for (var i = 0; i < this.paymentRequests.length; i++) {
                 var paymentRequest = this.paymentRequests[i];
-                if (paymentRequest.address == updatedPaymentRequest.address) {
-                    paymentRequest.amount = updatedPaymentRequest.amount;
-                    paymentRequest.paid = updatedPaymentRequest.paid;
-                    paymentRequest.complete = updatedPaymentRequest.complete;
+                if (paymentRequest.address == address) {
+                    paymentRequest.amount = amount;
                     return true;
                 }
             }
