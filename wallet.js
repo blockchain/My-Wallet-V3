@@ -803,6 +803,16 @@ var MyWallet = new function() {
                     addr.balance -= value;
                 }
             }
+
+            for (var i = 0; i < myHDWallet.getAccountsCount(); i++) {
+                var account = myHDWallet.getAccount(i);
+                if (account.isAddressPartOfAccount(output.addr)) {
+                    if (tx.account_indexes.indexOf(i) < 0) {
+                        tx.account_indexes.push(i);
+                   }
+                }
+            }
+
         }
 
         for (var ii = 0; ii < tx.out.length; ++ii) {
@@ -822,6 +832,16 @@ var MyWallet = new function() {
                     addr.balance += value;
                 }
             }
+
+            for (var i = 0; i < myHDWallet.getAccountsCount(); i++) {
+                var account = myHDWallet.getAccount(i);
+                if (account.isAddressPartOfAccount(output.addr)) {
+                    if (tx.account_indexes.indexOf(i) < 0) {
+                        tx.account_indexes.push(i);
+                    }
+                }
+            }
+
         }
         return result;
     }

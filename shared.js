@@ -133,6 +133,7 @@ function TransactionFromJSON(json) {
         balance : json.balance,
         double_spend : json.double_spend,
         note : json.note,
+        account_indexes : [], // should be filled later
         setConfirmations : function(n_confirmations) {
             this.confirmations = n_confirmations;
         }

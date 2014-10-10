@@ -26,6 +26,14 @@ function HDAccount(wallet, label) {
         setIsArchived : function(archived) {
             this.archived = archived;
         },
+        isAddressPartOfAccount : function(address) {
+            if (this.wallet.addresses.indexOf(address) > -1)
+                return true;
+            if (this.wallet.changeAddresses.indexOf(address) > -1)
+                return true;
+
+            return false;
+        },
         getAddresses : function() {
             return this.wallet.addresses;
         },
