@@ -118,7 +118,58 @@ function HDAccount(wallet, label) {
         },
         createTx : function(to, value, fixedFee) {
             return this.wallet.createTx(to, value, fixedFee, null);
-        }
+        },
+        getTransactions : function() {
+            var idx = this.idx;
+            
+            var transactions = [];
+          
+            var rawTxs = MyWallet.getTransactions().filter(function(element) { 
+               return element.account_indexes.indexOf(idx) != -1; 
+            }); // TODO: Don't call MyWallet like this
+            
+            // console.log("Raw:");
+            // console.log(rawTxs);
+            
+            for (var i in rawTxs) {
+              var tx = rawTxs[i];
+              var transaction = {};
+              
+              // Default values:
+              transaction.to_account= null;
+              transaction.from_account = null;
+              transaction.to_address = null;
+              transaction.from_address = null;
+              
+              // Figure out if we were the sender:
+              // If the first output is a receive address, it was us. TODO: more reliable method
+              isOrigin = this.isAddressPartOfAccount(tx.out[0].addr)
+              
+              transaction.intraWallet = false; // TODO: determine value
+              transaction.hash = tx.hash;
+              
+              if(isOrigin) {
+                transaction.to_account = idx;
+                transaction.from_address = tx.inputs[0].prev_out.addr // TODO: get from address reliably
+                transaction.amount = tx.out[0].value;
+              } else {
+                transaction.from_account = idx;
+                transaction.to_address = tx.out[0].addr // TODO: get to address reliably
+                transaction.amount = -tx.out[0].value;
+
+              }
+              
+              // transaction.note = tx.note ? tx.note : tx_notes[tx.hash];
+
+              if (tx.time > 0) {
+                transaction.txTime = new Date(tx.time * 1000);
+              }
+              
+              transactions.push(transaction);
+            }
+            
+            return transactions;
+        },
     };
 
     return accountObject;
@@ -138,7 +189,9 @@ function HDWallet(passphrase) {
             return this.accountArray.length;
         },
         getAccount : function(accountIdx) {
-            return this.accountArray[accountIdx];
+          account = this.accountArray[accountIdx];
+          account.idx = accountIdx;
+          return account;
         },
         getAccounts : function() {
             return this.accountArray;

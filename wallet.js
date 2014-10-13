@@ -1122,6 +1122,10 @@ var MyWallet = new function() {
         return success;
     }
 
+    this.getTransactionsForAccount = function(accountIdx) {
+        return myHDWallet.getAccount(accountIdx).getTransactions();
+    }
+
     this.asyncGetAndSetUnspentOutputsForAccount = function(accountIdx, successCallback, errorCallback) {
         var account = myHDWallet.getAccount(accountIdx);
         var addresses = account.getAddresses();
