@@ -138,7 +138,9 @@ function HDWallet(passphrase) {
             return this.accountArray.length;
         },
         getAccount : function(accountIdx) {
-            return this.accountArray[accountIdx];
+          account = this.accountArray[accountIdx];
+          account.idx = accountIdx;
+          return account;
         },
         getAccounts : function() {
             return this.accountArray;
