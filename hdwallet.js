@@ -141,15 +141,22 @@ function HDAccount(wallet, label) {
               transaction.to_address = null;
               transaction.from_address = null;
               
-              transaction.amount = tx.balance;
+              // Figure out if we were the sender:
+              // If the first output is a receive address, it was us. TODO: more reliable method
+              isOrigin = this.isAddressPartOfAccount(tx.out[0].addr)
+              
               transaction.intraWallet = false; // TODO: determine value
               transaction.hash = tx.hash;
-              if(tx.balance > 0) {
+              
+              if(isOrigin) {
                 transaction.to_account = idx;
                 transaction.from_address = tx.inputs[0].prev_out.addr // TODO: get from address reliably
+                transaction.amount = tx.out[0].value;
               } else {
                 transaction.from_account = idx;
-                transaction.to_address = tx.outputs[0].addr // TODO: get to address reliably
+                transaction.to_address = tx.out[0].addr // TODO: get to address reliably
+                transaction.amount = -tx.out[0].value;
+
               }
               
               // transaction.note = tx.note ? tx.note : tx_notes[tx.hash];
