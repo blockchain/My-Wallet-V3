@@ -428,7 +428,7 @@ var BlockchainAPI = new function() {
             error: function (data) {
                 //Try and look for unspent outputs in the cache
                 if (do_not_use_unspent_cache) {
-                    error(e);
+                    error(data);
                 } else {
                     MyStore.get('unspent', function(cache) {
                         try {
