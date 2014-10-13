@@ -889,7 +889,11 @@ var MyWallet = new function() {
                     n_tx++;
 
                     tx.setConfirmations(0);
-                    
+
+                    for (var i = 0; i <  tx.account_indexes.length; i++) {
+                        MyWallet.asyncGetAndSetUnspentOutputsForAccount(tx.account_indexes[i]);
+                    }
+
                     transactions.push(tx);
 
                     playSound('beep');
@@ -1091,6 +1095,7 @@ var MyWallet = new function() {
         try {
             ws.send('{"op":"addr_sub", "addr":"'+paymentRequest.address+'"}');
         } catch (e) { }
+        return paymentRequest
     }
 
     this.updatePaymentRequestForAccount = function(accountIdx, address, amount) {
@@ -1134,11 +1139,17 @@ var MyWallet = new function() {
             });
 
             account.setUnspentOutputs(obj.unspent_outputs);
-            successCallback();
+
+            MyWallet.sendEvent('hw_wallet_balance_updated');
+            if (successCallback) {
+                successCallback();
+            }
         }, function(e) {
-            errorCallback(e);
+            if (errorCallback) {
+                errorCallback(e);
+            }
             MyWallet.sendMonitorEvent({type: "error", message: e, code: 0});
-        }, 0, false);
+        }, 0, true);
     }
 
 
@@ -2392,6 +2403,10 @@ var MyWallet = new function() {
             tx.result = calcTxResult(tx, false);
 
             transactions.push(tx);
+        }
+
+        for (var i = 0; i < myHDWallet.getAccountsCount(); i++) {
+            MyWallet.asyncGetAndSetUnspentOutputsForAccount(i);
         }
 
         if (!cached) {
