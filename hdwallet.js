@@ -118,7 +118,51 @@ function HDAccount(wallet, label) {
         },
         createTx : function(to, value, fixedFee) {
             return this.wallet.createTx(to, value, fixedFee, null);
-        }
+        },
+        getTransactions : function() {
+            var idx = this.idx;
+            
+            var transactions = [];
+          
+            var rawTxs = MyWallet.getTransactions().filter(function(element) { 
+               return element.account_indexes.indexOf(idx) != -1; 
+            }); // TODO: Don't call MyWallet like this
+            
+            // console.log("Raw:");
+            // console.log(rawTxs);
+            
+            for (var i in rawTxs) {
+              var tx = rawTxs[i];
+              var transaction = {};
+              
+              // Default values:
+              transaction.to_account= null;
+              transaction.from_account = null;
+              transaction.to_address = null;
+              transaction.from_address = null;
+              
+              transaction.amount = tx.balance;
+              transaction.intraWallet = false; // TODO: determine value
+              transaction.hash = tx.hash;
+              if(tx.balance > 0) {
+                transaction.to_account = idx;
+                transaction.from_address = tx.inputs[0].prev_out.addr // TODO: get from address reliably
+              } else {
+                transaction.from_account = idx;
+                transaction.to_address = tx.outputs[0].addr // TODO: get to address reliably
+              }
+              
+              // transaction.note = tx.note ? tx.note : tx_notes[tx.hash];
+
+              if (tx.time > 0) {
+                transaction.txTime = new Date(tx.time * 1000);
+              }
+              
+              transactions.push(transaction);
+            }
+            
+            return transactions;
+        },
     };
 
     return accountObject;
