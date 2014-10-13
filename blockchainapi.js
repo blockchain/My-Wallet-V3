@@ -56,7 +56,7 @@ var BlockchainAPI = new function() {
         var allAddresses = []; // temporary disable fetching none HD wallet addresses
         var myHDWallet = MyWallet.getHDWallet();
         if (myHDWallet != null) {
-            for (var i = 0; i < myHDWallet.getAccountsCount(); i++) {
+            for (var i in myHDWallet.getAccounts()) {
                 var account = myHDWallet.getAccount(i);
                 if (! account.isArchived()) {
                     allAddresses = allAddresses.concat(account.getAddresses());

@@ -804,7 +804,7 @@ var MyWallet = new function() {
                 }
             }
 
-            for (var i = 0; i < myHDWallet.getAccountsCount(); i++) {
+            for (var i in myHDWallet.getAccounts()) {
                 var account = myHDWallet.getAccount(i);
                 if (account.isAddressPartOfAccount(output.addr)) {
                     if (tx.account_indexes.indexOf(i) < 0) {
@@ -833,7 +833,7 @@ var MyWallet = new function() {
                 }
             }
 
-            for (var i = 0; i < myHDWallet.getAccountsCount(); i++) {
+            for (var i in myHDWallet.getAccounts()) {
                 var account = myHDWallet.getAccount(i);
                 if (account.isAddressPartOfAccount(output.addr)) {
                     if (tx.account_indexes.indexOf(i) < 0) {
@@ -1171,6 +1171,10 @@ var MyWallet = new function() {
         });
     }
 
+    this.getAccounts = function() {
+        return myHDWallet.getAccounts();
+    }
+
     this.getAccountsCount = function() {
         return myHDWallet.getAccountsCount();
     }
@@ -1207,7 +1211,7 @@ var MyWallet = new function() {
     }
 
     this.listenToHDWalletAccounts = function() {
-        for (var i = 0; i < myHDWallet.getAccountsCount(); i++) {
+        for (var i in myHDWallet.getAccounts()) {
             MyWallet.listenToHDWalletAccountAddresses(i);
         }
     }
@@ -1312,7 +1316,7 @@ var MyWallet = new function() {
                 out += '	{"passphrase" : "'+ myHDWallet.getPassphrase() +'",\n';
                 out += '	"accounts" : [\n';
 
-                for (var i = 0; i < myHDWallet.getAccountsCount(); i++) {
+                for (var i in myHDWallet.getAccounts()) {
                     var account = myHDWallet.getAccount(i);
 
                     var accountJsonData = account.getAccountJsonData();
@@ -2405,7 +2409,7 @@ var MyWallet = new function() {
             transactions.push(tx);
         }
 
-        for (var i = 0; i < myHDWallet.getAccountsCount(); i++) {
+        for (var i in myHDWallet.getAccounts()) {
             MyWallet.asyncGetAndSetUnspentOutputsForAccount(i);
         }
 
