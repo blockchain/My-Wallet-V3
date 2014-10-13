@@ -1091,6 +1091,7 @@ var MyWallet = new function() {
         try {
             ws.send('{"op":"addr_sub", "addr":"'+paymentRequest.address+'"}');
         } catch (e) { }
+        return paymentRequest
     }
 
     this.updatePaymentRequestForAccount = function(accountIdx, address, amount) {
