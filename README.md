@@ -225,3 +225,8 @@ Documentation
     * @param {function} error Callback function
     */
     MyWallet.get_ticker(successCallback, errorCallback);
+
+    /*
+    * @returns {boolean} 
+    */
+    MyWallet.isSynchronizedWithServer();

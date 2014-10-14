@@ -115,6 +115,7 @@ var MyWallet = new function() {
     var buffer = Bitcoin.Buffer;
 
     var myHDWallet = null;
+    var isSynchronizedWithServer = true;
 
     var wallet_options = {
         pbkdf2_iterations : default_pbkdf2_iterations, //Number of pbkdf2 iterations to default to for second password and dpasswordhash
@@ -148,6 +149,11 @@ var MyWallet = new function() {
         } catch (e) {
             console.log(e);
         }
+    }
+
+
+    this.isSynchronizedWithServer = function() {
+        return isSynchronizedWithServer;
     }
 
     this.setRealAuthType = function(val) {
@@ -2979,6 +2985,7 @@ var MyWallet = new function() {
 
     //Can call multiple times in a row and it will backup only once after a certain delay of activity
     this.backupWalletDelayed = function(method, success, error, extra) {
+        isSynchronizedWithServer = false;
         if (archTimer) {
             clearInterval(archTimer);
             archTimer = null;
@@ -3066,6 +3073,7 @@ var MyWallet = new function() {
                             if (successcallback != null)
                                 successcallback();
 
+                            isSynchronizedWithServer = true;
                             MyWallet.sendEvent('on_backup_wallet_success')
                         }, function() {
                             _errorcallback('Checksum Did Not Match Expected Value')
