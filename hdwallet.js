@@ -77,14 +77,26 @@ function HDAccount(wallet, label) {
             this.paymentRequests = paymentRequests;
         },
         generatePaymentRequest : function(amount) {
+            for (var i in this.paymentRequests) {
+                var paymentRequest = this.paymentRequests[i];
+                if (paymentRequest.canceled == true) {
+                    paymentRequest.canceled = false;
+                    paymentRequest.complete = false;
+                    paymentRequest.amount = amount;
+                    paymentRequest.paid = 0;
+                    return paymentRequest;
+                }
+            }
+
             var address = this.generateAddress();
             var paymentRequest = {address: address,
                                    amount: amount,
                                    paid: 0,
                                    txidList: [],
+                                   canceled : false,
                                    complete: false}
             this.paymentRequests.push(paymentRequest);
-            // returns {address: address, amount: amount, paid: 0, complete: false}
+            // returns {address: address, amount: amount, paid: 0, canceled: false, complete: false}
             return paymentRequest;
         },
         updatePaymentRequest : function(address, amount) {
@@ -122,7 +134,7 @@ function HDAccount(wallet, label) {
             for (var i in this.paymentRequests) {
                 var paymentRequest = this.paymentRequests[i];
                 if (paymentRequest.address == address) {
-                    this.paymentRequests.splice(i, 1);
+                    paymentRequest.canceled = true;
                     return true;
                 }
             }
