@@ -808,7 +808,7 @@ var MyWallet = new function() {
                 var account = myHDWallet.getAccount(i);
                 if (account.isAddressPartOfAccount(output.addr)) {
                     if (tx.account_indexes.indexOf(i) < 0) {
-                        tx.account_indexes.push(i);
+                        tx.account_indexes.push(parseInt(i));
                    }
                 }
             }
@@ -837,7 +837,7 @@ var MyWallet = new function() {
                 var account = myHDWallet.getAccount(i);
                 if (account.isAddressPartOfAccount(output.addr)) {
                     if (tx.account_indexes.indexOf(i) < 0) {
-                        tx.account_indexes.push(i);
+                        tx.account_indexes.push(parseInt(i));
                     }
                 }
             }
