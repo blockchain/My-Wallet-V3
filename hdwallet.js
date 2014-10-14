@@ -81,6 +81,7 @@ function HDAccount(wallet, label) {
             var paymentRequest = {address: address,
                                    amount: amount,
                                    paid: 0,
+                                   txidList: [],
                                    complete: false}
             this.paymentRequests.push(paymentRequest);
             // returns {address: address, amount: amount, paid: 0, complete: false}
@@ -101,6 +102,17 @@ function HDAccount(wallet, label) {
                 var paymentRequest = this.paymentRequests[i];
                 if (paymentRequest.address == address) {
                     paymentRequest.complete = true;
+                    return true;
+                }
+            }
+            return false;
+        },
+        addTxToPaymentRequest : function(address, paid, txid) {
+            for (var i = 0; i < this.paymentRequests.length; i++) {
+                var paymentRequest = this.paymentRequests[i];
+                if (paymentRequest.address == address) {
+                    paymentRequest.paid += paid;
+                    paymentRequest.txidList.push(txid);
                     return true;
                 }
             }

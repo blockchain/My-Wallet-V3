@@ -1114,6 +1114,23 @@ var MyWallet = new function() {
         return success;
     }
 
+    this.checkToAddTxToPaymentRequestForAccount = function(account, address, txHash, amount) {
+        var paymentRequests = account.getPaymentRequests();
+        for (var j in paymentRequests) {
+            var paymentRequest = paymentRequests[j];
+            if (paymentRequest.complete == false &&
+                paymentRequest.address == address &&
+                paymentRequest.txidList.indexOf(txHash) < 0) {
+
+                account.addTxToPaymentRequest(paymentRequest.address, amount, txHash);
+                if (paymentRequest.paid + amount >= paymentRequest.amount) {
+                    account.acceptPaymentRequest(paymentRequest.address);
+                    MyWallet.sendEvent('hw_wallet_accepted_payment_request', {"address": address});
+                }
+            }
+        }
+    }
+
     this.cancelPaymentRequestForAccount = function(accountIdx, address) {
         var success = myHDWallet.getAccount(accountIdx).cancelPaymentRequest(address);
         if (success) {
