@@ -840,6 +840,8 @@ var MyWallet = new function() {
                         tx.account_indexes.push(parseInt(i));
                     }
                 }
+
+                MyWallet.checkToAddTxToPaymentRequestForAccount(account, output.addr, tx.hash, output.value);
             }
 
         }
@@ -1129,6 +1131,7 @@ var MyWallet = new function() {
                 }
             }
         }
+        MyWallet.backupWalletDelayed();
     }
 
     this.cancelPaymentRequestForAccount = function(accountIdx, address) {
