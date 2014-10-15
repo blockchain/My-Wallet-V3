@@ -199,26 +199,30 @@ function HDAccount(wallet, label) {
     return accountObject;
 }
 
-function HDWallet(passphraseBuffer) {
+function passphraseHexStringToPassphrase(passphraseHex) {
+    return  new Bitcoin.Buffer.Buffer(passphraseHex, "hex").toString();
+}
+
+function passphraseToPassphraseHexString(passphrase) {
+    return  new Bitcoin.Buffer.Buffer(passphrase).toString("hex");
+}
+
+function HDWallet(seedHexBuffer) {
 
     var walletObject = {
-        passphrase : passphraseBuffer,
-        seed : null,
+        seedHexBuffer : seedHexBuffer,
         accountArray : [],
-        getPassphrase : function() {
-            return this.passphrase;
+        getPassphraseString : function() {
+            return this.seedHexBuffer.toString();
         },
-        passphraseToMasterHex : function(passphraseBuffer) {
+        getSeedHexString : function() {
+            return this.seedHexBuffer.toString("hex");
+        },
+        bufferToMasterHex : function(buffer) {
             // TODO
-            //var seed = Bitcoin.crypto.sha256(Bitcoin.crypto.sha256(passphraseBuffer));
-            var seed = Bitcoin.crypto.sha256(passphraseBuffer);
+            //var seed = Bitcoin.crypto.sha256(Bitcoin.crypto.sha256(buffer));
+            var seed = Bitcoin.crypto.sha256(buffer);
             return seed;
-        },
-        passphraseHexStringToPassphrase : function(passphraseHex) {
-            return  new Bitcoin.Buffer.Buffer(passphraseHex, "hex").toString();
-        },
-        passphraseToPassphraseHexString : function(passphrase) {
-            return  new Bitcoin.Buffer.Buffer(passphrase).toString("hex");
         },
         getAccountsCount : function() {
             return this.accountArray.length;
@@ -234,7 +238,7 @@ function HDWallet(passphraseBuffer) {
         createAccount : function(label) {
             var accountIdx = this.accountArray.length;
 
-            var walletAccount = new Bitcoin.Wallet(this.seed);
+            var walletAccount = new Bitcoin.Wallet(this.bufferToMasterHex(this.seedHexBuffer));
             walletAccount.accountZero = walletAccount.getMasterKey().deriveHardened(0).derive(accountIdx);
             walletAccount.externalAccount = walletAccount.getAccountZero().derive(0);
             walletAccount.internalAccount = walletAccount.getAccountZero().derive(1);
@@ -246,13 +250,11 @@ function HDWallet(passphraseBuffer) {
         }
     };
 
-    walletObject.seed = walletObject.passphraseToMasterHex(passphraseBuffer);
-
     return walletObject;
 }
 
-function buildHDWallet(passphrase, accountsArrayPayload) {
-    var hdwallet = HDWallet(new Bitcoin.Buffer.Buffer(passphrase));
+function buildHDWallet(seedHexString, accountsArrayPayload) {
+    var hdwallet = HDWallet(new Bitcoin.Buffer.Buffer(seedHexString, "hex"));
 
     for (var i = 0; i < accountsArrayPayload.length; i++) {
         if (archived == true)
@@ -312,7 +314,7 @@ function test() {
         
     ];
 
-    var hdwallet = buildHDWallet(passphrase, accountsArrayPayload);
+    var hdwallet = buildHDWallet(passphraseToPassphraseHexString(passphrase), accountsArrayPayload);
     hdwallet.createAccount("Rothbard");
 
     var account = hdwallet.getAccount(0);

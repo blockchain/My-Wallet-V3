@@ -1258,16 +1258,21 @@ var MyWallet = new function() {
         }
     }
 
-    this.buildHDWallet = function(passphrase, accountsArrayPayload) {
-        myHDWallet = buildHDWallet(passphrase, accountsArrayPayload);
+    this.buildHDWallet = function(seedHexString, accountsArrayPayload) {
+        myHDWallet = buildHDWallet(seedHexString, accountsArrayPayload);
     }
 
-    this.getHDWalletPassphrase = function() {
+    this.generateHDWalletPassphrase = function() {
         return "don't use a string seed like this in real life";
     }
 
-    this.initializeHDWallet = function(passphrase) {
-        MyWallet.buildHDWallet(passphrase, []);
+    this.generateHDWalletSeedHex = function() {
+        var passPhrase = this.generateHDWalletPassphrase();
+        return passphraseToPassphraseHexString(passPhrase);
+    }
+
+    this.initializeHDWallet = function(seedHexString) {
+        MyWallet.buildHDWallet(seedHexString, []);
         MyWallet.createAccount("Spending");
     }
 
@@ -1355,7 +1360,7 @@ var MyWallet = new function() {
 
         if (myHDWallet != null) {
             for (var key in address_book) {
-                out += '	{"passphrase" : "'+ myHDWallet.getPassphrase() +'",\n';
+                out += '	{"seed_hex" : "'+ myHDWallet.getSeedHexString() +'",\n';
                 out += '	"accounts" : [\n';
 
                 for (var i in myHDWallet.getAccounts()) {
@@ -1377,7 +1382,6 @@ var MyWallet = new function() {
         out += '\n}';
 
         //Write the address book
-
         return out;
     }
 
@@ -2611,9 +2615,9 @@ var MyWallet = new function() {
 
                 if (obj.hd_wallets) {
                     var defaultHDWallet = obj.hd_wallets[0];
-                    MyWallet.buildHDWallet(defaultHDWallet.passphrase, defaultHDWallet.accounts);
+                    MyWallet.buildHDWallet(defaultHDWallet.seed_hex, defaultHDWallet.accounts);
                 } else {
-                    MyWallet.initializeHDWallet(MyWallet.getHDWalletPassphrase());
+                    MyWallet.initializeHDWallet(MyWallet.generateHDWalletSeedHex());
                 }
 
                 if (obj.tx_notes) {
