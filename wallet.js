@@ -1109,19 +1109,7 @@ var MyWallet = new function() {
     this.updatePaymentRequestForAccount = function(accountIdx, address, amount) {
         var account = myHDWallet.getAccount(accountIdx);
         var success = account.updatePaymentRequest(address, amount);
-        var paymentRequests = account.getPaymentRequests();
-        for (var i in paymentRequests) {
-            var paymentRequest = paymentRequests[i];
-            if (paymentRequest.complete == false &&
-                paymentRequest.address == address) {
-                if (paymentRequest.paid == paymentRequest.amount) {
-                    account.acceptPaymentRequest(paymentRequest.address);
-                    MyWallet.sendEvent('hw_wallet_accepted_payment_request', {"address": address});
-                } else if (paymentRequest.paid > 0) {
-                    MyWallet.sendEvent('hw_wallet_updated_payment_request', {"address": address});
-                }
-            }
-        }
+
         if (success) {
             MyWallet.backupWalletDelayed();
         }
