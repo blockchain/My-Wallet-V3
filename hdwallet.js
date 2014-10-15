@@ -199,15 +199,20 @@ function HDAccount(wallet, label) {
     return accountObject;
 }
 
-function HDWallet(passphrase) {
-    var seed = Bitcoin.crypto.sha256(passphrase);
+function HDWallet(passphraseBuffer) {
 
     var walletObject = {
-        passphrase : passphrase,
-        seed : seed,
+        passphrase : passphraseBuffer,
+        seed : null,
         accountArray : [],
         getPassphrase : function() {
             return this.passphrase;
+        },
+        passphraseToMasterHex : function(passphraseBuffer) {
+            // TODO
+            //var seed = Bitcoin.crypto.sha256(Bitcoin.crypto.sha256(passphraseBuffer));
+            var seed = Bitcoin.crypto.sha256(passphraseBuffer);
+            return seed;
         },
         getAccountsCount : function() {
             return this.accountArray.length;
@@ -235,11 +240,13 @@ function HDWallet(passphrase) {
         }
     };
 
+    walletObject.seed = walletObject.passphraseToMasterHex(passphraseBuffer);
+
     return walletObject;
 }
 
 function buildHDWallet(passphrase, accountsArrayPayload) {
-    var hdwallet = HDWallet(passphrase);
+    var hdwallet = HDWallet(new Bitcoin.Buffer.Buffer(passphrase));
 
     for (var i = 0; i < accountsArrayPayload.length; i++) {
         if (archived == true)
