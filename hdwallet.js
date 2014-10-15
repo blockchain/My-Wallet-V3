@@ -214,6 +214,12 @@ function HDWallet(passphraseBuffer) {
             var seed = Bitcoin.crypto.sha256(passphraseBuffer);
             return seed;
         },
+        passphraseHexStringToPassphrase : function(passphraseHex) {
+            return  new Bitcoin.Buffer.Buffer(passphraseHex, "hex").toString();
+        },
+        passphraseToPassphraseHexString : function(passphrase) {
+            return  new Bitcoin.Buffer.Buffer(passphrase).toString("hex");
+        },
         getAccountsCount : function() {
             return this.accountArray.length;
         },
