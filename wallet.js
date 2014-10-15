@@ -1135,9 +1135,11 @@ var MyWallet = new function() {
                 account.addTxToPaymentRequest(paymentRequest.address, amount, txHash);
                 if (paymentRequest.paid + amount == paymentRequest.amount) {
                     account.acceptPaymentRequest(paymentRequest.address);
-                    MyWallet.sendEvent('hw_wallet_accepted_payment_request', {"address": address});
-                } else {
-                  MyWallet.sendEvent('hw_wallet_updated_payment_request', {"address": address});
+                    MyWallet.sendEvent('hw_wallet_accepted_payment_request', {"address": address, amount: paymentRequest.amount});
+                } else if (amount > 0 && paymentRequest.paid + amount < paymentRequest.amount) {
+                  MyWallet.sendEvent('hw_wallet_payment_request_received_too_little', {"address": address, amountRequested: paymentRequest.amount, amountReceived: paymentRequest.paid + amount});
+                } else if (paymentRequest.paid + amount > paymentRequest.amount) {
+                  MyWallet.sendEvent('hw_wallet_payment_request_received_too_much', {"address": address, amountRequested: paymentRequest.amount, amountReceived: paymentRequest.paid + amount});
                 }
             }
         }
