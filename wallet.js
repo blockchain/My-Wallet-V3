@@ -2629,7 +2629,6 @@ var MyWallet = new function() {
                     MyWallet.buildHDWallet(defaultHDWallet.seed_hex, defaultHDWallet.accounts);
                 } else {
                     MyWallet.sendEvent('hd_wallets_does_not_exist');
-                    loadScript('wallet/mnemonic', function(){});
                 }
 
                 if (obj.tx_notes) {
