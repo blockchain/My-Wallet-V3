@@ -1281,8 +1281,13 @@ var MyWallet = new function() {
         return passphraseToPassphraseHexString(passPhrase);
     }
 
-    this.initializeHDWallet = function() {
-        var seedHexString = this.generateHDWalletSeedHex();
+    this.initializeHDWallet = function(passphrase) {
+        var seedHexString = null;
+        if (passphrase == null)
+            seedHexString = this.generateHDWalletSeedHex();
+        else
+            seedHexString = passphraseToPassphraseHexString(passphrase);
+
         MyWallet.buildHDWallet(seedHexString, []);
         MyWallet.createAccount("Spending");
     }
