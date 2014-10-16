@@ -289,6 +289,22 @@ function buildHDWallet(seedHexString, accountsArrayPayload) {
     return hdwallet;
 }
 
+function recoverHDWallet(hdwallet) {
+
+
+    return hdwallet;
+}
+
+function recoverHDWalletFromSeedHex(seedHex) {
+    var hdwallet = HDWallet(new Bitcoin.Buffer.Buffer(seedHex, "hex"));
+    return recoverHDWallet(hdwallet);
+}
+
+function recoverHDWalletFromMnemonic(passphrase) {
+    var hdwallet = HDWallet(new Bitcoin.Buffer.Buffer(passphrase));
+    return recoverHDWallet(hdwallet);
+}
+
 function test() {
     var passphrase = "don't use a string seed like this in real life";
     console.log("passphrase: ", passphrase);
