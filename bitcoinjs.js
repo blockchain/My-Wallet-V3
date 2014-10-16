@@ -8267,7 +8267,7 @@
                         }
                     }
 
-                    function estimatePaddedFee(tx, network) {
+                    Wallet.prototype.estimatePaddedFee = function(tx, network) {
                         var tmpTx = tx.clone();
                         tmpTx.addOutput(Script.EMPTY, network.dustSoftThreshold || 0);
                         return network.estimateFee(tmpTx)

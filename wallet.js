@@ -1194,6 +1194,9 @@ var MyWallet = new function() {
         }, 0, true);
     }
 
+    this.recommendedTransactionFeeForAccount = function(accountIdx, amount) {
+        return myHDWallet.getAccount(accountIdx).recommendedTransactionFee(amount);
+    }
 
     this.sendBitcoinsForAccount = function(accountIdx, to, value, fixedFee, note, successCallback, errorCallback) {
         MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
