@@ -1253,8 +1253,10 @@ var MyWallet = new function() {
     }
 
     this.listenToHDWalletAccounts = function() {
-        for (var i in myHDWallet.getAccounts()) {
-            MyWallet.listenToHDWalletAccountAddresses(i);
+        if (myHDWallet) {
+            for (var i in myHDWallet.getAccounts()) {
+                MyWallet.listenToHDWalletAccountAddresses(i);
+            }
         }
     }
 
@@ -1263,7 +1265,15 @@ var MyWallet = new function() {
     }
 
     this.generateHDWalletPassphrase = function() {
-        return "don't use a string seed like this in real life";
+        var passphraseWordList = [];
+        for (var i = 0; i < 12; i++) {
+            var randomBytes = new Bitcoin.Buffer.Buffer(Bitcoin.rng(32));
+            var wordIdx = parseInt(new Bitcoin.BigInteger.fromBuffer(randomBytes)) % 1268;
+            passphraseWordList.push(mn_v2_words[wordIdx]);
+        }
+
+        //return "don't use a string seed like this in real life";
+        return passphraseWordList.join(' ');
     }
 
     this.generateHDWalletSeedHex = function() {
@@ -1271,7 +1281,8 @@ var MyWallet = new function() {
         return passphraseToPassphraseHexString(passPhrase);
     }
 
-    this.initializeHDWallet = function(seedHexString) {
+    this.initializeHDWallet = function() {
+        var seedHexString = this.generateHDWalletSeedHex();
         MyWallet.buildHDWallet(seedHexString, []);
         MyWallet.createAccount("Spending");
     }
@@ -2617,7 +2628,8 @@ var MyWallet = new function() {
                     var defaultHDWallet = obj.hd_wallets[0];
                     MyWallet.buildHDWallet(defaultHDWallet.seed_hex, defaultHDWallet.accounts);
                 } else {
-                    MyWallet.initializeHDWallet(MyWallet.generateHDWalletSeedHex());
+                    MyWallet.sendEvent('hd_wallets_does_not_exist');
+                    loadScript('wallet/mnemonic', function(){});
                 }
 
                 if (obj.tx_notes) {

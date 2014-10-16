@@ -10342,6 +10342,7 @@
                     base58check: require("./bs58check"),
                     Crypto: require("./crypto-js"),
                     Buffer: require("./buffer"),
+                    rng : require("./rng"),
 
                     Address: require("./address"),
                     bufferutils: require("./bufferutils"),
@@ -10367,6 +10368,7 @@
                 "./bs58check": 5,
                 "./crypto-js": 27,
                 "./buffer": 78,
+                "./rng": 18,
 
                 "./address": 58,
                 "./bufferutils": 59,
