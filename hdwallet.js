@@ -282,7 +282,7 @@ function buildHDWallet(seedHexString, accountsArrayPayload) {
 
         for (var k = 0; k < change_addresses; k++) {
             var changeAddress = hdaccount.generateChangeAddress();
-            console.log("\tchangeAddress: ", address);
+            console.log("\tchangeAddress: ", changeAddress);
         }
     }
 
