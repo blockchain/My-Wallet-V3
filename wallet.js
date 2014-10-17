@@ -1109,17 +1109,7 @@ var MyWallet = new function() {
     this.updatePaymentRequestForAccount = function(accountIdx, address, amount) {
         var account = myHDWallet.getAccount(accountIdx);
         var success = account.updatePaymentRequest(address, amount);
-        var paymentRequests = account.getPaymentRequests();
-        for (var i in paymentRequests) {
-            var paymentRequest = paymentRequests[i];
-            if (paymentRequest.complete == false &&
-                paymentRequest.address == address) {
-                if (paymentRequest.paid >= paymentRequest.amount) {
-                    account.acceptPaymentRequest(paymentRequest.address);
-                    MyWallet.sendEvent('hw_wallet_accepted_payment_request', {"address": address});
-                }
-            }
-        }
+
         if (success) {
             MyWallet.backupWalletDelayed();
         }
@@ -1143,9 +1133,13 @@ var MyWallet = new function() {
                 paymentRequest.txidList.indexOf(txHash) < 0) {
 
                 account.addTxToPaymentRequest(paymentRequest.address, amount, txHash);
-                if (paymentRequest.paid + amount >= paymentRequest.amount) {
+                if (paymentRequest.paid + amount == paymentRequest.amount) {
                     account.acceptPaymentRequest(paymentRequest.address);
-                    MyWallet.sendEvent('hw_wallet_accepted_payment_request', {"address": address});
+                    MyWallet.sendEvent('hw_wallet_accepted_payment_request', {"address": address, amount: paymentRequest.amount});
+                } else if (amount > 0 && paymentRequest.paid + amount < paymentRequest.amount) {
+                  MyWallet.sendEvent('hw_wallet_payment_request_received_too_little', {"address": address, amountRequested: paymentRequest.amount, amountReceived: paymentRequest.paid + amount});
+                } else if (paymentRequest.paid + amount > paymentRequest.amount) {
+                  MyWallet.sendEvent('hw_wallet_payment_request_received_too_much', {"address": address, amountRequested: paymentRequest.amount, amountReceived: paymentRequest.paid + amount});
                 }
             }
         }
