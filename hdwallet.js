@@ -304,17 +304,13 @@ function recoverHDWallet(hdwallet) {
     var continueLookingAheadAccount = true;
 
     while(continueLookingAheadAccount) {
-        var lookAheadOffset = 0;
-
         var account = hdwallet.createAccount("Account " + accountIdx.toString());
+        //console.log("accountIdx: " + accountIdx.toString());
 
-        console.log("accountIdx: " + accountIdx.toString());
 
+        var lookAheadOffset = 0;
         var accountAddressIdx = 0;
-        var accountChangeAddressIdx = 0;
         var continueLookingAheadAddress = true;
-        var continueLookingAheadChangeAddress = true;
-
         while(continueLookingAheadAddress) {
             var addresses = [];
             var addressToIdxDict = {};
@@ -324,19 +320,18 @@ function recoverHDWallet(hdwallet) {
                 addresses.push(address);
                 addressToIdxDict[address] = i;
             }
-            console.log("addressToIdxDict: " + JSON.stringify(addressToIdxDict));
 
             MyWallet.get_history_with_addresses(addresses, function(obj) {
                 for (var i = 0; i < obj.addresses.length; ++i) {
-                    console.log("i: " + i);
-                    console.log("address: ", obj.addresses[i].address, " n_tx: ", obj.addresses[i].n_tx);
+                    //console.log("i: " + i);
+                    //console.log("address: ", obj.addresses[i].address, " n_tx: ", obj.addresses[i].n_tx);
                     if (obj.addresses[i].n_tx > 0 && addressToIdxDict[obj.addresses[i].address] > accountAddressIdx) {
                         accountAddressIdx = addressToIdxDict[obj.addresses[i].address];
                     }
                 }
 
-                console.log("accountAddressIdx : " + accountAddressIdx);
-                console.log("lookAheadOffset : " + lookAheadOffset);
+                //console.log("accountAddressIdx : " + accountAddressIdx);
+                //console.log("lookAheadOffset : " + lookAheadOffset);
                 if (accountAddressIdx < lookAheadOffset) {
                     continueLookingAheadAddress = false;
                 }
@@ -346,8 +341,44 @@ function recoverHDWallet(hdwallet) {
             });
         }
 
-        while(accountAddressIdx > account.getAddressesCount()) {
+        while(account.getAddressesCount() > accountAddressIdx) {
             account.undoGenerateAddress();
+        }
+
+        lookAheadOffset = 0;
+        var accountChangeAddressIdx = 0;
+        var continueLookingAheadChangeAddress = true;
+        while(continueLookingAheadChangeAddress) {
+            var addresses = [];
+            var addressToIdxDict = {};
+
+            for (var i = lookAheadOffset; i < lookAheadOffset + LOOK_AHEAD_ADDRESS_COUNT; i++) {
+                var address = account.generateChangeAddress();
+                addresses.push(address);
+                addressToIdxDict[address] = i;
+            }
+
+            MyWallet.get_history_with_addresses(addresses, function(obj) {
+                for (var i = 0; i < obj.addresses.length; ++i) {
+                    //console.log("address: ", obj.addresses[i].address, " n_tx: ", obj.addresses[i].n_tx);
+                    if (obj.addresses[i].n_tx > 0 && addressToIdxDict[obj.addresses[i].address] > accountChangeAddressIdx) {
+                        accountChangeAddressIdx = addressToIdxDict[obj.addresses[i].address];
+                    }
+                }
+
+                //console.log("accountChangeAddressIdx : " + accountChangeAddressIdx);
+                //console.log("lookAheadOffset : " + lookAheadOffset);
+                if (accountChangeAddressIdx < lookAheadOffset) {
+                    continueLookingAheadChangeAddress = false;
+                }
+
+                lookAheadOffset += LOOK_AHEAD_ADDRESS_COUNT;
+            }, function() {
+            });
+        }
+
+        while(account.getChangeAddressesCount() > accountChangeAddressIdx) {
+            account.undoGenerateChangeAddress();
         }
 
         if (accountAddressIdx == 0 && accountChangeAddressIdx == 0) {

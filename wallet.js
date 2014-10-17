@@ -1227,6 +1227,16 @@ var MyWallet = new function() {
         return myHDWallet;
     }
 
+    this.recoverMyWalletHDWalletFromSeedHex = function(seedHex) {
+        myHDWallet = recoverHDWalletFromSeedHex(seedHex);
+        MyWallet.backupWalletDelayed();
+    }
+
+    this.recoverMyWalletHDWalletFromMnemonic = function(passphrase) {
+        myHDWallet = recoverHDWalletFromMnemonic(passphrase);
+        MyWallet.backupWalletDelayed();
+    }
+
     this.listenToHDWalletAccountAddresses = function(accountIdx) {
         var account = myHDWallet.getAccount(accountIdx);
         var msg = "";
@@ -1372,22 +1382,20 @@ var MyWallet = new function() {
         out += ',\n	"hd_wallets" : [\n';
 
         if (myHDWallet != null) {
-            for (var key in address_book) {
-                out += '	{"seed_hex" : "'+ myHDWallet.getSeedHexString() +'",\n';
-                out += '	"accounts" : [\n';
+            out += '	{"seed_hex" : "'+ myHDWallet.getSeedHexString() +'",\n';
+            out += '	"accounts" : [\n';
 
-                for (var i in myHDWallet.getAccounts()) {
-                    var account = myHDWallet.getAccount(i);
+            for (var i in myHDWallet.getAccounts()) {
+                var account = myHDWallet.getAccount(i);
 
-                    var accountJsonData = account.getAccountJsonData();
-                    out += JSON.stringify(accountJsonData);
-                    if (i < myHDWallet.getAccountsCount() - 1) {
-                        out += ",\n";
-                    }
+                var accountJsonData = account.getAccountJsonData();
+                out += JSON.stringify(accountJsonData);
+                if (i < myHDWallet.getAccountsCount() - 1) {
+                    out += ",\n";
                 }
-                out += "\n	]";
-                out += '\n	}';
             }
+            out += "\n	]";
+            out += '\n	}';
         }
 
         out += "\n	]";
