@@ -1299,6 +1299,15 @@ var MyWallet = new function() {
         MyWallet.createAccount("Spending");
     }
 
+    this.isValidAddress = function(address) {
+        try {
+            Bitcoin.Address.fromBase58Check(address);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
     this.makeWalletJSON = function(format) {
         return MyWallet.makeCustomWalletJSON(format, guid, sharedKey);
     }
