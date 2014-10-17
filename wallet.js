@@ -1402,6 +1402,15 @@ var MyWallet = new function() {
         BlockchainAPI.get_ticker(successCallback, errorCallback);
     }
 
+    this.get_history_with_addresses = function(addresses, success, error) {
+        BlockchainAPI.get_history_with_addresses(addresses, function(data) {
+            if (success) success(data);
+        }, function() {
+            if (error) error();
+
+        }, tx_filter, tx_page*MyWallet.getNTransactionsPerPage(), MyWallet.getNTransactionsPerPage());
+    }
+
     this.get_history = function(success, error) {
         BlockchainAPI.get_history(function(data) {
 

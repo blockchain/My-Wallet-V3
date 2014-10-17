@@ -61,6 +61,9 @@ function HDAccount(wallet, label) {
         generateChangeAddress : function() {
             return this.wallet.generateChangeAddress();
         },
+        undoGenerateChangeAddress : function() {
+            return this.wallet.changeAddresses.pop();
+        },
         getUnspentOutputs : function() {
             return this.wallet.getUnspentOutputs();
         },        
@@ -295,7 +298,65 @@ function buildHDWallet(seedHexString, accountsArrayPayload) {
 }
 
 function recoverHDWallet(hdwallet) {
+    var LOOK_AHEAD_ADDRESS_COUNT = 20;
+    var accountIdx = 0;
 
+    var continueLookingAheadAccount = true;
+
+    while(continueLookingAheadAccount) {
+        var lookAheadOffset = 0;
+
+        var account = hdwallet.createAccount("Account " + accountIdx.toString());
+
+        console.log("accountIdx: " + accountIdx.toString());
+
+        var accountAddressIdx = 0;
+        var accountChangeAddressIdx = 0;
+        var continueLookingAheadAddress = true;
+        var continueLookingAheadChangeAddress = true;
+
+        while(continueLookingAheadAddress) {
+            var addresses = [];
+            var addressToIdxDict = {};
+
+            for (var i = lookAheadOffset; i < lookAheadOffset + LOOK_AHEAD_ADDRESS_COUNT; i++) {
+                var address = account.generateAddress();
+                addresses.push(address);
+                addressToIdxDict[address] = i;
+            }
+            console.log("addressToIdxDict: " + JSON.stringify(addressToIdxDict));
+
+            MyWallet.get_history_with_addresses(addresses, function(obj) {
+                for (var i = 0; i < obj.addresses.length; ++i) {
+                    console.log("i: " + i);
+                    console.log("address: ", obj.addresses[i].address, " n_tx: ", obj.addresses[i].n_tx);
+                    if (obj.addresses[i].n_tx > 0 && addressToIdxDict[obj.addresses[i].address] > accountAddressIdx) {
+                        accountAddressIdx = addressToIdxDict[obj.addresses[i].address];
+                    }
+                }
+
+                console.log("accountAddressIdx : " + accountAddressIdx);
+                console.log("lookAheadOffset : " + lookAheadOffset);
+                if (accountAddressIdx < lookAheadOffset) {
+                    continueLookingAheadAddress = false;
+                }
+
+                lookAheadOffset += LOOK_AHEAD_ADDRESS_COUNT;
+            }, function() {
+            });
+        }
+
+        while(accountAddressIdx > account.getAddressesCount()) {
+            account.undoGenerateAddress();
+        }
+
+        if (accountAddressIdx == 0 && accountChangeAddressIdx == 0) {
+            continueLookingAheadAccount = false;
+            hdwallet.accountArray.pop();
+        } else {
+            accountIdx += 1;
+        }
+    }
 
     return hdwallet;
 }
