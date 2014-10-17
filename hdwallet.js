@@ -179,7 +179,8 @@ function HDAccount(wallet, label) {
               
               transaction.intraWallet = false; // TODO: determine value
               transaction.hash = tx.hash;
-              
+              transaction.confirmations = MyWallet.getConfirmationsForTx(MyWallet.getLatestBlock(), tx);
+
               if(isOrigin) {
                 transaction.to_account = idx;
                 transaction.from_address = tx.inputs[0].prev_out.addr // TODO: get from address reliably

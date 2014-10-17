@@ -1718,6 +1718,20 @@ var MyWallet = new function() {
         return latest_block;
     }
 
+    this.getConfirmationsForTx = function(latest_block, tx) {
+        if (tx.blockHeight != null && tx.blockHeight > 0) {
+            var confirmations = latest_block.height - tx.blockHeight + 1;
+            if (confirmations <= 100) {
+                return latest_block.height - tx.blockHeight + 1;
+            } else {
+                return null;
+            }
+        } else {
+            tx.setConfirmations(0);
+            return 0;
+        }
+    }
+
     function setLatestBlock(block) {
 
         if (block != null) {
@@ -1725,17 +1739,7 @@ var MyWallet = new function() {
 
             for (var key in transactions) {
                 var tx = transactions[key];
-
-                if (tx.blockHeight != null && tx.blockHeight > 0) {
-                    var confirmations = latest_block.height - tx.blockHeight + 1;
-                    if (confirmations <= 100) {
-                        tx.setConfirmations(latest_block.height - tx.blockHeight + 1);
-                    } else {
-                        tx.setConfirmations(null);
-                    }
-                } else {
-                    tx.setConfirmations(0);
-                }
+                tx.setConfirmations(MyWallet.getConfirmationsForTx(latest_block, tx));
             }
 
             MyWallet.sendEvent('did_set_latest_block');
