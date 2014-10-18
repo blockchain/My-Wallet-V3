@@ -147,9 +147,14 @@ function HDAccount(wallet, label) {
             return this.wallet.createTx(to, value, fixedFee, null);
         },
         recommendedTransactionFee : function(amount) {
-            //12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX is dummy address, first ever bitcoin address
-            var tx = this.createTx("12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX", amount, null, null);
-            return this.wallet.estimatePaddedFee(tx, Bitcoin.networks.bitcoin);
+            try {
+                //12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX is dummy address, first ever bitcoin address
+                var tx = this.createTx("12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX", amount, null, null);
+                return this.wallet.estimatePaddedFee(tx, Bitcoin.networks.bitcoin);
+            } catch (e) {
+                return 10000;
+            }
+
         },
         getTransactions : function() {
             var idx = this.idx;
