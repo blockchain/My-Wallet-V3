@@ -1125,25 +1125,9 @@ var MyWallet = new function() {
     }
 
     this.checkToAddTxToPaymentRequestForAccount = function(account, address, txHash, amount) {
-        var paymentRequests = account.getPaymentRequests();
-        for (var j in paymentRequests) {
-            var paymentRequest = paymentRequests[j];
-            if (paymentRequest.complete == false &&
-                paymentRequest.address == address &&
-                paymentRequest.txidList.indexOf(txHash) < 0) {
+       account.checkToAddTxToPaymentRequest( address, txHash, amount);
 
-                account.addTxToPaymentRequest(paymentRequest.address, amount, txHash);
-                if (paymentRequest.paid == paymentRequest.amount) {
-                    account.acceptPaymentRequest(paymentRequest.address);
-                    MyWallet.sendEvent('hw_wallet_accepted_payment_request', {"address": address, amount: paymentRequest.amount});
-                } else if (amount > 0 && paymentRequest.paid < paymentRequest.amount) {
-                  MyWallet.sendEvent('hw_wallet_payment_request_received_too_little', {"address": address, amountRequested: paymentRequest.amount, amountReceived: paymentRequest.paid});
-                } else if (paymentRequest.paid > paymentRequest.amount) {
-                  MyWallet.sendEvent('hw_wallet_payment_request_received_too_much', {"address": address, amountRequested: paymentRequest.amount, amountReceived: paymentRequest.paid});
-                }
-            }
-        }
-        MyWallet.backupWalletDelayed();
+       MyWallet.backupWalletDelayed();
     }
 
     this.cancelPaymentRequestForAccount = function(accountIdx, address) {
