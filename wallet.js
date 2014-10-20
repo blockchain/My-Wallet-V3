@@ -2981,6 +2981,7 @@ var MyWallet = new function() {
 
     //Can call multiple times in a row and it will backup only once after a certain delay of activity
     this.backupWalletDelayed = function(method, success, error, extra) {
+        MyWallet.disableLogout(true);
         isSynchronizedWithServer = false;
         if (archTimer) {
             clearInterval(archTimer);
@@ -2994,6 +2995,7 @@ var MyWallet = new function() {
 
     //Save the javascript wallet to the remote server
     this.backupWallet = function(method, successcallback, errorcallback) {
+        MyWallet.disableLogout(true);
         if (archTimer) {
             clearInterval(archTimer);
             archTimer = null;
@@ -3070,19 +3072,25 @@ var MyWallet = new function() {
                                 successcallback();
 
                             isSynchronizedWithServer = true;
+                            MyWallet.disableLogout(true);
+                            logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
                             MyWallet.sendEvent('on_backup_wallet_success')
                         }, function() {
                             _errorcallback('Checksum Did Not Match Expected Value')
+                            MyWallet.disableLogout(false);
                         });
                     }, function(e) {
                         _errorcallback(e.responseText);
+                        MyWallet.disableLogout(false);
                     });
                 } catch (e) {
                     _errorcallback(e);
+                    MyWallet.disableLogout(false);
                 };
             });
         } catch (e) {
             _errorcallback(e);
+            MyWallet.disableLogout(false);
         }
     }
 
