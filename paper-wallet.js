@@ -213,7 +213,6 @@ var PaperWallet = new function() {
     this.showColdStorageModal = function() {
 
         function callModal() {
-            MyWallet._seed();
 
             var key = Bitcoin.ECKey.makeRandom(false);
 

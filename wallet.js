@@ -98,7 +98,6 @@ var MyWallet = new function() {
     var last_input_main_password; //The time the last password was entered
     var main_password_timeout = 60000;
     var isInitialized = false;
-    var extra_seed; //Help for browsers that don't support window.crypto
     var language = 'en'; //Current language
     var supported_encryption_version = 2.0;  //The maxmimum supported encryption version
     var encryption_version_used = 0.0; //The encryption version of the current wallet. Set by decryptWallet()
@@ -717,36 +716,7 @@ var MyWallet = new function() {
         return addr;
     }
 
-    this._seed = function(_password) {
-        rng_seed_time();
-
-        //rng pool is seeded on key press and mouse movements
-        //Add extra entropy from the user's password
-        if (password || _password) {
-            var word_array = Crypto.util.bytesToWords(Crypto.SHA256(password ? password : _password, {asBytes: true}));
-
-            for (var i in word_array) {
-                rng_seed_int(word_array[i]);
-            }
-        }
-
-        if (!extra_seed) {
-            extra_seed = $('body').data('extra-seed');
-        }
-
-        //Extra entropy from a random number provided by server
-        if (extra_seed) {
-            var word_array = Crypto.util.bytesToWords(Crypto.util.hexToBytes(extra_seed));
-
-            for (var i in word_array) {
-                rng_seed_int(word_array[i]);
-            }
-        }
-    }
-
     this.generateNewKey = function(_password) {
-        MyWallet._seed(_password);
-
         var key = Bitcoin.ECKey.makeRandom(false);
 
         // key is uncompressed, so cannot passed in opts.compressed = true here
@@ -3421,7 +3391,6 @@ var MyWallet = new function() {
                     return;
                 }
 
-                extra_seed = obj.extra_seed;
                 guid = obj.guid;
                 auth_type = obj.auth_type;
                 real_auth_type = obj.real_auth_type;

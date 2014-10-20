@@ -1737,9 +1737,6 @@ function initNewTx() {
                     self.ask_to_send();
                 };
 
-                //Be sure the RNG is fully seeded
-                MyWallet._seed();
-
                 self.signWebWorker(success, function(e) {
                     console.log(e);
 
