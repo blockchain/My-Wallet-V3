@@ -175,59 +175,7 @@ function HDAccount(wallet, label) {
                 return 10000;
             }
 
-        },
-        getTransactions : function() {
-            var idx = this.idx;
-            
-            var transactions = [];
-          
-            var rawTxs = MyWallet.getTransactions().filter(function(element) { 
-               return element.account_indexes.indexOf(idx) != -1; 
-            }); // TODO: Don't call MyWallet like this
-            
-            // console.log("Raw:");
-            // console.log(rawTxs);
-            
-            for (var i in rawTxs) {
-              var tx = rawTxs[i];
-              var transaction = {};
-              
-              // Default values:
-              transaction.to_account= null;
-              transaction.from_account = null;
-              transaction.to_address = null;
-              transaction.from_address = null;
-              
-              // Figure out if we were the sender:
-              // If the first output is a receive address, it was us. TODO: more reliable method
-              isOrigin = this.isAddressPartOfAccount(tx.out[0].addr)
-              
-              transaction.intraWallet = false; // TODO: determine value
-              transaction.hash = tx.hash;
-              transaction.confirmations = MyWallet.getConfirmationsForTx(MyWallet.getLatestBlock(), tx);
-
-              if(isOrigin) {
-                transaction.to_account = idx;
-                transaction.from_address = tx.inputs[0].prev_out.addr // TODO: get from address reliably
-                transaction.amount = tx.out[0].value;
-              } else {
-                transaction.from_account = idx;
-                transaction.to_address = tx.out[0].addr // TODO: get to address reliably
-                transaction.amount = -tx.out[0].value;
-
-              }
-              
-              // transaction.note = tx.note ? tx.note : tx_notes[tx.hash];
-
-              if (tx.time > 0) {
-                transaction.txTime = new Date(tx.time * 1000);
-              }
-              
-              transactions.push(transaction);
-            }
-            
-            return transactions;
-        },
+        }
     };
 
     return accountObject;
@@ -265,6 +213,87 @@ function HDWallet(seedHexBuffer) {
           account = this.accountArray[accountIdx];
           account.idx = accountIdx;
           return account;
+        },
+        filterTransactionsForAccount : function(accountIdx, transactions) {
+            var account = this.accountArray[accountIdx];
+
+            var idx = accountIdx;
+
+            var filteredTransactions = [];
+
+            var rawTxs = transactions.filter(function(element) {
+               return element.account_indexes.indexOf(idx) != -1;
+            });
+
+            // console.log("Raw:");
+            // console.log(rawTxs);
+
+            for (var i in rawTxs) {
+                var tx = rawTxs[i];
+                var transaction = {};
+
+                // Default values:
+                transaction.to_account= null;
+                transaction.from_account = null;
+                transaction.from_addresses = [];
+                transaction.to_addresses = [];
+                transaction.amount = 0;
+
+                var isOrigin = false;
+                for (var i = 0; i < tx.inputs.length; ++i) {
+                    var output = tx.inputs[i].prev_out;
+                    if (!output || !output.addr)
+                        continue;
+
+                    transaction.from_addresses.push(output.addr);
+                    if (account.isAddressPartOfAccount(output.addr)) {
+                        isOrigin = true;
+                        transaction.amount -= output.value;
+                    }
+                }
+
+                transaction.intraWallet = false;
+                for (var i = 0; i < tx.out.length; ++i) {
+                    var output = tx.out[i];
+                    if (!output || !output.addr)
+                        continue;
+
+                    transaction.to_addresses.push(output.addr);
+                    if (account.isAddressPartOfAccount(output.addr)) {
+                        transaction.amount += output.value;
+                    } else {
+                        if (! isOrigin) {
+                            for (var j in myHDWallet.getAccounts()) {
+                                var otherAccount = myHDWallet.getAccount(j);
+                                if (otherAccount.isAddressPartOfAccount(output.addr)) {
+                                    transaction.intraWallet = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                transaction.hash = tx.hash;
+                transaction.confirmations = MyWallet.getConfirmationsForTx(MyWallet.getLatestBlock(), tx);
+
+                if(isOrigin) {
+                    transaction.to_account = idx;
+                } else {
+                    transaction.from_account = idx;
+                }
+
+                // transaction.note = tx.note ? tx.note : tx_notes[tx.hash];
+
+                if (tx.time > 0) {
+                    transaction.txTime = new Date(tx.time * 1000);
+                }
+
+                filteredTransactions.push(transaction);
+            }
+
+            return filteredTransactions;
+
         },
         getAccounts : function() {
             return this.accountArray;

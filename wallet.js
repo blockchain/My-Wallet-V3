@@ -1109,7 +1109,7 @@ var MyWallet = new function() {
     }
 
     this.getTransactionsForAccount = function(accountIdx) {
-        return myHDWallet.getAccount(accountIdx).getTransactions();
+        return myHDWallet.filterTransactionsForAccount(accountIdx, MyWallet.getTransactions());
     }
 
     this.asyncGetAndSetUnspentOutputsForAccount = function(accountIdx, successCallback, errorCallback) {
