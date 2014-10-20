@@ -3801,6 +3801,8 @@ var MyWallet = new function() {
         if (disable_logout)
             return;
 
+        MyWallet.sendEvent('logging_out')
+
         if (guid == demo_guid) {
             window.location = root + 'wallet/logout';
         } else {
