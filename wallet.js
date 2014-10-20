@@ -1705,11 +1705,7 @@ var MyWallet = new function() {
     this.getConfirmationsForTx = function(latest_block, tx) {
         if (tx.blockHeight != null && tx.blockHeight > 0) {
             var confirmations = latest_block.height - tx.blockHeight + 1;
-            if (confirmations <= 100) {
-                return latest_block.height - tx.blockHeight + 1;
-            } else {
-                return null;
-            }
+            return latest_block.height - tx.blockHeight + 1;
         } else {
             tx.setConfirmations(0);
             return 0;
