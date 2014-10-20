@@ -133,6 +133,26 @@ function HDAccount(wallet, label) {
             }
             return false;
         },
+        checkToAddTxToPaymentRequest: function(address, txHash, amount) {
+          var paymentRequests = this.getPaymentRequests();
+          for (var j in paymentRequests) {
+              var paymentRequest = paymentRequests[j];
+              if (paymentRequest.complete == false &&
+                  paymentRequest.address == address &&
+                  paymentRequest.txidList.indexOf(txHash) < 0) {
+                  
+                  this.addTxToPaymentRequest(paymentRequest.address, amount, txHash);
+                  if (paymentRequest.paid == paymentRequest.amount) {
+                      this.acceptPaymentRequest(paymentRequest.address);
+                      MyWallet.sendEvent('hw_wallet_accepted_payment_request', {"address": address, amount: paymentRequest.amount});
+                  } else if (amount > 0 && paymentRequest.paid < paymentRequest.amount) {
+                    MyWallet.sendEvent('hw_wallet_payment_request_received_too_little', {"address": address, amountRequested: paymentRequest.amount, amountReceived: paymentRequest.paid});
+                  } else if (paymentRequest.paid > paymentRequest.amount) {
+                    MyWallet.sendEvent('hw_wallet_payment_request_received_too_much', {"address": address, amountRequested: paymentRequest.amount, amountReceived: paymentRequest.paid});
+                  }
+              }
+          }
+        },
         cancelPaymentRequest : function(address) {
             for (var i in this.paymentRequests) {
                 var paymentRequest = this.paymentRequests[i];

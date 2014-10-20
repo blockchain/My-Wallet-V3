@@ -230,3 +230,12 @@ Documentation
     * @returns {boolean} 
     */
     MyWallet.isSynchronizedWithServer();
+    
+Tests
+=====
+You'll need [Karma and Jasmine](https://github.com/karma-runner/karma-jasmine) and PhantomJS:
+```sh
+npm install -g karma-jasmine@2_0
+brew install phantomjs
+karma start
+```
