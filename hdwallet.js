@@ -4,6 +4,7 @@ function HDAccount(wallet, label) {
         label : label,
         archived : false,
         paymentRequests : [],
+        changeAddressToNTxs : {},
         getAccountJsonData : function() {
             var accountJsonData = {
                 label : this.getLabel(),
@@ -13,6 +14,12 @@ function HDAccount(wallet, label) {
                 change_addresses : this.getChangeAddressesCount()
             };
             return accountJsonData;
+        },
+        getNTxsForChangeAddress : function(address) {
+            return changeAddressToNTxs[address];
+        },
+        setChangeAddressNTxs : function(address, NTxs) {
+            this.changeAddressToNTxs[address] = NTxs;
         },
         getLabel : function() {
             return this.label;
@@ -34,6 +41,17 @@ function HDAccount(wallet, label) {
 
             return false;
         },
+        isAddressPartOfExternalAccountAddress : function(address) {
+            if (this.wallet.addresses.indexOf(address) > -1)
+                return true;
+            return false;
+        },
+        isAddressPartOfInternalAccountAddress : function(address) {
+            if (this.wallet.changeAddresses.indexOf(address) > -1)
+                return true;
+            return false;
+        },
+
         getAddresses : function() {
             return this.wallet.addresses;
         },
