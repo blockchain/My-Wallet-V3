@@ -263,8 +263,8 @@ function HDWallet(seedHexBuffer) {
                         transaction.amount += output.value;
                     } else {
                         if (! isOrigin) {
-                            for (var j in myHDWallet.getAccounts()) {
-                                var otherAccount = myHDWallet.getAccount(j);
+                            for (var j in this.getAccounts()) {
+                                var otherAccount = this.getAccount(j);
                                 if (otherAccount.isAddressPartOfAccount(output.addr)) {
                                     transaction.intraWallet = true;
                                     break;
