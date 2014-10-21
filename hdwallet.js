@@ -263,10 +263,11 @@ function HDWallet(seedHexBuffer) {
                     if (!output || !output.addr)
                         continue;
 
-                    transaction.from_addresses.push(output.addr);
                     if (account.isAddressPartOfAccount(output.addr)) {
                         isOrigin = true;
                         transaction.amount -= output.value;
+                    } else {
+                        transaction.from_addresses.push(output.addr);
                     }
                 }
 
@@ -276,10 +277,10 @@ function HDWallet(seedHexBuffer) {
                     if (!output || !output.addr)
                         continue;
 
-                    transaction.to_addresses.push(output.addr);
                     if (account.isAddressPartOfAccount(output.addr)) {
                         transaction.amount += output.value;
                     } else {
+                        transaction.to_addresses.push(output.addr);
                         if (! isOrigin) {
                             for (var j in this.getAccounts()) {
                                 var otherAccount = this.getAccount(j);
