@@ -3072,7 +3072,7 @@ var MyWallet = new function() {
                                 successcallback();
 
                             isSynchronizedWithServer = true;
-                            MyWallet.disableLogout(true);
+                            MyWallet.disableLogout(false);
                             logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
                             MyWallet.sendEvent('on_backup_wallet_success')
                         }, function() {
