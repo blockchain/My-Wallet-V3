@@ -1183,12 +1183,16 @@ var MyWallet = new function() {
 
     this.recoverMyWalletHDWalletFromSeedHex = function(seedHex) {
         myHDWallet = recoverHDWalletFromSeedHex(seedHex);
-        MyWallet.backupWalletDelayed();
+        MyWallet.backupWalletDelayed('update', function() {
+            MyWallet.get_history();
+        });
     }
 
     this.recoverMyWalletHDWalletFromMnemonic = function(passphrase) {
         myHDWallet = recoverHDWalletFromMnemonic(passphrase);
-        MyWallet.backupWalletDelayed();
+        MyWallet.backupWalletDelayed('update', function() {
+            MyWallet.get_history();
+        });
     }
 
     this.listenToHDWalletAccountAddresses = function(accountIdx) {
