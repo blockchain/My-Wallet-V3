@@ -3408,8 +3408,6 @@ var MyWallet = new function() {
                     MyWallet.setEncryptedWalletData(obj.payload);
                 }
 
-                MyWallet.sendEvent('did_set_guid');
-
                 war_checksum = obj.war_checksum;
 
                 setLocalSymbol(obj.symbol_local);
@@ -3440,6 +3438,8 @@ var MyWallet = new function() {
                 if (obj.language && language != obj.language) {
                     MyWallet.setLanguage(obj.language);
                 }
+
+                MyWallet.sendEvent('did_set_guid');
             },
             error : function(e) {
 
