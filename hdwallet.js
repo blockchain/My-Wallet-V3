@@ -415,7 +415,7 @@ function recoverHDWallet(hdwallet) {
             });
         }
 
-        while(account.getAddressesCount() > accountAddressIdx) {
+        while(account.getAddressesCount() > accountAddressIdx+1) {
             account.undoGenerateAddress();
         }
 
@@ -451,7 +451,7 @@ function recoverHDWallet(hdwallet) {
             });
         }
 
-        while(account.getChangeAddressesCount() > accountChangeAddressIdx) {
+        while(account.getChangeAddressesCount() > accountChangeAddressIdx+1) {
             account.undoGenerateChangeAddress();
         }
 
