@@ -383,7 +383,7 @@ function recoverHDWallet(hdwallet) {
 
 
         var lookAheadOffset = 0;
-        var accountAddressIdx = 0;
+        var accountAddressIdx = -1;
         var continueLookingAheadAddress = true;
         while(continueLookingAheadAddress) {
             var addresses = [];
@@ -420,7 +420,7 @@ function recoverHDWallet(hdwallet) {
         }
 
         lookAheadOffset = 0;
-        var accountChangeAddressIdx = 0;
+        var accountChangeAddressIdx = -1;
         var continueLookingAheadChangeAddress = true;
         while(continueLookingAheadChangeAddress) {
             var addresses = [];
@@ -455,7 +455,7 @@ function recoverHDWallet(hdwallet) {
             account.undoGenerateChangeAddress();
         }
 
-        if (accountAddressIdx == 0 && accountChangeAddressIdx == 0) {
+        if (accountAddressIdx == -1 && accountChangeAddressIdx == -1) {
             continueLookingAheadAccount = false;
             hdwallet.accountArray.pop();
         } else {
