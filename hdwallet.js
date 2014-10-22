@@ -397,15 +397,15 @@ function recoverHDWallet(hdwallet) {
 
             MyWallet.get_history_with_addresses(addresses, function(obj) {
                 for (var i = 0; i < obj.addresses.length; ++i) {
-                    //console.log("i: " + i);
-                    //console.log("address: ", obj.addresses[i].address, " n_tx: ", obj.addresses[i].n_tx);
+                    console.log("i: " + i);
+                    console.log("Idx: ", addressToIdxDict[obj.addresses[i].address], "address: ", obj.addresses[i].address, " n_tx: ", obj.addresses[i].n_tx);
                     if (obj.addresses[i].n_tx > 0 && addressToIdxDict[obj.addresses[i].address] > accountAddressIdx) {
                         accountAddressIdx = addressToIdxDict[obj.addresses[i].address];
                     }
                 }
 
-                //console.log("accountAddressIdx : " + accountAddressIdx);
-                //console.log("lookAheadOffset : " + lookAheadOffset);
+                console.log("accountAddressIdx : " + accountAddressIdx);
+                console.log("lookAheadOffset : " + lookAheadOffset);
                 if (accountAddressIdx < lookAheadOffset) {
                     continueLookingAheadAddress = false;
                 }
@@ -434,14 +434,14 @@ function recoverHDWallet(hdwallet) {
 
             MyWallet.get_history_with_addresses(addresses, function(obj) {
                 for (var i = 0; i < obj.addresses.length; ++i) {
-                    //console.log("address: ", obj.addresses[i].address, " n_tx: ", obj.addresses[i].n_tx);
+                    console.log("Idx: ", addressToIdxDict[obj.addresses[i].address], "change address: ", obj.addresses[i].address, " n_tx: ", obj.addresses[i].n_tx);
                     if (obj.addresses[i].n_tx > 0 && addressToIdxDict[obj.addresses[i].address] > accountChangeAddressIdx) {
                         accountChangeAddressIdx = addressToIdxDict[obj.addresses[i].address];
                     }
                 }
 
-                //console.log("accountChangeAddressIdx : " + accountChangeAddressIdx);
-                //console.log("lookAheadOffset : " + lookAheadOffset);
+                console.log("accountChangeAddressIdx : " + accountChangeAddressIdx);
+                console.log("lookAheadOffset : " + lookAheadOffset);
                 if (accountChangeAddressIdx < lookAheadOffset) {
                     continueLookingAheadChangeAddress = false;
                 }
