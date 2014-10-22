@@ -357,12 +357,12 @@ function buildHDWallet(seedHexString, accountsArrayPayload) {
             hdaccount.setPaymentRequests(paymentRequests);
         }
 
-        for (var j = 0; j < external_addresses+1; j++) {
+        for (var j = 0; j < external_addresses; j++) {
             var address = hdaccount.generateAddress();
             console.log("\taddress: ", address);
         }
 
-        for (var k = 0; k < change_addresses+1; k++) {
+        for (var k = 0; k < change_addresses; k++) {
             var changeAddress = hdaccount.generateChangeAddress();
             console.log("\tchangeAddress: ", changeAddress);
         }
