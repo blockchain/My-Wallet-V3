@@ -305,9 +305,9 @@ function HDWallet(seedHexBuffer) {
                 transaction.confirmations = MyWallet.getConfirmationsForTx(MyWallet.getLatestBlock(), tx);
 
                 if(isOrigin) {
-                    transaction.to_account = idx;
-                } else {
                     transaction.from_account = idx;
+                } else {
+                    transaction.to_account = idx;
                 }
 
                 // transaction.note = tx.note ? tx.note : tx_notes[tx.hash];
