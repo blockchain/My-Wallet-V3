@@ -115,6 +115,7 @@ var MyWallet = new function() {
 
     var myHDWallet = null;
     var isSynchronizedWithServer = true;
+    var localWalletJsonString = null;
 
     var wallet_options = {
         pbkdf2_iterations : default_pbkdf2_iterations, //Number of pbkdf2 iterations to default to for second password and dpasswordhash
@@ -2990,6 +2991,16 @@ var MyWallet = new function() {
         });
     }
 
+    this.getLocalWalletJson = function() {
+            var obj = null;
+            try {
+                var obj = $.parseJSON(localWalletJsonString);
+                return obj;
+            } catch (e) {
+                return null;
+            }
+    }
+
     //Can call multiple times in a row and it will backup only once after a certain delay of activity
     this.backupWalletDelayed = function(method, success, error, extra) {
         MyWallet.disableLogout(true);
@@ -3034,6 +3045,7 @@ var MyWallet = new function() {
             }
 
             var data = MyWallet.makeWalletJSON();
+            localWalletJsonString = data;
 
             //Everything looks ok, Encrypt the JSON output
             var crypted = MyWallet.encryptWallet(data, password);
