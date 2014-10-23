@@ -212,13 +212,13 @@ var BlockchainAPI = new function() {
     function updateKV(txt, method, value, success, error, extra) {
         value = $.trim(value);
 
-        if ( value.length == 0) {
-            MyWallet.makeNotice('error', 'misc-error', txt + ': Invalid value');
+        if (value.length == 0) {
+            MyWallet.sendMonitorEvent({type: "error", message: 'misc-error ' + txt + ': Invalid value', code: 0});
             return;
         }
 
         if (value.length == 0) {
-            MyWallet.makeNotice('error', method + '-error', data.responseText);
+            MyWallet.sendMonitorEvent({type: "error", message: method + '-error: ' + data.responseText, code: 0});
 
             if (error) error();
 
