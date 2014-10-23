@@ -2440,6 +2440,13 @@ var MyWallet = new function() {
         for (var i = 0; i < obj.addresses.length; ++i) {
             if (addresses[obj.addresses[i].address])
                 addresses[obj.addresses[i].address].balance = obj.addresses[i].final_balance;
+
+            for (var j in myHDWallet.getAccounts()) {
+                var account = myHDWallet.getAccount(j);
+                if (account.isAddressPartOfInternalAccountAddress(obj.addresses[i].address)) {
+                    account.setChangeAddressNTxs(obj.addresses[i].address, obj.addresses[i].n_tx);
+                }
+            }
         }
 
         for (var i = 0; i < obj.txs.length; ++i) {

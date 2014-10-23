@@ -16,7 +16,7 @@ function HDAccount(wallet, label) {
             return accountJsonData;
         },
         getNTxsForChangeAddress : function(address) {
-            return changeAddressToNTxs[address];
+            return this.changeAddressToNTxs[address];
         },
         setChangeAddressNTxs : function(address, NTxs) {
             this.changeAddressToNTxs[address] = NTxs;
@@ -182,7 +182,15 @@ function HDAccount(wallet, label) {
             return false;
         },
         createTx : function(to, value, fixedFee) {
-            return this.wallet.createTx(to, value, fixedFee, null);
+            var utxos = this.wallet.getUnspentOutputs();
+            var changeAddress = this.wallet.getChangeAddress();
+
+            var NTxs = this.getNTxsForChangeAddress(changeAddress);
+            if (NTxs != null && NTxs > 0) {
+                changeAddress = this.wallet.generateChangeAddress();
+            }
+
+            return this.wallet.createTx(to, value, fixedFee, changeAddress);
         },
         recommendedTransactionFee : function(amount) {
             try {
