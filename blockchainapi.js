@@ -209,6 +209,49 @@ var BlockchainAPI = new function() {
         }, error);
     }
 
+    function updateKV(txt, method, value, success, error, extra) {
+        value = $.trim(value);
+
+        if ( value.length == 0) {
+            MyWallet.makeNotice('error', 'misc-error', txt + ': Invalid value');
+            return;
+        }
+
+        if (value.length == 0) {
+            MyWallet.makeNotice('error', method + '-error', data.responseText);
+
+            if (error) error();
+
+            return;
+        }
+
+        if (!extra)
+            extra = '';
+
+
+        MyWallet.securePost("wallet"+extra, { length : (value+'').length, payload : value+'', method : method }, function(data) {
+            MyWallet.makeNotice('success', method + '-success', data);
+
+            if (success) success();
+        }, function(data) {
+            MyWallet.makeNotice('error', method + '-error', data.responseText);
+
+            if (error) error();
+        });
+    }
+
+    this.change_language = function(language, successCallback, errorCallback) {
+        updateKV('Updating Language', 'update-language', language, successCallback, errorCallback);
+    }
+
+    this.change_local_currency = function(code, successCallback, errorCallback) {
+        updateKV('Updating Local Currency', 'update-currency', code, successCallback, errorCallback);
+    }
+
+    this.change_btc_currency = function(code, successCallback, errorCallback) {
+        updateKV('Updating BTC Currency', 'update-btc-currency', code, successCallback, errorCallback);
+    }
+
     this.get_ticker = function(successCallback, errorCallback) {
         MyWallet.sendMonitorEvent({type: "info", message: 'Getting Ticker Data', code: 0});
 

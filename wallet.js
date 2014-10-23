@@ -1378,6 +1378,48 @@ var MyWallet = new function() {
         BlockchainAPI.get_ticker(successCallback, errorCallback);
     }
 
+    this.change_language = function(language, successCallback, errorCallback) {
+        BlockchainAPI.change_language(language, function() {
+            MyWallet.setLanguage(language);
+
+            if (successCallback)
+                successCallback();
+        }, function() {
+            if (errorCallback)
+               errorCallback();
+        });
+    }
+
+    this.change_local_currency = function(code, successCallback, errorCallback) {
+        BlockchainAPI.change_local_currency(code, function() {
+            var original_code = symbol_local.code;
+            symbol_local.code = code;
+            MyWallet.get_history();
+            symbol_local.code = original_code;
+
+            if (successCallback)
+                successCallback();
+        }, function() {
+            if (errorCallback)
+               errorCallback();
+        });
+    }
+
+    this.change_btc_currency = function(code, successCallback, errorCallback) {
+        BlockchainAPI.change_btc_currency(code, function() {
+            var original_code = symbol_btc.code;
+            symbol_btc.code = code;
+            MyWallet.get_history();
+            symbol_btc.code = original_code;
+
+            if (successCallback)
+                successCallback();
+        }, function() {
+            if (errorCallback)
+               errorCallback();
+        });
+    }
+
     this.get_history_with_addresses = function(addresses, success, error) {
         BlockchainAPI.get_history_with_addresses(addresses, function(data) {
             if (success) success(data);
