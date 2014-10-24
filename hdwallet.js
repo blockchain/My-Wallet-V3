@@ -153,6 +153,7 @@ function HDAccount(wallet, label) {
         },
         checkToAddTxToPaymentRequest: function(address, txHash, amount) {
           var paymentRequests = this.getPaymentRequests();
+          var haveAddedTxToPaymentRequest = false;
           for (var j in paymentRequests) {
               var paymentRequest = paymentRequests[j];
               if (paymentRequest.complete == false &&
@@ -168,8 +169,12 @@ function HDAccount(wallet, label) {
                   } else if (paymentRequest.paid > paymentRequest.amount) {
                     MyWallet.sendEvent('hw_wallet_payment_request_received_too_much', {"address": address, amountRequested: paymentRequest.amount, amountReceived: paymentRequest.paid});
                   }
+
+                  haveAddedTxToPaymentRequest = true;
               }
           }
+
+          return haveAddedTxToPaymentRequest;
         },
         cancelPaymentRequest : function(address) {
             for (var i in this.paymentRequests) {

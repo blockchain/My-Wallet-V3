@@ -1098,9 +1098,10 @@ var MyWallet = new function() {
     }
 
     this.checkToAddTxToPaymentRequestForAccount = function(account, address, txHash, amount) {
-       account.checkToAddTxToPaymentRequest( address, txHash, amount);
-
-       MyWallet.backupWalletDelayed();
+        var haveAddedTxToPaymentRequest = account.checkToAddTxToPaymentRequest( address, txHash, amount);
+        if (haveAddedTxToPaymentRequest) {
+            MyWallet.backupWalletDelayed();
+        }
     }
 
     this.cancelPaymentRequestForAccount = function(accountIdx, address) {
