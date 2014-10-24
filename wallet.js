@@ -1231,15 +1231,7 @@ var MyWallet = new function() {
     }
 
     this.generateHDWalletPassphrase = function() {
-        var passphraseWordList = [];
-        for (var i = 0; i < 12; i++) {
-            var randomBytes = new Bitcoin.Buffer.Buffer(Bitcoin.rng(32));
-            var wordIdx = parseInt(new Bitcoin.BigInteger.fromBuffer(randomBytes)) % 1268;
-            passphraseWordList.push(mn_v2_words[wordIdx]);
-        }
-
-        //return "don't use a string seed like this in real life";
-        return passphraseWordList.join(' ');
+        return BIP39.generateMnemonic();
     }
 
     this.generateHDWalletSeedHex = function() {

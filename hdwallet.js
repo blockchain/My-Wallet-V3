@@ -208,29 +208,26 @@ function HDAccount(wallet, label) {
 }
 
 function passphraseHexStringToPassphrase(passphraseHex) {
-    return  new Bitcoin.Buffer.Buffer(passphraseHex, "hex").toString();
+    return BIP39.entropyToMnemonic(passphraseHex);
 }
 
 function passphraseToPassphraseHexString(passphrase) {
-    return  new Bitcoin.Buffer.Buffer(passphrase).toString("hex");
+    return BIP39.mnemonicToEntropy(passphrase);
 }
 
-function HDWallet(seedHexBuffer) {
+function HDWallet(seedHex) {
 
     var walletObject = {
-        seedHexBuffer : seedHexBuffer,
+        seedHex : seedHex,
         accountArray : [],
         getPassphraseString : function() {
-            return this.seedHexBuffer.toString();
+            return passphraseHexStringToPassphrase(this.seedHex);
         },
         getSeedHexString : function() {
-            return this.seedHexBuffer.toString("hex");
+            return this.seedHex;
         },
-        bufferToMasterHex : function(buffer) {
-            // TODO
-            //var seed = Bitcoin.crypto.sha256(Bitcoin.crypto.sha256(buffer));
-            var seed = Bitcoin.crypto.sha256(buffer);
-            return seed;
+        getMasterHex : function() {
+            return BIP39.mnemonicToSeed(passphraseHexStringToPassphrase(this.seedHex));
         },
         getAccountsCount : function() {
             return this.accountArray.length;
@@ -328,7 +325,7 @@ function HDWallet(seedHexBuffer) {
         createAccount : function(label) {
             var accountIdx = this.accountArray.length;
 
-            var walletAccount = new Bitcoin.Wallet(this.bufferToMasterHex(this.seedHexBuffer));
+            var walletAccount = new Bitcoin.Wallet(this.getMasterHex());
             walletAccount.accountZero = walletAccount.getMasterKey().deriveHardened(0).derive(accountIdx);
             walletAccount.externalAccount = walletAccount.getAccountZero().derive(0);
             walletAccount.internalAccount = walletAccount.getAccountZero().derive(1);
@@ -344,7 +341,8 @@ function HDWallet(seedHexBuffer) {
 }
 
 function buildHDWallet(seedHexString, accountsArrayPayload) {
-    var hdwallet = HDWallet(new Bitcoin.Buffer.Buffer(seedHexString, "hex"));
+    var hdwallet = HDWallet(seedHexString);
+
 
     for (var i = 0; i < accountsArrayPayload.length; i++) {
         if (archived == true)
@@ -475,17 +473,17 @@ function recoverHDWallet(hdwallet) {
 }
 
 function recoverHDWalletFromSeedHex(seedHex) {
-    var hdwallet = HDWallet(new Bitcoin.Buffer.Buffer(seedHex, "hex"));
+    var hdwallet = HDWallet(seedHex);
     return recoverHDWallet(hdwallet);
 }
 
 function recoverHDWalletFromMnemonic(passphrase) {
-    var hdwallet = HDWallet(new Bitcoin.Buffer.Buffer(passphrase));
+    var hdwallet = HDWallet(passphraseToPassphraseHexString(passphrase));
     return recoverHDWallet(hdwallet);
 }
 
 function test() {
-    var passphrase = "don't use a string seed like this in real life";
+    var passphrase = "add imitate business carbon city orbit spray boss ribbon deposit bachelor sustain";
     console.log("passphrase: ", passphrase);
     var accountsArrayPayload = [
         {
