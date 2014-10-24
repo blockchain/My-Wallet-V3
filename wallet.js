@@ -116,6 +116,8 @@ var MyWallet = new function() {
     var myHDWallet = null;
     var isSynchronizedWithServer = true;
     var localWalletJsonString = null;
+    var haveBuildHDWallet = false;
+
 
     var wallet_options = {
         pbkdf2_iterations : default_pbkdf2_iterations, //Number of pbkdf2 iterations to default to for second password and dpasswordhash
@@ -2653,7 +2655,10 @@ var MyWallet = new function() {
 
                 if (obj.hd_wallets) {
                     var defaultHDWallet = obj.hd_wallets[0];
-                    MyWallet.buildHDWallet(defaultHDWallet.seed_hex, defaultHDWallet.accounts);
+                    if (haveBuildHDWallet == false) {
+                        MyWallet.buildHDWallet(defaultHDWallet.seed_hex, defaultHDWallet.accounts);
+                        haveBuildHDWallet = true;
+                    }
                 } else {
                     MyWallet.sendEvent('hd_wallets_does_not_exist');
                 }
