@@ -1,0 +1,33 @@
+{
+  "name": "wallet",
+  "version": "0.0.0",
+  "description": "hdwallet",
+  "main": "wallet.js",
+  "directories": {
+    "postinstall": "browserify -r bitcoinjs-lib -s Bitcoin | uglifyjs >
+bitcoinjs.min.js && cd node_modules/bip39 && npm run compile && mv
+bip39.js ../..",
+    "test": "karma start"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/blockchain/My-Wallet-HD.git"
+  },
+  "author": "Tim Lee",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/blockchain/My-Wallet-HD/issues"
+  },
+  "homepage": "https://github.com/blockchain/My-Wallet-HD",
+  "dependencies": {
+    "bip39": "^2.1.0",
+    "karma": "^0.12.24"
+  },
+  "devDependencies": {
+    "browserify": "^6.1.0",
+    "uglify-js": "^2.4.15"
+  }
+}
