@@ -3,14 +3,9 @@
   "version": "0.0.0",
   "description": "hdwallet",
   "main": "wallet.js",
-  "directories": {
-    "postinstall": "browserify -r bitcoinjs-lib -s Bitcoin | uglifyjs >
-bitcoinjs.min.js && cd node_modules/bip39 && npm run compile && mv
-bip39.js ../..",
-    "test": "karma start"
-  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "postinstall": "cd node_modules/bip39 && npm run compile && mv bip39.js ../..",
+    "test": "karma start"
   },
   "repository": {
     "type": "git",
