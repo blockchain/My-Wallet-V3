@@ -3043,6 +3043,10 @@ var MyWallet = new function() {
 
     //Can call multiple times in a row and it will backup only once after a certain delay of activity
     this.backupWalletDelayed = function(method, success, error, extra) {
+        if (!sharedKey || sharedKey.length == 0 || sharedKey.length != 36) {
+            throw 'Cannot backup wallet now. Shared key is not set';
+        }
+
         MyWallet.disableLogout(true);
         isSynchronizedWithServer = false;
         if (archTimer) {
@@ -3057,6 +3061,10 @@ var MyWallet = new function() {
 
     //Save the javascript wallet to the remote server
     this.backupWallet = function(method, successcallback, errorcallback) {
+        if (!sharedKey || sharedKey.length == 0 || sharedKey.length != 36) {
+            throw 'Cannot backup wallet now. Shared key is not set';
+        }
+
         MyWallet.disableLogout(true);
         if (archTimer) {
             clearInterval(archTimer);
