@@ -1202,11 +1202,16 @@ var MyWallet = new function() {
     this.listenToHDWalletAccountAddresses = function(accountIdx) {
         var account = myHDWallet.getAccount(accountIdx);
         var msg = "";
-        var addresses = account.getAddresses();
-        for (var i in addresses) {
-            var address = addresses[i];
+
+        var paymentRequests = account.getPaymentRequests();
+        var addresses = account.getChangeAddresses();
+        for (var i in paymentRequests) {
+            var paymentRequest = paymentRequests[i];
+            if (paymentRequest.complete == true || paymentRequest.canceled == true)
+                continue;
+
             try {
-                msg += '{"op":"addr_sub", "addr":"'+ address +'"}';
+                msg += '{"op":"addr_sub", "addr":"'+ paymentRequest.address +'"}';
             } catch (e) { }
         }
 
