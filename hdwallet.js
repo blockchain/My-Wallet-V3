@@ -10,7 +10,6 @@ function HDAccount(wallet, label) {
                 label : this.getLabel(),
                 archived : this.isArchived(),
                 paymentRequests : this.paymentRequests,
-                external_addresses : this.getAddressesCount(),
                 change_addresses : this.getChangeAddressesCount()
             };
             return accountJsonData;
@@ -357,7 +356,7 @@ function buildHDWallet(seedHexString, accountsArrayPayload) {
         var accountPayload = accountsArrayPayload[i];
         var label = accountPayload.label;
         var archived = accountPayload.archived;
-        var external_addresses = accountPayload.external_addresses;
+        var external_addresses = accountPayload.paymentRequests.length;
         var change_addresses = accountPayload.change_addresses;
         var paymentRequests = accountPayload.paymentRequests;
 
@@ -495,20 +494,20 @@ function test() {
         {
             label: "Savings", 
             archived: false,
-            external_addresses: 7,
-            change_addresses: 12
+            change_addresses: 12,
+            paymentRequests: [{address: "dummy", amount: 100, paid: 0, canceled: false, complete: false}]
         },
         {
             label: "archived", 
             archived: true,
-            external_addresses: 3,
-            change_addresses: 3
+            change_addresses: 3,
+            paymentRequests: []
         },
         {
             label: "Splurge", 
             archived: false,
-            external_addresses: 5,
-            change_addresses: 2
+            change_addresses: 2,
+            paymentRequests: []
         }
         
     ];
