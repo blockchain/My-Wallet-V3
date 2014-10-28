@@ -256,6 +256,13 @@ var BlockchainAPI = new function() {
         updateKV('Updating TOR ip block', 'update-block-tor-ips', enabled, successCallback, errorCallback);
     }
 
+    this.update_password_hint1 = function(value, successCallback, errorCallback) {
+        updateKV('Updating Main Password Hint', 'update-password-hint1', value);
+    }
+
+    this.update_password_hint2 = function(value, successCallback, errorCallback) {
+        updateKV('Updating Second Password Hint', 'update-password-hint2', value);
+    }
 
     this.get_ticker = function(successCallback, errorCallback) {
         MyWallet.sendMonitorEvent({type: "info", message: 'Getting Ticker Data', code: 0});

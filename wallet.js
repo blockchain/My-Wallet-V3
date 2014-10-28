@@ -1434,6 +1434,26 @@ var MyWallet = new function() {
         });
     }
 
+    this.update_password_hint1 = function(value, successCallback, errorCallback) {
+        BlockchainAPI.update_password_hint1(value, function() {
+            if (successCallback)
+                successCallback();
+        }, function() {
+            if (errorCallback)
+               errorCallback();
+        });
+    }
+
+    this.update_password_hint2 = function(value, successCallback, errorCallback) {
+        BlockchainAPI.update_password_hint2(value, function() {
+            if (successCallback)
+                successCallback();
+        }, function() {
+            if (errorCallback)
+               errorCallback();
+        });
+    }
+
     this.get_history_with_addresses = function(addresses, success, error) {
         BlockchainAPI.get_history_with_addresses(addresses, function(data) {
             if (success) success(data);
