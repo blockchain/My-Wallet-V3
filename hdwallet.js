@@ -331,6 +331,7 @@ function HDWallet(seedHex) {
             var accountIdx = this.accountArray.length;
 
             var walletAccount = new Bitcoin.Wallet(this.getMasterHex());
+            //walletAccount.accountZero = walletAccount.getMasterKey().deriveHardened(0).derive(accountIdx);
             walletAccount.accountZero = walletAccount.getMasterKey().deriveHardened(44).deriveHardened(0).deriveHardened(accountIdx);
             walletAccount.externalAccount = walletAccount.getAccountZero().derive(0);
             walletAccount.internalAccount = walletAccount.getAccountZero().derive(1);
