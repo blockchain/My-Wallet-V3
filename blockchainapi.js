@@ -272,6 +272,21 @@ var BlockchainAPI = new function() {
         });
     }
 
+    this.get_account_info = function(successCallback, errorCallback) {
+        MyWallet.securePost("wallet", {method : 'get-info', format : 'json'}, function(data) {
+            if (successCallback) successCallback();
+
+        }, function(data) {
+            if (data.responseText)
+                MyWallet.sendMonitorEvent({type: "error", message: data.responseText, code: 0});
+            else
+                MyWallet.sendMonitorEvent({type: "error", message: 'Error Downloading Account Settings', code: 0});
+
+            if (errorCallback) errorCallback();
+        });
+    }
+
+
     this.resolve_firstbits = function(addr, success, error) {
         MyWallet.setLoadingText('Querying Firstbits');
 

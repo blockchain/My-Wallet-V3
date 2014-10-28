@@ -1378,6 +1378,10 @@ var MyWallet = new function() {
         BlockchainAPI.get_ticker(successCallback, errorCallback);
     }
 
+    this.get_account_info = function(successCallback, errorCallback) {
+        BlockchainAPI.get_account_info(successCallback, errorCallback);
+    }
+
     this.change_language = function(language, successCallback, errorCallback) {
         BlockchainAPI.change_language(language, function() {
             MyWallet.setLanguage(language);
