@@ -1424,6 +1424,16 @@ var MyWallet = new function() {
         });
     }
 
+    this.update_tor_ip_block = function(enabled, successCallback, errorCallback) {
+        BlockchainAPI.update_tor_ip_block(enabled ? 1 : 0, function() {
+            if (successCallback)
+                successCallback();
+        }, function() {
+            if (errorCallback)
+               errorCallback();
+        });
+    }
+
     this.get_history_with_addresses = function(addresses, success, error) {
         BlockchainAPI.get_history_with_addresses(addresses, function(data) {
             if (success) success(data);

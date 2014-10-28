@@ -252,6 +252,11 @@ var BlockchainAPI = new function() {
         updateKV('Updating BTC Currency', 'update-btc-currency', code, successCallback, errorCallback);
     }
 
+    this.update_tor_ip_block = function(enabled, successCallback, errorCallback) {
+        updateKV('Updating TOR ip block', 'update-block-tor-ips', enabled, successCallback, errorCallback);
+    }
+
+
     this.get_ticker = function(successCallback, errorCallback) {
         MyWallet.sendMonitorEvent({type: "info", message: 'Getting Ticker Data', code: 0});
 
