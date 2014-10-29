@@ -264,6 +264,10 @@ var BlockchainAPI = new function() {
         updateKV('Updating Second Password Hint', 'update-password-hint2', value);
     }
 
+    this.change_email = function(email, successCallback, errorCallback) {
+        updateKV('Updating Email', 'update-email', email, successCallback, errorCallback);
+    }
+
     this.get_ticker = function(successCallback, errorCallback) {
         MyWallet.sendMonitorEvent({type: "info", message: 'Getting Ticker Data', code: 0});
 

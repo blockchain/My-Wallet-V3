@@ -1454,6 +1454,16 @@ var MyWallet = new function() {
         });
     }
 
+    this.change_email = function(email, successCallback, errorCallback) {
+        BlockchainAPI.change_email(email, function() {
+            if (successCallback)
+                successCallback();
+        }, function() {
+            if (errorCallback)
+               errorCallback();
+        });
+    }
+
     this.get_history_with_addresses = function(addresses, success, error) {
         BlockchainAPI.get_history_with_addresses(addresses, function(data) {
             if (success) success(data);
