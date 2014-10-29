@@ -286,7 +286,7 @@ var BlockchainAPI = new function() {
 
     this.get_account_info = function(successCallback, errorCallback) {
         MyWallet.securePost("wallet", {method : 'get-info', format : 'json'}, function(data) {
-            if (successCallback) successCallback();
+            if (successCallback) successCallback(data);
 
         }, function(data) {
             if (data.responseText)
