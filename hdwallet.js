@@ -9,7 +9,7 @@ function HDAccount(wallet, label) {
             var accountJsonData = {
                 label : this.getLabel(),
                 archived : this.isArchived(),
-                paymentRequests : this.paymentRequests,
+                paymentRequests : this.getPaymentRequestsJson(),
                 change_addresses : this.getChangeAddressesCount()
             };
             return accountJsonData;
@@ -89,6 +89,20 @@ function HDAccount(wallet, label) {
         },                
         getBalance : function() {
             return this.wallet.getBalance();
+        },
+        getPaymentRequestsJson : function() {
+            var paymentRequestsJson = [];
+            for (var i in this.paymentRequests) {
+                var paymentRequest = {};
+                paymentRequest.address = this.paymentRequests[i].address;
+                paymentRequest.amount = this.paymentRequests[i].amount;
+                paymentRequest.paid = this.paymentRequests[i].paid;
+                paymentRequest.canceled = this.paymentRequests[i].canceled;
+                paymentRequest.complete = this.paymentRequests[i].complete;
+                paymentRequestsJson.push(paymentRequest);
+            }
+
+            return paymentRequestsJson;
         },
         getPaymentRequests : function() {
             return this.paymentRequests;
@@ -365,7 +379,15 @@ function buildHDWallet(seedHexString, accountsArrayPayload) {
         var hdaccount = hdwallet.createAccount(label);
         hdaccount.setIsArchived(archived);
         if (paymentRequests != null) {
-            hdaccount.setPaymentRequests(paymentRequests);
+            for (var i in paymentRequests) {
+                var paymentRequest = paymentRequests[i];
+                if (paymentRequest.complete == false &&
+                    paymentRequest.canceled == false) {
+                        paymentRequest.paid = 0;
+                    }
+
+                hdaccount.paymentRequests.push();
+            }
         }
 
         for (var j = 0; j < external_addresses; j++) {
