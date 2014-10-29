@@ -50,15 +50,20 @@ function HDAccount(wallet, label) {
                 return true;
             return false;
         },
-
         getAddresses : function() {
             return this.wallet.addresses;
+        },
+        getAddressAtIdx : function(idx) {
+            return this.wallet.addresses[idx];
         },
         getAddressesCount : function() {
             return this.wallet.addresses.length;
         },
         getChangeAddresses : function() {
             return this.wallet.changeAddresses;
+        },
+        getChangeAddressAtIdx : function(idx) {
+            return this.wallet.changeAddresses[idx];
         },
         getChangeAddressesCount : function() {
             return this.wallet.changeAddresses.length;
