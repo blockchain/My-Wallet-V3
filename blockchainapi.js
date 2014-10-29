@@ -257,11 +257,11 @@ var BlockchainAPI = new function() {
     }
 
     this.update_password_hint1 = function(value, successCallback, errorCallback) {
-        updateKV('Updating Main Password Hint', 'update-password-hint1', value);
+        updateKV('Updating Main Password Hint', 'update-password-hint1', value, successCallback, errorCallback);
     }
 
     this.update_password_hint2 = function(value, successCallback, errorCallback) {
-        updateKV('Updating Second Password Hint', 'update-password-hint2', value);
+        updateKV('Updating Second Password Hint', 'update-password-hint2', value, successCallback, errorCallback);
     }
 
     this.change_email = function(email, successCallback, errorCallback) {
