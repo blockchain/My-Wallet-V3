@@ -3775,6 +3775,17 @@ var MyWallet = new function() {
         MyWallet.makeNotice('success', 'wallet-success', 'Wallet verified.');
     }
 
+    this.changePassword = function(new_password, success, error) {
+        password = new_password;
+        MyWallet.backupWallet('update', function() {
+            if (success)
+                success();
+        }, function() {
+            if (error)
+                error();
+        });
+    }
+
     this.setMainPassword = function(new_password) {
         MyWallet.getMainPassword(function() {
             password = new_password;
