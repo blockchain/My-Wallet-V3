@@ -1464,6 +1464,26 @@ var MyWallet = new function() {
         });
     }
 
+    this.changeMobileNumber = function(val, successCallback, errorCallback) {
+        BlockchainAPI.changeMobileNumber(val, function() {
+            if (successCallback)
+                successCallback();
+        }, function() {
+            if (errorCallback)
+               errorCallback();
+        });
+    }
+
+    this.verifyMobile = function(code, successCallback, errorCallback) {
+        BlockchainAPI.verifyMobile(code, function(data) {
+            if (successCallback)
+                successCallback(data);
+        }, function() {
+            if (errorCallback)
+               errorCallback();
+        });
+    }
+
     this.get_history_with_addresses = function(addresses, success, error) {
         BlockchainAPI.get_history_with_addresses(addresses, function(data) {
             if (success) success(data);

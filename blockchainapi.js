@@ -268,6 +268,20 @@ var BlockchainAPI = new function() {
         updateKV('Updating Email', 'update-email', email, successCallback, errorCallback);
     }
 
+    this.changeMobileNumber = function(val, successCallback, errorCallback) {
+        updateKV('Updating Cell Number', 'update-sms', val, successCallback, errorCallback);
+    }
+
+    this.verifyMobile = function(code, successCallback, errorCallback) {
+        MyWallet.securePost("wallet", { payload:code, length : code.length, method : 'verify-sms' }, function(data) {
+            MyWallet.sendMonitorEvent({type: "success", message: data, code: 0});
+            if (successCallback) successCallback(data);
+        }, function(data) {
+            MyWallet.sendMonitorEvent({type: "error", message: data.responseText, code: 0});
+            if (errorCallback) errorCallback();
+        });
+    }
+
     this.get_ticker = function(successCallback, errorCallback) {
         MyWallet.sendMonitorEvent({type: "info", message: 'Getting Ticker Data', code: 0});
 
