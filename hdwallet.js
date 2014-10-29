@@ -451,6 +451,19 @@ function recoverHDWallet(hdwallet) {
         while(account.getAddressesCount() > accountAddressIdx+1) {
             account.undoGenerateAddress();
         }
+        var addresses = account.getAddresses();
+        for (var i in addresses) {
+            var address = addresses[i];
+            var paymentRequest = {address: address,
+                                    amount: 0,
+                                    paid: 0,
+                                    txidList: [],
+                                    canceled : false,
+                                    complete: false}
+
+            account.paymentRequests.push(paymentRequest);
+        }
+
 
         lookAheadOffset = 0;
         var accountChangeAddressIdx = -1;
