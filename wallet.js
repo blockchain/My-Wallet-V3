@@ -1164,8 +1164,13 @@ var MyWallet = new function() {
             var tx = myHDWallet.getAccount(accountIdx).createTx(to, value, fixedFee);
 
             BlockchainAPI.push_tx(tx, note, function(response) {
-                if (successCallback)
-                    successCallback(response);
+                MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
+                    if (successCallback)
+                        successCallback(response);
+                }, function(e) {
+                    if (errorCallback)
+                        errorCallback(e);
+                });
             }, function(response) {
                 if (errorCallback)
                     errorCallback(response);
