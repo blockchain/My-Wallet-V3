@@ -761,7 +761,7 @@ var MyWallet = new function() {
         return tx_tr;
     }
 
-    function calcTxResult(tx, is_new) {
+    function calcTxResult(tx, is_new, checkCompleted) {
         /* Calculate the result */
         var result = 0;
         for (var i = 0; i < tx.inputs.length; ++i) {
@@ -820,7 +820,7 @@ var MyWallet = new function() {
                     }
                 }
 
-                MyWallet.checkToAddTxToPaymentRequestForAccount(account, output.addr, tx.hash, output.value);
+                MyWallet.checkToAddTxToPaymentRequestForAccount(account, output.addr, tx.hash, output.value, checkCompleted);
             }
 
         }
@@ -861,7 +861,7 @@ var MyWallet = new function() {
                             return;
                     }
 
-                    var result = calcTxResult(tx, true);
+                    var result = calcTxResult(tx, true, false);
 
                     tx.result = result;
 
@@ -1097,8 +1097,8 @@ var MyWallet = new function() {
         return success;
     }
 
-    this.checkToAddTxToPaymentRequestForAccount = function(account, address, txHash, amount) {
-        var haveAddedTxToPaymentRequest = account.checkToAddTxToPaymentRequest( address, txHash, amount);
+    this.checkToAddTxToPaymentRequestForAccount = function(account, address, txHash, amount, checkCompleted) {
+        var haveAddedTxToPaymentRequest = account.checkToAddTxToPaymentRequest( address, txHash, amount, checkCompleted);
         if (haveAddedTxToPaymentRequest) {
             MyWallet.backupWalletDelayed();
         }
@@ -1114,6 +1114,27 @@ var MyWallet = new function() {
 
     this.getTransactionsForAccount = function(accountIdx) {
         return myHDWallet.filterTransactionsForAccount(accountIdx, MyWallet.getTransactions());
+    }
+
+    this.refreshAllPaymentRequestsAndChangeAddresses = function(successCallback, errorCallback) {
+        transactions = [];
+        var allAddresses = [];
+        for (var i in myHDWallet.getAccounts()) {
+            var account = myHDWallet.getAccount(i);
+            if (! account.isArchived()) {
+                allAddresses = allAddresses.concat(account.getAddresses());
+                allAddresses = allAddresses.concat(account.getChangeAddresses());
+            }
+        }
+
+        MyWallet.get_history_with_addresses(allAddresses, function(data) {
+            parseMultiAddressJSON(data, false, true);
+            if (successCallback)
+                successCallback();
+        }, function() {
+            if (errorCallback)
+                errorCallback(e);
+        });
     }
 
     this.asyncGetAndSetUnspentOutputsForAccount = function(accountIdx, successCallback, errorCallback) {
@@ -1496,7 +1517,7 @@ var MyWallet = new function() {
     this.get_history = function(success, error) {
         BlockchainAPI.get_history(function(data) {
 
-            parseMultiAddressJSON(data, false);
+            parseMultiAddressJSON(data, false, false);
 
             if (success) success();
 
@@ -2504,7 +2525,7 @@ var MyWallet = new function() {
         }
     }
 
-    function parseMultiAddressJSON(obj, cached) {
+    function parseMultiAddressJSON(obj, cached, checkCompleted) {
         if (!cached) {
             if (obj.mixer_fee) {
                 mixer_fee = obj.mixer_fee;
@@ -2560,7 +2581,7 @@ var MyWallet = new function() {
             var tx = TransactionFromJSON(obj.txs[i]);
 
             //Don't use the result given by the api because it doesn't include archived addresses
-            tx.result = calcTxResult(tx, false);
+            tx.result = calcTxResult(tx, false, checkCompleted);
 
             transactions.push(tx);
         }
@@ -2615,7 +2636,7 @@ var MyWallet = new function() {
         MyWallet.get_history(null, function() {
             MyStore.get('multiaddr', function(multiaddrjson) {
                 if (multiaddrjson != null) {
-                    parseMultiAddressJSON($.parseJSON(multiaddrjson), true);
+                    parseMultiAddressJSON($.parseJSON(multiaddrjson), true, false);
                 }
             });
         });

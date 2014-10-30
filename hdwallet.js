@@ -169,15 +169,19 @@ function HDAccount(wallet, label) {
             }
             return false;
         },
-        checkToAddTxToPaymentRequest: function(address, txHash, amount) {
+        checkToAddTxToPaymentRequest: function(address, txHash, amount, checkCompleted) {
           var paymentRequests = this.getPaymentRequests();
           var haveAddedTxToPaymentRequest = false;
           for (var j in paymentRequests) {
               var paymentRequest = paymentRequests[j];
-              if (paymentRequest.complete == false &&
+              if ((checkCompleted == true || paymentRequest.complete == false) &&
                   paymentRequest.address == address &&
                   paymentRequest.txidList.indexOf(txHash) < 0) {
-                  
+
+                  if (checkCompleted == true && paymentRequest.complete == true) {
+                    paymentRequest.complete = false;
+                  }
+
                   this.addTxToPaymentRequest(paymentRequest.address, amount, txHash);
                   if (paymentRequest.paid == paymentRequest.amount) {
                       this.acceptPaymentRequest(paymentRequest.address);
