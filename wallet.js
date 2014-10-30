@@ -1268,6 +1268,17 @@ var MyWallet = new function() {
         return passphraseToPassphraseHexString(passPhrase);
     }
 
+    this.deleteHDWallet = function(successCallback, errorCallback) {
+        myHDWallet = null;
+        MyWallet.backupWallet('update', function() {
+            if (successCallback)
+                successCallback();
+        }, function() {
+            if (errorCallback)
+                errorCallback();
+        });
+    }
+
     this.initializeHDWallet = function(passphrase) {
         var seedHexString = null;
         if (passphrase == null)
