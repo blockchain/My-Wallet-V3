@@ -1,6 +1,7 @@
-function HDAccount(wallet, label) {
+function HDAccount(wallet, label, idx) {
     var accountObject = {
         wallet : wallet,
+        idx : idx,
         label : label,
         archived : false,
         paymentRequests : [],
@@ -261,7 +262,6 @@ function HDWallet(seedHex) {
         },
         getAccount : function(accountIdx) {
           account = this.accountArray[accountIdx];
-          account.idx = accountIdx;
           return account;
         },
         filterTransactionsForAccount : function(accountIdx, transactions) {
@@ -358,7 +358,7 @@ function HDWallet(seedHex) {
             walletAccount.externalAccount = walletAccount.getAccountZero().derive(0);
             walletAccount.internalAccount = walletAccount.getAccountZero().derive(1);
 
-            var account = HDAccount(walletAccount, label);
+            var account = HDAccount(walletAccount, label, this.accountArray.length);
             this.accountArray.push(account);
 
             return account;
