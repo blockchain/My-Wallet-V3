@@ -486,98 +486,77 @@ var MyWallet = new function() {
         });
     }
 
-    this.setDoubleEncryption = function(value, tpassword, success) {
-        var panic = function(e) {
-            console.log('Panic ' + e);
-
-            //If we caught an exception here the wallet could be in a inconsistent state
-            //We probably haven't synced it, so no harm done
-            //But for now panic!
-            window.location.reload();
-        };
-
+    this.setDoubleEncryption = function(value, tpassword, success, error) {
         try {
-            if (double_encryption == value)
-                return;
-
             if (value) {
-                //Ask the use again before we backup
-                MyWallet.getSecondPassword(function() {
-                    try {
-                        double_encryption = true;
-                        dpassword = tpassword;
+                try {
+                    double_encryption = true;
+                    dpassword = tpassword;
 
-                        for (var key in addresses) {
-                            var addr = addresses[key];
+                    for (var key in addresses) {
+                        var addr = addresses[key];
 
-                            if (addr.priv) {
-                                addr.priv = encodePK(new BigInteger(Bitcoin.base58.decode(addr.priv)));
+                        if (addr.priv) {
+                            addr.priv = encodePK(new BigInteger(Bitcoin.base58.decode(addr.priv)));
 
-                                if (!addr.priv) throw 'addr.priv is null';
-                            }
+                            if (!addr.priv) throw 'addr.priv is null';
                         }
-
-                        dpasswordhash = hashPassword(sharedKey + dpassword, wallet_options.pbkdf2_iterations);
-
-                        //Clear the password to force the user to login again
-                        //Incase they have forgotten their password already
-                        dpassword = null;
-
-                        MyWallet.getSecondPassword(function() {
-                            try {
-                                MyWallet.checkAllKeys();
-
-                                MyWallet.backupWallet('update', function() {
-                                    success();
-                                }, function() {
-                                    panic(e);
-                                });
-                            } catch(e) {
-                                panic(e);
-                            }
-                        }, function(e) {
-                            panic(e);
-                        });
-                    } catch(e) {
-                        panic(e);
                     }
-                }, function (e) {
-                    panic(e);
-                });
-            } else {
-                MyWallet.getSecondPassword(function() {
+
+                    dpasswordhash = hashPassword(sharedKey + dpassword, wallet_options.pbkdf2_iterations);
+
+                    //Clear the password to force the user to login again
+                    //Incase they have forgotten their password already
+                    dpassword = null;
+
+                    if (! MyWallet.validateSecondPassword(tpassword)) {
+                        throw "Invalid Second Password";
+                    }
+
                     try {
-                        for (var key in addresses) {
-
-                            var addr = addresses[key];
-
-                            if (addr.priv) {
-                                addr.priv = MyWallet.decryptPK(addr.priv);
-
-                                if (!addr.priv) throw 'addr.priv is null';
-                            }
-                        }
-
-                        double_encryption = false;
-
-                        dpassword = null;
-
                         MyWallet.checkAllKeys();
 
                         MyWallet.backupWallet('update', function() {
                             success();
                         }, function() {
-                            panic(e);
+                            error(e);
                         });
-                    } catch (e) {
-                        panic(e);
+                    } catch(e) {
+                        error(e);
                     }
-                }, function(e) {
-                    panic(e);
-                });
+                } catch(e) {
+                    error(e);
+                }
+            } else {
+                try {
+                    for (var key in addresses) {
+
+                        var addr = addresses[key];
+
+                        if (addr.priv) {
+                            addr.priv = MyWallet.decryptPK(addr.priv);
+
+                            if (!addr.priv) throw 'addr.priv is null';
+                        }
+                    }
+
+                    double_encryption = false;
+
+                    dpassword = null;
+
+                    MyWallet.checkAllKeys();
+
+                    MyWallet.backupWallet('update', function() {
+                        success();
+                    }, function() {
+                        error(e);
+                    });
+                } catch (e) {
+                    error(e);
+                }
             }
         } catch (e) {
-            panic(e);
+            error(e);
         }
     }
 
@@ -3834,7 +3813,7 @@ var MyWallet = new function() {
             }
         }
 
-        MyWallet.makeNotice('success', 'wallet-success', 'Wallet verified.');
+        MyWallet.sendMonitorEvent({type: "success", message: 'wallet-success ' + 'Wallet verified.', code: 0});
     }
 
     this.changePassword = function(new_password, success, error) {

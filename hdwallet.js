@@ -518,6 +518,10 @@ function recoverHDWallet(hdwallet) {
         }
     }
 
+    if (hdwallet.getAccountsCount() < 1) {
+        hdwallet.createAccount("Account 1");
+    }
+
     return hdwallet;
 }
 
