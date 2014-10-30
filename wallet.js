@@ -486,7 +486,16 @@ var MyWallet = new function() {
         });
     }
 
-    this.setDoubleEncryption = function(value, tpassword, success, error) {
+    this.setDoubleEncryption = function(value, tpassword, success) {
+        var panic = function(e) {
+            console.log('Panic ' + e);
+
+            //If we caught an exception here the wallet could be in a inconsistent state
+            //We probably haven't synced it, so no harm done
+            //But for now panic!
+            window.location.reload();
+        };
+
         try {
             if (value) {
                 try {
@@ -519,13 +528,13 @@ var MyWallet = new function() {
                         MyWallet.backupWallet('update', function() {
                             success();
                         }, function() {
-                            error(e);
+                            panic(e);
                         });
                     } catch(e) {
-                        error(e);
+                        panic(e);
                     }
                 } catch(e) {
-                    error(e);
+                    panic(e);
                 }
             } else {
                 try {
@@ -549,14 +558,14 @@ var MyWallet = new function() {
                     MyWallet.backupWallet('update', function() {
                         success();
                     }, function() {
-                        error(e);
+                        panic(e);
                     });
                 } catch (e) {
-                    error(e);
+                    panic(e);
                 }
             }
         } catch (e) {
-            error(e);
+            panic(e);
         }
     }
 
