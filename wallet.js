@@ -959,32 +959,11 @@ var MyWallet = new function() {
     };
 
     this.makeNotice = function(type, id, msg, timeout) {
-
         if (msg == null || msg.length == 0)
             return;
 
         console.log(msg);
-
-        var el = $('<div class="alert alert-block alert-'+type+'"></div>');
-
-        el.text(''+msg);
-
-        if ($('#'+id).length > 0) {
-            el.attr('id', id);
-            return;
-        }
-
-        $("#notices").append(el).hide().fadeIn(200);
-
-        (function() {
-            var tel = el;
-
-            setTimeout(function() {
-                tel.fadeOut(250, function() {
-                    $(this).remove();
-                });
-            }, timeout ? timeout : 5000);
-        })();
+        MyWallet.sendEvent({type: type, id: id, msg: msg});
     }
 
     this.pkBytesToSipa = function(bytes, addr) {
