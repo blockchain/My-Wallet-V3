@@ -100,7 +100,6 @@ function HDAccount(wallet, label, idx) {
             var paymentRequestsJson = [];
             for (var i in this.paymentRequests) {
                 var paymentRequest = {};
-                paymentRequest.address = this.paymentRequests[i].address;
                 paymentRequest.amount = this.paymentRequests[i].amount;
                 paymentRequest.paid = this.paymentRequests[i].paid;
                 paymentRequest.canceled = this.paymentRequests[i].canceled;
@@ -129,83 +128,76 @@ function HDAccount(wallet, label, idx) {
             }
 
             var address = this.generateAddress();
-            var paymentRequest = {address: address,
-                                   amount: amount,
+            var paymentRequest = {amount: amount,
                                    paid: 0,
                                    txidList: [],
                                    canceled : false,
                                    complete: false}
             this.paymentRequests.push(paymentRequest);
-            // returns {address: address, amount: amount, paid: 0, canceled: false, complete: false}
             return paymentRequest;
         },
         updatePaymentRequest : function(address, amount) {
-            for (var i = 0; i < this.paymentRequests.length; i++) {
-                var paymentRequest = this.paymentRequests[i];
-                if (paymentRequest.address == address) {
-                    paymentRequest.amount = amount;
-                    return true;
-                }
+            var idx = this.wallet.addresses.indexOf(address);
+            var paymentRequest = this.paymentRequests[idx];
+            if (idx > 0) {
+                paymentRequest.amount = amount;
+                return true;
             }
             return false;
         },
         acceptPaymentRequest : function(address) {
-            for (var i in this.paymentRequests) {
-                var paymentRequest = this.paymentRequests[i];
-                if (paymentRequest.address == address) {
-                    paymentRequest.complete = true;
-                    return true;
-                }
+            var idx = this.wallet.addresses.indexOf(address);
+            var paymentRequest = this.paymentRequests[idx];
+            if (idx > 0) {
+                paymentRequest.complete = true;
+                return true;
             }
             return false;
         },
         addTxToPaymentRequest : function(address, paid, txid) {
-            for (var i = 0; i < this.paymentRequests.length; i++) {
-                var paymentRequest = this.paymentRequests[i];
-                if (paymentRequest.address == address) {
-                    paymentRequest.paid += paid;
-                    paymentRequest.txidList.push(txid);
-                    return true;
-                }
+            var idx = this.wallet.addresses.indexOf(address);
+            var paymentRequest = this.paymentRequests[idx];
+            if (idx > 0) {
+                paymentRequest.paid += paid;
+                paymentRequest.txidList.push(txid);
+                return true;
             }
             return false;
         },
         checkToAddTxToPaymentRequest: function(address, txHash, amount, checkCompleted) {
-          var paymentRequests = this.getPaymentRequests();
-          var haveAddedTxToPaymentRequest = false;
-          for (var j in paymentRequests) {
-              var paymentRequest = paymentRequests[j];
-              if ((checkCompleted == true || paymentRequest.complete == false) &&
-                  paymentRequest.address == address &&
-                  paymentRequest.txidList.indexOf(txHash) < 0) {
+            var idx = this.wallet.addresses.indexOf(address);
+            var paymentRequest = this.paymentRequests[idx];
+            var haveAddedTxToPaymentRequest = false;
+            if (idx > 0) {
+                if ((checkCompleted == true || paymentRequest.complete == false) &&
+                    paymentRequest.txidList.indexOf(txHash) < 0) {
 
-                  if (checkCompleted == true && paymentRequest.complete == true) {
-                    paymentRequest.complete = false;
-                  }
+                    if (checkCompleted == true && paymentRequest.complete == true) {
+                        paymentRequest.complete = false;
+                    }
 
-                  this.addTxToPaymentRequest(paymentRequest.address, amount, txHash);
-                  if (paymentRequest.paid == paymentRequest.amount) {
-                      this.acceptPaymentRequest(paymentRequest.address);
-                      MyWallet.sendEvent('hw_wallet_accepted_payment_request', {"address": address, amount: paymentRequest.amount});
-                  } else if (amount > 0 && paymentRequest.paid < paymentRequest.amount) {
-                    MyWallet.sendEvent('hw_wallet_payment_request_received_too_little', {"address": address, amountRequested: paymentRequest.amount, amountReceived: paymentRequest.paid});
-                  } else if (paymentRequest.paid > paymentRequest.amount) {
-                    MyWallet.sendEvent('hw_wallet_payment_request_received_too_much', {"address": address, amountRequested: paymentRequest.amount, amountReceived: paymentRequest.paid});
-                  }
+                    this.addTxToPaymentRequest(address, amount, txHash);
+                    if (paymentRequest.paid == paymentRequest.amount) {
+                        this.acceptPaymentRequest(address);
+                        MyWallet.sendEvent('hw_wallet_accepted_payment_request', {"address": address, amount: paymentRequest.amount});
+                    } else if (amount > 0 && paymentRequest.paid < paymentRequest.amount) {
+                        MyWallet.sendEvent('hw_wallet_payment_request_received_too_little', {"address": address, amountRequested: paymentRequest.amount, amountReceived: paymentRequest.paid});
+                    } else if (paymentRequest.paid > paymentRequest.amount) {
+                        MyWallet.sendEvent('hw_wallet_payment_request_received_too_much', {"address": address, amountRequested: paymentRequest.amount, amountReceived: paymentRequest.paid});
+                    }
 
-                  haveAddedTxToPaymentRequest = true;
-              }
-          }
+                    haveAddedTxToPaymentRequest = true;
+                }
+            }
 
-          return haveAddedTxToPaymentRequest;
+            return haveAddedTxToPaymentRequest;
         },
         cancelPaymentRequest : function(address) {
-            for (var i in this.paymentRequests) {
-                var paymentRequest = this.paymentRequests[i];
-                if (paymentRequest.address == address) {
-                    paymentRequest.canceled = true;
-                    return true;
-                }
+            var idx = this.wallet.addresses.indexOf(address);
+            var paymentRequest = this.paymentRequests[idx];
+            if (idx > 0) {
+                paymentRequest.canceled = true;
+                return true;
             }
             return false;
         },
