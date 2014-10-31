@@ -96,6 +96,9 @@ function HDAccount(wallet, label, idx) {
         getBalance : function() {
             return this.wallet.getBalance();
         },
+        getAddressForPaymentRequest : function(paymentRequest) {
+            return this.getAddressAtIdx(paymentRequest.index);
+        },
         getPaymentRequestsJson : function() {
             var paymentRequestsJson = [];
             for (var i in this.paymentRequests) {
@@ -104,6 +107,7 @@ function HDAccount(wallet, label, idx) {
                 paymentRequest.paid = this.paymentRequests[i].paid;
                 paymentRequest.canceled = this.paymentRequests[i].canceled;
                 paymentRequest.complete = this.paymentRequests[i].complete;
+                paymentRequest.index = this.paymentRequests[i].index;
                 paymentRequestsJson.push(paymentRequest);
             }
 
@@ -132,7 +136,8 @@ function HDAccount(wallet, label, idx) {
                                    paid: 0,
                                    txidList: [],
                                    canceled : false,
-                                   complete: false}
+                                   complete: false,
+                                   index: this.getAddressesCount()-1}
             this.paymentRequests.push(paymentRequest);
             return paymentRequest;
         },
@@ -386,8 +391,8 @@ function buildHDWallet(seedHexString, accountsArrayPayload) {
                     paymentRequest.canceled == false) {
                         paymentRequest.paid = 0;
                     }
-
-                hdaccount.paymentRequests.push();
+                paymentRequest.txidList = [];
+                hdaccount.paymentRequests.push(paymentRequest);
             }
         }
 
@@ -455,12 +460,12 @@ function recoverHDWallet(hdwallet) {
         var addresses = account.getAddresses();
         for (var i in addresses) {
             var address = addresses[i];
-            var paymentRequest = {address: address,
-                                    amount: 0,
+            var paymentRequest = {  amount: 0,
                                     paid: 0,
                                     txidList: [],
                                     canceled : false,
-                                    complete: false}
+                                    complete: false,
+                                    index: parseInt(i)}
 
             account.paymentRequests.push(paymentRequest);
         }

@@ -1059,10 +1059,11 @@ var MyWallet = new function() {
     }
 
     this.generatePaymentRequestForAccount = function(accountIdx, amount) {
-        var paymentRequest = myHDWallet.getAccount(accountIdx).generatePaymentRequest(amount);
+        var account = myHDWallet.getAccount(accountIdx);
+        var paymentRequest = account.generatePaymentRequest(amount);
         MyWallet.backupWalletDelayed();
         try {
-            ws.send('{"op":"addr_sub", "addr":"'+paymentRequest.address+'"}');
+            ws.send('{"op":"addr_sub", "addr":"'+account.getAddressForPaymentRequest(paymentRequest)+'"}');
         } catch (e) { }
         return paymentRequest
     }
@@ -1240,7 +1241,7 @@ var MyWallet = new function() {
                 continue;
 
             try {
-                msg += '{"op":"addr_sub", "addr":"'+ paymentRequest.address +'"}';
+                msg += '{"op":"addr_sub", "addr":"'+ account.getAddressForPaymentRequest(paymentRequest) +'"}';
             } catch (e) { }
         }
 
