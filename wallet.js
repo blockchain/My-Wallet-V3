@@ -771,19 +771,19 @@ var MyWallet = new function() {
                 }
             }
 
-            for (var i = 0; i < myHDWallet.getAccountsCount(); i++) {
-                var account = myHDWallet.getAccount(i);
+            for (var j = 0; j < myHDWallet.getAccountsCount(); j++) {
+                var account = myHDWallet.getAccount(j);
                 if (account.isAddressPartOfAccount(output.addr)) {
-                    if (tx.account_indexes.indexOf(i) < 0) {
-                        tx.account_indexes.push(parseInt(i));
+                    if (tx.account_indexes.indexOf(j) < 0) {
+                        tx.account_indexes.push(parseInt(j));
                    }
                 }
             }
 
         }
 
-        for (var ii = 0; ii < tx.out.length; ++ii) {
-            var output = tx.out[ii];
+        for (var i = 0; i < tx.out.length; ++i) {
+            var output = tx.out[i];
 
             if (!output || !output.addr)
                 continue;
@@ -800,11 +800,11 @@ var MyWallet = new function() {
                 }
             }
 
-            for (var i = 0; i < myHDWallet.getAccountsCount(); i++) {
-                var account = myHDWallet.getAccount(i);
+            for (var j = 0; j < myHDWallet.getAccountsCount(); j++) {
+                var account = myHDWallet.getAccount(j);
                 if (account.isAddressPartOfAccount(output.addr)) {
-                    if (tx.account_indexes.indexOf(i) < 0) {
-                        tx.account_indexes.push(parseInt(i));
+                    if (tx.account_indexes.indexOf(j) < 0) {
+                        tx.account_indexes.push(parseInt(j));
                     }
                 }
 
