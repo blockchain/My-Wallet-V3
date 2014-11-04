@@ -144,7 +144,7 @@ function HDAccount(wallet, label, idx) {
         updatePaymentRequest : function(address, amount) {
             var idx = this.wallet.addresses.indexOf(address);
             var paymentRequest = this.paymentRequests[idx];
-            if (idx > 0) {
+            if (idx > -1) {
                 paymentRequest.amount = amount;
                 return true;
             }
@@ -153,7 +153,7 @@ function HDAccount(wallet, label, idx) {
         acceptPaymentRequest : function(address) {
             var idx = this.wallet.addresses.indexOf(address);
             var paymentRequest = this.paymentRequests[idx];
-            if (idx > 0) {
+            if (idx > -1) {
                 paymentRequest.complete = true;
                 return true;
             }
@@ -162,7 +162,7 @@ function HDAccount(wallet, label, idx) {
         addTxToPaymentRequest : function(address, paid, txid) {
             var idx = this.wallet.addresses.indexOf(address);
             var paymentRequest = this.paymentRequests[idx];
-            if (idx > 0) {
+            if (idx > -1) {
                 paymentRequest.paid += paid;
                 paymentRequest.txidList.push(txid);
                 return true;
@@ -173,7 +173,7 @@ function HDAccount(wallet, label, idx) {
             var idx = this.wallet.addresses.indexOf(address);
             var paymentRequest = this.paymentRequests[idx];
             var haveAddedTxToPaymentRequest = false;
-            if (idx > 0) {
+            if (idx > -1) {
                 if ((checkCompleted == true || paymentRequest.complete == false) &&
                     paymentRequest.txidList.indexOf(txHash) < 0) {
 
@@ -200,7 +200,7 @@ function HDAccount(wallet, label, idx) {
         cancelPaymentRequest : function(address) {
             var idx = this.wallet.addresses.indexOf(address);
             var paymentRequest = this.paymentRequests[idx];
-            if (idx > 0) {
+            if (idx > -1) {
                 paymentRequest.canceled = true;
                 return true;
             }
