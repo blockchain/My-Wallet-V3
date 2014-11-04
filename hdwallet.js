@@ -368,14 +368,12 @@ function HDWallet(seedHex) {
 function buildHDWallet(seedHexString, accountsArrayPayload) {
     var hdwallet = HDWallet(seedHexString);
 
-
     for (var i = 0; i < accountsArrayPayload.length; i++) {
+        var accountPayload = accountsArrayPayload[i];
+        var archived = accountPayload.archived;
         if (archived == true)
             continue;
-
-        var accountPayload = accountsArrayPayload[i];
         var label = accountPayload.label;
-        var archived = accountPayload.archived;
         var external_addresses = accountPayload.paymentRequests.length;
         var change_addresses = accountPayload.change_addresses;
         var paymentRequests = accountPayload.paymentRequests;
@@ -385,8 +383,8 @@ function buildHDWallet(seedHexString, accountsArrayPayload) {
         var hdaccount = hdwallet.createAccount(label);
         hdaccount.setIsArchived(archived);
         if (paymentRequests != null) {
-            for (var i in paymentRequests) {
-                var paymentRequest = paymentRequests[i];
+            for (var m in paymentRequests) {
+                var paymentRequest = paymentRequests[m];
                 if (paymentRequest.complete == false &&
                     paymentRequest.canceled == false) {
                         paymentRequest.paid = 0;
