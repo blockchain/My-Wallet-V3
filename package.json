@@ -5,7 +5,7 @@
   "main": "wallet.js",
   "scripts": {
     "postinstall": "cd node_modules/bip39 && npm run compile && mv bip39.js ../..",
-    "test": "karma start"
+    "test": "node ./node_modules/karma/bin/karma start karma.conf.js"
   },
   "repository": {
     "type": "git",
@@ -19,10 +19,18 @@
   "homepage": "https://github.com/blockchain/My-Wallet-HD",
   "dependencies": {
     "bip39": "^2.1.0",
-    "karma": "^0.12.24"
+    "coffee": "0.0.1",
+    "coffee-script": "^1.8.0",
+    "karma": "^0.12.24",
+    "karma-coffee-preprocessor": "^0.2.1",
+    "karma-phantomjs-launcher": "^0.1.4"
   },
   "devDependencies": {
     "browserify": "^6.1.0",
+    "karma": "^0.12.24",
+    "karma-coffee-preprocessor": "^0.2.1",
+    "karma-jasmine": "^0.2.0",
+    "karma-phantomjs-launcher": "^0.1.4",
     "phantomjs": "^1.9.12",
     "uglify-js": "^2.4.15"
   }
