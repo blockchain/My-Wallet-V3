@@ -2742,7 +2742,7 @@ var MyWallet = new function() {
                     }
                 }
 
-                if (obj.hd_wallets) {
+                if (obj.hd_wallets && obj.hd_wallets.length > 0) {
                     var defaultHDWallet = obj.hd_wallets[0];
                     if (haveBuildHDWallet == false) {
                         MyWallet.buildHDWallet(defaultHDWallet.seed_hex, defaultHDWallet.accounts);
