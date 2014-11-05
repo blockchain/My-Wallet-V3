@@ -4,17 +4,26 @@ describe "HD Wallet", ->
             
   describe "checkToAddTxToPaymentRequest()", ->
     it "should exist", ->
-      account = HDAccount()
+      passphrase = "add imitate business carbon city orbit spray boss ribbon deposit bachelor sustain"
+      hdwallet = buildHDWallet(passphraseToPassphraseHexString(passphrase), [])
+
+      account = hdwallet.createAccount("Spending")
+
       expect(account.checkToAddTxToPaymentRequest).toBeDefined()
       
     it "should mark request as complete if amount matches", ->
-      account = HDAccount()
-      account.paymentRequests.push {complete: false, address: "addres1", amount: 1, paid: 0, txidList: []}
-      
-      account.checkToAddTxToPaymentRequest("addres1", "tx1", 1)
-      
+      passphrase = "add imitate business carbon city orbit spray boss ribbon deposit bachelor sustain"
+      hdwallet = buildHDWallet(passphraseToPassphraseHexString(passphrase), [])
+
+      account = hdwallet.createAccount("Spending")
+
+      paymentRequest = account.generatePaymentRequest(1)
+      address = account.getAddressAtIdx(paymentRequest.index)
+
+      account.checkToAddTxToPaymentRequest(address, "tx1", 1, false)
+
       request =  account.paymentRequests[0]
-      
+
       expect(request.complete).toBe(true)
       
     return

@@ -29,6 +29,7 @@ module.exports = function(config) {
       'bitcoinjs.js',
       // 'old_bitcoinjs.js',
       // 'wallet.js',
+      'bip39.js',
       'hdwallet.js',
       'tests/**/*.js',
       'tests/**/*.js.coffee'
