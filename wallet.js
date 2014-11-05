@@ -3224,9 +3224,6 @@ var MyWallet = new function() {
                                 }
                             }
 
-                            MyWallet.sendMonitorEvent({type: "success", message: data, code: 0});
-
-
                             if (successcallback != null)
                                 successcallback();
 
