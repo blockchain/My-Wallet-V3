@@ -230,7 +230,136 @@ Documentation
     * @returns {boolean} 
     */
     MyWallet.isSynchronizedWithServer();
-    
+
+HDWallet API
+===========
+    /*
+    * @param {int} index of account
+    * @returns {string} label
+    */
+    MyWallet.getLabelForAccount(accountIdx);
+
+    /*
+    * @param {int} index of account
+    * @param {string} account name
+    */
+    MyWallet.setLabelForAccount(accountIdx, label);
+
+    /*
+    * @param {int} index of account
+    * @returns {boolean} is archived
+    */
+    MyWallet.isArchivedForAccount(accountIdx);
+
+    /*
+    * @param {int} index of account
+    * @param {string} account name
+    */
+    MyWallet.setIsArchivedForAccount(accountIdx, isArchived);
+
+    /*
+    * @param {int} index of account
+    * @returns {array} address for account
+    */
+    MyWallet.getAddressesForAccount(accountIdx);
+
+    /*
+    * @param {int} index of account
+    * @returns {array} change address for account
+    */
+    MyWallet.getChangeAddressesForAccount(accountIdx);
+
+    /*
+    * @param {int} index of account
+    * @returns {int} balance of account in satoshis
+    */
+    MyWallet.getBalanceForAccount(accountIdx);
+
+    /*
+    * @param {int} index of account
+    * @returns {array} Payment Request object
+    */
+    MyWallet.getPaymentRequestsForAccount(accountIdx);
+
+    /*
+    * @param {int} index of account
+    * @param {int} Payment Request amount in satoshis
+    * @returns {Object} Payment Request object
+    */
+    MyWallet.generatePaymentRequestForAccount(accountIdx, amount);
+
+    /*
+    * @param {int} index of account
+    * @param {string} address to update
+    * @param {int} Payment Request amount in satoshis
+    * @returns {Boolean} success or not
+    */
+    MyWallet.updatePaymentRequestForAccount(accountIdx, address, amount);
+
+    /*
+    * @param {int} index of account
+    * @param {string} address to accept
+    * @returns {Boolean} success or not
+    */
+    MyWallet.acceptPaymentRequestForAccount(accountIdx, address);
+
+    /*
+    * @param {int} index of account
+    * @param {string} address to cancel
+    * @returns {Boolean} success or not
+    */
+    MyWallet.cancelPaymentRequestForAccount(accountIdx, address);
+
+    /*
+    * @param {int} index of account
+    * @returns {array} array of transaction objects
+    */
+    MyWallet.getTransactionsForAccount(accountIdx);
+
+    /*
+    * @param {function} success callback function
+    * @param {function} error callback function
+    */
+    MyWallet.refreshAllPaymentRequestsAndChangeAddresses(successcallback, errorcallback);
+
+    /*
+    * @param {int} index of account
+    * @param {string} address to send to
+    * @param {int} send amount in satoshis
+    * @param {int} fee amount in satoshis
+    * @param {string} tx note
+    * @param {function} success callback function
+    * @param {function} error callback function
+    */
+    MyWallet.sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successcallback, errorcallback);
+
+    /*
+    * @returns {int} accounts count
+    */
+    MyWallet.getAccountsCount();
+
+    /*
+    * @param {string} label name
+    */
+    MyWallet.createAccount(label);
+
+    /*
+    * @param {string} passphrase seed in hex
+    */
+    MyWallet.recoverMyWalletHDWalletFromSeedHex(seedHex);
+
+    /*
+    * @param {string} passphrase seed
+    */
+    MyWallet.recoverMyWalletHDWalletFromMnemonic(passphrase);
+
+    /*
+    * @param {string} passphrase seed
+    */
+    MyWallet.initializeHDWallet(passphrase);
+
+
+
 Tests
 =====
 You'll need [Karma and Jasmine](https://github.com/karma-runner/karma-jasmine) and PhantomJS:
