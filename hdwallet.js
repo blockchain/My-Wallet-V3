@@ -462,7 +462,7 @@ function recoverHDWallet(hdwallet) {
                                     paid: 0,
                                     txidList: [],
                                     canceled : false,
-                                    complete: false,
+                                    complete: true,
                                     index: parseInt(i)}
 
             account.paymentRequests.push(paymentRequest);
