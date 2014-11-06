@@ -1,7 +1,7 @@
 describe "HD Wallet", ->
     # beforeEach ->
 
-    describe "generatePaymentRequest()", ->
+    describe "updatePaymentRequest()", ->
         it "should have amount change to 2", ->
             passphrase = "add imitate business carbon city orbit spray boss ribbon deposit bachelor sustain"
             hdwallet = buildHDWallet(passphraseToPassphraseHexString(passphrase), [])
