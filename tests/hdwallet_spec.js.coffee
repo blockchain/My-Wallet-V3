@@ -1,6 +1,34 @@
 describe "HD Wallet", ->
     # beforeEach ->
 
+
+    describe "generatePaymentRequest()", ->
+        it "should have payment request array length be 1", ->
+            passphrase = "add imitate business carbon city orbit spray boss ribbon deposit bachelor sustain"
+            hdwallet = buildHDWallet(passphraseToPassphraseHexString(passphrase), [])
+
+            account = hdwallet.createAccount("Spending")
+            paymentRequest = account.generatePaymentRequest(1)
+
+            expect(account.paymentRequests.length).toBe(1)
+
+        it "should have reused canceled payment request", ->
+            passphrase = "add imitate business carbon city orbit spray boss ribbon deposit bachelor sustain"
+            hdwallet = buildHDWallet(passphraseToPassphraseHexString(passphrase), [])
+
+            account = hdwallet.createAccount("Spending")
+            paymentRequest = account.generatePaymentRequest(1)
+            address = account.getAddressAtIdx(paymentRequest.index)
+            account.cancelPaymentRequest(address)
+
+            paymentRequest2 = account.generatePaymentRequest(2)
+
+            expect(account.paymentRequests.length).toBe(1)
+            expect(account.paymentRequests[paymentRequest2.index].amount).toBe(2)
+
+        return
+
+
     describe "updatePaymentRequest()", ->
         it "should have amount change to 2", ->
             passphrase = "add imitate business carbon city orbit spray boss ribbon deposit bachelor sustain"
