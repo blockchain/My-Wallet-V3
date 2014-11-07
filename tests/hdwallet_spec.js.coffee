@@ -28,6 +28,22 @@ describe "HD Wallet", ->
 
         return
 
+    describe "acceptPaymentRequest()", ->
+        it "should mark request as completed", ->
+            passphrase = "add imitate business carbon city orbit spray boss ribbon deposit bachelor sustain"
+            hdwallet = buildHDWallet(passphraseToPassphraseHexString(passphrase), [])
+
+            account = hdwallet.createAccount("Spending")
+            paymentRequest = account.generatePaymentRequest(1)
+            address = account.getAddressAtIdx(paymentRequest.index)
+            account.acceptPaymentRequest(address)
+
+            paymentRequest2 = account.paymentRequests[paymentRequest.index]
+
+            expect(paymentRequest2.complete).toBe(true)
+
+        return
+
 
     describe "updatePaymentRequest()", ->
         it "should have amount change to 2", ->
