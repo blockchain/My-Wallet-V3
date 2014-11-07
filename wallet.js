@@ -1846,6 +1846,9 @@ var MyWallet = new function() {
         MyWallet.backupWalletDelayed();
     }
 
+    this.setNote = function(tx_hash, text) {
+        tx_notes[tx_hash] = note;
+    }
 
     function isAlphaNumericSpace(input) {
         return /^[\w\-,._  ]+$/.test(input);
