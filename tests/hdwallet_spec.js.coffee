@@ -104,3 +104,27 @@ describe "HD Wallet", ->
             expect(request.complete).toBe(true)
 
         return
+
+    describe "buildHDWallet()", ->
+        it "should have accounts count be 2", ->
+            passphrase = "add imitate business carbon city orbit spray boss ribbon deposit bachelor sustain"
+            accountsArrayPayload = [
+                {
+                    label: "Savings",
+                    archived: false,
+                    change_addresses: 12,
+                    paymentRequests: [{amount: 100, paid: 0, canceled: false, complete: false, index: 0}]
+                },
+                {
+                    label: "Splurge",
+                    archived: false,
+                    change_addresses: 2,
+                    paymentRequests: []
+                }
+            ]
+
+            hdwallet = buildHDWallet(passphraseToPassphraseHexString(passphrase), accountsArrayPayload)
+
+            expect(hdwallet.getAccountsCount()).toBe(2)
+
+        return
