@@ -1862,7 +1862,7 @@ var MyWallet = new function() {
 
     this.setTag = function(tx_hash, idx) {
         if (tx_hash[tx_hash] == null) {
-            tx_hash[tx_hash] = {};
+            tx_hash[tx_hash] = [];
         }
         tx_hash[tx_hash].push(idx);
         MyWallet.backupWalletDelayed();
@@ -1894,7 +1894,7 @@ var MyWallet = new function() {
     this.deleteTag = function(idx) {
         tag_names.splice(idx,1);
 
-        for (var tx_hash in obj.tx_tags) {
+        for (var tx_hash in tx_tags) {
             var tags = tx_tags[tx_hash];
             var index = tx_tags.indexOf(idx);
             if (index > -1) {
