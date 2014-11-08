@@ -1861,10 +1861,10 @@ var MyWallet = new function() {
     }
 
     this.setTag = function(tx_hash, idx) {
-        if (tx_hash[tx_hash] == null) {
-            tx_hash[tx_hash] = [];
+        if (tx_tags[tx_hash] == null) {
+            tx_tags[tx_hash] = [];
         }
-        tx_hash[tx_hash].push(idx);
+        tx_tags[tx_hash].push(idx);
         MyWallet.backupWalletDelayed();
     }
 
