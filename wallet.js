@@ -117,6 +117,8 @@ var MyWallet = new function() {
     var isSynchronizedWithServer = true;
     var localWalletJsonString = null;
     var haveBuildHDWallet = false;
+    var tx_tags = {};
+    var tag_names = [];
 
 
     var wallet_options = {
@@ -1366,6 +1368,13 @@ var MyWallet = new function() {
             out += ',\n	"tx_notes" : ' + JSON.stringify(tx_notes)
         }
 
+        if (nKeys(tx_tags) > 0) {
+            out += ',\n	"tx_tags" : ' + JSON.stringify(tx_tags)
+        }
+
+        if (tag_names != null) {
+            out += ',\n	"tag_names" : ' + JSON.stringify(tag_names)
+        }
 
         out += ',\n	"hd_wallets" : [\n';
 
@@ -1848,6 +1857,51 @@ var MyWallet = new function() {
 
     this.setNote = function(tx_hash, text) {
         tx_notes[tx_hash] = note;
+        MyWallet.backupWalletDelayed();
+    }
+
+    this.setTag = function(tx_hash, idx) {
+        if (tx_hash[tx_hash] == null) {
+            tx_hash[tx_hash] = {};
+        }
+        tx_hash[tx_hash].push(idx);
+        MyWallet.backupWalletDelayed();
+    }
+
+    this.unsetTag = function(tx_hash, idx) {
+        var tags = tx_tags[tx_hash];
+        var index = tx_tags.indexOf(idx);
+        if (index > -1) {
+            tx_tags.splice(index, 1);
+        }
+        MyWallet.backupWalletDelayed();
+    }
+
+    this.getTagNames = function() {
+        return tag_names;
+    }
+
+    this.addTag = function() {
+        tag_names.push(name);
+        MyWallet.backupWalletDelayed();
+    }
+
+    this.renameTag = function(idx, name) {
+        tag_names[idx] = name;
+        MyWallet.backupWalletDelayed();
+    }
+
+    this.deleteTag = function(idx) {
+        tag_names.splice(idx,1);
+
+        for (var tx_hash in obj.tx_tags) {
+            var tags = tx_tags[tx_hash];
+            var index = tx_tags.indexOf(idx);
+            if (index > -1) {
+                tx_tags.splice(index, 1);
+            }
+        }
+        //MyWallet.backupWalletDelayed();
     }
 
     function isAlphaNumericSpace(input) {
@@ -2763,6 +2817,19 @@ var MyWallet = new function() {
                             tx_notes[tx_hash] = note;
                         }
                     }
+                }
+
+                if (obj.tx_tags) {
+                    for (var tx_hash in obj.tx_tags) {
+                        var tags = obj.tx_tags[tx_hash];
+
+                        if (tags && isAlphaNumericSpace(tags)) {
+                            tx_tags[tx_hash] = tags;
+                        }
+                    }
+                }
+                if (obj.tag_names) {
+                    tag_names = obj.tag_names;
                 }
 
                 //If we don't have a checksum then the wallet is probably brand new - so we can generate our own
