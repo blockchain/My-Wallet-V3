@@ -1881,7 +1881,7 @@ var MyWallet = new function() {
         return tag_names;
     }
 
-    this.addTag = function() {
+    this.addTag = function(name) {
         tag_names.push(name);
         MyWallet.backupWalletDelayed();
     }
