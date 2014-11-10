@@ -606,8 +606,31 @@ var MyWallet = new function() {
             MyWallet.makeNotice('error', 'add-error', 'Cannot Archive This Address');
         }
     }
-    this.addWatchOnlyAddress = function(address) {
-        return internalAddKey(address);
+    this.addWatchOnlyAddress = function(addressString) {
+        var address = Bitcoin.Address.fromBase58Check(addressString);
+
+        if (address.toString() != addressString) {
+            throw 'Inconsistency between addresses';
+        }
+
+        try {
+            if (internalAddKey(addressString)) {
+                MyWallet.makeNotice('success', 'added-address', 'Successfully Added Address ' + address);
+
+                try {
+                    ws.send('{"op":"addr_sub", "addr":"'+addressString+'"}');
+                } catch (e) { }
+
+                //Backup
+                MyWallet.backupWallet('update', function() {
+                    MyWallet.get_history();
+                });
+            } else {
+                throw 'Wallet Full Or Addresses Exists'
+            }
+        } catch (e) {
+            MyWallet.makeNotice('error', 'misc-error', e);
+        }
     }
 
     //temperary workaround instead instead of modding bitcoinjs to do it TODO: not efficient

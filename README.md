@@ -231,6 +231,13 @@ Documentation
     */
     MyWallet.isSynchronizedWithServer();
 
+    /*
+     * @param {string} bitcoin address
+     * @returns {boolean} success or not
+     */
+    MyWallet.addWatchOnlyAddress(address);
+
+
 HDWallet API
 ===========
     /*
