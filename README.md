@@ -58,7 +58,7 @@ Documentation
      * @param {Bitcoin.ECKey} Bitcoin ECKey
      * @returns {Boolean} success or not
      */
-    MyWallet.addPrivateKey(key);
+    MyWallet.importPrivateKey(privateKeyString);
 
     /*
      * @returns {Bitcoin.ECKey}
