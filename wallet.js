@@ -686,6 +686,24 @@ var MyWallet = new function() {
         }
     }
 
+    this.importPrivateKey = function(privateKeyString) {
+        var format = MyWallet.detectPrivateKeyFormat(privateKeyString);
+        var key = MyWallet.privateKeyStringToKey(privateKeyString, format);
+        var compressed = (format == 'sipa') ? false : true;
+
+        if (MyWallet.addPrivateKey(key, {compressed: compressed, app_name : IMPORTED_APP_NAME, app_version : IMPORTED_APP_VERSION})) {
+
+            //Perform a wallet backup
+            MyWallet.backupWallet('update', function() {
+                MyWallet.get_history();
+            });
+
+            MyWallet.makeNotice('success', 'added-address', 'Imported Bitcoin Address ' + key.pub.getAddress().toString());
+        } else {
+            throw 'Unable to add private key for bitcoin address ' + key.pub.getAddress().toString();
+        }
+    }
+
     //opts = {compressed, app_name, app_version, created_time}
     this.addPrivateKey = function(key, opts) {
         if (walletIsFull()) {
@@ -5184,7 +5202,8 @@ var MyWallet = new function() {
         if (key_bytes.length != 32)
             throw 'Result not 32 bytes in length';
 
-        return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), false);
+        var compressed = (format == 'sipa') ? false : true;
+        return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), compressed);
     }
 
     $(document).ready(function() {

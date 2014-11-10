@@ -56,10 +56,9 @@ Documentation
 
     /*
      * @param {Bitcoin.ECKey} Bitcoin ECKey
-     * @param {Object} dictionary of options the following possible keys {compressed, app_name, app_version, created_time}
      * @returns {Boolean} success or not
      */
-    MyWallet.addPrivateKey(key, opts);
+    MyWallet.addPrivateKey(key);
 
     /*
      * @returns {Bitcoin.ECKey}
