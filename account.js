@@ -442,7 +442,7 @@ var AccountSettings = new function() {
 
 
     function setDoubleEncryptionOff() {
-        MyWallet.setDoubleEncryption(false, null, function() {
+        MyWallet.setSecondPassword(false, null, function() {
             setDoubleEncryptionButton();
         });
     }
@@ -466,7 +466,7 @@ var AccountSettings = new function() {
             return;
         }
 
-        MyWallet.setDoubleEncryption(true, tpassword, function() {
+        MyWallet.setSecondPassword(true, tpassword, function() {
             setDoubleEncryptionButton();
         });
 

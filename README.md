@@ -38,11 +38,17 @@ Documentation
     MyWallet.setPbkdf2Iterations(pbkdf2_iterations, success);
 
     /*
-     * @param {boolean} enable or not 
      * @param {string} password
      * @param {function} success callback function
+     * @param {function} error callback function
      */
-    MyWallet.setDoubleEncryption(value, tpassword, success);
+    MyWallet.setSecondPassword(password, success, error);
+
+    /*
+     * @param {function} success callback function
+     * @param {function} error callback function
+     */
+    MyWallet.unsetSecondPassword(success, error);
 
     /*
      * @param {string} bitcoin address

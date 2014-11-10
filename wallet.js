@@ -488,7 +488,7 @@ var MyWallet = new function() {
         });
     }
 
-    this.setDoubleEncryption = function(value, tpassword, success) {
+    this.unsetSecondPassword = function(success, error) {
         var panic = function(e) {
             console.log('Panic ' + e);
 
@@ -499,75 +499,85 @@ var MyWallet = new function() {
         };
 
         try {
-            if (value) {
-                try {
-                    double_encryption = true;
-                    dpassword = tpassword;
+            for (var key in addresses) {
 
-                    for (var key in addresses) {
-                        var addr = addresses[key];
+                var addr = addresses[key];
 
-                        if (addr.priv) {
-                            addr.priv = encodePK(new BigInteger(Bitcoin.base58.decode(addr.priv)));
+                if (addr.priv) {
+                    addr.priv = MyWallet.decryptPK(addr.priv);
 
-                            if (!addr.priv) throw 'addr.priv is null';
-                        }
-                    }
-
-                    dpasswordhash = hashPassword(sharedKey + dpassword, wallet_options.pbkdf2_iterations);
-
-                    //Clear the password to force the user to login again
-                    //Incase they have forgotten their password already
-                    dpassword = null;
-
-                    if (! MyWallet.validateSecondPassword(tpassword)) {
-                        throw "Invalid Second Password";
-                    }
-
-                    try {
-                        MyWallet.checkAllKeys();
-
-                        MyWallet.backupWallet('update', function() {
-                            success();
-                        }, function() {
-                            panic(e);
-                        });
-                    } catch(e) {
-                        panic(e);
-                    }
-                } catch(e) {
-                    panic(e);
-                }
-            } else {
-                try {
-                    for (var key in addresses) {
-
-                        var addr = addresses[key];
-
-                        if (addr.priv) {
-                            addr.priv = MyWallet.decryptPK(addr.priv);
-
-                            if (!addr.priv) throw 'addr.priv is null';
-                        }
-                    }
-
-                    double_encryption = false;
-
-                    dpassword = null;
-
-                    MyWallet.checkAllKeys();
-
-                    MyWallet.backupWallet('update', function() {
-                        success();
-                    }, function() {
-                        panic(e);
-                    });
-                } catch (e) {
-                    panic(e);
+                    if (!addr.priv) throw 'addr.priv is null';
                 }
             }
+
+            double_encryption = false;
+
+            dpassword = null;
+
+            MyWallet.checkAllKeys();
+
+            MyWallet.backupWallet('update', function() {
+                success();
+            }, function() {
+                panic(e);
+                error(e);
+            });
         } catch (e) {
             panic(e);
+            error(e);
+        }
+    }
+
+    this.setSecondPassword = function(password, success, error) {
+        var panic = function(e) {
+            console.log('Panic ' + e);
+
+            //If we caught an exception here the wallet could be in a inconsistent state
+            //We probably haven't synced it, so no harm done
+            //But for now panic!
+            window.location.reload();
+        };
+
+        try {
+            double_encryption = true;
+            dpassword = password;
+
+            for (var key in addresses) {
+                var addr = addresses[key];
+
+                if (addr.priv) {
+                    addr.priv = encodePK(new BigInteger(Bitcoin.base58.decode(addr.priv)));
+
+                    if (!addr.priv) throw 'addr.priv is null';
+                }
+            }
+
+            dpasswordhash = hashPassword(sharedKey + dpassword, wallet_options.pbkdf2_iterations);
+
+            //Clear the password to force the user to login again
+            //Incase they have forgotten their password already
+            dpassword = null;
+
+            if (! MyWallet.validateSecondPassword(password)) {
+                throw "Invalid Second Password";
+            }
+
+            try {
+                MyWallet.checkAllKeys();
+
+                MyWallet.backupWallet('update', function() {
+                    success();
+                }, function() {
+                    panic(e);
+                    error(e);
+                });
+            } catch(e) {
+                panic(e);
+                error(e);
+            }
+        } catch(e) {
+            panic(e);
+            error(e);
         }
     }
 
