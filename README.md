@@ -236,6 +236,12 @@ Documentation
      */
     MyWallet.addWatchOnlyAddress(address);
 
+    /*
+     * @param {string} bitcoin address
+     * @returns {boolean} whether is watch only address or not
+     */
+    MyWallet.isWatchOnly(address);
+
 
 HDWallet API
 ===========
