@@ -11,7 +11,9 @@ function HDAccount(wallet, label, idx) {
                 label : this.getLabel(),
                 archived : this.isArchived(),
                 paymentRequests : this.getPaymentRequestsJson(),
-                change_addresses : this.getChangeAddressesCount()
+                change_addresses : this.getChangeAddressesCount(),
+                xpriv : this.getAccountMainKey(true),
+                xpub : this.getAccountMainKey(false)
             };
             return accountJsonData;
         },
@@ -69,11 +71,11 @@ function HDAccount(wallet, label, idx) {
         getChangeAddressesCount : function() {
             return this.wallet.changeAddresses.length;
         },        
-        getAccountMainKey : function() {
-            return this.wallet.getExternalAccount().toBase58();
+        getAccountMainKey : function(isPrivate) {
+            return this.wallet.getExternalAccount().toBase58(isPrivate);
         },
-        getAccountChangeKey : function() {
-            return this.wallet.getInternalAccount().toBase58();
+        getAccountChangeKey : function(isPrivate) {
+            return this.wallet.getInternalAccount().toBase58(isPrivate);
         },
         generateAddress : function() {
             return this.wallet.generateAddress();
