@@ -242,10 +242,11 @@ function passphraseToPassphraseHexString(passphrase) {
     return BIP39.mnemonicToEntropy(passphrase);
 }
 
-function HDWallet(seedHex) {
+function HDWallet(seedHex, bip39Password) {
 
     var walletObject = {
         seedHex : seedHex,
+        bip39Password : bip39Password,
         accountArray : [],
         getPassphraseString : function() {
             return passphraseHexStringToPassphrase(this.seedHex);
@@ -254,7 +255,7 @@ function HDWallet(seedHex) {
             return this.seedHex;
         },
         getMasterHex : function() {
-            return BIP39.mnemonicToSeed(passphraseHexStringToPassphrase(this.seedHex));
+            return BIP39.mnemonicToSeed(passphraseHexStringToPassphrase(this.seedHex), this.bip39Password);
         },
         getAccountsCount : function() {
             return this.accountArray.length;
@@ -367,8 +368,8 @@ function HDWallet(seedHex) {
     return walletObject;
 }
 
-function buildHDWallet(seedHexString, accountsArrayPayload) {
-    var hdwallet = HDWallet(seedHexString);
+function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password) {
+    var hdwallet = HDWallet(seedHexString, bip39Password);
 
     for (var i = 0; i < accountsArrayPayload.length; i++) {
         var accountPayload = accountsArrayPayload[i];
@@ -522,12 +523,12 @@ function recoverHDWallet(hdwallet) {
     return hdwallet;
 }
 
-function recoverHDWalletFromSeedHex(seedHex) {
-    var hdwallet = HDWallet(seedHex);
+function recoverHDWalletFromSeedHex(seedHex, bip39Password) {
+    var hdwallet = HDWallet(seedHex, bip39Password);
     return recoverHDWallet(hdwallet);
 }
 
-function recoverHDWalletFromMnemonic(passphrase) {
-    var hdwallet = HDWallet(passphraseToPassphraseHexString(passphrase));
+function recoverHDWalletFromMnemonic(passphrase, bip39Password) {
+    var hdwallet = HDWallet(passphraseToPassphraseHexString(passphrase), bip39Password);
     return recoverHDWallet(hdwallet);
 }

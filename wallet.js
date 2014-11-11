@@ -1262,15 +1262,15 @@ var MyWallet = new function() {
         return myHDWallet;
     }
 
-    this.recoverMyWalletHDWalletFromSeedHex = function(seedHex) {
-        myHDWallet = recoverHDWalletFromSeedHex(seedHex);
+    this.recoverMyWalletHDWalletFromSeedHex = function(seedHex, bip39Password) {
+        myHDWallet = recoverHDWalletFromSeedHex(seedHex, bip39Password);
         MyWallet.backupWalletDelayed('update', function() {
             MyWallet.get_history();
         });
     }
 
-    this.recoverMyWalletHDWalletFromMnemonic = function(passphrase) {
-        myHDWallet = recoverHDWalletFromMnemonic(passphrase);
+    this.recoverMyWalletHDWalletFromMnemonic = function(passphrase, bip39Password) {
+        myHDWallet = recoverHDWalletFromMnemonic(passphrase, bip39Password);
         MyWallet.backupWalletDelayed('update', function() {
             MyWallet.get_history();
         });
@@ -1335,14 +1335,14 @@ var MyWallet = new function() {
         });
     }
 
-    this.initializeHDWallet = function(passphrase) {
+    this.initializeHDWallet = function(passphrase, bip39Password) {
         var seedHexString = null;
         if (passphrase == null)
             seedHexString = this.generateHDWalletSeedHex();
         else
             seedHexString = passphraseToPassphraseHexString(passphrase);
 
-        MyWallet.buildHDWallet(seedHexString, []);
+        MyWallet.buildHDWallet(seedHexString, [], bip39Password);
         MyWallet.createAccount("Spending");
     }
 

@@ -3,10 +3,10 @@ describe "HD Wallet", ->
   
   beforeEach ->
     passphrase = "add imitate business carbon city orbit spray boss ribbon deposit bachelor sustain"
-      
   describe "buildHDWallet()", ->
     
       it "should have accounts count be 2", ->
+          bip39Password = "bip39Password"
           accountsArrayPayload = [
               {
                   label: "Savings",
@@ -22,7 +22,7 @@ describe "HD Wallet", ->
               }
           ]
 
-          hdwallet = buildHDWallet(passphraseToPassphraseHexString(passphrase), accountsArrayPayload)
+          hdwallet = buildHDWallet(passphraseToPassphraseHexString(passphrase), accountsArrayPayload, bip39Password)
 
           expect(hdwallet.getAccountsCount()).toBe(2)
 

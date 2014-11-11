@@ -373,18 +373,21 @@ HDWallet API
 
     /*
     * @param {string} passphrase seed in hex
+    * @param {string} optional bip39 Password
     */
-    MyWallet.recoverMyWalletHDWalletFromSeedHex(seedHex);
+    MyWallet.recoverMyWalletHDWalletFromSeedHex(seedHex, bip39Password);
 
     /*
     * @param {string} passphrase seed
+    * @param {string} optional bip39 Password
     */
-    MyWallet.recoverMyWalletHDWalletFromMnemonic(passphrase);
+    MyWallet.recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password);
 
     /*
     * @param {string} passphrase seed
+    * @param {string} optional bip39 Password
     */
-    MyWallet.initializeHDWallet(passphrase);
+    MyWallet.initializeHDWallet(passphrase, bip39Password);
 
 
 
