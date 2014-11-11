@@ -24,7 +24,7 @@ var MyWalletSignup = new function() {
                     //SHA256 new_checksum verified by server in case of curruption during transit
                     var new_checksum = Crypto.util.bytesToHex(Crypto.SHA256(crypted, {asBytes: true}));
 
-                    MyWallet.setLoadingText('Saving wallet');
+                    MyWallet.sendEvent('message', {msg: 'Saving wallet'});
 
                     if (extra == null) {
                         extra = '';
@@ -60,7 +60,7 @@ var MyWalletSignup = new function() {
     }
 
     function generateUUIDs(n, success, error) {
-        MyWallet.setLoadingText('Generating Wallet Identifier');
+        MyWallet.sendEvent('message', {msg: 'Generating Wallet Identifier'});
 
         $.ajax({
             type: "GET",

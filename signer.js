@@ -443,7 +443,7 @@ function startTxUI(el, type, pending_transaction, dont_ask_for_anon) {
                     //We have the transaction ready to send, check if were online or offline
                     var btn = self.modal.find('.btn.btn-primary');
 
-                    MyWallet.setLoadingText('Checking Connectivity');
+                    MyWallet.sendEvent('message', {msg: 'Checking Connectivity'});
 
                     $.ajax({
                         timeout: 60000,
@@ -816,7 +816,7 @@ function startTxUI(el, type, pending_transaction, dont_ask_for_anon) {
                                         throw 'Invalid Bitcoin Address';
                                     }
 
-                                    MyWallet.setLoadingText('Creating Forwarding Address');
+                                    MyWallet.sendEvent('message', {msg: 'Creating Forwarding Address'});
 
                                     MyWallet.securePost("forwarder", { action : "create-mix", address : address, shared : true, format : 'json'}, function(obj) {
                                         try {

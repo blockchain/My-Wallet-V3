@@ -55,7 +55,7 @@ function buildTable(groups) {
 }
 
 function loadTaintData() {
-    MyWallet.setLoadingText('Loading Taint Data');
+    MyWallet.sendEvent('message', {msg: 'Loading Taint Data'});
 
     var all_addresses = MyWallet.getAllAddresses();
 

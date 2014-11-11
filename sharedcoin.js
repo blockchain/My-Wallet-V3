@@ -189,7 +189,7 @@ var SharedCoin = new function() {
 
                 console.log('Offer._pollForCompleted()');
 
-                MyWallet.setLoadingText('Waiting For Other Participants To Sign');
+                MyWallet.sendEvent('message', {msg: 'Waiting For Other Participants To Sign'});
 
                 $.retryAjax({
                     dataType: 'json',
@@ -235,7 +235,7 @@ var SharedCoin = new function() {
             submit : function(success, error, complete) {
                 var self = this;
 
-                MyWallet.setLoadingText('Submitting Offer');
+                MyWallet.sendEvent('message', {msg: 'Submitting Offer'});
 
                 $.retryAjax({
                     dataType: 'json',
@@ -264,7 +264,7 @@ var SharedCoin = new function() {
 
                 console.log('Offer._pollForProposalID()');
 
-                MyWallet.setLoadingText('Waiting For Other Participants');
+                MyWallet.sendEvent('message', {msg: 'Waiting For Other Participants'});
 
                 $.retryAjax({
                     dataType: 'json',
@@ -318,7 +318,7 @@ var SharedCoin = new function() {
 
                 console.log('SharedCoin.getProposal()');
 
-                MyWallet.setLoadingText('Fetching Proposal');
+                MyWallet.sendEvent('message', {msg: 'Fetching Proposal'});
 
                 $.retryAjax({
                     dataType: 'json',
@@ -530,7 +530,7 @@ var SharedCoin = new function() {
 
                 var self = this;
 
-                MyWallet.setLoadingText('Submitting Signatures');
+                MyWallet.sendEvent('message', {msg: 'Submitting Signatures'});
 
                 LastSignatureSubmitTime = new Date().getTime();
 
@@ -1432,7 +1432,7 @@ var SharedCoin = new function() {
 
                                 el.find('input,select,button').prop('disabled', true);
 
-                                MyWallet.setLoadingText('Constructing Plan. Please Wait.');
+                                MyWallet.sendEvent('message', {msg: 'Constructing Plan. Please Wait.'});
 
                                 var timeSinceLastSubmit = new Date().getTime() - LastSignatureSubmitTime;
 
@@ -1465,7 +1465,7 @@ var SharedCoin = new function() {
             }
         }
 
-        MyWallet.setLoadingText('Fetching SharedCoin Info');
+        MyWallet.sendEvent('message', {msg: 'Fetching SharedCoin Info'});
 
         $.retryAjax({
             dataType: 'json',

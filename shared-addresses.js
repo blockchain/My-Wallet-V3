@@ -16,7 +16,7 @@ function buildSharedTable(el) {
     var forward_tbody =  forward_table.find('tbody');
 
     MyWallet.securePost("forwarder", { method : "get", format : 'json'}, function(obj) {
-        MyWallet.setLoadingText('Loading Shared Addresses');
+        MyWallet.sendEvent('message', {msg: 'Loading Shared Addresses'});
 
         forward_tbody.empty();
 
@@ -93,7 +93,7 @@ function buildSharedTable(el) {
     $('#shared-address').unbind().click(function() {
         var destination = MyWallet.getPreferredAddress();
 
-        MyWallet.setLoadingText('Creating Forwarding Address');
+        MyWallet.sendEvent('message', {msg: 'Creating Forwarding Address'});
 
         //Default expires is 4 days
         MyWallet.securePost("forwarder", { action : "create-mix", shared : true, address : destination, expires : new Date().getTime()+(345600000), format : 'json'}, function(obj) {

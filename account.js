@@ -52,7 +52,7 @@ var AccountSettings = new function() {
             return;
         }
 
-        MyWallet.setLoadingText(txt);
+        MyWallet.sendEvent('message', {msg: txt});
 
         if (!extra)
             extra = '';
@@ -135,7 +135,7 @@ var AccountSettings = new function() {
     }
 
     this.init = function(container, success, error) {
-        MyWallet.setLoadingText('Loading Account Settings');
+        MyWallet.sendEvent('message', {msg: 'Loading Account Settings'});
 
         if (!container.is(':empty')) {
             AccountSettings.bind(success, error);
@@ -175,7 +175,7 @@ var AccountSettings = new function() {
             $(e.target.hash).trigger('show');
         });
 
-        MyWallet.setLoadingText('Getting Wallet Info');
+        MyWallet.sendEvent('message', {msg: 'Getting Wallet Info'});
 
         MyWallet.securePost("wallet", {method : 'get-info', format : 'json'}, function(data) {
 
@@ -677,7 +677,7 @@ var AccountSettings = new function() {
                 return;
             }
 
-            MyWallet.setLoadingText('Verifying Email');
+            MyWallet.sendEvent('message', {msg: 'Verifying Email'});
 
             MyWallet.securePost("wallet", { payload: code, length : code.length, method : 'verify-email' }, function(data) {
                 MyWallet.makeNotice('success', 'misc-success', data);
@@ -699,7 +699,7 @@ var AccountSettings = new function() {
                 return;
             }
 
-            MyWallet.setLoadingText('Verifying SMS Code');
+            MyWallet.sendEvent('message', {msg: 'Verifying SMS Code'});
 
             MyWallet.securePost("wallet", { payload:code, length : code.length, method : 'verify-sms' }, function(data) {
                 MyWallet.makeNotice('success', 'misc-success', data);

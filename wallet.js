@@ -3276,7 +3276,7 @@ var MyWallet = new function() {
     }
 
     function emailBackup() {
-        MyWallet.setLoadingText('Sending email backup');
+        MyWallet.sendEvent('message', {msg: 'Sending email backup'});
 
         MyWallet.securePost("wallet", { method : 'email-backup' }, function(data) {
             MyWallet.makeNotice('success', 'backup-success', data);
@@ -3361,7 +3361,7 @@ var MyWallet = new function() {
                 try {
                     var old_checksum = payload_checksum;
 
-                    MyWallet.setLoadingText('Saving wallet');
+                    MyWallet.sendEvent('message', {msg: 'Saving wallet'});
 
                     MyWallet.setEncryptedWalletData(crypted);
 
