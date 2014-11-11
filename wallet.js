@@ -1061,6 +1061,13 @@ var MyWallet = new function() {
         return MyWallet.pkBytesToSipa(MyWallet.decodePK(x), addr);
     }
 
+    this.getExtPrivKeyForAccount = function(accountIdx) {
+        return myHDWallet.getAccount(accountIdx).getAccountMainKey(true);
+    }
+
+    this.getExtPubKeyForAccount = function(accountIdx) {
+        return myHDWallet.getAccount(accountIdx).getAccountMainKey(false);
+    }
 
     this.getLabelForAccount = function(accountIdx) {
         return myHDWallet.getAccount(accountIdx).getLabel();
