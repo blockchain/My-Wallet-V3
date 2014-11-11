@@ -248,6 +248,16 @@ Documentation
      */
     MyWallet.isWatchOnly(address);
 
+    /*
+     * @returns {boolean} whether mnemonic is verified
+     */
+    MyWallet.isMnemonicVerified();
+
+    /*
+     */
+    MyWallet.didVerifyMnemonic();
+
+
 
 HDWallet API
 ===========

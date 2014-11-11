@@ -119,7 +119,7 @@ var MyWallet = new function() {
     var haveBuildHDWallet = false;
     var tx_tags = {};
     var tag_names = [];
-
+    var mnemonicVerified = false;
 
     var wallet_options = {
         pbkdf2_iterations : default_pbkdf2_iterations, //Number of pbkdf2 iterations to default to for second password and dpasswordhash
@@ -155,6 +155,14 @@ var MyWallet = new function() {
         }
     }
 
+    this.didVerifyMnemonic = function() {
+        mnemonicVerified = true;
+        MyWallet.backupWalletDelayed();
+    }
+
+    this.isMnemonicVerified = function() {
+        return mnemonicVerified;
+    }
 
     this.isSynchronizedWithServer = function() {
         return isSynchronizedWithServer;
@@ -1431,6 +1439,7 @@ var MyWallet = new function() {
 
         if (myHDWallet != null) {
             out += '	{"seed_hex" : "'+ myHDWallet.getSeedHexString() +'",\n';
+            out += '    "mnemonic_verified" : "'+ mnemonicVerified +'",\n';
             out += '	"accounts" : [\n';
 
             for (var i in myHDWallet.getAccounts()) {
@@ -2855,6 +2864,11 @@ var MyWallet = new function() {
                     if (haveBuildHDWallet == false) {
                         MyWallet.buildHDWallet(defaultHDWallet.seed_hex, defaultHDWallet.accounts);
                         haveBuildHDWallet = true;
+                    }
+                    if (defaultHDWallet.mnemonic_verified) {
+                        mnemonicVerified = defaultHDWallet.mnemonic_verified;
+                    } else {
+                        mnemonicVerified = false;
                     }
                 } else {
                     MyWallet.sendEvent('hd_wallets_does_not_exist');
