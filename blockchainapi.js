@@ -272,6 +272,25 @@ var BlockchainAPI = new function() {
         updateKV('Updating Cell Number', 'update-sms', val, successCallback, errorCallback);
     }
 
+    this.setTwoFactorGoogleAuthenticator = function(successCallback, errorCallback) {
+        MyWallet.securePost("wallet", { method : 'generate-google-secret' }, function(google_secret_url) {
+            if (successCallback)
+                successCallback(google_secret_url);
+        }, function(data) {
+            MyWallet.makeNotice('error', 'misc-error', data.responseText);
+            if (errorCallback)
+                errorCallback(data.responseText);
+        });
+    }
+
+    this.confirmTwoFactorGoogleAuthenticator = function(code, successCallback, errorCallback) {
+        updateKV('Updating Two Factor Authentication', 'update-auth-type', 4, function() {
+            MyWallet.setRealAuthType(4);
+            if (successCallback)
+                successCallback();
+        }, errorCallback, '?code='+code);
+    }
+
     this.verifyMobile = function(code, successCallback, errorCallback) {
         MyWallet.securePost("wallet", { payload:code, length : code.length, method : 'verify-sms' }, function(data) {
             MyWallet.sendMonitorEvent({type: "success", message: data, code: 0});

@@ -1580,6 +1580,26 @@ var MyWallet = new function() {
         });
     }
 
+    this.setTwoFactorGoogleAuthenticator = function(successCallback, errorCallback) {
+        BlockchainAPI.setTwoFactorGoogleAuthenticator(function(google_secret_url) {
+            if (successCallback)
+                successCallback(google_secret_url);
+        }, function(e) {
+            if (errorCallback)
+               errorCallback(e);
+        });
+    }
+
+    this.confirmTwoFactorGoogleAuthenticator = function(code, successCallback, errorCallback) {
+        BlockchainAPI.confirmTwoFactorGoogleAuthenticator(code, function() {
+            if (successCallback)
+                successCallback();
+        }, function() {
+            if (errorCallback)
+               errorCallback();
+        });
+    }
+
     this.get_history_with_addresses = function(addresses, success, error) {
         BlockchainAPI.get_history_with_addresses(addresses, function(data) {
             if (success) success(data);
