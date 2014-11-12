@@ -99,6 +99,7 @@ var MyWallet = new function() {
     var main_password_timeout = 60000;
     var isInitialized = false;
     var language = 'en'; //Current language
+    var localSymbolCode = null; //Current local symbol
     var supported_encryption_version = 2.0;  //The maxmimum supported encryption version
     var encryption_version_used = 0.0; //The encryption version of the current wallet. Set by decryptWallet()
     var serverTimeOffset = 0; //Difference between server and client time
@@ -191,6 +192,20 @@ var MyWallet = new function() {
     this.setLanguage = function(_language) {
         MyStore.put('language', _language);
         language = _language;
+    }
+
+    this.getLocalSymbolCode = function() {
+        if (localSymbolCode) {
+            return localSymbolCode;
+        } else {
+            return MyStore.get('localSymbolCode');            
+        }
+    }
+
+    this.setLocalSymbolCode = function(code) {
+        MyStore.put('localSymbolCode', code);
+        symbol_local.code = code;
+        localSymbolCode = code;
     }
 
     this.addEventListener = function(func) {
@@ -1500,6 +1515,7 @@ var MyWallet = new function() {
             symbol_local.code = code;
             MyWallet.get_history();
             symbol_local.code = original_code;
+            MyWallet.setLocalSymbolCode(code);
 
             if (successCallback)
                 successCallback();
@@ -3741,6 +3757,7 @@ var MyWallet = new function() {
                 war_checksum = obj.war_checksum;
 
                 setLocalSymbol(obj.symbol_local);
+                MyWallet.setLocalSymbolCode(obj.symbol_local.code);
 
                 setBTCSymbol(obj.symbol_btc);
 
