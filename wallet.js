@@ -1943,7 +1943,7 @@ var MyWallet = new function() {
     }
 
     this.setNote = function(tx_hash, text) {
-        tx_notes[tx_hash] = note;
+        tx_notes[tx_hash] = text;
         MyWallet.backupWalletDelayed();
     }
 
