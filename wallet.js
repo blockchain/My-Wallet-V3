@@ -1947,6 +1947,10 @@ var MyWallet = new function() {
         MyWallet.backupWalletDelayed();
     }
 
+    this.getTags = function(tx_hash) {
+        return tx_tags[tx_hash];
+    }
+
     this.setTag = function(tx_hash, idx) {
         if (tx_tags[tx_hash] == null) {
             tx_tags[tx_hash] = [];
