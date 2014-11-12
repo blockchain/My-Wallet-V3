@@ -2804,7 +2804,7 @@ var MyWallet = new function() {
         if (payload_checksum && payload_checksum.length > 0)
             data.checksum = payload_checksum;
 
-        MyWallet.sendMonitorEvent({type: "info", message: "Checking For Wallet Updates", code: 0});
+        MyWallet.sendMonitorEvent({type: "loadingText", message: "Checking For Wallet Updates", code: 0});
 
 
         MyWallet.securePost("wallet", data, function(obj) {
@@ -3175,7 +3175,7 @@ var MyWallet = new function() {
 
             //If we don't have any wallet data then we must have two factor authentication enabled
             if (encrypted_wallet_data == null || encrypted_wallet_data.length == 0) {
-                MyWallet.sendMonitorEvent({type: "info", message: 'Validating Authentication key', code: 0});
+                MyWallet.sendMonitorEvent({type: "loadingText", message: 'Validating Authentication key', code: 0});
 
                 if (auth_key == null) {
                     throw 'Two Factor Authentication code this null';
@@ -3460,7 +3460,7 @@ var MyWallet = new function() {
 
     this.decryptWallet = function(data, password, success, error) {
         try {
-            MyWallet.sendMonitorEvent({type: "info", message: 'Decrypting Wallet', code: 0});
+            MyWallet.sendMonitorEvent({type: "loadingText", message: 'Decrypting Wallet', code: 0});
 
             MyWallet.sendEvent('on_wallet_decrypt_start')
 
@@ -3694,7 +3694,7 @@ var MyWallet = new function() {
             throw 'Cannot Set GUID Once Initialized';
         }
 
-        MyWallet.sendMonitorEvent({type: "info", message: 'Downloading Wallet', code: 0});
+        MyWallet.sendMonitorEvent({type: "loadingText", message: 'Downloading Wallet', code: 0});
 
         var clientTime=(new Date()).getTime();
         var data = {format : 'json', resend_code : resend_code, ct : clientTime};
