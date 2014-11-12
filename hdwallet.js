@@ -251,6 +251,9 @@ function HDWallet(seedHex, bip39Password) {
         getPassphraseString : function() {
             return passphraseHexStringToPassphrase(this.seedHex);
         },
+        setSeedHexString : function(seedHex) {
+            this.seedHex = seedHex;
+        },
         getSeedHexString : function() {
             return this.seedHex;
         },
