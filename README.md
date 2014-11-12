@@ -3,6 +3,9 @@ MyWallet
 
 Javascript Model for blockchain wallet.
 
+
+
+
 Documentation
 ===========
 
@@ -261,6 +264,93 @@ Documentation
 
 HDWallet API
 ===========
+
+### Creating HD Wallet
+
+This method should be called if the event `hd_wallets_does_not_exist` is fired. Method will create the HD wallet and create the first account with the name `Spending`.
+
+Parameters:
+
+`passphrase` - passphrase seed
+
+`bip39Password` - optional bip39 Password
+
+Method:
+
+```
+MyWallet.initializeHDWallet(passphrase, bip39Password);
+```
+
+
+### Getting account label 
+
+This method returns the account name for the given account index.
+
+Parameters:
+
+`accountIdx` - index of HD wallet account
+
+Returns:
+
+`account label`
+
+Method:
+
+```
+MyWallet.getLabelForAccount(accountIdx);
+```
+
+
+### Setting account label 
+
+This method sets the account name for the given account index.
+
+Parameters:
+
+`accountIdx` - index of HD wallet account
+`label` - account name to be changed to
+
+Method:
+
+```
+MyWallet.setLabelForAccount(accountIdx, label);
+```
+
+
+### Checking if account is archived 
+
+This method tells whether the account is archived or not.
+
+Parameters:
+
+`accountIdx` - index of HD wallet account
+
+Method:
+
+```
+MyWallet.isArchivedForAccount(accountIdx);
+```
+
+
+### Setting account archived 
+
+This method sets for the given account index.
+
+Parameters:
+
+`accountIdx` - index of HD wallet account
+`label` - account name to be changed to
+
+Method:
+
+```
+MyWallet.setIsArchivedForAccount(accountIdx, label);
+```
+
+
+
+HDWallet API
+===========
     /*
     * @param {int} index of account
     * @returns {string} label
@@ -383,11 +473,6 @@ HDWallet API
     */
     MyWallet.recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password);
 
-    /*
-    * @param {string} passphrase seed
-    * @param {string} optional bip39 Password
-    */
-    MyWallet.initializeHDWallet(passphrase, bip39Password);
 
 
 
