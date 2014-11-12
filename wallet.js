@@ -3520,7 +3520,7 @@ var MyWallet = new function() {
                     _success(root, obj);
                 } catch (e) {
                     _error('Error Decrypting Wallet. Please check your password is correct.');
-                    MyWallet.sendEvent('error_restoring_wallet');
+                    MyWallet.sendMonitorEvent({type: "loadingText", message: 'Error Decrypting Wallet. Please check your password is correct.', code: 0});
                 }
             };
 
@@ -3562,7 +3562,7 @@ var MyWallet = new function() {
                     }
                 }, function() {
                     _error('Error Decrypting Wallet. Please check your password is correct.');
-                    MyWallet.sendEvent('error_restoring_wallet');
+                    MyWallet.sendMonitorEvent({type: "loadingText", message: 'Error Decrypting Wallet. Please check your password is correct.', code: 0});
                 });
             }
         } catch (e) {
