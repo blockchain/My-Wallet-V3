@@ -549,8 +549,10 @@ var MyStore = new function() {
         } catch(e) {
             console.log(e);
         }
-
-        callback(result);
+        if (callback)
+            callback(result);
+        else
+            return result;
     }
 
     this.remove = function(key) {

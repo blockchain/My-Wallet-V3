@@ -181,7 +181,11 @@ var MyWallet = new function() {
     }
 
     this.getLanguage = function() {
-        return language;
+        if (language) {
+            return language;
+        } else {
+            return MyStore.get('language');            
+        }
     }
 
     this.setLanguage = function(_language) {
