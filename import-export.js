@@ -1,7 +1,7 @@
 function _ImportExport() {
 
     this.init = function(container, success, error) {
-        MyWallet.sendEvent('message', {msg: 'Loading Import Export View'});
+        MyWallet.sendMonitorEvent({type: "loadingText", message: 'Loading Import Export View', code: 0});
 
         if (!container.is(':empty')) {
             bind();
@@ -511,7 +511,7 @@ function _ImportExport() {
     }
 
     function importS3WalletBackup(id) {
-        MyWallet.sendEvent('message', {msg: 'Importing Backup'});
+        MyWallet.sendMonitorEvent({type: "loadingText", message: 'Importing Backup', code: 0});
 
         MyWallet.securePost('wallet', {method: 'get-backup', id : id, format : 'json'}, function(obj) {
             try {
@@ -538,7 +538,7 @@ function _ImportExport() {
     }
 
     function loadBackupsList(el) {
-        MyWallet.sendEvent('message', {msg: 'Loading Backup List'});
+        MyWallet.sendMonitorEvent({type: "loadingText", message: 'Loading Backup List', code: 0});
 
         MyWallet.securePost('wallet', {method : 'list-backups', format : 'json'}, function(obj) {
             try {

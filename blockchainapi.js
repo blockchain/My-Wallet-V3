@@ -172,7 +172,7 @@ var BlockchainAPI = new function() {
 
     //Get the balances of multi addresses (Used for archived)
     this.get_balances = function(addresses, success, error) {
-        MyWallet.sendEvent('message', {msg: 'Getting Balances'});
+        MyWallet.sendMonitorEvent({type: "loadingText", message: 'Getting Balances', code: 0});
 
         $.ajax({
             type: "POST",
@@ -197,7 +197,7 @@ var BlockchainAPI = new function() {
 
     //Get the balance of an array of addresses
     this.get_balance = function(addresses, success, error) {
-        MyWallet.sendEvent('message', {msg: 'Getting Balance'});
+        MyWallet.sendMonitorEvent({type: "loadingText", message: 'Getting Balance', code: 0});
 
         this.get_balances(addresses, function(obj){
             var balance = 0;
@@ -337,7 +337,7 @@ var BlockchainAPI = new function() {
 
 
     this.resolve_firstbits = function(addr, success, error) {
-        MyWallet.sendEvent('message', {msg: 'Querying Firstbits'});
+        MyWallet.sendMonitorEvent({type: "loadingText", message: 'Querying Firstbits', code: 0});
 
         $.ajax({
             type: "GET",
@@ -357,7 +357,7 @@ var BlockchainAPI = new function() {
     }
 
     this.get_rejection_reason = function(hexhash, got_reason, not_rejected, error) {
-        MyWallet.sendEvent('message', {msg: 'Querying Rejection Reason'});
+        MyWallet.sendMonitorEvent({type: "loadingText", message: 'Querying Rejection Reason', code: 0});
 
         $.ajax({
             type: "GET",
@@ -407,7 +407,7 @@ var BlockchainAPI = new function() {
                 }
             }
                         
-            MyWallet.sendEvent('message', {msg: 'Pushing Transaction'});
+            MyWallet.sendMonitorEvent({type: "loadingText", message: 'Pushing Transaction', code: 0});
 
             var transactions = MyWallet.getTransactions();
 
@@ -560,7 +560,7 @@ var BlockchainAPI = new function() {
 
     this.get_unspent = function(fromAddresses, success, error, confirmations, do_not_use_unspent_cache) {
         //Get unspent outputs
-        MyWallet.sendEvent('message', {msg: 'Getting Unspent Outputs'});
+        MyWallet.sendMonitorEvent({type: "loadingText", message: 'Getting Unspent Outputs', code: 0});
 
         $.retryAjax({
             type: "POST",

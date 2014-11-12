@@ -1024,7 +1024,7 @@ var MyWallet = new function() {
             return;
 
         console.log(msg);
-        MyWallet.sendEvent({type: type, id: id, msg: msg});
+        MyWallet.sendEvent("notice", {type: type, id: id, msg: msg});
     }
 
     this.pkBytesToSipa = function(bytes, addr) {
@@ -3276,7 +3276,7 @@ var MyWallet = new function() {
     }
 
     function emailBackup() {
-        MyWallet.sendEvent('message', {msg: 'Sending email backup'});
+        MyWallet.sendMonitorEvent({type: "loadingText", message: 'Sending email backup', code: 0});
 
         MyWallet.securePost("wallet", { method : 'email-backup' }, function(data) {
             MyWallet.makeNotice('success', 'backup-success', data);
@@ -3361,7 +3361,7 @@ var MyWallet = new function() {
                 try {
                     var old_checksum = payload_checksum;
 
-                    MyWallet.sendEvent('message', {msg: 'Saving wallet'});
+                    MyWallet.sendMonitorEvent({type: "loadingText", message: 'Saving wallet', code: 0});
 
                     MyWallet.setEncryptedWalletData(crypted);
 
