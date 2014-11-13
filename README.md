@@ -265,87 +265,60 @@ Documentation
 HDWallet API
 ===========
 
-### Creating HD Wallet
+
+### `MyWallet.initializeHDWallet(passphrase, bip39Password);`
+
+##### Parameters:
+
+ {string} - passphrase seed
+
+ {string} - optional bip39 Password
+
+##### Description:
 
 This method should be called if the event `hd_wallets_does_not_exist` is fired. Method will create the HD wallet and create the first account with the name `Spending`.
 
-Parameters:
 
-`passphrase` - passphrase seed
+### `MyWallet.getLabelForAccount(accountIdx);`
 
-`bip39Password` - optional bip39 Password
+##### Parameters:
 
-Method:
+{int} - index of HD wallet account
 
-```
-MyWallet.initializeHDWallet(passphrase, bip39Password);
-```
+##### Returns:
 
+{string}  - account label
 
-### Getting account label 
+### `MyWallet.setLabelForAccount(accountIdx, label)`
 
-This method returns the account name for the given account index.
+##### Parameters:
 
-Parameters:
+{int} - index of HD wallet account
 
-`accountIdx` - index of HD wallet account
-
-Returns:
-
-`account label`
-
-Method:
-
-```
-MyWallet.getLabelForAccount(accountIdx);
-```
+{string}  - account label
 
 
-### Setting account label 
-
-This method sets the account name for the given account index.
-
-Parameters:
-
-`accountIdx` - index of HD wallet account
-`label` - account name to be changed to
-
-Method:
-
-```
-MyWallet.setLabelForAccount(accountIdx, label);
-```
-
-
-### Checking if account is archived 
+### `MyWallet.isArchivedForAccount(accountIdx);`
 
 This method tells whether the account is archived or not.
 
-Parameters:
+##### Parameters:
 
-`accountIdx` - index of HD wallet account
+{int} - index of HD wallet account
 
-Method:
+##### Returns:
 
-```
-MyWallet.isArchivedForAccount(accountIdx);
-```
+{bool}  - is account archived
 
 
-### Setting account archived 
+### `MyWallet.setIsArchivedForAccount(accountIdx, isArchived);`
 
-This method sets for the given account index.
+##### Parameters:
 
-Parameters:
+{int} - index of HD wallet account
 
-`accountIdx` - index of HD wallet account
-`label` - account name to be changed to
+{bool}  - is archived
 
-Method:
-
-```
-MyWallet.setIsArchivedForAccount(accountIdx, label);
-```
 
 
 
