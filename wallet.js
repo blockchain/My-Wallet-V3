@@ -1237,7 +1237,7 @@ var MyWallet = new function() {
             if (errorCallback) {
                 errorCallback(e);
             }
-            MyWallet.sendMonitorEvent({type: "error", message: e, code: 0});
+            MyWallet.sendMonitorEvent({type: "error", message: e.responseText, code: 0});
         }, 0, true);
     }
 
