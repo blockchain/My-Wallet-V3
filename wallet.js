@@ -1600,6 +1600,22 @@ var MyWallet = new function() {
         });
     }
 
+    this.unsetTwoFactor = function(successCallback, errorCallback) {
+        BlockchainAPI.unsetTwoFactor(successCallback, errorCallback);
+    }
+
+    this.setTwoFactorSMS = function(successCallback, errorCallback) {
+        BlockchainAPI.setTwoFactorSMS(successCallback, errorCallback);
+    }
+
+    this.setTwoFactorYubiKey = function(successCallback, errorCallback) {
+        BlockchainAPI.setTwoFactorYubiKey(successCallback, errorCallback);
+    }
+
+    this.setTwoFactorEmail = function(successCallback, errorCallback) {
+        BlockchainAPI.setTwoFactorEmail(successCallback, errorCallback);
+    }
+
     this.setTwoFactorGoogleAuthenticator = function(successCallback, errorCallback) {
         BlockchainAPI.setTwoFactorGoogleAuthenticator(function(google_secret_url) {
             if (successCallback)
@@ -1612,6 +1628,16 @@ var MyWallet = new function() {
 
     this.confirmTwoFactorGoogleAuthenticator = function(code, successCallback, errorCallback) {
         BlockchainAPI.confirmTwoFactorGoogleAuthenticator(code, function() {
+            if (successCallback)
+                successCallback();
+        }, function() {
+            if (errorCallback)
+               errorCallback();
+        });
+    }
+
+    this.confirmTwoFactorGoogleAuthenticator = function(successCallback, errorCallback) {
+        BlockchainAPI.confirmTwoFactorGoogleAuthenticator(function() {
             if (successCallback)
                 successCallback();
         }, function() {

@@ -272,6 +272,30 @@ var BlockchainAPI = new function() {
         updateKV('Updating Cell Number', 'update-sms', val, successCallback, errorCallback);
     }
 
+    function updateAuthType(val, successCallback, errorCallback) {
+        updateKV('Updating Two Factor Authentication', 'update-auth-type', val, function() {
+            MyWallet.setRealAuthType(val);
+            if (successCallback)
+                successCallback();
+        }, errorCallback);
+    }
+
+    this.unsetTwoFactor = function(successCallback, errorCallback) {
+        updateAuthType(0, successCallback, errorCallback);
+    }
+
+    this.setTwoFactorSMS = function(successCallback, errorCallback) {
+        updateAuthType(1, successCallback, errorCallback);
+    }
+
+    this.setTwoFactorYubiKey = function(successCallback, errorCallback) {
+        updateAuthType(3, successCallback, errorCallback);
+    }
+
+    this.setTwoFactorEmail = function(successCallback, errorCallback) {
+        updateAuthType(2, successCallback, errorCallback);
+    }
+
     this.setTwoFactorGoogleAuthenticator = function(successCallback, errorCallback) {
         MyWallet.securePost("wallet", { method : 'generate-google-secret' }, function(google_secret_url) {
             if (successCallback)
