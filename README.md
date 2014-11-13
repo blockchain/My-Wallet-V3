@@ -266,7 +266,7 @@ HDWallet API
 ===========
 
 
-### `MyWallet.initializeHDWallet(passphrase, bip39Password);`
+#### `MyWallet.initializeHDWallet(passphrase, bip39Password);`
 
 ##### Parameters:
 
@@ -279,7 +279,7 @@ HDWallet API
 This method should be called if the event `hd_wallets_does_not_exist` is fired. Method will create the HD wallet and create the first account with the name `Spending`.
 
 
-### `MyWallet.getLabelForAccount(accountIdx);`
+#### `MyWallet.getLabelForAccount(accountIdx);`
 
 ##### Parameters:
 
@@ -289,7 +289,7 @@ This method should be called if the event `hd_wallets_does_not_exist` is fired. 
 
 {string}  - account label
 
-### `MyWallet.setLabelForAccount(accountIdx, label)`
+#### `MyWallet.setLabelForAccount(accountIdx, label)`
 
 ##### Parameters:
 
@@ -298,11 +298,11 @@ This method should be called if the event `hd_wallets_does_not_exist` is fired. 
 {string}  - account label
 
 
-### `MyWallet.isArchivedForAccount(accountIdx);`
+#### `MyWallet.isArchivedForAccount(accountIdx);`
 
 This method tells whether the account is archived or not.
 
-##### Parameters:
+Parameters:
 
 {int} - index of HD wallet account
 
@@ -311,15 +311,13 @@ This method tells whether the account is archived or not.
 {bool}  - is account archived
 
 
-### `MyWallet.setIsArchivedForAccount(accountIdx, isArchived);`
+#### `MyWallet.setIsArchivedForAccount(accountIdx, isArchived);`
 
 ##### Parameters:
 
 {int} - index of HD wallet account
 
 {bool}  - is archived
-
-
 
 
 HDWallet API
