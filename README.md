@@ -172,6 +172,18 @@ delete tx note and backups wallet
 fetches wallet json from server
 
 
+#### `MyWallet.restoreWallet(pw, auth_key);`
+
+##### Parameters:
+
+{string} - main password
+{string} - 2FA code
+
+##### Description:
+
+method that you need did call after 'did_set_guid' event is fired from calling `MyWallet.setGUID(guid, resend_code)`
+
+
 #### `MyWallet.signmessage(address, message);`
 
 ##### Parameters:
