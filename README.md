@@ -297,6 +297,10 @@ This method should be called if the event `hd_wallets_does_not_exist` is fired. 
 
 {string}  - account label
 
+##### Description:
+
+    Sets label for account and backups wallet
+
 
 #### `MyWallet.isArchivedForAccount(accountIdx);`
 
@@ -319,132 +323,202 @@ Parameters:
 
 {bool}  - is archived
 
+##### Description:
 
-HDWallet API
-===========
-    /*
-    * @param {int} index of account
-    * @returns {string} label
-    */
-    MyWallet.getLabelForAccount(accountIdx);
-
-    /*
-    * @param {int} index of account
-    * @param {string} account name
-    */
-    MyWallet.setLabelForAccount(accountIdx, label);
-
-    /*
-    * @param {int} index of account
-    * @returns {boolean} is archived
-    */
-    MyWallet.isArchivedForAccount(accountIdx);
-
-    /*
-    * @param {int} index of account
-    * @param {string} account name
-    */
-    MyWallet.setIsArchivedForAccount(accountIdx, isArchived);
-
-    /*
-    * @param {int} index of account
-    * @returns {array} address for account
-    */
-    MyWallet.getAddressesForAccount(accountIdx);
-
-    /*
-    * @param {int} index of account
-    * @returns {array} change address for account
-    */
-    MyWallet.getChangeAddressesForAccount(accountIdx);
-
-    /*
-    * @param {int} index of account
-    * @returns {int} balance of account in satoshis
-    */
-    MyWallet.getBalanceForAccount(accountIdx);
-
-    /*
-    * @param {int} index of account
-    * @returns {array} Payment Request object
-    */
-    MyWallet.getPaymentRequestsForAccount(accountIdx);
-
-    /*
-    * @param {int} index of account
-    * @param {int} Payment Request amount in satoshis
-    * @returns {Object} Payment Request object
-    */
-    MyWallet.generatePaymentRequestForAccount(accountIdx, amount);
-
-    /*
-    * @param {int} index of account
-    * @param {string} address to update
-    * @param {int} Payment Request amount in satoshis
-    * @returns {Boolean} success or not
-    */
-    MyWallet.updatePaymentRequestForAccount(accountIdx, address, amount);
-
-    /*
-    * @param {int} index of account
-    * @param {string} address to accept
-    * @returns {Boolean} success or not
-    */
-    MyWallet.acceptPaymentRequestForAccount(accountIdx, address);
-
-    /*
-    * @param {int} index of account
-    * @param {string} address to cancel
-    * @returns {Boolean} success or not
-    */
-    MyWallet.cancelPaymentRequestForAccount(accountIdx, address);
-
-    /*
-    * @param {int} index of account
-    * @returns {array} array of transaction objects
-    */
-    MyWallet.getTransactionsForAccount(accountIdx);
-
-    /*
-    * @param {function} success callback function
-    * @param {function} error callback function
-    */
-    MyWallet.refreshAllPaymentRequestsAndChangeAddresses(successcallback, errorcallback);
-
-    /*
-    * @param {int} index of account
-    * @param {string} address to send to
-    * @param {int} send amount in satoshis
-    * @param {int} fee amount in satoshis
-    * @param {string} tx note
-    * @param {function} success callback function
-    * @param {function} error callback function
-    */
-    MyWallet.sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successcallback, errorcallback);
-
-    /*
-    * @returns {int} accounts count
-    */
-    MyWallet.getAccountsCount();
-
-    /*
-    * @param {string} label name
-    */
-    MyWallet.createAccount(label);
-
-    /*
-    * @param {string} passphrase seed in hex
-    * @param {string} optional bip39 Password
-    */
-    MyWallet.recoverMyWalletHDWalletFromSeedHex(seedHex, bip39Password);
-
-    /*
-    * @param {string} passphrase seed
-    * @param {string} optional bip39 Password
-    */
-    MyWallet.recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password);
+    sets account to `isArchived` and backups wallet
 
 
+#### `MyWallet.getAddressesForAccount(accountIdx);`
+
+Parameters:
+
+{int} - index of HD wallet account
+
+##### Returns:
+
+{array}  - addresses for account
+
+
+#### `MyWallet.getChangeAddressesForAccount(accountIdx);`
+
+Parameters:
+
+{int} - index of HD wallet account
+
+##### Returns:
+
+{array}  - change addresses for account
+
+
+#### `MyWallet.getBalanceForAccount(accountIdx);`
+
+Parameters:
+
+{int} - index of HD wallet account
+
+##### Returns:
+
+{int}  - balance of account in satoshis
+
+
+#### `MyWallet.getPaymentRequestsForAccount(accountIdx);`
+
+Parameters:
+
+{int} - index of HD wallet account
+
+##### Returns:
+
+{array}  - Payment Request objects
+
+
+#### `MyWallet.generatePaymentRequestForAccount(accountIdx, amount);`
+
+Parameters:
+
+{int} - index of HD wallet account
+{int} - Payment Request amount in satoshis
+
+##### Returns:
+
+{Object}  - Payment Request object
+
+##### Description:
+
+    generates and returns a Payment Request object and backups wallet
+
+
+#### `MyWallet.updatePaymentRequestForAccount(accountIdx, address, amount);`
+
+Parameters:
+
+{int} - index of HD wallet account
+{string} - address to update
+{int} - Payment Request amount in satoshis
+
+##### Returns:
+
+{bool}  - success or not
+
+##### Description:
+
+    updates a Payment Request object and backups wallet
+
+
+#### `MyWallet.acceptPaymentRequestForAccount(accountIdx, address, amount);`
+
+Parameters:
+
+{int} - index of HD wallet account
+{string} - address to accept
+
+##### Returns:
+
+{bool}  - success or not
+
+##### Description:
+
+    accepts a Payment Request object and backups wallet
+
+
+#### `MyWallet.cancelPaymentRequestForAccount(accountIdx, address);`
+
+Parameters:
+
+{int} - index of HD wallet account
+{string} - address to cancel
+
+##### Returns:
+
+{bool}  - success or not
+
+##### Description:
+
+    cancels a Payment Request object and backups wallet
+
+
+#### `MyWallet.getTransactionsForAccount(accountIdx);`
+
+Parameters:
+
+{int} - index of HD wallet account
+
+##### Returns:
+
+{array}  - array of transaction objects
+
+
+#### `MyWallet.refreshAllPaymentRequestsAndChangeAddresses(accountIdx);`
+
+Parameters:
+
+{function} - success callback function
+{function} - error callback function
+
+##### Description:
+
+    refreshes all balances across all accounts and addresses
+
+
+#### `MyWallet.sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successcallback, errorcallback);`
+
+Parameters:
+
+{int} - index of account
+{string} - address to send to
+{int} - send amount in satoshis
+{int} - fee amount in satoshis
+{string} - optional tx note
+{function} - success callback function
+{function} - error callback function
+
+
+#### `MyWallet.getAccountsCount();`
+
+##### Returns:
+
+{int}  - number of accounts
+
+
+#### `MyWallet.createAccount(label);`
+
+Parameters:
+
+{string} - label name
+
+##### Description:
+
+    creates new account and backups wallet
+
+
+#### `MyWallet.recoverMyWalletHDWalletFromSeedHex(seedHex, bip39Password);`
+
+##### Parameters:
+
+ {string} - passphrase seed in hex
+
+ {string} - optional bip39 Password
+
+##### Description:
+
+recovers HD wallet from passphrases by recreating all accounts and queries all balances of accounts and addresses
+
+
+#### `MyWallet.recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password);`
+
+##### Parameters:
+
+ {string} - passphrase seed in words
+
+ {string} - optional bip39 Password
+
+##### Description:
+
+aaaa
+
+##### Description:
+
+recovers HD wallet from passphrases by recreating all accounts and queries all balances of accounts and addresses
 
 
 Tests
