@@ -3223,13 +3223,13 @@ var MyWallet = new function() {
         }, error);
     }
 
-    this.restoreWallet = function(pw, auth_key) {
+    this.restoreWallet = function(pw, two_factor_auth_key, wrong_two_factor_code) {
 
         if (isInitialized || isRestoringWallet) {
             return;
         }
 
-        function error(e) {
+        function _error(e) {
             isRestoringWallet = false;
             MyWallet.sendMonitorEvent({type: "error", message: e, code: 0});
 
@@ -3248,11 +3248,11 @@ var MyWallet = new function() {
             if (encrypted_wallet_data == null || encrypted_wallet_data.length == 0) {
                 MyWallet.sendMonitorEvent({type: "loadingText", message: 'Validating Authentication key', code: 0});
 
-                if (auth_key == null) {
+                if (two_factor_auth_key == null) {
                     throw 'Two Factor Authentication code this null';
                 }
 
-                if (auth_key.length == 0 || auth_key.length > 255) {
+                if (two_factor_auth_key.length == 0 || two_factor_auth_key.length > 255) {
                     throw 'You must enter a Two Factor Authentication code';
                 }
 
@@ -3260,7 +3260,7 @@ var MyWallet = new function() {
                     timeout: 60000,
                     type: "POST",
                     url: root + "wallet",
-                    data :  { guid: guid, payload: auth_key, length : auth_key.length,  method : 'get-wallet', format : 'plain' },
+                    data :  { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain' },
                     success: function(data) {
                         try {
                             if (data == null || data.length == 0) {
@@ -3281,7 +3281,8 @@ var MyWallet = new function() {
                         }
                     },
                     error : function (response) {
-                        error(response.responseText);
+                        _error(response.responseText);
+                        wrong_two_factor_code();
                     }
                 });
             } else {
@@ -3289,10 +3290,10 @@ var MyWallet = new function() {
                     isRestoringWallet = false;
 
                     didDecryptWallet();
-                }, error);
+                }, _error);
             }
         } catch (e) {
-            error(e);
+            _error(e);
         }
     }
 
@@ -3759,8 +3760,7 @@ var MyWallet = new function() {
 
 
     //Fetch information on a new wallet identfier
-    this.setGUID = function(user_guid, resend_code) {
-
+    this.setGUID = function(user_guid, resend_code, needs_two_factor_code) {
 //        console.log('Set GUID ' + user_guid);
 
         if (isInitialized) {
@@ -3801,6 +3801,8 @@ var MyWallet = new function() {
 
                 if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
                     MyWallet.setEncryptedWalletData(obj.payload);
+                } else {
+                    needs_two_factor_code();
                 }
 
                 war_checksum = obj.war_checksum;

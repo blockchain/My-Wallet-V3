@@ -160,24 +160,26 @@ delete tx note and backups wallet
 {string} - bitcoin amount
 
 
-#### `MyWallet.setGUID(guid, resend_code);`
+#### `MyWallet.setGUID(guid, resend_code, needs_two_factor_code);`
 
 ##### Parameters:
 
 {string} - guid
 {bool} - resend code
+{function} - callback function thank will invoke if 2FA code is needed when you later call `MyWallet.restoreWallet`
 
 ##### Description:
 
 fetches wallet json from server
 
 
-#### `MyWallet.restoreWallet(pw, auth_key);`
+#### `MyWallet.restoreWallet(pw, two_factor_auth_key, wrong_two_factor_code);`
 
 ##### Parameters:
 
 {string} - main password
 {string} - 2FA code
+{function} - callback function thank will invoke if 2FA code is incorrect
 
 ##### Description:
 
