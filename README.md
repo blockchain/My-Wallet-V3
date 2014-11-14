@@ -514,10 +514,6 @@ recovers HD wallet from passphrases by recreating all accounts and queries all b
 
 ##### Description:
 
-aaaa
-
-##### Description:
-
 recovers HD wallet from passphrases by recreating all accounts and queries all balances of accounts and addresses
 
 
