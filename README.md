@@ -4,6 +4,22 @@ MyWallet
 Javascript Model for blockchain wallet.
 
 
+MyWallet API
+===========
+
+#### `MyWallet.setLabel(address, label)`
+
+##### Parameters:
+
+{string}  - label name
+
+{string}  - label name
+
+##### Description:
+
+Sets label for account and backups wallet
+
+
 Documentation
 ===========
     /*
@@ -290,7 +306,7 @@ Sets label for account and backups wallet
 
 This method tells whether the account is archived or not.
 
-Parameters:
+##### Parameters:
 
 {int} - index of HD wallet account
 
@@ -314,7 +330,7 @@ sets account to `isArchived` and backups wallet
 
 #### `MyWallet.getAddressesForAccount(accountIdx);`
 
-Parameters:
+##### Parameters:
 
 {int} - index of HD wallet account
 
@@ -325,7 +341,7 @@ Parameters:
 
 #### `MyWallet.getChangeAddressesForAccount(accountIdx);`
 
-Parameters:
+##### Parameters:
 
 {int} - index of HD wallet account
 
@@ -336,7 +352,7 @@ Parameters:
 
 #### `MyWallet.getBalanceForAccount(accountIdx);`
 
-Parameters:
+##### Parameters:
 
 {int} - index of HD wallet account
 
@@ -347,7 +363,7 @@ Parameters:
 
 #### `MyWallet.getPaymentRequestsForAccount(accountIdx);`
 
-Parameters:
+##### Parameters:
 
 {int} - index of HD wallet account
 
@@ -358,7 +374,7 @@ Parameters:
 
 #### `MyWallet.generatePaymentRequestForAccount(accountIdx, amount);`
 
-Parameters:
+##### Parameters:
 
 {int} - index of HD wallet account
 
@@ -375,7 +391,7 @@ generates and returns a Payment Request object and backups wallet
 
 #### `MyWallet.updatePaymentRequestForAccount(accountIdx, address, amount);`
 
-Parameters:
+##### Parameters:
 
 {int} - index of HD wallet account
 
@@ -394,7 +410,7 @@ updates a Payment Request object and backups wallet
 
 #### `MyWallet.acceptPaymentRequestForAccount(accountIdx, address, amount);`
 
-Parameters:
+##### Parameters:
 
 {int} - index of HD wallet account
 
@@ -411,7 +427,7 @@ accepts a Payment Request object and backups wallet
 
 #### `MyWallet.cancelPaymentRequestForAccount(accountIdx, address);`
 
-Parameters:
+##### Parameters:
 
 {int} - index of HD wallet account
 
@@ -428,7 +444,7 @@ cancels a Payment Request object and backups wallet
 
 #### `MyWallet.getTransactionsForAccount(accountIdx);`
 
-Parameters:
+##### Parameters:
 
 {int} - index of HD wallet account
 
@@ -439,7 +455,7 @@ Parameters:
 
 #### `MyWallet.refreshAllPaymentRequestsAndChangeAddresses(accountIdx);`
 
-Parameters:
+##### Parameters:
 
 {function} - success callback function
 
@@ -452,7 +468,7 @@ refreshes all balances across all accounts and addresses
 
 #### `MyWallet.sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successcallback, errorcallback);`
 
-Parameters:
+##### Parameters:
 
 {int} - index of account
 
@@ -478,7 +494,7 @@ Parameters:
 
 #### `MyWallet.createAccount(label);`
 
-Parameters:
+##### Parameters:
 
 {string} - label name
 
@@ -504,9 +520,9 @@ recovers HD wallet from passphrases by recreating all accounts and queries all b
 
 ##### Parameters:
 
- {string} - passphrase seed in words
+{string} - passphrase seed in words
 
- {string} - optional bip39 Password
+{string} - optional bip39 Password
 
 ##### Description:
 
