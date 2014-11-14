@@ -1996,6 +1996,10 @@ var MyWallet = new function() {
             });
         });
     }
+    
+    this.getNote = function(tx_hash) {
+        return tx_notes[tx_hash];
+    }
 
     this.deleteNote = function(tx_hash) {
         delete tx_notes[tx_hash];
