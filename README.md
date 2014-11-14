@@ -11,7 +11,7 @@ MyWallet API
 
 ##### Parameters:
 
-{string}  - label name
+{string}  - bitcoin address
 
 {string}  - label name
 

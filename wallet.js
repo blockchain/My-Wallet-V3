@@ -419,8 +419,6 @@ var MyWallet = new function() {
         addresses[address].label = label;
 
         MyWallet.backupWalletDelayed();
-
-        buildVisibleView();
     }
 
     this.securePost = function(url, data, success, error) {
