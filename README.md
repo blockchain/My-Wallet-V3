@@ -157,6 +157,7 @@ delete tx note and backups wallet
 ##### Parameters:
 
 {string} - bitcoin address to send to 
+
 {string} - bitcoin amount
 
 
@@ -165,7 +166,9 @@ delete tx note and backups wallet
 ##### Parameters:
 
 {string} - guid
+
 {bool} - resend code
+
 {function} - callback function thank will invoke if 2FA code is needed when you later call `MyWallet.restoreWallet`
 
 ##### Description:
@@ -178,7 +181,9 @@ fetches wallet json from server
 ##### Parameters:
 
 {string} - main password
+
 {string} - 2FA code
+
 {function} - callback function thank will invoke if 2FA code is incorrect
 
 ##### Description:
@@ -191,6 +196,7 @@ method that you need to call after 'did_set_guid' event is fired from calling `M
 ##### Parameters:
 
 {string} - bitcoin address
+
 {string} - message
 
 ##### Returns:
@@ -236,6 +242,7 @@ sets main password, backups wallet and logsout
 ##### Parameters:
 
 {string}  - bitcoin address
+
 {string}  - label
 
 
