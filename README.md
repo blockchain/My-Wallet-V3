@@ -181,7 +181,7 @@ fetches wallet json from server
 
 ##### Description:
 
-method that you need did call after 'did_set_guid' event is fired from calling `MyWallet.setGUID(guid, resend_code)`
+method that you need to call after 'did_set_guid' event is fired from calling `MyWallet.setGUID(guid, resend_code)`
 
 
 #### `MyWallet.signmessage(address, message);`
