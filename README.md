@@ -20,245 +20,265 @@ MyWallet API
 Sets label for account and backups wallet
 
 
-Documentation
-===========
-    /*
-     * @param {string} bitcoin address
-     * @param {string} label name
-     */
-    MyWallet.setLabel(address, label);
+#### `MyWallet.isCorrectMainPassword(_password);`
 
-    /*
-     * @param {string} inputed password
-     * @returns {boolean} 
-     */
-    MyWallet.isCorrectMainPassword(_password);
+##### Parameters:
 
-    /*
-     * @param {number} number of iterations for pbkdf2 encryption
-     * @param {function} success callback function
-     */
-    MyWallet.setPbkdf2Iterations(pbkdf2_iterations, success);
+{string}  - main password
 
-    /*
-     * @param {string} password
-     * @param {function} success callback function
-     * @param {function} error callback function
-     */
-    MyWallet.setSecondPassword(password, success, error);
+##### Returns:
 
-    /*
-     * @param {function} success callback function
-     * @param {function} error callback function
-     */
-    MyWallet.unsetSecondPassword(success, error);
-
-    /*
-     * @param {string} bitcoin address
-     */
-    MyWallet.unArchiveAddr(addr);
-
-    /*
-     * @param {string} bitcoin address
-     */
-    MyWallet.archiveAddr(addr);
-
-    /*
-     * @param {Bitcoin.ECKey} Bitcoin ECKey
-     * @returns {Boolean} success or not
-     */
-    MyWallet.importPrivateKey(privateKeyString);
-
-    /*
-     * @returns {Bitcoin.ECKey}
-     */
-    MyWallet.generateNewKey();
-
-    /*
-     * @param {function} success callback function
-     * @param {function} error callback function
-     */
-    MyWallet.get_history(success, error);
-
-    /*
-     * @param {string} bitcoin address
-     */
-    MyWallet.deleteAddressBook(addr);
-
-    /*
-     * @returns {Array}
-     */
-    MyWallet.getAllAddresses();
+{bool}  - is main password correct
 
 
-    /*
-     * @returns {string}
-     */
-    MyWallet.getPreferredAddress();
+#### `MyWallet.setPbkdf2Iterations(pbkdf2_iterations, success);`
 
-    /*
-     * @param {function} success callback function with scanned data
-     * @param {function} error callback function
-     */
-    MyWallet.scanQRCode(success, error);
+##### Parameters:
 
-    /*
-     * @returns {Array}
-     */
-    MyWallet.getAllAddresses();
+{int} - number of pbkdf2 iterations
 
-    /*
-     * @returns {Array}
-     */
-    MyWallet.getArchivedAddresses();
+{function} - success callback function
 
-    /*
-     * @returns {Object}
-     */
-    MyWallet.getLatestBlock();
 
-    /*
-     * Delete note associate with given transaction and backs up wallet with server
-     * @param {string} tx hash
-     */
-    MyWallet.deleteNote(tx_hash);
+#### `MyWallet.setSecondPassword(password, success, error);`
 
-    /*
-     * @param {string} bitcoin address to send to 
-     * @param {string} bitcoin amount
-     */
-    MyWallet.quickSendNoUI(to, value);
+##### Parameters:
 
-    /*
-     * @param {string} api method to use, use 'update'
-     * @param {function} success callback function
-     * @param {function} error callback function
-     */
-    MyWallet.backupWallet(method, successcallback, errorcallback);
+{string} - Second password
 
-    /*
-     * @param {string} json string
-     * @param {string} password use to encrypt
-     */
-    MyWallet.encryptWallet(data, password);
+{function} - success callback function
 
-    /*
-     * @param {string} json string
-     * @param {string} password use to encrypt
-     * @param {function} success callback function
-     * @param {function} error callback function
-     */
-    MyWallet.decryptWallet(data, password, success, error);
+{function} - error callback function
 
-    /*
-     * @returns {string}
-     */
-    MyWallet.getWebWorkerLoadPrefix();
 
-    /*
-     * @param {string} json string
-     * @param {string} password use to encrypt
-     * @param {number} number of iterations for pbkdf2 encryption
-     * @param {function} success callback function
-     * @param {function} error callback function
-     */
-    MyWallet.decryptWebWorker(data, password, pbkdf2_iterations, success, _error);
+#### `MyWallet.unsetSecondPassword(success, error);`
 
-    /*
-     * @param {string} json string
-     * @param {string} password use to encrypt
-     * @param {number} number of iterations for pbkdf2 encryption
-     * @param {function} success callback function
-     * @param {function} error callback function
-     */
-    MyWallet.decrypt(data, password, pbkdf2_iterations, success, error);
+##### Parameters:
 
-    /*
-     * @param {string} guid
-     * @param {boolean} resend_code
-     */
-    MyWallet.setGUID(guid, resend_code);
+{function} - success callback function
 
-    /*
-     * @param {string} encrypted Private Key
-     * @returns {string} decrypted Private Key
-     */
-    MyWallet.decryptPK(priv);
+{function} - error callback function
 
-    /*
-     * @param {string} Private Key
-     * @returns {Bitcoin.Buffer} decoded Private Key
-     */
-    MyWallet.decodePK(priv);
 
-    /*
-     * @param {string} bitcoin address
-     * @param {string} message
-     * @returns {string} message signature
-     */
-    MyWallet.signmessage(address, message);
+#### `MyWallet.unArchiveAddr(addr);`
 
-    /*
-     * @param {string} bitcoin address
-     * @returns {boolean} whethere input matches second password
-     */
-    MyWallet.validateSecondPassword(input);
+##### Parameters:
 
-    /*
-     * @param {string} new password
-     */
-    MyWallet.setMainPassword(new_password);
+{string} - bitcoin address
 
-    /*
-     * @param {string} key with format of second parameter
-     * @param {string} either 'base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa' 
-     * @returns {Bitcoin.ECKey}
-     */
-    MyWallet.privateKeyStringToKey(value, format);
+##### Description:
 
-    /*
-     * @param {string} bitcoin address
-     * @returns {string} label
-     */
-    MyWallet.getAddressBookLabel(address);
+unarchives address, backups wallet and refreshes balances
 
-    /*
-     * @param {string} bitcoin address
-     * @param {string} label
-     */
-    MyWallet.MyWallet.addAddressBookEntry(addr, label);    
 
-    /*
-    * @param {function} success Callback function
-    * @param {function} error Callback function
-    */
-    MyWallet.get_ticker(successCallback, errorCallback);
+#### `MyWallet.archiveAddr(addr);`
 
-    /*
-    * @returns {boolean} 
-    */
-    MyWallet.isSynchronizedWithServer();
+##### Parameters:
 
-    /*
-     * @param {string} bitcoin address
-     * @returns {boolean} success or not
-     */
-    MyWallet.addWatchOnlyAddress(address);
+{string} - bitcoin address
 
-    /*
-     * @param {string} bitcoin address
-     * @returns {boolean} whether is watch only address or not
-     */
-    MyWallet.isWatchOnly(address);
+##### Description:
 
-    /*
-     * @returns {boolean} whether mnemonic is verified
-     */
-    MyWallet.isMnemonicVerified();
+archives address, backups wallet and refreshes balances
 
-    /*
-     */
-    MyWallet.didVerifyMnemonic();
+
+#### `MyWallet.importPrivateKey(privateKeyString);`
+
+##### Parameters:
+
+{string} - private Key
+
+##### Description:
+
+import Private Key, backups wallet and refreshes balances
+
+
+#### `MyWallet.get_history(success, error);`
+
+##### Parameters:
+
+{function} - success callback function
+
+{function} - error callback function
+
+
+#### `MyWallet.deleteAddressBook(addr);`
+
+##### Parameters:
+
+{string} - bitcoin address
+
+##### Description:
+
+delete address from addressBook and backups wallet
+
+
+#### `MyWallet.getAllAddresses();`
+
+##### Returns:
+
+{array}  - active addresses
+
+
+#### `MyWallet.getPreferredAddress();`
+
+##### Returns:
+
+{string}  - preferred address
+
+
+#### `MyWallet.getArchivedAddresses();`
+
+##### Returns:
+
+{array}  - archived addresses
+
+
+#### `MyWallet.getLatestBlock();`
+
+##### Returns:
+
+{Object}  - latest block object
+
+
+#### `MyWallet.deleteNote(tx_hash);`
+
+##### Parameters:
+
+{string} - tx hash
+
+##### Description:
+
+delete tx note and backups wallet
+
+
+#### `MyWallet.quickSendNoUI(to, value);`
+
+##### Parameters:
+
+{string} - bitcoin address to send to 
+{string} - bitcoin amount
+
+
+#### `MyWallet.setGUID(guid, resend_code);`
+
+##### Parameters:
+
+{string} - guid
+{bool} - resend code
+
+##### Description:
+
+fetches wallet json from server
+
+
+#### `MyWallet.signmessage(address, message);`
+
+##### Parameters:
+
+{string} - bitcoin address
+{string} - message
+
+##### Returns:
+
+{string}  - message signature in base64
+
+
+#### `MyWallet.validateSecondPassword(input);`
+
+##### Parameters:
+
+{string}  - second password
+
+##### Returns:
+
+{bool}  - whether input matches second password
+
+
+#### `MyWallet.setMainPassword(new_password);`
+
+##### Parameters:
+
+{string}  - main password
+
+##### Description:
+
+sets main password, backups wallet and logsout
+
+
+#### `MyWallet.getAddressBookLabel(address);`
+
+##### Parameters:
+
+{string}  - bitcoin address
+
+##### Returns:
+
+{bool}  - label
+
+
+#### `MyWallet.addAddressBookEntry(addr, label);`
+
+##### Parameters:
+
+{string}  - bitcoin address
+{string}  - label
+
+
+#### `MyWallet.get_ticker(successcallback, errorcallback);`
+
+##### Parameters:
+
+{function} - success callback function
+
+{function} - error callback function
+
+##### Description:
+
+calls success callback with json object, or error callback with error object
+
+
+#### `MyWallet.isSynchronizedWithServer();`
+
+##### Returns:
+
+{bool}  - is wallet payload synchronized with server
+
+
+#### `MyWallet.addWatchOnlyAddress(address);`
+
+##### Parameters:
+
+{string} - bitcoin address
+
+##### Description:
+
+add watch only address, backups wallet and refreshes balances
+
+
+#### `MyWallet.isWatchOnly(address);`
+
+##### Parameters:
+
+{string}  - bitcoin address
+
+##### Returns:
+
+{bool}  - whether address is watch only
+
+
+#### `MyWallet.isMnemonicVerified(address);`
+
+##### Returns:
+
+{bool}  - whether mnemonic is verified
+
+
+#### `MyWallet.didVerifyMnemonic();`
+
+##### Description:
+
+set mnemonic to be verified ands backups wallet
 
 
 
@@ -303,8 +323,6 @@ Sets label for account and backups wallet
 
 
 #### `MyWallet.isArchivedForAccount(accountIdx);`
-
-This method tells whether the account is archived or not.
 
 ##### Parameters:
 
