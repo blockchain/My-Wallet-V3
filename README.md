@@ -4,29 +4,13 @@ MyWallet
 Javascript Model for blockchain wallet.
 
 
-
-
 Documentation
 ===========
-
-    /*
-     * @param {string} encrypted wallet payload
-     */
-    MyWallet.setEncryptedWalletData(data);
-
     /*
      * @param {string} bitcoin address
      * @param {string} label name
      */
     MyWallet.setLabel(address, label);
-
-    /*
-     * @param {Bitcoin.ECKey} spendKey Spend Private Key
-     * @param {Object} url parameters
-     * @param {function} success callback function
-     * @param {function} error callback function 
-     */
-    MyWallet.securePost(data);
 
     /*
      * @param {string} inputed password
@@ -270,9 +254,9 @@ HDWallet API
 
 ##### Parameters:
 
- {string} - passphrase seed
+{string} - passphrase seed
 
- {string} - optional bip39 Password
+{string} - optional bip39 Password
 
 ##### Description:
 
@@ -299,7 +283,7 @@ This method should be called if the event `hd_wallets_does_not_exist` is fired. 
 
 ##### Description:
 
-    Sets label for account and backups wallet
+Sets label for account and backups wallet
 
 
 #### `MyWallet.isArchivedForAccount(accountIdx);`
@@ -325,7 +309,7 @@ Parameters:
 
 ##### Description:
 
-    sets account to `isArchived` and backups wallet
+sets account to `isArchived` and backups wallet
 
 
 #### `MyWallet.getAddressesForAccount(accountIdx);`
@@ -377,6 +361,7 @@ Parameters:
 Parameters:
 
 {int} - index of HD wallet account
+
 {int} - Payment Request amount in satoshis
 
 ##### Returns:
@@ -385,7 +370,7 @@ Parameters:
 
 ##### Description:
 
-    generates and returns a Payment Request object and backups wallet
+generates and returns a Payment Request object and backups wallet
 
 
 #### `MyWallet.updatePaymentRequestForAccount(accountIdx, address, amount);`
@@ -393,7 +378,9 @@ Parameters:
 Parameters:
 
 {int} - index of HD wallet account
+
 {string} - address to update
+
 {int} - Payment Request amount in satoshis
 
 ##### Returns:
@@ -402,7 +389,7 @@ Parameters:
 
 ##### Description:
 
-    updates a Payment Request object and backups wallet
+updates a Payment Request object and backups wallet
 
 
 #### `MyWallet.acceptPaymentRequestForAccount(accountIdx, address, amount);`
@@ -410,6 +397,7 @@ Parameters:
 Parameters:
 
 {int} - index of HD wallet account
+
 {string} - address to accept
 
 ##### Returns:
@@ -418,7 +406,7 @@ Parameters:
 
 ##### Description:
 
-    accepts a Payment Request object and backups wallet
+accepts a Payment Request object and backups wallet
 
 
 #### `MyWallet.cancelPaymentRequestForAccount(accountIdx, address);`
@@ -426,6 +414,7 @@ Parameters:
 Parameters:
 
 {int} - index of HD wallet account
+
 {string} - address to cancel
 
 ##### Returns:
@@ -434,7 +423,7 @@ Parameters:
 
 ##### Description:
 
-    cancels a Payment Request object and backups wallet
+cancels a Payment Request object and backups wallet
 
 
 #### `MyWallet.getTransactionsForAccount(accountIdx);`
@@ -453,11 +442,12 @@ Parameters:
 Parameters:
 
 {function} - success callback function
+
 {function} - error callback function
 
 ##### Description:
 
-    refreshes all balances across all accounts and addresses
+refreshes all balances across all accounts and addresses
 
 
 #### `MyWallet.sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successcallback, errorcallback);`
@@ -465,11 +455,17 @@ Parameters:
 Parameters:
 
 {int} - index of account
+
 {string} - address to send to
+
 {int} - send amount in satoshis
+
 {int} - fee amount in satoshis
+
 {string} - optional tx note
+
 {function} - success callback function
+
 {function} - error callback function
 
 
@@ -488,7 +484,7 @@ Parameters:
 
 ##### Description:
 
-    creates new account and backups wallet
+creates new account and backups wallet
 
 
 #### `MyWallet.recoverMyWalletHDWalletFromSeedHex(seedHex, bip39Password);`
