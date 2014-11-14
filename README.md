@@ -281,6 +281,47 @@ add watch only address, backups wallet and refreshes balances
 set mnemonic to be verified ands backups wallet
 
 
+#### `MyWallet.setRealAuthType(val)`
+
+##### Parameters:
+
+{int}  - auth type
+
+
+#### `MyWallet.getRealAuthType();`
+
+##### Returns:
+
+{int}  - auth type
+
+
+#### `MyWallet.getRealAuthTypeString();`
+
+##### Returns:
+
+{string}  - auth type string
+
+
+#### `MyWallet.sendMonitorEvent(obj);`
+
+##### Parameters:
+
+{Object} - object with fields `type`, `message`, and `code`
+
+##### Description:
+
+calls all methods registered with `MyWallet.monitor(func)`
+
+
+#### `MyWallet.monitor(func);`
+
+##### Parameters:
+
+{function} - callback function
+
+##### Description:
+
+add a listener to montitor for message events
 
 HDWallet API
 ===========
