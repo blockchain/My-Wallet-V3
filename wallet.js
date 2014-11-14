@@ -1002,7 +1002,7 @@ var MyWallet = new function() {
             try {
                 var addrs = MyWallet.getActiveAddresses();
                 for (var key in addrs) {
-                    //msg += '{"op":"addr_sub", "addr":"'+ addrs[key] +'"}'; //Subscribe to transactions updates through websockets
+                    msg += '{"op":"addr_sub", "addr":"'+ addrs[key] +'"}'; //Subscribe to transactions updates through websockets
                 }
                 MyWallet.listenToHDWalletAccounts();
             } catch (e) {
