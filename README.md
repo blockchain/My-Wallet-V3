@@ -546,6 +546,25 @@ cancels a Payment Request object and backups wallet
 refreshes all balances across all accounts and addresses
 
 
+#### `MyWallet.sendToAccount(fromIdx, toIdx, amount, feeAmount, note, successCallback, errorCallback);`
+
+##### Parameters:
+
+{int} - index of from account
+
+{int} - index of to account
+
+{int} - send amount in satoshis
+
+{int} - fee amount in satoshis
+
+{string} - optional tx note
+
+{function} - success callback function
+
+{function} - error callback function
+
+
 #### `MyWallet.sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successcallback, errorcallback);`
 
 ##### Parameters:

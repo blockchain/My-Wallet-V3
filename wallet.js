@@ -1243,6 +1243,13 @@ var MyWallet = new function() {
         return myHDWallet.getAccount(accountIdx).recommendedTransactionFee(amount);
     }
 
+    this.sendToAccount = function(fromIdx, toIdx, amount, feeAmount, note, successCallback, errorCallback)  {
+        var account = myHDWallet.getAccount(toIdx);
+        var paymentRequest = MyWallet.generatePaymentRequestForAccount(toIdx, amount);
+        var address = account.getAddressForPaymentRequest(paymentRequest);
+        MyWallet.sendBitcoinsForAccount(fromIdx, address, paymentRequest.amount, feeAmount, note, successCallback, successCallback);
+    }
+
     this.sendBitcoinsForAccount = function(accountIdx, to, value, fixedFee, note, successCallback, errorCallback) {
         MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
             var tx = myHDWallet.getAccount(accountIdx).createTx(to, value, fixedFee);
