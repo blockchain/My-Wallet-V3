@@ -345,6 +345,28 @@ calls all methods registered with `MyWallet.monitor(func)`
 add a listener to montitor for message events
 
 
+#### `MyWallet.getLocalSymbolCode();`
+
+##### Returns:
+
+{string}  - fiat currency code (e.g. USD)
+
+##### Description:
+
+gets currency code stored in memory or in local storage
+
+
+#### `MyWallet.setLocalSymbolCode(code);`
+
+##### Parameters:
+
+{string}  - fiat currency code (e.g. USD)
+
+##### Description:
+
+stores currency code in memory and in local storage
+
+
 #### `MyWallet.getLanguages();`
 
 ##### Returns:
