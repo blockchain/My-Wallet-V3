@@ -161,7 +161,7 @@ delete tx note and backups wallet
 {string} - bitcoin amount
 
 
-#### `MyWallet.fetchWalletJson(guid, resend_code, needs_two_factor_code);`
+#### `MyWallet.fetchWalletJson(user_guid, resend_code, inputedPassword, 2FACode, needs_two_factor_code, wrong_two_factor_code);`
 
 ##### Parameters:
 
@@ -169,26 +169,17 @@ delete tx note and backups wallet
 
 {bool} - resend code
 
-{function} - callback function thank will invoke if 2FA code is needed when you later call `MyWallet.restoreWallet`
-
-##### Description:
-
-fetches wallet json from server
-
-
-#### `MyWallet.restoreWallet(pw, two_factor_auth_key, wrong_two_factor_code);`
-
-##### Parameters:
-
 {string} - main password
 
 {string} - 2FA code
 
-{function} - callback function thank will invoke if 2FA code is incorrect
+{function} - callback function that will invoke with the 2FA Type, if 2FA code is needed
+
+{function} - callback function that will invoke if 2FA code is incorrect
 
 ##### Description:
 
-method that you need to call after 'did_set_guid' event is fired from calling `MyWallet.setGUID(guid, resend_code)`
+Fetches and decrypts wallet json from server. If 2FA is needed, method needs to be called again.
 
 
 #### `MyWallet.signmessage(address, message);`
@@ -309,18 +300,18 @@ set mnemonic to be verified ands backups wallet
 {int}  - auth type
 
 
-#### `MyWallet.getRealAuthType();`
+#### `MyWallet.get2FAType();`
 
 ##### Returns:
 
-{int}  - auth type
+{int}  - 2FA type
 
 
-#### `MyWallet.getRealAuthTypeString();`
+#### `MyWallet.get2FATypeString();`
 
 ##### Returns:
 
-{string}  - auth type string
+{string}  - 2FA type string
 
 
 #### `MyWallet.sendMonitorEvent(obj);`

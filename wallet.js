@@ -172,6 +172,7 @@ var MyWallet = new function() {
     var tx_tags = {};
     var tag_names = [];
     var mnemonicVerified = false;
+    var didSetGuid = false;
 
     var wallet_options = {
         pbkdf2_iterations : default_pbkdf2_iterations, //Number of pbkdf2 iterations to default to for second password and dpasswordhash
@@ -224,11 +225,11 @@ var MyWallet = new function() {
         real_auth_type = val;
     }
 
-    this.getRealAuthType = function() {
+    this.get2FAType = function() {
         return real_auth_type;
     }
 
-    this.getRealAuthTypeString = function() {
+    this.get2FATypeString = function() {
         if (real_auth_type == 0) {
             return null;
         } else if (real_auth_type == 1) {
@@ -3289,6 +3290,138 @@ var MyWallet = new function() {
         }, error);
     }
 
+    //Fetch information on a new wallet identfier
+    this.fetchWalletJson = function(user_guid, resend_code, inputedPassword, 2FACode, needs_two_factor_code, wrong_two_factor_code) {
+//        console.log('Set GUID ' + user_guid);
+        if (didSetGuid) {
+            MyWallet.restoreWallet(inputedPassword, 2FACode, wrong_two_factor_code);
+            return;
+        }
+ 
+        if (isInitialized) {
+            throw 'Cannot Set GUID Once Initialized';
+        }
+
+        MyWallet.sendMonitorEvent({type: "loadingText", message: 'Downloading Wallet', code: 0});
+
+        var clientTime=(new Date()).getTime();
+        var data = {format : 'json', resend_code : resend_code, ct : clientTime};
+
+        if (payload_checksum) {
+            data.checksum = payload_checksum;
+        }
+
+        if (sharedKey) {
+            data.sharedKey = sharedKey;
+        }
+
+        $.ajax({
+            type: "GET",
+            dataType: 'json',
+            url: root + 'wallet/'+user_guid,
+            data : data,
+            timeout: 60000,
+            success: function(obj) {
+                MyWallet.handleNTPResponse(obj, clientTime);
+
+                if (!obj.guid) {
+                    MyWallet.sendMonitorEvent({type: "error", message: 'Server returned null guid.', code: 0});
+                    return;
+                }
+
+                guid = obj.guid;
+                auth_type = obj.auth_type;
+                real_auth_type = obj.real_auth_type;
+                sync_pubkeys = obj.sync_pubkeys;
+
+                if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
+                    MyWallet.setEncryptedWalletData(obj.payload);
+                } else {
+                    needs_two_factor_code(MyWallet.get2FAType());
+                }
+
+                war_checksum = obj.war_checksum;
+
+                setLocalSymbol(obj.symbol_local);
+                MyWallet.setLocalSymbolCode(obj.symbol_local.code);
+
+                setBTCSymbol(obj.symbol_btc);
+
+                if (obj.initial_error) {
+                    MyWallet.sendMonitorEvent({type: "error", message: obj.initial_error, code: 0});
+                }
+
+                if (obj.initial_success) {
+                    MyWallet.sendMonitorEvent({type: "success", message: obj.initial_success, code: 0});
+                }
+
+                MyStore.get('guid', function(local_guid) {
+                    if (local_guid != guid) {
+                        MyStore.remove('guid');
+                        MyStore.remove('multiaddr');
+                        MyStore.remove('payload');
+
+                        //Demo Account Guid
+                        if (guid != demo_guid) {
+                            MyStore.put('guid', guid);
+                        }
+                    }
+                });
+
+                if (obj.language && language != obj.language) {
+                    MyWallet.setLanguage(obj.language);
+                }
+
+                didSetGuid = true;
+                MyWallet.restoreWallet(inputedPassword, 2FACode, wrong_two_factor_code);
+            },
+            error : function(e) {
+
+                MyStore.get('guid', function(local_guid) {
+                    MyStore.get('payload', function(local_payload) {
+                        //Error downloading wallet from server
+                        //But we can use the local cache
+
+                        if (local_guid == user_guid && local_payload) {
+                            MyWallet.setEncryptedWalletData(local_payload);
+
+                            //Generate a new Checksum
+                            guid = local_guid;
+                            payload_checksum = generatePayloadChecksum();
+                            auth_type = 0;
+
+                            didSetGuid = true;
+                            MyWallet.restoreWallet(inputedPassword, 2FACode, wrong_two_factor_code);
+                        }  else {
+                            MyWallet.sendEvent('did_fail_set_guid');
+
+                            try {
+                                var obj = $.parseJSON(e.responseText);
+
+                                if (obj.authorization_required) {
+                                    loadScript('wallet/poll-for-session-guid', function() {
+                                        pollForSessionGUID();
+                                    });
+                                }
+
+                                if (obj.initial_error) {
+                                    MyWallet.sendMonitorEvent({type: "error", message: obj.initial_error, code: 0});
+                                }
+
+                                return;
+                            } catch (ex) {}
+
+                            if (e.responseText)
+                                MyWallet.sendMonitorEvent({type: "error", message: e.responseText, code: 0});
+                            else
+                                MyWallet.sendMonitorEvent({type: "error", message: 'Error changing wallet identifier', code: 0});
+                        }
+                    });
+                });
+            }
+        });
+    }
+
     this.restoreWallet = function(pw, two_factor_auth_key, wrong_two_factor_code) {
 
         if (isInitialized || isRestoringWallet) {
@@ -3823,134 +3956,6 @@ var MyWallet = new function() {
             console.log('Server Time offset ' + serverTimeOffset + 'ms - This offset ' + thisOffset);
         }
     }
-
-
-    //Fetch information on a new wallet identfier
-    this.fetchWalletJson = function(user_guid, resend_code, needs_two_factor_code) {
-//        console.log('Set GUID ' + user_guid);
-
-        if (isInitialized) {
-            throw 'Cannot Set GUID Once Initialized';
-        }
-
-        MyWallet.sendMonitorEvent({type: "loadingText", message: 'Downloading Wallet', code: 0});
-
-        var clientTime=(new Date()).getTime();
-        var data = {format : 'json', resend_code : resend_code, ct : clientTime};
-
-        if (payload_checksum) {
-            data.checksum = payload_checksum;
-        }
-
-        if (sharedKey) {
-            data.sharedKey = sharedKey;
-        }
-
-        $.ajax({
-            type: "GET",
-            dataType: 'json',
-            url: root + 'wallet/'+user_guid,
-            data : data,
-            timeout: 60000,
-            success: function(obj) {
-                MyWallet.handleNTPResponse(obj, clientTime);
-
-                if (!obj.guid) {
-                    MyWallet.sendMonitorEvent({type: "error", message: 'Server returned null guid.', code: 0});
-                    return;
-                }
-
-                guid = obj.guid;
-                auth_type = obj.auth_type;
-                real_auth_type = obj.real_auth_type;
-                sync_pubkeys = obj.sync_pubkeys;
-
-                if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
-                    MyWallet.setEncryptedWalletData(obj.payload);
-                } else {
-                    needs_two_factor_code();
-                }
-
-                war_checksum = obj.war_checksum;
-
-                setLocalSymbol(obj.symbol_local);
-                MyWallet.setLocalSymbolCode(obj.symbol_local.code);
-
-                setBTCSymbol(obj.symbol_btc);
-
-                if (obj.initial_error) {
-                    MyWallet.sendMonitorEvent({type: "error", message: obj.initial_error, code: 0});
-                }
-
-                if (obj.initial_success) {
-                    MyWallet.sendMonitorEvent({type: "success", message: obj.initial_success, code: 0});
-                }
-
-                MyStore.get('guid', function(local_guid) {
-                    if (local_guid != guid) {
-                        MyStore.remove('guid');
-                        MyStore.remove('multiaddr');
-                        MyStore.remove('payload');
-
-                        //Demo Account Guid
-                        if (guid != demo_guid) {
-                            MyStore.put('guid', guid);
-                        }
-                    }
-                });
-
-                if (obj.language && language != obj.language) {
-                    MyWallet.setLanguage(obj.language);
-                }
-
-                MyWallet.sendEvent('did_set_guid');
-            },
-            error : function(e) {
-
-                MyStore.get('guid', function(local_guid) {
-                    MyStore.get('payload', function(local_payload) {
-                        //Error downloading wallet from server
-                        //But we can use the local cache
-
-                        if (local_guid == user_guid && local_payload) {
-                            MyWallet.setEncryptedWalletData(local_payload);
-
-                            //Generate a new Checksum
-                            guid = local_guid;
-                            payload_checksum = generatePayloadChecksum();
-                            auth_type = 0;
-
-                            MyWallet.sendEvent('did_set_guid');
-                        }  else {
-                            MyWallet.sendEvent('did_fail_set_guid');
-
-                            try {
-                                var obj = $.parseJSON(e.responseText);
-
-                                if (obj.authorization_required) {
-                                    loadScript('wallet/poll-for-session-guid', function() {
-                                        pollForSessionGUID();
-                                    });
-                                }
-
-                                if (obj.initial_error) {
-                                    MyWallet.sendMonitorEvent({type: "error", message: obj.initial_error, code: 0});
-                                }
-
-                                return;
-                            } catch (ex) {}
-
-                            if (e.responseText)
-                                MyWallet.sendMonitorEvent({type: "error", message: e.responseText, code: 0});
-                            else
-                                MyWallet.sendMonitorEvent({type: "error", message: 'Error changing wallet identifier', code: 0});
-                        }
-                    });
-                });
-            }
-        });
-    }
-
 
     function encodePK(priv) {
         var base58 = Bitcoin.base58.encode(priv.toBuffer(32));
