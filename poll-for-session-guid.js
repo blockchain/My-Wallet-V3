@@ -21,7 +21,7 @@ function pollForSessionGUID() {
 
                 MyWallet.sendMonitorEvent({type: "success", message: 'Authorization Successful', code: 0});
 
-                MyWallet.setGUID(obj.guid, false);
+                MyWallet.fetchWalletJson(obj.guid, false);
             } else {
                 if (counter < 240) {
                     ++counter;

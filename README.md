@@ -161,7 +161,7 @@ delete tx note and backups wallet
 {string} - bitcoin amount
 
 
-#### `MyWallet.setGUID(guid, resend_code, needs_two_factor_code);`
+#### `MyWallet.fetchWalletJson(guid, resend_code, needs_two_factor_code);`
 
 ##### Parameters:
 

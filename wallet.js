@@ -3767,7 +3767,7 @@ var MyWallet = new function() {
 
 
     //Fetch information on a new wallet identfier
-    this.setGUID = function(user_guid, resend_code, needs_two_factor_code) {
+    this.fetchWalletJson = function(user_guid, resend_code, needs_two_factor_code) {
 //        console.log('Set GUID ' + user_guid);
 
         if (isInitialized) {
@@ -5139,7 +5139,7 @@ var MyWallet = new function() {
 
     function bindInitial() {
         $('.resend-code').click(function() {
-            MyWallet.setGUID(guid, true);
+            MyWallet.fetchWalletJson(guid, true);
         });
 
         $('#reset-two-factor-btn').click(function() {
@@ -5193,7 +5193,7 @@ var MyWallet = new function() {
 
             if (guid != tguid) {
                 sharedKey = null;
-                MyWallet.setGUID(tguid, false);
+                MyWallet.fetchWalletJson(tguid, false);
             } else {
                 var input_field = $("#restore-password");
 
@@ -5355,7 +5355,7 @@ var MyWallet = new function() {
         function tSetGUID() {
             if (guid && guid.length == 36) {
                 setTimeout(function(){
-                    MyWallet.setGUID(guid, false);
+                    MyWallet.fetchWalletJson(guid, false);
                 }, 10);
             } else {
                 $('#signup-btn').show();
