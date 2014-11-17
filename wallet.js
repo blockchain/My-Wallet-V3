@@ -1247,7 +1247,7 @@ var MyWallet = new function() {
         var account = myHDWallet.getAccount(toIdx);
         var paymentRequest = MyWallet.generatePaymentRequestForAccount(toIdx, amount);
         var address = account.getAddressForPaymentRequest(paymentRequest);
-        MyWallet.sendBitcoinsForAccount(fromIdx, address, paymentRequest.amount, feeAmount, note, successCallback, successCallback);
+        MyWallet.sendBitcoinsForAccount(fromIdx, address, paymentRequest.amount, feeAmount, note, successCallback, errorCallback);
     }
 
     this.sendBitcoinsForAccount = function(accountIdx, to, value, fixedFee, note, successCallback, errorCallback) {
