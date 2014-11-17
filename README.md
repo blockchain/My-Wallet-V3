@@ -344,6 +344,23 @@ calls all methods registered with `MyWallet.monitor(func)`
 
 add a listener to montitor for message events
 
+
+#### `MyWallet.getLanguages();`
+
+##### Returns:
+
+{string}  - dictionary of available languages
+
+
+#### `MyWallet.getCurrencies();`
+
+##### Returns:
+
+{string}  - dictionary of available currencies
+
+
+
+
 HDWallet API
 ===========
 

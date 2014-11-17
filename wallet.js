@@ -61,6 +61,57 @@ function formatPrecision(x) {
 var MyWallet = new function() {
     var MyWallet = this;
 
+    var languageCodeToLanguage = {
+      "de": "German",
+      "hi": "Hindi",
+      "no": "Norwegian",
+      "ru": "Russian",
+      "pt": "Portuguese",
+      "bg": "Bulgarian",
+      "fr": "French",
+      "zh-cn": "Chinese Simplified",
+      "hu": "Hungarian",
+      "sl": "Slovenian",
+      "id": "Indonesian",
+      "sv": "Swedish",
+      "ko": "Korean",
+      "el": "Greek",
+      "en": "English",
+      "it": "Italiano",
+      "es": "Spanish",
+      "vi": "Vietnam",
+      "th": "Thai",
+      "ja": "Japanese",
+      "pl": "Polski",
+      "da": "Danish",
+      "ro": "Romanian",
+      "nl": "Dutch",
+      "tr": "Turkish"
+    }
+    var currencyCodeToCurrency = {
+      "ISK" : "lcelandic Króna",
+      "HKD" : "Hong Kong Dollar",
+      "TWD" : "New Taiwan dollar",
+      "CHF" : "Swiss Franc",
+      "EUR" : "Euro",
+      "DKK" : "Danish Krone",
+      "CLP" : "Chilean, Peso",
+      "USD" : "U.S. dollar",
+      "CAD" : "Canadian Dollar",
+      "CNY" : "Chinese yuan",
+      "THB" : "Thai baht",
+      "AUD" : "Australian Dollar",
+      "SGD" : "Singapore Dollar",
+      "KRW" : "South Korean Won",
+      "JPY" : "Japanese Yen",
+      "PLN" : "Polish Zloty",
+      "GBP" : "Great British Pound",
+      "SEK" : "Swedish Krona",
+      "NZD" : "New Zealand Dollar",
+      "BRL" : "Brazil Real",
+      "RUB" : "Russian Ruble"
+    };
+
     this.skip_init = false; //Set on sign up page
     var demo_guid = 'abcaa314-6f67-6705-b384-5d47fbe9d7cc';
     var encrypted_wallet_data; //Encrypted wallet data (Base64, AES 256)
@@ -225,6 +276,14 @@ var MyWallet = new function() {
         MyStore.put('localSymbolCode', code);
         symbol_local.code = code;
         localSymbolCode = code;
+    }
+
+    this.getLanguages = function() {
+        return languageCodeToLanguage;
+    }
+
+    this.getCurrencies = function() {
+        return currencyCodeToCurrency;
     }
 
     this.addEventListener = function(func) {
