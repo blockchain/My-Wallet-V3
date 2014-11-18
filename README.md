@@ -581,7 +581,7 @@ cancels a Payment Request object and backups wallet
 {array}  - array of transaction objects
 
 
-#### `MyWallet.refreshAllPaymentRequestsAndChangeAddresses(accountIdx);`
+#### `MyWallet.refreshAllPaymentRequestsAndChangeAddresses(successCallback, errorCallback);`
 
 ##### Parameters:
 
