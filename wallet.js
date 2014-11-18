@@ -3493,9 +3493,9 @@ var MyWallet = new function() {
                                 isRestoringWallet = false;
 
                                 didDecryptWallet(success);
-                            }, error);
+                            }, _error);
                         } catch (e) {
-                            error(e);
+                            _error(e);
                         }
                     },
                     error : function (response) {
