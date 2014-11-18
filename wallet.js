@@ -3308,10 +3308,10 @@ var MyWallet = new function() {
     }
 
     //Fetch information on a new wallet identfier
-    this.fetchWalletJson = function(user_guid, resend_code, inputedPassword, 2FACode, needs_two_factor_code, wrong_two_factor_code) {
+    this.fetchWalletJson = function(user_guid, resend_code, inputedPassword, twoFACode, needs_two_factor_code, wrong_two_factor_code) {
 //        console.log('Set GUID ' + user_guid);
         if (didSetGuid) {
-            MyWallet.restoreWallet(inputedPassword, 2FACode, wrong_two_factor_code);
+            MyWallet.restoreWallet(inputedPassword, twoFACode, wrong_two_factor_code);
             return;
         }
  
@@ -3390,7 +3390,7 @@ var MyWallet = new function() {
                 }
 
                 didSetGuid = true;
-                MyWallet.restoreWallet(inputedPassword, 2FACode, wrong_two_factor_code);
+                MyWallet.restoreWallet(inputedPassword, twoFACode, wrong_two_factor_code);
             },
             error : function(e) {
 
@@ -3408,7 +3408,7 @@ var MyWallet = new function() {
                             auth_type = 0;
 
                             didSetGuid = true;
-                            MyWallet.restoreWallet(inputedPassword, 2FACode, wrong_two_factor_code);
+                            MyWallet.restoreWallet(inputedPassword, twoFACode, wrong_two_factor_code);
                         }  else {
                             MyWallet.sendEvent('did_fail_set_guid');
 
