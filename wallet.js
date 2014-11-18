@@ -3308,7 +3308,7 @@ var MyWallet = new function() {
     }
 
     //Fetch information on a new wallet identfier
-    this.fetchWalletJson = function(user_guid, sharedKey, resend_code, inputedPassword, twoFACode, needs_two_factor_code, wrong_two_factor_code) {
+    this.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, needs_two_factor_code, wrong_two_factor_code) {
 //        console.log('Set GUID ' + user_guid);
         if (didSetGuid) {
             MyWallet.restoreWallet(inputedPassword, twoFACode, wrong_two_factor_code);
@@ -3320,7 +3320,7 @@ var MyWallet = new function() {
         }
 
         guid = user_guid;
-        sharedKey = sharedKey;
+        sharedKey = shared_key;
 
         MyWallet.sendMonitorEvent({type: "loadingText", message: 'Downloading Wallet', code: 0});
 
