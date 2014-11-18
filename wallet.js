@@ -3351,6 +3351,7 @@ var MyWallet = new function() {
                 if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
                     MyWallet.setEncryptedWalletData(obj.payload);
                 } else {
+                    didSetGuid = true;
                     needs_two_factor_code(MyWallet.get2FAType());
                     return;
                 }
