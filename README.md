@@ -290,7 +290,25 @@ add watch only address, backups wallet and refreshes balances
 
 ##### Description:
 
-set mnemonic to be verified ands backups wallet
+set mnemonic to be verified and backups wallet
+
+
+#### `MyWallet.setDefaultAccountIndex(accountIdx);`
+
+##### Parameters:
+
+{int}  - default Account Index
+
+##### Description:
+
+set default Account Index and backups wallet
+
+
+#### `MyWallet.getDefaultAccountIndex();`
+
+##### Returns:
+
+{int}  -  default Account Index
 
 
 #### `MyWallet.setRealAuthType(val)`

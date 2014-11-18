@@ -172,6 +172,7 @@ var MyWallet = new function() {
     var tx_tags = {};
     var tag_names = [];
     var mnemonicVerified = false;
+    var defaultAccountIdx = 0;
     var didSetGuid = false;
 
     var wallet_options = {
@@ -215,6 +216,15 @@ var MyWallet = new function() {
 
     this.isMnemonicVerified = function() {
         return mnemonicVerified;
+    }
+
+    this.setDefaultAccountIndex = function(accountIdx) {
+        defaultAccountIdx = accountIdx;
+        MyWallet.backupWalletDelayed();
+    }
+
+    this.getDefaultAccountIndex = function() {
+        return defaultAccountIdx;
     }
 
     this.isSynchronizedWithServer = function() {
@@ -1550,6 +1560,7 @@ var MyWallet = new function() {
         if (myHDWallet != null) {
             out += '	{"seed_hex" : "'+ myHDWallet.getSeedHexString() +'",\n';
             out += '    "mnemonic_verified" : "'+ mnemonicVerified +'",\n';
+            out += '    "default_account_idx" : "'+ defaultAccountIdx +'",\n';
             out += '	"accounts" : [\n';
 
             for (var i in myHDWallet.getAccounts()) {
@@ -3035,6 +3046,12 @@ var MyWallet = new function() {
                     } else {
                         mnemonicVerified = false;
                     }
+                    if (defaultHDWallet.default_account_idx) {
+                        defaultAccountIdx = defaultHDWallet.default_account_idx;
+                    } else {
+                        defaultAccountIdx = 0;
+                    }
+
                 } else {
                     MyWallet.sendEvent('hd_wallets_does_not_exist');
                 }
