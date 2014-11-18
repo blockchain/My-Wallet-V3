@@ -3350,6 +3350,7 @@ var MyWallet = new function() {
                     MyWallet.setEncryptedWalletData(obj.payload);
                 } else {
                     needs_two_factor_code(MyWallet.get2FAType());
+                    return;
                 }
 
                 war_checksum = obj.war_checksum;
