@@ -161,7 +161,7 @@ delete tx note and backups wallet
 {string} - bitcoin amount
 
 
-#### `MyWallet.fetchWalletJson(user_guid, resend_code, inputedPassword, 2FACode, needs_two_factor_code, wrong_two_factor_code);`
+#### `MyWallet.fetchWalletJson(user_guid, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, other_error);`
 
 ##### Parameters:
 
@@ -173,9 +173,13 @@ delete tx note and backups wallet
 
 {string} - 2FA code
 
+{function} - success callback, called after wallet fetched and decrypted
+
 {function} - callback function that will invoke with the 2FA Type, if 2FA code is needed
 
 {function} - callback function that will invoke if 2FA code is incorrect
+
+{function} - other error callback function
 
 ##### Description:
 
