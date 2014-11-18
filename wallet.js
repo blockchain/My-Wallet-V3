@@ -243,14 +243,16 @@ var MyWallet = new function() {
         if (real_auth_type == 0) {
             return null;
         } else if (real_auth_type == 1) {
-            return 'SMS';
-        } else if (real_auth_type == 3) {
             return 'Yubikey';
         } else if (real_auth_type == 2) {
             return 'Email';
+        } else if (real_auth_type == 3) {
+            return 'Yubikey MtGox';
 
         } else if (real_auth_type == 4) {
             return 'Google Auth';
+        } else if (real_auth_type == 5) {
+            return 'SMS';
         }
     }
 
