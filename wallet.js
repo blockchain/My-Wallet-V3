@@ -3449,6 +3449,7 @@ var MyWallet = new function() {
             MyWallet.sendMonitorEvent({type: "error", message: e, code: 0});
 
             MyWallet.sendEvent('error_restoring_wallet');
+            other_error(e);
         }
 
         try {
