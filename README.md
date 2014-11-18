@@ -380,14 +380,14 @@ stores currency code in memory and in local storage
 
 ##### Returns:
 
-{string}  - dictionary of available languages
+{Object}  - dictionary of available languages
 
 
 #### `MyWallet.getCurrencies();`
 
 ##### Returns:
 
-{string}  - dictionary of available currencies
+{Object}  - dictionary of available currencies
 
 
 #### `MyWallet.unsetTwoFactor(success, error);`
