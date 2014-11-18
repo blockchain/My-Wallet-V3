@@ -285,7 +285,7 @@ var BlockchainAPI = new function() {
     }
 
     this.setTwoFactorSMS = function(successCallback, errorCallback) {
-        updateAuthType(1, successCallback, errorCallback);
+        updateAuthType(5, successCallback, errorCallback);
     }
 
     this.setTwoFactorYubiKey = function(successCallback, errorCallback) {

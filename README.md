@@ -390,7 +390,13 @@ stores currency code in memory and in local storage
 {string}  - dictionary of available currencies
 
 
+#### `MyWallet.setTwoFactorSMS(success, error);`
 
+##### Parameters:
+
+{function} - success callback function
+
+{function} - error callback function
 
 HDWallet API
 ===========
