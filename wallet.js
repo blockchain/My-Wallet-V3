@@ -87,7 +87,7 @@ var MyWallet = new function() {
       "ro": "Romanian",
       "nl": "Dutch",
       "tr": "Turkish"
-    }
+    };
     var currencyCodeToCurrency = {
       "ISK" : "lcelandic Króna",
       "HKD" : "Hong Kong Dollar",
