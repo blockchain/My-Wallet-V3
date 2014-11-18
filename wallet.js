@@ -2906,14 +2906,14 @@ var MyWallet = new function() {
         });
     }
 
-    function didDecryptWallet() {
+    function didDecryptWallet(success) {
 
         //We need to check if the wallet has changed
         MyWallet.getWallet();
 
         logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
 
-        MyWallet.sendEvent('did_decrypt');
+        success();
 
         ///Get the list of transactions from the http API
         MyWallet.get_history(null, function() {
@@ -3300,15 +3300,16 @@ var MyWallet = new function() {
     }
 
     //Fetch information on a new wallet identfier
-    this.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, needs_two_factor_code, wrong_two_factor_code) {
+    this.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, other_error) {
 //        console.log('Set GUID ' + user_guid);
         if (didSetGuid) {
-            MyWallet.restoreWallet(inputedPassword, twoFACode, wrong_two_factor_code);
+            MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error);
             return;
         }
  
         if (isInitialized) {
-            throw 'Cannot Set GUID Once Initialized';
+            other_error('Cannot Set GUID Once Initialized');
+            return;
         }
 
         guid = user_guid;
@@ -3338,6 +3339,7 @@ var MyWallet = new function() {
 
                 if (!obj.guid) {
                     MyWallet.sendMonitorEvent({type: "error", message: 'Server returned null guid.', code: 0});
+                    other_error('Server returned null guid.');
                     return;
                 }
 
@@ -3386,7 +3388,7 @@ var MyWallet = new function() {
                 }
 
                 didSetGuid = true;
-                MyWallet.restoreWallet(inputedPassword, twoFACode, wrong_two_factor_code);
+                MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error);
             },
             error : function(e) {
 
@@ -3404,7 +3406,7 @@ var MyWallet = new function() {
                             auth_type = 0;
 
                             didSetGuid = true;
-                            MyWallet.restoreWallet(inputedPassword, twoFACode, wrong_two_factor_code);
+                            MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error);
                         }  else {
                             MyWallet.sendEvent('did_fail_set_guid');
 
@@ -3435,7 +3437,7 @@ var MyWallet = new function() {
         });
     }
 
-    this.restoreWallet = function(pw, two_factor_auth_key, wrong_two_factor_code) {
+    this.restoreWallet = function(pw, two_factor_auth_key, success, wrong_two_factor_code, other_error) {
 
         if (isInitialized || isRestoringWallet) {
             return;
@@ -3461,11 +3463,13 @@ var MyWallet = new function() {
                 MyWallet.sendMonitorEvent({type: "loadingText", message: 'Validating Authentication key', code: 0});
 
                 if (two_factor_auth_key == null) {
-                    throw 'Two Factor Authentication code this null';
+                    other_error('Two Factor Authentication code this null');
+                    return;
                 }
 
                 if (two_factor_auth_key.length == 0 || two_factor_auth_key.length > 255) {
-                    throw 'You must enter a Two Factor Authentication code';
+                    other_error('You must enter a Two Factor Authentication code');
+                    return;
                 }
 
                 $.ajax({
@@ -3476,7 +3480,8 @@ var MyWallet = new function() {
                     success: function(data) {
                         try {
                             if (data == null || data.length == 0) {
-                                throw 'Server Return Empty Wallet Data';
+                                other_error('Server Return Empty Wallet Data');
+                                return;
                             }
 
                             if (data != 'Not modified') {
@@ -3486,7 +3491,7 @@ var MyWallet = new function() {
                             internalRestoreWallet(function() {
                                 isRestoringWallet = false;
 
-                                didDecryptWallet();
+                                didDecryptWallet(success);
                             }, error);
                         } catch (e) {
                             error(e);
@@ -3501,7 +3506,7 @@ var MyWallet = new function() {
                 internalRestoreWallet(function() {
                     isRestoringWallet = false;
 
-                    didDecryptWallet();
+                    didDecryptWallet(success);
                 }, _error);
             }
         } catch (e) {
