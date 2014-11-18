@@ -390,6 +390,15 @@ stores currency code in memory and in local storage
 {string}  - dictionary of available currencies
 
 
+#### `MyWallet.unsetTwoFactor(success, error);`
+
+##### Parameters:
+
+{function} - success callback function
+
+{function} - error callback function
+
+
 #### `MyWallet.setTwoFactorSMS(success, error);`
 
 ##### Parameters:
@@ -397,6 +406,34 @@ stores currency code in memory and in local storage
 {function} - success callback function
 
 {function} - error callback function
+
+
+#### `MyWallet.setTwoFactorEmail(success, error);`
+
+##### Parameters:
+
+{function} - success callback function
+
+{function} - error callback function
+
+
+#### `MyWallet.setTwoFactorGoogleAuthenticator(success, error);`
+
+##### Parameters:
+
+{function} - success callback function with google secret url
+
+{function} - error callback function
+
+
+#### `MyWallet.confirmTwoFactorGoogleAuthenticator(code, success, error);`
+
+##### Parameters:
+
+{function} - success callback function
+
+{function} - error callback function
+
 
 HDWallet API
 ===========
