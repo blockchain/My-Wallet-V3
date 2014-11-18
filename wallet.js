@@ -3308,7 +3308,7 @@ var MyWallet = new function() {
     }
 
     //Fetch information on a new wallet identfier
-    this.fetchWalletJson = function(user_guid, resend_code, inputedPassword, twoFACode, needs_two_factor_code, wrong_two_factor_code) {
+    this.fetchWalletJson = function(user_guid, sharedKey, resend_code, inputedPassword, twoFACode, needs_two_factor_code, wrong_two_factor_code) {
 //        console.log('Set GUID ' + user_guid);
         if (didSetGuid) {
             MyWallet.restoreWallet(inputedPassword, twoFACode, wrong_two_factor_code);
@@ -3318,6 +3318,9 @@ var MyWallet = new function() {
         if (isInitialized) {
             throw 'Cannot Set GUID Once Initialized';
         }
+
+        guid = user_guid;
+        sharedKey = sharedKey;
 
         MyWallet.sendMonitorEvent({type: "loadingText", message: 'Downloading Wallet', code: 0});
 
@@ -5422,122 +5425,6 @@ var MyWallet = new function() {
     }
 
     $(document).ready(function() {
-
-        if (!$.isEmptyObject({}) || !$.isEmptyObject([])) {
-            MyWallet.makeNotice('error', 'error', 'Object.prototype has been extended by a browser extension. Please disable this extensions and reload the page.');
-            return;
-        }
-
-        //Disable autocomplete in firefox
-        $("input,button,select").attr("autocomplete","off");
-
-        var body = $(document.body);
-
-        function tSetGUID() {
-            if (guid && guid.length == 36) {
-                setTimeout(function(){
-                    MyWallet.fetchWalletJson(guid, false);
-                }, 10);
-            } else {
-                $('#signup-btn').show();
-            }
-        }
-
-        //Load data attributes from html
-        guid = body.data('guid');
-        sharedKey = body.data('sharedkey');
-        language = body.data('language');
-
-        //Deposit pages set this flag so it can be loaded in an iframe
-        if (MyWallet.skip_init)
-            return;
-
-        MyStore.get('server_time_offset', function (_serverTimeOffset) {
-            serverTimeOffset = parseInt(_serverTimeOffset);
-
-            if (isNaN(serverTimeOffset))
-                serverTimeOffset = 0;
-        });
-
-        if ((!guid || guid.length == 0) && (isExtension || window.location.href.indexOf('/login') > 0)) {
-            MyStore.get('guid', function(result) {
-                guid = result;
-
-                tSetGUID();
-
-                bindInitial();
-            });
-        } else {
-            tSetGUID();
-
-            bindInitial();
-        }
-
-        //Frame break
-        if (top.location != self.location) {
-            top.location = self.location.href
-        }
-
-        body.click(function() {
-            if (logout_timeout) {
-                clearTimeout(logout_timeout);
-                logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
-            }
-
-            rng_seed_time();
-        }).keypress(function() {
-                if (logout_timeout) {
-                    clearTimeout(logout_timeout);
-                    logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
-                }
-
-                rng_seed_time();
-            }).mousemove(function(event) {
-                if (event) {
-                    rng_seed_int(event.clientX * event.clientY);
-                }
-            });
-
-        $('.auth-'+auth_type).show();
-
-        cVisible = $("#restore-wallet");
-
-        cVisible.show();
-
-        //Show a warning when the Users copies a watch only address to the clipboard
-        var ctrlDown = false;
-        var ctrlKey = 17, vKey = 86, cKey = 67, appleKey = 67;
-        $(document).keydown(function(e) {
-            try {
-                if (e.keyCode == ctrlKey || e.keyCode == appleKey)
-                    ctrlDown = true;
-
-                if (ctrlDown &&  e.keyCode == cKey) {
-                    var selection = $.trim(getSelectionText());
-
-                    var addr = addresses[selection];
-
-                    if (addr != null) {
-                        if (addr.priv == null) {
-                            $('#watch-only-copy-warning-modal').modal('show');
-                        }
-                    }
-                }
-            } catch (e) {
-                console.log(e);
-            }
-        }).keyup(function(e) {
-                if (e.keyCode == ctrlKey || e.keyCode == appleKey)
-                    ctrlDown = false;
-            }).ajaxStart(function() {
-                setLogoutImageStatus('loading_start');
-
-                $('.loading-indicator').fadeIn(200);
-            }).ajaxStop(function() {
-                setLogoutImageStatus('loading_stop');
-
-                $('.loading-indicator').hide();
-            });
     });
 
     function buildReceiveCoinsView() {
