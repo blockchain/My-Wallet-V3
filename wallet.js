@@ -532,7 +532,7 @@ var MyWallet = new function() {
             dataType: dataType,
             type: "POST",
             timeout: 60000,
-            url: root + url,
+            url: BlockchainAPI.getRootURL() + url,
             data : clone,
             success: success,
             error : error

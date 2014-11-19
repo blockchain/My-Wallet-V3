@@ -43,6 +43,11 @@ var BlockchainAPI = new function() {
         };
     }(jQuery));
 
+
+    this.getRootURL = function() {
+        return "https://blockchain.info/";
+    }
+
     this.get_history = function(success, error, tx_filter, offset, n) {
         MyWallet.sendMonitorEvent({type: "info", message: 'Loading transactions', code: 0});
 
