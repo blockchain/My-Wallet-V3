@@ -4178,7 +4178,6 @@ var MyWallet = new function() {
     }
 
     this.createNewWallet = function(inputedEmail, inputedPassword, languageCode, currencyCode, success, error) {
-            console.log("createNewWallet: ", inputedEmail);
         MyWalletSignup.generateNewWallet(inputedPassword, inputedEmail, function(createdGuid, createdSharedKey, createdPassword) {
             MyStore.clear();
             if (languageCode)
