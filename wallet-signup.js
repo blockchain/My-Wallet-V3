@@ -111,10 +111,6 @@ var MyWalletSignup = new function() {
                 insertWallet(guid, sharedKey, password, {email : email}, function(message){
                     success(guid, sharedKey, password);
                 }, function(e) {
-                    $("#captcha").attr("src", root + "kaptcha.jpg?timestamp=" + new Date().getTime());
-
-                    $('#captcha-value').val('');
-
                     error(e);
                 });
             } catch (e) {

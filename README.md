@@ -439,6 +439,24 @@ stores currency code in memory and in local storage
 {function} - error callback function
 
 
+#### `MyWallet.createNewWallet(inputedEmail, inputedPassword, languageCode, currencyCode, success, error);`
+
+##### Parameters:
+
+{string} - user email
+
+{string} - user main password
+
+{string}  - fiat currency code (e.g. USD)
+
+{string}  - language code (e.g. en)
+
+{function} - success callback function
+
+{function} - error callback function
+
+
+
 HDWallet API
 ===========
 

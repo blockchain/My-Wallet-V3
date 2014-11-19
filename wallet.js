@@ -4177,6 +4177,21 @@ var MyWallet = new function() {
         });
     }
 
+    this.createNewWallet = function(inputedEmail, inputedPassword, languageCode, currencyCode, success, error) {
+            console.log("createNewWallet: ", inputedEmail);
+        MyWalletSignup.generateNewWallet(inputedPassword, inputedEmail, function(createdGuid, createdSharedKey, createdPassword) {
+            MyStore.clear();
+            if (languageCode)
+                MyWallet.setLanguage(languageCode);
+            if (currencyCode)
+                MyWallet.setLocalSymbolCode(currencyCode);
+
+            success(createdGuid);
+        }, function (e) {
+            error(e);
+        });
+    }
+
     function changeView(id) {
         if (id === cVisible)
             return;
