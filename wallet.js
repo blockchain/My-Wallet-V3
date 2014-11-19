@@ -4186,7 +4186,7 @@ var MyWallet = new function() {
             if (currencyCode)
                 MyWallet.setLocalSymbolCode(currencyCode);
 
-            success(createdGuid);
+            success(createdGuid, createdSharedKey, createdPassword);
         }, function (e) {
             error(e);
         });

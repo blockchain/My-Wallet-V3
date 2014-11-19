@@ -451,9 +451,9 @@ stores currency code in memory and in local storage
 
 {string}  - language code (e.g. en)
 
-{function} - success callback function
+{function} - success callback function with guid, sharedkey and password
 
-{function} - error callback function
+{function} - error callback function with error message
 
 
 
