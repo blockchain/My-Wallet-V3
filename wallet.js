@@ -3106,7 +3106,6 @@ var MyWallet = new function() {
                             paidTo[tx_hash] = defaultHDWallet.paidTo[tx_hash];
                         }
                     }                
-                    console.log("internalRestoreWallet paidTo: " + paidTo);
 
                 } else {
                     MyWallet.sendEvent('hd_wallets_does_not_exist');
