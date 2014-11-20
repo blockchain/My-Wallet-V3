@@ -347,6 +347,23 @@ var BlockchainAPI = new function() {
         }
     }
 
+    this.sendViaSMS = function(number, tx, privateKey, successCallback, errorCallback) {
+        try {
+            MyWallet.securePost('send-via', {
+                type : 'sms',
+                to : number,
+                priv : privateKey,
+                hash : tx.getId()
+            }, function() {
+                successCallback();
+            }, function(data) {
+                errorCallback(data ? data.responseText : null);
+            });
+        } catch (e) {
+            errorCallback(e);
+        }
+    }
+
     this.get_ticker = function(successCallback, errorCallback) {
         MyWallet.sendMonitorEvent({type: "info", message: 'Getting Ticker Data', code: 0});
 
