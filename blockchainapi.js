@@ -57,8 +57,8 @@ var BlockchainAPI = new function() {
         if (!offset) offset = 0;
         if (!n) n = 0;
 
-        //var allAddresses = MyWallet.getActiveAddresses();
-        var allAddresses = []; // temporary disable fetching none HD wallet addresses
+        var allAddresses = MyWallet.getActiveAddresses();
+        //var allAddresses = []; // temporary disable fetching none HD wallet addresses
         var myHDWallet = MyWallet.getHDWallet();
         if (myHDWallet != null) {
             for (var i in myHDWallet.getAccounts()) {
