@@ -741,6 +741,24 @@ recovers HD wallet from passphrases by recreating all accounts and queries all b
 recovers HD wallet from passphrases by recreating all accounts and queries all balances of accounts and addresses
 
 
+#### `MyWallet.sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback);`
+
+##### Parameters:
+
+{int}  - send from Account Index
+
+{int}  - send amount
+
+{int}  - fee amount
+
+{string} - to email
+
+{function} - success callback function
+
+{function} - error callback function
+
+
+
 Tests
 =====
 You'll need [Karma and Jasmine](https://github.com/karma-runner/karma-jasmine) and PhantomJS:

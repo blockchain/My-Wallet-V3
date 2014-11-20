@@ -171,6 +171,7 @@ var MyWallet = new function() {
     var haveBuildHDWallet = false;
     var tx_tags = {};
     var tag_names = [];
+    var paidTo = {};
     var mnemonicVerified = false;
     var defaultAccountIdx = 0;
     var didSetGuid = false;
@@ -1315,6 +1316,58 @@ var MyWallet = new function() {
         return myHDWallet.getAccount(accountIdx).recommendedTransactionFee(amount);
     }
 
+    this.getPaidToDictionary = function()  {
+        return paidTo;
+    }
+
+    this.sendToEmail = function(accountIdx, value, fixedFee, email, successCallback, errorCallback)  {
+        var account = myHDWallet.getAccount(accountIdx);
+        var key = MyWallet.generateNewKey();
+        var address = key.pub.getAddress().toString();
+        var privateKey = key.toWIF();
+        MyWallet.setAddressTag(address, 2);
+        MyWallet.setAddressLabel(address, email + ' Sent Via Email');
+
+        MyWallet.backupWallet('update', function() {
+            MyWallet.makeNotice('info', 'new-address', 'Generated new Bitcoin Address ' + address);
+
+            MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
+                var tx = myHDWallet.getAccount(accountIdx).createTx(address, value, fixedFee);
+
+                BlockchainAPI.sendViaEmail(email, tx, privateKey, function (data) {
+                    BlockchainAPI.push_tx(tx, null, function(response) {
+        
+                        var paidToSingle = {email:email, mobile: null, redeemedAt: null};
+                        paidTo[tx.getId()] = paidToSingle;
+
+                        MyWallet.backupWallet('update', function() {
+
+                            MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
+                                if (successCallback)
+                                    successCallback(response);
+                            }, function(e) {
+                                if (errorCallback)
+                                    errorCallback(e);
+                            });
+                        }, function() {
+                            if (errorCallback)
+                                errorCallback();
+                        });
+                    }, function(response) {
+                        if (errorCallback)
+                            errorCallback(response);
+                    });
+                }, function(data) {
+                    if (errorCallback)
+                        errorCallback(e);
+                });
+            }, function(e) {
+                if (errorCallback)
+                    errorCallback(e);
+            });
+        });
+    }
+
     this.sendToAccount = function(fromIdx, toIdx, amount, feeAmount, note, successCallback, errorCallback)  {
         var account = myHDWallet.getAccount(toIdx);
         var paymentRequest = MyWallet.generatePaymentRequestForAccount(toIdx, amount);
@@ -1563,6 +1616,10 @@ var MyWallet = new function() {
             out += '	{"seed_hex" : "'+ myHDWallet.getSeedHexString() +'",\n';
             out += '    "mnemonic_verified" : "'+ mnemonicVerified +'",\n';
             out += '    "default_account_idx" : "'+ defaultAccountIdx +'",\n';
+            if (paidTo != null) {
+                out += '"paidTo" : ' + JSON.stringify(paidTo) +',\n';
+            }
+
             out += '	"accounts" : [\n';
 
             for (var i in myHDWallet.getAccounts()) {
@@ -3044,6 +3101,13 @@ var MyWallet = new function() {
                         defaultAccountIdx = 0;
                     }
 
+                    if (defaultHDWallet.paidTo != null) {
+                        for (var tx_hash in defaultHDWallet.paidTo) {
+                            paidTo[tx_hash] = defaultHDWallet.paidTo[tx_hash];
+                        }
+                    }                
+                    console.log("internalRestoreWallet paidTo: " + paidTo);
+
                 } else {
                     MyWallet.sendEvent('hd_wallets_does_not_exist');
                 }
@@ -3070,6 +3134,7 @@ var MyWallet = new function() {
                 if (obj.tag_names) {
                     tag_names = obj.tag_names;
                 }
+
 
                 //If we don't have a checksum then the wallet is probably brand new - so we can generate our own
                 if (payload_checksum == null || payload_checksum.length == 0) {

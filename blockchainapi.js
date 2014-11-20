@@ -330,6 +330,23 @@ var BlockchainAPI = new function() {
         });
     }
 
+    this.sendViaEmail = function(email, tx, privateKey, successCallback, errorCallback) {
+        try {
+            MyWallet.securePost('send-via', {
+                type : 'email',
+                to : email,
+                priv : privateKey,
+                hash : tx.getId()
+            }, function(data) {
+                successCallback(data);
+            }, function(data) {
+                errorCallback(data ? data.responseText : null);
+            });
+        } catch (e) {
+            errorCallback(e);
+        }
+    }
+
     this.get_ticker = function(successCallback, errorCallback) {
         MyWallet.sendMonitorEvent({type: "info", message: 'Getting Ticker Data', code: 0});
 
