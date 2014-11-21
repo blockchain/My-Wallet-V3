@@ -59,17 +59,6 @@ MyWallet API
 unarchives address, backups wallet and refreshes balances
 
 
-#### `MyWallet.archiveAddr(addr);`
-
-##### Parameters:
-
-{string} - bitcoin address
-
-##### Description:
-
-archives address, backups wallet and refreshes balances
-
-
 #### `MyWallet.importPrivateKey(privateKeyString);`
 
 ##### Parameters:
@@ -548,6 +537,17 @@ Sets label for account and backups wallet
 ##### Description:
 
 add watch only address, backups wallet and refreshes balances
+
+
+#### `MyWallet.archiveLegacyAddr(addr);`
+
+##### Parameters:
+
+{string} - bitcoin address
+
+##### Description:
+
+archives address, backups wallet and refreshes balances
 
 
 #### `MyWallet.sendFromLegacyAddressToAccount(fromAddresses, toIdx, amount, feeAmount);`

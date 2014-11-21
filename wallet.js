@@ -732,7 +732,7 @@ var MyWallet = new function() {
         }
     }
 
-    this.archiveAddr = function(addr) {
+    this.archiveLegacyAddr = function(addr) {
         if (MyWallet.getLegacyActiveAddresses().length <= 1) {
             MyWallet.makeNotice('error', 'add-error', 'You must leave at least one active address');
             return;
@@ -4879,7 +4879,7 @@ var MyWallet = new function() {
 
                 (function(address) {
                     action_tx.find('.act-archive').click(function() {
-                        MyWallet.archiveAddr(address);
+                        MyWallet.archiveLegacyAddr(address);
                     });
 
                     action_tx.find('.act-label').click(function() {
