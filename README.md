@@ -456,11 +456,23 @@ stores currency code in memory and in local storage
 {function} - error callback function with error message
 
 
+
+Legacy API
+===========
+
+
 #### `MyWallet.getTotalBalanceForActiveLegacyAddresses();`
 
 ##### Returns:
 
 {int}  - total Balance For Active Legacy Addresses
+
+
+#### `MyWallet.hasLegacyAddresses();`
+
+##### Returns:
+
+{bool}  - has legacy addresses
 
 
 
