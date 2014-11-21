@@ -69,6 +69,13 @@ var BlockchainAPI = new function() {
                 }
             }
         }
+        var paidTo = MyWallet.getPaidToDictionary();
+        for (var tx_hash in paidTo) {
+            if (paidTo[tx_hash].redeemedAt == null) {
+                allAddresses.push(paidTo[tx_hash].address);                
+            }
+        }
+
 
         var data = {
             active : allAddresses.join('|'),

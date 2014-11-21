@@ -172,6 +172,7 @@ var MyWallet = new function() {
     var tx_tags = {};
     var tag_names = [];
     var paidTo = {};
+    var paidToAddressesToBalance = {};
     var mnemonicVerified = false;
     var defaultAccountIdx = 0;
     var didSetGuid = false;
@@ -950,6 +951,9 @@ var MyWallet = new function() {
                 }
             }
 
+            if (output.addr in paidToAddressesToBalance) {
+                paidToAddressesToBalance[output.addr] -= value;
+            }
         }
 
         for (var i = 0; i < tx.out.length; ++i) {
@@ -981,7 +985,21 @@ var MyWallet = new function() {
                 MyWallet.checkToAddTxToPaymentRequestForAccount(account, output.addr, tx.hash, output.value, checkCompleted);
             }
 
+            if (output.addr in paidToAddressesToBalance) {
+                paidToAddressesToBalance[output.addr] += value;
+            }
+
         }
+
+        for (var tx_hash in paidTo) {
+            if (paidTo[tx_hash].redeemedAt == null &&
+                paidToAddressesToBalance[paidTo[tx_hash].address] == 0) {
+                paidTo[tx_hash].redeemedAt = tx.time;
+                delete paidToAddressesToBalance[paidTo[tx_hash].address];
+                MyWallet.sendEvent("paid_to_bitcoins_claimed", {address: paidTo[tx_hash].address});
+            }
+        }
+
         return result;
     }
 
@@ -1078,6 +1096,13 @@ var MyWallet = new function() {
                     msg += '{"op":"addr_sub", "addr":"'+ addrs[key] +'"}'; //Subscribe to transactions updates through websockets
                 }
                 MyWallet.listenToHDWalletAccounts();
+                var paidTo = MyWallet.getPaidToDictionary();
+                for (var tx_hash in paidTo) {
+                    if (paidTo[tx_hash].redeemedAt == null) {
+                        msg += '{"op":"addr_sub", "addr":"'+ paidTo[tx_hash].address +'"}';
+                    }
+                }
+
             } catch (e) {
                 alert(e);
             }
@@ -1366,7 +1391,7 @@ var MyWallet = new function() {
                 BlockchainAPI.sendViaEmail(email, tx, privateKey, function (data) {
                     BlockchainAPI.push_tx(tx, null, function(response) {
         
-                        var paidToSingle = {email:email, mobile: null, redeemedAt: null};
+                        var paidToSingle = {email:email, mobile: null, redeemedAt: null, address: address};
                         paidTo[tx.getId()] = paidToSingle;
 
                         MyWallet.backupWallet('update', function() {
@@ -3133,6 +3158,10 @@ var MyWallet = new function() {
                     if (defaultHDWallet.paidTo != null) {
                         for (var tx_hash in defaultHDWallet.paidTo) {
                             paidTo[tx_hash] = defaultHDWallet.paidTo[tx_hash];
+
+                            if (paidTo[tx_hash].redeemedAt == null) {
+                                paidToAddressesToBalance[paidTo[tx_hash].address] = 0;
+                            }
                         }
                     }                
 
