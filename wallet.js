@@ -752,7 +752,7 @@ var MyWallet = new function() {
             MyWallet.makeNotice('error', 'add-error', 'Cannot Archive This Address');
         }
     }
-    this.addWatchOnlyAddress = function(addressString) {
+    this.addWatchOnlyLegacyAddress = function(addressString) {
         var address = Bitcoin.Address.fromBase58Check(addressString);
 
         if (address.toString() != addressString) {

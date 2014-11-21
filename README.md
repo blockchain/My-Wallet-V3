@@ -228,17 +228,6 @@ calls success callback with json object, or error callback with error object
 {bool}  - is wallet payload synchronized with server
 
 
-#### `MyWallet.addWatchOnlyAddress(address);`
-
-##### Parameters:
-
-{string} - bitcoin address
-
-##### Description:
-
-add watch only address, backups wallet and refreshes balances
-
-
 #### `MyWallet.isWatchOnly(address);`
 
 ##### Parameters:
@@ -548,6 +537,17 @@ Sets label for account and backups wallet
 ##### Returns:
 
 {string}  - preferred address
+
+
+#### `MyWallet.addWatchOnlyLegacyAddress(address);`
+
+##### Parameters:
+
+{string} - bitcoin address
+
+##### Description:
+
+add watch only address, backups wallet and refreshes balances
 
 
 #### `MyWallet.sendFromLegacyAddressToAccount(fromAddresses, toIdx, amount, feeAmount);`

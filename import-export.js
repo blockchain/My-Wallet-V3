@@ -123,7 +123,7 @@ function _ImportExport() {
 
                 showWatchOnlyWarning(value, function() {
                     try {
-                        if (MyWallet.addWatchOnlyAddress(value)) {
+                        if (MyWallet.addWatchOnlyLegacyAddress(value)) {
                             MyWallet.makeNotice('success', 'added-address', 'Successfully Added Address ' + address);
 
                             try {

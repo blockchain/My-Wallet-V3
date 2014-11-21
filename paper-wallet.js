@@ -222,7 +222,7 @@ var PaperWallet = new function() {
 
             if (internalShowModal([{addr : address, priv : b58, label : 'Cold Storage'}])) {
                 showDidPrintModal(function() {
-                    MyWallet.addWatchOnlyAddress(address);
+                    MyWallet.addWatchOnlyLegacyAddress(address);
 
                     MyWallet.setLegacyAddressLabel(address, 'Cold Storage');
 
