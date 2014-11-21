@@ -228,7 +228,7 @@ var PaperWallet = new function() {
 
                     MyWallet.backupWallet();
                 }, function() {
-                    MyWallet.deleteAddress(address);
+                    MyWallet.deleteLegacyAddress(address);
                 });
             }
         }

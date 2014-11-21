@@ -1038,7 +1038,7 @@ var SharedCoin = new function() {
 
             function _error(e) {
                 for (var key in plan.generated_addresses) {
-                    MyWallet.deleteAddress(plan.generated_addresses[key]);
+                    MyWallet.deleteLegacyAddress(plan.generated_addresses[key]);
                 }
 
                 error(e);

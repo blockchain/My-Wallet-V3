@@ -543,6 +543,13 @@ Legacy API
 {int}  - balance
 
 
+#### `MyWallet.deleteLegacyAddress(addr);`
+
+##### Parameters:
+
+{string} - bitcoin address
+
+
 #### `MyWallet.sendFromLegacyAddressToAccount(fromAddresses, toIdx, amount, feeAmount);`
 
 ##### Parameters:

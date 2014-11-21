@@ -498,7 +498,7 @@ var MyWallet = new function() {
         return recommend_include_fee;
     }
 
-    this.deleteAddress = function(addr) {
+    this.deleteLegacyAddress = function(addr) {
         delete addresses[addr];
     }
 
@@ -4608,7 +4608,7 @@ var MyWallet = new function() {
                         MyWallet.makeNotice('warning', 'warning-deleted', 'Address & Private Key Removed From Wallet');
 
                         for (var ii in addrs) {
-                            MyWallet.deleteAddress(addrs[ii]);
+                            MyWallet.deleteLegacyAddress(addrs[ii]);
                         }
 
                         buildVisibleView();
@@ -5357,7 +5357,7 @@ var MyWallet = new function() {
 
                     (function(address) {
                         tr.find('.act-delete').click(function() {
-                            MyWallet.deleteAddressBook(address);
+                            MyWallet.deleteLegacyAddressBook(address);
                         });
                     })(address);
 

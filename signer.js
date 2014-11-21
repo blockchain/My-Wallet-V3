@@ -1823,7 +1823,7 @@ function initNewTx() {
             if (!this.has_pushed && this.generated_addresses.length > 0) {
                 //When an error occurs during send (or user cancelled) we need to remove the addresses we generated
                 for (var i = 0; i < this.generated_addresses.length; ++i) {
-                    MyWallet.deleteAddress(this.generated_addresses[i]);
+                    MyWallet.deleteLegacyAddress(this.generated_addresses[i]);
                 }
 
                 if (this.has_saved_addresses)
