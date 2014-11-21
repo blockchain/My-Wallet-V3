@@ -303,9 +303,9 @@ function _ImportExport() {
                                     MyWallet.setAddressLabel(addr, $.trim(json_key.label));
 
                                 if (json_key.tag)
-                                    MyWallet.setAddressTag(addr, json_key.tag);
+                                    MyWallet.setLegacyAddressTag(addr, json_key.tag);
                                 else
-                                    MyWallet.setAddressTag(addr, 1); //Mark as unsynced
+                                    MyWallet.setLegacyAddressTag(addr, 1); //Mark as unsynced
                             }
                         } catch (e) {
                             console.log(e);

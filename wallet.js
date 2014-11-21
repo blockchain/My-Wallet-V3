@@ -445,7 +445,7 @@ var MyWallet = new function() {
         return addresses[address].tag;
     }
 
-    this.setAddressTag = function(address, tag) {
+    this.setLegacyAddressTag = function(address, tag) {
         addresses[address].tag = tag;
     }
 
@@ -1421,7 +1421,7 @@ var MyWallet = new function() {
         var key = MyWallet.generateNewKey();
         var address = key.pub.getAddress().toString();
         var privateKey = key.toWIF();
-        MyWallet.setAddressTag(address, 2);
+        MyWallet.setLegacyAddressTag(address, 2);
         MyWallet.setAddressLabel(address, email + ' Sent Via Email');
 
         MyWallet.backupWallet('update', function() {

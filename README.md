@@ -498,6 +498,15 @@ Legacy API
 {string}  - Legacy Address Tag
 
 
+#### `MyWallet.setLegacyAddressTag(address, tag)`
+
+##### Parameters:
+
+{string}  - bitcoin address
+
+{string}  - tag
+
+
 
 #### `MyWallet.sendFromLegacyAddressToAccount(fromAddresses, toIdx, amount, feeAmount);`
 

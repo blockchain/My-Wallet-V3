@@ -880,7 +880,7 @@ function startTxUI(el, type, pending_transaction, dont_ask_for_anon) {
                             var address = miniKeyAddrobj.key.pub.getAddress().toString();
 
                             //Archive the address
-                            MyWallet.setAddressTag(address, 2);
+                            MyWallet.setLegacyAddressTag(address, 2);
 
                             MyWallet.setAddressLabel(address, mobile_number + ' Sent Via SMS');
 
@@ -914,7 +914,7 @@ function startTxUI(el, type, pending_transaction, dont_ask_for_anon) {
                                 var address = key.pub.getAddress().toString();
 
                                 //Archive the address
-                                MyWallet.setAddressTag(address, 2);
+                                MyWallet.setLegacyAddressTag(address, 2);
 
                                 MyWallet.setAddressLabel(address, send_to_email + ' Sent Via Email');
 
