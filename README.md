@@ -113,12 +113,6 @@ import Private Key, backups wallet and refreshes balances
 delete address from addressBook and backups wallet
 
 
-#### `MyWallet.getAllAddresses();`
-
-##### Returns:
-
-{array}  - active addresses
-
 
 #### `MyWallet.getPreferredAddress();`
 
@@ -490,7 +484,6 @@ Legacy API
 {bool}  - legacy Address Exists 
 
 
-
 #### `MyWallet.getLegacyAddressTag();`
 
 ##### Returns:
@@ -505,6 +498,13 @@ Legacy API
 {string}  - bitcoin address
 
 {string}  - tag
+
+
+#### `MyWallet.getAllLegacyAddresses();`
+
+##### Returns:
+
+{array}  - get all legacy addresses
 
 
 

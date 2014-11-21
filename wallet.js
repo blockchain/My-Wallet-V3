@@ -2063,7 +2063,7 @@ var MyWallet = new function() {
         }).trigger('change');
     }
 
-    this.getAllAddresses = function() {
+    this.getAllLegacyAddresses = function() {
         var array = [];
         for (var key in addresses) {
             array.push(key);

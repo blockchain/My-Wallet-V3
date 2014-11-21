@@ -239,7 +239,7 @@ function resolveAddress(label) {
         }
     }
 
-    var addresses = MyWallet.getAllAddresses();
+    var addresses = MyWallet.getAllLegacyAddresses();
     for (var i = 0; i < addresses.length; ++i) {
         var key = addresses[i];
         var a_label = MyWallet.getAddressLabel(key);

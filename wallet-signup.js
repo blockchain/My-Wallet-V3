@@ -96,7 +96,7 @@ var MyWalletSignup = new function() {
                     throw 'Passwords must be at shorter than 256 characters';
                 }
 
-                if (MyWallet.getAllAddresses().length == 0)
+                if (MyWallet.getAllLegacyAddresses().length == 0)
                     MyWallet.generateNewKey(password);
 
                 //User reported this browser generated an invalid private key
