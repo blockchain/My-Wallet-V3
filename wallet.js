@@ -2123,6 +2123,10 @@ var MyWallet = new function() {
         });
     }
 
+    this.hasLegacyAddresses = function() {
+        return addresses.length != 0;
+    }
+
     this.getActiveAddresses = function() {
         var array = [];
         for (var key in addresses) {
