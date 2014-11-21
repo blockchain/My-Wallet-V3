@@ -468,6 +468,16 @@ var MyWallet = new function() {
         return addresses[address].balance;
     }
 
+    this.getTotalBalanceForActiveLegacyAddresses = function() {
+        var totalBalance = 0;
+        for (var key in addresses) {
+            var addr = addresses[key];
+            if (addr.tag != 2)
+                totalBalance += addr.balance;
+        }
+        return totalBalance;
+    }
+
     this.getMixerFee = function() {
         return mixer_fee;
     }
