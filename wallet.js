@@ -1367,6 +1367,26 @@ var MyWallet = new function() {
         return paidTo;
     }
 
+    this.sendFromLegacyAddressToAccount = function(fromAddresses, toIdx, amount, feeAmount)  {
+        var account = myHDWallet.getAccount(toIdx);
+        var paymentRequest = MyWallet.generatePaymentRequestForAccount(toIdx, amount);
+        var address = account.getAddressForPaymentRequest(paymentRequest);
+        var obj = initNewTx();
+
+        if (feeAmount != null)
+            obj.fee = Bitcoin.BigInteger.valueOf(feeAmount);
+        else
+            obj.fee = obj.base_fee;
+
+        var paymentRequest = MyWallet.generatePaymentRequestForAccount(toIdx, amount);
+        var to_address = account.getAddressForPaymentRequest(paymentRequest);
+        obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(to_address), value : Bitcoin.BigInteger.valueOf(amount)});
+        obj.from_addresses = fromAddresses;
+        obj.ready_to_send_header = 'Bitcoins Ready to Send.';
+
+        obj.start();
+    }
+
     this.redeemFromEmailOrMobile = function(accountIdx, privatekey)  {
         try {
             var format = MyWallet.detectPrivateKeyFormat(privatekey);

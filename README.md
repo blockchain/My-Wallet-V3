@@ -475,6 +475,19 @@ Legacy API
 {bool}  - has legacy addresses
 
 
+#### `MyWallet.sendFromLegacyAddressToAccount(fromAddresses, toIdx, amount, feeAmount);`
+
+##### Parameters:
+
+{array} - from Addresses
+
+{int} - index of to account
+
+{int} - send amount in satoshis
+
+{int} - fee amount in satoshis, base fee will be use if null
+
+
 
 HDWallet API
 ===========
