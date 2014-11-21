@@ -196,7 +196,7 @@ var BlockchainAPI = new function() {
                 for (var key in obj) {
 
                     if (MyWallet.legacyAddressExists(key))
-                        MyWallet.setAddressBalance(key, obj[key].final_balance);
+                        MyWallet.setLegacyAddressBalance(key, obj[key].final_balance);
                 }
 
                 success(obj);

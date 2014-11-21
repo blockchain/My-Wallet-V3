@@ -464,7 +464,7 @@ var MyWallet = new function() {
         addresses[address].label = label;
     }
 
-    this.setAddressBalance = function(address, balance) {
+    this.setLegacyAddressBalance = function(address, balance) {
         addresses[address].balance = balance;
     }
 
