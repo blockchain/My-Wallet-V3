@@ -1083,7 +1083,7 @@ function setReviewTransactionContent(modal, tx, sendTxInAmounts, sendTxOutAmount
             //If it is then we don't need to subtract it from wallet effect
         } else if (out_addresses.length > 0) {
             var address = out_addresses[0].toString();
-            if (!MyWallet.legacyAddressExists(address)|| MyWallet.getAddressTag(address) == 2) {
+            if (!MyWallet.legacyAddressExists(address)|| MyWallet.getLegacyAddressTag(address) == 2) {
 
                 if (val.compareTo(Bitcoin.BigInteger.ZERO) == 0)
                     continue;

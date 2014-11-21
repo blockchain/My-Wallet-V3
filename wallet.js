@@ -441,7 +441,7 @@ var MyWallet = new function() {
         return addresses[address] != null;
     }
 
-    this.getAddressTag = function(address) {
+    this.getLegacyAddressTag = function(address) {
         return addresses[address].tag;
     }
 

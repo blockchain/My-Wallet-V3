@@ -491,6 +491,14 @@ Legacy API
 
 
 
+#### `MyWallet.getLegacyAddressTag();`
+
+##### Returns:
+
+{string}  - Legacy Address Tag
+
+
+
 #### `MyWallet.sendFromLegacyAddressToAccount(fromAddresses, toIdx, amount, feeAmount);`
 
 ##### Parameters:
