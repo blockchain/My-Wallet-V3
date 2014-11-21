@@ -644,7 +644,7 @@ function _ImportExport() {
                             var obj = initNewTx();
 
                             obj.fee = obj.base_fee; //Always include a fee
-                            obj.to_addresses.push({address: new Bitcoin.Address(MyWallet.getPreferredAddress()), value : BigInteger.valueOf(value).subtract(obj.fee)});
+                            obj.to_addresses.push({address: new Bitcoin.Address(MyWallet.getPreferredLegacyAddress()), value : BigInteger.valueOf(value).subtract(obj.fee)});
                             obj.from_addresses = [addr];
                             obj.extra_private_keys[addr] = B58.encode(key.priv);
 

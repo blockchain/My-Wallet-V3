@@ -101,14 +101,6 @@ import Private Key, backups wallet and refreshes balances
 delete address from addressBook and backups wallet
 
 
-
-#### `MyWallet.getPreferredAddress();`
-
-##### Returns:
-
-{string}  - preferred address
-
-
 #### `MyWallet.getLatestBlock();`
 
 ##### Returns:
@@ -549,6 +541,13 @@ Legacy API
 ##### Description:
 
 Sets label for account and backups wallet
+
+
+#### `MyWallet.getPreferredLegacyAddress();`
+
+##### Returns:
+
+{string}  - preferred address
 
 
 #### `MyWallet.sendFromLegacyAddressToAccount(fromAddresses, toIdx, amount, feeAmount);`

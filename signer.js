@@ -1420,7 +1420,7 @@ function initNewTx() {
                     else if (addresses_used.length > 0) { //Else return to a random from address if specified
                         sendTx.addOutput(Bitcoin.Address.fromBase58Check(addresses_used[Math.floor(Math.random() * addresses_used.length)]), parseInt(changeValue));
                     } else { //Otherwise return to random unarchived
-                        sendTx.addOutput(Bitcoin.Address.fromBase58Check(MyWallet.getPreferredAddress()), parseInt(changeValue));
+                        sendTx.addOutput(Bitcoin.Address.fromBase58Check(MyWallet.getPreferredLegacyAddress()), parseInt(changeValue));
                     }
                     this.sendTxOutAmounts.push(changeValue);
 

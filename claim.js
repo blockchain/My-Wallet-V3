@@ -127,7 +127,7 @@ $(document).ready(function() {
 
                             var obj = initNewTx();
                             obj.fee = obj.base_fee; //Always include a fee
-                            obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(MyWallet.getPreferredAddress()), value : Bitcoin.BigInteger.valueOf(value).subtract(obj.fee)});
+                            obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(MyWallet.getPreferredLegacyAddress()), value : Bitcoin.BigInteger.valueOf(value).subtract(obj.fee)});
                             obj.from_addresses = [from_address];
                             obj.extra_private_keys[from_address] = Bitcoin.base58.encode(privateKeyToSweep.d.toBuffer(32));
 

@@ -460,10 +460,6 @@ var MyWallet = new function() {
             return null;
     }
 
-    this.setLegacyAddressLabel = function(address, label) {
-        addresses[address].label = label;
-    }
-
     this.setLegacyAddressBalance = function(address, balance) {
         addresses[address].balance = balance;
     }
@@ -511,7 +507,7 @@ var MyWallet = new function() {
         return addresses[address].priv;
     }
 
-    this.setLabel = function(address, label) {
+    this.setLegacyAddressLabel = function(address, label) {
         addresses[address].label = label;
 
         MyWallet.backupWalletDelayed();
@@ -2073,7 +2069,7 @@ var MyWallet = new function() {
 
     //Find the preferred address to use for change
     //Order deposit / request coins
-    this.getPreferredAddress = function() {
+    this.getPreferredLegacyAddress = function() {
         var preferred = null;
         for (var key in addresses) {
             var addr = addresses[key];
@@ -2606,7 +2602,7 @@ var MyWallet = new function() {
             });
         });
 
-        var preferred = MyWallet.getPreferredAddress();
+        var preferred = MyWallet.getPreferredLegacyAddress();
 
         if (preferred == null)
             return;
@@ -4674,7 +4670,7 @@ var MyWallet = new function() {
 
                         var changeVal = sweepSelect.val();
                         if (changeVal == 'any') {
-                            changeVal = MyWallet.getPreferredAddress();
+                            changeVal = MyWallet.getPreferredLegacyAddress();
                         }
 
                         obj.fee = obj.base_fee; //Always include a fee
@@ -5052,7 +5048,7 @@ var MyWallet = new function() {
 
         $('.deposit-btn').click(function() {
             var self = $(this);
-            var address = MyWallet.getPreferredAddress();
+            var address = MyWallet.getPreferredLegacyAddress();
 
             var extra = self.data('extra');
             if (extra == null) extra = '';
@@ -5070,7 +5066,7 @@ var MyWallet = new function() {
         $('.withdraw-btn').click(function() {
             var self = $(this);
             MyWallet.getSecondPassword(function() {
-                var address = MyWallet.getPreferredAddress();
+                var address = MyWallet.getPreferredLegacyAddress();
                 loadScript('wallet/frame-modal', function() {
                     showFrameModal({
                         title : self.data('title'),
@@ -5376,7 +5372,7 @@ var MyWallet = new function() {
         });
 
         $("#cash-into-coins").click(function() {
-            $(this).attr('href', $(this).attr('href')+MyWallet.getPreferredAddress());
+            $(this).attr('href', $(this).attr('href')+MyWallet.getPreferredLegacyAddress());
         });
 
         $('.show_adv').click(function() {

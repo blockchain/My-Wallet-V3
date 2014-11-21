@@ -91,7 +91,7 @@ function buildSharedTable(el) {
 
 
     $('#shared-address').unbind().click(function() {
-        var destination = MyWallet.getPreferredAddress();
+        var destination = MyWallet.getPreferredLegacyAddress();
 
         MyWallet.sendMonitorEvent({type: "loadingText", message: 'Creating Forwarding Address', code: 0});
 
