@@ -48,17 +48,6 @@ MyWallet API
 {function} - error callback function
 
 
-#### `MyWallet.unArchiveAddr(addr);`
-
-##### Parameters:
-
-{string} - bitcoin address
-
-##### Description:
-
-unarchives address, backups wallet and refreshes balances
-
-
 #### `MyWallet.importPrivateKey(privateKeyString);`
 
 ##### Parameters:
@@ -548,6 +537,17 @@ add watch only address, backups wallet and refreshes balances
 ##### Description:
 
 archives address, backups wallet and refreshes balances
+
+
+#### `MyWallet.unArchiveLegacyAddr(addr);`
+
+##### Parameters:
+
+{string} - bitcoin address
+
+##### Description:
+
+unarchives address, backups wallet and refreshes balances
 
 
 #### `MyWallet.sendFromLegacyAddressToAccount(fromAddresses, toIdx, amount, feeAmount);`

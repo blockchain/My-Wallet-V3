@@ -717,7 +717,7 @@ var MyWallet = new function() {
         }
     }
 
-    this.unArchiveAddr = function(addr) {
+    this.unArchiveLegacyAddr = function(addr) {
         var addr = addresses[addr];
         if (addr.tag == 2) {
             addr.tag = null;
@@ -4977,7 +4977,7 @@ var MyWallet = new function() {
 
                     (function(address) {
                         tr.find('.act-unarchive').click(function() {
-                            MyWallet.unArchiveAddr(address);
+                            MyWallet.unArchiveLegacyAddr(address);
                         });
                     })(addr.addr);
 
