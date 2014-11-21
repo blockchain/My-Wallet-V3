@@ -757,7 +757,17 @@ recovers HD wallet from passphrases by recreating all accounts and queries all b
 
 {function} - error callback function
 
+#### `MyWallet.redeemFromEmailOrMobile(accountIdx, privatekey);`
 
+##### Parameters:
+
+{int} - index of HD wallet account
+
+{string} - private key to redeem
+
+##### Description:
+
+redeem bitcoins sent from email or mobile
 
 Tests
 =====

@@ -1320,6 +1320,35 @@ var MyWallet = new function() {
         return paidTo;
     }
 
+    this.redeemFromEmailOrMobile = function(accountIdx, privatekey)  {
+        try {
+            var format = MyWallet.detectPrivateKeyFormat(privatekey);
+            var privateKeyToSweep = MyWallet.privateKeyStringToKey(privatekey, format);
+            var from_address = MyWallet.getUnCompressedAddressString(privateKeyToSweep);
+
+            BlockchainAPI.get_balance([from_address], function(value) {
+
+                var obj = initNewTx();
+                obj.fee = obj.base_fee; //Always include a fee
+                var amount = Bitcoin.BigInteger.valueOf(value).subtract(obj.fee);
+                var paymentRequest = MyWallet.generatePaymentRequestForAccount(accountIdx, parseInt(amount.toString()));
+                var to_address = account.getAddressForPaymentRequest(paymentRequest);
+ 
+                obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(to_address), value : amount});
+                obj.from_addresses = [from_address];
+                obj.extra_private_keys[from_address] = Bitcoin.base58.encode(privateKeyToSweep.d.toBuffer(32));
+                obj.ready_to_send_header = 'Bitcoins Ready to Claim.';
+
+                obj.start();
+            }, function() {
+                MyWallet.makeNotice('error', 'misc-error', 'Error Getting Address Balance');
+            });
+        } catch (e) {
+            console.log(e);
+            MyWallet.makeNotice('error', 'error-addr', 'Error Decoding Private Key. Could not claim coins.');
+        }        
+    }
+
     this.sendToEmail = function(accountIdx, value, fixedFee, email, successCallback, errorCallback)  {
         var account = myHDWallet.getAccount(accountIdx);
         var key = MyWallet.generateNewKey();
