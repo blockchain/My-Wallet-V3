@@ -224,7 +224,7 @@ var PaperWallet = new function() {
                 showDidPrintModal(function() {
                     MyWallet.addWatchOnlyAddress(address);
 
-                    MyWallet.setAddressLabel(address, 'Cold Storage');
+                    MyWallet.setLegacyAddressLabel(address, 'Cold Storage');
 
                     MyWallet.backupWallet();
                 }, function() {

@@ -514,6 +514,14 @@ Legacy API
 {array}  - get legacy address label
 
 
+#### `MyWallet.setLegacyAddressLabel(address, label)`
+
+##### Parameters:
+
+{string}  - bitcoin address
+
+{string}  - label
+
 
 
 #### `MyWallet.sendFromLegacyAddressToAccount(fromAddresses, toIdx, amount, feeAmount);`

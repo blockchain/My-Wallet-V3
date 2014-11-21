@@ -882,7 +882,7 @@ function startTxUI(el, type, pending_transaction, dont_ask_for_anon) {
                             //Archive the address
                             MyWallet.setLegacyAddressTag(address, 2);
 
-                            MyWallet.setAddressLabel(address, mobile_number + ' Sent Via SMS');
+                            MyWallet.setLegacyAddressLabel(address, mobile_number + ' Sent Via SMS');
 
                             pending_transaction.generated_addresses.push(address);
 
@@ -916,7 +916,7 @@ function startTxUI(el, type, pending_transaction, dont_ask_for_anon) {
                                 //Archive the address
                                 MyWallet.setLegacyAddressTag(address, 2);
 
-                                MyWallet.setAddressLabel(address, send_to_email + ' Sent Via Email');
+                                MyWallet.setLegacyAddressLabel(address, send_to_email + ' Sent Via Email');
 
                                 pending_transaction.generated_addresses.push(address);
 

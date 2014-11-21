@@ -300,7 +300,7 @@ function _ImportExport() {
                             //Copy over the tag and label
                             if (MyWallet.legacyAddressExists(addr)) {
                                 if (json_key.label && $.trim(json_key.label.length) > 0)
-                                    MyWallet.setAddressLabel(addr, $.trim(json_key.label));
+                                    MyWallet.setLegacyAddressLabel(addr, $.trim(json_key.label));
 
                                 if (json_key.tag)
                                     MyWallet.setLegacyAddressTag(addr, json_key.tag);
@@ -589,7 +589,7 @@ function _ImportExport() {
                             var addr = compressed ? MyWallet.getCompressedAddressString(key) : MyWallet.getUnCompressedAddressString(key);
 
                             if (label && label.length > 0)
-                                MyWallet.setAddressLabel(addr, label);
+                                MyWallet.setLegacyAddressLabel(addr, label);
 
                             //Perform a wallet backup
                             MyWallet.backupWallet('update', function() {

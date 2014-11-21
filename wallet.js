@@ -460,7 +460,7 @@ var MyWallet = new function() {
             return null;
     }
 
-    this.setAddressLabel = function(address, label) {
+    this.setLegacyAddressLabel = function(address, label) {
         addresses[address].label = label;
     }
 
@@ -1422,7 +1422,7 @@ var MyWallet = new function() {
         var address = key.pub.getAddress().toString();
         var privateKey = key.toWIF();
         MyWallet.setLegacyAddressTag(address, 2);
-        MyWallet.setAddressLabel(address, email + ' Sent Via Email');
+        MyWallet.setLegacyAddressLabel(address, email + ' Sent Via Email');
 
         MyWallet.backupWallet('update', function() {
             MyWallet.makeNotice('info', 'new-address', 'Generated new Bitcoin Address ' + address);
