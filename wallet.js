@@ -1474,21 +1474,6 @@ var MyWallet = new function() {
         });
     }
 
-    this.setFeePolicyAndBackUp = function(policy, successCallback, errorCallback) {
-        if (policy != -1 && policy != 0 && policy != 1)
-            throw 'Invalid fee policy';
-
-        MyWallet.setFeePolicy(policy);
-        //Fee Policy is stored in wallet so must save it
-        MyWallet.backupWallet('update', function() {
-            if (successCallback)
-                successCallback(response);
-        }, function() {
-            if (errorCallback)
-                errorCallback();
-        });
-    }
-
     this.getAccounts = function() {
         return myHDWallet.getAccounts();
     }
