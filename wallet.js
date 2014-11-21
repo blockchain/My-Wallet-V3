@@ -737,7 +737,7 @@ var MyWallet = new function() {
     }
 
     this.archiveAddr = function(addr) {
-        if (MyWallet.getActiveAddresses().length <= 1) {
+        if (MyWallet.getLegacyActiveAddresses().length <= 1) {
             MyWallet.makeNotice('error', 'add-error', 'You must leave at least one active address');
             return;
         }
@@ -1113,7 +1113,7 @@ var MyWallet = new function() {
                 msg += '{"op":"wallet_sub","guid":"'+guid+'"}';
 
             try {
-                var addrs = MyWallet.getActiveAddresses();
+                var addrs = MyWallet.getLegacyActiveAddresses();
                 for (var key in addrs) {
                     msg += '{"op":"addr_sub", "addr":"'+ addrs[key] +'"}'; //Subscribe to transactions updates through websockets
                 }
@@ -2147,7 +2147,7 @@ var MyWallet = new function() {
         return addresses.length != 0;
     }
 
-    this.getActiveAddresses = function() {
+    this.getLegacyActiveAddresses = function() {
         var array = [];
         for (var key in addresses) {
             var addr = addresses[key];
@@ -2779,7 +2779,7 @@ var MyWallet = new function() {
             showFrameModal({
                 title : 'Export History',
                 description : '',
-                src : root + 'export-history?active='+ MyWallet.getActiveAddresses().join('|')+'&archived='+MyWallet.getArchivedAddresses().join("|")
+                src : root + 'export-history?active='+ MyWallet.getLegacyActiveAddresses().join('|')+'&archived='+MyWallet.getArchivedAddresses().join("|")
             });
         });
     }
@@ -3701,7 +3701,7 @@ var MyWallet = new function() {
 
                     obj.webworker_resource_prefix = '';
 
-                    obj.from_addresses = MyWallet.getActiveAddresses();
+                    obj.from_addresses = MyWallet.getLegacyActiveAddresses();
 
                     obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(to), value :  parseValueBitcoin(value)});
 
@@ -3822,7 +3822,7 @@ var MyWallet = new function() {
                     };
 
                     if (sync_pubkeys) {
-                        data.active = MyWallet.getActiveAddresses().join('|');
+                        data.active = MyWallet.getLegacyActiveAddresses().join('|');
                     }
 
                     MyWallet.securePost("wallet", data, function(data) {
@@ -4780,7 +4780,7 @@ var MyWallet = new function() {
                 showFrameModal({
                     title : 'Address Relationships',
                     description : '',
-                    src : root + 'taint/' + MyWallet.getActiveAddresses().join('|')
+                    src : root + 'taint/' + MyWallet.getLegacyActiveAddresses().join('|')
                 });
             });
         });
@@ -5094,7 +5094,7 @@ var MyWallet = new function() {
                 showFrameModal({
                     title : 'Number of transactions',
                     description : '',
-                    src : root + 'charts/n-transactions?show_header=false&address='+MyWallet.getActiveAddresses().join('|')
+                    src : root + 'charts/n-transactions?show_header=false&address='+MyWallet.getLegacyActiveAddresses().join('|')
                 });
             });
         });
@@ -5104,7 +5104,7 @@ var MyWallet = new function() {
                 showFrameModal({
                     title : 'BTC Received Per Day',
                     description : '',
-                    src : root + 'charts/received-per-day?show_header=false&address='+MyWallet.getActiveAddresses().join('|')
+                    src : root + 'charts/received-per-day?show_header=false&address='+MyWallet.getLegacyActiveAddresses().join('|')
                 });
             });
         });
@@ -5114,7 +5114,7 @@ var MyWallet = new function() {
                 showFrameModal({
                     title : 'Wallet Balance',
                     description : '',
-                    src : root + 'charts/balance?show_header=false&address='+MyWallet.getActiveAddresses().join('|')
+                    src : root + 'charts/balance?show_header=false&address='+MyWallet.getLegacyActiveAddresses().join('|')
                 });
             });
         });

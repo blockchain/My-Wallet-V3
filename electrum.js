@@ -187,7 +187,7 @@ var JSONRPCoverHTTP = (function (host, port) {
 var ElectrumAPI = {
     rpc: JSONRPCoverHTTP(default_servers[0]),
     get_history : function () {
-        this.rpc.send([["blockchain.address.get_history", [MyWallet.getActiveAddresses()]]], function(response) {
+        this.rpc.send([["blockchain.address.get_history", [MyWallet.getLegacyActiveAddresses()]]], function(response) {
             console.log(response);
         }, function(response) {
             console.log(response);

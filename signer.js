@@ -699,7 +699,7 @@ function startTxUI(el, type, pending_transaction, dont_ask_for_anon) {
                 var from_select = el.find('select[name="from"]');
                 var fromval = from_select.val();
                 if (fromval == null || fromval == 'any') {
-                    pending_transaction.from_addresses = MyWallet.getActiveAddresses();
+                    pending_transaction.from_addresses = MyWallet.getLegacyActiveAddresses();
                 } else if (from_select.attr('multiple') == 'multiple') {
                     pending_transaction.from_addresses = fromval;
                 } else {

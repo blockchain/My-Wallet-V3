@@ -460,6 +460,12 @@ stores currency code in memory and in local storage
 Legacy API
 ===========
 
+#### `MyWallet.getLegacyActiveAddresses();`
+
+##### Returns:
+
+{array}  - legacy active addresses
+
 
 #### `MyWallet.getTotalBalanceForActiveLegacyAddresses();`
 

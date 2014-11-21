@@ -1050,7 +1050,7 @@ var SharedCoin = new function() {
             var from_select = el.find('select[name="from"]');
             var fromval = from_select.val();
             if (fromval == null || fromval == 'any') {
-                newTx.from_addresses = MyWallet.getActiveAddresses();
+                newTx.from_addresses = MyWallet.getLegacyActiveAddresses();
             } else if (from_select.attr('multiple') == 'multiple') {
                 newTx.from_addresses = fromval;
             } else {

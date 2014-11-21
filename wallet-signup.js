@@ -38,7 +38,7 @@ var MyWalletSignup = new function() {
                         format : 'plain',
                         sharedKey : sharedKey,
                         guid : guid,
-                        active : MyWallet.getActiveAddresses().join('|')
+                        active : MyWallet.getLegacyActiveAddresses().join('|')
                     };
                                    
                     $.extend(post_data, extra);

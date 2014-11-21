@@ -247,7 +247,7 @@ var PaperWallet = new function() {
 
     this.showModal = function() {
         function callModal() {
-            var active = MyWallet.getActiveAddresses();
+            var active = MyWallet.getLegacyActiveAddresses();
             var addr_array = [];
 
             for (var key in active) {
