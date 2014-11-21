@@ -382,7 +382,19 @@ var MyWallet = new function() {
     }
 
     this.setFeePolicy = function(policy) {
+        if (policy != -1 && policy != 0 && policy != 1)
+            throw 'Invalid fee policy';
+
         wallet_options.fee_policy = parseInt(policy);
+
+        //Fee Policy is stored in wallet so must save it
+        MyWallet.backupWallet('update', function() {
+            if (successCallback)
+                successCallback(response);
+        }, function() {
+            if (errorCallback)
+                errorCallback();
+        });
     }
 
     this.setAlwaysKeepLocalBackup = function(val) {
