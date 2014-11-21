@@ -151,7 +151,7 @@ function showLabelAddressModal(addr) {
         var label = stripHTML(label_input.val());
 
         if (label.length == 0) {
-            MyWallet.setLabel(addr, null);
+            MyWallet.setLegacyAddressLabel(addr, null);
             return true;
         }
 
@@ -160,7 +160,7 @@ function showLabelAddressModal(addr) {
             return false;
         }
 
-        MyWallet.setLabel(addr, label);
+        MyWallet.setLegacyAddressLabel(addr, label);
 
         if (make_public_input.is(':checked')) {
             MyWallet.getSecondPassword(function() {

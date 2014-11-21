@@ -7,18 +7,6 @@ Javascript Model for blockchain wallet.
 MyWallet API
 ===========
 
-#### `MyWallet.setLabel(address, label)`
-
-##### Parameters:
-
-{string}  - bitcoin address
-
-{string}  - label name
-
-##### Description:
-
-Sets label for account and backups wallet
-
 
 #### `MyWallet.isCorrectMainPassword(_password);`
 
@@ -548,6 +536,19 @@ Legacy API
 ##### Parameters:
 
 {string} - bitcoin address
+
+
+#### `MyWallet.setLegacyAddressLabel(address, label)`
+
+##### Parameters:
+
+{string}  - bitcoin address
+
+{string}  - label name
+
+##### Description:
+
+Sets label for account and backups wallet
 
 
 #### `MyWallet.sendFromLegacyAddressToAccount(fromAddresses, toIdx, amount, feeAmount);`
