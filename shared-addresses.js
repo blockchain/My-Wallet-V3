@@ -44,7 +44,7 @@ function buildSharedTable(el) {
                     return '<font color="red">Pending Deletion</font>'; //'just now' //or other string you like;
                 }
 
-                if (MyWallet.addressExists(forward.destination_address)) {
+                if (MyWallet.legacyAddressExists(forward.destination_address)) {
                     var desintation_desc;
 
                     if (MyWallet.getAddressLabel(forward.destination_address))

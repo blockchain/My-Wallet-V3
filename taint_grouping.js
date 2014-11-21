@@ -31,7 +31,7 @@ function buildTable(groups) {
         for (var ii in group) {
             var address = group[ii];
 
-            if (!MyWallet.addressExists(address))
+            if (!MyWallet.legacyAddressExists(address))
                  continue;
 
             var noPrivateKey = '';

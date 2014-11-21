@@ -298,7 +298,7 @@ function _ImportExport() {
                             }
 
                             //Copy over the tag and label
-                            if (MyWallet.addressExists(addr)) {
+                            if (MyWallet.legacyAddressExists(addr)) {
                                 if (json_key.label && $.trim(json_key.label.length) > 0)
                                     MyWallet.setAddressLabel(addr, $.trim(json_key.label));
 
@@ -635,7 +635,7 @@ function _ImportExport() {
                 if (addr == null || addr.length == 0 || addr == 'undefined')
                     throw 'Unable to decode bitcoin addresses from private key';
 
-                if (MyWallet.addressExists(addr) && !MyWallet.isWatchOnly(addr))
+                if (MyWallet.legacyAddressExists(addr) && !MyWallet.isWatchOnly(addr))
                     throw 'Address already exists in the wallet';
 
                 function sweep() {

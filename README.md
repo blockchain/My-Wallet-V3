@@ -482,6 +482,15 @@ Legacy API
 {bool}  - has legacy addresses
 
 
+
+#### `MyWallet.legacyAddressExists(address);`
+
+##### Returns:
+
+{bool}  - legacy Address Exists 
+
+
+
 #### `MyWallet.sendFromLegacyAddressToAccount(fromAddresses, toIdx, amount, feeAmount);`
 
 ##### Parameters:

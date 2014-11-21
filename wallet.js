@@ -437,7 +437,7 @@ var MyWallet = new function() {
         return parseTransaction(transaction);
     }
 
-    this.addressExists = function(address) {
+    this.legacyAddressExists = function(address) {
         return addresses[address] != null;
     }
 

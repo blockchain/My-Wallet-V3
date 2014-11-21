@@ -992,7 +992,7 @@ function formatAddresses(m, faddresses, resolve_labels) {
     if (faddresses.length == 1) {
         var addr_string = faddresses[0].toString();
 
-        if (resolve_labels && MyWallet.addressExists(addr_string) && MyWallet.getAddressLabel(addr_string))
+        if (resolve_labels && MyWallet.legacyAddressExists(addr_string) && MyWallet.getAddressLabel(addr_string))
             str = MyWallet.getAddressLabel(addr_string);
         else if (resolve_labels && MyWallet.getAddressBookLabel(addr_string))
             str = MyWallet.getAddressBookLabel(addr_string);
@@ -1083,7 +1083,7 @@ function setReviewTransactionContent(modal, tx, sendTxInAmounts, sendTxOutAmount
             //If it is then we don't need to subtract it from wallet effect
         } else if (out_addresses.length > 0) {
             var address = out_addresses[0].toString();
-            if (!MyWallet.addressExists(address)|| MyWallet.getAddressTag(address) == 2) {
+            if (!MyWallet.legacyAddressExists(address)|| MyWallet.getAddressTag(address) == 2) {
 
                 if (val.compareTo(Bitcoin.BigInteger.ZERO) == 0)
                     continue;
@@ -1560,7 +1560,7 @@ function initNewTx() {
                             connected_script.priv_to_use = tmp_cache[inputAddress];
                         } else if (self.extra_private_keys && self.extra_private_keys[inputAddress]) {
                             connected_script.priv_to_use = Bitcoin.base58.decode(self.extra_private_keys[inputAddress]);
-                        } else if (MyWallet.addressExists(inputAddress) && !MyWallet.isWatchOnly(inputAddress)) {
+                        } else if (MyWallet.legacyAddressExists(inputAddress) && !MyWallet.isWatchOnly(inputAddress)) {
                             try {
                                 connected_script.priv_to_use = MyWallet.decodePK(MyWallet.getPrivateKey(inputAddress));
                             } catch (e) {
