@@ -1972,7 +1972,7 @@ var MyWallet = new function() {
         function bindRecipient(recipient) {
 
             recipient.find('input[name="send-to-address"]').typeahead({
-                source : getActiveLabels()
+                source : getLegacyActiveLabels()
             }).next().unbind().click(function() {
                     var input = $(this).prev();
                     MyWallet.scanQRCode(function(data) {
@@ -4634,7 +4634,7 @@ var MyWallet = new function() {
         });
     }
 
-    function getActiveLabels() {
+    function getLegacyActiveLabels() {
         var labels = [];
         for (var key in address_book) {
             labels.push(address_book[key]);
