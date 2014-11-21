@@ -42,8 +42,8 @@ function buildTable(groups) {
 
             var extra = '';
             var label = address;
-            if (MyWallet.getAddressLabel(address) != null) {
-                label = MyWallet.getAddressLabel(address);
+            if (MyWallet.getLegacyAddressLabel(address) != null) {
+                label = MyWallet.getLegacyAddressLabel(address);
                 extra = '<span class="hidden-phone"> - ' + address + '</span>';
             }
 

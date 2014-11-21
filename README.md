@@ -507,6 +507,14 @@ Legacy API
 {array}  - get all legacy addresses
 
 
+#### `MyWallet.getLegacyAddressLabel(address);`
+
+##### Returns:
+
+{array}  - get legacy address label
+
+
+
 
 #### `MyWallet.sendFromLegacyAddressToAccount(fromAddresses, toIdx, amount, feeAmount);`
 

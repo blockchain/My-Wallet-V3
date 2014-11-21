@@ -453,7 +453,7 @@ var MyWallet = new function() {
         return address_book;
     }
 
-    this.getAddressLabel = function(address) {
+    this.getLegacyAddressLabel = function(address) {
         if (addresses[address])
             return addresses[address].label;
         else

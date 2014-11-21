@@ -242,7 +242,7 @@ function resolveAddress(label) {
     var addresses = MyWallet.getAllLegacyAddresses();
     for (var i = 0; i < addresses.length; ++i) {
         var key = addresses[i];
-        var a_label = MyWallet.getAddressLabel(key);
+        var a_label = MyWallet.getLegacyAddressLabel(key);
         if (a_label && a_label.toLowerCase() == label)
             return key;
     }
@@ -992,8 +992,8 @@ function formatAddresses(m, faddresses, resolve_labels) {
     if (faddresses.length == 1) {
         var addr_string = faddresses[0].toString();
 
-        if (resolve_labels && MyWallet.legacyAddressExists(addr_string) && MyWallet.getAddressLabel(addr_string))
-            str = MyWallet.getAddressLabel(addr_string);
+        if (resolve_labels && MyWallet.legacyAddressExists(addr_string) && MyWallet.getLegacyAddressLabel(addr_string))
+            str = MyWallet.getLegacyAddressLabel(addr_string);
         else if (resolve_labels && MyWallet.getAddressBookLabel(addr_string))
             str = MyWallet.getAddressBookLabel(addr_string);
         else

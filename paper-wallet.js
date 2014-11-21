@@ -254,7 +254,7 @@ var PaperWallet = new function() {
                 if (MyWallet.isWatchOnly(active[key]))
                     continue;
 
-                addr_array.push({addr : active[key], label : MyWallet.getAddressLabel(active[key]), priv : MyWallet.decryptPK(MyWallet.getPrivateKey(active[key]))});
+                addr_array.push({addr : active[key], label : MyWallet.getLegacyAddressLabel(active[key]), priv : MyWallet.decryptPK(MyWallet.getPrivateKey(active[key]))});
             }
 
             internalShowModal(addr_array, self.mnemonic1, self.mnemonic2);

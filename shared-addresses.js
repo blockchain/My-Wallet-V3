@@ -47,8 +47,8 @@ function buildSharedTable(el) {
                 if (MyWallet.legacyAddressExists(forward.destination_address)) {
                     var desintation_desc;
 
-                    if (MyWallet.getAddressLabel(forward.destination_address))
-                        desintation_desc = MyWallet.getAddressLabel(forward.destination_address);
+                    if (MyWallet.getLegacyAddressLabel(forward.destination_address))
+                        desintation_desc = MyWallet.getLegacyAddressLabel(forward.destination_address);
                     else
                         desintation_desc = forward.destination_address;
 
