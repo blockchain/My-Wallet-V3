@@ -635,7 +635,7 @@ function _ImportExport() {
                 if (addr == null || addr.length == 0 || addr == 'undefined')
                     throw 'Unable to decode bitcoin addresses from private key';
 
-                if (MyWallet.legacyAddressExists(addr) && !MyWallet.isWatchOnly(addr))
+                if (MyWallet.legacyAddressExists(addr) && !MyWallet.isWatchOnlyLegacyAddress(addr))
                     throw 'Address already exists in the wallet';
 
                 function sweep() {

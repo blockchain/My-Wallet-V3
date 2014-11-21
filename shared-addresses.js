@@ -58,7 +58,7 @@ function buildSharedTable(el) {
                         desintation_desc += ' <small>(Not Shared)</small>';
                     }
 
-                    if (MyWallet.isWatchOnly(forward.destination_address))
+                    if (MyWallet.isWatchOnlyLegacyAddress(forward.destination_address))
                         desintation_desc += ' <font color="red">(Watch Only!)</font>';
 
                     if (forward.expires == -1)

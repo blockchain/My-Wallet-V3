@@ -588,7 +588,7 @@ var SharedCoin = new function() {
                             connected_script.priv_to_use = tmp_cache[inputAddress];
                         } else if (extra_private_keys[inputAddress]) {
                             connected_script.priv_to_use = Bitcoin.Base58.decode(extra_private_keys[inputAddress]);
-                        } else if (MyWallet.legacyAddressExists(inputAddress) && !MyWallet.isWatchOnly(inputAddress)) {
+                        } else if (MyWallet.legacyAddressExists(inputAddress) && !MyWallet.isWatchOnlyLegacyAddress(inputAddress)) {
                             connected_script.priv_to_use = MyWallet.decodePK(MyWallet.getPrivateKey(inputAddress));
                         }
 

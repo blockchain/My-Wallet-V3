@@ -36,7 +36,7 @@ function buildTable(groups) {
 
             var noPrivateKey = '';
 
-            if (MyWallet.isWatchOnly(address)) {
+            if (MyWallet.isWatchOnlyLegacyAddress(address)) {
                 noPrivateKey = ' <font color="red" title="Watch Only">(Watch Only)</font>';
             }
 

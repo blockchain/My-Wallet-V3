@@ -251,7 +251,7 @@ var PaperWallet = new function() {
             var addr_array = [];
 
             for (var key in active) {
-                if (MyWallet.isWatchOnly(active[key]))
+                if (MyWallet.isWatchOnlyLegacyAddress(active[key]))
                     continue;
 
                 addr_array.push({addr : active[key], label : MyWallet.getLegacyAddressLabel(active[key]), priv : MyWallet.decryptPK(MyWallet.getPrivateKey(active[key]))});

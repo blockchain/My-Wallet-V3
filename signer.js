@@ -1288,7 +1288,7 @@ function initNewTx() {
                         try {
                             var addr_input_obj = parseOut(out);
 
-                            if (!includeWatchOnly && MyWallet.isWatchOnly(addr_input_obj.addr)) {
+                            if (!includeWatchOnly && MyWallet.isWatchOnlyLegacyAddress(addr_input_obj.addr)) {
                                 continue;
                             }
 
@@ -1560,7 +1560,7 @@ function initNewTx() {
                             connected_script.priv_to_use = tmp_cache[inputAddress];
                         } else if (self.extra_private_keys && self.extra_private_keys[inputAddress]) {
                             connected_script.priv_to_use = Bitcoin.base58.decode(self.extra_private_keys[inputAddress]);
-                        } else if (MyWallet.legacyAddressExists(inputAddress) && !MyWallet.isWatchOnly(inputAddress)) {
+                        } else if (MyWallet.legacyAddressExists(inputAddress) && !MyWallet.isWatchOnlyLegacyAddress(inputAddress)) {
                             try {
                                 connected_script.priv_to_use = MyWallet.decodePK(MyWallet.getPrivateKey(inputAddress));
                             } catch (e) {

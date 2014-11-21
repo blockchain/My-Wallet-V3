@@ -206,17 +206,6 @@ calls success callback with json object, or error callback with error object
 {bool}  - is wallet payload synchronized with server
 
 
-#### `MyWallet.isWatchOnly(address);`
-
-##### Parameters:
-
-{string}  - bitcoin address
-
-##### Returns:
-
-{bool}  - whether address is watch only
-
-
 #### `MyWallet.isMnemonicVerified(address);`
 
 ##### Returns:
@@ -515,6 +504,17 @@ Sets label for account and backups wallet
 ##### Returns:
 
 {string}  - preferred address
+
+
+#### `MyWallet.isWatchOnlyLegacyAddress(address);`
+
+##### Parameters:
+
+{string}  - bitcoin address
+
+##### Returns:
+
+{bool}  - whether address is watch only
 
 
 #### `MyWallet.addWatchOnlyLegacyAddress(address);`

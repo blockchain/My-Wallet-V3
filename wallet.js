@@ -468,7 +468,7 @@ var MyWallet = new function() {
         return address_book[address];
     }
 
-    this.isWatchOnly = function(address) {
+    this.isWatchOnlyLegacyAddress = function(address) {
         return !addresses[address] || addresses[address].priv == null;
     }
 
@@ -2607,7 +2607,7 @@ var MyWallet = new function() {
         if (preferred == null)
             return;
 
-        if (MyWallet.isWatchOnly(preferred)) {
+        if (MyWallet.isWatchOnlyLegacyAddress(preferred)) {
             $('.no-watch-only').hide();
         } else {
             $('.no-watch-only').show();
