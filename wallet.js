@@ -476,7 +476,7 @@ var MyWallet = new function() {
         return !addresses[address] || addresses[address].priv == null;
     }
 
-    this.getAddressBalance = function(address) {
+    this.getLegacyAddressBalance = function(address) {
         return addresses[address].balance;
     }
 

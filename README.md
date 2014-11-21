@@ -532,6 +532,15 @@ Legacy API
 {string}  - balance
 
 
+#### `MyWallet.getLegacyAddressBalance(address)`
+
+##### Parameters:
+
+{string}  - bitcoin address
+
+##### Returns:
+
+{int}  - balance
 
 
 #### `MyWallet.sendFromLegacyAddressToAccount(fromAddresses, toIdx, amount, feeAmount);`

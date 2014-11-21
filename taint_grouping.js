@@ -47,7 +47,7 @@ function buildTable(groups) {
                 extra = '<span class="hidden-phone"> - ' + address + '</span>';
             }
 
-            var thtml = '<tr style="background-color:#FFFFFF;"><td style="background-color:#FFFFFF;"><div class="short-addr"><a href="'+root+'address/'+address+'" target="new">' + label + '</a>'+ extra + ' ' + noPrivateKey +'<div></td><td style="background-color:#FFFFFF;" colspan="2"><span style="color:green">' + formatBTC(MyWallet.getAddressBalance(address)) + '</span></td></tr>';
+            var thtml = '<tr style="background-color:#FFFFFF;"><td style="background-color:#FFFFFF;"><div class="short-addr"><a href="'+root+'address/'+address+'" target="new">' + label + '</a>'+ extra + ' ' + noPrivateKey +'<div></td><td style="background-color:#FFFFFF;" colspan="2"><span style="color:green">' + formatBTC(MyWallet.getLegacyAddressBalance(address)) + '</span></td></tr>';
 
             tbody.append(thtml);
         }
