@@ -127,13 +127,6 @@ delete address from addressBook and backups wallet
 {string}  - preferred address
 
 
-#### `MyWallet.getArchivedAddresses();`
-
-##### Returns:
-
-{array}  - archived addresses
-
-
 #### `MyWallet.getLatestBlock();`
 
 ##### Returns:
@@ -460,11 +453,19 @@ stores currency code in memory and in local storage
 Legacy API
 ===========
 
+
 #### `MyWallet.getLegacyActiveAddresses();`
 
 ##### Returns:
 
 {array}  - legacy active addresses
+
+
+#### `MyWallet.getLegacyArchivedAddresses();`
+
+##### Returns:
+
+{array}  - archived addresses
 
 
 #### `MyWallet.getTotalBalanceForActiveLegacyAddresses();`

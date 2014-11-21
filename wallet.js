@@ -2159,7 +2159,7 @@ var MyWallet = new function() {
     }
 
 
-    this.getArchivedAddresses = function() {
+    this.getLegacyArchivedAddresses = function() {
         var array = [];
         for (var key in addresses) {
             var addr = addresses[key];
@@ -2779,7 +2779,7 @@ var MyWallet = new function() {
             showFrameModal({
                 title : 'Export History',
                 description : '',
-                src : root + 'export-history?active='+ MyWallet.getLegacyActiveAddresses().join('|')+'&archived='+MyWallet.getArchivedAddresses().join("|")
+                src : root + 'export-history?active='+ MyWallet.getLegacyActiveAddresses().join('|')+'&archived='+MyWallet.getLegacyArchivedAddresses().join("|")
             });
         });
     }
@@ -4953,7 +4953,7 @@ var MyWallet = new function() {
 
             var table = $(this).find('tbody');
 
-            var archived = MyWallet.getArchivedAddresses();
+            var archived = MyWallet.getLegacyArchivedAddresses();
 
             var build = function() {
                 table.empty();
