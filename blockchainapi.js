@@ -343,7 +343,7 @@ var BlockchainAPI = new function() {
                 type : 'email',
                 to : email,
                 priv : privateKey,
-                hash : tx.getId()
+                hash : tx.getHash().toString('hex')
             }, function(data) {
                 successCallback(data);
             }, function(data) {
@@ -360,7 +360,7 @@ var BlockchainAPI = new function() {
                 type : 'sms',
                 to : number,
                 priv : privateKey,
-                hash : tx.getId()
+                hash : tx.getHash().toString('hex')
             }, function() {
                 successCallback();
             }, function(data) {
