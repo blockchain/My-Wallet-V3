@@ -724,7 +724,6 @@ var MyWallet = new function() {
         if (addr.tag == 2) {
             addr.tag = null;
 
-            buildVisibleView();
 
             MyWallet.backupWalletDelayed('update', function() {
                 MyWallet.get_history();
@@ -744,7 +743,6 @@ var MyWallet = new function() {
         if (addr.tag == null || addr.tag == 0) {
             addr.tag = 2;
 
-            buildVisibleView();
 
             MyWallet.backupWalletDelayed('update', function() {
                 MyWallet.get_history();
@@ -2314,7 +2312,6 @@ var MyWallet = new function() {
     this.deleteNote = function(tx_hash) {
         delete tx_notes[tx_hash];
 
-        buildVisibleView();
 
         MyWallet.backupWalletDelayed();
     }
@@ -2441,7 +2438,6 @@ var MyWallet = new function() {
                     MyWallet.backupWalletDelayed();
                 }
 
-                buildVisibleView();
             });
         })(el, tx_hash);
     }
@@ -2655,39 +2651,6 @@ var MyWallet = new function() {
 
         return html;
     };
-
-
-    //Reset is true when called manually with changeview
-    function buildVisibleViewPre() {
-        //Hide any popovers as they can get stuck whent the element is re-drawn
-        hidePopovers();
-
-        //Update the account balance
-        if (final_balance == null) {
-            $('#balance').html('Loading...');
-        } else {
-            $('#balance').html(formatSymbol(final_balance, symbol, true));
-            $('#balance2').html(formatSymbol(final_balance, (symbol === symbol_local) ? symbol_btc : symbol_local), true);
-        }
-
-        //Only build when visible
-        return cVisible.attr('id');
-    }
-
-    //Reset is true when called manually with changeview
-    function buildVisibleView(reset) {
-
-        var id = buildVisibleViewPre();
-
-        if ("send-coins" == id)
-            buildSendTxView(reset);
-        else if ("home-intro" == id)
-            buildHomeIntroView(reset);
-        else if ("receive-coins" == id)
-            buildReceiveCoinsView(reset)
-        else if ("my-transactions" == id)
-            buildTransactionsView(reset)
-    }
 
     function buildHomeIntroView(reset) {
         $('#summary-n-tx').html(n_tx);
@@ -4461,7 +4424,6 @@ var MyWallet = new function() {
         if ($('#' + cVisible.attr('id') + '-btn').length > 0)
             $('#' + cVisible.attr('id') + '-btn').parent().attr('class', 'active');
 
-        buildVisibleView(true);
     }
 
     function nKeys(obj) {
@@ -4673,7 +4635,6 @@ var MyWallet = new function() {
                     }
 
                     //Update view with remove address
-                    buildVisibleView();
 
                     MyWallet.backupWallet();
 
@@ -4710,7 +4671,6 @@ var MyWallet = new function() {
                             MyWallet.deleteLegacyAddress(addrs[ii]);
                         }
 
-                        buildVisibleView();
 
                         MyWallet.backupWallet('update', function() {
                             MyWallet.get_history();
@@ -5256,7 +5216,6 @@ var MyWallet = new function() {
 
             wallet_options.tx_display = value;
 
-            buildVisibleView();
 
             MyWallet.backupWalletDelayed();
         });
@@ -5276,7 +5235,6 @@ var MyWallet = new function() {
         $('#balance').click(function() {
             toggleSymbol();
 
-            buildVisibleView();
         });
 
         $('#send-quick').on('show', function(e, reset) {
