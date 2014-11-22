@@ -1507,8 +1507,8 @@ var MyWallet = new function() {
         var address = miniKeyAddrobj.key.pub.getAddress().toString();
         var privateKey = miniKeyAddrobj.key.toWIF();
 
-        MyWallet.setAddressTag(address, 2);
-        MyWallet.setAddressLabel(address, mobile + ' Sent Via SMS');
+        MyWallet.setLegacyAddressTag(address, 2);
+        MyWallet.setLegacyAddressLabel(address, mobile + ' Sent Via SMS');
 
         MyWallet.backupWallet('update', function() {
             MyWallet.makeNotice('info', 'new-address', 'Generated new Bitcoin Address ' + address);
