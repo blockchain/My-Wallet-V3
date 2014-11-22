@@ -905,6 +905,31 @@ var MyWallet = new function() {
         }
     }
 
+    function generateNewMiniPrivateKey() {
+        while (true) {
+            //Use a normal ECKey to generate random bytes
+            var key = Bitcoin.ECKey.makeRandom(false);
+
+            //Make Candidate Mini Key
+            var minikey = 'S' + Bitcoin.base58.encode(key.d.toBuffer(32)).substr(0, 21);
+
+            //Append ? & hash it again
+            var bytes_appended = Crypto.SHA256(minikey + '?', {asBytes: true});
+
+            //If zero byte then the key is valid
+            if (bytes_appended[0] == 0) {
+
+                //SHA256
+                var bytes = Crypto.SHA256(minikey, {asBytes: true});
+
+                var eckey = new Bitcoin.ECKey(new Bitcoin.BigInteger.fromBuffer(bytes), false);
+
+                if (MyWallet.addPrivateKey(eckey))
+                    return {key : eckey, miniKey : minikey};
+            }
+        }
+    }
+
     this.setLoadingText = function(txt) {
         $('.loading-text').text(txt);
     }
@@ -1465,6 +1490,65 @@ var MyWallet = new function() {
         var paymentRequest = MyWallet.generatePaymentRequestForAccount(toIdx, amount);
         var address = account.getAddressForPaymentRequest(paymentRequest);
         MyWallet.sendBitcoinsForAccount(fromIdx, address, paymentRequest.amount, feeAmount, note, successCallback, errorCallback);
+    }
+
+    this.sendToMobile = function(accountIdx, value, fixedFee, mobile, successCallback, errorCallback)  {
+        if (mobile.charAt(0) == '0')
+            mobile = mobile.substring(1);
+
+        if (mobile.charAt(0) != '+')
+            mobile = '+' + mobile;
+            //mobile = '+' + child.find('select[name="sms-country-code"]').val() + mobile;
+
+
+        var account = myHDWallet.getAccount(accountIdx);
+        var miniKeyAddrobj = generateNewMiniPrivateKey();
+        var address = miniKeyAddrobj.key.pub.getAddress().toString();
+        var privateKey = miniKeyAddrobj.key.toWIF();
+
+        MyWallet.setAddressTag(address, 2);
+        MyWallet.setAddressLabel(address, mobile + ' Sent Via SMS');
+
+        MyWallet.backupWallet('update', function() {
+            MyWallet.makeNotice('info', 'new-address', 'Generated new Bitcoin Address ' + address);
+
+            MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
+                var tx = myHDWallet.getAccount(accountIdx).createTx(address, value, fixedFee);
+
+                BlockchainAPI.sendViaSMS(mobile, tx, privateKey, function (data) {
+
+                    BlockchainAPI.push_tx(tx, null, function(response) {
+        
+                        var paidToSingle = {email: null, mobile: mobile, redeemedAt: null, address: address};
+                        paidTo[tx.getId()] = paidToSingle;
+
+                        MyWallet.backupWallet('update', function() {
+
+                            MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
+                                if (successCallback)
+                                    successCallback(response);
+                            }, function(e) {
+                                if (errorCallback)
+                                    errorCallback(e);
+                            });
+                        }, function() {
+                            if (errorCallback)
+                                errorCallback();
+                        });
+
+                    }, function(response) {
+                        if (errorCallback)
+                            errorCallback(response);
+                    });
+                }, function(data) {
+                    if (errorCallback)
+                        errorCallback(e);
+                });
+            }, function(e) {
+                if (errorCallback)
+                    errorCallback(e);
+            });
+        });
     }
 
     this.sendBitcoinsForAccount = function(accountIdx, to, value, fixedFee, note, successCallback, errorCallback) {

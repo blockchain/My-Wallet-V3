@@ -864,6 +864,24 @@ recovers HD wallet from passphrases by recreating all accounts and queries all b
 
 {function} - error callback function
 
+
+#### `MyWallet.sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback);`
+
+##### Parameters:
+
+{int}  - send from Account Index
+
+{int}  - send amount
+
+{int}  - fee amount
+
+{string} - to mobile number
+
+{function} - success callback function
+
+{function} - error callback function
+
+
 #### `MyWallet.redeemFromEmailOrMobile(accountIdx, privatekey);`
 
 ##### Parameters:
