@@ -1376,7 +1376,8 @@ var MyWallet = new function() {
             if (errorCallback) {
                 errorCallback(e);
             }
-            MyWallet.sendMonitorEvent({type: "error", message: e.responseText, code: 0});
+            //TODO: not clean
+            MyWallet.sendMonitorEvent({type: "error", message: e.responseText ? e.responseText : e.message, code: 0});
         }, 0, true);
     }
 
