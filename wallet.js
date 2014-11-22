@@ -176,6 +176,8 @@ var MyWallet = new function() {
     var mnemonicVerified = false;
     var defaultAccountIdx = 0;
     var didSetGuid = false;
+    var amountToRecommendedFee = {};
+    var isAccountRecommendedFeesValid = true;
 
     var wallet_options = {
         pbkdf2_iterations : default_pbkdf2_iterations, //Number of pbkdf2 iterations to default to for second password and dpasswordhash
@@ -1071,6 +1073,8 @@ var MyWallet = new function() {
                     }
 
                 } else if (obj.op == 'utx') {
+                    isAccountRecommendedFeesValid = false;
+
                     var tx = TransactionFromJSON(obj.x);
 
                     //Check if this is a duplicate
@@ -1382,7 +1386,20 @@ var MyWallet = new function() {
     }
 
     this.recommendedTransactionFeeForAccount = function(accountIdx, amount) {
-        return myHDWallet.getAccount(accountIdx).recommendedTransactionFee(amount);
+        if (! isAccountRecommendedFeesValid) {
+            amountToRecommendedFee = {};
+            isAccountRecommendedFeesValid = true;
+        }
+
+        if (amountToRecommendedFee[amount] != null) {
+            return amountToRecommendedFee[amount];
+        } else {
+            var recommendedFee = myHDWallet.getAccount(accountIdx).recommendedTransactionFee(amount);
+            
+            amountToRecommendedFee[amount] = recommendedFee;
+
+            return recommendedFee;
+        }
     }
 
     this.getPaidToDictionary = function()  {
@@ -3084,6 +3101,7 @@ var MyWallet = new function() {
             }
         }
 
+        isAccountRecommendedFeesValid = false;
         for (var i = 0; i < obj.txs.length; ++i) {
             var tx = TransactionFromJSON(obj.txs[i]);
             //Don't use the result given by the api because it doesn't include archived addresses
