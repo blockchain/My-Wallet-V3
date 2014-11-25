@@ -87,7 +87,8 @@ var BlockchainAPI = new function() {
             n : n,
             language : MyWallet.getLanguage(),
             symbol_btc : symbol_btc.code,
-            symbol_local : symbol_local.code
+            symbol_local : symbol_local.code,
+            no_buttons: true
         };
 
         $.retryAjax({
