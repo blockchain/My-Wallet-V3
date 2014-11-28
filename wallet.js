@@ -528,7 +528,7 @@ var MyWallet = new function() {
             var now = new Date().getTime();
             var timestamp = parseInt((now - serverTimeOffset) / 10000);
 
-            var SKHashHex = Crypto.SHA256(sharedKey.toLowerCase() + timestamp);
+            var SKHashHex = CryptoJS.SHA256(sharedKey.toLowerCase() + timestamp).toString();
 
             var i = 0;
             var tSKUID = SKHashHex.substring(i, i+=8)+'-'+SKHashHex.substring(i, i+=4)+'-'+SKHashHex.substring(i, i+=4)+'-'+SKHashHex.substring(i, i+=4)+'-'+SKHashHex.substring(i, i+=12);
@@ -566,6 +566,7 @@ var MyWallet = new function() {
     }
 
     function hashPassword(password, iterations) {
+        console.log("Calling hashPassword. Needs refactor for CryptoJS.")
         //N rounds of SHA 256
         var round_data = Crypto.SHA256(password, {asBytes: true});
         for (var i = 1; i < iterations; ++i) {
@@ -1046,8 +1047,8 @@ var MyWallet = new function() {
         return result;
     }
 
-    function generatePayloadChecksum() {
-        return Crypto.util.bytesToHex(Crypto.SHA256(encrypted_wallet_data, {asBytes: true}));
+    function generatePayloadChecksum() {        
+      return CryptoJS.SHA256(encrypted_wallet_data).toString();        
     }
 
     function wsSuccess(ws) {
@@ -1162,21 +1163,6 @@ var MyWallet = new function() {
     }
 
     var logout_status = 'ok';
-    function setLogoutImageStatus(_status) {
-        var logout_btn = $('#logout');
-
-        if (_status == 'loading_start') {
-            logout_btn.attr('src', resource + 'logout-orange.png');
-            return;
-        } else if (_status != 'loading_stop') {
-            logout_status = _status;
-        }
-
-        if (logout_status == 'ok')
-            logout_btn.attr('src', resource + 'logout.png');
-        else if (logout_status == 'error')
-            logout_btn.attr('src', resource + 'logout-red.png');
-    }
 
     this.showNotification = function(options, timeout) {
         try {
@@ -3738,8 +3724,6 @@ var MyWallet = new function() {
     function setIsInitialized() {
         if (isInitialized) return;
 
-        setLogoutImageStatus('error');
-
         webSocketConnect(wsSuccess);
 
         isInitialized = true;
@@ -3854,25 +3838,24 @@ var MyWallet = new function() {
 
             var data = MyWallet.makeWalletJSON();
             localWalletJsonString = data;
-
+            
             //Everything looks ok, Encrypt the JSON output
             var crypted = MyWallet.encryptWallet(data, password);
-
+            
             if (crypted.length == 0) {
                 throw 'Error encrypting the JSON output';
             }
-
+            
             //Now Decrypt the it again to double check for any possible corruption
             MyWallet.decryptWallet(crypted, password, function(obj) {
                 try {
                     var old_checksum = payload_checksum;
-
                     MyWallet.sendMonitorEvent({type: "loadingText", message: 'Saving wallet', code: 0});
 
                     MyWallet.setEncryptedWalletData(crypted);
 
                     var new_checksum = payload_checksum;
-
+                    
                     var data =  {
                         length: crypted.length,
                         payload: crypted,
@@ -3944,24 +3927,41 @@ var MyWallet = new function() {
         return true;
     }
 
-    //Changed padding to CBC iso10126 9th March 2012 & iterations to pbkdf2_iterations
     this.encrypt = function(data, password, pbkdf2_iterations) {
-        return Crypto.AES.encrypt(data, password, { mode: new Crypto.mode.CBC(Crypto.pad.iso10126), iterations : pbkdf2_iterations});
+      var salt = CryptoJS.lib.WordArray.random(16)      
+      var streched_password = CryptoJS.PBKDF2(password, salt, { keySize: 256 / 32, iterations: pbkdf2_iterations })
+            
+      var iv = salt // Use the same value for IV and salt.
+        
+      var payload = CryptoJS.enc.Utf8.parse(data)        
+          
+      // AES encryption expects a base 64 encoded payload:
+      var payload_base_64 = payload.toString(CryptoJS.enc.Base64)
+        
+      // AES.encrypt takes an optional salt argument, which we don't use.
+      var encrypted = CryptoJS.AES.encrypt(payload, streched_password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iv: iv}); 
+                        
+      // Add IV to beginning of payload (using hex strings):                                 
+      var res = iv.toString() + encrypted.ciphertext.toString();
+      
+      // Return as Base64:
+      return CryptoJS.enc.Hex.parse(res).toString(CryptoJS.enc.Base64)
     }
 
-    //Changed padding to CBC iso10126 9th March 2012 & iterations to pbkdf2_iterations
     this.encryptWallet = function(data, password) {
-        if (encryption_version_used == 2.0) {
-            return JSON.stringify({
-                pbkdf2_iterations : MyWallet.getMainPasswordPbkdf2Iterations(),
-                version : encryption_version_used,
-                payload : MyWallet.encrypt(data, password, MyWallet.getMainPasswordPbkdf2Iterations())
-            });
-        } else if (encryption_version_used == 0.0) {
+        // Disabled by Sjors on 2014-11-28 for lack of a test wallet.
+        // if (encryption_version_used == 2.0) {
+        //     return JSON.stringify({
+        //         pbkdf2_iterations : MyWallet.getMainPasswordPbkdf2Iterations(),
+        //         version : encryption_version_used,
+        //         payload : MyWallet.encrypt(data, password, MyWallet.getMainPasswordPbkdf2Iterations())
+        //     });
+        // } else
+        // if (encryption_version_used == 0.0) {
             return MyWallet.encrypt(data, password, MyWallet.getDefaultPbkdf2Iterations());
-        } else {
-            throw 'Unknown encryption version ' + encryption_version_used;
-        }
+        // } else {
+        //     throw 'Unknown encryption version ' + encryption_version_used;
+        // }
     }
 
     this.decryptWallet = function(data, password, success, error) {
@@ -3986,50 +3986,51 @@ var MyWallet = new function() {
                 }
             }
 
-            //Test if the payload is valid json
-            //If it is json then check the payload and pbkdf2_iterations keys are available
-            var obj = null;
-            try {
-                var obj = $.parseJSON(data);
-            } catch (e) {}
+            // Disabled by Sjors on 2014-11-28 for lack of a test wallet
 
-            var decryptNormal = function() {
-                try {
-                    var decrypted = Crypto.AES.decrypt(obj.payload, password, { mode: new Crypto.mode.CBC(Crypto.pad.iso10126), iterations : obj.pbkdf2_iterations});
-
-                    var root = $.parseJSON(decrypted);
-
-                    _success(root, obj);
-                } catch (e) {
-                    _error('Error Decrypting Wallet. Please check your password is correct.');
-                    MyWallet.sendMonitorEvent({type: "loadingText", message: 'Error Decrypting Wallet. Please check your password is correct.', code: 0});
-                }
-            };
-
-            if (obj && obj.payload && obj.pbkdf2_iterations) {
-                if (obj.version != supported_encryption_version)
-                    throw 'Wallet version ' + obj.version + ' not supported';
-
-                if (obj.pbkdf2_iterations > 0) {
-
-                    MyWallet.decryptWebWorker(obj.payload, password, obj.pbkdf2_iterations, function(decrypted) {
-
-                        try {
-                            var root = $.parseJSON(decrypted);
-
-                            _success(root, obj);
-                        } catch (e) {
-                            decryptNormal();
-                        }
-                    }, function(e) {
-
-                        decryptNormal();
-                    });
-                } else {
-                    decryptNormal();
-                }
-            } else {
-                MyWallet.decrypt(data, password, MyWallet.getDefaultPbkdf2Iterations(), function(decrypted) {
+            // //Test if the payload is valid json
+            // //If it is json then check the payload and pbkdf2_iterations keys are available
+            // var obj = null;
+            // try {
+            //     var obj = $.parseJSON(data);
+            // } catch (e) {}
+            //
+            // var decryptNormal = function() {
+            //     try {
+            //         var decrypted = CryptoJS.AES.decrypt(obj.payload, password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iterations : obj.pbkdf2_iterations});
+            //         var root = $.parseJSON(decrypted);
+            //
+            //         _success(root, obj);
+            //     } catch (e) {
+            //         _error('Error Decrypting Wallet. Please check your password is correct.');
+            //         MyWallet.sendMonitorEvent({type: "loadingText", message: 'Error Decrypting Wallet. Please check your password is correct.', code: 0});
+            //     }
+            // };
+            //
+            // if (obj && obj.payload && obj.pbkdf2_iterations) {
+            //     if (obj.version != supported_encryption_version)
+            //         throw 'Wallet version ' + obj.version + ' not supported';
+            //
+            //     if (obj.pbkdf2_iterations > 0) {
+            //
+            //         MyWallet.decryptWebWorker(obj.payload, password, obj.pbkdf2_iterations, function(decrypted) {
+            //
+            //             try {
+            //                 var root = $.parseJSON(decrypted);
+            //
+            //                 _success(root, obj);
+            //             } catch (e) {
+            //                 decryptNormal();
+            //             }
+            //         }, function(e) {
+            //
+            //             decryptNormal();
+            //         });
+            //     } else {
+            //         decryptNormal();
+            //     }
+            // } else {
+              MyWallet.decrypt(data, password, MyWallet.getDefaultPbkdf2Iterations(), function(decrypted) {
                     try {
                         var root = $.parseJSON(decrypted);
 
@@ -4046,7 +4047,7 @@ var MyWallet = new function() {
                     _error('Error Decrypting Wallet. Please check your password is correct.');
                     MyWallet.sendMonitorEvent({type: "loadingText", message: 'Error Decrypting Wallet. Please check your password is correct.', code: 0});
                 });
-            }
+            // }
         } catch (e) {
             _error(e);
         }
@@ -4100,14 +4101,51 @@ var MyWallet = new function() {
     //So we call success(data) and if it returns true the data was formatted correctly
     this.decrypt = function(data, password, pbkdf2_iterations, success, error) {
         //iso10126 with pbkdf2_iterations iterations
-        try {
-            var decoded = Crypto.AES.decrypt(data, password, { mode: new Crypto.mode.CBC(Crypto.pad.iso10126), iterations : pbkdf2_iterations});
+     
+    try {
+        /* This is currently (2014-11-28) the default wallet format. 
+           There are two steps to decrypting the wallet. The first step is to
+           stretch the users password using PBKDF2. This essentially generates
+           an AES key which we need for the second step, which is to decrypt 
+           the payload using AES.
 
-            if (decoded != null && decoded.length > 0) {
-                if (success(decoded)) {
-                    return decoded;
-                };
+           Strechting the password requires a salt. AES requires an IV. We use 
+           the same for both. It's the first 32 hexadecimals characters (i.e. 
+           16 bytes).
+      
+           The conversions between different encodings can probably be achieved
+           with fewer methods.
+        */
+            
+        data_hex_string = CryptoJS.enc.Base64.parse(data).toString()
+      
+        var iv = CryptoJS.enc.Hex.parse(data_hex_string.slice(0,32))
+          
+        // We use same value for the PBKDF2 salt and the AES IV.
+        var salt = iv
+        
+        // Stretch the password using PBKDF2:  
+        var streched_password = CryptoJS.PBKDF2(password, salt, { keySize: 256 / 32, iterations: pbkdf2_iterations })
+          
+        // Remove the first 16 bytes (IV) from the payload: 
+        var payload_hex_string = data_hex_string.slice(32)
+        
+        var payload = CryptoJS.enc.Hex.parse(payload_hex_string)
+          
+        // AES decryption expects a base 64 encoded payload:
+        var payload_base_64 = payload.toString(CryptoJS.enc.Base64)
+
+        // AES.decrypt takes an optional salt argument, which we don't use.
+        var decrypted = CryptoJS.AES.decrypt({ciphertext: payload, salt: ""}, streched_password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iv: iv}); 
+                
+        var decoded = decrypted.toString(CryptoJS.enc.Utf8)
+                  
+        if (decoded != null && decoded.length > 0) {
+            if (success(decoded)) {
+                return decoded;
             };
+        };
+      
         } catch (e) {
             console.log(e);
         }
@@ -4115,8 +4153,12 @@ var MyWallet = new function() {
         //iso10126 with 10 iterations  (old default)
         if (pbkdf2_iterations != 10) {
             try {
-                var decoded = Crypto.AES.decrypt(data, password, { mode: new Crypto.mode.CBC(Crypto.pad.iso10126), iterations : 10 });
-
+                var streched_password = CryptoJS.PBKDF2(password, salt, { keySize: 256 / 32, iterations: 10 })
+              
+                var decrypted = CryptoJS.AES.decrypt({ciphertext: payload, salt: ""}, streched_password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iv: iv}); 
+        
+                var decoded = decrypted.toString(CryptoJS.enc.Utf8)
+              
                 if (decoded != null && decoded.length > 0) {
                     if (success(decoded)) {
                         return decoded;
@@ -4128,34 +4170,40 @@ var MyWallet = new function() {
         }
 
         //Otherwise try the old default settings
-        try {
-            var decoded = Crypto.AES.decrypt(data, password);
-
-            if (decoded != null && decoded.length > 0) {
-                if (success(decoded)) {
-                    return decoded;
-                };
-            };
-        } catch (e) {
-            console.log(e);
-        }
+        
+        // Disabled by Sjors on 2014-11-26, for lack of test wallet.
+        
+        // try {
+        //     var decoded = CryptoJS.AES.decrypt(data, password);
+        //
+        //     if (decoded != null && decoded.length > 0) {
+        //         if (success(decoded)) {
+        //             return decoded;
+        //         };
+        //     };
+        // } catch (e) {
+        //     console.log(e);
+        // }
 
         //OFB iso7816 padding with one iteration (old default)
-        try {
-            var decoded = Crypto.AES.decrypt(data, password, {mode: new Crypto.mode.OFB(Crypto.pad.iso7816), iterations : 1});
-
-            if (decoded != null && decoded.length > 0) {
-                if (success(decoded)) {
-                    return decoded;
-                };
-            };
-        } catch (e) {
-            console.log(e);
-        }
+        
+        // Disabled by Sjors on 2014-11-26, because the current CryptoJS doesn't support iso7816. 
+               
+        // try {
+        //     var decoded = CryptoJS.AES.decrypt(data, password, {mode: new CryptoJS.mode.OFB(CryptoJS.pad.Iso7816), iterations : 1});
+        //
+        //     if (decoded != null && decoded.length > 0) {
+        //         if (success(decoded)) {
+        //             return decoded;
+        //         };
+        //     };
+        // } catch (e) {
+        //     console.log(e);
+        // }
 
         //iso10126 padding with one iteration (old default)
         try {
-            var decoded = Crypto.AES.decrypt(data, password, { mode: new Crypto.mode.CBC(Crypto.pad.iso10126), iterations : 1 });
+            var decoded = CryptoJS.AES.decrypt(data, password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iterations : 1 });
 
             if (decoded != null && decoded.length > 0) {
                 if (success(decoded)) {

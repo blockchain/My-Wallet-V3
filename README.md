@@ -1,12 +1,20 @@
-MyWallet
-===========
+# MyWallet
 
 Javascript Model for blockchain wallet.
 
+## Install
 
-MyWallet API
-===========
+```sh
+npm install
+```
 
+## Tests
+
+```sh
+npm test
+```
+
+## MyWallet API
 
 #### `MyWallet.isCorrectMainPassword(_password);`
 
@@ -894,11 +902,3 @@ recovers HD wallet from passphrases by recreating all accounts and queries all b
 
 redeem bitcoins sent from email or mobile
 
-Tests
-=====
-You'll need [Karma and Jasmine](https://github.com/karma-runner/karma-jasmine) and PhantomJS:
-```sh
-npm install -g karma-jasmine@2_0
-brew install phantomjs
-karma start
-```
