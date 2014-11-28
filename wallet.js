@@ -1163,21 +1163,6 @@ var MyWallet = new function() {
     }
 
     var logout_status = 'ok';
-    function setLogoutImageStatus(_status) {
-        var logout_btn = $('#logout');
-
-        if (_status == 'loading_start') {
-            logout_btn.attr('src', resource + 'logout-orange.png');
-            return;
-        } else if (_status != 'loading_stop') {
-            logout_status = _status;
-        }
-
-        if (logout_status == 'ok')
-            logout_btn.attr('src', resource + 'logout.png');
-        else if (logout_status == 'error')
-            logout_btn.attr('src', resource + 'logout-red.png');
-    }
 
     this.showNotification = function(options, timeout) {
         try {
@@ -3738,8 +3723,6 @@ var MyWallet = new function() {
 
     function setIsInitialized() {
         if (isInitialized) return;
-
-        setLogoutImageStatus('error');
 
         webSocketConnect(wsSuccess);
 

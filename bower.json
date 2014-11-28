@@ -20,6 +20,7 @@
     "tests"
   ],
   "dependencies": {
-    "cryptojslib": "~3.1.2"
+    "cryptojslib": "~3.1.2",
+    "jquery": "1.11.1"
   }
 }
