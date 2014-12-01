@@ -3977,50 +3977,49 @@ var MyWallet = new function() {
                 }
             }
 
-            // Disabled by Sjors on 2014-11-28 for lack of a test wallet
-
-            // //Test if the payload is valid json
-            // //If it is json then check the payload and pbkdf2_iterations keys are available
-            // var obj = null;
-            // try {
-            //     var obj = $.parseJSON(data);
-            // } catch (e) {}
-            //
-            // var decryptNormal = function() {
-            //     try {
-            //         var decrypted = CryptoJS.AES.decrypt(obj.payload, password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iterations : obj.pbkdf2_iterations});
-            //         var root = $.parseJSON(decrypted);
-            //
-            //         _success(root, obj);
-            //     } catch (e) {
-            //         _error('Error Decrypting Wallet. Please check your password is correct.');
-            //         MyWallet.sendMonitorEvent({type: "loadingText", message: 'Error Decrypting Wallet. Please check your password is correct.', code: 0});
-            //     }
-            // };
-            //
-            // if (obj && obj.payload && obj.pbkdf2_iterations) {
-            //     if (obj.version != supported_encryption_version)
-            //         throw 'Wallet version ' + obj.version + ' not supported';
-            //
-            //     if (obj.pbkdf2_iterations > 0) {
-            //
-            //         MyWallet.decryptWebWorker(obj.payload, password, obj.pbkdf2_iterations, function(decrypted) {
-            //
-            //             try {
-            //                 var root = $.parseJSON(decrypted);
-            //
-            //                 _success(root, obj);
-            //             } catch (e) {
-            //                 decryptNormal();
-            //             }
-            //         }, function(e) {
-            //
-            //             decryptNormal();
-            //         });
-            //     } else {
-            //         decryptNormal();
-            //     }
-            // } else {
+            //Test if the payload is valid json
+            //If it is json then check the payload and pbkdf2_iterations keys are available
+            var obj = null;
+            try {
+                var obj = $.parseJSON(data);
+            } catch (e) {}
+            
+            var decryptNormal = function() {
+                try {
+                    console.log('1')
+                    var decrypted = decryptAesWithStretchedPassword(obj.payload, password, obj.pbkdf2_iterations);
+                    // CryptoJS.AES.decrypt(obj.payload, password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iterations : obj.pbkdf2_iterations});
+                    var root = $.parseJSON(decrypted);
+            
+                    _success(root, obj);
+                } catch (e) {
+                    _error('Error Decrypting Wallet. Please check your password is correct.');
+                    MyWallet.sendMonitorEvent({type: "loadingText", message: 'Error Decrypting Wallet. Please check your password is correct.', code: 0});
+                }
+            };
+            
+            if (obj && obj.payload && obj.pbkdf2_iterations) {
+                if (obj.version != supported_encryption_version)
+                    throw 'Wallet version ' + obj.version + ' not supported';
+            
+                if (obj.pbkdf2_iterations > 0) {
+                    MyWallet.decryptWebWorker(obj.payload, password, obj.pbkdf2_iterations, function(decrypted) {
+            
+                        try {
+                            var root = $.parseJSON(decrypted);
+            
+                            _success(root, obj);
+                        } catch (e) {
+                            decryptNormal();
+                        }
+                    }, function(e) {
+            
+                        decryptNormal();
+                    });
+                } else {
+                    decryptNormal();
+                }
+            } else {
               MyWallet.decrypt(data, password, MyWallet.getDefaultPbkdf2Iterations(), function(decrypted) {
                     try {
                         var root = $.parseJSON(decrypted);
@@ -4038,7 +4037,7 @@ var MyWallet = new function() {
                     _error('Error Decrypting Wallet. Please check your password is correct.');
                     MyWallet.sendMonitorEvent({type: "loadingText", message: 'Error Decrypting Wallet. Please check your password is correct.', code: 0});
                 });
-            // }
+            }
         } catch (e) {
             _error(e);
         }
