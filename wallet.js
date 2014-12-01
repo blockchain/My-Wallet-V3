@@ -1221,11 +1221,11 @@ var MyWallet = new function() {
     }
 
     this.getExtPrivKeyForAccount = function(accountIdx) {
-        return myHDWallet.getAccount(accountIdx).getAccountMainKey(true);
+        return myHDWallet.getAccount(accountIdx).getAccountExtendedKey(true);
     }
 
     this.getExtPubKeyForAccount = function(accountIdx) {
-        return myHDWallet.getAccount(accountIdx).getAccountMainKey(false);
+        return myHDWallet.getAccount(accountIdx).getAccountExtendedKey(false);
     }
 
     this.getLabelForAccount = function(accountIdx) {

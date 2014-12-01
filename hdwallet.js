@@ -71,11 +71,8 @@ function HDAccount(wallet, label, idx) {
         getChangeAddressesCount : function() {
             return this.wallet.changeAddresses.length;
         },        
-        getAccountMainKey : function(isPrivate) {
-            return this.wallet.getExternalAccount().toBase58(isPrivate);
-        },
-        getAccountChangeKey : function(isPrivate) {
-            return this.wallet.getInternalAccount().toBase58(isPrivate);
+        getAccountExtendedKey : function(isPrivate) {
+            return this.wallet.getAccountZero().toBase58(isPrivate);
         },
         generateAddress : function() {
             return this.wallet.generateAddress();
