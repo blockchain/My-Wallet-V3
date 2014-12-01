@@ -27,7 +27,8 @@ describe "HD Wallet", ->
           expect(hdwallet.getAccountsCount()).toBe(2)
 
       return
-      
+
+
     describe "paymentRequest", ->
       hdwallet = undefined
       account = undefined
@@ -40,6 +41,22 @@ describe "HD Wallet", ->
         account = hdwallet.createAccount("Spending")
         paymentRequest = account.generatePaymentRequest(1)
         address = account.getAddressAtIdx(paymentRequest.index)
+
+      describe "getAccountExtendedKey()", ->
+          it "should mark request as completed", ->
+              extendedPrivKey = account.getAccountExtendedKey(true);
+
+              expect(extendedPrivKey).toBe("xprv9yd5CkFRNfUXBGf22qxMtvZvBEaSzzUioe7QqeyC1uuTukBWeMvFpzjJUEDswuWby8JmGR84wQHy75djYEAsAktvJa5B2QueQkzuNQiqS1C")
+
+          return
+
+      describe "getAccountExtendedKey()", ->
+          it "should mark request as completed", ->
+              extendedPubKey = account.getAccountExtendedKey(false);
+
+              expect(extendedPubKey).toBe("xpub6CcRcFnKD32pPkjV8sVNG4WejGQwQTCaAs31e3NoaFSSnYWfBuEWNo3nKWVZotgtN1dpoYGwSxUVyVfNrrgE7YwpSrUWsqgK2LdmuGDCBMp")
+
+          return
 
       describe "generatePaymentRequest()", ->
           it "should have payment request array length be 1", ->
