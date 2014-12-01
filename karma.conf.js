@@ -25,7 +25,7 @@ module.exports = function(config) {
     autoWatch: true,
     
     files: [
-      'jquery.js',
+      'bower_components/jquery/dist/jquery.js',
       'bitcoinjs.js',
       'bip39.js',
       'hdwallet.js',
