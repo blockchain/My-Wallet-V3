@@ -4113,40 +4113,44 @@ var MyWallet = new function() {
            The conversions between different encodings can probably be achieved
            with fewer methods.
         */
-            
-        data_hex_string = CryptoJS.enc.Base64.parse(data).toString()
-      
+        
+        // Convert base64 string data to hex string
+        var data_hex_string = CryptoJS.enc.Base64.parse(data).toString()
+        
+        // Pull out the Initialization vector from data (@see http://en.wikipedia.org/wiki/Initialization_vector )
         var iv = CryptoJS.enc.Hex.parse(data_hex_string.slice(0,32))
-          
-        // We use same value for the PBKDF2 salt and the AES IV.
+        
+        // We use same value for the PBKDF2 salt and the AES IV. But we do not use a salt in the AES encryption
         var salt = iv
         
-        // Stretch the password using PBKDF2:  
+        // Stretch the password using PBKDF2:
         var streched_password = CryptoJS.PBKDF2(password, salt, { keySize: 256 / 32, iterations: pbkdf2_iterations })
-          
-        // Remove the first 16 bytes (IV) from the payload: 
+        
+        // Remove the first 16 bytes (IV) from the payload:
         var payload_hex_string = data_hex_string.slice(32)
         
+        // Paylod is cipthertext without IV as bytes
         var payload = CryptoJS.enc.Hex.parse(payload_hex_string)
-          
+        
         // AES decryption expects a base 64 encoded payload:
         var payload_base_64 = payload.toString(CryptoJS.enc.Base64)
-
+        
         // AES.decrypt takes an optional salt argument, which we don't use.
-        var decrypted = CryptoJS.AES.decrypt({ciphertext: payload, salt: ""}, streched_password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iv: iv}); 
-                
+        var decrypted = CryptoJS.AES.decrypt({ciphertext: payload, salt: ""}, streched_password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iv: iv});
+        
+        // Decrypted is returned as bytes, we convert it to a UTF8 String
         var decoded = decrypted.toString(CryptoJS.enc.Utf8)
-                  
+        
         if (decoded != null && decoded.length > 0) {
             if (success(decoded)) {
                 return decoded;
             };
         };
-      
+        
         } catch (e) {
             console.log(e);
         }
-
+        
         //iso10126 with 10 iterations  (old default)
         if (pbkdf2_iterations != 10) {
             try {
