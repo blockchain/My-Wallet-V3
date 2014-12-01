@@ -3933,10 +3933,7 @@ var MyWallet = new function() {
             
       var iv = salt // Use the same value for IV and salt.
         
-      var payload = CryptoJS.enc.Utf8.parse(data)        
-          
-      // AES encryption expects a base 64 encoded payload:
-      var payload_base_64 = payload.toString(CryptoJS.enc.Base64)
+      var payload = CryptoJS.enc.Utf8.parse(data)
         
       // AES.encrypt takes an optional salt argument, which we don't use.
       var encrypted = CryptoJS.AES.encrypt(payload, streched_password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iv: iv}); 
