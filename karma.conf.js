@@ -29,6 +29,7 @@ module.exports = function(config) {
       'bitcoinjs.js',
       'bip39.js',
       'hdwallet.js',
+      'HDWalletAccount.js',
       'bower_components/cryptojslib/rollups/sha256.js',
       'bower_components/cryptojslib/rollups/aes.js',
       'bower_components/cryptojslib/rollups/pbkdf2.js',
