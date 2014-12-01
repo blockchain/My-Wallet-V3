@@ -42,7 +42,7 @@ describe "HD Wallet", ->
         paymentRequest = account.generatePaymentRequest(1)
         address = account.getAddressAtIdx(paymentRequest.index)
 
-      describe "getAccountExtendedKey()", ->
+      describe "getAccountExtendedPrivKey()", ->
           it "should mark request as completed", ->
               extendedPrivKey = account.getAccountExtendedKey(true);
 
@@ -50,7 +50,7 @@ describe "HD Wallet", ->
 
           return
 
-      describe "getAccountExtendedKey()", ->
+      describe "getAccountExtendedPubKey()", ->
           it "should mark request as completed", ->
               extendedPubKey = account.getAccountExtendedKey(false);
 
