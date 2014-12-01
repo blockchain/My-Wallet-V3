@@ -27,10 +27,15 @@ module.exports = function(config) {
     files: [
       'jquery.js',
       'bitcoinjs.js',
-      // 'old_bitcoinjs.js',
-      // 'wallet.js',
       'bip39.js',
       'hdwallet.js',
+      'bower_components/cryptojslib/rollups/sha256.js',
+      'bower_components/cryptojslib/rollups/aes.js',
+      'bower_components/cryptojslib/rollups/pbkdf2.js',
+      'bower_components/cryptojslib/components/cipher-core.js',
+      'bower_components/cryptojslib/components/pad-iso10126.js',
+      'crypto-util-legacy.js',
+      'wallet.js',
       'tests/**/*.js',
       'tests/**/*.js.coffee'
     ],
