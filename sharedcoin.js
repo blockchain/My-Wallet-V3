@@ -1088,7 +1088,13 @@ var SharedCoin = new function() {
                         throw 'You must enter a bitcoin address for each recipient';
                     }
 
-                    newTx.to_addresses.push({address: new Bitcoin.Address(address), value : value});
+                    var addressObject = new Bitcoin.Address(address);
+
+                    if (addressObject.version != 0) {
+                        throw 'Sharedcoin only supports sending payments to regular bitcoin addresses';
+                    }
+
+                    newTx.to_addresses.push({address: addressObject, value : value});                    
                 } catch (e) {
                     _error(e);
                 }
