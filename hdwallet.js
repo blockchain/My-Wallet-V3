@@ -12,8 +12,8 @@ function HDAccount(wallet, label, idx) {
                 archived : this.isArchived(),
                 paymentRequests : this.getPaymentRequestsJson(),
                 change_addresses : this.getChangeAddressesCount(),
-                xpriv : this.getAccountMainKey(true),
-                xpub : this.getAccountMainKey(false)
+                xpriv : this.getAccountExtendedKey(true),
+                xpub : this.getAccountExtendedKey(false)
             };
             return accountJsonData;
         },
