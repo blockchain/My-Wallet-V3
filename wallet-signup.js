@@ -266,7 +266,7 @@ var MyWalletSignup = new function() {
             var result = document.getElementById('password-result');
             var password = $(this).val();
 
-            var cps = HSIMP.convertToNumber('250000000'),
+            var cps = HSIMP.convertToNumber('1000000000'),
                 time, i, checks;
 
             warnings.innerHTML = '';
