@@ -267,7 +267,7 @@ function HDWalletAccount(seed, network) {
     return network.estimateFee(tmpTx)
   }
 
-  function getChangeAddress() {
+  this.getChangeAddress = function() {
     if(me.changeAddresses.length === 0) me.generateChangeAddress();
     return me.changeAddresses[me.changeAddresses.length - 1]
   }
