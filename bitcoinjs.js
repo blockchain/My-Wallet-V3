@@ -10343,6 +10343,8 @@
                     Crypto: require("./crypto-js"),
                     Buffer: require("./buffer"),
                     rng : require("./rng"),
+                    assert : require("./assert"),
+
 
                     Address: require("./address"),
                     bufferutils: require("./bufferutils"),
@@ -10369,6 +10371,7 @@
                 "./crypto-js": 27,
                 "./buffer": 78,
                 "./rng": 18,
+                "./assert": 75,
 
                 "./address": 58,
                 "./bufferutils": 59,
