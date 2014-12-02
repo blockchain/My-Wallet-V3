@@ -1158,26 +1158,6 @@ var MyWallet = new function() {
 
     var logout_status = 'ok';
 
-    this.showNotification = function(options, timeout) {
-        try {
-            var notification;
-
-            if (window.webkitNotifications && webkitNotifications.checkPermission() == 0) {
-                notification = webkitNotifications.createNotification(options.iconUrl, options.title, options.body);
-
-                notification.show();
-            } else if (window.Notification && window.Notification.permissionLevel() == 'granted') {
-                notification = new window.Notification(options.title, options).show();
-            }
-
-            if (notification) {
-                setTimeout(function() {
-                    notification.cancel();
-                }, timeout ? timeout : 5000);
-            }
-        } catch (e) { }
-    };
-
     this.makeNotice = function(type, id, msg, timeout) {
         if (msg == null || msg.length == 0)
             return;
