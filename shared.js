@@ -63,12 +63,9 @@ var ws;
 var reconnectInterval;
 function webSocketConnect(success) {
     try {
-        var ii = 0;
         function reallyConnect() {
             try {
                 var url = "wss://ws.blockchain.info/inv";
-
-                ++ii;
 
                 console.log('Connect ' + url);
 
