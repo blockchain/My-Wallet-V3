@@ -2816,7 +2816,7 @@ var MyWallet = new function() {
             for (var key in obj.home_buttons) {
                 var button =  obj.home_buttons[key];
 
-                var a = $('<a class="btn" style="margin-left:3px;" href="" target="blank"><img src=""></a>');
+                var a = $('<a class="btn" style="margin-left:3px;margin-bottom:3px;" href="" target="blank"><img src=""></a>');
 
                 if (button.button_class)
                     a.addClass(button.button_class);
