@@ -266,7 +266,7 @@ var MyWalletSignup = new function() {
             var result = document.getElementById('password-result');
             var password = $(this).val();
 
-            var cps = HSIMP.convertToNumber('1000000000'),
+            var cps = HSIMP.convertToNumber('100000000000000'),
                 time, i, checks;
 
             warnings.innerHTML = '';
@@ -280,13 +280,13 @@ var MyWalletSignup = new function() {
                     if (time.time < 0.000001) {
                         result.innerHTML = 'Your password would be hacked <span>Instantly</span>';
                     } else if (time.time < 1) {
-                        result.innerHTML = 'It would take a desktop PC <span>' + time.time+' '+time.period+ '</span> to hack your password';
+                        result.innerHTML = 'It would take a GPU Cracking array <span>' + time.time+' '+time.period+ '</span> to bruteforce your password';
                     } else {
-                        result.innerHTML = 'It would take a desktop PC <span>About ' + time.time+' '+time.period+ '</span> to hack your password';
+                        result.innerHTML = 'It would take a GPU Cracking array <span>About ' + time.time+' '+time.period+ '</span> to bruteforce your password';
                     }
                 } else {
 
-                    result.innerHTML = 'It would take a desktop PC <span>About ' + time.time+' '+time.period+ '</span> to hack your password';
+                    result.innerHTML = 'It would take a GPU Cracking array <span>About ' + time.time+' '+time.period+ '</span> to bruteforce your password';
                 }
 
                 checks = HSIMP.check(password);
