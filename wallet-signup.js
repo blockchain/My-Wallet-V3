@@ -22,7 +22,7 @@ var MyWalletSignup = new function() {
             MyWallet.decryptWallet(crypted, password, function() {
                 try {
                     //SHA256 new_checksum verified by server in case of curruption during transit
-                    var new_checksum = Crypto.util.bytesToHex(Crypto.SHA256(crypted, {asBytes: true}));
+                    var new_checksum = CryptoJS.SHA256(crypted, {asBytes: true}).toString();
 
                     MyWallet.sendMonitorEvent({type: "loadingText", message: 'Saving wallet', code: 0});
 
