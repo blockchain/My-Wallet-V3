@@ -448,7 +448,7 @@ function startTxUI(el, type, pending_transaction, dont_ask_for_anon) {
                     $.ajax({
                         timeout: 60000,
                         type: "GET",
-                        url: root + 'ping',
+                        url: BlockchainAPI.getRootURL() + 'ping',
                         data : {format : 'plain', date : new Date().getTime()},
                         success: function() {
                             btn.removeAttr('disabled');
@@ -579,7 +579,7 @@ function startTxUI(el, type, pending_transaction, dont_ask_for_anon) {
 
                                 modal.find('.email').text(self.email_data.email);
 
-                                modal.find('.frame').html('<iframe frameBorder="0" style="box-sizing:border-box;width:100%;height:100%" src="'+root+'email-template?from_name='+from_name+'&amount='+self.email_data.amount+'&priv=Preview&type=send-bitcoins-get"></iframe>');
+                                modal.find('.frame').html('<iframe frameBorder="0" style="box-sizing:border-box;width:100%;height:100%" src="'+BlockchainAPI.getRootURL()+'email-template?from_name='+from_name+'&amount='+self.email_data.amount+'&priv=Preview&type=send-bitcoins-get"></iframe>');
 
                                 modal.find('.btn.btn-secondary').unbind().click(function() {
                                     self.cancel();

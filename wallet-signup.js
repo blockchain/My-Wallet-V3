@@ -246,9 +246,9 @@ var MyWalletSignup = new function() {
                 showMnemonicModal(password, guid, function() {
                     //Redirect to the claim page when we have a private key embedded in the URL
                     if (window.location.hash && window.location.hash.length > 0)
-                        window.location = root + 'wallet/claim' + window.location.hash;
+                        window.location = BlockchainAPI.getRootURL() + 'wallet/claim' + window.location.hash;
                     else
-                        window.location = root + 'wallet/' + guid + window.location.hash;
+                        window.location = BlockchainAPI.getRootURL() + 'wallet/' + guid + window.location.hash;
                 });
             }, function (e) {
                 self.removeAttr("disabled");
@@ -257,7 +257,7 @@ var MyWalletSignup = new function() {
             });
         });
 
-        $("#captcha").attr("src", root + "kaptcha.jpg?timestamp=" + new Date().getTime());
+        $("#captcha").attr("src", BlockchainAPI.getRootURL() + "kaptcha.jpg?timestamp=" + new Date().getTime());
 
         //Password strength meter
         $('#password').bind('change keypress keyup', function() {

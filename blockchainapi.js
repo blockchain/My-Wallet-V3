@@ -94,7 +94,7 @@ var BlockchainAPI = new function() {
         $.retryAjax({
             type: "POST",
             dataType: 'json',
-            url: root +'multiaddr',
+            url: this.getRootURL() +'multiaddr',
             data: data,
             timeout: AjaxTimeout,
             success: function(obj) {
@@ -152,7 +152,7 @@ var BlockchainAPI = new function() {
         $.retryAjax({
             type: "POST",
             dataType: 'json',
-            url: root +'multiaddr',
+            url: this.getRootURL() +'multiaddr',
             data: data,
             async: false,
             timeout: AjaxTimeout,
@@ -189,7 +189,7 @@ var BlockchainAPI = new function() {
 
         $.ajax({
             type: "POST",
-            url: root + 'multiaddr',
+            url: this.getRootURL() + 'multiaddr',
             dataType: 'json',
             timeout: AjaxTimeout,
             data : {active : addresses.join('|'), simple : true, format : 'json'},
@@ -365,7 +365,7 @@ var BlockchainAPI = new function() {
         $.ajax({
             type: "GET",
             dataType: 'json',
-            url: root +'ticker',
+            url: this.getRootURL() +'ticker',
             data: {format : 'json'},
             timeout: AjaxTimeout,
             success: function(data) {
@@ -399,7 +399,7 @@ var BlockchainAPI = new function() {
 
         $.ajax({
             type: "GET",
-            url: root + 'q/resolvefirstbits/'+addr,
+            url: this.getRootURL() + 'q/resolvefirstbits/'+addr,
             data : {format : 'plain'},
             timeout: AjaxTimeout,
             success: function(data) {
@@ -419,7 +419,7 @@ var BlockchainAPI = new function() {
 
         $.ajax({
             type: "GET",
-            url: root + 'q/rejected/'+hexhash,
+            url: this.getRootURL() + 'q/rejected/'+hexhash,
             data : {format : 'plain'},
             timeout: AjaxTimeout,
             success: function(data) {
@@ -542,7 +542,7 @@ var BlockchainAPI = new function() {
 
                 $.ajax({
                     type: "POST",
-                    url: root + 'pushtx',
+                    url: this.getRootURL() + 'pushtx',
                     timeout: AjaxTimeout,
                     data : post_data,
                     success: function() {
@@ -581,7 +581,7 @@ var BlockchainAPI = new function() {
                 fd.append('hash', tx_hash);
 
                 $.ajax({
-                    url: root + 'pushtx',
+                    url: this.getRootURL() + 'pushtx',
                     data: fd,
                     processData: false,
                     contentType: false,
@@ -623,7 +623,7 @@ var BlockchainAPI = new function() {
         $.retryAjax({
             type: "POST",
             dataType: 'json',
-            url: root +'unspent',
+            url: this.getRootURL() +'unspent',
             timeout: AjaxTimeout,
             data: {active : fromAddresses.join('|'), format : 'json', confirmations : confirmations ? confirmations : 0},
             success: function(obj) {

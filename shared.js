@@ -4,7 +4,6 @@ var adv_rule;
 var symbol_btc = {code : "BTC", symbol : "BTC", name : "Bitcoin",  conversion : satoshi, symbolAppearsAfter : true, local : false}; //Default BTC Currency Symbol object
 var symbol_local = {"conversion":0,"symbol":"$","name":"U.S. dollar","symbolAppearsAfter":false,"local":true,"code":"USD"}; //Users local currency object
 var symbol = symbol_btc; //Active currency object
-var root = '/';
 var resource = '/Resources/';
 var war_checksum;
 var min = true; //whether to load minified scripts
@@ -238,15 +237,15 @@ function formatOutput(output, myAddresses, addresses_book) {
                 return addr;
         } else {
             if (addresses_book && addresses_book[addr])
-                return '<a target="new" href="'+root+'address/'+addr+'">'+addresses_book[addr]+'</a>';
+                return '<a target="new" href="'+BlockchainAPI.getRootURL()+'address/'+addr+'">'+addresses_book[addr]+'</a>';
             else if (out.addr_tag) {
                 var link = '';
                 if (out.addr_tag_link)
-                    link = ' <a class="external" rel="nofollow" href="'+root + 'r?url='+out.addr_tag_link+'" target="new"></a>';
+                    link = ' <a class="external" rel="nofollow" href="'+BlockchainAPI.getRootURL() + 'r?url='+out.addr_tag_link+'" target="new"></a>';
 
-                return '<a target="new" href="'+root+'address/'+addr+'" class="tag-address">'+addr+'</a> <span class="tag">('+out.addr_tag+link+')</span>';
+                return '<a target="new" href="'+BlockchainAPI.getRootURL()+'address/'+addr+'" class="tag-address">'+addr+'</a> <span class="tag">('+out.addr_tag+link+')</span>';
             } else {
-                return '<a target="new" href="'+root+'address/'+addr+'">'+addr+'</a>';
+                return '<a target="new" href="'+BlockchainAPI.getRootURL()+'address/'+addr+'">'+addr+'</a>';
             }
         }
     }
@@ -323,7 +322,7 @@ function setupSymbolToggle() {
                     timeout: 60000,
                     type: "GET",
                     dataType: 'text',
-                    url: root + 'frombtc',
+                    url: BlockchainAPI.getRootURL() + 'frombtc',
                     data : {value : self.data('c'), currency : symbol_local.code, time : self.data('time'), textual : true, nosavecurrency : true},
                     success: function(response) {
                         if (!response) return;

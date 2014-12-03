@@ -2055,7 +2055,7 @@ var MyWallet = new function() {
             showFrameModal({
                 title : 'Transaction Summary',
                 description : '',
-                src : root + 'tx-summary/'+txIndex+'?result='+result+'&symbol_btc='+symbol_btc.code+'&symbol_local='+symbol_local.code
+                src : BlockchainAPI.getRootURL() + 'tx-summary/'+txIndex+'?result='+result+'&symbol_btc='+symbol_btc.code+'&symbol_local='+symbol_local.code
             });
         });
     }
@@ -2741,7 +2741,7 @@ var MyWallet = new function() {
         $.ajax({
             type: "GET",
             dataType: 'json',
-            url: root + 'wallet/'+user_guid,
+            url: BlockchainAPI.getRootURL() + 'wallet/'+user_guid,
             data : data,
             timeout: 60000,
             success: function(obj) {
@@ -2887,7 +2887,7 @@ var MyWallet = new function() {
                 $.ajax({
                     timeout: 60000,
                     type: "POST",
-                    url: root + "wallet",
+                    url: BlockchainAPI.getRootURL() + "wallet",
                     data :  { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain' },
                     success: function(data) {
                         try {
@@ -3708,12 +3708,12 @@ var MyWallet = new function() {
         MyWallet.sendEvent('logging_out')
 
         if (guid == demo_guid) {
-            window.location = root + 'wallet/logout';
+            window.location = BlockchainAPI.getRootURL() + 'wallet/logout';
         } else {
             $.ajax({
                 type: "GET",
                 timeout: 60000,
-                url: root + 'wallet/logout',
+                url: BlockchainAPI.getRootURL() + 'wallet/logout',
                 data : {format : 'plain'},
                 success: function(data) {
                     window.location.reload();
