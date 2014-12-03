@@ -1205,7 +1205,7 @@ function initNewTx() {
                             }
 
                             var out = {script : script,
-                                value : Bitcoin.BigInteger.fromByteArrayUnsigned(Crypto.util.hexToBytes(obj.unspent_outputs[i].value_hex)),
+                                value : new Bitcoin.BigInteger.fromHex(obj.unspent_outputs[i].value_hex),
                                 tx_output_n : obj.unspent_outputs[i].tx_output_n,
                                 tx_hash : obj.unspent_outputs[i].tx_hash,
                                 confirmations : obj.unspent_outputs[i].confirmations
