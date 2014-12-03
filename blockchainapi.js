@@ -225,22 +225,9 @@ var BlockchainAPI = new function() {
     function updateKV(txt, method, value, success, error, extra) {
         value = $.trim(value);
 
-        if (value.length == 0) {
-            MyWallet.sendMonitorEvent({type: "error", message: 'misc-error ' + txt + ': Invalid value', code: 0});
-            return;
-        }
-
-        if (value.length == 0) {
-            MyWallet.sendMonitorEvent({type: "error", message: method + '-error: ' + data.responseText, code: 0});
-
-            if (error) error();
-
-            return;
-        }
-
-        if (!extra)
+        if (!extra) {
             extra = '';
-
+        }
 
         MyWallet.securePost("wallet"+extra, { length : (value+'').length, payload : value+'', method : method }, function(data) {
             MyWallet.makeNotice('success', method + '-success', data);
