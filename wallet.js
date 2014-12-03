@@ -1928,35 +1928,6 @@ var MyWallet = new function() {
         MyWallet.backupWalletDelayed();
     }
 
-    function buildSelect(select, zero_balance, reset) {
-        var old_val = select.val();
-
-        select.empty();
-
-        for (var key in addresses) {
-            var addr = addresses[key];
-
-            //Don't include archived addresses
-            if (!addr || addr.tag == 2)
-                continue;
-
-            var label = addr.label;
-
-            if (!label)
-                label = addr.addr.substring(0, 15) + '...';
-
-            if (zero_balance || addr.balance > 0) {
-                //On the sent transactions page add the address to the from address options
-                select.prepend('<option value="'+addr.addr+'">' + label + ' - ' + formatBTC(addr.balance) + '</option>');
-            }
-        }
-
-        select.prepend('<option value="any" selected>Any Address</option>');
-
-        if (!reset && old_val)
-            select.val(old_val);
-    }
-
     this.getAllLegacyAddresses = function() {
         var array = [];
         for (var key in addresses) {
@@ -2231,7 +2202,109 @@ var MyWallet = new function() {
         
         return result;
     }
+
     
+    function parseMultiAddressJSON(obj, cached, checkCompleted) {
+        if (!cached) {
+            if (obj.mixer_fee) {
+                mixer_fee = obj.mixer_fee;
+            }
+
+            recommend_include_fee = obj.recommend_include_fee;
+
+            if (obj.info) {
+                if (obj.info.symbol_local)
+                    setLocalSymbol(obj.info.symbol_local);
+
+                if (obj.info.symbol_btc)
+                    setBTCSymbol(obj.info.symbol_btc);
+
+                if (obj.info.notice)
+                    MyWallet.makeNotice('error', 'misc-error', obj.info.notice);                
+            }
+        }
+
+        if (obj.disable_mixer) {
+            //$('#shared-addresses,#send-shared').hide();
+        }
+
+        sharedcoin_endpoint = obj.sharedcoin_endpoint;
+
+        transactions.length = 0;
+
+        if (obj.wallet == null) {
+            total_received = 0;
+            total_sent = 0;
+            final_balance = 0;
+            n_tx = 0;
+            n_tx_filtered = 0;
+            return;
+        }
+
+        total_received = obj.wallet.total_received;
+        total_sent = obj.wallet.total_sent;
+        final_balance = obj.wallet.final_balance;
+        n_tx = obj.wallet.n_tx;
+        n_tx_filtered = obj.wallet.n_tx_filtered;
+
+        for (var i = 0; i < obj.addresses.length; ++i) {
+            if (addresses[obj.addresses[i].address])
+                addresses[obj.addresses[i].address].balance = obj.addresses[i].final_balance;
+
+            for (var j in myHDWallet.getAccounts()) {
+                var account = myHDWallet.getAccount(j);
+                if (account.isAddressPartOfInternalAccountAddress(obj.addresses[i].address)) {
+                    account.setChangeAddressNTxs(obj.addresses[i].address, obj.addresses[i].n_tx);
+                }
+            }
+        }
+
+        isAccountRecommendedFeesValid = false;
+        for (var i = 0; i < obj.txs.length; ++i) {
+            var tx = TransactionFromJSON(obj.txs[i]);
+            //Don't use the result given by the api because it doesn't include archived addresses
+            tx.result = calcTxResult(tx, false, checkCompleted);
+
+            transactions.push(tx);
+        }
+
+        for (var i in myHDWallet.getAccounts()) {
+            MyWallet.asyncGetAndSetUnspentOutputsForAccount(i);
+        }
+
+        if (!cached) {
+            if (obj.info.latest_block)
+                setLatestBlock(obj.info.latest_block);
+        }
+
+        MyWallet.sendEvent('did_multiaddr');
+    }
+
+    this.handleURI = function(hash, recipient) {
+        loadScript('wallet/jsuri-1.1.1', function() {
+            try {
+                var uri = new Uri(hash);
+
+                var address = new Bitcoin.Address(uri.host());
+
+                recipient.find('input[name="send-to-address"]').val(address.toString());
+
+                var value = parseFloat(uri.getQueryParamValue('amount'));
+
+                if (value > 0 && !isNaN(value)) {
+                    recipient.find('.send-value').val(value);
+                }
+
+            } catch (e) {
+                console.log(e);
+
+                MyWallet.makeNotice('error', 'error', 'Invalid Bitcoin Address or URI');
+            }
+        }, function() {
+            MyWallet.makeNotice('error', 'error', 'Invalid Bitcoin Address or URI');
+        });
+    }
+
     function didDecryptWallet(success) {
 
         //We need to check if the wallet has changed
