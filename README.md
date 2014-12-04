@@ -525,6 +525,16 @@ Sets label for account and backups wallet
 {bool}  - whether address is watch only
 
 
+#### `MyWallet.isActiveLegacyAddress(addr);`
+
+##### Parameters:
+
+{string}  - bitcoin address
+
+##### Returns:
+
+{bool}  - whether address is active
+
 #### `MyWallet.addWatchOnlyLegacyAddress(address);`
 
 ##### Parameters:
@@ -569,6 +579,13 @@ unarchives address, backups wallet and refreshes balances
 {int} - send amount in satoshis
 
 {int} - fee amount in satoshis, base fee will be use if null
+
+
+#### `MyWallet.getLegacyTransactions();`
+
+##### Returns:
+
+{array}  - Legacy Transactions
 
 
 

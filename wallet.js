@@ -470,6 +470,10 @@ var MyWallet = new function() {
         return address_book[address];
     }
 
+    this.isActiveLegacyAddress = function(addr) {
+        return addresses[addr] != null && addresses[addr].tag != 2;
+    }
+
     this.isWatchOnlyLegacyAddress = function(address) {
         return !addresses[address] || addresses[address].priv == null;
     }
@@ -1254,6 +1258,85 @@ var MyWallet = new function() {
             MyWallet.backupWalletDelayed();
         }
         return success;
+    }
+
+    this.getLegacyTransactions = function() {
+        var filteredTransactions = [];
+
+        var rawTxs = transactions;
+
+        for (var i in rawTxs) {
+            var tx = rawTxs[i];
+            var transaction = {};
+
+            // Default values:
+            transaction.to_account= null;
+            transaction.from_account = null;
+            transaction.from_addresses = [];
+            transaction.to_addresses = [];
+            transaction.amount = 0;
+
+            var isOrigin = false;
+            var isLegacyAddressTx = false;
+            for (var i = 0; i < tx.inputs.length; ++i) {
+                var output = tx.inputs[i].prev_out;
+                if (!output || !output.addr)
+                    continue;
+
+                if (MyWallet.isActiveLegacyAddress(output.addr)) {
+                    isLegacyAddressTx = true;
+                    isOrigin = true;
+                    transaction.amount -= output.value;
+                } else {
+                    transaction.from_addresses.push(output.addr);
+                }
+            }
+
+            transaction.intraWallet = false;
+            for (var i = 0; i < tx.out.length; ++i) {
+                var output = tx.out[i];
+                if (!output || !output.addr)
+                    continue;
+
+                if (MyWallet.isActiveLegacyAddress(output.addr)) {
+                    isLegacyAddressTx = true;
+                    transaction.amount += output.value;
+                } else {
+                    transaction.to_addresses.push(output.addr);
+                    if (! isOrigin) {
+                        for (var j in myHDWallet.getAccounts()) {
+                            var otherAccount = myHDWallet.getAccount(j);
+                            if (otherAccount.isAddressPartOfAccount(output.addr)) {
+                                transaction.intraWallet = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (! isLegacyAddressTx)
+                continue;
+
+            transaction.hash = tx.hash;
+            transaction.confirmations = MyWallet.getConfirmationsForTx(MyWallet.getLatestBlock(), tx);
+
+            if(isOrigin) {
+                transaction.from_account = -1;
+            } else {
+                transaction.to_account = -1;
+            }
+
+            // transaction.note = tx.note ? tx.note : tx_notes[tx.hash];
+
+            if (tx.time > 0) {
+                transaction.txTime = new Date(tx.time * 1000);
+            }
+
+            filteredTransactions.push(transaction);
+        }
+
+        return filteredTransactions;
     }
 
     this.getTransactionsForAccount = function(accountIdx) {
