@@ -4,7 +4,7 @@ var adv_rule;
 var symbol_btc = {code : "BTC", symbol : "BTC", name : "Bitcoin",  conversion : satoshi, symbolAppearsAfter : true, local : false}; //Default BTC Currency Symbol object
 var symbol_local = {"conversion":0,"symbol":"$","name":"U.S. dollar","symbolAppearsAfter":false,"local":true,"code":"USD"}; //Users local currency object
 var symbol = symbol_btc; //Active currency object
-var resource = '/Resources/';
+var resource = 'Resources/';
 var war_checksum;
 var min = true; //whether to load minified scripts
 var isExtension = false;
@@ -370,7 +370,7 @@ var _sounds = {};
 function playSound(id) {
     try {
         if (!_sounds[id])
-            _sounds[id] = new Audio(resource+id+'.wav');
+            _sounds[id] = new Audio('/'+resource+id+'.wav');
 
         _sounds[id].play();
     } catch (e) { }
@@ -495,7 +495,7 @@ function loadScript(src, success, error) {
     var s = document.createElement('script');
     s.type = "text/javascript";
     s.async = true;
-    s.src = resource + src + (min ? '.min.js' : '.js') + '?'+war_checksum;
+    s.src = BlockchainAPI.getRootURL() + resource + src + (min ? '.min.js' : '.js') + '?'+war_checksum;
     try {
         s.addEventListener('error', function(e){ error_fired = true;  if (error) error('Error Loading Script. Are You Offline?'); }, false);
         s.addEventListener('load', function (e) { if (!error_fired) success(); }, false);

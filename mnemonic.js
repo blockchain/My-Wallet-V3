@@ -135,7 +135,7 @@ function mn_encode_pass_v2(str_bytes, success, error) {
 function loadV3WordList(success, error) {
     $.ajax({
         type: "GET",
-        url: resource + 'wallet/mnemonic_words_v3.html',
+        url: BlockchainAPI.getRootURL() + resource + 'wallet/mnemonic_words_v3.html',
         success: function(data) {
             success(data.split('\n'));
         },

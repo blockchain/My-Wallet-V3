@@ -3310,7 +3310,7 @@ var MyWallet = new function() {
     }
 
     this.getWebWorkerLoadPrefix = function() {
-        return resource + 'wallet/';
+        return BlockchainAPI.getRootURL() + resource + 'wallet/';
     }
 
     this.decryptWebWorker = function(data, password, pbkdf2_iterations, success, _error) {
