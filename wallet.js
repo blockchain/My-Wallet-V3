@@ -1289,6 +1289,13 @@ var MyWallet = new function() {
                     transaction.amount -= output.value;
                 } else {
                     transaction.from_addresses.push(output.addr);
+                    for (var j in myHDWallet.getAccounts()) {
+                        var account = myHDWallet.getAccount(j);
+                        if (account.isAddressPartOfAccount(output.addr)) {
+                            transaction.from_account = j;
+                            break;
+                        }
+                    }                    
                 }
             }
 
@@ -1301,15 +1308,17 @@ var MyWallet = new function() {
                 if (MyWallet.isActiveLegacyAddress(output.addr)) {
                     isLegacyAddressTx = true;
                     transaction.amount += output.value;
+                    if (isOrigin)
+                        transaction.intraWallet = true;
                 } else {
                     transaction.to_addresses.push(output.addr);
-                    if (! isOrigin) {
-                        for (var j in myHDWallet.getAccounts()) {
-                            var otherAccount = myHDWallet.getAccount(j);
-                            if (otherAccount.isAddressPartOfAccount(output.addr)) {
+                    for (var j in myHDWallet.getAccounts()) {
+                        var account = myHDWallet.getAccount(j);
+                        if (account.isAddressPartOfAccount(output.addr)) {
+                            transaction.to_account = j;
+                            if (isOrigin)
                                 transaction.intraWallet = true;
-                                break;
-                            }
+                            break;
                         }
                     }
                 }
