@@ -735,11 +735,6 @@ var MyWallet = new function() {
     }
 
     this.archiveLegacyAddr = function(addr) {
-        if (MyWallet.getLegacyActiveAddresses().length <= 1) {
-            MyWallet.makeNotice('error', 'add-error', 'You must leave at least one active address');
-            return;
-        }
-
         var addr = addresses[addr];
         if (addr.tag == null || addr.tag == 0) {
             addr.tag = 2;
