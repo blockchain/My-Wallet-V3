@@ -3178,19 +3178,6 @@ var MyWallet = new function() {
         }
     }
 
-    function encryptPK(base58) {
-        if (double_encryption) {
-            if (dpassword == null)
-                throw 'Cannot encrypt private key without a password';
-
-            return MyWallet.encrypt(base58, sharedKey + dpassword, MyWallet.getSecondPasswordPbkdf2Iterations());
-        } else {
-            return base58;
-        }
-
-        return null;
-    }
-
     this.isBase58 = function(str, base) {
         for (var i = 0; i < str.length; ++i) {
             if (str[i] < 0 || str[i] > 58) {
@@ -3521,6 +3508,19 @@ var MyWallet = new function() {
 
             console.log('Server Time offset ' + serverTimeOffset + 'ms - This offset ' + thisOffset);
         }
+    }
+
+    function encryptPK(base58) {
+        if (double_encryption) {
+            if (dpassword == null)
+                throw 'Cannot encrypt private key without a password';
+
+            return MyWallet.encrypt(base58, sharedKey + dpassword, MyWallet.getSecondPasswordPbkdf2Iterations());
+        } else {
+            return base58;
+        }
+
+        return null;
     }
 
     function encodePK(priv) {
