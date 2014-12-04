@@ -1321,12 +1321,6 @@ var MyWallet = new function() {
             transaction.hash = tx.hash;
             transaction.confirmations = MyWallet.getConfirmationsForTx(MyWallet.getLatestBlock(), tx);
 
-            if(isOrigin) {
-                transaction.from_account = -1;
-            } else {
-                transaction.to_account = -1;
-            }
-
             // transaction.note = tx.note ? tx.note : tx_notes[tx.hash];
 
             if (tx.time > 0) {
