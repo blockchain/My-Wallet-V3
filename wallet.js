@@ -2712,28 +2712,16 @@ var MyWallet = new function() {
         });
     }
 
-    this.makePairingQRCode = function(success, version) {
-
-        MyWallet.getMainPassword(function() {
-            loadScript('wallet/jquery.qrcode', function() {
-                try {
-                    if (version == 1) {
-                        MyWallet.securePost("wallet", { method : 'pairing-encryption-password' }, function(encryption_phrase) {
-                            success($('<div></div>').qrcode({width: 300, height: 300, text: '1|'+ guid + '|' + MyWallet.encrypt(sharedKey + '|' + Crypto.util.bytesToHex(UTF8.stringToBytes(password)), encryption_phrase, MyWallet.getDefaultPbkdf2Iterations())}));
-                        }, function(e) {
-                            MyWallet.makeNotice('error', 'misc-error', e);
-                        });
-                    } else if (version == 0) {
-                        //Depreciate this ASAP
-                        success($('<div></div>').qrcode({width: 300, height: 300, text: guid + '|' + sharedKey + '|' + password}));
-                    }
-                } catch (e) {
-                    MyWallet.makeNotice('error', 'misc-error', e);
-                }
+    this.makePairingCode = function(success, error) {
+        try {
+            MyWallet.securePost('wallet', { method : 'pairing-encryption-password' }, function(encryption_phrase) {
+                success('1|' + guid + '|' + MyWallet.encrypt(sharedKey + '|' + UTF8.stringToBytes(password).toString(), encryption_phrase, MyWallet.getDefaultPbkdf2Iterations()))
+            }, function(e) {
+                error(e);
             });
-        }, function() {
-            MyWallet.logout();
-        });
+        } catch (e) {
+            error(e);
+        }
     }
 
     this.getMainPassword = function(success, error) {
