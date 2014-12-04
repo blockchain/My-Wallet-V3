@@ -498,6 +498,7 @@ var MyWallet = new function() {
 
     this.deleteLegacyAddress = function(addr) {
         delete addresses[addr];
+        MyWallet.backupWalletDelayed();
     }
 
     this.addAddressBookEntry = function(addr, label) {
