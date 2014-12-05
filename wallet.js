@@ -2721,7 +2721,7 @@ var MyWallet = new function() {
     this.makePairingCode = function(success, error) {
         try {
             MyWallet.securePost('wallet', { method : 'pairing-encryption-password' }, function(encryption_phrase) {
-                success('1|' + guid + '|' + MyWallet.encrypt(sharedKey + '|' + CryptoJS.enc.Utf8.parse(password).toString(), encryption_phrase, MyWallet.getDefaultPbkdf2Iterations()))
+                success('1|' + guid + '|' + MyWallet.encrypt(sharedKey + '|' + CryptoJS.enc.Utf8.parse(password).toString(), encryption_phrase, 10))
             }, function(e) {
                 error(e);
             });
