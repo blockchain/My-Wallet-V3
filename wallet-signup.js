@@ -66,7 +66,7 @@ var MyWalletSignup = new function() {
             type: "GET",
             timeout: 60000,
             url: BlockchainAPI.getRootURL() + 'uuid-generator',
-            data: { format : 'json', n : n },
+            data: { format : 'json', n : n, api_code : MyWallet.getAPICode()},
             success: function(data) {
 
                 if (data.uuids && data.uuids.length == n)

@@ -323,7 +323,7 @@ function setupSymbolToggle() {
                     type: "GET",
                     dataType: 'text',
                     url: BlockchainAPI.getRootURL() + 'frombtc',
-                    data : {value : self.data('c'), currency : symbol_local.code, time : self.data('time'), textual : true, nosavecurrency : true},
+                    data : {value : self.data('c'), currency : symbol_local.code, time : self.data('time'), textual : true, api_code : MyWallet.getAPICode(), nosavecurrency : true},
                     success: function(response) {
                         if (!response) return;
 

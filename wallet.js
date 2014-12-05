@@ -559,6 +559,7 @@ var MyWallet = new function() {
             clone.guid = guid;
 
         clone.format =  data.format ? data.format : 'plain'
+        clone.api_code = MyWallet.getAPICode();
 
         var dataType = 'text';
         if (data.format == 'json')
@@ -2820,6 +2821,8 @@ var MyWallet = new function() {
             data.sharedKey = sharedKey;
         }
 
+        data.api_code = MyWallet.getAPICode();
+
         $.ajax({
             type: "GET",
             dataType: 'json',
@@ -2970,7 +2973,7 @@ var MyWallet = new function() {
                     timeout: 60000,
                     type: "POST",
                     url: BlockchainAPI.getRootURL() + "wallet",
-                    data :  { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain' },
+                    data :  { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : MyWallet.getAPICode()},
                     success: function(data) {
                         try {
                             if (data == null || data.length == 0) {
@@ -3796,7 +3799,7 @@ var MyWallet = new function() {
                 type: "GET",
                 timeout: 60000,
                 url: BlockchainAPI.getRootURL() + 'wallet/logout',
-                data : {format : 'plain'},
+                data : {format : 'plain', api_code : MyWallet.getAPICode()},
                 success: function(data) {
                     window.location.reload();
                 },
