@@ -64,8 +64,8 @@ var BlockchainAPI = new function() {
             for (var i in myHDWallet.getAccounts()) {
                 var account = myHDWallet.getAccount(i);
                 if (! account.isArchived()) {
-                    allAddresses = allAddresses.concat(account.getAddresses());
-                    allAddresses = allAddresses.concat(account.getChangeAddresses());
+                    var accountExtendedPublicKey = account.getAccountExtendedKey(false);
+                    allAddresses.push(accountExtendedPublicKey);
                 }
             }
         }

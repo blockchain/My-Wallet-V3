@@ -4,6 +4,7 @@ function HDAccount(wallet, label, idx) {
         idx : idx,
         label : label,
         archived : false,
+        balance : 0,
         paymentRequests : [],
         changeAddressToNTxs : {},
         getAccountJsonData : function() {
@@ -92,8 +93,20 @@ function HDAccount(wallet, label, idx) {
         setUnspentOutputs : function(utxo) {
             return this.wallet.setUnspentOutputs(utxo);
         },                
+        incBalance : function(amount) {
+            this.balance += amount;
+        },
+        decBalance : function(amount) {
+            this.balance -= amount;
+        },
         getBalance : function() {
-            return this.wallet.getBalance();
+            return this.balance;
+        },
+        setBalance : function(balance) {
+            return this.balance = balance;
+        },
+        resetBalance : function() {
+            return this.balance = 0;
         },
         getAddressForPaymentRequest : function(paymentRequest) {
             return this.getAddressAtIdx(paymentRequest.index);
@@ -266,11 +279,11 @@ function HDWallet(seedHex, bip39Password) {
         },
         filterTransactionsForAccount : function(accountIdx, transactions) {
             var account = this.accountArray[accountIdx];
+            
 
             var idx = accountIdx;
 
             var filteredTransactions = [];
-
             var rawTxs = transactions.filter(function(element) {
                return element.account_indexes.indexOf(idx) != -1;
             });
@@ -295,7 +308,7 @@ function HDWallet(seedHex, bip39Password) {
                     if (!output || !output.addr)
                         continue;
 
-                    if (account.isAddressPartOfAccount(output.addr)) {
+                    if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                         isOrigin = true;
                         transaction.amount -= output.value;
                     } else {
@@ -308,15 +321,14 @@ function HDWallet(seedHex, bip39Password) {
                     var output = tx.out[i];
                     if (!output || !output.addr)
                         continue;
-
-                    if (account.isAddressPartOfAccount(output.addr)) {
+                    if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                         transaction.amount += output.value;
                     } else {
                         transaction.to_addresses.push(output.addr);
                         if (! isOrigin) {
                             for (var j in this.getAccounts()) {
                                 var otherAccount = this.getAccount(j);
-                                if (otherAccount.isAddressPartOfAccount(output.addr)) {
+                                if (otherAccount.getAccountExtendedKey(false) == output.xpub.m) {
                                     transaction.intraWallet = true;
                                     break;
                                 }

@@ -955,10 +955,8 @@ var MyWallet = new function() {
 
             for (var j = 0; j < myHDWallet.getAccountsCount(); j++) {
                 var account = myHDWallet.getAccount(j);
-                if (account.isAddressPartOfAccount(output.addr)) {
-                    if (tx.account_indexes.indexOf(j) < 0) {
+                if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                         tx.account_indexes.push(parseInt(j));
-                   }
                 }
             }
 
@@ -987,10 +985,8 @@ var MyWallet = new function() {
 
             for (var j = 0; j < myHDWallet.getAccountsCount(); j++) {
                 var account = myHDWallet.getAccount(j);
-                if (account.isAddressPartOfAccount(output.addr)) {
-                    if (tx.account_indexes.indexOf(j) < 0) {
+                if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                         tx.account_indexes.push(parseInt(j));
-                    }
                 }
 
                 MyWallet.checkToAddTxToPaymentRequestForAccount(account, output.addr, tx.hash, output.value, checkCompleted);
@@ -1291,7 +1287,7 @@ var MyWallet = new function() {
                     transaction.from_addresses.push(output.addr);
                     for (var j in myHDWallet.getAccounts()) {
                         var account = myHDWallet.getAccount(j);
-                        if (account.isAddressPartOfAccount(output.addr)) {
+                        if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                             transaction.from_account = j;
                             break;
                         }
@@ -1314,7 +1310,7 @@ var MyWallet = new function() {
                     transaction.to_addresses.push(output.addr);
                     for (var j in myHDWallet.getAccounts()) {
                         var account = myHDWallet.getAccount(j);
-                        if (account.isAddressPartOfAccount(output.addr)) {
+                        if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                             transaction.to_account = j;
                             if (isOrigin)
                                 transaction.intraWallet = true;
@@ -2335,6 +2331,13 @@ var MyWallet = new function() {
 
             for (var j in myHDWallet.getAccounts()) {
                 var account = myHDWallet.getAccount(j);
+
+                var extPubKey = account.getAccountExtendedKey(false);
+
+                if (extPubKey == obj.addresses[i].address) {
+                    account.setBalance(obj.addresses[i].final_balance);
+                }
+
                 if (account.isAddressPartOfInternalAccountAddress(obj.addresses[i].address)) {
                     account.setChangeAddressNTxs(obj.addresses[i].address, obj.addresses[i].n_tx);
                 }
