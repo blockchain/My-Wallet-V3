@@ -178,6 +178,7 @@ var MyWallet = new function() {
     var didSetGuid = false;
     var amountToRecommendedFee = {};
     var isAccountRecommendedFeesValid = true;
+    var api_code = "0";
 
     var wallet_options = {
         pbkdf2_iterations : default_pbkdf2_iterations, //Number of pbkdf2 iterations to default to for second password and dpasswordhash
@@ -189,6 +190,14 @@ var MyWallet = new function() {
         transactions_per_page : 30, //Number of transactions per page
         additional_seeds : []
     };
+
+    this.setAPICode = function(val) {
+        api_code = val;
+    }
+
+    this.getAPICode = function() {
+        return api_code;
+    }
 
     this.setEncryptedWalletData = function(data) {
         if (!data || data.length == 0) {

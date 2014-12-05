@@ -387,6 +387,20 @@ stores currency code in memory and in local storage
 {function} - error callback function with error message
 
 
+#### `MyWallet.getAPICode();`
+
+##### Returns:
+
+{string}  - api code
+
+
+#### `MyWallet.setAPICode(val)`
+
+##### Parameters:
+
+{string}  - api code
+
+
 
 Legacy API
 ===========
