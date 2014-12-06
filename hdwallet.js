@@ -361,6 +361,18 @@ function HDWallet(seedHex, bip39Password) {
         getAccounts : function() {
             return this.accountArray;
         },
+        createAccountFromExtKey : function(label, extKey) {
+            var accountIdx = this.accountArray.length;
+
+            var walletAccount = new HDWalletAccount(null);
+
+            walletAccount.newNodeFromExtKey(extKey);
+
+            var account = HDAccount(walletAccount, label, this.accountArray.length);
+            this.accountArray.push(account);
+
+            return account;
+        },
         createAccount : function(label) {
             var accountIdx = this.accountArray.length;
 
@@ -396,7 +408,7 @@ function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password) {
 
         console.log("label: ", label);
 
-        var hdaccount = hdwallet.createAccount(label);
+        var hdaccount = hdwallet.createAccountFromExtKey(label, accountPayload.xpriv);
         hdaccount.setIsArchived(archived);
         if (paymentRequests != null) {
             for (var m in paymentRequests) {

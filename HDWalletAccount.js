@@ -23,6 +23,18 @@ function HDWalletAccount(seed, network) {
   this.outputs = {}
 
   // Make a new master key
+  this.newNodeFromExtKey = function(extKey) {
+    this.accountZero = Bitcoin.HDNode.fromBase58(extKey)
+    this.externalAccount = this.accountZero.derive(0);
+    this.internalAccount = this.accountZero.derive(1)
+
+    me.addresses = []
+    me.changeAddresses = []
+
+    me.outputs = {}
+  }
+
+  // Make a new master key
   this.newMasterKey = function(seed) {
     seed = seed || crypto.randomBytes(32)
     masterkey = Bitcoin.HDNode.fromSeedBuffer(seed, network)
@@ -39,7 +51,8 @@ function HDWalletAccount(seed, network) {
     me.outputs = {}
   }
 
-  this.newMasterKey(seed)
+  if (seed)
+    this.newMasterKey(seed)
 
   this.generateAddress = function() {
     var key = this.externalAccount.derive(this.addresses.length)
