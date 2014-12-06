@@ -401,6 +401,19 @@ stores currency code in memory and in local storage
 {string}  - api code
 
 
+#### `MyWallet.getTransactions();`
+
+##### Returns:
+
+{array}  - get all transactions
+
+
+#### `MyWallet.getAllTransactions();`
+
+##### Returns:
+
+{array}  - get all transactions with fields to_account, from_account, from_addresses, to_addresses, etc filled
+
 
 Legacy API
 ===========
