@@ -622,9 +622,6 @@ var BlockchainAPI = new function() {
     }
 
     this.get_unspent = function(fromAddresses, success, error, confirmations, do_not_use_unspent_cache) {
-        //Get unspent outputs
-        MyWallet.sendMonitorEvent({type: "loadingText", message: 'Getting Unspent Outputs', code: 0});
-
         $.retryAjax({
             type: "POST",
             dataType: 'json',
