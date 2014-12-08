@@ -406,7 +406,7 @@ function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password) {
         var change_addresses = accountPayload.change_addresses;
         var paymentRequests = accountPayload.paymentRequests;
 
-        console.log("label: ", label);
+        //console.log("label: ", label);
 
         var hdaccount = hdwallet.createAccountFromExtKey(label, accountPayload.xpriv);
         hdaccount.setIsArchived(archived);
@@ -424,12 +424,12 @@ function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password) {
 
         for (var j = 0; j < external_addresses; j++) {
             var address = hdaccount.generateAddress();
-            console.log("\taddress: ", address);
+            //console.log("\taddress: ", address);
         }
 
         for (var k = 0; k < change_addresses; k++) {
             var changeAddress = hdaccount.generateChangeAddress();
-            console.log("\tchangeAddress: ", changeAddress);
+            //console.log("\tchangeAddress: ", changeAddress);
         }
     }
 
