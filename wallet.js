@@ -1298,12 +1298,9 @@ var MyWallet = new function() {
                         if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                             isOrigin = true;
                             transaction.from_account = j;
+                            transaction.from_addresses.push(output.addr);
                             break;
                         }
-                    }
-
-                    if (! isOrigin) {
-                        transaction.from_addresses.push(output.addr);
                     }
                 }
             }
@@ -1328,15 +1325,12 @@ var MyWallet = new function() {
                         if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                             isTo = true;
                             transaction.to_account = j;
+                            transaction.to_addresses.push(output.addr);
                             if (isOrigin)
                                 transaction.intraWallet = true;
                             break;
                         }
                     }
-                }
-
-                if (! isTo) {
-                    transaction.to_addresses.push(output.addr);
                 }
             }
 
@@ -1382,6 +1376,7 @@ var MyWallet = new function() {
                     isLegacyAddressTx = true;
                     isOrigin = true;
                     transaction.amount -= output.value;
+                    transaction.from_addresses.push(output.addr);
                 } else {
                     transaction.from_addresses.push(output.addr);
                     for (var j in myHDWallet.getAccounts()) {
@@ -1403,6 +1398,7 @@ var MyWallet = new function() {
                 if (MyWallet.isActiveLegacyAddress(output.addr)) {
                     isLegacyAddressTx = true;
                     transaction.amount += output.value;
+                    transaction.to_addresses.push(output.addr);
                     if (isOrigin)
                         transaction.intraWallet = true;
                 } else {
