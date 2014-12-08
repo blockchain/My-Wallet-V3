@@ -426,6 +426,16 @@ stores currency code in memory and in local storage
 {bool}  - is valid address
 
 
+#### `MyWallet.isValidPrivateKey(candidate);`
+
+##### Parameters:
+
+{string} - candidate PrivateKey
+
+##### Returns:
+
+{bool}  - is valid PrivateKey
+
 
 
 Legacy API

@@ -1806,6 +1806,16 @@ var MyWallet = new function() {
         }
     }
 
+    this.isValidPrivateKey = function(candidate) {
+        try {
+            var key = Bitcoin.ECKey.fromWIF(candidate);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+
     this.makeWalletJSON = function(format) {
         return MyWallet.makeCustomWalletJSON(format, guid, sharedKey);
     }
