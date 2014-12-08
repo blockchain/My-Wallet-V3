@@ -1297,7 +1297,7 @@ var MyWallet = new function() {
                         var account = myHDWallet.getAccount(j);
                         if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                             isOrigin = true;
-                            transaction.from_account = j;
+                            transaction.from_account = parseInt(j);
                             transaction.from_addresses.push(output.addr);
                             break;
                         }
@@ -1324,7 +1324,7 @@ var MyWallet = new function() {
                         var account = myHDWallet.getAccount(j);
                         if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                             isTo = true;
-                            transaction.to_account = j;
+                            transaction.to_account = parseInt(j);
                             transaction.to_addresses.push(output.addr);
                             if (isOrigin)
                                 transaction.intraWallet = true;
@@ -1382,7 +1382,7 @@ var MyWallet = new function() {
                     for (var j in myHDWallet.getAccounts()) {
                         var account = myHDWallet.getAccount(j);
                         if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
-                            transaction.from_account = j;
+                            transaction.from_account = parseInt(j);
                             break;
                         }
                     }                    
@@ -1406,7 +1406,7 @@ var MyWallet = new function() {
                     for (var j in myHDWallet.getAccounts()) {
                         var account = myHDWallet.getAccount(j);
                         if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
-                            transaction.to_account = j;
+                            transaction.to_account = parseInt(j);
                             if (isOrigin)
                                 transaction.intraWallet = true;
                             break;
