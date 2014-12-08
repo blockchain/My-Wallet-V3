@@ -1291,6 +1291,7 @@ var MyWallet = new function() {
                 if (MyWallet.isActiveLegacyAddress(output.addr)) {
                     isOrigin = true;
                     transaction.amount -= output.value;
+                    transaction.from_addresses.push(output.addr);
                 } else {
                     for (var j in myHDWallet.getAccounts()) {
                         var account = myHDWallet.getAccount(j);
@@ -1317,6 +1318,7 @@ var MyWallet = new function() {
                 if (MyWallet.isActiveLegacyAddress(output.addr)) {
                     isTo = true;
                     transaction.amount += output.value;
+                    transaction.to_addresses.push(output.addr);
                     if (isOrigin)
                         transaction.intraWallet = true;
                 } else {
