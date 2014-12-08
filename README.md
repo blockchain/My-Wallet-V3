@@ -415,6 +415,19 @@ stores currency code in memory and in local storage
 {array}  - get all transactions with fields to_account, from_account, from_addresses, to_addresses, etc filled
 
 
+#### `MyWallet.isValidAddress(candidate);`
+
+##### Parameters:
+
+{string} - candidate address
+
+##### Returns:
+
+{bool}  - is valid address
+
+
+
+
 Legacy API
 ===========
 

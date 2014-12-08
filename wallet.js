@@ -1797,9 +1797,9 @@ var MyWallet = new function() {
         MyWallet.createAccount("Spending");
     }
 
-    this.isValidAddress = function(address) {
+    this.isValidAddress = function(candidate) {
         try {
-            Bitcoin.Address.fromBase58Check(address);
+            Bitcoin.Address.fromBase58Check(candidate);
             return true;
         } catch (e) {
             return false;
