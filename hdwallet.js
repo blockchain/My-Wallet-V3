@@ -131,24 +131,32 @@ function HDAccount(wallet, label, idx) {
         setPaymentRequests : function(paymentRequests) {
             this.paymentRequests = paymentRequests;
         },
-        generatePaymentRequest : function(amount) {
+        generatePaymentRequest : function(amount, label) {
             for (var i in this.paymentRequests) {
                 var paymentRequest = this.paymentRequests[i];
                 if (paymentRequest.canceled == true) {
+
                     paymentRequest.canceled = false;
                     paymentRequest.complete = false;
                     paymentRequest.amount = amount;
                     paymentRequest.paid = 0;
+                    if (label === null || label === undefined)
+                        label = "";
+                    paymentRequest.label = label;
                     return paymentRequest;
                 }
             }
 
             var address = this.generateAddress();
+            if (label === null || label === undefined)
+                label = "";
+
             var paymentRequest = {amount: amount,
                                    paid: 0,
                                    txidList: [],
                                    canceled : false,
-                                   complete: false,
+                                   complete : false,
+                                   label : label,
                                    index: this.getAddressesCount()-1}
             this.paymentRequests.push(paymentRequest);
             return paymentRequest;

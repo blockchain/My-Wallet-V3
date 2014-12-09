@@ -747,13 +747,16 @@ sets account to `isArchived` and backups wallet
 {array}  - Payment Request objects
 
 
-#### `MyWallet.generatePaymentRequestForAccount(accountIdx, amount);`
+#### `MyWallet.generatePaymentRequestForAccount(accountIdx, amount, label);`
 
 ##### Parameters:
 
 {int} - index of HD wallet account
 
 {int} - Payment Request amount in satoshis
+
+{string} - label
+
 
 ##### Returns:
 

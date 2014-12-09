@@ -1223,9 +1223,9 @@ var MyWallet = new function() {
         return myHDWallet.getAccount(accountIdx).getPaymentRequests();
     }
 
-    this.generatePaymentRequestForAccount = function(accountIdx, amount) {
+    this.generatePaymentRequestForAccount = function(accountIdx, amount, label) {
         var account = myHDWallet.getAccount(accountIdx);
-        var paymentRequest = account.generatePaymentRequest(amount);
+        var paymentRequest = account.generatePaymentRequest(amount, label);
         MyWallet.backupWalletDelayed();
         try {
             ws.send('{"op":"addr_sub", "addr":"'+account.getAddressForPaymentRequest(paymentRequest)+'"}');
