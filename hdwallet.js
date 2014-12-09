@@ -134,7 +134,12 @@ function HDAccount(wallet, label, idx) {
         generatePaymentRequest : function(amount, label) {
             for (var i in this.paymentRequests) {
                 var paymentRequest = this.paymentRequests[i];
-                if (paymentRequest.canceled == true) {
+                if (paymentRequest.canceled == true ||
+                    paymentRequest.amount == 0 ||
+                    paymentRequest.amount == null ||
+                    paymentRequest.label == null ||
+                    paymentRequest.label == "" ||
+                    paymentRequest.paid == 0) {
 
                     paymentRequest.canceled = false;
                     paymentRequest.complete = false;

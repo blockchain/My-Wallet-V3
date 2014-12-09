@@ -1223,7 +1223,7 @@ var MyWallet = new function() {
         return myHDWallet.getAccount(accountIdx).getPaymentRequests();
     }
 
-    this.generatePaymentRequestForAccount = function(accountIdx, amount, label) {
+    this.generateOrReuseEmptyPaymentRequestForAccount = function(accountIdx, amount, label) {
         var account = myHDWallet.getAccount(accountIdx);
         var paymentRequest = account.generatePaymentRequest(amount, label);
         MyWallet.backupWalletDelayed();
@@ -1512,7 +1512,7 @@ var MyWallet = new function() {
 
     this.sendFromLegacyAddressToAccount = function(fromAddresses, toIdx, amount, feeAmount)  {
         var account = myHDWallet.getAccount(toIdx);
-        var paymentRequest = MyWallet.generatePaymentRequestForAccount(toIdx, amount);
+        var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx, amount);
         var address = account.getAddressForPaymentRequest(paymentRequest);
         var obj = initNewTx();
 
@@ -1521,7 +1521,7 @@ var MyWallet = new function() {
         else
             obj.fee = obj.base_fee;
 
-        var paymentRequest = MyWallet.generatePaymentRequestForAccount(toIdx, amount);
+        var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx, amount);
         var to_address = account.getAddressForPaymentRequest(paymentRequest);
         obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(to_address), value : Bitcoin.BigInteger.valueOf(amount)});
         obj.from_addresses = fromAddresses;
@@ -1541,7 +1541,7 @@ var MyWallet = new function() {
                 var obj = initNewTx();
                 obj.fee = obj.base_fee; //Always include a fee
                 var amount = Bitcoin.BigInteger.valueOf(value).subtract(obj.fee);
-                var paymentRequest = MyWallet.generatePaymentRequestForAccount(accountIdx, parseInt(amount.toString()));
+                var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(accountIdx, parseInt(amount.toString()));
                 var to_address = account.getAddressForPaymentRequest(paymentRequest);
  
                 obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(to_address), value : amount});
@@ -1609,7 +1609,7 @@ var MyWallet = new function() {
 
     this.sendToAccount = function(fromIdx, toIdx, amount, feeAmount, note, successCallback, errorCallback)  {
         var account = myHDWallet.getAccount(toIdx);
-        var paymentRequest = MyWallet.generatePaymentRequestForAccount(toIdx, amount);
+        var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx, amount);
         var address = account.getAddressForPaymentRequest(paymentRequest);
         MyWallet.sendBitcoinsForAccount(fromIdx, address, paymentRequest.amount, feeAmount, note, successCallback, errorCallback);
     }
