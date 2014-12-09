@@ -116,6 +116,7 @@ function HDAccount(wallet, label, idx) {
             for (var i in this.paymentRequests) {
                 var paymentRequest = {};
                 paymentRequest.amount = this.paymentRequests[i].amount;
+                paymentRequest.label = this.paymentRequests[i].label;
                 paymentRequest.paid = this.paymentRequests[i].paid;
                 paymentRequest.canceled = this.paymentRequests[i].canceled;
                 paymentRequest.complete = this.paymentRequests[i].complete;
@@ -132,15 +133,17 @@ function HDAccount(wallet, label, idx) {
             this.paymentRequests = paymentRequests;
         },
         generatePaymentRequest : function(amount, label) {
+          console.log("Generating payment request")
+          console.log(amount)
             for (var i in this.paymentRequests) {
                 var paymentRequest = this.paymentRequests[i];
                 if (paymentRequest.canceled == true ||
-                    paymentRequest.amount == 0 ||
-                    paymentRequest.amount == null ||
-                    paymentRequest.label == null ||
-                    paymentRequest.label == "" ||
-                    paymentRequest.paid == 0) {
-
+                    (
+                     (paymentRequest.amount == 0   || paymentRequest.amount == null) &&
+                     (paymentRequest.label == null || paymentRequest.label == "") &&
+                     paymentRequest.paid == 0
+                    )
+                ) { // Reuse:
                     paymentRequest.canceled = false;
                     paymentRequest.complete = false;
                     paymentRequest.amount = amount;
@@ -148,7 +151,7 @@ function HDAccount(wallet, label, idx) {
                     if (label === null || label === undefined)
                         label = "";
                     paymentRequest.label = label;
-                    return paymentRequest;
+                    return paymentRequest; // Return reused request
                 }
             }
 
@@ -166,11 +169,12 @@ function HDAccount(wallet, label, idx) {
             this.paymentRequests.push(paymentRequest);
             return paymentRequest;
         },
-        updatePaymentRequest : function(address, amount) {
+        updatePaymentRequest : function(address, amount, label) {
             var idx = this.wallet.addresses.indexOf(address);
             var paymentRequest = this.paymentRequests[idx];
             if (idx > -1) {
                 paymentRequest.amount = amount;
+                paymentRequest.label = label;
                 return true;
             }
             return false;

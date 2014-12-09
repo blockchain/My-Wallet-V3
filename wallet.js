@@ -1223,9 +1223,20 @@ var MyWallet = new function() {
         return myHDWallet.getAccount(accountIdx).getPaymentRequests();
     }
 
-    this.generateOrReuseEmptyPaymentRequestForAccount = function(accountIdx, amount, label) {
+    this.generateOrReuseEmptyPaymentRequestForAccount = function(accountIdx) {
         var account = myHDWallet.getAccount(accountIdx);
-        var paymentRequest = account.generatePaymentRequest(amount, label);
+        
+        var requests = account.getPaymentRequests();
+        
+        var i, len;
+        for (i = 0,  len = requests.length; i<len; i++) {
+          var request = requests[i]
+          if(request.label === "" && (request.amount == 0)) {
+            return request;
+          }
+        }
+
+        var paymentRequest = account.generatePaymentRequest(0, "");
         MyWallet.backupWalletDelayed();
         try {
             ws.send('{"op":"addr_sub", "addr":"'+account.getAddressForPaymentRequest(paymentRequest)+'"}');
@@ -1233,10 +1244,10 @@ var MyWallet = new function() {
         return paymentRequest
     }
 
-    this.updatePaymentRequestForAccount = function(accountIdx, address, amount) {
+    this.updatePaymentRequestForAccount = function(accountIdx, address, amount, label) {
         var account = myHDWallet.getAccount(accountIdx);
-        var success = account.updatePaymentRequest(address, amount);
-
+        var success = account.updatePaymentRequest(address, amount, label);
+      
         if (success) {
             MyWallet.backupWalletDelayed();
         }
