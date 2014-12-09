@@ -1527,26 +1527,6 @@ var MyWallet = new function() {
         return paidTo;
     }
 
-    this.sendFromLegacyAddressToAccount = function(fromAddresses, toIdx, amount, feeAmount)  {
-        var account = myHDWallet.getAccount(toIdx);
-        var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx, amount);
-        var address = account.getAddressForPaymentRequest(paymentRequest);
-        var obj = initNewTx();
-
-        if (feeAmount != null)
-            obj.fee = Bitcoin.BigInteger.valueOf(feeAmount);
-        else
-            obj.fee = obj.base_fee;
-
-        var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx, amount);
-        var to_address = account.getAddressForPaymentRequest(paymentRequest);
-        obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(to_address), value : Bitcoin.BigInteger.valueOf(amount)});
-        obj.from_addresses = fromAddresses;
-        obj.ready_to_send_header = 'Bitcoins Ready to Send.';
-
-        obj.start();
-    }
-
     this.redeemFromEmailOrMobile = function(accountIdx, privatekey)  {
         try {
             var format = MyWallet.detectPrivateKeyFormat(privatekey);
@@ -1622,6 +1602,39 @@ var MyWallet = new function() {
                     errorCallback(e);
             });
         });
+    }
+
+    this.sendFromLegacyAddressToAccount = function(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback)  {
+        var account = myHDWallet.getAccount(toIdx);
+        var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx, amount);
+        var address = account.getAddressForPaymentRequest(paymentRequest);
+        var obj = initNewTx();
+
+        if (feeAmount != null)
+            obj.fee = Bitcoin.BigInteger.valueOf(feeAmount);
+        else
+            obj.fee = obj.base_fee;
+
+        var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx, amount);
+        var to_address = account.getAddressForPaymentRequest(paymentRequest);
+        obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(to_address), value : Bitcoin.BigInteger.valueOf(amount)});
+        obj.from_addresses = [fromAddress];
+        obj.ready_to_send_header = 'Bitcoins Ready to Send.';
+
+        obj.addListener({
+            on_success : function(e) {
+                successCallback();
+            },
+            on_start : function(e) {
+            },
+            on_error : function(e) {
+                errorCallback(e);
+            }
+        });
+
+        obj.note = note;
+
+        obj.start();
     }
 
     this.sendToAccount = function(fromIdx, toIdx, amount, feeAmount, note, successCallback, errorCallback)  {
