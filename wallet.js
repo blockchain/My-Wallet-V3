@@ -847,8 +847,10 @@ var MyWallet = new function() {
         var format = MyWallet.detectPrivateKeyFormat(privateKeyString);
         var key = MyWallet.privateKeyStringToKey(privateKeyString, format);
         var compressed = (format == 'sipa') ? false : true;
-
-        if (MyWallet.addPrivateKey(key, {compressed: compressed, app_name : IMPORTED_APP_NAME, app_version : IMPORTED_APP_VERSION})) {
+        
+        address = MyWallet.addPrivateKey(key, {compressed: compressed, app_name : IMPORTED_APP_NAME, app_version : IMPORTED_APP_VERSION});
+        
+        if (address) {
 
             //Perform a wallet backup
             MyWallet.backupWallet('update', function() {
@@ -856,6 +858,7 @@ var MyWallet = new function() {
             });
 
             MyWallet.makeNotice('success', 'added-address', 'Imported Bitcoin Address ' + key.pub.getAddress().toString());
+            return address
         } else {
             throw 'Unable to add private key for bitcoin address ' + key.pub.getAddress().toString();
         }
@@ -1820,7 +1823,7 @@ var MyWallet = new function() {
     this.isValidPrivateKey = function(candidate) {
         try {
             var key = Bitcoin.ECKey.fromWIF(candidate);
-            return true;
+            return key.pub.getAddress().toString();
         } catch (e) {
             return false;
         }
