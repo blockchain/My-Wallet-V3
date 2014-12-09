@@ -857,6 +857,9 @@ var MyWallet = new function() {
                 MyWallet.get_history();
             });
 
+            // Update balance for this specific address (rather than all wallet addresses):
+            // BlockchainAPI.get_balances([address], function() { MyWallet.sendEvent('did_update_legacy_address_balance')  },null)
+
             MyWallet.makeNotice('success', 'added-address', 'Imported Bitcoin Address ' + key.pub.getAddress().toString());
             return address
         } else {
@@ -2446,7 +2449,8 @@ var MyWallet = new function() {
 
         for (var i = 0; i < obj.addresses.length; ++i) {
             if (addresses[obj.addresses[i].address])
-                addresses[obj.addresses[i].address].balance = obj.addresses[i].final_balance;
+                MyWallet.setLegacyAddressBalance(obj.addresses[i].address, obj.addresses[i].final_balance)
+                // addresses[obj.addresses[i].address].balance = obj.addresses[i].final_balance;
 
             for (var j in myHDWallet.getAccounts()) {
                 var account = myHDWallet.getAccount(j);
@@ -3886,7 +3890,7 @@ var MyWallet = new function() {
     function internalAddKey(addr, priv) {
         var existing = addresses[addr];
         if (!existing || existing.length == 0) {
-            addresses[addr] = {addr : addr, priv : priv, balance : 0};
+            addresses[addr] = {addr : addr, priv : priv, balance : null};
             return true;
         } else if (!existing.priv && priv) {
             existing.priv = priv;
