@@ -1448,7 +1448,7 @@ var MyWallet = new function() {
     }
 
     this.getTransactionsForAccount = function(accountIdx) {
-        return myHDWallet.filterTransactionsForAccount(accountIdx, MyWallet.getTransactions());
+        return myHDWallet.filterTransactionsForAccount(accountIdx, MyWallet.getTransactions(), paidTo);
     }
 
     this.refreshAllPaymentRequestsAndChangeAddresses = function(successCallback, errorCallback) {
