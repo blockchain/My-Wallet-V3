@@ -73,7 +73,10 @@ function HDAccount(wallet, label, idx) {
             return this.wallet.changeAddresses.length;
         },        
         getAccountExtendedKey : function(isPrivate) {
-            return this.wallet.getAccountZero().toBase58(isPrivate);
+            if (isPrivate)  
+                return this.wallet.getAccountZero().toBase58();
+            else
+                return this.wallet.getAccountZero().neutered().toBase58();
         },
         generateAddress : function() {
             return this.wallet.generateAddress();
