@@ -908,6 +908,13 @@ refreshes all balances across all accounts and addresses
 {int}  - number of accounts
 
 
+#### `MyWallet.getAccount(idx);`
+
+##### Returns:
+
+{int}  - idx of account
+
+
 #### `MyWallet.createAccount(label);`
 
 ##### Parameters:

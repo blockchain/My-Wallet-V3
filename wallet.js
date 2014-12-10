@@ -1748,6 +1748,10 @@ var MyWallet = new function() {
         return myHDWallet.getAccounts();
     }
 
+    this.getAccount = function(idx) {
+        return myHDWallet.getAccount(idx)
+    }
+
     this.getAccountsCount = function() {
         return myHDWallet.getAccountsCount();
     }
