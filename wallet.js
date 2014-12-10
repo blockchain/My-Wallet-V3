@@ -1290,11 +1290,12 @@ var MyWallet = new function() {
         for (var i in rawTxs) {
             var tx = rawTxs[i];
 
-            filteredTransactions[tx.hash] = {from: {account: {}, legacyAddresses: [], externalAddresses: []},
-                                               to: {account: {}, legacyAddresses: [], externalAddresses: []},
+            filteredTransactions[tx.hash] = {from: {account: {}, legacyAddresses: [], externalAddresses: null},
+                                               to: {account: {}, legacyAddresses: [], externalAddresses: null},
                                               fee: 0};
 
             var isOrigin = false;
+
             for (var i = 0; i < tx.inputs.length; ++i) {
                 var output = tx.inputs[i].prev_out;
                 if (!output || !output.addr)
@@ -1313,7 +1314,10 @@ var MyWallet = new function() {
                                 filteredTransactions[tx.hash].from.account = {index: parseInt(j), amount: output.value};
                                 filteredTransactions[tx.hash].fee += output.value;
                             } else {
-                                filteredTransactions[tx.hash].from.externalAddresses.push({address: output.addr, amount: output.value});
+                                if (filteredTransactions[tx.hash].from.externalAddresses == null ||
+                                    output.value > filteredTransactions[tx.hash].from.externalAddresses.amount) {
+                                    filteredTransactions[tx.hash].from.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
+                                }
                                 filteredTransactions[tx.hash].fee += output.value;
                             }
                             break;
@@ -1321,7 +1325,10 @@ var MyWallet = new function() {
                     }
 
                     if (! isOrigin) {
-                        filteredTransactions[tx.hash].from.externalAddresses.push({address: output.addr, amount: output.value});
+                        if (filteredTransactions[tx.hash].from.externalAddresses == null ||
+                            output.value > filteredTransactions[tx.hash].from.externalAddresses.amount) {
+                            filteredTransactions[tx.hash].from.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
+                        }
                         filteredTransactions[tx.hash].fee += output.value;
                     }
                 }
@@ -1346,7 +1353,10 @@ var MyWallet = new function() {
                                 filteredTransactions[tx.hash].to.account = {index: parseInt(j), amount: output.value};
                                 filteredTransactions[tx.hash].fee -= output.value;
                             } else {
-                                filteredTransactions[tx.hash].to.externalAddresses.push({address: output.addr, amount: output.value});
+                                if (filteredTransactions[tx.hash].to.externalAddresses == null ||
+                                    output.value > filteredTransactions[tx.hash].to.externalAddresses.amount) {
+                                    filteredTransactions[tx.hash].to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
+                                }
                                 filteredTransactions[tx.hash].fee -= output.value;
                             }
                             break;
@@ -1354,7 +1364,10 @@ var MyWallet = new function() {
                     }
 
                     if (! isTo) {
-                        filteredTransactions[tx.hash].to.externalAddresses.push({address: output.addr, amount: output.value});
+                        if (filteredTransactions[tx.hash].to.externalAddresses == null ||
+                            output.value > filteredTransactions[tx.hash].to.externalAddresses.amount) {
+                            filteredTransactions[tx.hash].to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
+                        }
                         filteredTransactions[tx.hash].fee -= output.value;
                     }                    
                 }
