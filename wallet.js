@@ -2231,18 +2231,6 @@ var MyWallet = new function() {
             MyWallet.sendEvent('did_set_latest_block');
         }
     }
-
-
-
-    function openTransactionSummaryModal(txIndex, result) {
-        loadScript('wallet/frame-modal', function() {
-            showFrameModal({
-                title : 'Transaction Summary',
-                description : '',
-                src : BlockchainAPI.getRootURL() + 'tx-summary/'+txIndex+'?result='+result+'&symbol_btc='+symbol_btc.code+'&symbol_local='+symbol_local.code
-            });
-        });
-    }
     
     this.getNote = function(tx_hash) {
         return tx_notes[tx_hash];
