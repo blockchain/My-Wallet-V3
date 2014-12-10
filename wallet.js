@@ -581,13 +581,12 @@ var MyWallet = new function() {
     }
 
     function hashPassword(password, iterations) {
-        console.log("Calling hashPassword. Needs refactor for CryptoJS.")
         //N rounds of SHA 256
-        var round_data = Crypto.SHA256(password, {asBytes: true});
+        var round_data = CryptoJS.SHA256(password);
         for (var i = 1; i < iterations; ++i) {
-            round_data = Crypto.SHA256(round_data, {asBytes: true});
+            round_data = CryptoJS.SHA256(round_data);
         }
-        return Crypto.util.bytesToHex(round_data);
+        return round_data.toString();
     }
 
     this.setPbkdf2Iterations = function(pbkdf2_iterations, success) {
@@ -3727,7 +3726,7 @@ var MyWallet = new function() {
     }
 
     this.validateSecondPassword = function(input) {
-        var thash = Crypto.SHA256(sharedKey + input, {asBytes: true});
+        var thash = CryptoJS.SHA256(sharedKey + input);
 
         var password_hash = hashPassword(thash, MyWallet.getSecondPasswordPbkdf2Iterations()-1);  //-1 because we have hashed once in the previous line
 
