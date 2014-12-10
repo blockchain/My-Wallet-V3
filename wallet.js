@@ -3086,33 +3086,7 @@ var MyWallet = new function() {
     this.connectWebSocket = function() {
         webSocketConnect(wsSuccess);
     }
-
-    this.quickSendNoUI = function(to, value, listener) {
-        loadScript('wallet/signer', function() {
-            MyWallet.getSecondPassword(function() {
-                try {
-                    var obj = initNewTx();
-
-                    obj.webworker_resource_prefix = '';
-
-                    obj.from_addresses = MyWallet.getLegacyActiveAddresses();
-
-                    obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(to), value :  parseValueBitcoin(value)});
-
-                    obj.addListener(listener);
-
-                    obj.start();
-                } catch (e){
-                    console.log("quickSendNoUI error: " + e);
-                    listener.on_error(e);
-                }
-            }, function(e) {
-                console.log("getSecondPassword error: " + e);
-                listener.on_error(e);
-            });
-        });
-    }
-
+    
     function emailBackup() {
         MyWallet.sendMonitorEvent({type: "loadingText", message: 'Sending email backup', code: 0});
 
