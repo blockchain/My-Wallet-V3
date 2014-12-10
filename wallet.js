@@ -1617,8 +1617,6 @@ var MyWallet = new function() {
 
     this.sendFromLegacyAddressToAccount = function(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback)  {
         var account = myHDWallet.getAccount(toIdx);
-        var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx, amount);
-        var address = account.getAddressForPaymentRequest(paymentRequest);
         var obj = initNewTx();
 
         if (feeAmount != null)
