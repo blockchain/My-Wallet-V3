@@ -1290,16 +1290,6 @@ var MyWallet = new function() {
         for (var i in rawTxs) {
             var tx = rawTxs[i];
 
-            /*
-            filteredTransactions[tx.hash].from = {};
-            filteredTransactions[tx.hash].from.account = {};
-            filteredTransactions[tx.hash].from.legacyAddresses = [];
-            filteredTransactions[tx.hash].from.externalAddresses = [];
-            filteredTransactions[tx.hash].to = {};
-            filteredTransactions[tx.hash].to.account = {};
-            filteredTransactions[tx.hash].to.legacyAddresses = [];
-            filteredTransactions[tx.hash].to.externalAddresses = [];
-            //*/
             filteredTransactions[tx.hash] = {from: {account: {}, legacyAddresses: [], externalAddresses: []},
                                                to: {account: {}, legacyAddresses: [], externalAddresses: []},
                                               fee: 0};
