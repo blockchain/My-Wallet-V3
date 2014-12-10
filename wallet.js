@@ -1637,6 +1637,13 @@ var MyWallet = new function() {
         obj.start();
     }
 
+    this.sweepLegacyAddressToAccount = function(fromAddress, toIdx, successCallback, errorCallback)  {
+        var obj = initNewTx();
+        var feeAmount = parseInt(obj.base_fee.toString());
+        var amount = MyWallet.getLegacyAddressBalance(fromAddress) - feeAmount;
+        MyWallet.sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, null, successCallback, errorCallback);
+    }
+
     this.sendToAccount = function(fromIdx, toIdx, amount, feeAmount, note, successCallback, errorCallback)  {
         var account = myHDWallet.getAccount(toIdx);
         var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx, amount);
