@@ -2460,31 +2460,6 @@ var MyWallet = new function() {
         MyWallet.sendEvent('did_multiaddr');
     }
 
-    this.handleURI = function(hash, recipient) {
-        loadScript('wallet/jsuri-1.1.1', function() {
-            try {
-                var uri = new Uri(hash);
-
-                var address = new Bitcoin.Address(uri.host());
-
-                recipient.find('input[name="send-to-address"]').val(address.toString());
-
-                var value = parseFloat(uri.getQueryParamValue('amount'));
-
-                if (value > 0 && !isNaN(value)) {
-                    recipient.find('.send-value').val(value);
-                }
-
-            } catch (e) {
-                console.log(e);
-
-                MyWallet.makeNotice('error', 'error', 'Invalid Bitcoin Address or URI');
-            }
-        }, function() {
-            MyWallet.makeNotice('error', 'error', 'Invalid Bitcoin Address or URI');
-        });
-    }
-
     function didDecryptWallet(success) {
 
         //We need to check if the wallet has changed
