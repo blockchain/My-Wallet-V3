@@ -1634,12 +1634,14 @@ var MyWallet = new function() {
 
         obj.addListener({
             on_success : function(e) {
-                successCallback();
+                if (successCallback)
+                    successCallback();
             },
             on_start : function(e) {
             },
             on_error : function(e) {
-                errorCallback(e);
+                if (successCallback)
+                    errorCallback(e);
             }
         });
 
