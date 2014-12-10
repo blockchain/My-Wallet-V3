@@ -4102,53 +4102,6 @@ var MyWallet = new function() {
         return labels;
     }
 
-    this.sweepAddressesModal = function(addresses, extra_private_keys) {
-        MyWallet.getSecondPassword(function() {
-            var modal = $('#sweep-address-modal');
-
-            modal.modal('show');
-
-            BlockchainAPI.get_balance(addresses, function(data) {
-                modal.find('.balance').text('Amount: ' + formatBTC(data));
-            }, function() {
-                modal.find('.balance').text('Error Fetching Balance');
-            });
-
-            var sweepSelect = modal.find('select[name="change"]');
-
-            buildSelect(sweepSelect, true);
-
-            modal.find('.btn.btn-primary').unbind().click(function() {
-                loadScript('wallet/signer', function() {
-                    BlockchainAPI.get_balance(addresses, function(value) {
-                        var obj = initNewTx();
-
-                        var changeVal = sweepSelect.val();
-                        if (changeVal == 'any') {
-                            changeVal = MyWallet.getPreferredLegacyAddress();
-                        }
-
-                        obj.fee = obj.base_fee; //Always include a fee
-                        obj.to_addresses.push({address: new Bitcoin.Address(changeVal), value : BigInteger.valueOf(value).subtract(obj.fee)});
-                        obj.from_addresses = addresses;
-                        obj.extra_private_keys = extra_private_keys;
-
-                        obj.start();
-
-                    }, function() {
-                        MyWallet.makeNotice('error', 'misc-error', 'Error Getting Address Balance');
-                    });
-                });
-
-                modal.modal('hide');
-            });
-
-            modal.find('.btn.btn-secondary').unbind().click(function() {
-                modal.modal('hide');
-            });
-        });
-    }
-
     this.openWindow = function(url) {
         function _hasPopupBlocker(poppedWindow) {
             var result = false;
