@@ -1284,20 +1284,26 @@ var MyWallet = new function() {
     }
 
     this.getAllTransactions = function() {
-        var filteredTransactions = [];
+        var filteredTransactions = {};
 
         var rawTxs = transactions;
 
         for (var i in rawTxs) {
             var tx = rawTxs[i];
-            var transaction = {};
 
-            // Default values:
-            transaction.to_account= null;
-            transaction.from_account = null;
-            transaction.from_addresses = [];
-            transaction.to_addresses = [];
-            transaction.amount = 0;
+            /*
+            filteredTransactions[tx.hash].from = {};
+            filteredTransactions[tx.hash].from.account = {};
+            filteredTransactions[tx.hash].from.legacyAddresses = [];
+            filteredTransactions[tx.hash].from.externalAddresses = [];
+            filteredTransactions[tx.hash].to = {};
+            filteredTransactions[tx.hash].to.account = {};
+            filteredTransactions[tx.hash].to.legacyAddresses = [];
+            filteredTransactions[tx.hash].to.externalAddresses = [];
+            //*/
+            filteredTransactions[tx.hash] = {from: {account: {}, legacyAddresses: [], externalAddresses: []},
+                                               to: {account: {}, legacyAddresses: [], externalAddresses: []},
+                                              fee: 0};
 
             var isOrigin = false;
             for (var i = 0; i < tx.inputs.length; ++i) {
@@ -1307,22 +1313,31 @@ var MyWallet = new function() {
 
                 if (MyWallet.isActiveLegacyAddress(output.addr)) {
                     isOrigin = true;
-                    transaction.amount -= output.value;
-                    transaction.from_addresses.push(output.addr);
+                    filteredTransactions[tx.hash].from.legacyAddresses.push({address: output.addr, amount: output.value});
+                    filteredTransactions[tx.hash].fee += output.value;
                 } else {
                     for (var j in myHDWallet.getAccounts()) {
                         var account = myHDWallet.getAccount(j);
                         if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
-                            isOrigin = true;
-                            transaction.from_account = parseInt(j);
-                            transaction.from_addresses.push(output.addr);
+                            if (! isOrigin) {
+                                isOrigin = true;
+                                filteredTransactions[tx.hash].from.account = {index: parseInt(j), amount: output.value};
+                                filteredTransactions[tx.hash].fee += output.value;
+                            } else {
+                                filteredTransactions[tx.hash].from.externalAddresses.push({address: output.addr, amount: output.value});
+                                filteredTransactions[tx.hash].fee += output.value;
+                            }
                             break;
                         }
+                    }
+
+                    if (! isOrigin) {
+                        filteredTransactions[tx.hash].from.externalAddresses.push({address: output.addr, amount: output.value});
+                        filteredTransactions[tx.hash].fee += output.value;
                     }
                 }
             }
 
-            transaction.intraWallet = false;
             var isTo = false;
             for (var i = 0; i < tx.out.length; ++i) {
                 var output = tx.out[i];
@@ -1331,36 +1346,30 @@ var MyWallet = new function() {
 
                 if (MyWallet.isActiveLegacyAddress(output.addr)) {
                     isTo = true;
-                    transaction.amount += output.value;
-                    transaction.to_addresses.push(output.addr);
-                    if (isOrigin)
-                        transaction.intraWallet = true;
+                    filteredTransactions[tx.hash].to.legacyAddresses.push({address: output.addr, amount: output.value});
+                    filteredTransactions[tx.hash].fee -= output.value;
                 } else {
-                    transaction.to_addresses.push(output.addr);
                     for (var j in myHDWallet.getAccounts()) {
                         var account = myHDWallet.getAccount(j);
                         if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
-                            isTo = true;
-                            transaction.to_account = parseInt(j);
-                            transaction.to_addresses.push(output.addr);
-                            if (isOrigin)
-                                transaction.intraWallet = true;
+                            if (! isTo) {
+                                isTo = true;
+                                filteredTransactions[tx.hash].to.account = {index: parseInt(j), amount: output.value};
+                                filteredTransactions[tx.hash].fee -= output.value;
+                            } else {
+                                filteredTransactions[tx.hash].to.externalAddresses.push({address: output.addr, amount: output.value});
+                                filteredTransactions[tx.hash].fee -= output.value;
+                            }
                             break;
                         }
                     }
+
+                    if (! isTo) {
+                        filteredTransactions[tx.hash].to.externalAddresses.push({address: output.addr, amount: output.value});
+                        filteredTransactions[tx.hash].fee -= output.value;
+                    }                    
                 }
             }
-
-            transaction.hash = tx.hash;
-            transaction.confirmations = MyWallet.getConfirmationsForTx(MyWallet.getLatestBlock(), tx);
-
-            // transaction.note = tx.note ? tx.note : tx_notes[tx.hash];
-
-            if (tx.time > 0) {
-                transaction.txTime = new Date(tx.time * 1000);
-            }
-
-            filteredTransactions.push(transaction);
         }
 
         return filteredTransactions;
