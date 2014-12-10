@@ -766,7 +766,7 @@ sets account to `isArchived` and backups wallet
 {array}  - Payment Request objects
 
 
-#### `MyWallet.generatePaymentRequestForAccount(accountIdx, amount, label);`
+#### `MyWallet.generateOrReuseEmptyPaymentRequestForAccount(accountIdx, amount, label);`
 
 ##### Parameters:
 
