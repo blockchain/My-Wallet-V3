@@ -638,6 +638,38 @@ unarchives address, backups wallet and refreshes balances
 {array}  - Legacy Transactions
 
 
+#### `MyWallet.sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback);`
+
+##### Parameters:
+
+{string} - from address
+
+{int} - index of account
+
+{int} - send amount in satoshis
+
+{int} - fee amount in satoshis
+
+{string} - optional tx note
+
+{function} - success callback function
+
+{function} - error callback function
+
+
+#### `MyWallet.sweepLegacyAddressToAccount(fromAddress, toIdx, successCallback, errorCallback);`
+
+##### Parameters:
+
+{string} - from address
+
+{int} - index of account
+
+{function} - success callback function
+
+{function} - error callback function
+
+
 
 HDWallet API
 ===========
