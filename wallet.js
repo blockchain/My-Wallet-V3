@@ -2178,40 +2178,6 @@ var MyWallet = new function() {
         return preferred.addr;
     }
 
-    this.scanQRCode = function(success, error) {
-
-        var modal = $('#qr-code-reader-modal');
-
-        modal.modal({
-            keyboard: false,
-            backdrop: "static",
-            show: true
-        });
-
-        //WebCam
-        loadScript('wallet/qr.code.reader', function() {
-            QRCodeReader.init(modal, function(data) {
-                QRCodeReader.stop();
-
-                modal.modal('hide');
-
-                success(data);
-            }, function(e) {
-                modal.modal('hide');
-
-                error(e);
-            });
-        }, error);
-
-        modal.find('.btn.btn-secondary').unbind().click(function() {
-            QRCodeReader.stop();
-
-            modal.modal('hide');
-
-            error();
-        });
-    }
-
     this.hasLegacyAddresses = function() {
         return addresses.length != 0;
     }
