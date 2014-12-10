@@ -1425,44 +1425,43 @@ var SharedCoin = new function() {
                         }
 
                         MyWallet.getSecondPassword(function() {
-                            loadScript('wallet/signer', function() {
 
-                                progressModal.show();
+                            progressModal.show();
 
-                                progressModal.disableCancel();
+                            progressModal.disableCancel();
 
-                                var value = precisionToSatoshiBN(el.find('input[name="send-value"]').val());
-                                var address = el.find('input[name="send-to-address"]').val();
+                            var value = precisionToSatoshiBN(el.find('input[name="send-value"]').val());
+                            var address = el.find('input[name="send-to-address"]').val();
 
-                                progressModal.setAddressAndAmount(address, value);
+                            progressModal.setAddressAndAmount(address, value);
 
-                                el.find('input,select,button').prop('disabled', true);
+                            el.find('input,select,button').prop('disabled', true);
 
-                                MyWallet.sendMonitorEvent({type: "loadingText", message: 'Constructing Plan. Please Wait.', code: 0});
+                            MyWallet.sendMonitorEvent({type: "loadingText", message: 'Constructing Plan. Please Wait.', code: 0});
 
-                                var timeSinceLastSubmit = new Date().getTime() - LastSignatureSubmitTime;
+                            var timeSinceLastSubmit = new Date().getTime() - LastSignatureSubmitTime;
 
 
-                                var interval = Math.max(0, MinTimeBetweenSubmits - timeSinceLastSubmit);
+                            var interval = Math.max(0, MinTimeBetweenSubmits - timeSinceLastSubmit);
 
-                                if (interval > 0 )
-                                    $('.loading-indicator').fadeIn(200);
+                            if (interval > 0 )
+                                $('.loading-indicator').fadeIn(200);
 
-                                setTimeout(function() {
-                                    $('.loading-indicator').hide();
+                            setTimeout(function() {
+                                $('.loading-indicator').hide();
 
-                                    SharedCoin.constructPlan(el, function(plan) {
+                                SharedCoin.constructPlan(el, function(plan) {
 
-                                        console.log('Created Plan');
+                                    console.log('Created Plan');
 
-                                        console.log(plan);
+                                    console.log(plan);
 
-                                        plan.execute(success, function(e) {
-                                            error(e, plan);
-                                        });
-                                    }, error);
-                                }, interval)
-                            }, error);
+                                    plan.execute(success, function(e) {
+                                        error(e, plan);
+                                    });
+                                }, error);
+                            }, interval)
+
                         }, error);
                     });
                 }
