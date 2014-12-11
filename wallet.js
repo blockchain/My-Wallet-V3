@@ -444,10 +444,6 @@ var MyWallet = new function() {
         return transactions;
     }
     
-    this.parseTransaction = function(transaction) {
-        return parseTransaction(transaction);
-    }
-
     this.legacyAddressExists = function(address) {
         return addresses[address] != null;
     }
@@ -2316,83 +2312,7 @@ var MyWallet = new function() {
     function isAlphaNumericSpace(input) {
         return /^[\w\-,._  ]+$/.test(input);
     }
-
-    /* For a given transaction, figure out if it was coins moved between 
-    addresses inside the wallet, or coming from someone in the users address
-    book, etc.. Based on getCompactHTML. */
-    function parseTransaction(tx) {
-      var result = {balance: tx.balance, result: tx.result, hash: tx.hash, confirmations: tx.confirmations, doubleSpend: tx.double_spend, coinbase: null, sender: null, receipient: null, intraWallet: null, note: null, txTime: null}
-            
-      var all_from_self = true;
-      if (tx.result >= 0) {
-          for (var i = 0; i < tx.inputs.length; ++i) {
-              var out = tx.inputs[i].prev_out;
-
-              if (!out || !out.addr) {
-                  all_from_self = false;
-                  result.coinbase = true
-              } else {
-                  var my_addr = addresses[out.addr];
-
-                  result.sender = parseOutput(out)
-
-                  if (my_addr)
-                      continue;
-
-                  all_from_self = false;
-                  
-              }
-          }
-      } else if (tx.result < 0) {
-          for (var i = 0; i < tx.out.length; ++i) {
-              var out = tx.out[i];
-
-              var my_addr = addresses[out.addr];
-
-              result.receipient = parseOutput(out)
-
-              if (my_addr && out.type == 0)
-                  continue;
-
-              all_from_self = false;
-
-          }
-      }
-
-      if (all_from_self)
-          result.intraWallet = true;
-
-      result.note = tx.note ? tx.note : tx_notes[tx.hash];
-
-      if (tx.time > 0) {
-        result.txTime = new Date(tx.time * 1000);
-      }
-      
-      return result;
-    }
-    
-    /* Given a transaction output returns information about the sender.
-    */
-    
-    function parseOutput(output) {
-        result = {address: output.addr, label: null}
-      
-        var myAddr = null;
-        if (addresses != null)
-            myAddr = addresses[output.addr];
-
-        if (myAddr != null) {
-            if (myAddr.label != null)
-                result.label = myAddr.label;
-        } else {
-            if (address_book && address_book[output.addr])
-              result.label = address_book[output.addr]
-        }
         
-        return result;
-    }
-
-    
     function parseMultiAddressJSON(obj, cached, checkCompleted) {
         if (!cached) {
             if (obj.mixer_fee) {
@@ -3811,10 +3731,6 @@ var MyWallet = new function() {
         return size;
     };
 
-    function internalDeletePrivateKey(addr) {
-        addresses[addr].priv = null;
-    }
-
     function walletIsFull() {
         if (nKeys(addresses) >= maxAddr) {
             MyWallet.sendMonitorEvent({type: "error", message: 'We currently support a maximum of '+maxAddr+' private keys, please remove some unused ones.', code: 0});
@@ -3859,167 +3775,6 @@ var MyWallet = new function() {
                 }
             });
         }
-    }
-
-    function deleteAddresses(addrs) {
-
-        var modal = $('#delete-address-modal');
-
-        modal.modal({
-            keyboard: true,
-            backdrop: "static",
-            show: true
-        });
-
-        modal.find('.btn.btn-primary').hide();
-        modal.find('.btn.btn-danger').hide();
-
-        $('#change-mind').hide();
-
-        modal.find('#to-delete-address').html(addrs.join(' '));
-
-        modal.find('#delete-balance').empty();
-
-        var dbalance = modal.find('#delete-balance');
-
-        var addrs_with_priv = [];
-        for (var i in addrs) {
-            var address_string = addrs[i];
-            if (addresses[address_string] && addresses[address_string].priv)
-                addrs_with_priv.push(addrs[i]);
-        }
-
-        BlockchainAPI.get_balance(addrs_with_priv, function(data) {
-
-            modal.find('.btn.btn-primary').show(200);
-            modal.find('.btn.btn-danger').show(200);
-
-            dbalance.html('Balance ' + formatBTC(data));
-
-            if (data > 0)
-                dbalance.css('color', 'red');
-            else
-                dbalance.css('color', 'black');
-
-
-        }, function() {
-
-            modal.find('.btn.btn-primary').show(200);
-            modal.find('.btn.btn-danger').show(200);
-
-            dbalance.text('Error Fetching Balance');
-        });
-
-        var isCancelled = false;
-        var i = 0;
-        var interval = null;
-        var changeMindTime = 10;
-
-        changeMind = function() {
-            $('#change-mind').show();
-            $('#change-mind-time').text(changeMindTime - i);
-        };
-
-        modal.find('.btn.btn-primary').unbind().click(function() {
-
-            changeMind();
-
-            modal.find('.btn.btn-primary').hide();
-            modal.find('.btn.btn-danger').hide();
-
-            interval = setInterval(function() {
-
-                if (isCancelled)
-                    return;
-
-                ++i;
-
-                changeMind();
-
-                if (i == changeMindTime) {
-                    //Really delete address
-                    $('#delete-address-modal').modal('hide');
-
-                    MyWallet.makeNotice('warning', 'warning-deleted', 'Private Key Removed From Wallet');
-
-                    for (var ii in addrs) {
-                        internalDeletePrivateKey(addrs[ii]);
-                    }
-
-                    //Update view with remove address
-
-                    MyWallet.backupWallet();
-
-                    clearInterval(interval);
-                }
-
-            }, 1000);
-        });
-
-        modal.find('.btn.btn-danger').unbind().click(function() {
-
-            changeMind();
-
-            modal.find('.btn.btn-primary').hide();
-            modal.find('.btn.btn-danger').hide();
-
-            interval = setInterval(function() {
-
-                if (isCancelled)
-                    return;
-
-                ++i;
-
-                changeMind();
-
-                if (i == changeMindTime) {
-                    try {
-                        //Really delete address
-                        $('#delete-address-modal').modal('hide');
-
-                        MyWallet.makeNotice('warning', 'warning-deleted', 'Address & Private Key Removed From Wallet');
-
-                        for (var ii in addrs) {
-                            MyWallet.deleteLegacyAddress(addrs[ii]);
-                        }
-
-
-                        MyWallet.backupWallet('update', function() {
-                            MyWallet.get_history();
-                        });
-
-                    } finally {
-                        clearInterval(interval);
-                    }
-                }
-
-            }, 1000);
-        });
-
-        modal.unbind().on('hidden', function () {
-            if (interval) {
-                isCancelled = true;
-                clearInterval(interval);
-                interval = null;
-            }
-        });
-
-        modal.find('.btn.btn-secondary').unbind().click(function() {
-            modal.modal('hide');
-        });
-    }
-
-    function getLegacyActiveLabels() {
-        var labels = [];
-        for (var key in address_book) {
-            labels.push(address_book[key]);
-        }
-        for (var key in addresses) {
-            var addr =  addresses[key];
-            if (addr.tag != 2 && addr.label)
-                labels.push(addr.label);
-        }
-        return labels;
     }
 
     this.openWindow = function(url) {
@@ -4080,22 +3835,6 @@ var MyWallet = new function() {
                 break;
         }
     };
-
-    function getSelectionText() {
-        var sel, html = "";
-        if (window.getSelection) {
-            sel = window.getSelection();
-            if (sel.rangeCount) {
-                var frag = sel.getRangeAt(0).cloneContents();
-                var el = document.createElement("div");
-                el.appendChild(frag);
-                html = el.innerText;
-            }
-        } else if (document.selection && document.selection.type == "Text") {
-            html = document.selection.createRange().htmlText;
-        }
-        return html;
-    }
 
     this.detectPrivateKeyFormat = function(key) {
         // 51 characters base58, always starts with a '5'
