@@ -967,7 +967,8 @@ var MyWallet = new function() {
             for (var j = 0; j < myHDWallet.getAccountsCount(); j++) {
                 var account = myHDWallet.getAccount(j);
                 if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
-                        tx.account_indexes.push(parseInt(j));
+                    tx.account_indexes.push(parseInt(j));
+                    result -= parseInt(output.value);
                 }
             }
 
@@ -997,7 +998,8 @@ var MyWallet = new function() {
             for (var j = 0; j < myHDWallet.getAccountsCount(); j++) {
                 var account = myHDWallet.getAccount(j);
                 if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
-                        tx.account_indexes.push(parseInt(j));
+                    tx.account_indexes.push(parseInt(j));
+                    result += parseInt(output.value);
                 }
 
                 MyWallet.checkToAddTxToPaymentRequestForAccount(account, output.addr, tx.hash, output.value, checkCompleted);
@@ -1279,17 +1281,16 @@ var MyWallet = new function() {
     }
 
     this.getAllTransactions = function() {
-        var filteredTransactions = {};
+        var filteredTransactions = [];
 
         var rawTxs = transactions;
 
         for (var i in rawTxs) {
-            var tx = rawTxs[i];
+            var tx = rawTxs[i]; 
 
-            filteredTransactions[tx.hash] = {from: {account: {}, legacyAddresses: [], externalAddresses: null},
-                                               to: {account: {}, legacyAddresses: [], externalAddresses: null},
+            var transaction = {from: {account: null, legacyAddresses: null, externalAddresses: null},
+                                               to: {account: null, legacyAddresses: null, externalAddresses: null},
                                               fee: 0};
-
             var isOrigin = false;
 
             for (var i = 0; i < tx.inputs.length; ++i) {
@@ -1299,37 +1300,40 @@ var MyWallet = new function() {
 
                 if (MyWallet.isActiveLegacyAddress(output.addr)) {
                     isOrigin = true;
-                    filteredTransactions[tx.hash].from.legacyAddresses.push({address: output.addr, amount: output.value});
-                    filteredTransactions[tx.hash].fee += output.value;
+                    if (transaction.from.legacyAddresses == null)
+                        transaction.from.legacyAddresses = [];
+                    transaction.from.legacyAddresses.push({address: output.addr, amount: output.value});
+                    transaction.fee += output.value;
                 } else {
                     for (var j in myHDWallet.getAccounts()) {
                         var account = myHDWallet.getAccount(j);
                         if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                             if (! isOrigin) {
                                 isOrigin = true;
-                                filteredTransactions[tx.hash].from.account = {index: parseInt(j), amount: output.value};
-                                filteredTransactions[tx.hash].fee += output.value;
+                                transaction.from.account = {index: parseInt(j), amount: output.value};
+                                transaction.fee += output.value;
                             } else {
-                                if (filteredTransactions[tx.hash].from.externalAddresses == null ||
-                                    output.value > filteredTransactions[tx.hash].from.externalAddresses.amount) {
-                                    filteredTransactions[tx.hash].from.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
-                                }
-                                filteredTransactions[tx.hash].fee += output.value;
+                                if (transaction.from.externalAddresses == null ||
+                                    output.value > transaction.from.externalAddresses.amount) {
+                                    transaction.from.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
+                                   }
+                                transaction.fee += output.value;
                             }
                             break;
                         }
                     }
 
                     if (! isOrigin) {
-                        if (filteredTransactions[tx.hash].from.externalAddresses == null ||
-                            output.value > filteredTransactions[tx.hash].from.externalAddresses.amount) {
-                            filteredTransactions[tx.hash].from.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
+                        if (transaction.from.externalAddresses == null ||
+                            output.value > transaction.from.externalAddresses.amount) {
+                            transaction.from.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
                         }
-                        filteredTransactions[tx.hash].fee += output.value;
+                        transaction.fee += output.value;
                     }
                 }
             }
 
+            transaction.intraWallet = false;
             var isTo = false;
             for (var i = 0; i < tx.out.length; ++i) {
                 var output = tx.out[i];
@@ -1338,37 +1342,63 @@ var MyWallet = new function() {
 
                 if (MyWallet.isActiveLegacyAddress(output.addr)) {
                     isTo = true;
-                    filteredTransactions[tx.hash].to.legacyAddresses.push({address: output.addr, amount: output.value});
-                    filteredTransactions[tx.hash].fee -= output.value;
+                    if (isOrigin)
+                        transaction.intraWallet = true;
+                    if (transaction.to.legacyAddresses == null)
+                        transaction.to.legacyAddresses = [];
+                    transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
+                    transaction.fee -= output.value;
                 } else {
                     for (var j in myHDWallet.getAccounts()) {
                         var account = myHDWallet.getAccount(j);
                         if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
+                            if (isOrigin)
+                                transaction.intraWallet = true;
+
                             if (! isTo) {
                                 isTo = true;
-                                filteredTransactions[tx.hash].to.account = {index: parseInt(j), amount: output.value};
-                                filteredTransactions[tx.hash].fee -= output.value;
+                                transaction.to.account = {index: parseInt(j), amount: output.value};
+                                transaction.fee -= output.value;
                             } else {
-                                if (filteredTransactions[tx.hash].to.externalAddresses == null ||
-                                    output.value > filteredTransactions[tx.hash].to.externalAddresses.amount) {
-                                    filteredTransactions[tx.hash].to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
+                                if (transaction.to.externalAddresses == null ||
+                                    output.value > transaction.to.externalAddresses.amount) {
+                                    transaction.to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
                                 }
-                                filteredTransactions[tx.hash].fee -= output.value;
+                                transaction.fee -= output.value;
                             }
                             break;
                         }
                     }
 
                     if (! isTo) {
-                        if (filteredTransactions[tx.hash].to.externalAddresses == null ||
-                            output.value > filteredTransactions[tx.hash].to.externalAddresses.amount) {
-                            filteredTransactions[tx.hash].to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
+                        if (transaction.to.externalAddresses == null ||
+                            output.value > transaction.to.externalAddresses.amount) {
+                            transaction.to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
                         }
-                        filteredTransactions[tx.hash].fee -= output.value;
+                        transaction.fee -= output.value;
                     }                    
                 }
             }
+
+            if (tx.result > 0)
+                transaction.sent_received_moved = "received";
+            else if (tx.result < 0)
+                transaction.sent_received_moved = "sent";
+            else
+                transaction.sent_received_moved = "moved";
+
+            transaction.hash = tx.hash;
+            transaction.confirmations = MyWallet.getConfirmationsForTx(MyWallet.getLatestBlock(), tx);
+            transaction.txTime = tx.time;
+
+            transaction.size = tx.size;
+            transaction.tx_index = tx.txIndex;
+            transaction.block_height = tx.blockHeight;
+            transaction.result = tx.result;
+
+            filteredTransactions.push(transaction);
         }
+
 
         return filteredTransactions;
     }
