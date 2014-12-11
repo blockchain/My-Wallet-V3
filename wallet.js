@@ -1390,7 +1390,8 @@ var MyWallet = new function() {
             transaction.hash = tx.hash;
             transaction.confirmations = MyWallet.getConfirmationsForTx(MyWallet.getLatestBlock(), tx);
             transaction.txTime = tx.time;
-
+            transaction.note = tx.note ? tx.note : MyWallet.getNote(tx.hash);
+            transaction.tags = MyWallet.getTags(tx.hash);
             transaction.size = tx.size;
             transaction.tx_index = tx.txIndex;
             transaction.block_height = tx.blockHeight;
