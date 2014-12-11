@@ -10,12 +10,16 @@ describe "HD Wallet", ->
           accountsArrayPayload = [
               {
                   label: "Savings",
+                  xpub: "xpub6CEhipAhE6UangYAYeQUAAMiVHzhroPZRL9we3X2zzrHPsBLSfUGxkz6gZSJNm5iFV6Mf1x2V6f6APXD6YeK8sc72FYtxYrhHsfopCMLNwy",
+                  xpriv: "xprv9yFMKJdoPivHaCThScsTo2QywGADTLfi47ELqf7RSfKJX4rBu8A2QxfcqGjt3kar4RHzZvhpv3UXLQyLuqAcd4X53qpyc6PSBj7LjKftg8f",
                   archived: false,
                   change_addresses: 12,
                   paymentRequests: [{amount: 100, paid: 0, canceled: false, complete: false, index: 0}]
               },
               {
                   label: "Splurge",
+                  xpub: "xpub6CEhipAhE6UaqPj9UHEYpjY1o62ZRqeej116R7Q8rVFS1qPz2qP7kdWhMopXvJD5CoUw17aNiX81d8NJ3PAcQz8KDu5CmoJdovnX7bw5KCy",
+                  xpriv: "xprv9yFMKJdoPivHcuegNFhYTbbHF4C52NvoMn5VcizXJ9iT934qVJ4sCqCDWYWDcXogg9vvBvCDgpR7NXz2W8VzL6F5Pm6k8dxDzwPCgJ2G1oU",
                   archived: false,
                   change_addresses: 2,
                   paymentRequests: []

@@ -160,7 +160,7 @@ function HDAccount(wallet, label, idx) {
 
             var address = this.generateAddress();
             if (label === null || label === undefined)
-                label = "";
+                label = ""; 
 
             var paymentRequest = {amount: amount,
                                    paid: 0,
