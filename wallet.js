@@ -3109,7 +3109,7 @@ var MyWallet = new function() {
             MyWallet.decryptWallet(crypted, password, function(obj) {
                 try {
                     var old_checksum = payload_checksum;
-                    MyWallet.sendMonitorEvent({type: "loadingText", message: 'Saving wallet', code: 0});
+                    MyWallet.sendEvent('on_backup_wallet_start');
 
                     MyWallet.setEncryptedWalletData(crypted);
 
