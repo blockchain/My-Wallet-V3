@@ -1352,15 +1352,22 @@ var MyWallet = new function() {
                     for (var j in myHDWallet.getAccounts()) {
                         var account = myHDWallet.getAccount(j);
                         if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
-                            if (isOrigin)
-                                transaction.intraWallet = true;
-
                             if (! isTo) {
-                                isTo = true;
-                                transaction.to.account = {index: parseInt(j), amount: output.value};
+                                if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
+                                    transaction.from.account.amount -= output.value;
+                                } else {
+                                    if (isOrigin)
+                                        transaction.intraWallet = true;
+
+                                    isTo = true;
+                                    transaction.to.account = {index: parseInt(j), amount: output.value};                                    
+                                }
+
                                 transaction.fee -= output.value;
                             } else {
-                                if (transaction.to.externalAddresses == null ||
+                                if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
+                                    transaction.from.account.amount -= output.value;
+                                } else if (transaction.to.externalAddresses == null ||
                                     output.value > transaction.to.externalAddresses.amount) {
                                     transaction.to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
                                 }
