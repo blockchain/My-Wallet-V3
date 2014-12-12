@@ -1236,7 +1236,7 @@ function initNewTx() {
                             }
                         } catch (e) {
                             //An error, but probably recoverable
-                            MyWallet.makeNotice('info', 'tx-error', e);
+                            MyWallet.sendMonitorEvent({type: "error", message: e, platform: ""});
                         }
                     }
 

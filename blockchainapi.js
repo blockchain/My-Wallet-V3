@@ -233,11 +233,11 @@ var BlockchainAPI = new function() {
         }
 
         MyWallet.securePost("wallet"+extra, { length : (value+'').length, payload : value+'', method : method }, function(data) {
-            MyWallet.makeNotice('success', method + '-success', data);
+            MyWallet.sendMonitorEvent({type: "success", message: method + '-success' + data, platform: ""});
 
             if (success) success();
         }, function(data) {
-            MyWallet.makeNotice('error', method + '-error', data.responseText);
+            MyWallet.sendMonitorEvent({type: "error", message: method + '-error' + data.responseText, platform: ""});
 
             if (error) error();
         });
@@ -304,7 +304,7 @@ var BlockchainAPI = new function() {
             if (successCallback)
                 successCallback(google_secret_url);
         }, function(data) {
-            MyWallet.makeNotice('error', 'misc-error', data.responseText);
+            MyWallet.sendMonitorEvent({type: "error", message: data.responseText, platform: ""});
             if (errorCallback)
                 errorCallback(data.responseText);
         });
@@ -487,21 +487,21 @@ var BlockchainAPI = new function() {
                     MyWallet.get_history(function() {
                         if (transactions.length == 0 || transactions[0].txIndex == first_tx_index) {
                             BlockchainAPI.get_rejection_reason(tx_hash, function(reason) {
-                                MyWallet.makeNotice('error', 'tx-error', reason);
+                                MyWallet.sendMonitorEvent({type: "error", message: reason, platform: ""});
                             }, function() {
                                 if (transactions.length == 0 || transactions[0].txIndex == first_tx_index) {
                                     MyWallet.get_history();
                                 }
                             }, function() {
                                 if (transactions.length == 0 || transactions[0].txIndex == first_tx_index) {
-                                    MyWallet.makeNotice('error', 'tx-error', 'Unknown Error Pushing Transaction');
+                                    MyWallet.sendMonitorEvent({type: "error", message: 'Unknown Error Pushing Transaction', platform: ""});
                                 }
                             });
                         } else {
                             playSound('beep');
                         }
                     }, function() {
-                        MyWallet.makeNotice('error', 'tx-error', 'Unable to determine if transaction was submitted. Please re-login.');
+                        MyWallet.sendMonitorEvent({type: "error", message: 'Unable to determine if transaction was submitted. Please re-login.', platform: ""});
                     });
                 }
 
@@ -635,7 +635,7 @@ var BlockchainAPI = new function() {
                     }
 
                     if (obj.notice != null) {
-                        MyWallet.makeNotice('notice', 'misc-notice', obj.notice);
+                        MyWallet.sendMonitorEvent({type: "success", message: obj.notice, platform: ""});
                     }
 
                     //Save the unspent cache

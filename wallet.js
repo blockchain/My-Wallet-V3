@@ -740,7 +740,7 @@ var MyWallet = new function() {
                 MyWallet.get_history();
             });
         } else {
-            MyWallet.makeNotice('error', 'add-error', 'Cannot Unarchive This Address');
+            MyWallet.sendMonitorEvent({type: "error", message: 'Cannot Unarchive This Address', platform: ""});
         }
     }
 
@@ -755,7 +755,7 @@ var MyWallet = new function() {
             });
 
         } else {
-            MyWallet.makeNotice('error', 'add-error', 'Cannot Archive This Address');
+            MyWallet.sendMonitorEvent({type: "error", message: 'Cannot Archive This Address', platform: ""});
         }
     }
     this.addWatchOnlyLegacyAddress = function(addressString) {
@@ -767,7 +767,7 @@ var MyWallet = new function() {
 
         try {
             if (internalAddKey(addressString)) {
-                MyWallet.makeNotice('success', 'added-address', 'Successfully Added Address ' + address);
+                MyWallet.sendMonitorEvent({type: "success", message: 'Successfully Added Address ' + address, platform: ""});
 
                 try {
                     ws.send('{"op":"addr_sub", "addr":"'+addressString+'"}');
@@ -781,7 +781,7 @@ var MyWallet = new function() {
                 throw 'Wallet Full Or Addresses Exists'
             }
         } catch (e) {
-            MyWallet.makeNotice('error', 'misc-error', e);
+            MyWallet.sendMonitorEvent({type: "error", message: e, platform: ""});
         }
     }
 
@@ -855,7 +855,7 @@ var MyWallet = new function() {
             // Update balance for this specific address (rather than all wallet addresses):
             // BlockchainAPI.get_balances([address], function() { MyWallet.sendEvent('did_update_legacy_address_balance')  },null)
 
-            MyWallet.makeNotice('success', 'added-address', 'Imported Bitcoin Address ' + key.pub.getAddress().toString());
+            MyWallet.sendMonitorEvent({type: "success", message: 'Imported Bitcoin Address ' + key.pub.getAddress().toString(), platform: ""});
             return address
         } else {
             throw 'Unable to add private key for bitcoin address ' + key.pub.getAddress().toString();
@@ -1139,14 +1139,6 @@ var MyWallet = new function() {
     }
 
     var logout_status = 'ok';
-
-    this.makeNotice = function(type, id, msg, timeout) {
-        if (msg == null || msg.length == 0)
-            return;
-
-        console.log(msg);
-        MyWallet.sendEvent("notice", {type: type, id: id, msg: msg});
-    }
 
     this.pkBytesToSipa = function(bytes, addr) {
         var bytesBigInt = new BigInteger.fromBuffer(bytes);
@@ -1593,11 +1585,11 @@ var MyWallet = new function() {
 
                 obj.start();
             }, function() {
-                MyWallet.makeNotice('error', 'misc-error', 'Error Getting Address Balance');
+                MyWallet.sendMonitorEvent({type: "error", message: 'Error Getting Address Balance', platform: ""});
             });
         } catch (e) {
             console.log(e);
-            MyWallet.makeNotice('error', 'error-addr', 'Error Decoding Private Key. Could not claim coins.');
+            MyWallet.sendMonitorEvent({type: "error", message: 'Error Decoding Private Key. Could not claim coins.', platform: ""});
         }        
     }
 
@@ -1610,7 +1602,7 @@ var MyWallet = new function() {
         MyWallet.setLegacyAddressLabel(address, email + ' Sent Via Email');
 
         MyWallet.backupWallet('update', function() {
-            MyWallet.makeNotice('info', 'new-address', 'Generated new Bitcoin Address ' + address);
+            MyWallet.sendMonitorEvent({type: "info", message: 'Generated new Bitcoin Address ' + address, platform: ""});
 
             MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
                 var tx = myHDWallet.getAccount(accountIdx).createTx(address, value, fixedFee);
@@ -1714,7 +1706,7 @@ var MyWallet = new function() {
         MyWallet.setLegacyAddressLabel(address, mobile + ' Sent Via SMS');
 
         MyWallet.backupWallet('update', function() {
-            MyWallet.makeNotice('info', 'new-address', 'Generated new Bitcoin Address ' + address);
+            MyWallet.sendMonitorEvent({type: "info", message: 'Generated new Bitcoin Address ' + address + address, platform: ""});
 
             MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
                 var tx = myHDWallet.getAccount(accountIdx).createTx(address, value, fixedFee);
@@ -2367,7 +2359,7 @@ var MyWallet = new function() {
                     setBTCSymbol(obj.info.symbol_btc);
 
                 if (obj.info.notice)
-                    MyWallet.makeNotice('error', 'misc-error', obj.info.notice);                
+                    MyWallet.sendMonitorEvent({type: "error", message: obj.info.notice, platform: ""});
             }
         }
 
@@ -2530,8 +2522,8 @@ var MyWallet = new function() {
                 for (var i = 0; i < obj.keys.length; ++i) {
                     var key = obj.keys[i];
                     if (!key.addr || !isAlphaNumericSpace(key.addr)) {
-                        MyWallet.makeNotice('error', 'null-error', 'Your wallet contains an invalid address. This is a sign of possible corruption, please double check all your BTC is accounted for. Backup your wallet to remove this error.', 15000);
-                        continue;
+                        MyWallet.sendMonitorEvent({type: "error", message: 'Your wallet contains an invalid address. This is a sign of possible corruption, please double check all your BTC is accounted for. Backup your wallet to remove this error.', platform: ""});
+                            continue;
                     }
 
                     if (key.tag == 1 || !isAlphaNumericSpace(key.tag)) {
@@ -2737,7 +2729,7 @@ var MyWallet = new function() {
                 setTimeout(function() {
                     modal.modal('hide');
 
-                    try { ccopy(); } catch (e) { MyWallet.makeNotice('error', 'misc-error', e); }
+                    try { ccopy(); } catch (e) { MyWallet.sendMonitorEvent({type: "error", message: e, platform: ""}); }
                 }, 10);
             } else {
                 modal.modal('hide');
@@ -2757,7 +2749,7 @@ var MyWallet = new function() {
                 success = null;
 
                 setTimeout(function() {
-                    try { ccopy(); } catch (e) { MyWallet.makeNotice('error', 'misc-error', e); }
+                    try { ccopy(); } catch (e) { MyWallet.sendMonitorEvent({type: "error", message: e, platform: ""}); }
                 }, 10);
             }
         });
@@ -2786,13 +2778,13 @@ var MyWallet = new function() {
                 last_input_main_password = new Date().getTime();
 
                 if (success) {
-                    try { success(password); } catch (e) { MyWallet.makeNotice('error', 'misc-error', e); }
+                    try { success(password); } catch (e) { MyWallet.sendMonitorEvent({type: "error", message: e, platform: ""}); }
                 }
             } else {
-                MyWallet.makeNotice('error', 'misc-error', 'Password incorrect.');
+                MyWallet.sendMonitorEvent({type: "error", message: 'Password incorrect.', platform: ""});
 
                 if (error) {
-                    try { error(); } catch (e) { MyWallet.makeNotice('error', 'misc-error', e); }
+                    try { error(); } catch (e) { MyWallet.sendMonitorEvent({type: "error", message: e, platform: ""}); }
                 }
             }
         }, error);
@@ -2801,7 +2793,7 @@ var MyWallet = new function() {
     this.getSecondPassword = function(success, error) {
         if (!double_encryption || dpassword != null) {
             if (success) {
-                try { success(dpassword); } catch (e) { MyWallet.makeNotice('error', 'misc-error', e);  }
+                try { success(dpassword); } catch (e) { MyWallet.sendMonitorEvent({type: "error", message: e, platform: ""});  }
             }
             return;
         }
@@ -2810,18 +2802,18 @@ var MyWallet = new function() {
             try {
                 if (MyWallet.validateSecondPassword(_password)) {
                     if (success) {
-                        try { success(_password); } catch (e) { console.log(e); MyWallet.makeNotice('error', 'misc-error', e); }
+                        try { success(_password); } catch (e) { console.log(e); MyWallet.sendMonitorEvent({type: "error", message: e, platform: ""}); }
                     }
                 } else {
-                    MyWallet.makeNotice('error', 'misc-error', 'Password incorrect.');
+                    MyWallet.sendMonitorEvent({type: "error", message: 'Password incorrect.', platform: ""});
 
                     if (error) {
-                        try { error(); } catch (e) { MyWallet.makeNotice('error', 'misc-error', e); }
+                        try { error(); } catch (e) { MyWallet.sendMonitorEvent({type: "error", message: e, platform: ""}); }
                     }
                 }
             } catch (e) {
                 if (error) {
-                    try { error(); } catch (e) { MyWallet.makeNotice('error', 'misc-error', e); }
+                    try { error(); } catch (e) { MyWallet.sendMonitorEvent({type: "error", message: e, platform: ""}); }
                 }
             }
         }, error);
@@ -3066,9 +3058,9 @@ var MyWallet = new function() {
         MyWallet.sendMonitorEvent({type: "info", message: 'Sending email backup', platform: "iOS"});
 
         MyWallet.securePost("wallet", { method : 'email-backup' }, function(data) {
-            MyWallet.makeNotice('success', 'backup-success', data);
+            MyWallet.sendMonitorEvent({type: "success", message: 'backup-success' + data, platform: ""});
         }, function(e) {
-            MyWallet.makeNotice('error', 'misc-error', e.responseText);
+            MyWallet.sendMonitorEvent({type: "error", message: e.responseText, platform: ""});
         });
     }
 
@@ -3115,7 +3107,7 @@ var MyWallet = new function() {
         var _errorcallback = function(e) {
             MyWallet.sendEvent('on_backup_wallet_error')
 
-            MyWallet.sendMonitorEvent({type: "error", message: 'Error Saving Wallet: ' + e, platform: "");
+            MyWallet.sendMonitorEvent({type: "error", message: 'Error Saving Wallet: ' + e, platform: ""});
 
             //Fetch the wallet agin from server
             MyWallet.getWallet();
@@ -3847,7 +3839,7 @@ var MyWallet = new function() {
         window.open(url, null, "scroll=1,status=1,location=1,toolbar=1");
 
         if (_hasPopupBlocker(window)) {
-            MyWallet.makeNotice('error', 'misc-error', "Popup Blocked. Try and click again.");
+            MyWallet.sendMonitorEvent({type: "error", message: "Popup Blocked. Try and click again.", platform: ""});
             return false;
         } else {
             return true;
