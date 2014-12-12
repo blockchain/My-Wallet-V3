@@ -304,7 +304,7 @@ var BlockchainAPI = new function() {
             if (successCallback)
                 successCallback(google_secret_url);
         }, function(data) {
-            MyWallet.sendMonitorEvent({type: "error", message: data.responseText, platform: ""});
+            MyWallet.sendEvent("msg", {type: "error", message: data.responseText, platform: ""});
             if (errorCallback)
                 errorCallback(data.responseText);
         });
