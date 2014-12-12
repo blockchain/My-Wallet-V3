@@ -345,7 +345,7 @@ function startTxUI(el, type, pending_transaction, dont_ask_for_anon) {
                     //We have the transaction ready to send, check if were online or offline
                     var btn = self.modal.find('.btn.btn-primary');
 
-                    MyWallet.sendMonitorEvent({type: "loadingText", message: 'Checking Connectivity', code: 0});
+                    MyWallet.sendMonitorEvent({type: "info", message: 'Checking Connectivity', platform: "iOS"});
 
                     $.ajax({
                         timeout: 60000,
@@ -718,7 +718,7 @@ function startTxUI(el, type, pending_transaction, dont_ask_for_anon) {
                                         throw 'Invalid Bitcoin Address';
                                     }
 
-                                    MyWallet.sendMonitorEvent({type: "loadingText", message: 'Creating Forwarding Address', code: 0});
+                                    MyWallet.sendMonitorEvent({type: "info", message: 'Creating Forwarding Address', platform: "iOS"});
 
                                     MyWallet.securePost("forwarder", { action : "create-mix", address : address, shared : true, format : 'json'}, function(obj) {
                                         try {
@@ -1102,7 +1102,7 @@ function initNewTx() {
                                     throw 'Strange Script';
 
                             } catch(e) {
-                                MyWallet.sendMonitorEvent({type: "error", message: 'Error Saving Wallet: ' + e, code: 0}); //Not a fatal error
+                                MyWallet.sendMonitorEvent({type: "error", message: 'Error Saving Wallet: ' + e, platform: ""}); //Not a fatal error
                                 continue;
                             }
 
@@ -1744,7 +1744,7 @@ function initNewTx() {
             console.log(e);
 
             if(e) {
-                MyWallet.sendMonitorEvent({type: "error", message: e, code: 0});
+                MyWallet.sendMonitorEvent({type: "error", message: e, platform: ""});
             }
         },
         on_begin_signing : function() {

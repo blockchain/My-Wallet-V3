@@ -1547,7 +1547,7 @@ var MyWallet = new function() {
                 errorCallback(e);
             }
             //TODO: not clean
-            MyWallet.sendMonitorEvent({type: "error", message: e.responseText ? e.responseText : e.message, code: 0});
+            MyWallet.sendMonitorEvent({type: "error", message: e.responseText ? e.responseText : e.message, platform: ""});
         }, 0, true);
     }
 
@@ -2474,7 +2474,7 @@ var MyWallet = new function() {
         if (payload_checksum && payload_checksum.length > 0)
             data.checksum = payload_checksum;
 
-        MyWallet.sendMonitorEvent({type: "loadingText", message: "Checking For Wallet Updates", code: 0});
+        MyWallet.sendMonitorEvent({type: "info", message: "Checking For Wallet Updates", platform: "iOS"});
 
 
         MyWallet.securePost("wallet", data, function(obj) {
@@ -2843,7 +2843,7 @@ var MyWallet = new function() {
         guid = user_guid;
         sharedKey = shared_key;
 
-        MyWallet.sendMonitorEvent({type: "loadingText", message: 'Downloading Wallet', code: 0});
+        MyWallet.sendMonitorEvent({type: "info", message: 'Downloading Wallet', platform: "iOS"});
 
         var clientTime=(new Date()).getTime();
         var data = {format : 'json', resend_code : resend_code, ct : clientTime};
@@ -2868,7 +2868,7 @@ var MyWallet = new function() {
                 MyWallet.handleNTPResponse(obj, clientTime);
 
                 if (!obj.guid) {
-                    MyWallet.sendMonitorEvent({type: "error", message: 'Server returned null guid.', code: 0});
+                    MyWallet.sendMonitorEvent({type: "error", message: 'Server returned null guid.', platform: ""});
                     other_error('Server returned null guid.');
                     return;
                 }
@@ -2894,11 +2894,11 @@ var MyWallet = new function() {
                 setBTCSymbol(obj.symbol_btc);
 
                 if (obj.initial_error) {
-                    MyWallet.sendMonitorEvent({type: "error", message: obj.initial_error, code: 0});
+                    MyWallet.sendMonitorEvent({type: "error", message: obj.initial_error, platform: ""});
                 }
 
                 if (obj.initial_success) {
-                    MyWallet.sendMonitorEvent({type: "success", message: obj.initial_success, code: 0});
+                    MyWallet.sendMonitorEvent({type: "success", message: obj.initial_success, platform: ""});
                 }
 
                 MyStore.get('guid', function(local_guid) {
@@ -2951,16 +2951,16 @@ var MyWallet = new function() {
                                 }
 
                                 if (obj.initial_error) {
-                                    MyWallet.sendMonitorEvent({type: "error", message: obj.initial_error, code: 0});
+                                    MyWallet.sendMonitorEvent({type: "error", message: obj.initial_error, platform: ""});
                                 }
 
                                 return;
                             } catch (ex) {}
 
                             if (e.responseText)
-                                MyWallet.sendMonitorEvent({type: "error", message: e.responseText, code: 0});
+                                MyWallet.sendMonitorEvent({type: "error", message: e.responseText, platform: ""});
                             else
-                                MyWallet.sendMonitorEvent({type: "error", message: 'Error changing wallet identifier', code: 0});
+                                MyWallet.sendMonitorEvent({type: "error", message: 'Error changing wallet identifier', platform: ""});
                         }
                     });
                 });
@@ -2976,7 +2976,7 @@ var MyWallet = new function() {
 
         function _error(e) {
             isRestoringWallet = false;
-            MyWallet.sendMonitorEvent({type: "error", message: e, code: 0});
+            MyWallet.sendMonitorEvent({type: "error", message: e, platform: ""});
 
             MyWallet.sendEvent('error_restoring_wallet');
             other_error(e);
@@ -2992,7 +2992,7 @@ var MyWallet = new function() {
 
             //If we don't have any wallet data then we must have two factor authentication enabled
             if (encrypted_wallet_data == null || encrypted_wallet_data.length == 0) {
-                MyWallet.sendMonitorEvent({type: "loadingText", message: 'Validating Authentication key', code: 0});
+                MyWallet.sendMonitorEvent({type: "info", message: 'Validating Authentication key', platform: "iOS"});
 
                 if (two_factor_auth_key == null) {
                     other_error('Two Factor Authentication code this null');
@@ -3063,7 +3063,7 @@ var MyWallet = new function() {
     }
     
     function emailBackup() {
-        MyWallet.sendMonitorEvent({type: "loadingText", message: 'Sending email backup', code: 0});
+        MyWallet.sendMonitorEvent({type: "info", message: 'Sending email backup', platform: "iOS"});
 
         MyWallet.securePost("wallet", { method : 'email-backup' }, function(data) {
             MyWallet.makeNotice('success', 'backup-success', data);
@@ -3115,7 +3115,7 @@ var MyWallet = new function() {
         var _errorcallback = function(e) {
             MyWallet.sendEvent('on_backup_wallet_error')
 
-            MyWallet.sendMonitorEvent({type: "error", message: 'Error Saving Wallet: ' + e, code: 0});
+            MyWallet.sendMonitorEvent({type: "error", message: 'Error Saving Wallet: ' + e, platform: "");
 
             //Fetch the wallet agin from server
             MyWallet.getWallet();
@@ -3247,7 +3247,7 @@ var MyWallet = new function() {
 
     this.decryptWallet = function(data, password, success, error) {
         try {
-            MyWallet.sendMonitorEvent({type: "loadingText", message: 'Decrypting Wallet', code: 0});
+            MyWallet.sendMonitorEvent({type: "info", message: 'Decrypting Wallet', platform: "iOS"});
 
             MyWallet.sendEvent('on_wallet_decrypt_start')
 
@@ -3284,7 +3284,7 @@ var MyWallet = new function() {
                     _success(root, obj);
                 } catch (e) {
                     _error('Error Decrypting Wallet. Please check your password is correct.');
-                    MyWallet.sendMonitorEvent({type: "loadingText", message: 'Error Decrypting Wallet. Please check your password is correct.', code: 0});
+                    MyWallet.sendMonitorEvent({type: "info", message: 'Error Decrypting Wallet. Please check your password is correct.', platform: "iOS"});
                 }
             };
             
@@ -3325,7 +3325,7 @@ var MyWallet = new function() {
                     }
                 }, function() {
                     _error('Error Decrypting Wallet. Please check your password is correct.');
-                    MyWallet.sendMonitorEvent({type: "loadingText", message: 'Error Decrypting Wallet. Please check your password is correct.', code: 0});
+                    MyWallet.sendMonitorEvent({type: "info", message: 'Error Decrypting Wallet. Please check your password is correct.', platform: "iOS"});
                 });
             }
         } catch (e) {
@@ -3721,7 +3721,7 @@ var MyWallet = new function() {
             }
         }
 
-        MyWallet.sendMonitorEvent({type: "success", message: 'wallet-success ' + 'Wallet verified.', code: 0});
+        MyWallet.sendMonitorEvent({type: "success", message: 'wallet-success ' + 'Wallet verified.', platform: ""});
     }
 
     this.changePassword = function(new_password, success, error) {
@@ -3771,7 +3771,7 @@ var MyWallet = new function() {
 
     function walletIsFull() {
         if (nKeys(addresses) >= maxAddr) {
-            MyWallet.sendMonitorEvent({type: "error", message: 'We currently support a maximum of '+maxAddr+' private keys, please remove some unused ones.', code: 0});
+            MyWallet.sendMonitorEvent({type: "error", message: 'We currently support a maximum of '+maxAddr+' private keys, please remove some unused ones.', platform: ""});
             return true;
         }
 

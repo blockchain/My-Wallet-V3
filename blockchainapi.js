@@ -49,7 +49,7 @@ var BlockchainAPI = new function() {
     }
 
     this.get_history = function(success, error, tx_filter, offset, n) {
-        MyWallet.sendMonitorEvent({type: "info", message: 'Loading transactions', code: 0});
+        MyWallet.sendMonitorEvent({type: "info", message: 'Loading transactions', platform: ""});
 
         var clientTime=(new Date()).getTime();
 
@@ -100,7 +100,7 @@ var BlockchainAPI = new function() {
             timeout: AjaxTimeout,
             success: function(obj) {
                 if (obj.error != null) {
-                    MyWallet.sendMonitorEvent({type: "error", message: obj.error, code: 0});
+                    MyWallet.sendMonitorEvent({type: "error", message: obj.error, platform: ""});
                 }
 
                 MyWallet.handleNTPResponse(obj, clientTime);
@@ -113,7 +113,7 @@ var BlockchainAPI = new function() {
 
                     success(obj);
                 } catch (e) {
-                    MyWallet.sendMonitorEvent({type: "error", message: e, code: 0});
+                    MyWallet.sendMonitorEvent({type: "error", message: e, platform: ""});
 
                     error();
                 }
@@ -121,9 +121,9 @@ var BlockchainAPI = new function() {
             error : function(data) {
 
                 if (data.responseText)
-                    MyWallet.sendMonitorEvent({type: "error", message: data.responseText, code: 0});
+                    MyWallet.sendMonitorEvent({type: "error", message: data.responseText, platform: ""});
                 else
-                    MyWallet.sendMonitorEvent({type: "error", message: 'Error Downloading Wallet Balance', code: 0});
+                    MyWallet.sendMonitorEvent({type: "error", message: 'Error Downloading Wallet Balance', platform: ""});
 
                 error();
             }
@@ -160,7 +160,7 @@ var BlockchainAPI = new function() {
             timeout: AjaxTimeout,
             success: function(obj) {
                 if (obj.error != null) {
-                    MyWallet.sendMonitorEvent({type: "error", message: obj.error, code: 0});
+                    MyWallet.sendMonitorEvent({type: "error", message: obj.error, platform: ""});
                 }
 
                 MyWallet.handleNTPResponse(obj, clientTime);
@@ -168,7 +168,7 @@ var BlockchainAPI = new function() {
                 try {
                     success(obj);
                 } catch (e) {
-                    MyWallet.sendMonitorEvent({type: "error", message: e, code: 0});
+                    MyWallet.sendMonitorEvent({type: "error", message: e, platform: ""});
 
                     error();
                 }
@@ -176,9 +176,9 @@ var BlockchainAPI = new function() {
             error : function(data) {
 
                 if (data.responseText)
-                    MyWallet.sendMonitorEvent({type: "error", message: data.responseText, code: 0});
+                    MyWallet.sendMonitorEvent({type: "error", message: data.responseText, platform: ""});
                 else
-                    MyWallet.sendMonitorEvent({type: "error", message: 'Error Restoring Wallet', code: 0});
+                    MyWallet.sendMonitorEvent({type: "error", message: 'Error Restoring Wallet', platform: ""});
 
                 error();
             }
@@ -187,7 +187,7 @@ var BlockchainAPI = new function() {
 
     //Get the balances of multi addresses (Used for archived)
     this.get_balances = function(addresses, success, error) {
-        MyWallet.sendMonitorEvent({type: "loadingText", message: 'Getting Balances', code: 0});
+        MyWallet.sendMonitorEvent({type: "info", message: 'Getting Balances', platform: "iOS"});
             
 
         $.ajax({
@@ -213,7 +213,7 @@ var BlockchainAPI = new function() {
 
     //Get the balance of an array of addresses
     this.get_balance = function(addresses, success, error) {
-        MyWallet.sendMonitorEvent({type: "loadingText", message: 'Getting Balance', code: 0});
+        MyWallet.sendMonitorEvent({type: "info", message: 'Getting Balance', platform: "iOS"});
 
         this.get_balances(addresses, function(obj){
             var balance = 0;
@@ -320,10 +320,10 @@ var BlockchainAPI = new function() {
 
     this.verifyMobile = function(code, successCallback, errorCallback) {
         MyWallet.securePost("wallet", { payload:code, length : code.length, method : 'verify-sms' }, function(data) {
-            MyWallet.sendMonitorEvent({type: "success", message: data, code: 0});
+            MyWallet.sendMonitorEvent({type: "success", message: data, platform: ""});
             if (successCallback) successCallback(data);
         }, function(data) {
-            MyWallet.sendMonitorEvent({type: "error", message: data.responseText, code: 0});
+            MyWallet.sendMonitorEvent({type: "error", message: data.responseText, platform: ""});
             if (errorCallback) errorCallback();
         });
     }
@@ -363,7 +363,7 @@ var BlockchainAPI = new function() {
     }
 
     this.get_ticker = function(successCallback, errorCallback) {
-        MyWallet.sendMonitorEvent({type: "info", message: 'Getting Ticker Data', code: 0});
+        MyWallet.sendMonitorEvent({type: "info", message: 'Getting Ticker Data', platform: ""});
 
         $.ajax({
             type: "GET",
@@ -388,9 +388,9 @@ var BlockchainAPI = new function() {
 
         }, function(data) {
             if (data.responseText)
-                MyWallet.sendMonitorEvent({type: "error", message: data.responseText, code: 0});
+                MyWallet.sendMonitorEvent({type: "error", message: data.responseText, platform: ""});
             else
-                MyWallet.sendMonitorEvent({type: "error", message: 'Error Downloading Account Settings', code: 0});
+                MyWallet.sendMonitorEvent({type: "error", message: 'Error Downloading Account Settings', platform: ""});
 
             if (errorCallback) errorCallback();
         });
@@ -398,7 +398,7 @@ var BlockchainAPI = new function() {
 
 
     this.resolve_firstbits = function(addr, success, error) {
-        MyWallet.sendMonitorEvent({type: "loadingText", message: 'Querying Firstbits', code: 0});
+        MyWallet.sendMonitorEvent({type: "info", message: 'Querying Firstbits', platform: "iOS"});
 
         $.ajax({
             type: "GET",
@@ -418,7 +418,7 @@ var BlockchainAPI = new function() {
     }
 
     this.get_rejection_reason = function(hexhash, got_reason, not_rejected, error) {
-        MyWallet.sendMonitorEvent({type: "loadingText", message: 'Querying Rejection Reason', code: 0});
+        MyWallet.sendMonitorEvent({type: "info", message: 'Querying Rejection Reason', platform: "iOS"});
 
         $.ajax({
             type: "GET",
@@ -468,7 +468,7 @@ var BlockchainAPI = new function() {
                 }
             }
                         
-            MyWallet.sendMonitorEvent({type: "loadingText", message: 'Pushing Transaction', code: 0});
+            MyWallet.sendMonitorEvent({type: "info", message: 'Pushing Transaction', platform: ""});
 
             var transactions = MyWallet.getTransactions();
 

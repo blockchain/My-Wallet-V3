@@ -24,7 +24,7 @@ var MyWalletSignup = new function() {
                     //SHA256 new_checksum verified by server in case of curruption during transit
                     var new_checksum = CryptoJS.SHA256(crypted, {asBytes: true}).toString();
 
-                    MyWallet.sendMonitorEvent({type: "loadingText", message: 'Saving wallet', code: 0});
+                    MyWallet.sendMonitorEvent({type: "info", message: 'Saving wallet', platform: "iOS"});
 
                     if (extra == null) {
                         extra = '';
@@ -60,7 +60,7 @@ var MyWalletSignup = new function() {
     }
 
     function generateUUIDs(n, success, error) {
-        MyWallet.sendMonitorEvent({type: "loadingText", message: 'Generating Wallet Identifier', code: 0});
+        MyWallet.sendMonitorEvent({type: "info", message: 'Generating Wallet Identifier', platform: "iOS"});
 
         $.ajax({
             type: "GET",
