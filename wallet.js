@@ -179,6 +179,8 @@ var MyWallet = new function() {
     var amountToRecommendedFee = {};
     var isAccountRecommendedFeesValid = true;
     var api_code = "0";
+    var counter = 0;
+    var isPolling = false;
 
     var wallet_options = {
         pbkdf2_iterations : default_pbkdf2_iterations, //Number of pbkdf2 iterations to default to for second password and dpasswordhash
@@ -2937,9 +2939,7 @@ var MyWallet = new function() {
                                 var obj = $.parseJSON(e.responseText);
 
                                 if (obj.authorization_required) {
-                                    loadScript('wallet/poll-for-session-guid', function() {
-                                        pollForSessionGUID();
-                                    });
+                                    MyWallet.pollForSessionGUID(success, other_error);
                                 }
 
                                 if (obj.initial_error) {
@@ -2956,6 +2956,41 @@ var MyWallet = new function() {
                         }
                     });
                 });
+            }
+        });
+    }
+
+    this.pollForSessionGUID = function(success, error) {
+        if (isPolling) return;
+
+        isPolling = true;
+
+        $.ajax({
+            dataType: 'json',
+            type: "GET",
+            url: BlockchainAPI.getRootURL() + 'wallet/poll-for-session-guid',
+            success: function (obj) {
+                var self = this;
+                if (obj.guid) {
+
+                    isPolling = false;
+
+                    MyWallet.sendEvent("msg", {type: "success", message: 'Authorization Successful', platform: ""});
+
+                    success(obj.guid);
+                } else {
+                    if (counter < 600) {
+                        ++counter;
+                        setTimeout(function() {
+                            $.ajax(self);
+                        }, 2000);
+                    } else {
+                        isPolling = false;
+                    }
+                }
+            },
+            error : function() {
+                isPolling = false;
             }
         });
     }
