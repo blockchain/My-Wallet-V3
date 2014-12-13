@@ -473,43 +473,6 @@ $(document).ready(function() {
     } catch (e) {}
 });
 
-function loadScript(src, success, error) {
-    var found = false;
-
-    $('script').each(function() {
-        var attr_src = $(this).attr('src');
-        if (attr_src && attr_src.replace(/^.*[\\\/]/, '').indexOf(src) == 0) {
-            success();
-            found = true;
-            return false;
-        }
-    });
-
-    if (found) {
-        return;
-    }
-
-    console.log('Load ' + src);
-
-    var error_fired = false;
-    var s = document.createElement('script');
-    s.type = "text/javascript";
-    s.async = true;
-    s.src = BlockchainAPI.getRootURL() + resource + src + (min ? '.min.js' : '.js') + '?'+war_checksum;
-    try {
-        s.addEventListener('error', function(e){ error_fired = true;  if (error) error('Error Loading Script. Are You Offline?'); }, false);
-        s.addEventListener('load', function (e) { if (!error_fired) success(); }, false);
-    } catch (e) {
-        //IE 7 & 8 Will throw an exception here
-        setTimeout(function() {
-            if (!error_fired) success();
-        }, 10000);
-    }
-
-    var head = document.getElementsByTagName('head')[0];
-    head.appendChild(s);
-}
-
 function SetCookie(key, value) {
     document.cookie = key + "=" + encodeURI(value.toString()) + '; path=/; domain=blockchain.info; max-age=' + (60*60*24*365);
 }
