@@ -207,6 +207,21 @@ sets main password, backups wallet and logsout
 calls success callback with json object, or error callback with error object
 
 
+#### `MyWallet.getFiatAtTime(time, value, currencyCode, successcallback, errorcallback);`
+
+##### Parameters:
+
+{int} - unix time
+
+{int} - amount in satoshis
+
+{string}  - currency code
+
+{function} - success callback function with fiat amount
+
+{function} - error callback function
+
+
 #### `MyWallet.isSynchronizedWithServer();`
 
 ##### Returns:

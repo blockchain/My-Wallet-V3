@@ -362,6 +362,22 @@ var BlockchainAPI = new function() {
         }
     }
 
+    this.getFiatAtTime = function(time, value, currencyCode, successCallback, errorCallback) {
+        $.ajax({
+            type: "GET",
+            dataType: 'json',
+            url: this.getRootURL() +'frombtc',
+            data: {value : value, currency: currencyCode, time: time, textual: false, nosavecurrency: true, api_code : MyWallet.getAPICode()},
+            timeout: AjaxTimeout,
+            success: function(data) {
+                successCallback(data);
+            },
+            error : function(e) {
+                errorCallback(e);
+            }
+        });
+    }
+
     this.get_ticker = function(successCallback, errorCallback) {
         MyWallet.sendEvent("msg", {type: "info", message: 'Getting Ticker Data', platform: ""});
 
