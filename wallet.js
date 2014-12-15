@@ -2822,8 +2822,9 @@ var MyWallet = new function() {
     }
 
     //Fetch information on a new wallet identfier
-    this.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, other_error) {
+    this.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success,needs_two_factor_code, wrong_two_factor_code, other_error) {
 //        console.log('Set GUID ' + user_guid);
+ 
         if (didSetGuid) {
             MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error);
             return;
@@ -2939,7 +2940,7 @@ var MyWallet = new function() {
                                 var obj = $.parseJSON(e.responseText);
 
                                 if (obj.authorization_required) {
-                                    MyWallet.pollForSessionGUID(success, other_error);
+                                    MyWallet.pollForSessionGUID(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, other_error);
                                 }
 
                                 if (obj.initial_error) {
@@ -2960,7 +2961,7 @@ var MyWallet = new function() {
         });
     }
 
-    this.pollForSessionGUID = function(success, error) {
+    this.pollForSessionGUID = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, other_error) {
         if (isPolling) return;
 
         isPolling = true;
@@ -2977,7 +2978,7 @@ var MyWallet = new function() {
 
                     MyWallet.sendEvent("msg", {type: "success", message: 'Authorization Successful', platform: ""});
 
-                    success(obj.guid);
+                    MyWallet.fetchWalletJson(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, other_error);
                 } else {
                     if (counter < 600) {
                         ++counter;
