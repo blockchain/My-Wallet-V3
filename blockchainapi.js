@@ -49,7 +49,7 @@ var BlockchainAPI = new function() {
     }
 
     this.get_history = function(success, error, tx_filter, offset, n) {
-        MyWallet.sendEvent("msg", {type: "info", message: 'Loading transactions', platform: ""});
+        MyWallet.sendEvent("msg", {type: "info", message: 'Loading transactions', platform: "iOS"});
 
         var clientTime=(new Date()).getTime();
 
