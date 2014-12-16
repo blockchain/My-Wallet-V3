@@ -1381,13 +1381,6 @@ var MyWallet = new function() {
                 }
             }
 
-            if (tx.result > 0)
-                transaction.sent_received_moved = "received";
-            else if (tx.result < 0)
-                transaction.sent_received_moved = "sent";
-            else
-                transaction.sent_received_moved = "moved";
-
             transaction.hash = tx.hash;
             transaction.confirmations = MyWallet.getConfirmationsForTx(MyWallet.getLatestBlock(), tx);
             transaction.txTime = tx.time;
