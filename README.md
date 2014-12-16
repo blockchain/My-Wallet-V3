@@ -897,7 +897,7 @@ refreshes all balances across all accounts and addresses
 {function} - error callback function
 
 
-#### `MyWallet.sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successcallback, errorcallback);`
+#### `MyWallet.sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successcallback, errorcallback, getPassword);`
 
 ##### Parameters:
 
@@ -914,6 +914,8 @@ refreshes all balances across all accounts and addresses
 {function} - success callback function
 
 {function} - error callback function
+
+{function} - function with signiture getPassword(success) where success has parameter pw for user inputed password
 
 
 #### `MyWallet.getAccountsCount();`

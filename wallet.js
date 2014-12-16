@@ -1742,6 +1742,24 @@ var MyWallet = new function() {
         });
     }
 
+    this.sendBitcoinsForAccount = function(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, getPassword) {
+        if (double_encryption) {
+            if (dpassword == null) {
+                getPassword(function(pw) {
+                    if (MyWallet.validateSecondPassword(pw)) {
+                         MyWallet.sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback);                    
+                    } else {
+                        MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
+                    }
+                });            
+            } else {
+                MyWallet.sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback);                    
+            }
+        } else {
+             MyWallet.sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback);            
+        }
+    }
+
     this.sendBitcoinsForAccount = function(accountIdx, to, value, fixedFee, note, successCallback, errorCallback) {
         MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
             var tx = myHDWallet.getAccount(accountIdx).createTx(to, value, fixedFee);
