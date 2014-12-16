@@ -297,7 +297,7 @@ function HDWallet(seedHex, bip39Password) {
           account = this.accountArray[accountIdx];
           return account;
         },
-        filterTransactionsForAccount : function(accountIdx, transactions, paidTo) {
+        filterTransactionsForAccount : function(accountIdx, transactions, paidTo, tx_notes) {
             var account = this.accountArray[accountIdx];
             
             var idx = accountIdx;
@@ -365,8 +365,8 @@ function HDWallet(seedHex, bip39Password) {
                     transaction.to_account = idx;
                 }
 
-                // transaction.note = tx.note ? tx.note : tx_notes[tx.hash];
-
+                transaction.note = tx_notes[tx.hash] ? tx_notes[tx.hash] : null;
+    
                 if (tx.time > 0) {
                     transaction.txTime = new Date(tx.time * 1000);
                 }

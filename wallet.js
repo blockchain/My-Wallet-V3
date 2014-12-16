@@ -1384,7 +1384,7 @@ var MyWallet = new function() {
             transaction.hash = tx.hash;
             transaction.confirmations = MyWallet.getConfirmationsForTx(MyWallet.getLatestBlock(), tx);
             transaction.txTime = tx.time;
-            transaction.note = tx.note ? tx.note : MyWallet.getNote(tx.hash);
+            transaction.note = tx_notes[tx.hash] ? tx_notes[tx.hash] : null;
             transaction.tags = MyWallet.getTags(tx.hash);
             transaction.size = tx.size;
             transaction.tx_index = tx.txIndex;
@@ -1483,7 +1483,7 @@ var MyWallet = new function() {
     }
 
     this.getTransactionsForAccount = function(accountIdx) {
-        return myHDWallet.filterTransactionsForAccount(accountIdx, MyWallet.getTransactions(), paidTo);
+        return myHDWallet.filterTransactionsForAccount(accountIdx, MyWallet.getTransactions(), paidTo, tx_notes);
     }
 
     this.refreshAllPaymentRequestsAndChangeAddresses = function(successCallback, errorCallback) {
