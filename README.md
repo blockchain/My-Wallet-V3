@@ -640,7 +640,7 @@ unarchives address, backups wallet and refreshes balances
 {array}  - Legacy Transactions
 
 
-#### `MyWallet.sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback);`
+#### `MyWallet.sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback, getPassword);`
 
 ##### Parameters:
 
@@ -658,8 +658,10 @@ unarchives address, backups wallet and refreshes balances
 
 {function} - error callback function
 
+{function} - function with signiture getPassword(success) where success has parameter pw for user inputed password
 
-#### `MyWallet.sweepLegacyAddressToAccount(fromAddress, toIdx, successCallback, errorCallback);`
+
+#### `MyWallet.sweepLegacyAddressToAccount(fromAddress, toIdx, successCallback, errorCallback, getPassword);`
 
 ##### Parameters:
 
@@ -878,7 +880,7 @@ cancels a Payment Request object and backups wallet
 refreshes all balances across all accounts and addresses
 
 
-#### `MyWallet.sendToAccount(fromIdx, toIdx, amount, feeAmount, note, successCallback, errorCallback);`
+#### `MyWallet.sendToAccount(fromIdx, toIdx, amount, feeAmount, note, successCallback, errorCallback, getPassword);`
 
 ##### Parameters:
 
@@ -895,6 +897,8 @@ refreshes all balances across all accounts and addresses
 {function} - success callback function
 
 {function} - error callback function
+
+{function} - function with signiture getPassword(success) where success has parameter pw for user inputed password
 
 
 #### `MyWallet.sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successcallback, errorcallback, getPassword);`
@@ -969,7 +973,7 @@ recovers HD wallet from passphrases by recreating all accounts and queries all b
 recovers HD wallet from passphrases by recreating all accounts and queries all balances of accounts and addresses
 
 
-#### `MyWallet.sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback);`
+#### `MyWallet.sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback, getPassword);`
 
 ##### Parameters:
 
@@ -984,6 +988,8 @@ recovers HD wallet from passphrases by recreating all accounts and queries all b
 {function} - success callback function
 
 {function} - error callback function
+
+{function} - function with signiture getPassword(success) where success has parameter pw for user inputed password
 
 
 #### `MyWallet.sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback);`

@@ -1588,6 +1588,24 @@ var MyWallet = new function() {
         }        
     }
 
+    this.sendToEmail = function(accountIdx, value, fixedFee, email, successCallback, errorCallback, getPassword)  {
+        if (double_encryption) {
+            if (dpassword == null) {
+                getPassword(function(pw) {
+                    if (MyWallet.validateSecondPassword(pw)) {
+                        MyWallet.sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback);                    
+                    } else {
+                        MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
+                    }
+                });            
+            } else {
+                MyWallet.sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback);                    
+            }
+        } else {
+            MyWallet.sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback);                    
+        }
+    }
+
     this.sendToEmail = function(accountIdx, value, fixedFee, email, successCallback, errorCallback)  {
         var account = myHDWallet.getAccount(accountIdx);
         var key = MyWallet.generateNewKey();
@@ -1636,6 +1654,24 @@ var MyWallet = new function() {
         });
     }
 
+    this.sendFromLegacyAddressToAccount = function(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback, getPassword)  {
+        if (double_encryption) {
+            if (dpassword == null) {
+                getPassword(function(pw) {
+                    if (MyWallet.validateSecondPassword(pw)) {
+                        MyWallet.sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback);                    
+                    } else {
+                        MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
+                    }
+                });            
+            } else {
+                MyWallet.sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback);                    
+            }
+        } else {
+                MyWallet.sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback);                    
+        }
+    }
+
     this.sendFromLegacyAddressToAccount = function(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback)  {
         var account = myHDWallet.getAccount(toIdx);
         var obj = initNewTx();
@@ -1669,18 +1705,37 @@ var MyWallet = new function() {
         obj.start();
     }
 
-    this.sweepLegacyAddressToAccount = function(fromAddress, toIdx, successCallback, errorCallback)  {
+
+    this.sweepLegacyAddressToAccount = function(fromAddress, toIdx, successCallback, errorCallback, getPassword)  {
         var obj = initNewTx();
         var feeAmount = parseInt(obj.base_fee.toString());
         var amount = MyWallet.getLegacyAddressBalance(fromAddress) - feeAmount;
-        MyWallet.sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, null, successCallback, errorCallback);
+        MyWallet.sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, null, successCallback, errorCallback, getPassword);
     }
 
-    this.sendToAccount = function(fromIdx, toIdx, amount, feeAmount, note, successCallback, errorCallback)  {
+    this.sendToAccount = function(fromIdx, toIdx, amount, feeAmount, note, successCallback, errorCallback, getPassword)  {
         var account = myHDWallet.getAccount(toIdx);
         var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx, amount);
         var address = account.getAddressForPaymentRequest(paymentRequest);
-        MyWallet.sendBitcoinsForAccount(fromIdx, address, paymentRequest.amount, feeAmount, note, successCallback, errorCallback);
+        MyWallet.sendBitcoinsForAccount(fromIdx, address, paymentRequest.amount, feeAmount, note, successCallback, errorCallback, getPassword);
+    }
+
+    this.sendToMobile = function(accountIdx, value, fixedFee, mobile, successCallback, errorCallback, getPassword)  {
+        if (double_encryption) {
+            if (dpassword == null) {
+                getPassword(function(pw) {
+                    if (MyWallet.validateSecondPassword(pw)) {
+                        MyWallet.sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback);                    
+                    } else {
+                        MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
+                    }
+                });            
+            } else {
+                MyWallet.sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback, getPassword);                    
+            }
+        } else {
+                MyWallet.sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback);                    
+        }
     }
 
     this.sendToMobile = function(accountIdx, value, fixedFee, mobile, successCallback, errorCallback)  {
