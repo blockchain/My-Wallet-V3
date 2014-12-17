@@ -936,11 +936,13 @@ refreshes all balances across all accounts and addresses
 {int}  - idx of account
 
 
-#### `MyWallet.createAccount(label);`
+#### `MyWallet.createAccount(label, getPassword);`
 
 ##### Parameters:
 
 {string} - label name
+
+{function} - function with signiture getPassword(success) where success has parameter pw for user inputed password
 
 ##### Description:
 

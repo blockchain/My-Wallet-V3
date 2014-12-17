@@ -1850,6 +1850,24 @@ var MyWallet = new function() {
         return myHDWallet.getAccountsCount();
     }
 
+    this.createAccount = function(label, getPassword)  {
+        if (double_encryption) {
+            if (dpassword == null) {
+                getPassword(function(pw) {
+                    if (MyWallet.validateSecondPassword(pw)) {
+                        MyWallet.createAccount(label);                    
+                    } else {
+                        MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
+                    }
+                });            
+            } else {
+                MyWallet.createAccount(label);                    
+            }
+        } else {
+            MyWallet.createAccount(label);                    
+        }
+    }
+
     this.createAccount = function(label) {
         myHDWallet.createAccount(label);
         MyWallet.backupWalletDelayed();
