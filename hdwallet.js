@@ -3,6 +3,8 @@ function HDAccount(wallet, label, idx) {
         wallet : wallet,
         idx : idx,
         label : label,
+        extendedPrivateKey : null,
+        extendedPublicKey : null,
         archived : false,
         balance : 0,
         paymentRequests : [],
@@ -384,14 +386,16 @@ function HDWallet(seedHex, bip39Password) {
         getAccounts : function() {
             return this.accountArray;
         },
-        createAccountFromExtKey : function(label, extKey) {
+        createAccountFromExtKey : function(label, extendedPrivateKey, extendedPublicKey) {
             var accountIdx = this.accountArray.length;
 
             var walletAccount = new HDWalletAccount(null);
 
-            walletAccount.newNodeFromExtKey(extKey);
+            walletAccount.newNodeFromExtKey(extendedPrivateKey);
 
             var account = HDAccount(walletAccount, label, this.accountArray.length);
+            account.extendedPrivateKey = extendedPrivateKey;
+            account.extendedPublicKey = extendedPublicKey;
             this.accountArray.push(account);
 
             return account;
@@ -432,7 +436,7 @@ function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password) {
 
         //console.log("label: ", label);
 
-        var hdaccount = hdwallet.createAccountFromExtKey(label, accountPayload.xpriv);
+        var hdaccount = hdwallet.createAccountFromExtKey(label, accountPayload.xpriv, accountPayload.xpub);
         hdaccount.setIsArchived(archived);
         if (paymentRequests != null) {
             for (var m in paymentRequests) {
