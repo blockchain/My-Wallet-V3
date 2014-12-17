@@ -4064,10 +4064,12 @@ var MyWallet = new function() {
     }
 
     this.privateKeyStringToKey = function(value, format) {
-
         var key_bytes = null;
+        var compressed = null;
+
         if (format == 'base58') {
             key_bytes = BigInteger.fromBuffer(Bitcoin.base58.decode(value)).toByteArray();
+            compressed = false;
         } else if (format == 'base64') {
             key_bytes = Crypto.util.base64ToBytes(value);
         } else if (format == 'hex') {
@@ -4090,10 +4092,11 @@ var MyWallet = new function() {
             throw 'Unsupported Key Format';
         }
 
-        if (key_bytes.length != 32)
-            throw 'Result not 32 bytes in length';
+        if (key_bytes.length != 32 && key_bytes.length != 33)
+            throw 'Result not 32 or 33 bytes in length';
 
-        var compressed = (format == 'sipa') ? false : true;
+        if (compressed == null)
+            compressed = (format == 'sipa') ? false : true;
         return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), compressed);
     }
 };
