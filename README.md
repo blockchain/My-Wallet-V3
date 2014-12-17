@@ -673,13 +673,14 @@ unarchives address, backups wallet and refreshes balances
 
 {function} - error callback function
 
+{function} - function with signiture getPassword(success) where success has parameter pw for user inputed password
 
 
 HDWallet API
 ===========
 
 
-#### `MyWallet.initializeHDWallet(passphrase, bip39Password);`
+#### `MyWallet.initializeHDWallet(passphrase, bip39Password, getPassword);`
 
 ##### Parameters:
 
@@ -687,9 +688,29 @@ HDWallet API
 
 {string} - optional bip39 Password
 
+{function} - function with signiture getPassword(success) where success has parameter pw for user inputed password
+
 ##### Description:
 
 This method should be called if the event `hd_wallets_does_not_exist` is fired. Method will create the HD wallet and create the first account with the name `Spending`.
+
+
+#### `MyWallet.getHDWalletPassphraseString(getPassword);`
+
+##### Parameters:
+
+{function} - function with signiture getPassword(success) where success has parameter pw for user inputed password
+
+##### Returns:
+
+{string}  - HDWallet Passphrase
+
+
+#### `MyWallet.getAccount(idx);`
+
+##### Returns:
+
+{int}  - idx of account
 
 
 #### `MyWallet.getLabelForAccount(accountIdx);`

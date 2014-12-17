@@ -1950,6 +1950,24 @@ var MyWallet = new function() {
         });
     }
 
+    this.initializeHDWallet = function(passphrase, bip39Password, getPassword)  {
+        if (double_encryption) {
+            if (dpassword == null) {
+                getPassword(function(pw) {
+                    if (MyWallet.validateSecondPassword(pw)) {
+                        MyWallet.initializeHDWallet(passphrase, bip39Password);                    
+                    } else {
+                        MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
+                    }
+                });            
+            } else {
+                MyWallet.initializeHDWallet(passphrase, bip39Password);                    
+            }
+        } else {
+            MyWallet.initializeHDWallet(passphrase, bip39Password);                    
+        }
+    }
+
     this.initializeHDWallet = function(passphrase, bip39Password) {
         var seedHexString = null;
         if (passphrase == null)
@@ -1959,6 +1977,25 @@ var MyWallet = new function() {
 
         MyWallet.buildHDWallet(seedHexString, [], bip39Password);
         MyWallet.createAccount("Spending");
+    }
+
+    this.getHDWalletPassphraseString = function(getPassword) {
+        if (double_encryption) {
+            if (dpassword == null) {
+                getPassword(function(pw) {
+                    if (MyWallet.validateSecondPassword(pw)) {
+                        return myHDWallet.getPassphraseString();                    
+                    } else {
+                        MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
+                        return null;
+                    }
+                });            
+            } else {
+                return myHDWallet.getPassphraseString();                    
+            }
+        } else {
+            return myHDWallet.getPassphraseString();                    
+        }  
     }
 
     this.isValidAddress = function(candidate) {
