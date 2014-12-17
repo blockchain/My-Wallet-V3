@@ -2009,7 +2009,8 @@ var MyWallet = new function() {
 
     this.isValidPrivateKey = function(candidate) {
         try {
-            var key = Bitcoin.ECKey.fromWIF(candidate);
+            var format = MyWallet.detectPrivateKeyFormat(candidate);
+            var key = MyWallet.privateKeyStringToKey(candidate, format);
             return key.pub.getAddress().toString();
         } catch (e) {
             return false;
