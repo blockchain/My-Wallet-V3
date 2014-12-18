@@ -279,6 +279,11 @@ function HDAccount(wallet, label, idx) {
     return accountObject;
 }
 
+
+function isValidateMnemonic(mnemonic) {
+    return BIP39.validateMnemonic(mnemonic);
+}
+
 function passphraseHexStringToPassphrase(passphraseHex) {
     return BIP39.entropyToMnemonic(passphraseHex);
 }

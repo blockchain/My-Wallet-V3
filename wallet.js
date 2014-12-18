@@ -1926,6 +1926,10 @@ var MyWallet = new function() {
         return myHDWallet;
     }
 
+    this.isValidateBIP39Mnemonic = function(mnemonic) {
+        return isValidateMnemonic(mnemonic);
+    }
+
     this.recoverMyWalletHDWalletFromSeedHex = function(seedHex, bip39Password) {
         myHDWallet = recoverHDWalletFromSeedHex(seedHex, bip39Password);
         MyWallet.backupWalletDelayed('update', function() {
