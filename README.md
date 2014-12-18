@@ -814,15 +814,11 @@ sets account to `isArchived` and backups wallet
 {array}  - Payment Request objects
 
 
-#### `MyWallet.generateOrReuseEmptyPaymentRequestForAccount(accountIdx, amount, label);`
+#### `MyWallet.generateOrReuseEmptyPaymentRequestForAccount(accountIdx);`
 
 ##### Parameters:
 
 {int} - index of HD wallet account
-
-{int} - Payment Request amount in satoshis
-
-{string} - label
 
 
 ##### Returns:
@@ -834,7 +830,7 @@ sets account to `isArchived` and backups wallet
 generates and returns a Payment Request object and backups wallet
 
 
-#### `MyWallet.updatePaymentRequestForAccount(accountIdx, address, amount);`
+#### `MyWallet.updatePaymentRequestForAccount(accountIdx, address, amount, label);`
 
 ##### Parameters:
 
@@ -843,6 +839,8 @@ generates and returns a Payment Request object and backups wallet
 {string} - address to update
 
 {int} - Payment Request amount in satoshis
+
+{string} - label
 
 ##### Returns:
 
