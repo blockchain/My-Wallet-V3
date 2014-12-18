@@ -482,7 +482,7 @@ function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password) {
     return hdwallet;
 }
 
-function recoverHDWallet(hdwallet) {
+function recoverHDWallet(hdwallet, successCallback, errorCallback) {
     var LOOK_AHEAD_ADDRESS_COUNT = 20;
     var accountIdx = 0;
 
@@ -523,6 +523,9 @@ function recoverHDWallet(hdwallet) {
 
                 lookAheadOffset += LOOK_AHEAD_ADDRESS_COUNT;
             }, function() {
+                if (errorCallback)
+                    errorCallback();                
+                return;                    
             });
         }
 
@@ -572,6 +575,9 @@ function recoverHDWallet(hdwallet) {
 
                 lookAheadOffset += LOOK_AHEAD_ADDRESS_COUNT;
             }, function() {
+                if (errorCallback)
+                    errorCallback();                
+                return;
             });
         }
 
@@ -591,15 +597,16 @@ function recoverHDWallet(hdwallet) {
         hdwallet.createAccount("Account 1", hdwallet.getSeedHexString());
     }
 
-    return hdwallet;
+    if (successCallback)
+        successCallback(hdwallet);
 }
 
-function recoverHDWalletFromSeedHex(seedHex, bip39Password) {
+function recoverHDWalletFromSeedHex(seedHex, bip39Password, successCallback, errorCallback) {
     var hdwallet = HDWallet(seedHex, bip39Password);
-    return recoverHDWallet(hdwallet);
+    recoverHDWallet(hdwallet, successCallback, errorCallback);
 }
 
-function recoverHDWalletFromMnemonic(passphrase, bip39Password) {
+function recoverHDWalletFromMnemonic(passphrase, bip39Password, successCallback, errorCallback) {
     var hdwallet = HDWallet(passphraseToPassphraseHexString(passphrase), bip39Password);
-    return recoverHDWallet(hdwallet);
+    recoverHDWallet(hdwallet, successCallback, errorCallback);
 }

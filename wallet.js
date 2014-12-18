@@ -1930,17 +1930,35 @@ var MyWallet = new function() {
         return isValidateMnemonic(mnemonic);
     }
 
-    this.recoverMyWalletHDWalletFromSeedHex = function(seedHex, bip39Password) {
-        myHDWallet = recoverHDWalletFromSeedHex(seedHex, bip39Password);
-        MyWallet.backupWalletDelayed('update', function() {
-            MyWallet.get_history();
+    this.recoverMyWalletHDWalletFromSeedHex = function(seedHex, bip39Password, successCallback, errorCallback) {
+        recoverHDWalletFromSeedHex(seedHex, bip39Password, function(hdWallet) {
+            myHDWallet = hdWallet;
+
+            if (successCallback)
+                successCallback();
+
+            MyWallet.backupWalletDelayed('update', function() {
+                MyWallet.get_history();
+            });
+        }, function() {
+            if (errorCallback)
+                errorCallback();
         });
     }
 
-    this.recoverMyWalletHDWalletFromMnemonic = function(passphrase, bip39Password) {
-        myHDWallet = recoverHDWalletFromMnemonic(passphrase, bip39Password);
-        MyWallet.backupWalletDelayed('update', function() {
-            MyWallet.get_history();
+    this.recoverMyWalletHDWalletFromMnemonic = function(passphrase, bip39Password, successCallback, errorCallback) {
+        recoverHDWalletFromMnemonic(passphrase, bip39Password, function(hdWallet) {
+            myHDWallet = hdWallet;
+
+            if (successCallback)
+                successCallback();
+
+            MyWallet.backupWalletDelayed('update', function() {
+                MyWallet.get_history();
+            });
+        }, function() {
+            if (errorCallback)
+                errorCallback();
         });
     }
 
