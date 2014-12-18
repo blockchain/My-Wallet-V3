@@ -1512,9 +1512,6 @@ var MyWallet = new function() {
         var addresses = account.getAddresses();
         addresses = addresses.concat(account.getChangeAddresses());
 
-
-        console.log("asyncGetAndSetUnspentOutputsForAccount addresses " + addresses);
-
         BlockchainAPI.get_unspent(addresses, function (obj) {
 
             obj.unspent_outputs.forEach(function(utxo) {
