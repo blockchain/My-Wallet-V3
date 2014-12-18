@@ -639,6 +639,30 @@ var MyWallet = new function() {
         });
     }
 
+    this.B58LegacyDecode = function(input) {
+        var alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+        var base = BigInteger.valueOf(58);
+
+        var bi = BigInteger.valueOf(0);
+        var leadingZerosNum = 0;
+        for (var i = input.length - 1; i >= 0; i--) {
+            var alphaIndex = alphabet.indexOf(input[i]);
+
+            bi = bi.add(BigInteger.valueOf(alphaIndex)
+                .multiply(base.pow(input.length - 1 -i)));
+
+            // This counts leading zero bytes
+            if (input[i] == "1") leadingZerosNum++;
+            else leadingZerosNum = 0;
+        }
+        var bytes = bi.toByteArrayUnsigned();
+
+        // Add leading zeros
+        while (leadingZerosNum-- > 0) bytes.unshift(0);
+
+        return bytes;
+    }
+
     this.unsetSecondPassword = function(success, error) {
         var panic = function(e) {
             console.log('Panic ' + e);
@@ -697,7 +721,7 @@ var MyWallet = new function() {
                 var addr = addresses[key];
 
                 if (addr.priv) {
-                    addr.priv = encodePK(new BigInteger(Bitcoin.base58.decode(addr.priv)));
+                    addr.priv = encodePK(new BigInteger(MyWallet.B58LegacyDecode(addr.priv)));
 
                     if (!addr.priv) throw 'addr.priv is null';
                 }
@@ -3729,7 +3753,7 @@ var MyWallet = new function() {
 
         var decrypted = MyWallet.decryptPK(priv);
         if (decrypted != null) {
-            return Bitcoin.base58.decode(decrypted);
+            return MyWallet.B58LegacyDecode(decrypted);
         }
         return null;
     }
