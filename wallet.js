@@ -1597,6 +1597,12 @@ var MyWallet = new function() {
         return paidTo;
     }
 
+    this.recommendedTransactionFeeForAddress = function(address, balance) {
+      // TODO: calculate the correct fee:
+      var obj = initNewTx();
+      return obj.base_fee.toInt();
+    }
+
     this.redeemFromEmailOrMobile = function(accountIdx, privatekey)  {
         try {
             var format = MyWallet.detectPrivateKeyFormat(privatekey);
