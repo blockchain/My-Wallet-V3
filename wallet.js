@@ -1614,8 +1614,9 @@ var MyWallet = new function() {
                 var obj = initNewTx();
                 obj.fee = obj.base_fee; //Always include a fee
                 var amount = Bitcoin.BigInteger.valueOf(value).subtract(obj.fee);
-                var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(accountIdx, parseInt(amount.toString()));
+                var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(accountIdx);
                 var to_address = account.getAddressForPaymentRequest(paymentRequest);
+                MyWallet.updatePaymentRequestForAccount(accountIdx, to_address, parseInt(amount.toString()));
  
                 obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(to_address), value : amount});
                 obj.from_addresses = [from_address];
@@ -1742,6 +1743,7 @@ var MyWallet = new function() {
 
         var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx, amount);
         var to_address = account.getAddressForPaymentRequest(paymentRequest);
+        MyWallet.updatePaymentRequestForAccount(toIdx, to_address, amount);
         obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(to_address), value : Bitcoin.BigInteger.valueOf(amount)});
         obj.from_addresses = [fromAddress];
         obj.ready_to_send_header = 'Bitcoins Ready to Send.';
@@ -1774,8 +1776,9 @@ var MyWallet = new function() {
 
     this.sendToAccount = function(fromIdx, toIdx, amount, feeAmount, note, successCallback, errorCallback, getPassword)  {
         var account = myHDWallet.getAccount(toIdx);
-        var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx, amount);
+        var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx);
         var address = account.getAddressForPaymentRequest(paymentRequest);
+        MyWallet.updatePaymentRequestForAccount(toIdx, address, amount);
         sendBitcoinsForAccount(fromIdx, address, amount, feeAmount, note, successCallback, errorCallback, getPassword);
     }
 
@@ -1848,7 +1851,7 @@ var MyWallet = new function() {
                     });
                 }, function(data) {
                     if (errorCallback)
-                        errorCallback(e);
+                        errorCallback(e);   
                 });
             }, function(e) {
                 if (errorCallback)
