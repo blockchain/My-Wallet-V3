@@ -718,7 +718,7 @@ var MyWallet = new function() {
 
                 MyWallet.backupWallet('update', function() {
                     success();
-                }, function() {
+                }, function(e) {
                     panic(e);
                     error(e);
                 });
