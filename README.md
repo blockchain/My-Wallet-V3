@@ -14,6 +14,45 @@ npm install
 npm test
 ```
 
+##Getting Started
+
+Include the following files:
+
+* `shared.js`
+* `blockchainapi.js`
+* `bower_components/jquery/dist/jquery.js`
+* `bitcoinjs.js`
+* `bip39.js`
+* `hdwallet.js`
+* `HDWalletAccount.js`
+* `bower_components/cryptojslib/rollups/sha256.js`
+* `bower_components/cryptojslib/rollups/aes.js`
+* `bower_components/cryptojslib/rollups/pbkdf2.js`
+* `bower_components/cryptojslib/components/cipher-core.js`
+* `bower_components/cryptojslib/components/pad-iso10126.js`
+* `crypto-util-legacy.js`
+* `wallet.js`
+
+Disable logout, if desired, for development work:
+
+```javascript
+MyWallet.disableLogout(true);
+```
+
+Load a wallet from the server, with no 2FA
+```javascript
+var guid = "my-wallet-guid-1234-bcde";
+var pass = "wallet-password";
+var twoFactorCode = "code";
+
+MyWallet.fetchWalletJSON(guid, null, null, pass, twoFactorCode, 
+    successFun, need2FAfun, wrong2FAfun, otherErrorFun);
+
+// Do stuff with the wallet
+var LegacyAddresses = MyWallet.getLegacyActiveAddresses();
+```
+
+
 ## MyWallet API
 
 #### `MyWallet.isCorrectMainPassword(_password);`
