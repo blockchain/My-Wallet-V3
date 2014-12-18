@@ -1650,20 +1650,20 @@ var MyWallet = new function() {
             if (dpassword == null) {
                 getPassword(function(pw) {
                     if (MyWallet.validateSecondPassword(pw)) {
-                        MyWallet.sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback);                    
+                        sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback);                    
                     } else {
                         MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
                     }
                 });            
             } else {
-                MyWallet.sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback);                    
+                sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback);                    
             }
         } else {
-            MyWallet.sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback);                    
+            sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback);                    
         }
     }
 
-    this.sendToEmail = function(accountIdx, value, fixedFee, email, successCallback, errorCallback)  {
+    function sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback)  {
         var account = myHDWallet.getAccount(accountIdx);
         var key = MyWallet.generateNewKey();
         var address = key.pub.getAddress().toString();
@@ -1718,20 +1718,20 @@ var MyWallet = new function() {
             if (dpassword == null) {
                 getPassword(function(pw) {
                     if (MyWallet.validateSecondPassword(pw)) {
-                        MyWallet.sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback);                    
+                        sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback);                    
                     } else {
                         MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
                     }
                 });            
             } else {
-                MyWallet.sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback);                    
+                sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback);                    
             }
         } else {
-                MyWallet.sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback);                    
+                sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback);                    
         }
     }
 
-    this.sendFromLegacyAddressToAccount = function(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback)  {
+    function sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback)  {
         var account = myHDWallet.getAccount(toIdx);
         var obj = initNewTx();
 
@@ -1776,7 +1776,7 @@ var MyWallet = new function() {
         var account = myHDWallet.getAccount(toIdx);
         var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx, amount);
         var address = account.getAddressForPaymentRequest(paymentRequest);
-        MyWallet.sendBitcoinsForAccount(fromIdx, address, amount, feeAmount, note, successCallback, errorCallback, getPassword);
+        sendBitcoinsForAccount(fromIdx, address, amount, feeAmount, note, successCallback, errorCallback, getPassword);
     }
 
     this.sendToMobile = function(accountIdx, value, fixedFee, mobile, successCallback, errorCallback, getPassword)  {
@@ -1784,20 +1784,20 @@ var MyWallet = new function() {
             if (dpassword == null) {
                 getPassword(function(pw) {
                     if (MyWallet.validateSecondPassword(pw)) {
-                        MyWallet.sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback);                    
+                        sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback);                    
                     } else {
                         MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
                     }
                 });            
             } else {
-                MyWallet.sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback, getPassword);                    
+                sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback, getPassword);                    
             }
         } else {
-                MyWallet.sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback);                    
+                sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback);                    
         }
     }
 
-    this.sendToMobile = function(accountIdx, value, fixedFee, mobile, successCallback, errorCallback)  {
+    function sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback)  {
         if (mobile.charAt(0) == '0')
             mobile = mobile.substring(1);
 
@@ -1862,20 +1862,20 @@ var MyWallet = new function() {
             if (dpassword == null) {
                 getPassword(function(pw) {
                     if (MyWallet.validateSecondPassword(pw)) {
-                         MyWallet.sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback);                    
+                         sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback);                    
                     } else {
                         MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
                     }
                 });            
             } else {
-                MyWallet.sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback);                    
+                sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback);                    
             }
         } else {
-             MyWallet.sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback);            
+             sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback);            
         }
     }
 
-    this.sendBitcoinsForAccount = function(accountIdx, to, value, fixedFee, note, successCallback, errorCallback) {
+    function sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback) {
         MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function (unspent_outputs) {
             var account = myHDWallet.getAccount(accountIdx);
             var extendedPrivateKey = MyWallet.decryptPK(account.extendedPrivateKey);
@@ -1916,20 +1916,20 @@ var MyWallet = new function() {
             if (dpassword == null) {
                 getPassword(function(pw) {
                     if (MyWallet.validateSecondPassword(pw)) {
-                        MyWallet.createAccount(label);                    
+                        createAccount(label);                    
                     } else {
                         MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
                     }
                 });            
             } else {
-                MyWallet.createAccount(label);                    
+                createAccount(label);                    
             }
         } else {
-            MyWallet.createAccount(label);                    
+            createAccount(label);                    
         }
     }
 
-    this.createAccount = function(label) {
+    function createAccount(label) {
         var seedHex = MyWallet.decryptPK(myHDWallet.getSeedHexString());
         myHDWallet.createAccount(label, seedHex);
         MyWallet.backupWalletDelayed();
@@ -2039,20 +2039,20 @@ var MyWallet = new function() {
             if (dpassword == null) {
                 getPassword(function(pw) {
                     if (MyWallet.validateSecondPassword(pw)) {
-                        MyWallet.initializeHDWallet(passphrase, bip39Password);                    
+                        initializeHDWallet(passphrase, bip39Password);                    
                     } else {
                         MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
                     }
                 });            
             } else {
-                MyWallet.initializeHDWallet(passphrase, bip39Password);                    
+                initializeHDWallet(passphrase, bip39Password);                    
             }
         } else {
-            MyWallet.initializeHDWallet(passphrase, bip39Password);                    
+            initializeHDWallet(passphrase, bip39Password);                    
         }
     }
 
-    this.initializeHDWallet = function(passphrase, bip39Password) {
+    function initializeHDWallet(passphrase, bip39Password) {
         var seedHexString = null;
         if (passphrase == null)
             seedHexString = this.generateHDWalletSeedHex();
