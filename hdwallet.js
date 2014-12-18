@@ -15,8 +15,8 @@ function HDAccount(wallet, label, idx) {
                 archived : this.isArchived(),
                 paymentRequests : this.getPaymentRequestsJson(),
                 change_addresses : this.getChangeAddressesCount(),
-                xpriv : this.getAccountExtendedKey(true),
-                xpub : this.getAccountExtendedKey(false)
+                xpriv : this.extendedPrivateKey,
+                xpub : this.extendedPublicKey
             };
             return accountJsonData;
         },
@@ -240,7 +240,7 @@ function HDAccount(wallet, label, idx) {
             }
             return false;
         },
-        createTx : function(to, value, fixedFee) {
+        createTx : function(to, value, fixedFee, extendedPrivateKey) {
             var utxos = this.wallet.getUnspentOutputs();
             var changeAddress = this.wallet.getChangeAddress();
 
@@ -249,7 +249,18 @@ function HDAccount(wallet, label, idx) {
                 changeAddress = this.wallet.generateChangeAddress();
             }
 
-            return this.wallet.createTx(to, value, fixedFee, changeAddress);
+            var sendAccount = new HDWalletAccount(null);
+            sendAccount.newNodeFromExtKey(extendedPrivateKey);
+
+            for (var i = 0; i < this.wallet.addresses.length; i++) {
+                sendAccount.generateAddress();
+            }
+
+            for (var i = 0; i < this.wallet.changeAddresses.length; i++) {
+                sendAccount.generateChangeAddress();
+            }
+
+            return sendAccount.createTx(to, value, fixedFee, changeAddress);
         },
         recommendedTransactionFee : function(amount) {
             try {
@@ -391,7 +402,7 @@ function HDWallet(seedHex, bip39Password) {
 
             var walletAccount = new HDWalletAccount(null);
 
-            walletAccount.newNodeFromExtKey(extendedPrivateKey);
+            walletAccount.newNodeFromExtKey(extendedPublicKey);
 
             var account = HDAccount(walletAccount, label, this.accountArray.length);
             account.extendedPrivateKey = extendedPrivateKey;

@@ -1618,7 +1618,9 @@ var MyWallet = new function() {
             MyWallet.sendEvent("msg", {type: "info", message: 'Generated new Bitcoin Address ' + address, platform: ""});
 
             MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
-                var tx = myHDWallet.getAccount(accountIdx).createTx(address, value, fixedFee);
+                var account = myHDWallet.getAccount(accountIdx);
+                var extendedPrivateKey = MyWallet.decryptPK(account.extendedPrivateKey);
+                var tx = myHDWallet.getAccount(accountIdx).createTx(address, value, fixedFee, extendedPrivateKey);
 
                 BlockchainAPI.sendViaEmail(email, tx, privateKey, function (data) {
                     BlockchainAPI.push_tx(tx, null, function(response) {
@@ -1717,7 +1719,7 @@ var MyWallet = new function() {
         var account = myHDWallet.getAccount(toIdx);
         var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx, amount);
         var address = account.getAddressForPaymentRequest(paymentRequest);
-        MyWallet.sendBitcoinsForAccount(fromIdx, address, paymentRequest.amount, feeAmount, note, successCallback, errorCallback, getPassword);
+        MyWallet.sendBitcoinsForAccount(fromIdx, address, amount, feeAmount, note, successCallback, errorCallback, getPassword);
     }
 
     this.sendToMobile = function(accountIdx, value, fixedFee, mobile, successCallback, errorCallback, getPassword)  {
@@ -1747,7 +1749,6 @@ var MyWallet = new function() {
             //mobile = '+' + child.find('select[name="sms-country-code"]').val() + mobile;
 
 
-        var account = myHDWallet.getAccount(accountIdx);
         var miniKeyAddrobj = generateNewMiniPrivateKey();
         var address = miniKeyAddrobj.key.pub.getAddress().toString();
         var privateKey = miniKeyAddrobj.key.toWIF();
@@ -1759,7 +1760,9 @@ var MyWallet = new function() {
             MyWallet.sendEvent("msg", {type: "info", message: 'Generated new Bitcoin Address ' + address + address, platform: ""});
 
             MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
-                var tx = myHDWallet.getAccount(accountIdx).createTx(address, value, fixedFee);
+                var account = myHDWallet.getAccount(accountIdx);
+                var extendedPrivateKey = MyWallet.decryptPK(account.extendedPrivateKey);
+                var tx = myHDWallet.getAccount(accountIdx).createTx(address, value, fixedFee, extendedPrivateKey);
 
                 BlockchainAPI.sendViaSMS(mobile, tx, privateKey, function (data) {
 
@@ -1817,10 +1820,11 @@ var MyWallet = new function() {
 
     this.sendBitcoinsForAccount = function(accountIdx, to, value, fixedFee, note, successCallback, errorCallback) {
         MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
-            var tx = myHDWallet.getAccount(accountIdx).createTx(to, value, fixedFee);
-
+            var account = myHDWallet.getAccount(accountIdx);
+            var extendedPrivateKey = MyWallet.decryptPK(account.extendedPrivateKey);
+            var tx = account.createTx(to, value, fixedFee, extendedPrivateKey);
             BlockchainAPI.push_tx(tx, note, function(response) {
-                MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
+               MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
                     if (successCallback)
                         successCallback(response);
                 }, function(e) {
