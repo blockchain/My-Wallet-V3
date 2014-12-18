@@ -293,8 +293,8 @@ function HDWallet(seedHex, bip39Password) {
         seedHex : seedHex,
         bip39Password : bip39Password,
         accountArray : [],
-        getPassphraseString : function() {
-            return passphraseHexStringToPassphrase(this.seedHex);
+        getPassphraseString : function(seedHex) {
+            return passphraseHexStringToPassphrase(seedHex);
         },
         setSeedHexString : function(seedHex) {
             this.seedHex = seedHex;
@@ -302,8 +302,8 @@ function HDWallet(seedHex, bip39Password) {
         getSeedHexString : function() {
             return this.seedHex;
         },
-        getMasterHex : function() {
-            return BIP39.mnemonicToSeed(passphraseHexStringToPassphrase(this.seedHex), this.bip39Password);
+        getMasterHex : function(seedHex) {
+            return BIP39.mnemonicToSeed(passphraseHexStringToPassphrase(seedHex), this.bip39Password);
         },
         getAccountsCount : function() {
             return this.accountArray.length;
@@ -413,10 +413,10 @@ function HDWallet(seedHex, bip39Password) {
 
             return account;
         },
-        createAccount : function(label) {
+        createAccount : function(label, seedHex) {
             var accountIdx = this.accountArray.length;
 
-            var walletAccount = new HDWalletAccount(this.getMasterHex());
+            var walletAccount = new HDWalletAccount(this.getMasterHex(seedHex));
             //walletAccount.accountZero = walletAccount.getMasterKey().deriveHardened(0).derive(accountIdx);
 
             walletAccount.accountZero = walletAccount.getMasterKey().deriveHardened(44).deriveHardened(0).deriveHardened(accountIdx);
@@ -484,7 +484,7 @@ function recoverHDWallet(hdwallet) {
     var continueLookingAheadAccount = true;
 
     while(continueLookingAheadAccount) {
-        var account = hdwallet.createAccount("Account " + accountIdx.toString());
+        var account = hdwallet.createAccount("Account " + accountIdx.toString(), hdwallet.getSeedHexString());
         //console.log("accountIdx: " + accountIdx.toString());
 
 
@@ -583,7 +583,7 @@ function recoverHDWallet(hdwallet) {
     }
 
     if (hdwallet.getAccountsCount() < 1) {
-        hdwallet.createAccount("Account 1");
+        hdwallet.createAccount("Account 1", hdwallet.getSeedHexString());
     }
 
     return hdwallet;

@@ -685,6 +685,8 @@ var MyWallet = new function() {
                 }
             }
 
+            myHDWallet.seedHex = MyWallet.decryptPK(myHDWallet.seedHex);
+
             double_encryption = false;
 
             dpassword = null;
@@ -726,6 +728,8 @@ var MyWallet = new function() {
                     if (!addr.priv) throw 'addr.priv is null';
                 }
             }
+
+            myHDWallet.seedHex = MyWallet.encryptPK(myHDWallet.seedHex);
 
             dpasswordhash = hashPassword(sharedKey + dpassword, wallet_options.pbkdf2_iterations);
 
@@ -1897,7 +1901,8 @@ var MyWallet = new function() {
     }
 
     this.createAccount = function(label) {
-        myHDWallet.createAccount(label);
+        var seedHex = MyWallet.decryptPK(myHDWallet.getSeedHexString());
+        myHDWallet.createAccount(label, seedHex);
         MyWallet.backupWalletDelayed();
     }
 
@@ -2004,7 +2009,7 @@ var MyWallet = new function() {
             seedHexString = passphraseToPassphraseHexString(passphrase);
 
         MyWallet.buildHDWallet(seedHexString, [], bip39Password);
-        MyWallet.createAccount("Spending");
+        MyWallet.createAccount("Spending", seedHexString);
     }
 
     this.getHDWalletPassphraseString = function(getPassword) {
@@ -2012,7 +2017,8 @@ var MyWallet = new function() {
             if (dpassword == null) {
                 getPassword(function(pw) {
                     if (MyWallet.validateSecondPassword(pw)) {
-                        return myHDWallet.getPassphraseString();                    
+                        var seed = MyWallet.decryptPK(myHDWallet.getSeedHexString());
+                        return myHDWallet.getPassphraseString(seed);                    
                     } else {
                         MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
                         return null;
@@ -3716,7 +3722,7 @@ var MyWallet = new function() {
         }
     }
 
-    function encryptPK(base58) {
+    this.encryptPK = function(base58) {
         if (double_encryption) {
             if (dpassword == null)
                 throw 'Cannot encrypt private key without a password';
@@ -3732,7 +3738,7 @@ var MyWallet = new function() {
     function encodePK(priv) {
         var base58 = Bitcoin.base58.encode(priv.toBuffer(32));
 
-        return encryptPK(base58);
+        return MyWallet.encryptPK(base58);
     }
 
     this.decryptPK = function(priv) {
@@ -3887,10 +3893,10 @@ var MyWallet = new function() {
                 throw 'Error decoding wallet address ' + addr.addr;
 
             if (addr.priv != null) {
+
                 var decryptedpk = MyWallet.decodePK(addr.priv);
 
                 var privatekey = new ECKey(new BigInteger.fromBuffer(decryptedpk), false);
-
 
                 var actual_addr = MyWallet.getUnCompressedAddressString(privatekey);
                 if (actual_addr != addr.addr && MyWallet.getCompressedAddressString(privatekey) != addr.addr) {
