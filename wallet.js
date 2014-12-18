@@ -3853,6 +3853,8 @@ var MyWallet = new function() {
             }
         }
 
+        /*
+        //disable old crypto stuff
         //Otherwise try SHA256 + salt
         if (Crypto.util.bytesToHex(thash) == dpasswordhash) {
             dpassword = input;
@@ -3868,6 +3870,7 @@ var MyWallet = new function() {
             dpasswordhash = password_hash;
             return true;
         }
+        //*/
 
         return false;
     }
