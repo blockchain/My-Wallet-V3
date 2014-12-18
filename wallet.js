@@ -1603,7 +1603,7 @@ var MyWallet = new function() {
       return obj.base_fee.toInt();
     }
 
-    this.redeemFromEmailOrMobile = function(accountIdx, privatekey)  {
+    this.redeemFromEmailOrMobile = function(accountIdx, privatekey, successCallback, errorCallback)  {
         try {
             var format = MyWallet.detectPrivateKeyFormat(privatekey);
             var privateKeyToSweep = MyWallet.privateKeyStringToKey(privatekey, format);
@@ -1622,6 +1622,19 @@ var MyWallet = new function() {
                 obj.extra_private_keys[from_address] = Bitcoin.base58.encode(privateKeyToSweep.d.toBuffer(32));
                 obj.ready_to_send_header = 'Bitcoins Ready to Claim.';
 
+                obj.addListener({
+                    on_success : function(e) {
+                        if (successCallback)
+                            successCallback();
+                    },
+                    on_start : function(e) {
+                    },
+                    on_error : function(e) {
+                        if (successCallback)
+                            errorCallback(e);
+                    }
+                });
+        
                 obj.start();
             }, function() {
                 MyWallet.sendEvent("msg", {type: "error", message: 'Error Getting Address Balance', platform: ""});

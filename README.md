@@ -1042,13 +1042,17 @@ recovers HD wallet from passphrases by recreating all accounts and queries all b
 {function} - error callback function
 
 
-#### `MyWallet.redeemFromEmailOrMobile(accountIdx, privatekey);`
+#### `MyWallet.redeemFromEmailOrMobile(accountIdx, privatekey, successCallback, errorCallback);`
 
 ##### Parameters:
 
 {int} - index of HD wallet account
 
 {string} - private key to redeem
+
+{function} - success callback function
+
+{function} - error callback function
 
 ##### Description:
 
