@@ -679,6 +679,16 @@ unarchives address, backups wallet and refreshes balances
 HDWallet API
 ===========
 
+#### `MyWallet.isValidateBIP39Mnemonic(mnemonic);`
+
+##### Parameters:
+
+{string} - mnemonic
+
+##### Returns:
+
+{bool}  - is valid mnemonic
+
 
 #### `MyWallet.initializeHDWallet(passphrase, bip39Password, getPassword);`
 
