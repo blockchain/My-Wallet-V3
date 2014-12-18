@@ -685,6 +685,11 @@ var MyWallet = new function() {
                 }
             }
 
+            for (var i in myHDWallet.getAccounts()) {
+                var account = myHDWallet.getAccount(i);
+                account.extendedPrivateKey = MyWallet.decryptPK(account.extendedPrivateKey);
+            }
+
             myHDWallet.seedHex = MyWallet.decryptPK(myHDWallet.seedHex);
 
             double_encryption = false;
@@ -727,6 +732,11 @@ var MyWallet = new function() {
 
                     if (!addr.priv) throw 'addr.priv is null';
                 }
+            }
+
+            for (var i in myHDWallet.getAccounts()) {
+                var account = myHDWallet.getAccount(i);
+                account.extendedPrivateKey = MyWallet.encryptPK(account.extendedPrivateKey);
             }
 
             myHDWallet.seedHex = MyWallet.encryptPK(myHDWallet.seedHex);
