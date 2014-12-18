@@ -240,7 +240,7 @@ function HDAccount(wallet, label, idx) {
             }
             return false;
         },
-        createTx : function(to, value, fixedFee, extendedPrivateKey) {
+        createTx : function(to, value, fixedFee, unspentOutputs, extendedPrivateKey) {
             var utxos = this.wallet.getUnspentOutputs();
             var changeAddress = this.wallet.getChangeAddress();
 
@@ -259,6 +259,8 @@ function HDAccount(wallet, label, idx) {
             for (var i = 0; i < this.wallet.changeAddresses.length; i++) {
                 sendAccount.generateChangeAddress();
             }
+
+            sendAccount.setUnspentOutputs(unspentOutputs);
 
             return sendAccount.createTx(to, value, fixedFee, changeAddress);
         },
