@@ -1603,6 +1603,27 @@ var MyWallet = new function() {
       return obj.base_fee.toInt();
     }
 
+    this.getBalanceForRedeemCode = function(privatekey, successCallback, errorCallback)  {
+        try {
+            var format = MyWallet.detectPrivateKeyFormat(privatekey);
+            var privateKeyToSweep = MyWallet.privateKeyStringToKey(privatekey, format);
+            var from_address = MyWallet.getUnCompressedAddressString(privateKeyToSweep);
+
+            BlockchainAPI.get_balance([from_address], function(value) {
+                if (successCallback)
+                    successCallback(value);
+            }, function() {
+                MyWallet.sendEvent("msg", {type: "error", message: 'Error Getting Address Balance', platform: ""});
+                if (errorCallback)
+                    errorCallback();
+            });
+        } catch (e) {
+            MyWallet.sendEvent("msg", {type: "error", message: 'Error Decoding Private Key. Could not claim coins.', platform: ""});
+            if (errorCallback)
+                errorCallback();
+        } 
+    }
+
     this.redeemFromEmailOrMobile = function(accountIdx, privatekey, successCallback, errorCallback)  {
         try {
             var format = MyWallet.detectPrivateKeyFormat(privatekey);
@@ -1631,7 +1652,7 @@ var MyWallet = new function() {
                     on_start : function(e) {
                     },
                     on_error : function(e) {
-                        if (successCallback)
+                        if (errorCallback)
                             errorCallback(e);
                     }
                 });
@@ -1753,7 +1774,7 @@ var MyWallet = new function() {
             on_start : function(e) {
             },
             on_error : function(e) {
-                if (successCallback)
+                if (errorCallback)
                     errorCallback(e);
             }
         });
@@ -1805,7 +1826,7 @@ var MyWallet = new function() {
             on_start : function(e) {
             },
             on_error : function(e) {
-                if (successCallback)
+                if (errorCallback)
                     errorCallback(e);
             }
         });

@@ -1078,3 +1078,14 @@ recovers HD wallet from passphrases by recreating all accounts and queries all b
 
 redeem bitcoins sent from email or mobile
 
+
+#### `MyWallet.getBalanceForRedeemCode(accountIdx, privatekey, successCallback, errorCallback);`
+
+##### Parameters:
+
+{string} - private key to redeem
+
+{function} - success callback function with balance in satoshis
+
+{function} - error callback function
+
