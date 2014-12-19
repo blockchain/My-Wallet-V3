@@ -2,7 +2,6 @@ var SharedCoin = new function() {
     var SharedCoin = this;
     var DonationPercent = 0.5;
     var AjaxTimeout = 120000;
-    var AjaxRetry = 3;
     var LastSignatureSubmitTime = 0;
     var MinTimeBetweenSubmits = 120000;
     var options = {};
@@ -11,45 +10,7 @@ var SharedCoin = new function() {
     var extra_private_keys = {};
     var seed_prefix = 'sharedcoin-seed:';
 
-    /*globals jQuery, window */
-    (function($) {
-        $.retryAjax = function (ajaxParams) {
-            var errorCallback;
-            ajaxParams.tryCount = (!ajaxParams.tryCount) ? 0 : ajaxParams.tryCount;
-            ajaxParams.retryLimit = (!ajaxParams.retryLimit) ? 2 : ajaxParams.retryLimit;
-            ajaxParams.suppressErrors = true;
-
-            if (ajaxParams.error) {
-                errorCallback = ajaxParams.error;
-                delete ajaxParams.error;
-            } else {
-                errorCallback = function () {
-
-                };
-            }
-
-            ajaxParams.complete = function (jqXHR, textStatus) {
-                if ($.inArray(textStatus, ['timeout', 'abort', 'error']) > -1) {
-                    this.tryCount++;
-                    if (this.tryCount <= this.retryLimit) {
-
-                        // fire error handling on the last try
-                        if (this.tryCount === this.retryLimit) {
-                            this.error = errorCallback;
-                            delete this.suppressErrors;
-                        }
-
-                        //try again
-                        $.ajax(this);
-                        return true;
-                    }
-                    return true;
-                }
-            };
-
-            $.ajax(ajaxParams);
-        };
-    }(jQuery));
+    
 
     Bitcoin.Transaction.deserialize = function (buffer)
     {
@@ -242,7 +203,7 @@ var SharedCoin = new function() {
                     type: "POST",
                     url: URL,
                     timeout: AjaxTimeout,
-                    retryLimit: AjaxRetry,
+                    retryLimit: 3,
                     data : {method : 'submit_offer', fee_percent : self.fee_percent.toString(), format : 'json', token : SharedCoin.getToken(), offer : JSON.stringify(self)},
                     success: function (obj) {
                         if (obj.status == 'complete') {
@@ -271,7 +232,7 @@ var SharedCoin = new function() {
                     type: "POST",
                     url: URL,
                     timeout: AjaxTimeout,
-                    retryLimit: AjaxRetry,
+                    retryLimit: 3,
                     data : {method : 'get_offer_id', format : 'json', offer_id : self.offer_id},
                     success: function (obj) {
                         success(obj);
@@ -325,7 +286,7 @@ var SharedCoin = new function() {
                     type: "POST",
                     url: URL,
                     timeout: AjaxTimeout,
-                    retryLimit: AjaxRetry,
+                    retryLimit: 3,
                     data : {method : 'get_proposal_id', format : 'json', offer_id : self.offer_id, proposal_id : proposal_id},
                     success: function (obj) {
 
@@ -539,7 +500,7 @@ var SharedCoin = new function() {
                     type: "POST",
                     url: URL,
                     timeout: AjaxTimeout,
-                    retryLimit: AjaxRetry,
+                    retryLimit: 3,
                     data : {method : 'submit_signatures', format : 'json', input_scripts : JSON.stringify(input_scripts), offer_id : self.offer_id, proposal_id : proposal.proposal_id},
                     success: function (obj) {
                         if (obj.status == 'not_found')
@@ -1477,7 +1438,7 @@ var SharedCoin = new function() {
             type: "POST",
             url: URL,
             timeout: AjaxTimeout,
-            retryLimit: AjaxRetry,
+            retryLimit: 3,
             data : {method : 'get_info', format : 'json'},
             success: function (obj) {
                 try {
