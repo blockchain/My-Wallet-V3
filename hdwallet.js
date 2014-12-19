@@ -430,7 +430,7 @@ function HDWallet(seedHex, bip39Password) {
             walletAccount.internalAccount = walletAccount.getAccountZero().derive(1);
 
             var account = HDAccount(walletAccount, label, this.accountArray.length);
-            account.generatePaymentRequest(null, "");
+            account.generatePaymentRequest(0, "");
             this.accountArray.push(account);
 
             return account;
