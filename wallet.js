@@ -1324,7 +1324,7 @@ var MyWallet = new function() {
                                                to: {account: null, legacyAddresses: null, externalAddresses: null},
                                               fee: 0};
             var isOrigin = false;
-
+            transaction.intraWallet = true;
             for (var i = 0; i < tx.inputs.length; ++i) {
                 var output = tx.inputs[i].prev_out;
                 if (!output || !output.addr)
@@ -1361,40 +1361,33 @@ var MyWallet = new function() {
                             transaction.from.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
                         }
                         transaction.fee += output.value;
+                        transaction.intraWallet = false;
                     }
                 }
             }
 
-            transaction.intraWallet = false;
-            var isTo = false;
             for (var i = 0; i < tx.out.length; ++i) {
                 var output = tx.out[i];
                 if (!output || !output.addr)
                     continue;
 
                 if (MyWallet.isActiveLegacyAddress(output.addr)) {
-                    isTo = true;
-                    if (isOrigin)
-                        transaction.intraWallet = true;
                     if (transaction.to.legacyAddresses == null)
                         transaction.to.legacyAddresses = [];
                     transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
                     transaction.fee -= output.value;
                 } else {
+                    var toAccountSet = false;
                     for (var j in myHDWallet.getAccounts()) {
                         var account = myHDWallet.getAccount(j);
                         if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
-                            if (! isTo) {
+                            if (! toAccountSet) {
                                 if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
                                     transaction.from.account.amount -= output.value;
                                 } else {
-                                    if (isOrigin)
-                                        transaction.intraWallet = true;
-
-                                    isTo = true;
                                     transaction.to.account = {index: parseInt(j), amount: output.value};                                    
                                 }
-
+                                toAccountSet = true;
                                 transaction.fee -= output.value;
                             } else {
                                 if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
@@ -1409,12 +1402,13 @@ var MyWallet = new function() {
                         }
                     }
 
-                    if (! isTo) {
+                    if (! toAccountSet) {
                         if (transaction.to.externalAddresses == null ||
                             output.value > transaction.to.externalAddresses.amount) {
                             transaction.to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
                         }
                         transaction.fee -= output.value;
+                        transaction.intraWallet = false;
                     }                    
                 }
             }
@@ -1603,6 +1597,27 @@ var MyWallet = new function() {
       return obj.base_fee.toInt();
     }
 
+    this.getBalanceForRedeemCode = function(privatekey, successCallback, errorCallback)  {
+        try {
+            var format = MyWallet.detectPrivateKeyFormat(privatekey);
+            var privateKeyToSweep = MyWallet.privateKeyStringToKey(privatekey, format);
+            var from_address = MyWallet.getUnCompressedAddressString(privateKeyToSweep);
+
+            BlockchainAPI.get_balance([from_address], function(value) {
+                if (successCallback)
+                    successCallback(value);
+            }, function() {
+                MyWallet.sendEvent("msg", {type: "error", message: 'Error Getting Address Balance', platform: ""});
+                if (errorCallback)
+                    errorCallback();
+            });
+        } catch (e) {
+            MyWallet.sendEvent("msg", {type: "error", message: 'Error Decoding Private Key. Could not claim coins.', platform: ""});
+            if (errorCallback)
+                errorCallback();
+        } 
+    }
+
     this.redeemFromEmailOrMobile = function(accountIdx, privatekey, successCallback, errorCallback)  {
         try {
             var format = MyWallet.detectPrivateKeyFormat(privatekey);
@@ -1614,8 +1629,9 @@ var MyWallet = new function() {
                 var obj = initNewTx();
                 obj.fee = obj.base_fee; //Always include a fee
                 var amount = Bitcoin.BigInteger.valueOf(value).subtract(obj.fee);
-                var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(accountIdx, parseInt(amount.toString()));
+                var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(accountIdx);
                 var to_address = account.getAddressForPaymentRequest(paymentRequest);
+                MyWallet.updatePaymentRequestForAccount(accountIdx, to_address, parseInt(amount.toString()));
  
                 obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(to_address), value : amount});
                 obj.from_addresses = [from_address];
@@ -1630,7 +1646,7 @@ var MyWallet = new function() {
                     on_start : function(e) {
                     },
                     on_error : function(e) {
-                        if (successCallback)
+                        if (errorCallback)
                             errorCallback(e);
                     }
                 });
@@ -1713,6 +1729,54 @@ var MyWallet = new function() {
         });
     }
 
+    this.sendFromLegacyAddressToAddress = function(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback, getPassword)  {
+        if (double_encryption) {
+            if (dpassword == null) {
+                getPassword(function(pw) {
+                    if (MyWallet.validateSecondPassword(pw)) {
+                        sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback);                    
+                    } else {
+                        MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
+                    }
+                });            
+            } else {
+                sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback);                    
+            }
+        } else {
+                sendFromLegacyAddressToAccount(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback);                    
+        }
+    }
+
+    function sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback)  {
+        var obj = initNewTx();
+
+        if (feeAmount != null)
+            obj.fee = Bitcoin.BigInteger.valueOf(feeAmount);
+        else
+            obj.fee = obj.base_fee;
+
+        obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(toAddress), value : Bitcoin.BigInteger.valueOf(amount)});
+        obj.from_addresses = [fromAddress];
+        obj.ready_to_send_header = 'Bitcoins Ready to Send.';
+
+        obj.addListener({
+            on_success : function(e) {
+                if (successCallback)
+                    successCallback();
+            },
+            on_start : function(e) {
+            },
+            on_error : function(e) {
+                if (errorCallback)
+                    errorCallback(e);
+            }
+        });
+
+        obj.note = note;
+
+        obj.start();
+    }
+
     this.sendFromLegacyAddressToAccount = function(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback, getPassword)  {
         if (double_encryption) {
             if (dpassword == null) {
@@ -1742,6 +1806,7 @@ var MyWallet = new function() {
 
         var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx, amount);
         var to_address = account.getAddressForPaymentRequest(paymentRequest);
+        MyWallet.updatePaymentRequestForAccount(toIdx, to_address, amount);
         obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(to_address), value : Bitcoin.BigInteger.valueOf(amount)});
         obj.from_addresses = [fromAddress];
         obj.ready_to_send_header = 'Bitcoins Ready to Send.';
@@ -1754,7 +1819,7 @@ var MyWallet = new function() {
             on_start : function(e) {
             },
             on_error : function(e) {
-                if (successCallback)
+                if (errorCallback)
                     errorCallback(e);
             }
         });
@@ -1774,9 +1839,10 @@ var MyWallet = new function() {
 
     this.sendToAccount = function(fromIdx, toIdx, amount, feeAmount, note, successCallback, errorCallback, getPassword)  {
         var account = myHDWallet.getAccount(toIdx);
-        var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx, amount);
+        var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx);
         var address = account.getAddressForPaymentRequest(paymentRequest);
-        sendBitcoinsForAccount(fromIdx, address, amount, feeAmount, note, successCallback, errorCallback, getPassword);
+        MyWallet.updatePaymentRequestForAccount(toIdx, address, amount);
+        MyWallet.sendBitcoinsForAccount(fromIdx, address, amount, feeAmount, note, successCallback, errorCallback, getPassword);
     }
 
     this.sendToMobile = function(accountIdx, value, fixedFee, mobile, successCallback, errorCallback, getPassword)  {
@@ -1848,7 +1914,7 @@ var MyWallet = new function() {
                     });
                 }, function(data) {
                     if (errorCallback)
-                        errorCallback(e);
+                        errorCallback(e);   
                 });
             }, function(e) {
                 if (errorCallback)
@@ -2076,10 +2142,12 @@ var MyWallet = new function() {
                     }
                 });            
             } else {
-                return myHDWallet.getPassphraseString();                    
+                var seed = myHDWallet.getSeedHexString();
+                return myHDWallet.getPassphraseString(seed);                    
             }
         } else {
-            return myHDWallet.getPassphraseString();                    
+            var seed = myHDWallet.getSeedHexString();
+            return myHDWallet.getPassphraseString(seed);                    
         }  
     }
 

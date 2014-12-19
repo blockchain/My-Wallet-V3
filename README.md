@@ -717,6 +717,28 @@ unarchives address, backups wallet and refreshes balances
 {function} - function with signiture getPassword(success) where success has parameter pw for user inputed password
 
 
+#### `MyWallet.sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback, getPassword);`
+
+##### Parameters:
+
+{string} - from address
+
+{int} - to address
+
+{int} - send amount in satoshis
+
+{int} - fee amount in satoshis
+
+{string} - optional tx note
+
+{function} - success callback function
+
+{function} - error callback function
+
+{function} - function with signiture getPassword(success) where success has parameter pw for user inputed password
+
+
+
 HDWallet API
 ===========
 
@@ -855,15 +877,11 @@ sets account to `isArchived` and backups wallet
 {array}  - Payment Request objects
 
 
-#### `MyWallet.generateOrReuseEmptyPaymentRequestForAccount(accountIdx, amount, label);`
+#### `MyWallet.generateOrReuseEmptyPaymentRequestForAccount(accountIdx);`
 
 ##### Parameters:
 
 {int} - index of HD wallet account
-
-{int} - Payment Request amount in satoshis
-
-{string} - label
 
 
 ##### Returns:
@@ -875,7 +893,7 @@ sets account to `isArchived` and backups wallet
 generates and returns a Payment Request object and backups wallet
 
 
-#### `MyWallet.updatePaymentRequestForAccount(accountIdx, address, amount);`
+#### `MyWallet.updatePaymentRequestForAccount(accountIdx, address, amount, label);`
 
 ##### Parameters:
 
@@ -884,6 +902,8 @@ generates and returns a Payment Request object and backups wallet
 {string} - address to update
 
 {int} - Payment Request amount in satoshis
+
+{string} - label
 
 ##### Returns:
 
@@ -1098,4 +1118,15 @@ recovers HD wallet from passphrases by recreating all accounts and queries all b
 ##### Description:
 
 redeem bitcoins sent from email or mobile
+
+
+#### `MyWallet.getBalanceForRedeemCode(accountIdx, privatekey, successCallback, errorCallback);`
+
+##### Parameters:
+
+{string} - private key to redeem
+
+{function} - success callback function with balance in satoshis
+
+{function} - error callback function
 
