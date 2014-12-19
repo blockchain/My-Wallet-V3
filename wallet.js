@@ -1748,7 +1748,6 @@ var MyWallet = new function() {
     }
 
     function sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback)  {
-        var account = myHDWallet.getAccount(toIdx);
         var obj = initNewTx();
 
         if (feeAmount != null)
