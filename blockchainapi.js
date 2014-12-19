@@ -233,6 +233,10 @@ var BlockchainAPI = new function() {
         updateKV('Updating Cell Number', 'update-sms', val, successCallback, errorCallback);
     }
 
+    this.toggleSave2FA = function(val, successCallback, errorCallback) {
+        updateKV('Updating Save 2FA', 'update-never-save-auth-type', val, successCallback, errorCallback);
+    }
+
     function updateAuthType(val, successCallback, errorCallback) {
         updateKV('Updating Two Factor Authentication', 'update-auth-type', val, function() {
             MyWallet.setRealAuthType(val);

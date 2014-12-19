@@ -2406,6 +2406,26 @@ var MyWallet = new function() {
         });
     }
 
+    this.disableSaveTwoFactor = function(successCallback, errorCallback) {
+        BlockchainAPI.toggleSave2FA(true, function() {
+            if (successCallback)
+                successCallback();
+        }, function() {
+            if (errorCallback)
+               errorCallback();
+        });
+    }
+
+    this.enableSaveTwoFactor = function(successCallback, errorCallback) {
+        BlockchainAPI.toggleSave2FA(false, function() {
+            if (successCallback)
+                successCallback();
+        }, function() {
+            if (errorCallback)
+               errorCallback();
+        });
+    }
+
     this.unsetTwoFactor = function(successCallback, errorCallback) {
         BlockchainAPI.unsetTwoFactor(successCallback, errorCallback);
     }
