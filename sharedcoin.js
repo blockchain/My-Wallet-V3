@@ -152,7 +152,7 @@ var SharedCoin = new function() {
 
                 MyWallet.sendEvent("msg", {type: "info", message: 'Waiting For Other Participants To Sign', platform: "iOS"});
 
-                $.retryAjax({
+                retryAjax({
                     dataType: 'json',
                     type: "POST",
                     url: URL,
@@ -198,7 +198,7 @@ var SharedCoin = new function() {
 
                 MyWallet.sendEvent("msg", {type: "info", message: 'Submitting Offer', platform: "iOS"});
 
-                $.retryAjax({
+                retryAjax({
                     dataType: 'json',
                     type: "POST",
                     url: URL,
@@ -227,7 +227,7 @@ var SharedCoin = new function() {
 
                 MyWallet.sendEvent("msg", {type: "info", message: 'Waiting For Other Participants', platform: "iOS"});
 
-                $.retryAjax({
+                retryAjax({
                     dataType: 'json',
                     type: "POST",
                     url: URL,
@@ -281,7 +281,7 @@ var SharedCoin = new function() {
 
                 MyWallet.sendEvent("msg", {type: "info", message: 'Fetching Proposal', platform: "iOS"});
 
-                $.retryAjax({
+                retryAjax({
                     dataType: 'json',
                     type: "POST",
                     url: URL,
@@ -495,7 +495,7 @@ var SharedCoin = new function() {
 
                 LastSignatureSubmitTime = new Date().getTime();
 
-                $.retryAjax({
+                retryAjax({
                     dataType: 'json',
                     type: "POST",
                     url: URL,
@@ -1433,7 +1433,7 @@ var SharedCoin = new function() {
 
         MyWallet.sendEvent("msg", {type: "info", message: 'Fetching SharedCoin Info', platform: "iOS"});
 
-        $.retryAjax({
+        retryAjax({
             dataType: 'json',
             type: "POST",
             url: URL,
