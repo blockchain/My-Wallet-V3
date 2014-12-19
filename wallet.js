@@ -2143,10 +2143,12 @@ var MyWallet = new function() {
                     }
                 });            
             } else {
-                return myHDWallet.getPassphraseString();                    
+                var seed = myHDWallet.getSeedHexString();
+                return myHDWallet.getPassphraseString(seed);                    
             }
         } else {
-            return myHDWallet.getPassphraseString();                    
+            var seed = myHDWallet.getSeedHexString();
+            return myHDWallet.getPassphraseString(seed);                    
         }  
     }
 
