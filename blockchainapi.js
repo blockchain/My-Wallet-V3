@@ -3,9 +3,7 @@ var BlockchainAPI = new function() {
     var AjaxTimeout = 60000;
     var AjaxRetry = 2;
 
-    /*globals jQuery, window */
-    (function($) {
-        $.retryAjax = function (ajaxParams) {
+    function retryAjax(ajaxParams) {
             var errorCallback;
             ajaxParams.tryCount = (!ajaxParams.tryCount) ? 0 : ajaxParams.tryCount;
             ajaxParams.retryLimit = (!ajaxParams.retryLimit) ? AjaxRetry : ajaxParams.retryLimit;
@@ -40,9 +38,7 @@ var BlockchainAPI = new function() {
             };
 
             $.ajax(ajaxParams);
-        };
-    }(jQuery));
-
+    };
 
     this.getRootURL = function() {
         return "https://blockchain.info/";
@@ -92,7 +88,7 @@ var BlockchainAPI = new function() {
             no_buttons: true
         };
 
-        $.retryAjax({
+        retryAjax({
             type: "POST",
             dataType: 'json',
             url: this.getRootURL() +'multiaddr',
@@ -151,7 +147,7 @@ var BlockchainAPI = new function() {
             symbol_local : symbol_local.code
         };
 
-        $.retryAjax({
+        retryAjax({
             type: "POST",
             dataType: 'json',
             url: this.getRootURL() +'multiaddr',
@@ -638,7 +634,7 @@ var BlockchainAPI = new function() {
     }
 
     this.get_unspent = function(fromAddresses, success, error, confirmations, do_not_use_unspent_cache) {
-        $.retryAjax({
+        retryAjax({
             type: "POST",
             dataType: 'json',
             url: this.getRootURL() +'unspent',
