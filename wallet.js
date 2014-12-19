@@ -1324,7 +1324,7 @@ var MyWallet = new function() {
                                                to: {account: null, legacyAddresses: null, externalAddresses: null},
                                               fee: 0};
             var isOrigin = false;
-
+            transaction.intraWallet = true;
             for (var i = 0; i < tx.inputs.length; ++i) {
                 var output = tx.inputs[i].prev_out;
                 if (!output || !output.addr)
@@ -1361,11 +1361,11 @@ var MyWallet = new function() {
                             transaction.from.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
                         }
                         transaction.fee += output.value;
+                        transaction.intraWallet = false;
                     }
                 }
             }
 
-            transaction.intraWallet = true;
             for (var i = 0; i < tx.out.length; ++i) {
                 var output = tx.out[i];
                 if (!output || !output.addr)
@@ -1408,8 +1408,7 @@ var MyWallet = new function() {
                             transaction.to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
                         }
                         transaction.fee -= output.value;
-                        if (isOrigin)
-                            transaction.intraWallet = false;
+                        transaction.intraWallet = false;
                     }                    
                 }
             }
