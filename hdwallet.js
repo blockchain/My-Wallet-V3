@@ -202,6 +202,8 @@ function HDAccount(wallet, label, idx) {
         checkToAddTxToPaymentRequest: function(address, txHash, amount, checkCompleted) {
             var idx = this.wallet.addresses.indexOf(address);
             var paymentRequest = this.paymentRequests[idx];
+            if (paymentRequest.amount == 0)
+                return false;            
             var haveAddedTxToPaymentRequest = false;
             if (idx > -1) {
                 if ((checkCompleted == true || paymentRequest.complete == false) &&
