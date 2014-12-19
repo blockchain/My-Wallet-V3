@@ -2049,7 +2049,7 @@ var MyWallet = new function() {
         var addresses = account.getChangeAddresses();
         for (var i in paymentRequests) {
             var paymentRequest = paymentRequests[i];
-            if (paymentRequest.complete == true || paymentRequest.canceled == true)
+            if (paymentRequest.complete == true)
                 continue;
 
             try {
