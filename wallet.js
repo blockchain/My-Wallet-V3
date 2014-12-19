@@ -1365,36 +1365,29 @@ var MyWallet = new function() {
                 }
             }
 
-            transaction.intraWallet = false;
-            var isTo = false;
+            transaction.intraWallet = true;
             for (var i = 0; i < tx.out.length; ++i) {
                 var output = tx.out[i];
                 if (!output || !output.addr)
                     continue;
 
                 if (MyWallet.isActiveLegacyAddress(output.addr)) {
-                    isTo = true;
-                    if (isOrigin)
-                        transaction.intraWallet = true;
                     if (transaction.to.legacyAddresses == null)
                         transaction.to.legacyAddresses = [];
                     transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
                     transaction.fee -= output.value;
                 } else {
+                    var toAccountSet = false;
                     for (var j in myHDWallet.getAccounts()) {
                         var account = myHDWallet.getAccount(j);
                         if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
-                            if (! isTo) {
+                            if (! toAccountSet) {
                                 if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
                                     transaction.from.account.amount -= output.value;
                                 } else {
-                                    if (isOrigin)
-                                        transaction.intraWallet = true;
-
-                                    isTo = true;
                                     transaction.to.account = {index: parseInt(j), amount: output.value};                                    
                                 }
-
+                                toAccountSet = true;
                                 transaction.fee -= output.value;
                             } else {
                                 if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
@@ -1409,12 +1402,14 @@ var MyWallet = new function() {
                         }
                     }
 
-                    if (! isTo) {
+                    if (! toAccountSet) {
                         if (transaction.to.externalAddresses == null ||
                             output.value > transaction.to.externalAddresses.amount) {
                             transaction.to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
                         }
                         transaction.fee -= output.value;
+                        if (isOrigin)
+                            transaction.intraWallet = false;
                     }                    
                 }
             }
