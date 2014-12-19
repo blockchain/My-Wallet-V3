@@ -2085,7 +2085,7 @@ var MyWallet = new function() {
     }
 
     this.generateHDWalletSeedHex = function() {
-        var passPhrase = this.generateHDWalletPassphrase();
+        var passPhrase = MyWallet.generateHDWalletPassphrase();
         return passphraseToPassphraseHexString(passPhrase);
     }
 
@@ -2121,7 +2121,7 @@ var MyWallet = new function() {
     function initializeHDWallet(passphrase, bip39Password) {
         var seedHexString = null;
         if (passphrase == null)
-            seedHexString = this.generateHDWalletSeedHex();
+            seedHexString = MyWallet.generateHDWalletSeedHex();
         else
             seedHexString = passphraseToPassphraseHexString(passphrase);
 
