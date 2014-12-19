@@ -1779,7 +1779,7 @@ var MyWallet = new function() {
         var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx);
         var address = account.getAddressForPaymentRequest(paymentRequest);
         MyWallet.updatePaymentRequestForAccount(toIdx, address, amount);
-        sendBitcoinsForAccount(fromIdx, address, amount, feeAmount, note, successCallback, errorCallback, getPassword);
+        MyWallet.sendBitcoinsForAccount(fromIdx, address, amount, feeAmount, note, successCallback, errorCallback, getPassword);
     }
 
     this.sendToMobile = function(accountIdx, value, fixedFee, mobile, successCallback, errorCallback, getPassword)  {
