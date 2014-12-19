@@ -42,7 +42,7 @@ describe "HD Wallet", ->
       beforeEach ->
         hdwallet = buildHDWallet(passphraseToPassphraseHexString(passphrase), [])
 
-        account = hdwallet.createAccount("Spending")
+        account = hdwallet.createAccount("Spending", passphraseToPassphraseHexString(passphrase))
         paymentRequest = account.generatePaymentRequest(1)
         address = account.getAddressAtIdx(paymentRequest.index)
 
