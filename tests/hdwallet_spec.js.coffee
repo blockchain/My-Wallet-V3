@@ -14,7 +14,7 @@ describe "HD Wallet", ->
                   xpriv: "xprv9yFMKJdoPivHaCThScsTo2QywGADTLfi47ELqf7RSfKJX4rBu8A2QxfcqGjt3kar4RHzZvhpv3UXLQyLuqAcd4X53qpyc6PSBj7LjKftg8f",
                   archived: false,
                   change_addresses: 12,
-                  paymentRequests: [{amount: 100, paid: 0, canceled: false, complete: false, index: 0}]
+                  paymentRequests: [{amount: 100, paid: 0, complete: false, index: 0}]
               },
               {
                   label: "Splurge",
@@ -104,7 +104,7 @@ describe "HD Wallet", ->
 
               paymentRequest2 = account.paymentRequests[paymentRequest.index]
 
-              expect(paymentRequest2.canceled).toBe(true)
+              expect(paymentRequest2.label == "" && paymentRequest2.amount == 0).toBe(true)
 
           return
 
