@@ -1,44 +1,6 @@
 var BlockchainAPI = new function() {
     var BlockchainAPI = this;
     var AjaxTimeout = 60000;
-    var AjaxRetry = 2;
-
-    function retryAjax(ajaxParams) {
-            var errorCallback;
-            ajaxParams.tryCount = (!ajaxParams.tryCount) ? 0 : ajaxParams.tryCount;
-            ajaxParams.retryLimit = (!ajaxParams.retryLimit) ? AjaxRetry : ajaxParams.retryLimit;
-            ajaxParams.suppressErrors = true;
-
-            if (ajaxParams.error) {
-                errorCallback = ajaxParams.error;
-                delete ajaxParams.error;
-            } else {
-                errorCallback = function () {
-
-                };
-            }
-
-            ajaxParams.complete = function (jqXHR, textStatus) {
-                if ($.inArray(textStatus, ['timeout', 'abort', 'error']) > -1) {
-                    this.tryCount++;
-                    if (this.tryCount <= this.retryLimit) {
-
-                        // fire error handling on the last try
-                        if (this.tryCount === this.retryLimit) {
-                            this.error = errorCallback;
-                            delete this.suppressErrors;
-                        }
-
-                        //try again
-                        $.ajax(this);
-                        return true;
-                    }
-                    return true;
-                }
-            };
-
-            $.ajax(ajaxParams);
-    };
 
     this.getRootURL = function() {
         return "https://blockchain.info/";
