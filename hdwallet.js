@@ -123,7 +123,6 @@ function HDAccount(wallet, label, idx) {
                 paymentRequest.amount = this.paymentRequests[i].amount;
                 paymentRequest.label = this.paymentRequests[i].label;
                 paymentRequest.paid = this.paymentRequests[i].paid;
-                paymentRequest.canceled = this.paymentRequests[i].canceled;
                 paymentRequest.complete = this.paymentRequests[i].complete;
                 paymentRequest.index = this.paymentRequests[i].index;
                 paymentRequestsJson.push(paymentRequest);
@@ -142,14 +141,12 @@ function HDAccount(wallet, label, idx) {
           console.log(amount)
             for (var i in this.paymentRequests) {
                 var paymentRequest = this.paymentRequests[i];
-                if (paymentRequest.canceled == true ||
-                    (
+                if (                    
                      (paymentRequest.amount == 0   || paymentRequest.amount == null) &&
                      (paymentRequest.label == null || paymentRequest.label == "") &&
                      paymentRequest.paid == 0
-                    )
+                    
                 ) { // Reuse:
-                    paymentRequest.canceled = false;
                     paymentRequest.complete = false;
                     paymentRequest.amount = amount;
                     paymentRequest.paid = 0;
@@ -167,7 +164,6 @@ function HDAccount(wallet, label, idx) {
             var paymentRequest = {amount: amount,
                                    paid: 0,
                                    txidList: [],
-                                   canceled : false,
                                    complete : false,
                                    label : label,
                                    index: this.getAddressesCount()-1}
@@ -235,7 +231,8 @@ function HDAccount(wallet, label, idx) {
             var idx = this.wallet.addresses.indexOf(address);
             var paymentRequest = this.paymentRequests[idx];
             if (idx > -1) {
-                paymentRequest.canceled = true;
+                paymentRequest.amount = 0;
+                paymentRequest.label = "";
                 return true;
             }
             return false;
@@ -459,8 +456,7 @@ function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password) {
         if (paymentRequests != null) {
             for (var m in paymentRequests) {
                 var paymentRequest = paymentRequests[m];
-                if (paymentRequest.complete == false &&
-                    paymentRequest.canceled == false) {
+                if (paymentRequest.complete == false) {
                         paymentRequest.paid = 0;
                     }
                 paymentRequest.txidList = [];
@@ -538,7 +534,6 @@ function recoverHDWallet(hdwallet, successCallback, errorCallback) {
             var paymentRequest = {  amount: 0,
                                     paid: 0,
                                     txidList: [],
-                                    canceled : false,
                                     complete: true,
                                     index: parseInt(i)}
 
