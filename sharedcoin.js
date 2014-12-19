@@ -2,6 +2,7 @@ var SharedCoin = new function() {
     var SharedCoin = this;
     var DonationPercent = 0.5;
     var AjaxTimeout = 120000;
+    var AjaxRetryDefault = 3;
     var LastSignatureSubmitTime = 0;
     var MinTimeBetweenSubmits = 120000;
     var options = {};
@@ -203,7 +204,7 @@ var SharedCoin = new function() {
                     type: "POST",
                     url: URL,
                     timeout: AjaxTimeout,
-                    retryLimit: 3,
+                    retryLimit: AjaxRetryDefault,
                     data : {method : 'submit_offer', fee_percent : self.fee_percent.toString(), format : 'json', token : SharedCoin.getToken(), offer : JSON.stringify(self)},
                     success: function (obj) {
                         if (obj.status == 'complete') {
@@ -232,7 +233,7 @@ var SharedCoin = new function() {
                     type: "POST",
                     url: URL,
                     timeout: AjaxTimeout,
-                    retryLimit: 3,
+                    retryLimit: AjaxRetryDefault,
                     data : {method : 'get_offer_id', format : 'json', offer_id : self.offer_id},
                     success: function (obj) {
                         success(obj);
@@ -286,7 +287,7 @@ var SharedCoin = new function() {
                     type: "POST",
                     url: URL,
                     timeout: AjaxTimeout,
-                    retryLimit: 3,
+                    retryLimit: AjaxRetryDefault,
                     data : {method : 'get_proposal_id', format : 'json', offer_id : self.offer_id, proposal_id : proposal_id},
                     success: function (obj) {
 
@@ -500,7 +501,7 @@ var SharedCoin = new function() {
                     type: "POST",
                     url: URL,
                     timeout: AjaxTimeout,
-                    retryLimit: 3,
+                    retryLimit: AjaxRetryDefault,
                     data : {method : 'submit_signatures', format : 'json', input_scripts : JSON.stringify(input_scripts), offer_id : self.offer_id, proposal_id : proposal.proposal_id},
                     success: function (obj) {
                         if (obj.status == 'not_found')
@@ -1438,7 +1439,7 @@ var SharedCoin = new function() {
             type: "POST",
             url: URL,
             timeout: AjaxTimeout,
-            retryLimit: 3,
+            retryLimit: AjaxRetryDefault,
             data : {method : 'get_info', format : 'json'},
             success: function (obj) {
                 try {
