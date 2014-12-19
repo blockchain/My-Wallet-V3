@@ -2121,7 +2121,7 @@ var MyWallet = new function() {
     function initializeHDWallet(passphrase, bip39Password) {
         var seedHexString = null;
         if (passphrase == null)
-            seedHexString = this.generateHDWalletSeedHex();
+            seedHexString = MyWallet.generateHDWalletSeedHex();
         else
             seedHexString = passphraseToPassphraseHexString(passphrase);
 
@@ -3689,28 +3689,28 @@ var MyWallet = new function() {
     this.decrypt = function(data, password, pbkdf2_iterations, success, error) {
         //iso10126 with pbkdf2_iterations iterations
      
-    try {
-        /* This is currently (2014-11-28) the default wallet format. 
-           There are two steps to decrypting the wallet. The first step is to
-           stretch the users password using PBKDF2. This essentially generates
-           an AES key which we need for the second step, which is to decrypt 
-           the payload using AES.
+        try {
+            /* This is currently (2014-11-28) the default wallet format. 
+               There are two steps to decrypting the wallet. The first step is to
+               stretch the users password using PBKDF2. This essentially generates
+               an AES key which we need for the second step, which is to decrypt 
+               the payload using AES.
 
-           Strechting the password requires a salt. AES requires an IV. We use 
-           the same for both. It's the first 32 hexadecimals characters (i.e. 
-           16 bytes).
-      
-           The conversions between different encodings can probably be achieved
-           with fewer methods.
-        */
+               Strechting the password requires a salt. AES requires an IV. We use 
+               the same for both. It's the first 32 hexadecimals characters (i.e. 
+               16 bytes).
+          
+               The conversions between different encodings can probably be achieved
+               with fewer methods.
+            */
         
-        var decoded = decryptAesWithStretchedPassword(data, password, pbkdf2_iterations);
-        
-        if (decoded != null && decoded.length > 0) {
-            if (success(decoded)) {
-                return decoded;
+            var decoded = decryptAesWithStretchedPassword(data, password, pbkdf2_iterations);
+            
+            if (decoded != null && decoded.length > 0) {
+                if (success(decoded)) {
+                    return decoded;
+                };
             };
-        };
         
         } catch (e) {
             console.log(e);
