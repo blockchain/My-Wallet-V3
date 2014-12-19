@@ -1714,6 +1714,55 @@ var MyWallet = new function() {
         });
     }
 
+    this.sendFromLegacyAddressToAddress = function(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback, getPassword)  {
+        if (double_encryption) {
+            if (dpassword == null) {
+                getPassword(function(pw) {
+                    if (MyWallet.validateSecondPassword(pw)) {
+                        sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback);                    
+                    } else {
+                        MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
+                    }
+                });            
+            } else {
+                sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback);                    
+            }
+        } else {
+                sendFromLegacyAddressToAccount(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback);                    
+        }
+    }
+
+    function sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback)  {
+        var account = myHDWallet.getAccount(toIdx);
+        var obj = initNewTx();
+
+        if (feeAmount != null)
+            obj.fee = Bitcoin.BigInteger.valueOf(feeAmount);
+        else
+            obj.fee = obj.base_fee;
+
+        obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(toAddress), value : Bitcoin.BigInteger.valueOf(amount)});
+        obj.from_addresses = [fromAddress];
+        obj.ready_to_send_header = 'Bitcoins Ready to Send.';
+
+        obj.addListener({
+            on_success : function(e) {
+                if (successCallback)
+                    successCallback();
+            },
+            on_start : function(e) {
+            },
+            on_error : function(e) {
+                if (successCallback)
+                    errorCallback(e);
+            }
+        });
+
+        obj.note = note;
+
+        obj.start();
+    }
+
     this.sendFromLegacyAddressToAccount = function(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback, getPassword)  {
         if (double_encryption) {
             if (dpassword == null) {

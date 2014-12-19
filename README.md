@@ -676,6 +676,28 @@ unarchives address, backups wallet and refreshes balances
 {function} - function with signiture getPassword(success) where success has parameter pw for user inputed password
 
 
+#### `MyWallet.sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback, getPassword);`
+
+##### Parameters:
+
+{string} - from address
+
+{int} - to address
+
+{int} - send amount in satoshis
+
+{int} - fee amount in satoshis
+
+{string} - optional tx note
+
+{function} - success callback function
+
+{function} - error callback function
+
+{function} - function with signiture getPassword(success) where success has parameter pw for user inputed password
+
+
+
 HDWallet API
 ===========
 
