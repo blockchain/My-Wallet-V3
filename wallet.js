@@ -2200,6 +2200,8 @@ var MyWallet = new function() {
 
         out += '	"keys" : [\n';
 
+        var atLeastOne = false;
+
         for (var key in addresses) {
             var addr = $.extend({}, addresses[key]);
 
@@ -3454,10 +3456,6 @@ var MyWallet = new function() {
         try {
             if (method == null) {
                 method = 'update';
-            }
-
-            if (nKeys(addresses) == 0) {
-                throw 'Addresses Length 0';
             }
 
             var data = MyWallet.makeWalletJSON();

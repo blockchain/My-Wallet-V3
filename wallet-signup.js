@@ -37,8 +37,7 @@ var MyWalletSignup = new function() {
                         method : 'insert',
                         format : 'plain',
                         sharedKey : sharedKey,
-                        guid : guid,
-                        active : MyWallet.getLegacyActiveAddresses().join('|')
+                        guid : guid
                     };
                                    
                     $.extend(post_data, extra);
@@ -95,9 +94,6 @@ var MyWalletSignup = new function() {
                 if (password.length > 255) {
                     throw 'Passwords must be at shorter than 256 characters';
                 }
-
-                if (MyWallet.getAllLegacyAddresses().length == 0)
-                    MyWallet.generateNewKey(password);
 
                 //User reported this browser generated an invalid private key
                 if(navigator.userAgent.match(/MeeGo/i)) {
