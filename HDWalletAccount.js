@@ -54,6 +54,16 @@ function HDWalletAccount(seed, network) {
   if (seed)
     this.newMasterKey(seed)
 
+  this.getAddressAtIndex = function(idx) {
+    var key = this.externalAccount.derive(idx)
+    return key.getAddress().toString()
+  }
+
+  this.getChangeAddressAtIndex = function(idx) {
+    var key = this.internalAccount.derive(idx)
+    return key.getAddress().toString()
+  }
+
   this.generateAddress = function() {
     var key = this.externalAccount.derive(this.addresses.length)
     this.addresses.push(key.getAddress().toString())
