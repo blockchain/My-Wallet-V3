@@ -3603,7 +3603,6 @@ var MyWallet = new function() {
             
             var decryptNormal = function() {
                 try {
-                    console.log('1')
                     var decrypted = decryptAesWithStretchedPassword(obj.payload, password, obj.pbkdf2_iterations);
                     // CryptoJS.AES.decrypt(obj.payload, password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iterations : obj.pbkdf2_iterations});
                     var root = $.parseJSON(decrypted);
