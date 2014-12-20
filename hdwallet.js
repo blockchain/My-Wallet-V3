@@ -428,8 +428,8 @@ function HDWallet(seedHex, bip39Password) {
             walletAccount.accountZero = walletAccount.getMasterKey().deriveHardened(44).deriveHardened(0).deriveHardened(accountIdx);
             walletAccount.externalAccount = walletAccount.getAccountZero().derive(0);
             walletAccount.internalAccount = walletAccount.getAccountZero().derive(1);
-            walletAccount.extendedPrivateKey = walletAccount.getAccountExtendedKey(true);
-            walletAccount.extendedPublicKey = walletAccount.getAccountExtendedKey(false);
+            walletAccount.extendedPrivateKey = walletAccount.getAccountZero().toBase58();
+            walletAccount.extendedPublicKey = walletAccount.getAccountZero().neutered().toBase58();
 
 
             var account = HDAccount(walletAccount, label, this.accountArray.length);
