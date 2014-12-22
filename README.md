@@ -410,6 +410,24 @@ stores currency code in memory and in local storage
 {Object}  - dictionary of available currencies
 
 
+#### `MyWallet.disableSaveTwoFactor(success, error);`
+
+##### Parameters:
+
+{function} - success callback function
+
+{function} - error callback function
+
+
+#### `MyWallet.enableSaveTwoFactor(success, error);`
+
+##### Parameters:
+
+{function} - success callback function
+
+{function} - error callback function
+
+
 #### `MyWallet.unsetTwoFactor(success, error);`
 
 ##### Parameters:

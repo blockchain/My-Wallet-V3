@@ -2085,7 +2085,7 @@ var MyWallet = new function() {
     }
 
     this.generateHDWalletSeedHex = function() {
-        var passPhrase = this.generateHDWalletPassphrase();
+        var passPhrase = MyWallet.generateHDWalletPassphrase();
         return passphraseToPassphraseHexString(passPhrase);
     }
 
@@ -2199,6 +2199,8 @@ var MyWallet = new function() {
         }
 
         out += '	"keys" : [\n';
+
+        var atLeastOne = false;
 
         for (var key in addresses) {
             var addr = $.extend({}, addresses[key]);
@@ -2400,6 +2402,26 @@ var MyWallet = new function() {
         BlockchainAPI.verifyMobile(code, function(data) {
             if (successCallback)
                 successCallback(data);
+        }, function() {
+            if (errorCallback)
+               errorCallback();
+        });
+    }
+
+    this.disableSaveTwoFactor = function(successCallback, errorCallback) {
+        BlockchainAPI.toggleSave2FA(true, function() {
+            if (successCallback)
+                successCallback();
+        }, function() {
+            if (errorCallback)
+               errorCallback();
+        });
+    }
+
+    this.enableSaveTwoFactor = function(successCallback, errorCallback) {
+        BlockchainAPI.toggleSave2FA(false, function() {
+            if (successCallback)
+                successCallback();
         }, function() {
             if (errorCallback)
                errorCallback();
@@ -3436,10 +3458,6 @@ var MyWallet = new function() {
                 method = 'update';
             }
 
-            if (nKeys(addresses) == 0) {
-                throw 'Addresses Length 0';
-            }
-
             var data = MyWallet.makeWalletJSON();
             localWalletJsonString = data;
             
@@ -3583,7 +3601,6 @@ var MyWallet = new function() {
             
             var decryptNormal = function() {
                 try {
-                    console.log('1')
                     var decrypted = decryptAesWithStretchedPassword(obj.payload, password, obj.pbkdf2_iterations);
                     // CryptoJS.AES.decrypt(obj.payload, password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iterations : obj.pbkdf2_iterations});
                     var root = $.parseJSON(decrypted);
