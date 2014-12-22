@@ -1109,10 +1109,6 @@ var MyWallet = new function() {
 
                     tx.setConfirmations(0);
 
-                    for (var i = 0; i <  tx.account_indexes.length; i++) {
-                        MyWallet.asyncGetAndSetUnspentOutputsForAccount(tx.account_indexes[i]);
-                    }
-
                     transactions.push(tx);
 
                     playSound('beep');
@@ -2716,10 +2712,6 @@ var MyWallet = new function() {
             tx.result = calcTxResult(tx, false, checkCompleted);
 
             transactions.push(tx);
-        }
-
-        for (var i in myHDWallet.getAccounts()) {
-            MyWallet.asyncGetAndSetUnspentOutputsForAccount(i);
         }
 
         if (!cached) {
