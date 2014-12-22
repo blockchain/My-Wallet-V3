@@ -33,17 +33,45 @@ Include the following files:
 * `crypto-util-legacy.js`
 * `wallet.js`
 
-Disable logout, if desired, for development work:
 
+Disable logout, if desired, for development work:
 ```javascript
 MyWallet.disableLogout(true);
+
+// Set an interval, since logout gets reactived by certain parts of the code
+window.setInterval(function() { MyWallet.disableLogout(true); }, 60000);
 ```
+
+
+My Wallet communicates about its state with user-defined event listeners. Setup a listener like so:
+```javascript
+function myListenerFun(eventName, data) {
+    // Handle events
+}
+
+// Register listener function with MyWallet
+MyWallet.addEventListener(myListenerFun);
+```
+
+Some events that we need to process:
+
+| Event Name | Our Action |
+| :--- | :--- |
+| `did_multiaddr` | Populate wallet statistics on the UI |
+| `hd_wallets_does_not_exist` | Create an HD wallet |
+
+
+To build an HD wallet with an existing legacy wallet, we must initialize after receiving event notification from MyWallet. Calling `initializeHDWallet` with `null` argument creates a new random wallet seed.
+```javascript
+MyWallet.initializeHDWallet(null);
+```
+
 
 Load a wallet from the server, with no 2FA
 ```javascript
 var guid = "my-wallet-guid-1234-bcde";
 var pass = "wallet-password";
-var twoFactorCode = "code";
+var twoFactorCode = null;
 
 MyWallet.fetchWalletJSON(guid, null, null, pass, twoFactorCode, 
     successFun, need2FAfun, wrong2FAfun, otherErrorFun);
@@ -51,6 +79,7 @@ MyWallet.fetchWalletJSON(guid, null, null, pass, twoFactorCode,
 // Do stuff with the wallet
 var LegacyAddresses = MyWallet.getLegacyActiveAddresses();
 ```
+
 
 
 ## MyWallet API
