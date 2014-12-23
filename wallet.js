@@ -1537,10 +1537,7 @@ var MyWallet = new function() {
 
     this.asyncGetAndSetUnspentOutputsForAccount = function(accountIdx, successCallback, errorCallback) {
         var account = myHDWallet.getAccount(accountIdx);
-        var addresses = account.getAddresses();
-        addresses = addresses.concat(account.getChangeAddresses());
 
-        //BlockchainAPI.get_unspent(addresses, function (obj) {
         BlockchainAPI.get_unspent([account.extendedPublicKey], function (obj) {
 
             obj.unspent_outputs.forEach(function(utxo) {
