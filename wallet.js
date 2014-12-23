@@ -2519,7 +2519,7 @@ var MyWallet = new function() {
     }
 
     this.hasLegacyAddresses = function() {
-        return addresses.length != 0;
+        return (addresses.length != undefined && addresses.length != 0);
     }
 
     this.getLegacyActiveAddresses = function() {
