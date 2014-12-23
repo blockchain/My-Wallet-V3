@@ -3115,7 +3115,7 @@ var MyWallet = new function() {
     }
 
     //Fetch information on a new wallet identfier
-    this.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success,needs_two_factor_code, wrong_two_factor_code, other_error) {
+    this.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success,needs_two_factor_code, wrong_two_factor_code, authorization_required, other_error) {
 //        console.log('Set GUID ' + user_guid);
  
         if (didSetGuid) {
@@ -3210,7 +3210,7 @@ var MyWallet = new function() {
                 MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error);
             },
             error : function(e) {
-              if(e.responseJSON && e.responseJSON.initial_error) {
+                if(e.responseJSON && e.responseJSON.initial_error && !e.responseJSON.authorization_required) {
                   other_error(e.responseJSON.initial_error);
                   return;
                 }
@@ -3237,7 +3237,9 @@ var MyWallet = new function() {
                                 var obj = $.parseJSON(e.responseText);
 
                                 if (obj.authorization_required) {
-                                    MyWallet.pollForSessionGUID(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, other_error);
+                                  authorization_required(function(authorization_received) {
+                                      MyWallet.pollForSessionGUID(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_received, other_error);
+                                    })
                                 }
 
                                 if (obj.initial_error) {
@@ -3258,7 +3260,7 @@ var MyWallet = new function() {
         });
     }
 
-    this.pollForSessionGUID = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, other_error) {
+    this.pollForSessionGUID = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_received, other_error) {
         if (isPolling) return;
 
         isPolling = true;
@@ -3272,6 +3274,8 @@ var MyWallet = new function() {
                 if (obj.guid) {
 
                     isPolling = false;
+                    
+                    authorization_received()
 
                     MyWallet.sendEvent("msg", {type: "success", message: 'Authorization Successful', platform: ""});
 
