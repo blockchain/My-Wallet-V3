@@ -182,7 +182,7 @@ delete tx note and backups wallet
 {string} - bitcoin amount
 
 
-#### `MyWallet.fetchWalletJson(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, other_error);`
+#### `MyWallet.fetchWalletJson(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_required, other_error);`
 
 ##### Parameters:
 
@@ -201,6 +201,8 @@ delete tx note and backups wallet
 {function} - callback function that will invoke with the 2FA Type, if 2FA code is needed
 
 {function} - callback function that will invoke if 2FA code is incorrect
+
+{function(authorization_received)} - callback that will invoke if email authorization is needed. Polling starts as soon as a callback is provided which passes a function for once authorization has been received.
 
 {function} - other error callback function
 
