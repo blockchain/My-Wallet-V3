@@ -3279,7 +3279,7 @@ var MyWallet = new function() {
 
                     MyWallet.sendEvent("msg", {type: "success", message: 'Authorization Successful', platform: ""});
 
-                    MyWallet.fetchWalletJson(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, other_error);
+                    MyWallet.fetchWalletJson(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, null, other_error);
                 } else {
                     if (counter < 600) {
                         ++counter;
