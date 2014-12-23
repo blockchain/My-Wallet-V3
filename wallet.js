@@ -1540,7 +1540,8 @@ var MyWallet = new function() {
         var addresses = account.getAddresses();
         addresses = addresses.concat(account.getChangeAddresses());
 
-        BlockchainAPI.get_unspent(addresses, function (obj) {
+        //BlockchainAPI.get_unspent(addresses, function (obj) {
+        BlockchainAPI.get_unspent([account.extendedPublicKey], function (obj) {
 
             obj.unspent_outputs.forEach(function(utxo) {
                 var txBuffer = new Bitcoin.Buffer.Buffer(utxo.tx_hash, "hex");
