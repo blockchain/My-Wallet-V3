@@ -3210,7 +3210,11 @@ var MyWallet = new function() {
                 MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error);
             },
             error : function(e) {
-
+              if(e.responseJSON && e.responseJSON.initial_error) {
+                  other_error(e.responseJSON.initial_error);
+                  return;
+                }
+              
                 MyStore.get('guid', function(local_guid) {
                     MyStore.get('payload', function(local_payload) {
                         //Error downloading wallet from server
