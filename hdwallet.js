@@ -6,7 +6,7 @@ function HDAccount(wallet, label, idx) {
         extendedPrivateKey : null,
         extendedPublicKey : null,
         archived : false,
-        balance : 0,
+        balance : null,
         paymentRequests : [],
         changeAddressToNTxs : {},
         getAccountJsonData : function() {
@@ -99,9 +99,15 @@ function HDAccount(wallet, label, idx) {
             return this.wallet.setUnspentOutputs(utxo);
         },                
         incBalance : function(amount) {
+            if(this.balance == null) {
+              this.balance = 0;              
+            }
             this.balance += amount;
         },
         decBalance : function(amount) {
+            if(this.balance == null) {
+              this.balance = 0;              
+            }
             this.balance -= amount;
         },
         getBalance : function() {
@@ -111,7 +117,7 @@ function HDAccount(wallet, label, idx) {
             return this.balance = balance;
         },
         resetBalance : function() {
-            return this.balance = 0;
+            return this.balance = null;
         },
         getAddressForPaymentRequest : function(paymentRequest) {
             return this.getAddressAtIdx(paymentRequest.index);
