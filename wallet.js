@@ -2730,7 +2730,9 @@ var MyWallet = new function() {
         logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
 
         success();
+    }
 
+    this.getHistoryAndParseMultiAddressJSON = function() {
         ///Get the list of transactions from the http API
         MyWallet.get_history(null, function() {
             MyStore.get('multiaddr', function(multiaddrjson) {

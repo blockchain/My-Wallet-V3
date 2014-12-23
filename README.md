@@ -511,6 +511,12 @@ stores currency code in memory and in local storage
 {bool}  - is valid PrivateKey
 
 
+#### `MyWallet.getHistoryAndParseMultiAddressJSON();`
+
+##### Description:
+
+Get history and parse multiaddr json. Needs to be called by client in the success callback of fetchWalletJson and after MyWallet.initializeHDWallet
+
 
 Legacy API
 ===========
