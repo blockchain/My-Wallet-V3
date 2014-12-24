@@ -124,7 +124,7 @@ var LegacyAddresses = MyWallet.getLegacyActiveAddresses();
 {function} - error callback function
 
 
-#### `MyWallet.importPrivateKey(privateKeyString);`
+#### `MyWallet.importPrivateKey(privateKeyString, getPassword, success, error);`
 
 ##### Parameters:
 
@@ -808,7 +808,7 @@ HDWallet API
 {bool}  - is valid mnemonic
 
 
-#### `MyWallet.initializeHDWallet(passphrase, bip39Password, getPassword);`
+#### `MyWallet.initializeHDWallet(passphrase, bip39Password, getPassword, success, error);`
 
 ##### Parameters:
 

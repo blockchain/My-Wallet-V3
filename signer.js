@@ -595,262 +595,6 @@ function startTxUI(el, type, pending_transaction, dont_ask_for_anon) {
             };
         }
 
-        MyWallet.getSecondPassword(function() {
-            try {
-                //Get the from address, if any
-                var from_select = el.find('select[name="from"]');
-                var fromval = from_select.val();
-                if (fromval == null || fromval == 'any') {
-                    pending_transaction.from_addresses = MyWallet.getLegacyActiveAddresses();
-                } else if (from_select.attr('multiple') == 'multiple') {
-                    pending_transaction.from_addresses = fromval;
-                } else {
-                    pending_transaction.from_addresses = [fromval];
-                }
-
-                var note = el.find('textarea[name="public-note"]').val();
-                if (note != null && note.length > 0) {
-
-                    if (note.length > 255)
-                        throw 'Notes are restricted to 255 characters in length';
-
-                    pending_transaction.note = note;
-                }
-
-                var changeAddressVal = $.trim(el.find('select[name="change"]').val());
-
-                if (changeAddressVal.length > 0) {
-                    if (changeAddressVal == 'new') {
-                        var key = MyWallet.generateNewKey();
-
-                        var bitcoin_address = key.pub.getAddress();
-
-                        pending_transaction.change_address = bitcoin_address;
-
-                        pending_transaction.generated_addresses.push(bitcoin_address.toString());
-
-                    } else if (changeAddressVal != 'any') {
-                        try {
-                            pending_transaction.change_address = Bitcoin.Address.fromBase58Check(changeAddressVal);
-                        } catch (e) {
-                            throw 'Invalid change address: ' + e;
-                        };
-                    }
-                }
-
-                var input_fee_string = el.find('input[name="fees"]').val();
-                if (input_fee_string != null && input_fee_string.length > 0) {
-                    var input_fee = precisionToSatoshiBN(input_fee_string);
-                    if (input_fee.compareTo(Bitcoin.BigInteger.ZERO) >= 0) {
-                        pending_transaction.fee = input_fee;
-                        pending_transaction.did_specify_fee_manually = true;
-                    }
-                }
-
-                var recipients = el.find(".recipient");
-
-                if (recipients.length == 0) {
-                    throw 'A transaction must have at least one recipient';
-                }
-
-                var n_recipients = recipients.length;
-
-                var try_continue = function() {
-                    if (n_recipients == 0)  {
-                        pending_transaction.error('Nothing to send.');
-                        return;
-                    }
-
-                    //Check that we have resolved all to addresses
-                    if (pending_transaction.to_addresses.length < n_recipients)
-                        return;
-
-                    //Check that we have resolved all to addresses
-                    if (pending_transaction.to_addresses.length > n_recipients) {
-                        pending_transaction.error('We seem to have more recipients than required. Unknown error');
-                        return;
-                    }
-
-                    //If we do have the correct number of recipients start the transaction
-                    pending_transaction.start();
-                }
-
-                //Constuct the recepient address array
-                recipients.each(function() {
-                    try {
-                        var child = $(this);
-
-                        /* Parse The Value */
-                        var value_input = child.find('input[name="send-value"]');
-                        var send_to_input = child.find('input[name="send-to-address"]');
-                        var send_to_email_input = child.find('input[name="send-to-email"]');
-                        var send_to_sms_input = child.find('input[name="send-to-sms"]');
-
-                        var value = 0;
-                        try {
-                            value = precisionToSatoshiBN(value_input.val());
-
-                            if (value == null || value.compareTo(Bitcoin.BigInteger.ZERO) <= 0)
-                                throw 'You must enter a value greater than zero';
-                        } catch (e) {
-                            console.log(e);
-
-                            if (value_input.data('optional') == true) {
-                                --n_recipients;
-                                return true;
-                            } else {
-                                throw 'Invalid send amount';
-                            }
-                        };
-
-                        if (send_to_input.length > 0) {
-                            //Trim and remove non-printable characters
-                            var send_to_address = $.trim(send_to_input.val()).replace(/[\u200B-\u200D\uFEFF]/g, '');
-
-                            if (send_to_address == null || send_to_address.length == 0) {
-                                throw 'You must enter a bitcoin address for each recipient';
-                            }  else {
-
-                                var address = resolveAddress(send_to_address);
-
-                                if (type == 'shared') {
-                                    if (!address) {
-                                        throw 'Invalid Bitcoin Address';
-                                    }
-
-                                    MyWallet.sendEvent("msg", {type: "info", message: 'Creating Forwarding Address', platform: "iOS"});
-
-                                    MyWallet.securePost("forwarder", { action : "create-mix", address : address, shared : true, format : 'json'}, function(obj) {
-                                        try {
-                                            if (obj.destination != address) {
-                                                throw 'Mismatch between requested and returned destination address';
-                                            }
-
-                                            if (obj.fee_percent != MyWallet.getMixerFee()) {
-                                                MyWallet.get_history();
-
-                                                throw 'The mixer fee may have changed';
-                                            }
-
-                                            pending_transaction.to_addresses.push({address: Bitcoin.Address.fromBase58Check(obj.input_address), value : value});
-
-                                            //Call again now we have got the forwarding address
-                                            try_continue();
-                                        } catch (e) {
-                                            pending_transaction.error(e);
-                                        }
-                                    }, function(data) {
-                                        pending_transaction.error(data ? data.responseText : null);
-                                    });
-                                } else {
-                                    if (address) {
-                                        pending_transaction.to_addresses.push({address: Bitcoin.Address.fromBase58Check(address), value : value});
-                                    } else if (send_to_address.length < 10) {
-                                        //Try and Resolve firstbits
-                                        BlockchainAPI.resolve_firstbits(send_to_address, function(data) {
-                                            try {
-                                                pending_transaction.to_addresses.push({address: Bitcoin.Address.fromBase58Check(data), value : value});
-
-                                                //Call again now we have resolved the address
-                                                try_continue();
-                                            } catch (e) {
-                                                pending_transaction.error(e);
-                                            }
-                                        }, function() {
-                                            pending_transaction.error('Invalid to address: ' + send_to_address);
-                                        });
-
-                                        return false;
-                                    } else {
-                                        pending_transaction.error('Invalid to address: ' + send_to_address);
-                                    }
-                                }
-                            }
-                        } else if (send_to_sms_input.length > 0) {
-                            var mobile_number = $.trim(send_to_sms_input.val());
-
-                            if (mobile_number.charAt(0) == '0')
-                                mobile_number = mobile_number.substring(1);
-
-                            if (mobile_number.charAt(0) != '+')
-                                mobile_number = '+' + child.find('select[name="sms-country-code"]').val() + mobile_number;
-
-                            //Send to email address
-                            var miniKeyAddrobj = generateNewMiniPrivateKey();
-
-                            //Fetch the newly generated address
-                            var address = miniKeyAddrobj.key.pub.getAddress().toString();
-
-                            //Archive the address
-                            MyWallet.setLegacyAddressTag(address, 2);
-
-                            MyWallet.setLegacyAddressLabel(address, mobile_number + ' Sent Via SMS');
-
-                            pending_transaction.generated_addresses.push(address);
-
-                            pending_transaction.to_addresses.push({address: Bitcoin.Address.fromBase58Check(address), value : value});
-
-                            if (pending_transaction.sms_data)
-                                throw 'Cannot send to more than one SMS recipient at a time';
-
-                            pending_transaction.sms_data = {
-                                number : mobile_number,
-                                miniKey:  miniKeyAddrobj.miniKey
-                            };
-                        } else if (send_to_email_input.length > 0) {
-                            //Send to email address
-
-                            var send_to_email = $.trim(send_to_email_input.val());
-
-                            function validateEmail(str) {
-                                var lastAtPos = str.lastIndexOf('@');
-                                var lastDotPos = str.lastIndexOf('.');
-                                return (lastAtPos < lastDotPos && lastAtPos > 0 && str.indexOf('@@') == -1 && lastDotPos > 2 && (str.length - lastDotPos) > 2);
-                            }
-
-                            if (validateEmail(send_to_email)) {
-                                //Send to email address
-                                var key = MyWallet.generateNewKey();
-
-                                //Fetch the newly generated address
-                                var address = key.pub.getAddress().toString();
-
-                                //Archive the address
-                                MyWallet.setLegacyAddressTag(address, 2);
-
-                                MyWallet.setLegacyAddressLabel(address, send_to_email + ' Sent Via Email');
-
-                                pending_transaction.generated_addresses.push(address);
-
-                                pending_transaction.to_addresses.push({address: Bitcoin.Address.fromBase58Check(address), value : value});
-
-                                if (pending_transaction.email_data)
-                                    throw 'Cannot send to more than one email recipient at a time';
-
-                                pending_transaction.email_data = {
-                                    email : send_to_email,
-                                    priv : Bitcoin.base58.encode(key.d.toBuffer(32)),
-                                    amount : value
-                                }
-                            } else {
-                                throw 'Invalid Email Address';
-                            }
-                        }
-                    } catch (e) {
-                        console.log(e);
-
-                        pending_transaction.error(e);
-                    }
-                });
-
-                try_continue();
-
-            } catch (e) {
-                pending_transaction.error(e);
-            }
-        }, function() {
-            pending_transaction.error();
-        });
     } catch (e) {
         pending_transaction.error(e);
     }
@@ -860,18 +604,21 @@ function startTxUI(el, type, pending_transaction, dont_ask_for_anon) {
 
 
 function signInput(tx, inputN, base58Key, connected_script, type) {
-
     type = type ? type : Bitcoin.Transaction.SIGHASH_ALL;
 
     var inputBitcoinAddress = Bitcoin.Address.fromOutputScript(connected_script);
+    
+    var decoded = MyWallet.B58LegacyDecode(base58Key)
+    
+    var key = new Bitcoin.ECKey(new Bitcoin.BigInteger.fromBuffer(decoded), false);
 
-    var key = new Bitcoin.ECKey(new Bitcoin.BigInteger.fromBuffer(base58Key), false);
-
+    // var key = new Bitcoin.ECKey(new Bitcoin.BigInteger.fromBuffer(base58Key), false);
+    
     if (MyWallet.getUnCompressedAddressString(key) == inputBitcoinAddress.toString()) {
     } else if (MyWallet.getCompressedAddressString(key) == inputBitcoinAddress.toString()) {
         key = new Bitcoin.ECKey(key.d, true);
     } else {
-        throw 'Private key does not match bitcoin address ' + inputBitcoinAddress.toString() + ' = ' + MyWallet.getUnCompressedAddressString(key) + ' | '+ MyWallet.getCompressedAddressString(key);
+        throw 'Private key does not match bitcoin address ' + inputBitcoinAddress.toString() + ' != ' + MyWallet.getUnCompressedAddressString(key) + ' | '+ MyWallet.getCompressedAddressString(key);
     }
     var signature = tx.signInput(inputN, connected_script, key);
 
@@ -1075,12 +822,14 @@ function initNewTx() {
                     console.log(e);
                 }
             }
-        }, start : function() {
+        }, start : function(second_password) {
+            if(second_password == undefined) {
+              second_password = null;
+            }
             var self = this;
 
             try {
                 self.invoke('on_start');
-
                 BlockchainAPI.get_unspent(self.from_addresses, function (obj) {
                     try {
                         if (self.is_cancelled) {
@@ -1112,11 +861,11 @@ function initNewTx() {
                                 tx_hash : obj.unspent_outputs[i].tx_hash,
                                 confirmations : obj.unspent_outputs[i].confirmations
                             };
-
+                            
                             self.unspent.push(out);
                         }
-
-                        self.makeTransaction();
+                        
+                        self.makeTransaction(second_password);
                     } catch (e) {
                         self.error(e);
                     }
@@ -1131,7 +880,7 @@ function initNewTx() {
             return availableValue.compareTo(txValue) == 0 || availableValue.compareTo(txValue.add(this.min_free_output_size)) >= 0;
         },
         //Select Outputs and Construct transaction
-        makeTransaction : function() {
+        makeTransaction : function(second_password) {
             var self = this;
 
             try {
@@ -1240,11 +989,13 @@ function initNewTx() {
                         }
                     }
 
-                    if (self.isSelectedValueSufficient(txValue, availableValue))
-                        break;
+                    if (self.isSelectedValueSufficient(txValue, availableValue)) {
+                      break;
+                    }
 
-                    if (includeWatchOnly)
-                        break;
+                    if (includeWatchOnly) {
+                      break;
+                    }
 
                     includeWatchOnly = true;
                 }
@@ -1254,6 +1005,7 @@ function initNewTx() {
                 }
 
                 var difference = availableValue.subtract(txValue);
+                                
                 if (difference.compareTo(Bitcoin.BigInteger.ZERO) < 0) {
                     //Can only adjust when there is one recipient
                     if (self.to_addresses.length == 1 && availableValue.compareTo(Bitcoin.BigInteger.ZERO) > 0 && self.allow_adjust) {
@@ -1263,8 +1015,7 @@ function initNewTx() {
                             var adjusted = self.to_addresses[0].value.add(difference);
                             if (adjusted.compareTo(Bitcoin.BigInteger.ZERO) > 0 && adjusted.compareTo(txValue) <= 0) {
                                 self.to_addresses[0].value = adjusted;
-
-                                self.makeTransaction();
+                                self.makeTransaction(second_password);
 
                                 return;
                             } else {
@@ -1317,7 +1068,7 @@ function initNewTx() {
                 //Consume the change if it would create a very small none standard output
                 //Perhaps this behaviour should be user specified                
                 if (changeValue.compareTo(self.min_non_standard_output_size) > 0) {
-                    if (self.change_address != null) //If change address speicified return to that
+                  if (self.change_address != null) //If change address speicified return to that
                         sendTx.addOutput(self.change_address, parseInt(changeValue));
                     else if (addresses_used.length > 0) { //Else return to a random from address if specified
                         sendTx.addOutput(Bitcoin.Address.fromBase58Check(addresses_used[Math.floor(Math.random() * addresses_used.length)]), parseInt(changeValue));
@@ -1382,7 +1133,7 @@ function initNewTx() {
                     //Forced Fee
                     self.fee = self.base_fee.multiply(Bitcoin.BigInteger.valueOf(kilobytes));
 
-                    self.makeTransaction();
+                    self.makeTransaction(second_password);
                 }
 
                 //Priority under 57 million requires a 0.0005 BTC transaction fee (see https://en.bitcoin.it/wiki/Transaction_fees)
@@ -1392,10 +1143,9 @@ function initNewTx() {
                             set_fee_auto();
                         }, function() {
                             self.tx = sendTx;
-
                             self.determinePrivateKeys(function() {
                                 self.signInputs();
-                            });
+                            }, second_password);
                         }, self.fee, self.base_fee.multiply(Bitcoin.BigInteger.valueOf(kilobytes)));
                     } else {
                         //Forced Fee
@@ -1409,14 +1159,14 @@ function initNewTx() {
 
                         self.determinePrivateKeys(function() {
                             self.signInputs();
-                        });
+                        }, second_password);
                     });
                 } else {
                     self.tx = sendTx;
-
+                    
                     self.determinePrivateKeys(function() {
-                        self.signInputs();
-                    });
+                      self.signInputs();
+                    }, second_password);
                 }
             } catch (e) {
                 this.error(e);
@@ -1431,7 +1181,7 @@ function initNewTx() {
         insufficient_funds : function(amount_required, amount_available, yes, no) {
             no();
         },
-        determinePrivateKeys: function(success) {
+        determinePrivateKeys: function(success, second_password) {
             var self = this;
 
             try {
@@ -1449,8 +1199,6 @@ function initNewTx() {
                     var connected_script = self.selected_outputs[i].script;
 
                     if (connected_script == null) {
-                        console.log('Output:')
-                        console.log(self.selected_outputs[i]);
                         throw 'determinePrivateKeys() Connected script is null';
                     }
 
@@ -1464,38 +1212,38 @@ function initNewTx() {
                             connected_script.priv_to_use = Bitcoin.base58.decode(self.extra_private_keys[inputAddress]);
                         } else if (MyWallet.legacyAddressExists(inputAddress) && !MyWallet.isWatchOnlyLegacyAddress(inputAddress)) {
                             try {
-                                connected_script.priv_to_use = MyWallet.decodePK(MyWallet.getPrivateKey(inputAddress));
+                                connected_script.priv_to_use = second_password == null ? MyWallet.getPrivateKey(inputAddress) : MyWallet.decryptSecretWithSecondPassword(MyWallet.getPrivateKey(inputAddress), second_password);
                             } catch (e) {
                                 console.log(e);
                             }
                         }
-
                         if (connected_script.priv_to_use == null) {
-                            //No private key found, ask the user to provide it
-                            self.ask_for_private_key(function (key) {
-
-                                try {
-                                    if (inputAddress == MyWallet.getUnCompressedAddressString(key) || inputAddress == MyWallet.getCompressedAddressString(key)) {
-                                        self.extra_private_keys[inputAddress] = Bitcoin.Base58.encode(key.priv);
-
-                                        self.determinePrivateKeys(success); //Try Again
-                                    } else {
-                                        throw 'The private key you entered does not match the bitcoin address';
-                                    }
-                                } catch (e) {
-                                    self.error(e);
-                                }
-                            }, function(e) {
-                                //User did not provide it, try and re-construct without it
-                                //Remove the address from the from list
-                                self.from_addresses = $.grep(self.from_addresses, function(v) {
-                                    return v != inputAddress;
-                                });
-
-                                //Remake the transaction without the address
-                                self.makeTransaction();
-
-                            }, inputAddress);
+                            self.error("No private key found!");
+                            // //No private key found, ask the user to provide it
+                            // self.ask_for_private_key(function (key) {
+                            //
+                            //     try {
+                            //         if (inputAddress == MyWallet.getUnCompressedAddressString(key) || inputAddress == MyWallet.getCompressedAddressString(key)) {
+                            //             self.extra_private_keys[inputAddress] = Bitcoin.Base58.encode(key.priv);
+                            //
+                            //             self.determinePrivateKeys(success); //Try Again
+                            //         } else {
+                            //             throw 'The private key you entered does not match the bitcoin address';
+                            //         }
+                            //     } catch (e) {
+                            //         self.error(e);
+                            //     }
+                            // }, function(e) {
+                            //     //User did not provide it, try and re-construct without it
+                            //     //Remove the address from the from list
+                            //     self.from_addresses = $.grep(self.from_addresses, function(v) {
+                            //         return v != inputAddress;
+                            //     });
+                            //
+                            //     //Remake the transaction without the address
+                            //     self.makeTransaction();
+                            //
+                            // }, inputAddress);
 
                             return false;
                         } else {
