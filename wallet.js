@@ -1249,6 +1249,9 @@ var MyWallet = new function() {
     this.getBalanceForAccount = function(accountIdx) {
         return myHDWallet.getAccount(accountIdx).getBalance();
     }
+    this.getAddressAtIdxForAccount = function(accountIdx, addressIdx) {
+        return myHDWallet.getAccount(accountIdx).getAddressAtIdx(addressIdx);
+    }
 
     this.getPaymentRequestsForAccount = function(accountIdx) {
         return myHDWallet.getAccount(accountIdx).getPaymentRequests();

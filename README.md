@@ -1185,3 +1185,16 @@ redeem bitcoins sent from email or mobile
 
 {function} - error callback function
 
+
+#### `MyWallet.getAddressAtIdxForAccount(accountIdx, addressIdx);`
+
+##### Parameters:
+
+{int} - index of HD wallet account
+
+{int} - index of address of HD wallet account 
+
+
+##### Returns:
+
+{string}  - address from account idx and address idx
