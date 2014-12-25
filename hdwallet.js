@@ -76,9 +76,11 @@ function HDAccount(wallet, label, idx) {
         },        
         getAccountExtendedKey : function(isPrivate) {
             if (isPrivate)  
-                return this.wallet.getAccountZero().toBase58();
+                return this.extendedPrivateKey;
+                // return this.wallet.getAccountZero().toBase58();
             else
-                return this.wallet.getAccountZero().neutered().toBase58();
+                return this.extendedPublicKey;
+                // return this.wallet.getAccountZero().neutered().toBase58();
         },
         generateAddress : function() {
             return this.wallet.generateAddress();
@@ -143,8 +145,8 @@ function HDAccount(wallet, label, idx) {
             this.paymentRequests = paymentRequests;
         },
         generatePaymentRequest : function(amount, label) {
-          console.log("Generating payment request")
-          console.log(amount)
+          // console.log("Generating payment request")
+          // console.log(amount)
             for (var i in this.paymentRequests) {
                 var paymentRequest = this.paymentRequests[i];
                 if (                    
@@ -299,10 +301,14 @@ function passphraseToPassphraseHexString(passphrase) {
     return BIP39.mnemonicToEntropy(passphrase);
 }
 
-function HDWallet(seedHex, bip39Password) {
+// If second_password is not null we assume double encryption is set on the
+// wallet. We don't have access to the internal double_encryption variable
+// here.
+
+function HDWallet(seedHex, bip39Password, second_password, success, error) {
 
     var walletObject = {
-        seedHex : seedHex,
+        seedHex : second_password == null ? seedHex : MyWallet.encryptSecretWithSecondPassword(seedHex, second_password),
         bip39Password : bip39Password,
         accountArray : [],
         getPassphraseString : function(seedHex) {
@@ -311,8 +317,12 @@ function HDWallet(seedHex, bip39Password) {
         setSeedHexString : function(seedHex) {
             this.seedHex = seedHex;
         },
-        getSeedHexString : function() {
+        getSeedHexString : function(second_password) {
+          if(second_password == null) {
             return this.seedHex;
+          } else {
+            return MyWallet.decryptSecretWithSecondPassword(this.seedHex, second_password)
+          }
         },
         getMasterHex : function(seedHex) {
             return BIP39.mnemonicToSeed(passphraseHexStringToPassphrase(seedHex), this.bip39Password);
@@ -411,7 +421,10 @@ function HDWallet(seedHex, bip39Password) {
         getAccounts : function() {
             return this.accountArray;
         },
-        createAccountFromExtKey : function(label, extendedPrivateKey, extendedPublicKey) {
+        // This is called when a wallet is loaded, not when it's initially created. 
+        // If second password is enabled then accountPayload.xpriv has already been 
+        // encrypted. We're keeping it in an encrypted state.
+        createAccountFromExtKey : function(label, possiblyEncryptedExtendedPrivateKey, extendedPublicKey) {
             var accountIdx = this.accountArray.length;
 
             var walletAccount = new HDWalletAccount(null);
@@ -419,15 +432,17 @@ function HDWallet(seedHex, bip39Password) {
             walletAccount.newNodeFromExtKey(extendedPublicKey);
 
             var account = HDAccount(walletAccount, label, this.accountArray.length);
-            account.extendedPrivateKey = extendedPrivateKey;
+            account.extendedPrivateKey = possiblyEncryptedExtendedPrivateKey;
             account.extendedPublicKey = extendedPublicKey;
             this.accountArray.push(account);
 
             return account;
         },
-        createAccount : function(label, seedHex) {
+        createAccount : function(label, second_password) {
+            var seedHex = this.getSeedHexString(second_password)
+          
             var accountIdx = this.accountArray.length;
-
+              
             var walletAccount = new HDWalletAccount(this.getMasterHex(seedHex));
             //walletAccount.accountZero = walletAccount.getMasterKey().deriveHardened(0).derive(accountIdx);
 
@@ -437,11 +452,15 @@ function HDWallet(seedHex, bip39Password) {
 
             var account = HDAccount(walletAccount, label, this.accountArray.length);
             account.generatePaymentRequest(0, "");
-            account.extendedPrivateKey = walletAccount.getAccountZero().toBase58();
-            account.extendedPublicKey = walletAccount.getAccountZero().neutered().toBase58();
+            
+            var extendedPrivateKey = walletAccount.getAccountZero().toBase58();
+            var extendedPublicKey =  walletAccount.getAccountZero().neutered().toBase58();
+            
+            account.extendedPrivateKey = second_password == null ? extendedPrivateKey : MyWallet.encryptSecretWithSecondPassword(extendedPrivateKey, second_password);
+            account.extendedPublicKey = extendedPublicKey;
 
             this.accountArray.push(account);
-
+            
             return account;
         }
     };
@@ -449,8 +468,8 @@ function HDWallet(seedHex, bip39Password) {
     return walletObject;
 }
 
-function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password) {
-    var hdwallet = HDWallet(seedHexString, bip39Password);
+function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, second_password, success, error) {
+    var hdwallet = HDWallet(seedHexString, bip39Password, second_password, success, error);
 
     for (var i = 0; i < accountsArrayPayload.length; i++) {
         var accountPayload = accountsArrayPayload[i];
@@ -462,8 +481,9 @@ function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password) {
         var change_addresses = accountPayload.change_addresses;
         var paymentRequests = accountPayload.paymentRequests;
 
-        //console.log("label: ", label);
-
+        // This is called when a wallet is loaded, not when it's initially created. 
+        // If second password is enabled then accountPayload.xpriv has already been 
+        // encrypted. We're keeping it in an encrypted state.
         var hdaccount = hdwallet.createAccountFromExtKey(label, accountPayload.xpriv, accountPayload.xpub);
         hdaccount.setIsArchived(archived);
         if (paymentRequests != null) {

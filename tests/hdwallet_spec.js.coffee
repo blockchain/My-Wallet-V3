@@ -1,125 +1,171 @@
 describe "HD Wallet", ->
-  passphrase = undefined
+  accountsPayload = undefined
+  accountsPayloadSecondPassword = undefined
+  hdwallet = undefined
+  observer = undefined
   
   beforeEach ->
-    passphrase = "add imitate business carbon city orbit spray boss ribbon deposit bachelor sustain"
+    accountsPayload = decryptedWalletPayload["hd_wallets"][0]["accounts"]
+    accountsPayloadSecondPassword = decryptedWalletWithSecondPasswordPayload["hd_wallets"][0]["accounts"]
+    MyWallet.setDoubleEncryption(false)
+  
+  describe "initializeHDWallet()", ->
+    beforeEach ->
+      observer = {}
+      
+      observer.success = () ->
+      observer.error = () ->
+        console.log "error"
+      
+      spyOn(observer, "success")
+      spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
+      spyOn(MyWallet, "generateHDWalletSeedHex").and.returnValue(seed)
+      spyOn(MyWallet, "createAccount").and.callFake((label, getPassword, success, error)->
+        success()
+      )
+      
+    describe "without 2nd password", ->
+      beforeEach ->
+        MyWallet.initializeHDWallet(null, null, null, observer.success, observer.error)
+        
+      it "should succeed", ->
+        expect(MyWallet.createAccount).toHaveBeenCalled()
+        expect(observer.success).toHaveBeenCalled()
+      
+    describe "with a second password", ->
+      beforeEach ->
+        
+        MyWallet.setDoubleEncryption(true)
+        observer.getPassword = (callback) ->
+          callback(second_password, (()->), (()->))
+        spyOn(observer, "getPassword").and.callThrough()
+        
+        MyWallet.initializeHDWallet(null, null, observer.getPassword, observer.success, observer.error)
+        
+      it "should ask for it", ->         
+        expect(observer.getPassword).toHaveBeenCalled()
+        
+      it "should succeed", ->
+        expect(MyWallet.createAccount).toHaveBeenCalled()
+        expect(observer.success).toHaveBeenCalled()
+  
   describe "buildHDWallet()", ->
     
-      it "should have accounts count be 2", ->
-          bip39Password = "bip39Password"
-          accountsArrayPayload = [
-              {
-                  label: "Savings",
-                  xpub: "xpub6CEhipAhE6UangYAYeQUAAMiVHzhroPZRL9we3X2zzrHPsBLSfUGxkz6gZSJNm5iFV6Mf1x2V6f6APXD6YeK8sc72FYtxYrhHsfopCMLNwy",
-                  xpriv: "xprv9yFMKJdoPivHaCThScsTo2QywGADTLfi47ELqf7RSfKJX4rBu8A2QxfcqGjt3kar4RHzZvhpv3UXLQyLuqAcd4X53qpyc6PSBj7LjKftg8f",
-                  archived: false,
-                  change_addresses: 12,
-                  paymentRequests: [{amount: 100, paid: 0, complete: false, index: 0}]
-              },
-              {
-                  label: "Splurge",
-                  xpub: "xpub6CEhipAhE6UaqPj9UHEYpjY1o62ZRqeej116R7Q8rVFS1qPz2qP7kdWhMopXvJD5CoUw17aNiX81d8NJ3PAcQz8KDu5CmoJdovnX7bw5KCy",
-                  xpriv: "xprv9yFMKJdoPivHcuegNFhYTbbHF4C52NvoMn5VcizXJ9iT934qVJ4sCqCDWYWDcXogg9vvBvCDgpR7NXz2W8VzL6F5Pm6k8dxDzwPCgJ2G1oU",
-                  archived: false,
-                  change_addresses: 2,
-                  paymentRequests: []
-              }
-          ]
-
-          hdwallet = buildHDWallet(passphraseToPassphraseHexString(passphrase), accountsArrayPayload, bip39Password)
-
-          expect(hdwallet.getAccountsCount()).toBe(2)
-
-      return
-
-
-    describe "paymentRequest", ->
-      hdwallet = undefined
-      account = undefined
-      paymentRequest = undefined
-      address = undefined
-      
+    describe "when opening an existing wallet", ->
       beforeEach ->
-        hdwallet = buildHDWallet(passphraseToPassphraseHexString(passphrase), [])
+        hdwallet = buildHDWallet(seed, accountsPayload,bip39Password)
+        
+      it "should have accounts count be 2", ->
+          expect(hdwallet.getAccountsCount()).toBe(2)
+          
+      it "should not require the seed or bip39Password", ->
+        # In practice, you always need to provide a seed, e.g. 0
+        fake_seed = 0
+        hdwallet = buildHDWallet(fake_seed, accountsPayload, null)
+        expect(hdwallet.getAccountsCount()).toBe(2)
+        
+      it "should know the xpub for each account", ->
+        # The XPUB is loaded from the JSON payload, not calculated.
+        extendedPubKey = hdwallet.getAccounts()[0].getAccountExtendedKey(false)
+        expect(extendedPubKey).toBe(xpubAccountZero)
+        
+      it "should know the xpriv for each account", ->
+         # The XPRIV is loaded from the JSON payload, not calculated.
+        extendedPrivateKey = hdwallet.getAccounts()[0].getAccountExtendedKey(true)
+        expect(extendedPrivateKey).toBe(xprivAccountZero)
+             
+      describe "2nd password protected account", ->
+        beforeEach ->
+          # It might be better to refactor these tests at a higher level
+          fake_seed = 0
+          hdwallet = buildHDWallet(fake_seed, accountsPayloadSecondPassword,null)
+          hdwallet.setSeedHexString(seed_encrypted)
+                     
+        it "should only know the encrypted xpriv", ->
+          extendedPrivateKey = hdwallet.getAccounts()[0].getAccountExtendedKey(true)
+          expect(extendedPrivateKey).toBe(decryptedWalletWithSecondPasswordPayload["hd_wallets"][0]["accounts"][0]["xpriv"])
+        
+        it "should only know the encrypted seed hex", ->
+          expect(hdwallet.getSeedHexString()).toBe(seed_encrypted)
+          
+        it "decrypting the seed should work", ->
+          decrypted_seed = MyWallet.decryptSecretWithSecondPassword(hdwallet.getSeedHexString(),second_password)
+          expect(decrypted_seed).toBe(seed)
+        
+    describe "when generating a new wallet", ->
+       it "should have 0 accounts", ->
+         hdwallet = buildHDWallet(seed, [], bip39Password)
+         expect(hdwallet.getAccountsCount()).toBe(0)
+         
 
-        account = hdwallet.createAccount("Spending", passphraseToPassphraseHexString(passphrase))
-        paymentRequest = account.generatePaymentRequest(1)
-        address = account.getAddressAtIdx(paymentRequest.index)
-
-      describe "getAccountExtendedPrivKey()", ->
-          it "should mark request as completed", ->
-              extendedPrivKey = account.getAccountExtendedKey(true);
-
-              expect(extendedPrivKey).toBe("xprv9yd5CkFRNfUXBGf22qxMtvZvBEaSzzUioe7QqeyC1uuTukBWeMvFpzjJUEDswuWby8JmGR84wQHy75djYEAsAktvJa5B2QueQkzuNQiqS1C")
-
-          return
-
-      describe "getAccountExtendedPubKey()", ->
-          it "should mark request as completed", ->
-              extendedPubKey = account.getAccountExtendedKey(false);
-
-              expect(extendedPubKey).toBe("xpub6CcRcFnKD32pPkjV8sVNG4WejGQwQTCaAs31e3NoaFSSnYWfBuEWNo3nKWVZotgtN1dpoYGwSxUVyVfNrrgE7YwpSrUWsqgK2LdmuGDCBMp")
-
-          return
-
-      describe "generatePaymentRequest()", ->
-          it "should have payment request array length be 1", ->
-              expect(account.paymentRequests.length).toBe(1)
-
-          it "should have reused canceled payment request", ->
-              account.cancelPaymentRequest(address)
-
-              paymentRequest2 = account.generatePaymentRequest(2)
-
-              expect(account.paymentRequests.length).toBe(1)
-              expect(account.paymentRequests[paymentRequest2.index].amount).toBe(2)
-
-          return
-
-      describe "acceptPaymentRequest()", ->
-          it "should mark request as completed", ->
-              account.acceptPaymentRequest(address)
-
-              paymentRequest2 = account.paymentRequests[paymentRequest.index]
-
-              expect(paymentRequest2.complete).toBe(true)
-
-          return
-
-
-      describe "updatePaymentRequest()", ->
-          it "should have amount change to 2", ->
-              account.updatePaymentRequest(address, 2)
-
-              paymentRequest2 = account.paymentRequests[paymentRequest.index]
-
-              expect(paymentRequest2.amount).toBe(2)
-
-          return
-
-
-      describe "cancelPaymentRequest()", ->
-          it "should mark request as canceled", ->
-              account.cancelPaymentRequest(address)
-
-              paymentRequest2 = account.paymentRequests[paymentRequest.index]
-
-              expect(paymentRequest2.label == "" && paymentRequest2.amount == 0).toBe(true)
-
-          return
-
-
-      describe "checkToAddTxToPaymentRequest()", ->
-          it "should exist", ->
-              expect(account.checkToAddTxToPaymentRequest).toBeDefined()
-
-          it "should mark request as complete if amount matches", ->
-              account.checkToAddTxToPaymentRequest(address, "tx1", 1, false)
-
-              request =  account.paymentRequests[0]
-
-              expect(request.complete).toBe(true)
-
-          return
-
- 
+  describe "createAccount()", ->
+    account = undefined
+    
+        
+    describe "when 2nd password is disabled", ->
+      beforeEach ->
+        hdwallet = buildHDWallet(seed, accountsPayload, bip39Password)
+        account = hdwallet.createAccount("Mobile", null) # index 2
+        
+      it "should know the xpub", ->
+        extendedPubKey = account.getAccountExtendedKey(false) 
+        expect(extendedPubKey).toBe("xpub6CcRcFnKD32pSYsYf97azD7YtChp1CMxFaDnXcoYpjm4YLGBvy4LojWFYsgJxRCyzRysWxSiZ9yiZLdtncB8vhCouoihMW2BZu4T6uyW6ue")
+        
+      it "should know the xpriv", ->
+        extendedPrivateKey = account.getAccountExtendedKey(true)
+        expect(extendedPrivateKey).toBe("xprv9yd5CkFRNfUXE4o5Z7aad5ApLAsKbje6tMJBjEPwGQE5fXw3PRk6FwBmhbLDduzdQGmFP3CfhxmLKaYHxHApmrrtkHswj4oL6g37McodpQd")      
+      
+    describe "when 2nd password is enabled", ->
+      beforeEach ->
+        fake_seed = 0
+        hdwallet = buildHDWallet(fake_seed, accountsPayloadSecondPassword, null)
+        hdwallet.setSeedHexString(seed_encrypted)
+        account = hdwallet.createAccount("Mobile", second_password) # index 2  
+        
+      it "should know the xpub", ->
+        extendedPubKey = account.getAccountExtendedKey(false)
+        expect(extendedPubKey).toBe("xpub6CcRcFnKD32pSYsYf97azD7YtChp1CMxFaDnXcoYpjm4YLGBvy4LojWFYsgJxRCyzRysWxSiZ9yiZLdtncB8vhCouoihMW2BZu4T6uyW6ue")
+        
+      it "should only know the encrypted xpriv", ->
+        # Key encryption is non deterministic, so we check if the decrypted result is correct
+        extendedPrivateKey = account.getAccountExtendedKey(true)
+        descrypyedExtendedPrivateKey = MyWallet.decryptSecretWithSecondPassword(extendedPrivateKey, second_password)
+        expect(descrypyedExtendedPrivateKey).toBe("xprv9yd5CkFRNfUXE4o5Z7aad5ApLAsKbje6tMJBjEPwGQE5fXw3PRk6FwBmhbLDduzdQGmFP3CfhxmLKaYHxHApmrrtkHswj4oL6g37McodpQd")
+        
+  describe "getHDWalletPassphraseString()", ->
+    beforeEach ->
+      observer = {}
+      
+      observer.success = () ->
+      observer.error = () ->
+        console.log "error"
+      
+      spyOn(observer, "success")
+      spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
+      spyOn(MyWallet, "getHDWallet").and.returnValue({
+        getSeedHexString: (()-> if MyWallet.getDoubleEncryption() then seed_encrypted else seed) 
+        getPassphraseString: ((hex) -> if hex is seed then passphrase else "wrong")
+      })
+          
+    it "should provide the passphrase", ->
+      MyWallet.getHDWalletPassphraseString(null, observer.success, observer.error)
+      expect(observer.success).toHaveBeenCalledWith(passphrase)
+      
+    it "should ask for 2nd password and then provide the passphrase", ->
+      MyWallet.setDoubleEncryption(true)
+      
+      spyOn(MyWallet, "decryptSecretWithSecondPassword").and.callFake((secret, password) -> 
+        return seed if secret == seed_encrypted and password == second_password
+        return null
+      )
+      
+      observer.getPassword = (callback) ->
+        callback(second_password, (()->), (()->))
+        
+      spyOn(observer, "getPassword").and.callThrough()
+      
+      MyWallet.getHDWalletPassphraseString(observer.getPassword, observer.success, observer.error)
+      
+      expect(observer.getPassword).toHaveBeenCalled()
+      expect(observer.success).toHaveBeenCalledWith(passphrase)
+        

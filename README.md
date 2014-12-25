@@ -124,7 +124,7 @@ var LegacyAddresses = MyWallet.getLegacyActiveAddresses();
 {function} - error callback function
 
 
-#### `MyWallet.importPrivateKey(privateKeyString);`
+#### `MyWallet.importPrivateKey(privateKeyString, getPassword, success, error);`
 
 ##### Parameters:
 
@@ -808,7 +808,7 @@ HDWallet API
 {bool}  - is valid mnemonic
 
 
-#### `MyWallet.initializeHDWallet(passphrase, bip39Password, getPassword);`
+#### `MyWallet.initializeHDWallet(passphrase, bip39Password, getPassword, success, error);`
 
 ##### Parameters:
 
@@ -823,15 +823,19 @@ HDWallet API
 This method should be called if the event `hd_wallets_does_not_exist` is fired. Method will create the HD wallet and create the first account with the name `Spending`.
 
 
-#### `MyWallet.getHDWalletPassphraseString(getPassword);`
+#### `MyWallet.getHDWalletPassphraseString(getPassword, success, error);`
 
 ##### Parameters:
 
 {function} - function with signiture getPassword(success) where success has parameter pw for user inputed password
 
+{function(passphrase)} - the passphrase
+
+{function(reason)} - reason for failure
+
 ##### Returns:
 
-{string}  - HDWallet Passphrase
+Nothing
 
 
 #### `MyWallet.getAccount(idx);`
@@ -1083,13 +1087,17 @@ refreshes all balances across all accounts and addresses
 {int}  - idx of account
 
 
-#### `MyWallet.createAccount(label, getPassword);`
+#### `MyWallet.createAccount(label, getPassword,success,error);`
 
 ##### Parameters:
 
 {string} - label name
 
 {function} - function with signiture getPassword(success) where success has parameter pw for user inputed password
+
+{function} - called when account creation was successful
+
+{function} - called when account creation failed
 
 ##### Description:
 
