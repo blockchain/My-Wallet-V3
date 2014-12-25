@@ -957,25 +957,16 @@ var MyWallet = new function() {
         var addr = opts.compressed ? MyWallet.getCompressedAddressString(key) : MyWallet.getUnCompressedAddressString(key);
 
         var base58 = Bitcoin.base58.encode(key.d.toBuffer(32))
-        console.log("Base58:");
-        console.log(base58);
         
         var encoded = second_password == null ? base58 : MyWallet.encryptUsingSecondPassword(base58, second_password)
-
-        console.log(encoded);
 
         if (encoded == null)
             throw 'Error Encoding key';
         
         var decoded_base_58 = second_password == null ? base58 : MyWallet.decryptUsingSecondPassword(encoded, second_password);
 
-        console.log("Decoded base 58");
-        console.log(decoded_base_58);
-
         var decoded_key = new ECKey(new BigInteger.fromBuffer(decoded_base_58), opts.compressed);
         
-        console.log(decoded_key);
-
         if (addr != MyWallet.getUnCompressedAddressString(key) && addr != MyWallet.getCompressedAddressString(key)) {
             throw 'Decoded Key address does not match generated address';
         }

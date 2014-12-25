@@ -143,8 +143,8 @@ function HDAccount(wallet, label, idx) {
             this.paymentRequests = paymentRequests;
         },
         generatePaymentRequest : function(amount, label) {
-          console.log("Generating payment request")
-          console.log(amount)
+          // console.log("Generating payment request")
+          // console.log(amount)
             for (var i in this.paymentRequests) {
                 var paymentRequest = this.paymentRequests[i];
                 if (                    

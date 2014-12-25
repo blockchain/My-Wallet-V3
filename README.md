@@ -1083,13 +1083,17 @@ refreshes all balances across all accounts and addresses
 {int}  - idx of account
 
 
-#### `MyWallet.createAccount(label, getPassword);`
+#### `MyWallet.createAccount(label, getPassword,success,error);`
 
 ##### Parameters:
 
 {string} - label name
 
 {function} - function with signiture getPassword(success) where success has parameter pw for user inputed password
+
+{function} - called when account creation was successful
+
+{function} - called when account creation failed
 
 ##### Description:
 
