@@ -823,15 +823,19 @@ HDWallet API
 This method should be called if the event `hd_wallets_does_not_exist` is fired. Method will create the HD wallet and create the first account with the name `Spending`.
 
 
-#### `MyWallet.getHDWalletPassphraseString(getPassword);`
+#### `MyWallet.getHDWalletPassphraseString(getPassword, success, error);`
 
 ##### Parameters:
 
 {function} - function with signiture getPassword(success) where success has parameter pw for user inputed password
 
+{function(passphrase)} - the passphrase
+
+{function(reason)} - reason for failure
+
 ##### Returns:
 
-{string}  - HDWallet Passphrase
+Nothing
 
 
 #### `MyWallet.getAccount(idx);`

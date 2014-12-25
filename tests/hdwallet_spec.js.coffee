@@ -7,6 +7,7 @@ describe "HD Wallet", ->
   beforeEach ->
     accountsPayload = decryptedWalletPayload["hd_wallets"][0]["accounts"]
     accountsPayloadSecondPassword = decryptedWalletWithSecondPasswordPayload["hd_wallets"][0]["accounts"]
+    MyWallet.setDoubleEncryption(false)
   
   describe "initializeHDWallet()", ->
     beforeEach ->
@@ -132,6 +133,39 @@ describe "HD Wallet", ->
         expect(descrypyedExtendedPrivateKey).toBe("xprv9yd5CkFRNfUXE4o5Z7aad5ApLAsKbje6tMJBjEPwGQE5fXw3PRk6FwBmhbLDduzdQGmFP3CfhxmLKaYHxHApmrrtkHswj4oL6g37McodpQd")
         
   describe "getHDWalletPassphraseString()", ->
-    it "should ... 2nd password ...", ->
-      pending()
+    beforeEach ->
+      observer = {}
+      
+      observer.success = () ->
+      observer.error = () ->
+        console.log "error"
+      
+      spyOn(observer, "success")
+      spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
+      spyOn(MyWallet, "getHDWallet").and.returnValue({
+        getSeedHexString: (()-> if MyWallet.getDoubleEncryption() then seed_encrypted else seed) 
+        getPassphraseString: ((hex) -> if hex is seed then passphrase else "wrong")
+      })
+          
+    it "should provide the passphrase", ->
+      MyWallet.getHDWalletPassphraseString(null, observer.success, observer.error)
+      expect(observer.success).toHaveBeenCalledWith(passphrase)
+      
+    it "should ask for 2nd password and then provide the passphrase", ->
+      MyWallet.setDoubleEncryption(true)
+      
+      spyOn(MyWallet, "decryptSecretWithSecondPassword").and.callFake((secret, password) -> 
+        return seed if secret == seed_encrypted and password == second_password
+        return null
+      )
+      
+      observer.getPassword = (callback) ->
+        callback(second_password, (()->), (()->))
+        
+      spyOn(observer, "getPassword").and.callThrough()
+      
+      MyWallet.getHDWalletPassphraseString(observer.getPassword, observer.success, observer.error)
+      
+      expect(observer.getPassword).toHaveBeenCalled()
+      expect(observer.success).toHaveBeenCalledWith(passphrase)
         
