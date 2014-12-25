@@ -76,9 +76,11 @@ function HDAccount(wallet, label, idx) {
         },        
         getAccountExtendedKey : function(isPrivate) {
             if (isPrivate)  
-                return this.wallet.getAccountZero().toBase58();
+                return this.extendedPrivateKey;
+                // return this.wallet.getAccountZero().toBase58();
             else
-                return this.wallet.getAccountZero().neutered().toBase58();
+                return this.extendedPublicKey;
+                // return this.wallet.getAccountZero().neutered().toBase58();
         },
         generateAddress : function() {
             return this.wallet.generateAddress();
@@ -440,7 +442,7 @@ function HDWallet(seedHex, bip39Password, second_password, success, error) {
             var seedHex = this.getSeedHexString(second_password)
           
             var accountIdx = this.accountArray.length;
-  
+              
             var walletAccount = new HDWalletAccount(this.getMasterHex(seedHex));
             //walletAccount.accountZero = walletAccount.getMasterKey().deriveHardened(0).derive(accountIdx);
 
@@ -452,10 +454,10 @@ function HDWallet(seedHex, bip39Password, second_password, success, error) {
             account.generatePaymentRequest(0, "");
             
             var extendedPrivateKey = walletAccount.getAccountZero().toBase58();
+            var extendedPublicKey =  walletAccount.getAccountZero().neutered().toBase58();
             
             account.extendedPrivateKey = second_password == null ? extendedPrivateKey : MyWallet.encryptSecretWithSecondPassword(extendedPrivateKey, second_password);
-            
-            account.extendedPublicKey = walletAccount.getAccountZero().neutered().toBase58();
+            account.extendedPublicKey = extendedPublicKey;
 
             this.accountArray.push(account);
             

@@ -22,6 +22,9 @@ describe "Payment request", ->
       expect(account.paymentRequests[paymentRequest2.index].amount).toBe(2)
 
     return
+    
+    it "should ask for the second password if needed", ->
+      pending()
 
   describe "acceptPaymentRequest()", ->
     it "should mark request as completed", ->

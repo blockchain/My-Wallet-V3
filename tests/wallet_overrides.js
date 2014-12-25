@@ -4,8 +4,6 @@ MyWallet.logout = function() {};
 
 MyWallet.setPbkdf2Iterations = function() {};
 
-MyWallet.setDoubleEncryption = function() {};
-
 MyWallet.sendEvent = function() {};
 
 var loadScript, playSound;

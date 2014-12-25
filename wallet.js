@@ -385,6 +385,10 @@ var MyWallet = new function() {
     this.getDoubleEncryption = function() {
         return double_encryption;
     }
+    
+    this.setDoubleEncryption = function(newValue) {
+        double_encryption = newValue;
+    }
 
     this.getEncryptedWalletData = function() {
         return encrypted_wallet_data;
@@ -704,7 +708,7 @@ var MyWallet = new function() {
 
                     myHDWallet.seedHex = MyWallet.decryptSecretWithSecondPassword(myHDWallet.seedHex, pw);
 
-                    double_encryption = false;
+                    MyWallet.setDoubleEncryption(false);
 
                     MyWallet.checkAllKeys(null);
 
@@ -741,7 +745,7 @@ var MyWallet = new function() {
         };
 
         try {
-            double_encryption = true;
+            MyWallet.setDoubleEncryption(true);
 
             for (var key in addresses) {
                 var addr = addresses[key];
@@ -2145,11 +2149,31 @@ var MyWallet = new function() {
     }
 
     this.initializeHDWallet = function(passphrase, bip39Password, getPassword, success, error)  {
-        if (double_encryption) {
+        function initializeHDWallet(passphrase, bip39Password, second_password, success, error) {
+            var seedHexString = null;
+            if (passphrase == null)
+                seedHexString = MyWallet.generateHDWalletSeedHex();
+            else
+                seedHexString = passphraseToPassphraseHexString(passphrase);
+        
+            MyWallet.buildHDWallet(seedHexString, [], bip39Password, second_password, success, error );
+        
+            secondPasswordCallback = function(password) {
+              // Password already verified so we're passing dummy callbacks for (in)correctness.
+              password(second_password, function() {}, function() {})
+            }
+        
+            didCreateAccount = function() { success() }
+            failedToCreateAccount =  function(message) { error(message) }
+        
+            MyWallet.createAccount("Spending", secondPasswordCallback , didCreateAccount, failedToCreateAccount);
+        }
+      
+        if (this.getDoubleEncryption()) {
           getPassword(function(pw, correct_password, wrong_password) {
                 if (MyWallet.validateSecondPassword(pw)) {
                     correct_password()
-                    initializeHDWallet(passphrase, bip39Password, pw, success, error);                    
+                  initializeHDWallet(passphrase, bip39Password, pw, success, error);                    
                 } else {
                     wrong_password()
                     error()
@@ -2161,22 +2185,7 @@ var MyWallet = new function() {
         }
     }
 
-    function initializeHDWallet(passphrase, bip39Password, second_password, success, error) {
-        var seedHexString = null;
-        if (passphrase == null)
-            seedHexString = MyWallet.generateHDWalletSeedHex();
-        else
-            seedHexString = passphraseToPassphraseHexString(passphrase);
-        
-        MyWallet.buildHDWallet(seedHexString, [], bip39Password, second_password, success, error );
-        
-        secondPasswordCallback = function(password) {
-          // Password already verified so we're passing dummy callbacks for (in)correctness.
-          password(second_password, function() {}, function() {})
-        }
-        
-        MyWallet.createAccount("Spending", secondPasswordCallback , success, error);
-    }
+
 
     this.getHDWalletPassphraseString = function(getPassword) {
         if (double_encryption) {
@@ -2859,7 +2868,7 @@ var MyWallet = new function() {
                 }
 
                 if (obj.double_encryption && obj.dpasswordhash) {
-                    double_encryption = obj.double_encryption;
+                    MyWallet.setDoubleEncryption(obj.double_encryption);
                     dpasswordhash = obj.dpasswordhash;
                 }
 
