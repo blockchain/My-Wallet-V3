@@ -12,7 +12,7 @@ describe "Transaction", ->
     
     # externalAddreses = []
     # changeAddresses = []
-    activeLegacyAddresses = []
+    activeLegacyAddresses = ["1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h"]
     
     hdAccounts = [
       {
@@ -89,8 +89,30 @@ describe "Transaction", ->
         expect(MyWallet.processTransaction(tx)).toEqual(transaction)
         
     describe "from legacy address to external address", ->
-      it "...", ->
-        pending()
+      it "should be recognized", ->
+        # 391cfffa273d82866b367af7941fb3aca35b5a1a95003140a148166bf5d02ee8
+        # sent 0.0002, with 0.0007 of change and 0.0001 for the miners
+        tx = {"hash":"391cfffa273d82866b367af7941fb3aca35b5a1a95003140a148166bf5d02ee8","size":257,"txIndex":72943525,"time":1419595953,"inputs":[{"sequence":4294967295,"prev_out":{"spent":true,"tx_index":72943487,"type":0,"addr":"1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h","value":100000,"n":0,"script":"76a914078d35591e340799ee96968936e8b2ea8ce504a688ac"},"script":"4730440220365779bbc2b5f83d575f32a0bdc01630aff96d71d1845fad5f55d91f1012a3b4022068993156c45fd5ac779a5eed6848cd6acc26490ba0cbbc1362403437de945b20014104748bed81c1f6c72a63d2e9d39756ec17488cd5298f53f87dcbcb2bc6ea5e4bd046336d7411c16e08c00390481d67dc448535596ac7361159f359ca357a7da2ee"}],"out":[{"spent":false,"tx_index":72943525,"type":0,"addr":"1FeerpCgswvGRLVKme759C96DUBtf7SvA2","value":20000,"n":0,"script":"76a914a0b0c129bb55f8cfade30e02477dc5e504da607388ac"},{"spent":false,"tx_index":72943525,"type":0,"addr":"1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h","value":70000,"n":1,"script":"76a914078d35591e340799ee96968936e8b2ea8ce504a688ac"}],"result":-30000,"blockHeight":335980,"balance":1863945,"account_indexes":[],"confirmations":37}
+        transaction = {
+          "from":{
+            "account":null,
+            "legacyAddresses":[{"address":"1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h","amount":30000}]
+            ,"externalAddresses":null
+          },
+          "to":{
+            "account":null,
+            "legacyAddresses":[],
+            "externalAddresses":{"addressWithLargestOutput":"1FeerpCgswvGRLVKme759C96DUBtf7SvA2","amount":20000}
+          },
+          "fee":10000,
+          "intraWallet":false,
+          "hash":"391cfffa273d82866b367af7941fb3aca35b5a1a95003140a148166bf5d02ee8",
+          "confirmations":37,"txTime":1419595953,"note":null,"tags":[],"size":257,"tx_index":72943525,"block_height":335980,"result":-30000}
+        
+        result = MyWallet.processTransaction(tx)
+        
+        expect(result["from"]).toEqual(transaction["from"]) # Amount should be ex. change
+        expect(result["to"]).toEqual(transaction["to"]) # It shouldn't include the change
         
     describe "between legacy addresses", ->
       it "...", ->
