@@ -25,16 +25,17 @@ describe "Transaction", ->
       getAccounts: () -> hdAccounts
       getAccount: (idx) ->  hdAccounts[idx]
     })
-    
-    spyOn(MyWallet, "getTags").and.returnValue([])
-    
+        
     # Terminology:
     # account: an HD wallet account (which has external and change addresses)
     # legacy address: an non-HD address for which we have the private key or a watch-only address
     # external address: an address outside our wallet (not to be confused with "external address" inside an HD account)
     
   describe "processTransaction()", ->
-    describe " from account to external address", ->
+    beforeEach ->
+      spyOn(MyWallet, "getTags").and.returnValue([])
+    
+    describe "from account to external address", ->
       it "should be recognized", ->
         # TODO: find transaction spent from account to an external address where
         #       a change address was correctly generated
@@ -89,5 +90,7 @@ describe "Transaction", ->
     describe "from external address to legacy address", ->
       it "...", ->
         pending()
+        
+    
 
     
