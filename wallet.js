@@ -1475,7 +1475,14 @@ var MyWallet = new function() {
       }
 
       transaction.hash = tx.hash;
-      transaction.confirmations = tx.confirmations // MyWallet.getConfirmationsForTx(MyWallet.getLatestBlock(), tx);
+      
+      /* Typically processTransaction() is called directly after transactions
+         have been downloaded from the server. In that case you could simply 
+         reuse tx.confirmations. However processTransaction() can also be 
+         called at a later time, e.g. if the user keeps their wallet open
+         while waiting for a confirmation. */
+      transaction.confirmations = MyWallet.getConfirmationsForTx(MyWallet.getLatestBlock(), tx);
+      
       transaction.txTime = tx.time;
       transaction.note = tx_notes[tx.hash] ? tx_notes[tx.hash] : null;
       transaction.tags = MyWallet.getTags(tx.hash);
