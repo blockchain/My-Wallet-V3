@@ -1370,114 +1370,128 @@ var MyWallet = new function() {
         for (var i in rawTxs) {
             var tx = rawTxs[i]; 
 
-            var transaction = {from: {account: null, legacyAddresses: null, externalAddresses: null},
-                                               to: {account: null, legacyAddresses: null, externalAddresses: null},
-                                              fee: 0};
-            var isOrigin = false;
-            transaction.intraWallet = true;
-            for (var i = 0; i < tx.inputs.length; ++i) {
-                var output = tx.inputs[i].prev_out;
-                if (!output || !output.addr)
-                    continue;
-
-                if (MyWallet.isActiveLegacyAddress(output.addr)) {
-                    isOrigin = true;
-                    if (transaction.from.legacyAddresses == null)
-                        transaction.from.legacyAddresses = [];
-                    transaction.from.legacyAddresses.push({address: output.addr, amount: output.value});
-                    transaction.fee += output.value;
-                } else {
-                    for (var j in MyWallet.getHDWallet().getAccounts()) {
-                        var account = MyWallet.getHDWallet().getAccount(j);
-                        if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
-                            if (! isOrigin) {
-                                isOrigin = true;
-                                transaction.from.account = {index: parseInt(j), amount: output.value};
-                                transaction.fee += output.value;
-                            } else {
-                                if (transaction.from.externalAddresses == null ||
-                                    output.value > transaction.from.externalAddresses.amount) {
-                                    transaction.from.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
-                                   }
-                                transaction.fee += output.value;
-                            }
-                            break;
-                        }
-                    }
-
-                    if (! isOrigin) {
-                        if (transaction.from.externalAddresses == null ||
-                            output.value > transaction.from.externalAddresses.amount) {
-                            transaction.from.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
-                        }
-                        transaction.fee += output.value;
-                        transaction.intraWallet = false;
-                    }
-                }
-            }
-
-            for (var i = 0; i < tx.out.length; ++i) {
-                var output = tx.out[i];
-                if (!output || !output.addr)
-                    continue;
-
-                if (MyWallet.isActiveLegacyAddress(output.addr)) {
-                    if (transaction.to.legacyAddresses == null)
-                        transaction.to.legacyAddresses = [];
-                    transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
-                    transaction.fee -= output.value;
-                } else {
-                    var toAccountSet = false;
-                    for (var j in MyWallet.getHDWallet().getAccounts()) {
-                        var account = MyWallet.getHDWallet().getAccount(j);
-                        if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
-                            if (! toAccountSet) {
-                                if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
-                                    transaction.from.account.amount -= output.value;
-                                } else {
-                                    transaction.to.account = {index: parseInt(j), amount: output.value};                                    
-                                }
-                                toAccountSet = true;
-                                transaction.fee -= output.value;
-                            } else {
-                                if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
-                                    transaction.from.account.amount -= output.value;
-                                } else if (transaction.to.externalAddresses == null ||
-                                    output.value > transaction.to.externalAddresses.amount) {
-                                    transaction.to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
-                                }
-                                transaction.fee -= output.value;
-                            }
-                            break;
-                        }
-                    }
-
-                    if (! toAccountSet) {
-                        if (transaction.to.externalAddresses == null ||
-                            output.value > transaction.to.externalAddresses.amount) {
-                            transaction.to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
-                        }
-                        transaction.fee -= output.value;
-                        transaction.intraWallet = false;
-                    }                    
-                }
-            }
-
-            transaction.hash = tx.hash;
-            transaction.confirmations = MyWallet.getConfirmationsForTx(MyWallet.getLatestBlock(), tx);
-            transaction.txTime = tx.time;
-            transaction.note = tx_notes[tx.hash] ? tx_notes[tx.hash] : null;
-            transaction.tags = MyWallet.getTags(tx.hash);
-            transaction.size = tx.size;
-            transaction.tx_index = tx.txIndex;
-            transaction.block_height = tx.blockHeight;
-            transaction.result = tx.result;
+            var transaction = this.processTransaction(tx)
 
             filteredTransactions.push(transaction);
         }
 
 
         return filteredTransactions;
+    }
+    
+    this.processTransaction = function(tx) {
+      // console.log(JSON.stringify(tx))
+      var transaction = {from: {account: null, legacyAddresses: null, externalAddresses: null},
+                                         to: {account: null, legacyAddresses: null, externalAddresses: null},
+                                        fee: 0};
+      var isOrigin = false;
+      transaction.intraWallet = true;
+      for (var i = 0; i < tx.inputs.length; ++i) {
+          var output = tx.inputs[i].prev_out;
+          if (!output || !output.addr)
+              continue;
+
+          if (MyWallet.isActiveLegacyAddress(output.addr)) {
+              isOrigin = true;
+              if (transaction.from.legacyAddresses == null)
+                  transaction.from.legacyAddresses = [];
+              transaction.from.legacyAddresses.push({address: output.addr, amount: output.value});
+              transaction.fee += output.value;
+          } else {
+              for (var j in MyWallet.getHDWallet().getAccounts()) {
+                  var account = MyWallet.getHDWallet().getAccount(j);
+                  if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
+                      if (! isOrigin) {
+                          isOrigin = true;
+                          transaction.from.account = {index: parseInt(j), amount: output.value};
+                          transaction.fee += output.value;
+                      } else {
+                          if (transaction.from.externalAddresses == null ||
+                              output.value > transaction.from.externalAddresses.amount) {
+                              transaction.from.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
+                             }
+                          transaction.fee += output.value;
+                      }
+                      break;
+                  }
+              }
+
+              if (! isOrigin) {
+                  if (transaction.from.externalAddresses == null ||
+                      output.value > transaction.from.externalAddresses.amount) {
+                      transaction.from.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
+                  }
+                  transaction.fee += output.value;
+                  transaction.intraWallet = false;
+              }
+          }
+      }
+
+      for (var i = 0; i < tx.out.length; ++i) {
+          var output = tx.out[i];
+          if (!output || !output.addr)
+              continue;
+
+          if (MyWallet.isActiveLegacyAddress(output.addr)) {
+              if (transaction.to.legacyAddresses == null)
+                  transaction.to.legacyAddresses = [];
+              transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
+              transaction.fee -= output.value;
+          } else {
+              var toAccountSet = false;
+              for (var j in MyWallet.getHDWallet().getAccounts()) {
+                  var account = MyWallet.getHDWallet().getAccount(j);
+                  if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
+                      if (! toAccountSet) {
+                          if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
+                              transaction.from.account.amount -= output.value;
+                          } else {
+                              transaction.to.account = {index: parseInt(j), amount: output.value};                                    
+                          }
+                          toAccountSet = true;
+                          transaction.fee -= output.value;
+                      } else {
+                          if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
+                              transaction.from.account.amount -= output.value;
+                          } else if (transaction.to.externalAddresses == null ||
+                              output.value > transaction.to.externalAddresses.amount) {
+                              transaction.to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
+                          }
+                          transaction.fee -= output.value;
+                      }
+                      break;
+                  }
+              }
+
+              if (! toAccountSet) {
+                  if (transaction.to.externalAddresses == null ||
+                      output.value > transaction.to.externalAddresses.amount) {
+                      transaction.to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
+                  }
+                  transaction.fee -= output.value;
+                  transaction.intraWallet = false;
+              }                    
+          }
+      }
+
+      transaction.hash = tx.hash;
+      
+      /* Typically processTransaction() is called directly after transactions
+         have been downloaded from the server. In that case you could simply 
+         reuse tx.confirmations. However processTransaction() can also be 
+         called at a later time, e.g. if the user keeps their wallet open
+         while waiting for a confirmation. */
+      transaction.confirmations = MyWallet.getConfirmationsForTx(MyWallet.getLatestBlock(), tx);
+      
+      transaction.txTime = tx.time;
+      transaction.note = tx_notes[tx.hash] ? tx_notes[tx.hash] : null;
+      transaction.tags = MyWallet.getTags(tx.hash);
+      transaction.size = tx.size;
+      transaction.tx_index = tx.txIndex;
+      transaction.block_height = tx.blockHeight;
+      transaction.result = tx.result;
+      // console.log(JSON.stringify(transaction))
+      return transaction;
     }
 
     this.getLegacyTransactions = function() {
@@ -2655,7 +2669,7 @@ var MyWallet = new function() {
     }
 
     this.getTags = function(tx_hash) {
-        return tx_tags[tx_hash];
+        return tx_tags[tx_hash] || [];
     }
 
     this.setTag = function(tx_hash, idx) {
