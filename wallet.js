@@ -2060,8 +2060,8 @@ var MyWallet = new function() {
     }
 
     // Assumes second password is needed if the argument is not null.
-    function createAccount(label, second_password, success, error) {
-        this.getHDWallet().createAccount(label, second_password);
+    function createAccount(label, second_password, success, error) {      
+        MyWallet.getHDWallet().createAccount(label, second_password);
         success();
         MyWallet.backupWalletDelayed();
     }
@@ -3649,7 +3649,7 @@ var MyWallet = new function() {
             try {
                 var obj = $.parseJSON(data);
             } catch (e) {}
-            
+                        
             var decryptNormal = function() {
                 try {
                     var decrypted = decryptAesWithStretchedPassword(obj.payload, password, obj.pbkdf2_iterations);
