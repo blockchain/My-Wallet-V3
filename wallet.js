@@ -1055,8 +1055,8 @@ var MyWallet = new function() {
                 }
             }
 
-            for (var j = 0; j < this.getHDWallet().getAccountsCount(); j++) {
-                var account = this.getHDWallet().getAccount(j);
+            for (var j = 0; j < MyWallet.getHDWallet().getAccountsCount(); j++) {
+                var account = MyWallet.getHDWallet().getAccount(j);
                 if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                     tx.account_indexes.push(parseInt(j));
                     result -= parseInt(output.value);
@@ -1086,8 +1086,8 @@ var MyWallet = new function() {
                 }
             }
 
-            for (var j = 0; j < this.getHDWallet().getAccountsCount(); j++) {
-                var account = this.getHDWallet().getAccount(j);
+            for (var j = 0; j < MyWallet.getHDWallet().getAccountsCount(); j++) {
+                var account = MyWallet.getHDWallet().getAccount(j);
                 if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                     tx.account_indexes.push(parseInt(j));
                     result += parseInt(output.value);
@@ -1387,8 +1387,8 @@ var MyWallet = new function() {
                     transaction.from.legacyAddresses.push({address: output.addr, amount: output.value});
                     transaction.fee += output.value;
                 } else {
-                    for (var j in this.getHDWallet().getAccounts()) {
-                        var account = this.getHDWallet().getAccount(j);
+                    for (var j in MyWallet.getHDWallet().getAccounts()) {
+                        var account = MyWallet.getHDWallet().getAccount(j);
                         if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                             if (! isOrigin) {
                                 isOrigin = true;
@@ -1428,8 +1428,8 @@ var MyWallet = new function() {
                     transaction.fee -= output.value;
                 } else {
                     var toAccountSet = false;
-                    for (var j in this.getHDWallet().getAccounts()) {
-                        var account = this.getHDWallet().getAccount(j);
+                    for (var j in MyWallet.getHDWallet().getAccounts()) {
+                        var account = MyWallet.getHDWallet().getAccount(j);
                         if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                             if (! toAccountSet) {
                                 if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
@@ -1510,8 +1510,8 @@ var MyWallet = new function() {
                     transaction.from_addresses.push(output.addr);
                 } else {
                     transaction.from_addresses.push(output.addr);
-                    for (var j in this.getHDWallet().getAccounts()) {
-                        var account = this.getHDWallet().getAccount(j);
+                    for (var j in MyWallet.getHDWallet().getAccounts()) {
+                        var account = MyWallet.getHDWallet().getAccount(j);
                         if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                             transaction.from_account = parseInt(j);
                             break;
@@ -1534,8 +1534,8 @@ var MyWallet = new function() {
                         transaction.intraWallet = true;
                 } else {
                     transaction.to_addresses.push(output.addr);
-                    for (var j in this.getHDWallet().getAccounts()) {
-                        var account = this.getHDWallet().getAccount(j);
+                    for (var j in MyWallet.getHDWallet().getAccounts()) {
+                        var account = MyWallet.getHDWallet().getAccount(j);
                         if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                             transaction.to_account = parseInt(j);
                             if (isOrigin)
@@ -1571,8 +1571,8 @@ var MyWallet = new function() {
     this.refreshAllPaymentRequestsAndChangeAddresses = function(successCallback, errorCallback) {
         transactions = [];
         var allAddresses = [];
-        for (var i in this.getHDWallet().getAccounts()) {
-            var account = this.getHDWallet().getAccount(i);
+        for (var i in MyWallet.getHDWallet().getAccounts()) {
+            var account = MyWallet.getHDWallet().getAccount(i);
             if (! account.isArchived()) {
                 allAddresses = allAddresses.concat(account.getAddresses());
                 allAddresses = allAddresses.concat(account.getChangeAddresses());
@@ -1892,6 +1892,10 @@ var MyWallet = new function() {
         var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx);
         var address = account.getAddressForPaymentRequest(paymentRequest);
         MyWallet.updatePaymentRequestForAccount(toIdx, address, amount);
+        console.log(fromIdx)
+        console.log(address)
+        console.log(amount)
+        console.log(feeAmount)
         MyWallet.sendBitcoinsForAccount(fromIdx, address, amount, feeAmount, note, successCallback, errorCallback, getPassword);
     }
 
@@ -1975,6 +1979,32 @@ var MyWallet = new function() {
     }
 
     this.sendBitcoinsForAccount = function(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, getPassword) {
+        // second_password must be null if not needed.
+        function sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, second_password) {
+            MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function (unspent_outputs) {
+                var account = MyWallet.getHDWallet().getAccount(accountIdx);
+                var extendedPrivateKey = second_password == null ? account.extendedPrivateKey : MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password);
+                var tx = account.createTx(to, value, fixedFee, unspent_outputs, extendedPrivateKey);
+                BlockchainAPI.push_tx(tx, note, function(response) {
+                   MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
+                        if (successCallback)
+                            successCallback(response);
+                    }, function(e) {
+                        if (errorCallback)
+                            errorCallback(e);
+                    });
+                }, function(response) {
+                    if (errorCallback)
+                        errorCallback(response);
+                });
+
+            }, function(e) {
+                if (errorCallback)
+                    errorCallback(e);
+            });
+        }
+        
+        
         if (double_encryption) {
             getPassword(function(pw, correct_password, wrong_password) {
                 if (MyWallet.validateSecondPassword(pw)) {
@@ -1989,30 +2019,7 @@ var MyWallet = new function() {
         }
     }
 
-    // second_password must be null if not needed.
-    function sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, second_password) {
-        MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function (unspent_outputs) {
-            var account = this.getHDWallet().getAccount(accountIdx);
-            var extendedPrivateKey = second_password == null ? account.extendedPrivateKey : MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password);
-            var tx = account.createTx(to, value, fixedFee, unspent_outputs, extendedPrivateKey);
-            BlockchainAPI.push_tx(tx, note, function(response) {
-               MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
-                    if (successCallback)
-                        successCallback(response);
-                }, function(e) {
-                    if (errorCallback)
-                        errorCallback(e);
-                });
-            }, function(response) {
-                if (errorCallback)
-                    errorCallback(response);
-            });
 
-        }, function(e) {
-            if (errorCallback)
-                errorCallback(e);
-        });
-    }
 
     this.getAccounts = function() {
         return this.getHDWallet().getAccounts();
@@ -2751,8 +2758,8 @@ var MyWallet = new function() {
                 MyWallet.setLegacyAddressBalance(obj.addresses[i].address, obj.addresses[i].final_balance)
                 // addresses[obj.addresses[i].address].balance = obj.addresses[i].final_balance;
 
-            for (var j in this.getHDWallet().getAccounts()) {
-                var account = this.getHDWallet().getAccount(j);
+            for (var j in MyWallet.getHDWallet().getAccounts()) {
+                var account = MyWallet.getHDWallet().getAccount(j);
 
                 var extPubKey = account.getAccountExtendedKey(false);
 
