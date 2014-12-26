@@ -1892,10 +1892,6 @@ var MyWallet = new function() {
         var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx);
         var address = account.getAddressForPaymentRequest(paymentRequest);
         MyWallet.updatePaymentRequestForAccount(toIdx, address, amount);
-        console.log(fromIdx)
-        console.log(address)
-        console.log(amount)
-        console.log(feeAmount)
         MyWallet.sendBitcoinsForAccount(fromIdx, address, amount, feeAmount, note, successCallback, errorCallback, getPassword);
     }
 
