@@ -1588,8 +1588,8 @@ var MyWallet = new function() {
         for (var i in MyWallet.getHDWallet().getAccounts()) {
             var account = MyWallet.getHDWallet().getAccount(i);
             if (! account.isArchived()) {
-                allAddresses = allAddresses.concat(account.getAddresses());
-                allAddresses = allAddresses.concat(account.getChangeAddresses());
+                var accountExtendedPublicKey = account.getAccountExtendedKey(false);
+                allAddresses.push(accountExtendedPublicKey);
             }
         }
 
