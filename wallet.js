@@ -1629,7 +1629,7 @@ var MyWallet = new function() {
         });
     }
 
-    this.asyncGetAndSetUnspentOutputsForAccount = function(accountIdx, successCallback, errorCallback) {
+    this.getAndSetUnspentOutputsForAccount = function(accountIdx, successCallback, errorCallback) {
         var account = this.getHDWallet().getAccount(accountIdx);
 
         BlockchainAPI.get_unspent([account.extendedPublicKey], function (obj) {
@@ -1785,7 +1785,7 @@ var MyWallet = new function() {
         MyWallet.backupWallet('update', function(unspent_outputs) {
             MyWallet.sendEvent("msg", {type: "info", message: 'Generated new Bitcoin Address ' + address, platform: ""});
 
-            MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
+            MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function () {
                 var account = this.getHDWallet().getAccount(accountIdx);
                 var extendedPrivateKey = MyWallet.decryptSecretWithSecondPasswordIfNeeded(account.extendedPrivateKey);
                 var tx = this.getHDWallet().getAccount(accountIdx).createTx(address, value, fixedFee, unspent_outputs, extendedPrivateKey);
@@ -1798,7 +1798,7 @@ var MyWallet = new function() {
 
                         MyWallet.backupWallet('update', function() {
 
-                            MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
+                            MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function () {
                                 if (successCallback)
                                     successCallback(response);
                             }, function(e) {
@@ -1973,7 +1973,7 @@ var MyWallet = new function() {
         MyWallet.backupWallet('update', function() {
             MyWallet.sendEvent("msg", {type: "info", message: 'Generated new Bitcoin Address ' + address + address, platform: ""});
 
-            MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function (unspent_outputs) {
+            MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function (unspent_outputs) {
                 var account = this.getHDWallet().getAccount(accountIdx);
                 var extendedPrivateKey = MyWallet.decryptSecretWithSecondPasswordIfNeeded(account.extendedPrivateKey);
                 var tx = this.getHDWallet().getAccount(accountIdx).createTx(address, value, fixedFee, unspent_outputs, extendedPrivateKey);
@@ -1987,7 +1987,7 @@ var MyWallet = new function() {
 
                         MyWallet.backupWallet('update', function() {
 
-                            MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
+                            MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function () {
                                 if (successCallback)
                                     successCallback(response);
                             }, function(e) {
@@ -2017,12 +2017,12 @@ var MyWallet = new function() {
     this.sendBitcoinsForAccount = function(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, getPassword) {
         // second_password must be null if not needed.
         function sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, second_password) {
-            MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function (unspent_outputs) {
+            MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function (unspent_outputs) {
                 var account = MyWallet.getHDWallet().getAccount(accountIdx);
                 var extendedPrivateKey = second_password == null ? account.extendedPrivateKey : MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password);
                 var tx = account.createTx(to, value, fixedFee, unspent_outputs, extendedPrivateKey);
                 BlockchainAPI.push_tx(tx, note, function(response) {
-                   MyWallet.asyncGetAndSetUnspentOutputsForAccount(accountIdx, function () {
+                   MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function () {
                         if (successCallback)
                             successCallback(response);
                     }, function(e) {
