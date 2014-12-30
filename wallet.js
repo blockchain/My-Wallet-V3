@@ -1112,8 +1112,6 @@ var MyWallet = new function() {
                     tx.account_indexes.push(parseInt(j));
                     result += parseInt(output.value);
                 }
-
-                MyWallet.checkToAddTxToPaymentRequestForAccount(account, output.addr, tx.hash, output.value, checkCompleted);
             }
 
             if (output.addr in paidToAddressesToBalance) {
@@ -1328,64 +1326,6 @@ var MyWallet = new function() {
 
     this.getAddressAtIdxForAccount = function(accountIdx, addressIdx) {
         return this.getHDWallet().getAccount(accountIdx).getAddressAtIdx(addressIdx);
-    }
-
-    this.getPaymentRequestsForAccount = function(accountIdx) {
-        return this.getHDWallet().getAccount(accountIdx).getPaymentRequests();
-    }
-
-    this.generateOrReuseEmptyPaymentRequestForAccount = function(accountIdx) {
-        var account = this.getHDWallet().getAccount(accountIdx);
-        
-        var requests = account.getPaymentRequests();
-        
-        var i, len;
-        for (i = 0,  len = requests.length; i<len; i++) {
-          var request = requests[i]
-          if(request.label === "" && (request.amount == 0)) {
-            return request;
-          }
-        }
-
-        var paymentRequest = account.generatePaymentRequest(0, "");
-        MyWallet.backupWalletDelayed();
-        try {
-            ws.send('{"op":"addr_sub", "addr":"'+account.getAddressForPaymentRequest(paymentRequest)+'"}');
-        } catch (e) { }
-        return paymentRequest
-    }
-
-    this.updatePaymentRequestForAccount = function(accountIdx, address, amount, label) {
-        var account = this.getHDWallet().getAccount(accountIdx);
-        var success = account.updatePaymentRequest(address, amount, label);
-      
-        if (success) {
-            MyWallet.backupWalletDelayed();
-        }
-        return success;
-    }
-
-    this.acceptPaymentRequestForAccount = function(accountIdx, address) {
-        var success = this.getHDWallet().getAccount(accountIdx).acceptPaymentRequest(address);
-        if (success) {
-            MyWallet.backupWalletDelayed();
-        }
-        return success;
-    }
-
-    this.checkToAddTxToPaymentRequestForAccount = function(account, address, txHash, amount, checkCompleted) {
-        var haveAddedTxToPaymentRequest = account.checkToAddTxToPaymentRequest( address, txHash, amount, checkCompleted);
-        if (haveAddedTxToPaymentRequest) {
-            MyWallet.backupWalletDelayed();
-        }
-    }
-
-    this.cancelPaymentRequestForAccount = function(accountIdx, address) {
-        var success = this.getHDWallet().getAccount(accountIdx).cancelPaymentRequest(address);
-        if (success) {
-            MyWallet.backupWalletDelayed();
-        }
-        return success;
     }
 
     this.getAllTransactions = function() {
@@ -1608,27 +1548,6 @@ var MyWallet = new function() {
         return this.getHDWallet().filterTransactionsForAccount(accountIdx, MyWallet.getTransactions(), paidTo, tx_notes);
     }
 
-    this.refreshAllPaymentRequestsAndChangeAddresses = function(successCallback, errorCallback) {
-        transactions = [];
-        var allAddresses = [];
-        for (var i in MyWallet.getHDWallet().getAccounts()) {
-            var account = MyWallet.getHDWallet().getAccount(i);
-            if (! account.isArchived()) {
-                var accountExtendedPublicKey = account.getAccountExtendedKey(false);
-                allAddresses.push(accountExtendedPublicKey);
-            }
-        }
-
-        MyWallet.get_history_with_addresses(allAddresses, function(data) {
-            parseMultiAddressJSON(data, false, true);
-            if (successCallback)
-                successCallback();
-        }, function() {
-            if (errorCallback)
-                errorCallback(e);
-        });
-    }
-
     this.getAndSetUnspentOutputsForAccount = function(accountIdx, successCallback, errorCallback) {
         var account = this.getHDWallet().getAccount(accountIdx);
 
@@ -1721,10 +1640,7 @@ var MyWallet = new function() {
                 var obj = initNewTx();
                 obj.fee = obj.base_fee; //Always include a fee
                 var amount = Bitcoin.BigInteger.valueOf(value).subtract(obj.fee);
-                var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(accountIdx);
-                var to_address = account.getAddressForPaymentRequest(paymentRequest);
-                MyWallet.updatePaymentRequestForAccount(accountIdx, to_address, parseInt(amount.toString()));
- 
+                var to_address = account.getReceivingAddress(); 
                 obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(to_address), value : amount});
                 obj.from_addresses = [from_address];
                 obj.extra_private_keys[from_address] = Bitcoin.base58.encode(privateKeyToSweep.d.toBuffer(32));
@@ -1894,9 +1810,7 @@ var MyWallet = new function() {
         else
             obj.fee = obj.base_fee;
 
-        var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx, amount);
-        var to_address = account.getAddressForPaymentRequest(paymentRequest);
-        MyWallet.updatePaymentRequestForAccount(toIdx, to_address, amount);
+        var to_address = account.getReceivingAddress(); 
         obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(to_address), value : Bitcoin.BigInteger.valueOf(amount)});
         obj.from_addresses = [fromAddress];
         obj.ready_to_send_header = 'Bitcoins Ready to Send.';
@@ -1929,9 +1843,7 @@ var MyWallet = new function() {
 
     this.sendToAccount = function(fromIdx, toIdx, amount, feeAmount, note, successCallback, errorCallback, getPassword)  {
         var account = this.getHDWallet().getAccount(toIdx);
-        var paymentRequest = MyWallet.generateOrReuseEmptyPaymentRequestForAccount(toIdx);
-        var address = account.getAddressForPaymentRequest(paymentRequest);
-        MyWallet.updatePaymentRequestForAccount(toIdx, address, amount);
+        var address = account.getReceivingAddress();
         MyWallet.sendBitcoinsForAccount(fromIdx, address, amount, feeAmount, note, successCallback, errorCallback, getPassword);
     }
 

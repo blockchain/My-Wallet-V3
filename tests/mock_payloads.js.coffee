@@ -40,9 +40,6 @@ decryptedWalletPayload = {
         {
           "label":"Checking",
           "archived":false,
-          "paymentRequests":[
-            {"amount":0,"label":"Dog food","paid":0,"complete":false,"index":0}
-          ]
           "change_addresses":3,
           "xpriv":xprivAccountZero,
           "xpub":xpubAccountZero
@@ -50,8 +47,6 @@ decryptedWalletPayload = {
         {
           "label":"Savings",
           "archived":false,
-          "paymentRequests":[
-          ]
           "change_addresses":0,
           "xpriv":"xprvA13yegr3foPWNkJhJdAQMCAHKuB1BGDSFLTcZSDHkaC89MjKPscWdjMro5HEqB7VYgX88wHff3JEnD2s4DXsM6ZJNi8aX91igFXKcx4t9ga",
           "xpub":"xpub6E3L4CNwWAwobEPAQehQiL71sw1VaiwHcZPDMpcuJuj72A4TwQvmBXgLeKo1NA1WA74XzDmR1vmYF1veqLwMqQYNg1Azv1wxv3yJeVBpxJa"
@@ -92,9 +87,6 @@ decryptedWalletWithSecondPasswordPayload = {
         {
           "label":"Checking",
           "archived":false,
-          "paymentRequests":[
-            {"amount":0,"label":"Dog food","paid":0,"complete":false,"index":0}
-          ]
           "change_addresses":3,
           "xpriv":"izwJDXdLlYAnPVab6mAJ6PAu5mSoQPgL2PHommMsqxkMSnZcZhrONpgvhzyg1BbhTTX4ZCyofoI49MqfM1u0nqBkIHJ5XTRf/Fc4PUBwTdN7E0PEI9/Cr9BpdN8HvZgXV0cK5O51We8zxbAxy8DfwXX4lRskyz+oT/dMUdHMR8Q=",
           "xpub":"xpub6F1cPTmvp4FrWUjDvtdZHJF1MVxdrx3LeSho3NFk6dKRT3x88BqcFbmitM1BuLR9b62yiNbsPHMxCVwZGFBKMzaAKVWbvVYxmXS14pCoxbJ"
@@ -102,8 +94,6 @@ decryptedWalletWithSecondPasswordPayload = {
         {
           "label":"Savings",
           "archived":false,
-          "paymentRequests":[
-          ]
           "change_addresses":0,
           "xpriv":"...",
           "xpub":xpubAccountZero

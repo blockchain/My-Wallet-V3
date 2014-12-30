@@ -9,12 +9,10 @@ function HDAccount(wallet, label, idx) {
         changeAddressCount : 0,
         archived : false,
         balance : null,
-        paymentRequests : [],
         getAccountJsonData : function() {
             var accountJsonData = {
                 label : this.getLabel(),
                 archived : this.isArchived(),
-                paymentRequests : this.getPaymentRequestsJson(),
                 receive_address_count : this.receiveAddressCount,
                 change_address_count : this.changeAddressCount,
                 xpriv : this.extendedPrivateKey,
@@ -125,134 +123,6 @@ function HDAccount(wallet, label, idx) {
         },
         resetBalance : function() {
             return this.balance = null;
-        },
-        getAddressForPaymentRequest : function(paymentRequest) {
-            return this.getAddressAtIdx(paymentRequest.index);
-        },
-        getPaymentRequestsJson : function() {
-            var paymentRequestsJson = [];
-            for (var i in this.paymentRequests) {
-                var paymentRequest = {};
-                paymentRequest.amount = this.paymentRequests[i].amount;
-                paymentRequest.label = this.paymentRequests[i].label;
-                paymentRequest.paid = this.paymentRequests[i].paid;
-                paymentRequest.complete = this.paymentRequests[i].complete;
-                paymentRequest.index = this.paymentRequests[i].index;
-                paymentRequestsJson.push(paymentRequest);
-            }
-
-            return paymentRequestsJson;
-        },
-        getPaymentRequests : function() {
-            return this.paymentRequests;
-        },
-        setPaymentRequests : function(paymentRequests) {
-            this.paymentRequests = paymentRequests;
-        },
-        generatePaymentRequest : function(amount, label) {
-          // console.log("Generating payment request")
-          // console.log(amount)
-            for (var i in this.paymentRequests) {
-                var paymentRequest = this.paymentRequests[i];
-                if (                    
-                     (paymentRequest.amount == 0   || paymentRequest.amount == null) &&
-                     (paymentRequest.label == null || paymentRequest.label == "") &&
-                     paymentRequest.paid == 0
-                    
-                ) { // Reuse:
-                    paymentRequest.complete = false;
-                    paymentRequest.amount = amount;
-                    paymentRequest.paid = 0;
-                    if (label === null || label === undefined)
-                        label = "";
-                    paymentRequest.label = label;
-                    return paymentRequest; // Return reused request
-                }
-            }
-
-            var address = this.generateAddress();
-            if (label === null || label === undefined)
-                label = ""; 
-
-            var paymentRequest = {amount: amount,
-                                   paid: 0,
-                                   txidList: [],
-                                   complete : false,
-                                   label : label,
-                                   index: this.getAddressesCount()-1}
-            this.paymentRequests.push(paymentRequest);
-            return paymentRequest;
-        },
-        updatePaymentRequest : function(address, amount, label) {
-            var idx = this.wallet.addresses.indexOf(address);
-            var paymentRequest = this.paymentRequests[idx];
-            if (idx > -1) {
-                paymentRequest.amount = amount;
-                paymentRequest.label = label;
-                return true;
-            }
-            return false;
-        },
-        acceptPaymentRequest : function(address) {
-            var idx = this.wallet.addresses.indexOf(address);
-            var paymentRequest = this.paymentRequests[idx];
-            if (idx > -1) {
-                paymentRequest.complete = true;
-                return true;
-            }
-            return false;
-        },
-        addTxToPaymentRequest : function(address, paid, txid) {
-            var idx = this.wallet.addresses.indexOf(address);
-            var paymentRequest = this.paymentRequests[idx];
-            if (idx > -1) {
-                paymentRequest.paid += paid;
-                paymentRequest.txidList.push(txid);
-                return true;
-            }
-            return false;
-        },
-        checkToAddTxToPaymentRequest: function(address, txHash, amount, checkCompleted) {
-            var idx = this.wallet.addresses.indexOf(address);
-        
-            if (idx > -1) {
-                var paymentRequest = this.paymentRequests[idx];
-                if (paymentRequest.amount == 0)
-                    return false;            
-                var haveAddedTxToPaymentRequest = false;
-              
-                if ((checkCompleted == true || paymentRequest.complete == false) &&
-                    paymentRequest.txidList.indexOf(txHash) < 0) {
-
-                    if (checkCompleted == true && paymentRequest.complete == true) {
-                        paymentRequest.complete = false;
-                    }
-
-                    this.addTxToPaymentRequest(address, amount, txHash);
-                    if (paymentRequest.paid == paymentRequest.amount) {
-                        this.acceptPaymentRequest(address);
-                        MyWallet.sendEvent('hw_wallet_accepted_payment_request', {"address": address, amount: paymentRequest.amount});
-                    } else if (amount > 0 && paymentRequest.paid < paymentRequest.amount) {
-                        MyWallet.sendEvent('hw_wallet_payment_request_received_too_little', {"address": address, amountRequested: paymentRequest.amount, amountReceived: paymentRequest.paid});
-                    } else if (paymentRequest.paid > paymentRequest.amount) {
-                        MyWallet.sendEvent('hw_wallet_payment_request_received_too_much', {"address": address, amountRequested: paymentRequest.amount, amountReceived: paymentRequest.paid});
-                    }
-
-                    haveAddedTxToPaymentRequest = true;
-                }
-            }
-
-            return haveAddedTxToPaymentRequest;
-        },
-        cancelPaymentRequest : function(address) {
-            var idx = this.wallet.addresses.indexOf(address);
-            var paymentRequest = this.paymentRequests[idx];
-            if (idx > -1) {
-                paymentRequest.amount = 0;
-                paymentRequest.label = "";
-                return true;
-            }
-            return false;
         },
         createTx : function(to, value, fixedFee, unspentOutputs, extendedPrivateKey) {
             var utxos = this.wallet.getUnspentOutputs();
@@ -451,7 +321,6 @@ function HDWallet(seedHex, bip39Password, second_password, success, error) {
             walletAccount.internalAccount = walletAccount.getAccountZero().derive(1);
 
             var account = HDAccount(walletAccount, label, this.accountArray.length);
-            account.generatePaymentRequest(0, "");
             
             var extendedPrivateKey = walletAccount.getAccountZero().toBase58();
             var extendedPublicKey =  walletAccount.getAccountZero().neutered().toBase58();
@@ -477,8 +346,6 @@ function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secon
         if (archived == true)
             continue;
         var label = accountPayload.label;
-        var external_addresses = accountPayload.paymentRequests.length;
-        var paymentRequests = accountPayload.paymentRequests;
 
         // This is called when a wallet is loaded, not when it's initially created. 
         // If second password is enabled then accountPayload.xpriv has already been 
@@ -487,17 +354,6 @@ function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secon
         hdaccount.setIsArchived(archived);
         hdaccount.receiveAddressCount = accountPayload.receive_address_count ? accountPayload.receive_address_count : 0;
         hdaccount.changeAddressCount = accountPayload.change_address_count ? accountPayload.change_address_count : 0;
-
-        if (paymentRequests != null) {
-            for (var m in paymentRequests) {
-                var paymentRequest = paymentRequests[m];
-                if (paymentRequest.complete == false) {
-                        paymentRequest.paid = 0;
-                    }
-                paymentRequest.txidList = [];
-                hdaccount.paymentRequests.push(paymentRequest);
-            }
-        }
     }
 
     return hdwallet;
@@ -553,20 +409,7 @@ function recoverHDWallet(hdwallet, successCallback, errorCallback) {
         while(account.getAddressesCount() > accountAddressIdx+1) {
             account.undoGenerateAddress();
         }
-        account.receiveAddressCount = account.getAddressesCount()
-
-        var addresses = account.getAddresses();
-        for (var i in addresses) {
-            var address = addresses[i];
-            var paymentRequest = {  amount: 0,
-                                    paid: 0,
-                                    txidList: [],
-                                    complete: true,
-                                    index: parseInt(i)}
-
-            account.paymentRequests.push(paymentRequest);
-        }
-
+        account.receiveAddressCount = account.getAddressesCount();
 
         lookAheadOffset = 0;
         var accountChangeAddressIdx = -1;
@@ -606,7 +449,7 @@ function recoverHDWallet(hdwallet, successCallback, errorCallback) {
         while(account.getChangeAddressesCount() > accountChangeAddressIdx+1) {
             account.undoGenerateChangeAddress();
         }
-        account.changeAddressCount = account.getChangeAddressesCount()
+        account.changeAddressCount = account.getChangeAddressesCount();
 
         if (accountAddressIdx == -1 && accountChangeAddressIdx == -1) {
             continueLookingAheadAccount = false;

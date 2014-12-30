@@ -925,88 +925,6 @@ sets account to `isArchived` and backups wallet
 {int}  - balance of account in satoshis
 
 
-#### `MyWallet.getPaymentRequestsForAccount(accountIdx);`
-
-##### Parameters:
-
-{int} - index of HD wallet account
-
-##### Returns:
-
-{array}  - Payment Request objects
-
-
-#### `MyWallet.generateOrReuseEmptyPaymentRequestForAccount(accountIdx);`
-
-##### Parameters:
-
-{int} - index of HD wallet account
-
-
-##### Returns:
-
-{Object}  - Payment Request object
-
-##### Description:
-
-generates and returns a Payment Request object and backups wallet
-
-
-#### `MyWallet.updatePaymentRequestForAccount(accountIdx, address, amount, label);`
-
-##### Parameters:
-
-{int} - index of HD wallet account
-
-{string} - address to update
-
-{int} - Payment Request amount in satoshis
-
-{string} - label
-
-##### Returns:
-
-{bool}  - success or not
-
-##### Description:
-
-updates a Payment Request object and backups wallet
-
-
-#### `MyWallet.acceptPaymentRequestForAccount(accountIdx, address, amount);`
-
-##### Parameters:
-
-{int} - index of HD wallet account
-
-{string} - address to accept
-
-##### Returns:
-
-{bool}  - success or not
-
-##### Description:
-
-accepts a Payment Request object and backups wallet
-
-
-#### `MyWallet.cancelPaymentRequestForAccount(accountIdx, address);`
-
-##### Parameters:
-
-{int} - index of HD wallet account
-
-{string} - address to cancel
-
-##### Returns:
-
-{bool}  - success or not
-
-##### Description:
-
-cancels a Payment Request object and backups wallet
-
-
 #### `MyWallet.getTransactionsForAccount(accountIdx);`
 
 ##### Parameters:
@@ -1016,19 +934,6 @@ cancels a Payment Request object and backups wallet
 ##### Returns:
 
 {array}  - array of transaction objects
-
-
-#### `MyWallet.refreshAllPaymentRequestsAndChangeAddresses(successCallback, errorCallback);`
-
-##### Parameters:
-
-{function} - success callback function
-
-{function} - error callback function
-
-##### Description:
-
-refreshes all balances across all accounts and addresses
 
 
 #### `MyWallet.sendToAccount(fromIdx, toIdx, amount, feeAmount, note, successCallback, errorCallback, getPassword);`
