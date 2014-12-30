@@ -1062,10 +1062,10 @@ var MyWallet = new function() {
                     var path = output.xpub.path.split("/");
                     path[1] = parseInt(path[1]);
                     path[2] = parseInt(path[2]);
-                    if (path[1] == 0 && account.receiveAddressCount < path[2]) {
-                        account.receiveAddressCount = path[2];
-                    } else if (path[1] == 1 && account.changeAddressCount < path[2]) {
-                        account.changeAddressCount = path[2];
+                    if (path[1] == 0 && account.receiveAddressCount <= path[2]) {
+                        account.receiveAddressCount = path[2]+1;
+                    } else if (path[1] == 1 && account.changeAddressCount <= path[2]) {
+                        account.changeAddressCount = path[2]+1;
                     }
 
                     tx.account_indexes.push(parseInt(j));
@@ -1103,10 +1103,10 @@ var MyWallet = new function() {
                     var path = output.xpub.path.split("/");
                     path[1] = parseInt(path[1]);
                     path[2] = parseInt(path[2]);        
-                    if (path[1] == 0 && account.receiveAddressCount < path[2]) {
-                        account.receiveAddressCount = path[2];
-                    } else if (path[1] == 1 && account.changeAddressCount < path[2]) {
-                        account.changeAddressCount = path[2];
+                    if (path[1] == 0 && account.receiveAddressCount <= path[2]) {
+                        account.receiveAddressCount = path[2]+1;;
+                    } else if (path[1] == 1 && account.changeAddressCount <= path[2]) {
+                        account.changeAddressCount = path[2]+1;;
                     }
 
                     tx.account_indexes.push(parseInt(j));
