@@ -484,8 +484,8 @@ function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secon
         // encrypted. We're keeping it in an encrypted state.
         var hdaccount = hdwallet.createAccountFromExtKey(label, accountPayload.xpriv, accountPayload.xpub);
         hdaccount.setIsArchived(archived);
-        hdaccount.receiveAddressCount = accountPayload.receive_address_count;
-        hdaccount.changeAddressCount = accountPayload.change_address_count;
+        hdaccount.receiveAddressCount = accountPayload.receive_address_count ? accountPayload.receive_address_count : 0;
+        hdaccount.changeAddressCount = accountPayload.change_address_count ? accountPayload.change_address_count : 0;
 
         if (paymentRequests != null) {
             for (var m in paymentRequests) {
