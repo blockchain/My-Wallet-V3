@@ -269,7 +269,8 @@ function HDAccount(wallet, label, idx) {
             }
 
             sendAccount.setUnspentOutputs(unspentOutputs);
-
+            var changeAddress = sendAccount.wallet.getChangeAddressAtIndex(this.changeAddressCount);
+            
             return sendAccount.createTx(to, value, fixedFee, changeAddress);
         },
         recommendedTransactionFee : function(amount) {
