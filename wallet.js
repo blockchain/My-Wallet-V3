@@ -1058,6 +1058,16 @@ var MyWallet = new function() {
             for (var j = 0; j < MyWallet.getHDWallet().getAccountsCount(); j++) {
                 var account = MyWallet.getHDWallet().getAccount(j);
                 if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
+
+                    var path = output.xpub.path.split("/");
+                    path[1] = parseInt(path[1]);
+                    path[2] = parseInt(path[2]);
+                    if (path[1] == 0 && account.receiveAddressCount < path[2]) {
+                        account.receiveAddressCount = path[2];
+                    } else if (path[1] == 1 && account.changeAddressCount < path[2]) {
+                        account.changeAddressCount = path[2];
+                    }
+
                     tx.account_indexes.push(parseInt(j));
                     result -= parseInt(output.value);
                 }
@@ -1089,6 +1099,16 @@ var MyWallet = new function() {
             for (var j = 0; j < MyWallet.getHDWallet().getAccountsCount(); j++) {
                 var account = MyWallet.getHDWallet().getAccount(j);
                 if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
+
+                    var path = output.xpub.path.split("/");
+                    path[1] = parseInt(path[1]);
+                    path[2] = parseInt(path[2]);
+                    if (path[1] == 0 && account.receiveAddressCount < path[2]) {
+                        account.receiveAddressCount = path[2];
+                    } else if (path[1] == 1 && account.changeAddressCount < path[2]) {
+                        account.changeAddressCount = path[2];
+                    }
+
                     tx.account_indexes.push(parseInt(j));
                     result += parseInt(output.value);
                 }
@@ -2111,38 +2131,12 @@ var MyWallet = new function() {
         });
     }
 
-    this.listenToHDWalletAccountAddresses = function(accountIdx) {
-        var account = this.getHDWallet().getAccount(accountIdx);
-        var msg = "";
-
-        var paymentRequests = account.getPaymentRequests();
-        var addresses = account.getChangeAddresses();
-        for (var i in paymentRequests) {
-            var paymentRequest = paymentRequests[i];
-            if (paymentRequest.complete == true)
-                continue;
-
-            try {
-                msg += '{"op":"addr_sub", "addr":"'+ account.getAddressForPaymentRequest(paymentRequest) +'"}';
-            } catch (e) { }
-        }
-
-        var changeAdresses = account.getChangeAddresses();
-        for (var i in changeAdresses) {
-            var address = changeAdresses[i];
-            try {
-                msg += '{"op":"addr_sub", "addr":"'+ address +'"}';
-            } catch (e) { }
-        }
-
-        ws.send(msg);
-    }
-
     this.listenToHDWalletAccounts = function() {
-        if (this.getHDWallet()) {
-            for (var i in this.getHDWallet().getAccounts()) {
-                MyWallet.listenToHDWalletAccountAddresses(i);
-            }
+        for (var i in MyWallet.getHDWallet().getAccounts()) {
+            var account = MyWallet.getHDWallet().getAccount(i);
+            var accountExtendedPublicKey = account.getAccountExtendedKey(false);
+            var msg = '{"op":"xpub_sub", "xpub":"'+ accountExtendedPublicKey +'"}';
+            ws.send(msg);
         }
     }
 
@@ -2775,10 +2769,6 @@ var MyWallet = new function() {
 
                 if (extPubKey == obj.addresses[i].address) {
                     account.setBalance(obj.addresses[i].final_balance);
-                }
-
-                if (account.isAddressPartOfInternalAccountAddress(obj.addresses[i].address)) {
-                    account.setChangeAddressNTxs(obj.addresses[i].address, obj.addresses[i].n_tx);
                 }
             }
         }

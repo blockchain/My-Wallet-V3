@@ -5,26 +5,22 @@ function HDAccount(wallet, label, idx) {
         label : label,
         extendedPrivateKey : null,
         extendedPublicKey : null,
+        receiveAddressCount : 0,
+        changeAddressCount : 0,
         archived : false,
         balance : null,
         paymentRequests : [],
-        changeAddressToNTxs : {},
         getAccountJsonData : function() {
             var accountJsonData = {
                 label : this.getLabel(),
                 archived : this.isArchived(),
                 paymentRequests : this.getPaymentRequestsJson(),
-                change_addresses : this.getChangeAddressesCount(),
+                receive_address_count : this.receiveAddressCount,
+                change_address_count : this.changeAddressCount,
                 xpriv : this.extendedPrivateKey,
                 xpub : this.extendedPublicKey
             };
             return accountJsonData;
-        },
-        getNTxsForChangeAddress : function(address) {
-            return this.changeAddressToNTxs[address];
-        },
-        setChangeAddressNTxs : function(address, NTxs) {
-            this.changeAddressToNTxs[address] = NTxs;
         },
         getLabel : function() {
             return this.label;
@@ -57,6 +53,9 @@ function HDAccount(wallet, label, idx) {
             return false;
         },
         getAddresses : function() {
+            while(this.wallet.addresses.length < this.receiveAddressCount) {
+                this.wallet.generateAddress();
+            }
             return this.wallet.addresses;
         },
         getAddressAtIdx : function(idx) {
@@ -66,6 +65,9 @@ function HDAccount(wallet, label, idx) {
             return this.wallet.addresses.length;
         },
         getChangeAddresses : function() {
+            while(this.wallet.changeAddresses.length < this.changeAddressCount) {
+                this.wallet.generateChangeAddress();
+            }
             return this.wallet.changeAddresses;
         },
         getChangeAddressAtIdx : function(idx) {
@@ -120,6 +122,9 @@ function HDAccount(wallet, label, idx) {
         },
         resetBalance : function() {
             return this.balance = null;
+        },
+        getReceivingAddress : function() {
+            return this.getAddressAtIdx(this.receiveAddressCount);
         },
         getAddressForPaymentRequest : function(paymentRequest) {
             return this.getAddressAtIdx(paymentRequest.index);
@@ -251,21 +256,15 @@ function HDAccount(wallet, label, idx) {
         },
         createTx : function(to, value, fixedFee, unspentOutputs, extendedPrivateKey) {
             var utxos = this.wallet.getUnspentOutputs();
-            var changeAddress = this.wallet.getChangeAddress();
-
-            var NTxs = this.getNTxsForChangeAddress(changeAddress);
-            if (NTxs != null && NTxs > 0) {
-                changeAddress = this.wallet.generateChangeAddress();
-            }
 
             var sendAccount = new HDWalletAccount(null);
             sendAccount.newNodeFromExtKey(extendedPrivateKey);
 
-            for (var i = 0; i < this.wallet.addresses.length; i++) {
+            for (var i = 0; i < this.receiveAddressCount; i++) {
                 sendAccount.generateAddress();
             }
 
-            for (var i = 0; i < this.wallet.changeAddresses.length; i++) {
+            for (var i = 0; i < this.changeAddressCount; i++) {
                 sendAccount.generateChangeAddress();
             }
 
@@ -478,7 +477,6 @@ function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secon
             continue;
         var label = accountPayload.label;
         var external_addresses = accountPayload.paymentRequests.length;
-        var change_addresses = accountPayload.change_addresses;
         var paymentRequests = accountPayload.paymentRequests;
 
         // This is called when a wallet is loaded, not when it's initially created. 
@@ -486,6 +484,9 @@ function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secon
         // encrypted. We're keeping it in an encrypted state.
         var hdaccount = hdwallet.createAccountFromExtKey(label, accountPayload.xpriv, accountPayload.xpub);
         hdaccount.setIsArchived(archived);
+        hdaccount.receiveAddressCount = accountPayload.receive_address_count;
+        hdaccount.changeAddressCount = accountPayload.change_address_count;
+
         if (paymentRequests != null) {
             for (var m in paymentRequests) {
                 var paymentRequest = paymentRequests[m];
@@ -495,16 +496,6 @@ function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secon
                 paymentRequest.txidList = [];
                 hdaccount.paymentRequests.push(paymentRequest);
             }
-        }
-
-        for (var j = 0; j < external_addresses; j++) {
-            var address = hdaccount.generateAddress();
-            //console.log("\taddress: ", address);
-        }
-
-        for (var k = 0; k < change_addresses; k++) {
-            var changeAddress = hdaccount.generateChangeAddress();
-            //console.log("\tchangeAddress: ", changeAddress);
         }
     }
 
@@ -561,6 +552,8 @@ function recoverHDWallet(hdwallet, successCallback, errorCallback) {
         while(account.getAddressesCount() > accountAddressIdx+1) {
             account.undoGenerateAddress();
         }
+        account.receiveAddressCount = account.getAddressesCount()
+
         var addresses = account.getAddresses();
         for (var i in addresses) {
             var address = addresses[i];
@@ -612,6 +605,7 @@ function recoverHDWallet(hdwallet, successCallback, errorCallback) {
         while(account.getChangeAddressesCount() > accountChangeAddressIdx+1) {
             account.undoGenerateChangeAddress();
         }
+        account.changeAddressCount = account.getChangeAddressesCount()
 
         if (accountAddressIdx == -1 && accountChangeAddressIdx == -1) {
             continueLookingAheadAccount = false;
