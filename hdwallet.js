@@ -58,6 +58,9 @@ function HDAccount(wallet, label, idx) {
             }
             return this.wallet.addresses;
         },
+        getReceivingAddress : function() {
+            return this.wallet.getAddressAtIndex(this.receiveAddressCount);
+        },
         getAddressAtIdx : function(idx) {
             return this.wallet.addresses[idx];
         },
@@ -122,9 +125,6 @@ function HDAccount(wallet, label, idx) {
         },
         resetBalance : function() {
             return this.balance = null;
-        },
-        getReceivingAddress : function() {
-            return this.getAddressAtIdx(this.receiveAddressCount);
         },
         getAddressForPaymentRequest : function(paymentRequest) {
             return this.getAddressAtIdx(paymentRequest.index);

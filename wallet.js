@@ -1102,7 +1102,7 @@ var MyWallet = new function() {
 
                     var path = output.xpub.path.split("/");
                     path[1] = parseInt(path[1]);
-                    path[2] = parseInt(path[2]);
+                    path[2] = parseInt(path[2]);        
                     if (path[1] == 0 && account.receiveAddressCount < path[2]) {
                         account.receiveAddressCount = path[2];
                     } else if (path[1] == 1 && account.changeAddressCount < path[2]) {
@@ -1320,6 +1320,12 @@ var MyWallet = new function() {
     this.getBalanceForAccount = function(accountIdx) {
         return this.getHDWallet().getAccount(accountIdx).getBalance();
     }
+
+    this.getReceivingAddressForAccount = function(accountIdx) {
+        console.log('getReceivingAddressForAccount');
+        return this.getHDWallet().getAccount(accountIdx).getReceivingAddress();
+    }
+
     this.getAddressAtIdxForAccount = function(accountIdx, addressIdx) {
         return this.getHDWallet().getAccount(accountIdx).getAddressAtIdx(addressIdx);
     }
