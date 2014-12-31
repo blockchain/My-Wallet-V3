@@ -36,6 +36,7 @@ module.exports = function(config) {
       'bower_components/cryptojslib/components/cipher-core.js',
       'bower_components/cryptojslib/components/pad-iso10126.js',
       'crypto-util-legacy.js',
+      'xregexp-all.js',
       'wallet.js',
       'tests/**/*.js',
       'tests/**/*.js.coffee'
