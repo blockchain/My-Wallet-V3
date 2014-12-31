@@ -265,6 +265,10 @@ sets main password, backups wallet and logsout
 
 {string}  - label
 
+##### Returns:
+
+{bool}  - success or not
+
 
 #### `MyWallet.get_ticker(successcallback, errorcallback);`
 
@@ -549,6 +553,105 @@ stores currency code in memory and in local storage
 Get history and parse multiaddr json. Needs to be called by client in the success callback of fetchWalletJson and after MyWallet.initializeHDWallet
 
 
+#### `MyWallet.getNote(tx_hash);`
+
+##### Parameters:
+
+{string} - tx hash
+
+##### Returns:
+
+{string} - note
+
+
+#### `MyWallet.deleteNote(tx_hash);`
+
+##### Parameters:
+
+{string} - tx hash
+
+
+#### `MyWallet.setNote(tx_hash, text);`
+
+##### Parameters:
+
+{string} - tx hash
+
+{string} - note
+
+##### Returns:
+
+{bool}  - success or not
+
+
+#### `MyWallet.getTags(tx_hash);`
+
+##### Parameters:
+
+{string} - tx hash
+
+##### Returns:
+
+{array} - tags
+
+
+#### `MyWallet.setTag(tx_hash, idx);`
+
+##### Parameters:
+
+{string} - tx hash
+
+{int} - index
+
+
+#### `MyWallet.unsetTag(tx_hash, idx);`
+
+##### Parameters:
+
+{string} - tx hash
+
+{int} - index
+
+
+#### `MyWallet.getTagNames();`
+
+##### Returns:
+
+{array} - Tag Names
+
+
+#### `MyWallet.addTag(name);`
+
+##### Parameters:
+
+{string} - tag name
+
+##### Returns:
+
+{bool}  - success or not
+
+
+#### `MyWallet.renameTag(idx, name);`
+
+##### Parameters:
+
+{int} - index
+
+{string} - tag name
+
+##### Returns:
+
+{bool}  - success or not
+
+
+#### `MyWallet.deleteTag(idx);`
+
+##### Parameters:
+
+{int} - index
+
+
+
 Legacy API
 ===========
 
@@ -626,6 +729,10 @@ Legacy API
 {string}  - bitcoin address
 
 {string}  - label
+
+##### Returns:
+
+{bool}  - success or not
 
 
 #### `MyWallet.setLegacyAddressBalance(address, balance)`
@@ -862,6 +969,10 @@ Nothing
 {int} - index of HD wallet account
 
 {string}  - account label
+
+##### Returns:
+
+{bool}  - success or not
 
 ##### Description:
 

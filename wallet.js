@@ -517,7 +517,10 @@ var MyWallet = new function() {
     }
 
     this.addAddressBookEntry = function(addr, label) {
+        if (! isAlphaNumericSpace(label))
+            return false;       
         address_book[addr] = label;
+        return true;
     }
 
     //TODO Depreciate this. Need to restructure signer.js
@@ -526,9 +529,12 @@ var MyWallet = new function() {
     }
 
     this.setLegacyAddressLabel = function(address, label) {
+        if (! isAlphaNumericSpace(label))
+            return false; 
         addresses[address].label = label;
 
         MyWallet.backupWalletDelayed();
+        return true;
     }
 
     this.securePost = function(url, data, success, error) {
@@ -1292,8 +1298,11 @@ var MyWallet = new function() {
     }
 
     this.setLabelForAccount = function(accountIdx, label) {
+        if (! isAlphaNumericSpace(label))
+            return false;        
         MyWallet.getHDWallet().getAccount(accountIdx).setLabel(label);
         MyWallet.backupWalletDelayed();
+        return true;
     }
 
     this.isArchivedForAccount = function(accountIdx) {
@@ -2576,8 +2585,11 @@ var MyWallet = new function() {
     }
 
     this.setNote = function(tx_hash, text) {
+        if (! isAlphaNumericSpace(text))
+            return false;
         tx_notes[tx_hash] = text;
         MyWallet.backupWalletDelayed();
+        return true;
     }
 
     this.getTags = function(tx_hash) {
@@ -2606,13 +2618,19 @@ var MyWallet = new function() {
     }
 
     this.addTag = function(name) {
+        if (! isAlphaNumericSpace(name))
+            return false;
         tag_names.push(name);
         MyWallet.backupWalletDelayed();
+        return true;
     }
 
     this.renameTag = function(idx, name) {
+        if (! isAlphaNumericSpace(name))
+            return false;
         tag_names[idx] = name;
         MyWallet.backupWalletDelayed();
+        return true;
     }
 
     this.deleteTag = function(idx) {
