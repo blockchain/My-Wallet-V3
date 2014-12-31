@@ -1823,7 +1823,7 @@ var MyWallet = new function() {
                 }
             });            
         } else {
-                sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback, pw);                    
+                sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback, null);
         }
     }
 
