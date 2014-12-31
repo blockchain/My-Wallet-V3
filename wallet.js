@@ -517,7 +517,7 @@ var MyWallet = new function() {
     }
 
     this.addAddressBookEntry = function(addr, label) {
-        if (! isAlphaNumericSpace(label))
+        if (! isAlphaNumericSpace(label) || ! MyWallet.isValidAddress(addr))
             return false;       
         address_book[addr] = label;
         return true;
