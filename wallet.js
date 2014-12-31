@@ -897,52 +897,69 @@ var MyWallet = new function() {
         }
     }
 
-    this.importPrivateKey = function(privateKeyString, getPassword, success, error) {
+    this.importPrivateKey = function(privateKeyString, getPassword, getBIP38Password, success, error) {
+
+        function reallyInsertKey(key, compressed, pw) {
+            try {
+                var address = MyWallet.addPrivateKey(key, {compressed : compressed, app_name : APP_NAME, app_version : APP_VERSION}, pw)
+                
+                if (!address) {
+                    throw 'Unable to add private key for bitcoin address ' + addr
+                }
+                
+                MyWallet.backupWallet('update', function() {
+                    MyWallet.get_history()
+                });
+                
+                success(address)
+            } catch (e) {
+                error(e)
+            }
+        }
+
         var format = MyWallet.detectPrivateKeyFormat(privateKeyString);
-        var key = MyWallet.privateKeyStringToKey(privateKeyString, format);
-        var compressed = (format == 'sipa') ? false : true;
-        
-        var successHandler = function(address) {
-          
-          if (address) {
 
-              //Perform a wallet backup
-              MyWallet.backupWallet('update', function() {
-                  MyWallet.get_history();
-              });
+        if (format == 'bip38') {
+            getBIP38Password(function(_password) {
+                             console.log(privateKeyString)
+                             console.log(_password)
+                ImportExport.parseBIP38toECKey(privateKeyString, _password, function(key, isCompPoint) {
+                    if(double_encryption) {
+                        getPassword(function(pw, correct_password, wrong_password) {
+                            if (MyWallet.validateSecondPassword(pw)) {
+                                correct_password()
+                                reallyInsertKey(key, isCompPoint, pw)
+                            } else {
+                                wrong_password()
+                                error('Second Password incorrect')
+                            }
+                        });
+                    } else {
+                        reallyInsertKey(key, isCompPoint, null)
+                    }
+                }, function(e) {
+                    error(e)
+                });
+            });
 
-              // Update balance for this specific address (rather than all wallet addresses):
-              // BlockchainAPI.get_balances([address], function() { MyWallet.sendEvent('did_update_legacy_address_balance')  },null)
-
-              MyWallet.sendEvent("msg", {type: "success", message: 'Imported Bitcoin Address ' + key.pub.getAddress().toString(), platform: ""});
-              
-              success(address)
-        } else {
-            // error(...)
-            throw 'Unable to add private key for bitcoin address ' + key.pub.getAddress().toString();
+            return;
         }
-          
-         
-        }
-        
+
+        var key = MyWallet.privateKeyStringToKey(privateKeyString, format)
+
         if(double_encryption) {
-          getPassword(function(pw, correct_password, wrong_password) {
-              if (MyWallet.validateSecondPassword(pw)) {
-                  correct_password()
-                  address = MyWallet.addPrivateKey(key, {compressed: compressed, app_name : IMPORTED_APP_NAME, app_version : IMPORTED_APP_VERSION}, pw);
-                  successHandler(address)
-     
-              } else {
-                  wrong_password()
-                  errorCallback()
-              }
-          });       
+            getPassword(function(pw, correct_password, wrong_password) {
+                if (MyWallet.validateSecondPassword(pw)) {
+                    correct_password()
+                    reallyInsertKey(key, (format == 'compsipa'), pw)
+                } else {
+                    wrong_password()
+                    error('Second Password incorrect')
+                }
+            });
         } else {
-          address = MyWallet.addPrivateKey(key, {compressed: compressed, app_name : IMPORTED_APP_NAME, app_version : IMPORTED_APP_VERSION}, null);
-          successHandler(address)
+            reallyInsertKey(key, (format == 'compsipa'), null)
         }
-        
-
     }
 
     //opts = {compressed, app_name, app_version, created_time}
