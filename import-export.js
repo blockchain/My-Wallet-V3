@@ -1,5 +1,9 @@
 function _ImportExport() {
     
+    // TODO Everything commented out for now except for BIP38 private key import
+    // TODO Can be deleted if not needed
+    
+    /*
     this.init = function(container, success, error) {
         MyWallet.setLoadingText('Loading Import Export View');
         
@@ -677,11 +681,13 @@ function _ImportExport() {
                                    }
                                    });
     }
+     */
     
+    // TODO needs re-factoring to work with new CryptoJS
     this.parseBIP38toECKey = function(base58Encrypted, passphrase, success, error) {
         var hex;
         try {
-            hex = Bitcoin.Base58.decode(base58Encrypted);
+            hex = Bitcoin.base58.decode(base58Encrypted);
         } catch (e) {
             error('Invalid Private Key');
             return;
@@ -698,7 +704,7 @@ function _ImportExport() {
         var expChecksum = hex.slice(-4);
         hex = hex.slice(0, -4);
         
-        var checksum =  Crypto.SHA256(Crypto.SHA256(hex, { asBytes: true }), { asBytes: true });
+        var checksum = Bitcoin.crypto.sha256(Bitcoin.crypto.sha256(hex));
         if (checksum[0] != expChecksum[0] || checksum[1] != expChecksum[1] || checksum[2] != expChecksum[2] || checksum[3] != expChecksum[3]) {
             error('Invalid Private Key');
             return;
@@ -728,13 +734,13 @@ function _ImportExport() {
         }
         
         var decrypted;
-        var AES_opts = {mode: new Crypto.mode.ECB(Crypto.pad.NoPadding), asBytes: true};
+        var AES_opts = { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.NoPadding };
         
         var verifyHashAndReturn = function() {
             var tmpkey = new Bitcoin.ECKey(decrypted);
             var base58AddrText = isCompPoint ? tmpkey.getBitcoinAddressCompressed() : tmpkey.getBitcoinAddress();
             
-            checksum = Crypto.SHA256(Crypto.SHA256(base58AddrText.toString(), { asBytes: true }), { asBytes: true });
+            checksum = Bitcoin.crypto.sha256(Bitcoin.crypto.sha256(base58AddrText.toString()));
             
             if (checksum[0] != hex[3] || checksum[1] != hex[4] || checksum[2] != hex[5] || checksum[3] != hex[6]) {
                 error('Incorrect Passphrase');
@@ -746,53 +752,78 @@ function _ImportExport() {
         
         if (!isECMult) {
             var addresshash = hex.slice(3, 7);
-            ImportExport.Crypto_scrypt(passphrase, addresshash, 16384, 8, 8, 64, function(derivedBytes) {
-                                       var k = derivedBytes.slice(32, 32+32);
-                                       decrypted = Crypto.AES.decrypt(hex.slice(7, 7+32), k, AES_opts);
-                                       for (var x = 0; x < 32; x++) decrypted[x] ^= derivedBytes[x];
-                                       verifyHashAndReturn();
-                                       });
+            ImportExport.Crypto_scrypt(passphrase, addresshash.toJSON().data, 16384, 8, 8, 64, function(derivedBytes) {
+                var k = derivedBytes.slice(32, 32+32);
+                decrypted = CryptoJS.AES.decrypt(hex.slice(7, 7+32), k, AES_opts);
+                for (var x = 0; x < 32; x++) decrypted[x] ^= derivedBytes[x];
+                    verifyHashAndReturn();
+            });
         } else {
             var ownerentropy = hex.slice(7, 7+8);
             var ownersalt = !hasLotSeq ? ownerentropy : ownerentropy.slice(0, 4);
-            ImportExport.Crypto_scrypt(passphrase, ownersalt, 16384, 8, 8, 32, function(prefactorA) {
-                                       var passfactor;
-                                       if (!hasLotSeq) {
-                                       passfactor = prefactorA;
-                                       } else {
-                                       var prefactorB = prefactorA.concat(ownerentropy);
-                                       passfactor = Crypto.SHA256(Crypto.SHA256(prefactorB, { asBytes: true }), { asBytes: true });
-                                       }
-                                       var kp = new Bitcoin.ECKey(passfactor);
-                                       var passpoint = kp.getPubCompressed();
-                                       
-                                       var encryptedpart2 = hex.slice(23, 23+16);
-                                       
-                                       var addresshashplusownerentropy = hex.slice(3, 3+12);
-                                       ImportExport.Crypto_scrypt(passpoint, addresshashplusownerentropy, 1024, 1, 1, 64, function(derived) {
-                                                                  var k = derived.slice(32);
-                                                                  
-                                                                  var unencryptedpart2 = Crypto.AES.decrypt(encryptedpart2, k, AES_opts);
-                                                                  for (var i = 0; i < 16; i++) { unencryptedpart2[i] ^= derived[i+16]; }
-                                                                  
-                                                                  var encryptedpart1 = hex.slice(15, 15+8).concat(unencryptedpart2.slice(0, 0+8));
-                                                                  var unencryptedpart1 = Crypto.AES.decrypt(encryptedpart1, k, AES_opts);
-                                                                  for (var i = 0; i < 16; i++) { unencryptedpart1[i] ^= derived[i]; }
-                                                                  
-                                                                  var seedb = unencryptedpart1.slice(0, 0+16).concat(unencryptedpart2.slice(8, 8+8));
-                                                                  
-                                                                  var factorb = Crypto.SHA256(Crypto.SHA256(seedb, { asBytes: true }), { asBytes: true });
-                                                                  
-                                                                  var ps = secp256k1();
-                                                                  var privateKey = BigInteger.fromByteArrayUnsigned(passfactor).multiply(BigInteger.fromByteArrayUnsigned(factorb)).remainder(ps.getN());
-                                                                  
-                                                                  decrypted = privateKey.toByteArrayUnsigned();
-                                                                  verifyHashAndReturn();
-                                                                  });
-                                       });
+            ImportExport.Crypto_scrypt(passphrase, ownersalt.toJSON().data, 16384, 8, 8, 32, function(prefactorA) {
+                var passfactor;
+                if (!hasLotSeq) {
+                    passfactor = prefactorA;
+                } else {
+                    // TODO not tested
+                    var prefactorB = prefactorA.concat(ownerentropy);
+                    passfactor = Bitcoin.crypto.sha256(Bitcoin.crypto.sha256(prefactorB));
+                }
+
+                var kp = new Bitcoin.ECKey(Bitcoin.BigInteger.fromBuffer(passfactor));
+
+                var passpoint = kp.pub.getAddress().hash;
+
+                var encryptedpart2 = hex.slice(23, 23+16);
+
+                var addresshashplusownerentropy = hex.slice(3, 3+12);
+                ImportExport.Crypto_scrypt(passpoint.toJSON().data, addresshashplusownerentropy.toJSON().data, 1024, 1, 1, 64, function(derived) {
+                    var k = derived.slice(32);
+
+                    // CryptoJS.AES.decrypt({ciphertext: payload, salt: ""}, streched_password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iv: iv});
+                    var unencryptedpart2 = CryptoJS.AES.decrypt({ciphertext: CryptoJS.enc.Hex.parse(encryptedpart2.toString('hex')), salt: ""}, CryptoJS.enc.Hex.parse(k.toString('hex')), AES_opts);
+
+                    var unencryptedpart2Bytes = new Bitcoin.Buffer.Buffer(unencryptedpart2.toString(CryptoJS.enc.Hex), 'hex')
+
+                    for (var i = 0; i < 16; i++) { unencryptedpart2Bytes[i] ^= derived[i+16]; }
+
+                    // var encryptedpart1 = hex.slice(15, 15+8).concat(unencryptedpart2Bytes.slice(0, 0+8));
+                    var encryptedpart1 = hex.slice(15, 15+8).toString('hex') + unencryptedpart2Bytes.slice(0, 0+8).toString('hex')
+                    var unencryptedpart1 = CryptoJS.AES.decrypt({ciphertext: CryptoJS.enc.Hex.parse(encryptedpart1), salt: ""}, CryptoJS.enc.Hex.parse(k.toString('hex')), AES_opts);
+
+                    var unencryptedpart1Bytes = new Bitcoin.Buffer.Buffer(unencryptedpart1.toString(CryptoJS.enc.Hex), 'hex')
+                    for (var i = 0; i < 16; i++) { unencryptedpart1Bytes[i] ^= derived[i]; }
+
+                    var seedb = unencryptedpart1Bytes.slice(0, 0+16).toString('hex') + unencryptedpart2Bytes.slice(8, 8+8).toString('hex');
+
+                    var factorb = CryptoJS.SHA256(CryptoJS.SHA256(CryptoJS.enc.Hex.parse(seedb))).toString(CryptoJS.enc.Hex);
+
+                    // var ps = secp256k1();
+                    // var ps = Bitcoin.ECKey.curve;
+                    // var privateKey = Bitcoin.BigInteger.fromBuffer(passfactor).multiply(Bitcoin.BigInteger.fromHex(factorb)).remainder(ps.getN());
+                                           var x1 = Bitcoin.BigInteger.fromBuffer(passfactor).multiply(Bitcoin.BigInteger.fromHex(factorb));
+                                           var x2 = x1.toByteArray();
+                                           console.log(x2)
+                                           x2.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
+                                           x2.shift();
+                                           console.log(x2)
+                                           console.log(Bitcoin.BigInteger.fromBuffer(x2))
+                    var privateKey = Bitcoin.ECKey(Bitcoin.BigInteger.fromBuffer(x2));
+
+                                           console.log(privateKey)
+                                           return;
+                    decrypted = privateKey.toByteArrayUnsigned();
+                    verifyHashAndReturn();
+                });
+            });
         }
     }
     
+    // TODO Used by parseBIP38toECKey but shadowed by iOS client
+    // Same as above - comment back in if needed, otherwise remove
+    
+    /*
     var MAX_VALUE = 2147483647;
     var workerUrl = null;
     
@@ -1056,6 +1087,8 @@ function _ImportExport() {
             }
         } // scryptCore
     };
+     */
+    
 }
 
 var ImportExport = new _ImportExport();
