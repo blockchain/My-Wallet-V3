@@ -1257,7 +1257,7 @@ var MyWallet = new function() {
                 }
 
             } catch (e) {
-                alert(e);
+                MyWallet.sendEvent("msg", {type: "error", message: 'error with websocket', platform: ""});
             }
 
             ws.send(msg);
