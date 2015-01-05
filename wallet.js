@@ -181,6 +181,7 @@ var MyWallet = new function() {
     var api_code = "0";
     var counter = 0;
     var isPolling = false;
+    var didUpgradeToHd = null;
 
     var wallet_options = {
         pbkdf2_iterations : default_pbkdf2_iterations, //Number of pbkdf2 iterations to default to for second password and dpasswordhash
@@ -192,6 +193,10 @@ var MyWallet = new function() {
         transactions_per_page : 30, //Number of transactions per page
         additional_seeds : []
     };
+
+    this.didUpgradeToHd = function() {
+        return didUpgradeToHd;
+    }
 
     this.setAPICode = function(val) {
         api_code = val;
@@ -2878,6 +2883,7 @@ var MyWallet = new function() {
                 }
 
                 if (obj.hd_wallets && obj.hd_wallets.length > 0) {
+                    didUpgradeToHd = true;
                     var defaultHDWallet = obj.hd_wallets[0];
                     if (haveBuildHDWallet == false) {
                         MyWallet.buildHDWallet(defaultHDWallet.seed_hex, defaultHDWallet.accounts);
@@ -2905,6 +2911,7 @@ var MyWallet = new function() {
                     }                
 
                 } else {
+                    didUpgradeToHd = false;
                     MyWallet.sendEvent('hd_wallets_does_not_exist');
                 }
 

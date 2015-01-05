@@ -941,6 +941,13 @@ HDWallet API
 This method should be called if the event `hd_wallets_does_not_exist` is fired. Method will create the HD wallet and create the first account with the name `Spending`.
 
 
+#### `MyWallet.didUpgradeToHd();`
+
+##### Returns:
+
+{bool}  - returns whether an hd wallet exist in json or null if unknown
+
+
 #### `MyWallet.getHDWalletPassphraseString(getPassword, success, error);`
 
 ##### Parameters:
