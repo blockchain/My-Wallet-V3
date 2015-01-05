@@ -1245,7 +1245,10 @@ var MyWallet = new function() {
                 for (var key in addrs) {
                     msg += '{"op":"addr_sub", "addr":"'+ addrs[key] +'"}'; //Subscribe to transactions updates through websockets
                 }
-                MyWallet.listenToHDWalletAccounts();
+
+                if (MyWallet.getHDWallet() != null)
+                    MyWallet.listenToHDWalletAccounts();
+                
                 var paidTo = MyWallet.getPaidToDictionary();
                 for (var tx_hash in paidTo) {
                     if (paidTo[tx_hash].redeemedAt == null) {
@@ -2127,6 +2130,7 @@ var MyWallet = new function() {
             failedToCreateAccount =  function(message) { error(message) }
         
             MyWallet.createAccount("Spending", secondPasswordCallback , didCreateAccount, failedToCreateAccount);
+            MyWallet.listenToHDWalletAccounts();
         }
       
         if (this.getDoubleEncryption()) {
