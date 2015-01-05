@@ -1248,7 +1248,7 @@ var MyWallet = new function() {
 
                 if (MyWallet.getHDWallet() != null)
                     MyWallet.listenToHDWalletAccounts();
-                
+
                 var paidTo = MyWallet.getPaidToDictionary();
                 for (var tx_hash in paidTo) {
                     if (paidTo[tx_hash].redeemedAt == null) {
@@ -2028,7 +2028,9 @@ var MyWallet = new function() {
 
     // Assumes second password is needed if the argument is not null.
     function createAccount(label, second_password, success, error) {      
-        MyWallet.getHDWallet().createAccount(label, second_password);
+        var account = MyWallet.getHDWallet().createAccount(label, second_password);
+        var accountExtendedPublicKey = account.getAccountExtendedKey(false);
+        MyWallet.listenToHDWalletAccount(accountExtendedPublicKey);
         success();
         MyWallet.backupWalletDelayed();
     }
@@ -2078,12 +2080,18 @@ var MyWallet = new function() {
         });
     }
 
+    this.listenToHDWalletAccount = function(accountExtendedPublicKey) {
+        try {
+            var msg = '{"op":"xpub_sub", "xpub":"'+ accountExtendedPublicKey +'"}';
+            ws.send(msg);
+        } catch (e) { }            
+    }
+
     this.listenToHDWalletAccounts = function() {
         for (var i in MyWallet.getHDWallet().getAccounts()) {
             var account = MyWallet.getHDWallet().getAccount(i);
             var accountExtendedPublicKey = account.getAccountExtendedKey(false);
-            var msg = '{"op":"xpub_sub", "xpub":"'+ accountExtendedPublicKey +'"}';
-            ws.send(msg);
+            MyWallet.listenToHDWalletAccount(accountExtendedPublicKey);
         }
     }
 
@@ -2130,7 +2138,6 @@ var MyWallet = new function() {
             failedToCreateAccount =  function(message) { error(message) }
         
             MyWallet.createAccount("Spending", secondPasswordCallback , didCreateAccount, failedToCreateAccount);
-            MyWallet.listenToHDWalletAccounts();
         }
       
         if (this.getDoubleEncryption()) {
