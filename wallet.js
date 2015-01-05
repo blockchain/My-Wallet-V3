@@ -3909,6 +3909,22 @@ var MyWallet = new function() {
         return signatureBuffer.toString("base64", 0, signatureBuffer.length);
     }
 
+    this.isCorrectSecondPassword = function(input) {
+        if (! double_encryption) {
+            throw 'No second password set';
+        }
+
+        var thash = CryptoJS.SHA256(sharedKey + input);
+
+        var password_hash = hashPassword(thash, MyWallet.getSecondPasswordPbkdf2Iterations()-1);  //-1 because we have hashed once in the previous line
+
+        if (password_hash == dpasswordhash) {
+            return true;
+        }
+
+        return false;
+    }
+
     this.validateSecondPassword = function(input) {
         var thash = CryptoJS.SHA256(sharedKey + input);
 

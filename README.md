@@ -224,6 +224,17 @@ Fetches and decrypts wallet json from server. If 2FA is needed, method needs to 
 {string}  - message signature in base64
 
 
+#### `MyWallet.isCorrectSecondPassword(input);`
+
+##### Parameters:
+
+{string}  - second password
+
+##### Returns:
+
+{bool}  - whether input matches set second password
+
+
 #### `MyWallet.validateSecondPassword(input);`
 
 ##### Parameters:
