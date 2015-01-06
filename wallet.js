@@ -4166,14 +4166,8 @@ var MyWallet = new function() {
                 MyWallet.setLanguage(languageCode);
             if (currencyCode)
                 MyWallet.setLocalSymbolCode(currencyCode);
-
-            MyWallet.initializeHDWallet(
-              null, null, null, 
-              function() {
-                success(createdGuid, createdSharedKey, createdPassword);
-              }, 
-              function(e) { error(e); }
-            )
+            
+            success(createdGuid, createdSharedKey, createdPassword);
             
         }, function (e) {
             error(e);
