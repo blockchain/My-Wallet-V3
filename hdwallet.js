@@ -53,6 +53,16 @@ function HDAccount(wallet, label, idx) {
             }
             this.address_labels.push({'index': addressIdx, 'label': label});
         },      
+        unsetLabelForAddress : function(addressIdx) {
+            for (var i in this.address_labels) {
+                var indexLabel = this.address_labels[i];
+                if (indexLabel.index == addressIdx) {
+                    this.address_labels.splice(i, 1);
+                    return true;
+                }
+            }
+            return false;
+        },
         getLabeledReceivingAddresses : function () {
           var addresses = [];
           for (var i in this.address_labels) {

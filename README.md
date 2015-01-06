@@ -1279,5 +1279,15 @@ redeem bitcoins sent from email or mobile
 {string}  - success or not
 
 
+#### `MyWallet.unsetLabelForAccountAddress(accountIdx, addressIdx);`
 
+##### Parameters:
+
+{int} - index of HD wallet account
+
+{int} - index of address of HD wallet account
+
+##### Returns:
+
+{string}  - success or not
 

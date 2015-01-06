@@ -1381,6 +1381,13 @@ var MyWallet = new function() {
       return MyWallet.getHDWallet().getAccount(accountIdx).getLabeledReceivingAddresses();
     }
 
+    this.unsetLabelForAccountAddress = function(accountIdx, addressIdx) {
+        var success = MyWallet.getHDWallet().getAccount(accountIdx).unsetLabelForAddress(addressIdx);
+        if (success)
+            MyWallet.backupWalletDelayed();
+        return success;
+    }
+
     this.getAllTransactions = function() {
         var filteredTransactions = [];
 
