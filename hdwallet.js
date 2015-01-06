@@ -37,6 +37,9 @@ function HDAccount(wallet, label, idx) {
                 }
             }
 
+            if (addressIdx > this.receiveAddressCount) {
+                this.receiveAddressCount = addressIdx;
+            }
             this.address_labels.push({'index': addressIdx, 'label': label});
         },        
         isArchived : function() {
