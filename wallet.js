@@ -1362,6 +1362,14 @@ var MyWallet = new function() {
         return MyWallet.getHDWallet().getAccount(accountIdx).getAddressAtIdx(addressIdx);
     }
 
+    this.setLabelForAccountAddress = function(accountIdx, addressIdx, label) {
+        if (! isAlphaNumericSpace(label))
+            return false;           
+        MyWallet.getHDWallet().getAccount(accountIdx).setLabelForAddress(addressIdx, label);
+        MyWallet.backupWalletDelayed();
+        return true;
+    }
+
     this.getAllTransactions = function() {
         var filteredTransactions = [];
 

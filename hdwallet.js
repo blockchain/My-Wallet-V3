@@ -8,6 +8,7 @@ function HDAccount(wallet, label, idx) {
         receiveAddressCount : 0,
         changeAddressCount : 0,
         archived : false,
+        address_labels: [],
         balance : null,
         getAccountJsonData : function() {
             var accountJsonData = {
@@ -16,7 +17,8 @@ function HDAccount(wallet, label, idx) {
                 receive_address_count : this.receiveAddressCount,
                 change_address_count : this.changeAddressCount,
                 xpriv : this.extendedPrivateKey,
-                xpub : this.extendedPublicKey
+                xpub : this.extendedPublicKey,
+                address_labels: this.address_labels
             };
             return accountJsonData;
         },
@@ -26,6 +28,17 @@ function HDAccount(wallet, label, idx) {
         setLabel : function(label) {
             this.label = label;
         },
+        setLabelForAddress : function(addressIdx, label) {
+            for (var i in this.address_labels) {
+                var indexLabel = this.address_labels[i];
+                if (indexLabel.index == addressIdx) {
+                    this.address_labels.splice(i, 1);
+                    break;
+                }
+            }
+
+            this.address_labels.push({'index': addressIdx, 'label': label});
+        },        
         isArchived : function() {
             return this.archived;
         },
@@ -353,6 +366,7 @@ function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secon
         hdaccount.setIsArchived(archived);
         hdaccount.receiveAddressCount = accountPayload.receive_address_count ? accountPayload.receive_address_count : 0;
         hdaccount.changeAddressCount = accountPayload.change_address_count ? accountPayload.change_address_count : 0;
+        hdaccount.address_labels = accountPayload.address_labels ? accountPayload.address_labels : [];
     }
 
     return hdwallet;
