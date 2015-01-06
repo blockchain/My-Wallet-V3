@@ -2053,36 +2053,68 @@ var MyWallet = new function() {
         return isValidateMnemonic(mnemonic);
     }
 
-    this.recoverMyWalletHDWalletFromSeedHex = function(seedHex, bip39Password, successCallback, errorCallback) {
-        recoverHDWalletFromSeedHex(seedHex, bip39Password, function(hdWallet) {
-            this.setHDWallet(hdWallet);
+    this.recoverMyWalletHDWalletFromSeedHex = function(seedHex, bip39Password, getPassword, successCallback, errorCallback) {
+        function recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, secondPassword, successCallback, errorCallback) {
+            recoverHDWalletFromSeedHex(seedHex, bip39Password, secondPassword, function(hdWallet) {
+                this.setHDWallet(hdWallet);
 
-            if (successCallback)
-                successCallback();
+                if (successCallback)
+                    successCallback();
 
-            MyWallet.backupWalletDelayed('update', function() {
-                MyWallet.get_history();
+                MyWallet.backupWalletDelayed('update', function() {
+                    MyWallet.get_history();
+                });
+            }, function() {
+                if (errorCallback)
+                    errorCallback();
             });
-        }, function() {
-            if (errorCallback)
-                errorCallback();
-        });
+        }
+
+        if (this.getDoubleEncryption()) {
+            getPassword(function(pw, correct_password, wrong_password) {
+                if (MyWallet.validateSecondPassword(pw)) {
+                    correct_password()
+                    recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, pw, successCallback, errorCallback);                    
+                } else {
+                    wrong_password()
+                    errorCallback()
+                }
+            });
+        } else {
+            recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, null, successCallback, errorCallback);                    
+        }
     }
 
-    this.recoverMyWalletHDWalletFromMnemonic = function(passphrase, bip39Password, successCallback, errorCallback) {
-        recoverHDWalletFromMnemonic(passphrase, bip39Password, function(hdWallet) {
-            this.setHDWallet(hdWallet);
+    this.recoverMyWalletHDWalletFromMnemonic = function(passphrase, bip39Password, getPassword, successCallback, errorCallback) {
+        function recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, secondPassword, successCallback, errorCallback) {
+            recoverHDWalletFromMnemonic(passphrase, bip39Password, secondPassword, function(hdWallet) {
+                this.setHDWallet(hdWallet);
 
-            if (successCallback)
-                successCallback();
+                if (successCallback)
+                    successCallback();
 
-            MyWallet.backupWalletDelayed('update', function() {
-                MyWallet.get_history();
+                MyWallet.backupWalletDelayed('update', function() {
+                    MyWallet.get_history();
+                });
+            }, function() {
+                if (errorCallback)
+                    errorCallback();
             });
-        }, function() {
-            if (errorCallback)
-                errorCallback();
-        });
+        }
+
+        if (this.getDoubleEncryption()) {
+            getPassword(function(pw, correct_password, wrong_password) {
+                if (MyWallet.validateSecondPassword(pw)) {
+                    correct_password()
+                    recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, pw, successCallback, errorCallback);                    
+                } else {
+                    wrong_password()
+                    errorCallback()
+                }
+            });
+        } else {
+            recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, null, successCallback, errorCallback);                    
+        }
     }
 
     this.listenToHDWalletAccount = function(accountExtendedPublicKey) {

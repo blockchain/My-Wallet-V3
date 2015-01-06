@@ -1138,26 +1138,38 @@ sets account to `isArchived` and backups wallet
 creates new account and backups wallet
 
 
-#### `MyWallet.recoverMyWalletHDWalletFromSeedHex(seedHex, bip39Password);`
+#### `MyWallet.recoverMyWalletHDWalletFromSeedHex(seedHex, bip39Password, getPassword, successCallback, errorCallback);`
 
 ##### Parameters:
 
- {string} - passphrase seed in hex
+{string} - passphrase seed in hex
 
- {string} - optional bip39 Password
+{string} - optional bip39 Password
+
+{function} - getPassword function
+
+{function} - success callback function
+
+{function} - error callback function
 
 ##### Description:
 
 recovers HD wallet from passphrases by recreating all accounts and queries all balances of accounts and addresses
 
 
-#### `MyWallet.recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password);`
+#### `MyWallet.recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, getPassword, successCallback, errorCallback);`
 
 ##### Parameters:
 
 {string} - passphrase seed in words
 
 {string} - optional bip39 Password
+
+{function} - getPassword function
+
+{function} - success callback function
+
+{function} - error callback function
 
 ##### Description:
 

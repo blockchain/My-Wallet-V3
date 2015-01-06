@@ -188,7 +188,7 @@ function HDWallet(seedHex, bip39Password, second_password, success, error) {
             this.seedHex = seedHex;
         },
         getSeedHexString : function(second_password) {
-          if(second_password == null) {
+          if(second_password == null) { 
             return this.seedHex;
           } else {
             return MyWallet.decryptSecretWithSecondPassword(this.seedHex, second_password)
@@ -310,7 +310,6 @@ function HDWallet(seedHex, bip39Password, second_password, success, error) {
         },
         createAccount : function(label, second_password) {
             var seedHex = this.getSeedHexString(second_password)
-          
             var accountIdx = this.accountArray.length;
               
             var walletAccount = new HDWalletAccount(this.getMasterHex(seedHex));
@@ -359,7 +358,7 @@ function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secon
     return hdwallet;
 }
 
-function recoverHDWallet(hdwallet, successCallback, errorCallback) {
+function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallback) {
     var LOOK_AHEAD_ADDRESS_COUNT = 20;
     var accountIdx = 0;
 
@@ -467,12 +466,12 @@ function recoverHDWallet(hdwallet, successCallback, errorCallback) {
         successCallback(hdwallet);
 }
 
-function recoverHDWalletFromSeedHex(seedHex, bip39Password, successCallback, errorCallback) {
-    var hdwallet = HDWallet(seedHex, bip39Password);
-    recoverHDWallet(hdwallet, successCallback, errorCallback);
+function recoverHDWalletFromSeedHex(seedHex, bip39Password, secondPassword, successCallback, errorCallback) {
+    var hdwallet = HDWallet(seedHex, bip39Password, secondPassword);
+    recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallback);
 }
 
-function recoverHDWalletFromMnemonic(passphrase, bip39Password, successCallback, errorCallback) {
-    var hdwallet = HDWallet(passphraseToPassphraseHexString(passphrase), bip39Password);
-    recoverHDWallet(hdwallet, successCallback, errorCallback);
+function recoverHDWalletFromMnemonic(passphrase, bip39Password, secondPassword, successCallback, errorCallback) {
+    var hdwallet = HDWallet(passphraseToPassphraseHexString(passphrase), bip39Password, secondPassword);
+    recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallback);
 }
