@@ -365,7 +365,7 @@ function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallbac
     var continueLookingAheadAccount = true;
 
     while(continueLookingAheadAccount) {
-        var account = hdwallet.createAccount("Account " + accountIdx.toString(), hdwallet.getSeedHexString());
+        var account = hdwallet.createAccount("Account " + accountIdx.toString(), secondPassword);
         //console.log("accountIdx: " + accountIdx.toString());
 
 
