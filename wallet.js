@@ -1435,8 +1435,19 @@ var MyWallet = new function() {
           if (MyWallet.isActiveLegacyAddress(output.addr)) {
               if (transaction.to.legacyAddresses == null)
                   transaction.to.legacyAddresses = [];
-              transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
-              transaction.fee -= output.value;
+
+              var isFromLegacyAddresses = false;
+              for (var j in transaction.from.legacyAddresses) {
+                var addressAmount = transaction.from.legacyAddresses[j];
+                if (addressAmount.address == output.addr) {
+                  addressAmount.amount -= output.value;
+                  isFromLegacyAddresses = true;
+                }
+              }
+              if (! isFromLegacyAddresses) {
+                  transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
+                  transaction.fee -= output.value;               
+              }
           } else {
               var toAccountSet = false;
               for (var j in MyWallet.getHDWallet().getAccounts()) {
