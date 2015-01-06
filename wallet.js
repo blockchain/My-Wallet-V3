@@ -1676,7 +1676,7 @@ var MyWallet = new function() {
         try {
             var format = MyWallet.detectPrivateKeyFormat(privatekey);
             var privateKeyToSweep = MyWallet.privateKeyStringToKey(privatekey, format);
-            var from_address = MyWallet.getUnCompressedAddressString(privateKeyToSweep);
+            var from_address = MyWallet.getCompressedAddressString(privateKeyToSweep);
 
             BlockchainAPI.get_balance([from_address], function(value) {
                 if (successCallback)
