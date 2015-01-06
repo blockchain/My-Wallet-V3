@@ -1354,12 +1354,19 @@ var MyWallet = new function() {
     }
 
     this.getReceivingAddressForAccount = function(accountIdx) {
-        console.log('getReceivingAddressForAccount');
         return MyWallet.getHDWallet().getAccount(accountIdx).getReceivingAddress();
+    }
+    
+    this.getReceivingAddressIndexForAccount = function(accountIdx) {
+        return MyWallet.getHDWallet().getAccount(accountIdx).getReceivingAddressIndex();
     }
 
     this.getAddressAtIdxForAccount = function(accountIdx, addressIdx) {
         return MyWallet.getHDWallet().getAccount(accountIdx).getAddressAtIdx(addressIdx);
+    }
+
+    this.getLabelForAccountAddress = function(accountIdx, addressIdx) {     
+        return MyWallet.getHDWallet().getAccount(accountIdx).getLabelForAddress(addressIdx);
     }
 
     this.setLabelForAccountAddress = function(accountIdx, addressIdx, label) {
@@ -1368,6 +1375,10 @@ var MyWallet = new function() {
         MyWallet.getHDWallet().getAccount(accountIdx).setLabelForAddress(addressIdx, label);
         MyWallet.backupWalletDelayed();
         return true;
+    }
+    
+    this.getLabeledReceivingAddressesForAccount = function(accountIdx) {
+      return MyWallet.getHDWallet().getAccount(accountIdx).getLabeledReceivingAddresses();
     }
 
     this.getAllTransactions = function() {

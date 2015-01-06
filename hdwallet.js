@@ -28,6 +28,17 @@ function HDAccount(wallet, label, idx) {
         setLabel : function(label) {
             this.label = label;
         },
+        getLabelForAddress : function(addressIdx) {
+            for (var i in this.address_labels) {
+                var indexLabel = this.address_labels[i];
+                if (indexLabel.index == addressIdx) {
+                    return indexLabel.label;
+                    break;
+                }
+            }
+            
+            return null;
+        }, 
         setLabelForAddress : function(addressIdx, label) {
             for (var i in this.address_labels) {
                 var indexLabel = this.address_labels[i];
@@ -41,7 +52,16 @@ function HDAccount(wallet, label, idx) {
                 this.receiveAddressCount++;
             }
             this.address_labels.push({'index': addressIdx, 'label': label});
-        },        
+        },      
+        getLabeledReceivingAddresses : function () {
+          var addresses = [];
+          for (var i in this.address_labels) {
+              var indexLabel = this.address_labels[i];
+              item = {'index' : indexLabel['index'], 'label' : indexLabel['label'], 'address' : this.wallet.getAddressAtIndex(indexLabel['index'])}
+              addresses.push(item)
+          }
+          return addresses;
+        }, 
         isArchived : function() {
             return this.archived;
         },
@@ -74,6 +94,9 @@ function HDAccount(wallet, label, idx) {
         },
         getReceivingAddress : function() {
             return this.wallet.getAddressAtIndex(this.receiveAddressCount);
+        },
+        getReceivingAddressIndex : function() {
+            return this.receiveAddressCount;
         },
         getAddressAtIdx : function(idx) {
             return this.wallet.addresses[idx];
