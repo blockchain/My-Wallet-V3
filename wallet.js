@@ -912,6 +912,10 @@ var MyWallet = new function() {
 
         function reallyInsertKey(key, compressed, pw) {
             try {
+                if (MyWallet.legacyAddressExists(key.pub.getAddress().toString())) {
+                    throw 'Key already imported';
+                }
+                
                 var address = MyWallet.addPrivateKey(key, {compressed : compressed, app_name : APP_NAME, app_version : APP_VERSION}, pw)
                 
                 if (!address) {
@@ -956,7 +960,14 @@ var MyWallet = new function() {
             return;
         }
 
-        var key = MyWallet.privateKeyStringToKey(privateKeyString, format)
+        var key;
+        try {
+            key = MyWallet.privateKeyStringToKey(privateKeyString, format)
+        }
+        catch (e) {
+            error(e)
+            return
+        }
 
         if(double_encryption) {
             getPassword(function(pw, correct_password, wrong_password) {
@@ -1028,7 +1039,7 @@ var MyWallet = new function() {
     }
 
     this.generateNewKey = function(_password) {
-        var key = Bitcoin.ECKey.makeRandom(false);
+        var key = Bitcoin.ECKey.makeRandom(true);
 
         // key is uncompressed, so cannot passed in opts.compressed = true here
         if (MyWallet.addPrivateKey(key)) {
@@ -4275,24 +4286,14 @@ var MyWallet = new function() {
     }
 
     function parseMiniKey(miniKey) {
-        var check = Crypto.SHA256(miniKey + '?');
-
-        switch(check.slice(0,2)) {
-            case '00':
-                var decodedKey = Crypto.SHA256(miniKey, {asBytes: true});
-                return decodedKey;
-                break;
-            case '01':
-                var x          = Crypto.util.hexToBytes(check.slice(2,4))[0];
-                var count      = Math.round(Math.pow(2, (x / 4)));
-                var decodedKey = Crypto.PBKDF2(miniKey, 'Satoshi Nakamoto', 32, { iterations: count, asBytes: true});
-                return decodedKey;
-                break;
-            default:
-                console.log('invalid key');
-                break;
+        var check = Bitcoin.crypto.sha256(miniKey + "?");
+        
+        if (check[0] !== 0x00) {
+            throw 'Invalid mini key';
         }
-    };
+        
+        return Bitcoin.crypto.sha256(miniKey);
+    }
 
     this.detectPrivateKeyFormat = function(key) {
         // 51 characters base58, always starts with a '5'
@@ -4321,7 +4322,7 @@ var MyWallet = new function() {
             /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{29}$/.test(key) ||
             /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{30}$/.test(key)) {
 
-            var testBytes = Crypto.SHA256(key + "?", { asBytes: true });
+            var testBytes = Bitcoin.crypto.sha256(key + "?");
 
             if (testBytes[0] === 0x00 || testBytes[0] === 0x01)
                 return 'mini';
@@ -4330,27 +4331,29 @@ var MyWallet = new function() {
         throw 'Unknown Key Format ' + key;
     }
 
+    function buffertoByteArray(value) {
+        return BigInteger.fromBuffer(value).toByteArray();
+    }
+
     this.privateKeyStringToKey = function(value, format) {
         var key_bytes = null;
-        var compressed = null;
 
         if (format == 'base58') {
-            key_bytes = BigInteger.fromBuffer(Bitcoin.base58.decode(value)).toByteArray();
-            compressed = false;
+            key_bytes = buffertoByteArray(Bitcoin.base58.decode(value));
         } else if (format == 'base64') {
-            key_bytes = Crypto.util.base64ToBytes(value);
+            key_bytes = buffertoByteArray(new Bitcoin.Buffer.Buffer(value, 'base64'))
         } else if (format == 'hex') {
-            key_bytes = Crypto.util.hexToBytes(value);
+            key_bytes = buffertoByteArray(new Bitcoin.Buffer.Buffer(value, 'hex'))
         } else if (format == 'mini') {
-            key_bytes = parseMiniKey(value);
+            key_bytes = buffertoByteArray(parseMiniKey(value));
         } else if (format == 'sipa') {
-            var tbytes = BigInteger.fromBuffer(Bitcoin.base58.decode(value)).toByteArray();
+            var tbytes = buffertoByteArray(Bitcoin.base58.decode(value));
             tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
             tbytes.shift();
             key_bytes = tbytes.slice(0, tbytes.length - 4);
 
         } else if (format == 'compsipa') {
-            var tbytes = BigInteger.fromBuffer(Bitcoin.base58.decode(value)).toByteArray();
+            var tbytes = buffertoByteArray(Bitcoin.base58.decode(value));
             tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
             tbytes.shift();
             tbytes.pop();
@@ -4362,8 +4365,6 @@ var MyWallet = new function() {
         if (key_bytes.length != 32 && key_bytes.length != 33)
             throw 'Result not 32 or 33 bytes in length';
 
-        if (compressed == null)
-            compressed = (format == 'sipa') ? false : true;
-        return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), compressed);
+        return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format == 'compsipa'));
     }
 };
