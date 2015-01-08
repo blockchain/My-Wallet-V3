@@ -12,7 +12,7 @@ describe "Transaction", ->
     
     # externalAddreses = []
     # changeAddresses = []
-    activeLegacyAddresses = ["1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h"]
+    activeLegacyAddresses = ["1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h", "14msrp3yc4JRZEu49u7zYeAkKer4ETH6ag"]
     
     hdAccounts = [
       {
@@ -127,8 +127,32 @@ describe "Transaction", ->
         pending()
         
     describe "from external address to legacy address", ->
-      it "...", ->
-        pending()
+      it "should be recoginized", ->
+        # 1ae6e674f0ea63284ea471f2809f5c84574237d589e16eee356c76d691fe9272
+        # received 0.00040959 from 18xLMRUADGRgty6gjmSZyeKZzALCXHY6AS
+        # 0.03237531 BTC change went to another address (not ours)
+        # 14msrp3yc4JRZEu49u7zYeAkKer4ETH6ag is a legacy address in our wallet
+        
+        tx = {"hash":"1ae6e674f0ea63284ea471f2809f5c84574237d589e16eee356c76d691fe9272","size":226,"txIndex":74018824,"time":1420717021,"inputs":[{"sequence":4294967295,"prev_out":{"spent":true,"tx_index":73952909,"type":0,"addr":"18xLMRUADGRgty6gjmSZyeKZzALCXHY6AS","value":3288490,"n":1,"script":"76a914573fe9a70f096cd747f076a9323f453c9114ad7988ac"},"script":"483045022100d183490a2e9e978a0deb4fe06cd54211904aebbe8b6b3fbb1c5f2fd847655ab502203dffa200b1419b3a083f8b430e2be25fe8b0eff80d74707104c4ceaf272ab1a601210250f530ecfcb81861cd48a8849db546c48f1fad45377fcf33189e733c3024d6a0"}],"out":[{"spent":false,"tx_index":74018824,"type":0,"addr":"14msrp3yc4JRZEu49u7zYeAkKer4ETH6ag","value":40959,"n":0,"script":"76a9142965226ca41acdf2810f0fc1b713f34c2e3df50b88ac"},{"spent":false,"tx_index":74018824,"type":0,"addr":"18vv58P4CGrYtWvBCgwgaQtCWpTq1DTtgV","value":3237531,"n":1,"script":"76a91456fb3a60720447d1e559a4f32fc32d96fb34804a88ac"}],"result":40959,"blockHeight":338047,"balance":1585720,"account_indexes":[],"confirmations":25}
+
+        transaction = {
+          "from":{
+            "account":null,
+            "legacyAddresses":null,
+            "externalAddresses":{"addressWithLargestOutput":"18xLMRUADGRgty6gjmSZyeKZzALCXHY6AS","amount":40959}
+          },
+          "to":{
+            "account":null,
+            "legacyAddresses":[{"address":"14msrp3yc4JRZEu49u7zYeAkKer4ETH6ag","amount":40959}],
+            "externalAddresses": null
+          },"fee":10000,"intraWallet":false,"hash":"1ae6e674f0ea63284ea471f2809f5c84574237d589e16eee356c76d691fe9272","confirmations":25,"txTime":1420717021,"note":null,"tags":[],"size":226,"tx_index":74018824,"block_height":338047,
+          "result":40959
+        }
+
+        result = MyWallet.processTransaction(tx)
+        
+        expect(result["from"]).toEqual(transaction["from"]) # Amount should be ex. change
+        expect(result["to"]).toEqual(transaction["to"]) # It shouldn't include the change
     
     describe "confirmations", ->
       it "should be fetched via getConfirmationsForTx()", ->
