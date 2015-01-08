@@ -2276,13 +2276,13 @@ var MyWallet = new function() {
     this.isValidPrivateKey = function(candidate) {
         try {
             var format = MyWallet.detectPrivateKeyFormat(candidate);
+            if(format == "bip38") { return true }
             var key = MyWallet.privateKeyStringToKey(candidate, format);
             return key.pub.getAddress().toString();
         } catch (e) {
             return false;
         }
     }
-
 
     this.makeWalletJSON = function(format) {
         return MyWallet.makeCustomWalletJSON(format, guid, sharedKey);
