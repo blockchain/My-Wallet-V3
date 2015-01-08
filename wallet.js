@@ -151,7 +151,8 @@ var MyWallet = new function() {
     var isInitialized = false;
     var language = 'en'; //Current language
     var localSymbolCode = null; //Current local symbol
-    var supported_encryption_version = 2.0;  //The maxmimum supported encryption version
+    var old_encryption_version = 2.0;  //The old encryption version
+    var supported_encryption_version = 3.0;  //The maxmimum supported encryption version
     var encryption_version_used = 0.0; //The encryption version of the current wallet. Set by decryptWallet()
     var serverTimeOffset = 0; //Difference between server and client time
     var haveSetServerTime = false; //Whether or not we have synced with server time
@@ -2925,6 +2926,7 @@ var MyWallet = new function() {
                 if (rootContainer) {
                     encryption_version_used = rootContainer.version;
                     main_pbkdf2_iterations = rootContainer.pbkdf2_iterations;
+                    default_pbkdf2_iterations = main_pbkdf2_iterations;
                 }
 
                 if (obj.double_encryption && obj.dpasswordhash) {
@@ -3635,7 +3637,10 @@ var MyWallet = new function() {
 
     this.encrypt = function(data, password, pbkdf2_iterations) {
       var salt = CryptoJS.lib.WordArray.random(16)      
+
+      console.log('streching password ');
       var streched_password = CryptoJS.PBKDF2(password, salt, { keySize: 256 / 32, iterations: pbkdf2_iterations })
+      console.log('streching password finished. finally!');
             
       var iv = salt // Use the same value for IV and salt.
         
@@ -3652,19 +3657,11 @@ var MyWallet = new function() {
     }
 
     this.encryptWallet = function(data, password) {
-        // Disabled by Sjors on 2014-11-28 for lack of a test wallet.
-        // if (encryption_version_used == 2.0) {
-        //     return JSON.stringify({
-        //         pbkdf2_iterations : MyWallet.getMainPasswordPbkdf2Iterations(),
-        //         version : encryption_version_used,
-        //         payload : MyWallet.encrypt(data, password, MyWallet.getMainPasswordPbkdf2Iterations())
-        //     });
-        // } else
-        // if (encryption_version_used == 0.0) {
-            return MyWallet.encrypt(data, password, MyWallet.getDefaultPbkdf2Iterations());
-        // } else {
-        //     throw 'Unknown encryption version ' + encryption_version_used;
-        // }
+        return JSON.stringify({
+            pbkdf2_iterations : MyWallet.getMainPasswordPbkdf2Iterations(),
+            version : 3.0,
+            payload : MyWallet.encrypt(data, password, MyWallet.getMainPasswordPbkdf2Iterations())
+        });
     }
 
     this.decryptWallet = function(data, password, success, error) {
@@ -3710,7 +3707,7 @@ var MyWallet = new function() {
             };
             
             if (obj && obj.payload && obj.pbkdf2_iterations) {
-                if (obj.version != supported_encryption_version)
+                if (obj.version != supported_encryption_version && obj.version != old_encryption_version)
                     throw 'Wallet version ' + obj.version + ' not supported';
             
                 if (obj.pbkdf2_iterations > 0) {
