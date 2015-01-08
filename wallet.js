@@ -911,6 +911,7 @@ var MyWallet = new function() {
     this.importPrivateKey = function(privateKeyString, getPassword, getBIP38Password, success, error) {
         function reallyInsertKey(key, compressed, pw) {
             try {
+                // TODO this should check if the private key is already imported, not if the address exists
                 if (MyWallet.legacyAddressExists(key.pub.getAddress().toString())) {
                     throw 'Key already imported';
                 }
@@ -931,12 +932,17 @@ var MyWallet = new function() {
             }
         }
 
-        var format = MyWallet.detectPrivateKeyFormat(privateKeyString);
+        var format;
+        try {
+            format = MyWallet.detectPrivateKeyFormat(privateKeyString);
+        }
+        catch (e) {
+            error(e)
+            return
+        }
 
         if (format == 'bip38') {
             getBIP38Password(function(_password) {
-                             console.log(privateKeyString)
-                             console.log(_password)
                 ImportExport.parseBIP38toECKey(privateKeyString, _password, function(key, isCompPoint) {
                     if(double_encryption) {
                         getPassword(function(pw, correct_password, wrong_password) {
