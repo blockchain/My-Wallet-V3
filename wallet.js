@@ -3638,7 +3638,7 @@ var MyWallet = new function() {
     this.encrypt = function(data, password, pbkdf2_iterations) {
       var salt = CryptoJS.lib.WordArray.random(16)      
 
-      console.log('streching password ');
+      console.log('streching password...');
       var streched_password = CryptoJS.PBKDF2(password, salt, { keySize: 256 / 32, iterations: pbkdf2_iterations })
       console.log('streching password finished. finally!');
             
