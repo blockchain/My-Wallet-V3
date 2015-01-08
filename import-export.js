@@ -141,10 +141,10 @@ function _ImportExport() {
         if (N > MAX_VALUE / 128 / r) throw Error("Parameter N is too large");
         if (r > MAX_VALUE / 128 / p) throw Error("Parameter r is too large");
         
-        var PBKDF2_opts = {iterations: 1, hasher: Crypto.SHA256, asBytes: true};
-        
-        var B = Crypto.PBKDF2(passwd, salt, p * 128 * r, PBKDF2_opts);
-        
+        var PBKDF2_opts = {iterations: 1, keySize: dkLen/4, hasher: CryptoJS.algo.SHA256};
+
+        B = CryptoJS.PBKDF2(passwd, salt, { iterations: 1, keySize: (p * 128 * r)/4, hasher: CryptoJS.algo.SHA256});
+
         try {
             var i = 0;
             var worksDone = 0;
@@ -177,7 +177,7 @@ function _ImportExport() {
                     }
                     
                     if (worksDone == p) {
-                        callback(Crypto.PBKDF2(passwd, B, dkLen, PBKDF2_opts));
+                        callback(CryptoJS.PBKDF2(passwd, B, PBKDF2_opts));
                     }
                 };
                 return worker;
@@ -190,7 +190,7 @@ function _ImportExport() {
         } catch (e) {
             window.setTimeout(function() {
                               scryptCore();
-                              callback(Crypto.PBKDF2(passwd, B, dkLen, PBKDF2_opts));
+                              callback(CryptoJS.PBKDF2(passwd, B, PBKDF2_opts));
                               }, 0);
         }
         
