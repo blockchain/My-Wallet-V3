@@ -911,8 +911,8 @@ var MyWallet = new function() {
     this.importPrivateKey = function(privateKeyString, getPassword, getBIP38Password, success, error) {
         function reallyInsertKey(key, compressed, pw) {
             try {
-                // TODO this should check if the private key is already imported, not if the address exists
-                if (MyWallet.legacyAddressExists(key.pub.getAddress().toString())) {
+                if (MyWallet.legacyAddressExists(key.pub.getAddress().toString()) &&
+                    !MyWallet.isWatchOnlyLegacyAddress(key.pub.getAddress().toString())) {
                     throw 'Key already imported';
                 }
                 
