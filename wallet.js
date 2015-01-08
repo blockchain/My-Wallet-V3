@@ -909,7 +909,6 @@ var MyWallet = new function() {
     }
 
     this.importPrivateKey = function(privateKeyString, getPassword, getBIP38Password, success, error) {
-
         function reallyInsertKey(key, compressed, pw) {
             try {
                 if (MyWallet.legacyAddressExists(key.pub.getAddress().toString())) {
@@ -1001,12 +1000,12 @@ var MyWallet = new function() {
 
         var base58 = Bitcoin.base58.encode(key.d.toBuffer(32))
         
-        var encoded = second_password == null ? base58 : MyWallet.encryptUsingSecondPassword(base58, second_password)
+        var encoded = second_password == null ? base58 : MyWallet.encryptSecretWithSecondPassword(base58, second_password)
 
         if (encoded == null)
             throw 'Error Encoding key';
         
-        var decoded_base_58 = second_password == null ? base58 : MyWallet.decryptUsingSecondPassword(encoded, second_password);
+        var decoded_base_58 = second_password == null ? base58 : MyWallet.decryptSecretWithSecondPassword(encoded, second_password);
 
         var decoded_key = new ECKey(new BigInteger.fromBuffer(decoded_base_58), opts.compressed);
         
