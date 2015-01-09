@@ -943,24 +943,30 @@ var MyWallet = new function() {
         }
 
         if (format == 'bip38') {
-            getBIP38Password(function(_password) {
-                ImportExport.parseBIP38toECKey(privateKeyString, _password, function(key, isCompPoint) {
-                    if(double_encryption) {
-                        getPassword(function(pw, correct_password, wrong_password) {
-                            if (MyWallet.validateSecondPassword(pw)) {
-                                correct_password()
-                                reallyInsertKey(key, isCompPoint, pw)
-                            } else {
-                                wrong_password()
-                                error('Second Password incorrect')
-                            }
-                        });
-                    } else {
-                        reallyInsertKey(key, isCompPoint, null)
+            getBIP38Password(function(_password, wrong_password) {
+                ImportExport.parseBIP38toECKey(
+                    privateKeyString, 
+                    _password, 
+                    function(key, isCompPoint) {
+                        if(double_encryption) {
+                            getPassword(function(pw, correct_password, wrong_password) {
+                                if (MyWallet.validateSecondPassword(pw)) {
+                                    correct_password()
+                                    reallyInsertKey(key, isCompPoint, pw)
+                                } else {
+                                    wrong_password()
+                                    error('Second Password incorrect')
+                                }
+                            });
+                        } else {
+                            reallyInsertKey(key, isCompPoint, null)
+                        }
+                    }, 
+                    wrong_password,
+                    function(e) {
+                        error(e)
                     }
-                }, function(e) {
-                    error(e)
-                });
+                );
             });
 
             return;
