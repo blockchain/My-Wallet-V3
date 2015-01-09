@@ -69,7 +69,7 @@ function _ImportExport() {
         
         if (!isECMult) {
             var addresshash = hex.slice(3, 7);
-            ImportExport.Crypto_scrypt(passphrase, addresshash.toJSON().data, 16384, 8, 8, 64, function(derivedBytes) {
+            ImportExport.Crypto_scrypt(passphrase, addresshash, 16384, 8, 8, 64, function(derivedBytes) {
                 var k = Bitcoin.convert.bufferToWordArray(derivedBytes.slice(32, 32+32));
                 
                 var decryptedWords = CryptoJS.AES.decrypt({ciphertext: Bitcoin.convert.bufferToWordArray(hex.slice(7, 7+32))}, k, AES_opts);
@@ -83,7 +83,7 @@ function _ImportExport() {
         } else {
             var ownerentropy = hex.slice(7, 7+8);
             var ownersalt = !hasLotSeq ? ownerentropy : ownerentropy.slice(0, 4);
-            ImportExport.Crypto_scrypt(passphrase, ownersalt.toJSON().data, 16384, 8, 8, 32, function(prefactorA) {
+            ImportExport.Crypto_scrypt(passphrase, ownersalt, 16384, 8, 8, 32, function(prefactorA) {
                 var passfactor;
                 
                 if (!hasLotSeq) {
@@ -100,7 +100,7 @@ function _ImportExport() {
                 var encryptedpart2 = hex.slice(23, 23+16);
                 
                 var addresshashplusownerentropy = hex.slice(3, 3+12);
-                ImportExport.Crypto_scrypt(passpoint.toJSON().data, addresshashplusownerentropy.toJSON().data, 1024, 1, 1, 64, function(derived) {
+                ImportExport.Crypto_scrypt(passpoint, addresshashplusownerentropy, 1024, 1, 1, 64, function(derived) {
                     var k = Bitcoin.convert.bufferToWordArray(derived.slice(32));
                     
                     var unencryptedpart2 = CryptoJS.AES.decrypt({ciphertext: Bitcoin.convert.bufferToWordArray(encryptedpart2)}, k, AES_opts);
@@ -140,6 +140,14 @@ function _ImportExport() {
         
         if (N > MAX_VALUE / 128 / r) throw Error("Parameter N is too large");
         if (r > MAX_VALUE / 128 / p) throw Error("Parameter r is too large");
+        
+        if(typeof(passwd) !== 'string') {
+            passwd = Bitcoin.convert.bufferToWordArray(passwd);
+        }
+        
+        if(typeof(salt) !== 'string') {
+            salt = Bitcoin.convert.bufferToWordArray(salt);
+        }
         
         var PBKDF2_opts = {iterations: 1, keySize: dkLen/4, hasher: CryptoJS.algo.SHA256};
 
