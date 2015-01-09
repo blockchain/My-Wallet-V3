@@ -104,22 +104,11 @@ var MyWalletSignup = new function() {
                     throw 'Error generating wallet identifier';
                 }
                 
-                MyWallet.initializeHDWallet(
-                  null, null, null, 
-                  function() {
-                    didUpgradeToHd = true;
-
-                    insertWallet(guid, sharedKey, password, {email : email}, function(message){
-                        success(guid, sharedKey, password);
-                    }, function(e) {
-                        error(e);
-                    });
-
-                  }, 
-                  function(e) { error(e); }
-                )
-
-
+                insertWallet(guid, sharedKey, password, {email : email}, function(message){
+                                 success(guid, sharedKey, password);
+                             }, function(e) {
+                                 error(e);
+                             });
             } catch (e) {
                 error(e);
             }
