@@ -1513,8 +1513,10 @@ var MyWallet = new function() {
                       } else {
                           if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
                               transaction.from.account.amount -= output.value;
-                          } else if (transaction.to.externalAddresses == null ||
-                              output.value > transaction.to.externalAddresses.amount) {
+                          } else if ((transaction.to.externalAddresses == null ||
+                              output.value > transaction.to.externalAddresses.amount) &&
+                              (transaction.from.account != null ||
+                              transaction.from.legacyAddresses != null)) {
                               transaction.to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
                           }
                           transaction.fee -= output.value;
@@ -1524,14 +1526,27 @@ var MyWallet = new function() {
               }
 
               if (! toAccountSet) {
-                  if (transaction.to.externalAddresses == null ||
-                      output.value > transaction.to.externalAddresses.amount) {
+                  if ((transaction.to.externalAddresses == null ||
+                      output.value > transaction.to.externalAddresses.amount) &&
+                      (transaction.from.account != null ||
+                      transaction.from.legacyAddresses != null)) {
                       transaction.to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
                   }
                   transaction.fee -= output.value;
                   transaction.intraWallet = false;
               }                    
           }
+      }
+
+      if (transaction.from.account == null && transaction.from.legacyAddresses == null) {
+            var fromAmount = 0;
+            if (transaction.to.account != null)
+                fromAmount += transaction.to.account.amount;
+            for (var i in transaction.to.legacyAddresses) {
+                var addressAmount = transaction.to.legacyAddresses[i];
+                fromAmount += addressAmount.amount;
+            }
+            transaction.from.externalAddresses.amount = fromAmount;
       }
 
       transaction.hash = tx.hash;
