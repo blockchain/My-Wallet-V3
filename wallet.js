@@ -4208,6 +4208,7 @@ var MyWallet = new function() {
             if (currencyCode)
                 MyWallet.setLocalSymbolCode(currencyCode);
             
+            sharedKey = createdSharedKey;
             success(createdGuid, createdSharedKey, createdPassword);
             
         }, function (e) {
