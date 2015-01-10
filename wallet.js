@@ -3931,8 +3931,21 @@ var MyWallet = new function() {
         // We use same value for the PBKDF2 salt and the AES IV. But we do not use a salt in the AES encryption
         var salt = iv
         
-        // Stretch the password using PBKDF2:
-        var streched_password = CryptoJS.PBKDF2(password, salt, { keySize: 256 / 32, iterations: pbkdf2_iterations })
+        // Stretch the password using PBKDF2
+        // This uses sjcl for speed reasons (order of magnitude faster than CryptoJS using sjcl 1.0.1 vs CryptoJS 3.1.2)
+        // sjcl defaults to sha256, but we need sha1 according to rfc 2898
+        var hmacSHA1 = function (key) {
+            var hasher = new sjcl.misc.hmac(key, sjcl.hash.sha1);
+            this.encrypt = function () {
+                return hasher.encrypt.apply(hasher, arguments);
+            };
+        };
+        
+        // need to convert CryptoJS word objects to sjcl word objects
+        salt = sjcl.codec.hex.toBits(salt.toString(CryptoJS.enc.Hex))
+        var streched_password = sjcl.misc.pbkdf2(password, salt, pbkdf2_iterations, 256, hmacSHA1)
+        // convert back
+        streched_password = CryptoJS.enc.Hex.parse(sjcl.codec.hex.fromBits(streched_password))
         
         // Remove the first 16 bytes (IV) from the payload:
         var payload_hex_string = data_hex_string.slice(32)
