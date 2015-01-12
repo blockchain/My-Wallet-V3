@@ -4,7 +4,7 @@
   "description": "hdwallet",
   "main": "wallet.js",
   "scripts": {
-    "postinstall": "node_modules/bower/bin/bower install && browserify -r bitcoinjs-lib -s Bitcoin > bitcoinjs-npm.js && cp bower_components/jquery/dist/jquery.min.js . && cd node_modules/bip39 && npm run compile && mv bip39.js ../.. && cd ../.. && cp node_modules/xregexp/xregexp-all.js . && cp node_modules/sjcl/sjcl.js .",
+    "postinstall": "node_modules/bower/bin/bower install && browserify -r bitcoinjs-lib -s Bitcoin > bitcoinjs-npm.js && cp bower_components/jquery/dist/jquery.min.js . && cd node_modules/bip39 && npm run compile && mv bip39.js ../.. && cd ../.. && cp node_modules/xregexp/xregexp-all.js . && cd node_modules/sjcl && ./configure --with-sha1 && make && cd - && cp node_modules/sjcl/sjcl.js .",
     "test": "node ./node_modules/karma/bin/karma start karma.conf.js"
   },
   "repository": {
@@ -22,9 +22,6 @@
     "bip39": "^2.1.0",
     "coffee": "0.0.1",
     "coffee-script": "^1.8.0",
-    "karma": "^0.12.24",
-    "karma-coffee-preprocessor": "^0.2.1",
-    "karma-phantomjs-launcher": "^0.1.4",
     "bower": "^1.3.12",
     "bitcoinjs-lib": "^1.0.2",
     "sjcl": "^1.0.1"
@@ -35,8 +32,8 @@
     "karma-coffee-preprocessor": "^0.2.1",
     "karma-jasmine": "^0.2.0",
     "karma-phantomjs-launcher": "^0.1.4",
+    "karma-chrome-launcher": "^0.1.5",
     "phantomjs": "^1.9.12",
-    "uglify-js": "^2.4.15",
-    "karma-chrome-launcher": "^0.1.5"
+    "uglify-js": "^2.4.15"
   }
 }
