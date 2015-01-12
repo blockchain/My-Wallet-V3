@@ -22,6 +22,7 @@ Include the following files:
 * `blockchainapi.js`
 * `bower_components/jquery/dist/jquery.js`
 * `bitcoinjs.js`
+* `bip38.js`
 * `bip39.js`
 * `sjcl.js`
 * `xregexp-all.js`
