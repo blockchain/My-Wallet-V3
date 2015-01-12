@@ -4,7 +4,7 @@
   "description": "hdwallet",
   "main": "wallet.js",
   "scripts": {
-    "postinstall": "node_modules/bower/bin/bower install && browserify -r bitcoinjs-lib -s Bitcoin > bitcoinjs-npm.js && cp bower_components/jquery/dist/jquery.min.js . && cd node_modules/bip39 && npm run compile && mv bip39.js ../.. && cd ../../node_modules/xregexp && cp xregexp-all.js ../..",
+    "postinstall": "node_modules/bower/bin/bower install && browserify -r bitcoinjs-lib -s Bitcoin > bitcoinjs-npm.js && cp bower_components/jquery/dist/jquery.min.js . && cd node_modules/bip39 && npm run compile && mv bip39.js ../.. && cd ../.. && cp node_modules/xregexp/xregexp-all.js . && cp node_modules/sjcl/sjcl.js .",
     "test": "node ./node_modules/karma/bin/karma start karma.conf.js"
   },
   "repository": {

@@ -23,6 +23,7 @@ Include the following files:
 * `bower_components/jquery/dist/jquery.js`
 * `bitcoinjs.js`
 * `bip39.js`
+* `sjcl.js`
 * `hdwallet.js`
 * `HDWalletAccount.js`
 * `bower_components/cryptojslib/rollups/sha256.js`

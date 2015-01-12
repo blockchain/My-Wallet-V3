@@ -35,6 +35,7 @@ module.exports = function(config) {
       'bower_components/cryptojslib/rollups/pbkdf2.js',
       'bower_components/cryptojslib/components/cipher-core.js',
       'bower_components/cryptojslib/components/pad-iso10126.js',
+      'sjcl.js',
       'crypto-util-legacy.js',
       'xregexp-all.js',
       'wallet.js',
