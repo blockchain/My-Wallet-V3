@@ -1,4 +1,12 @@
 describe "Wallet", ->
+  
+  describe "stretchPassword()", ->
+    it "should stretch a password", ->
+      password = "1234567890"
+      salt = CryptoJS.enc.Hex.parse("a633e05b567f64482d7620170bd45201")
+      pbkdf2_iterations = 10
+      
+      expect(MyWallet.stretchPassword(password, salt, pbkdf2_iterations).toString()).toBe("4be158806522094dd184bc9c093ea185c6a4ec003bdc6323108e3f5eeb7e388d")
 
   describe "decryptPasswordWithProcessedPin()", ->
         it "should return the password", ->
