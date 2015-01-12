@@ -27,6 +27,7 @@ module.exports = function(config) {
     files: [
       'bower_components/jquery/dist/jquery.js',
       'bitcoinjs.js',
+      'bip38.js',
       'bip39.js',
       'hdwallet.js',
       'HDWalletAccount.js',

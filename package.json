@@ -4,7 +4,7 @@
   "description": "hdwallet",
   "main": "wallet.js",
   "scripts": {
-    "postinstall": "node_modules/bower/bin/bower install && browserify -r bitcoinjs-lib -s Bitcoin > bitcoinjs-npm.js && cp bower_components/jquery/dist/jquery.min.js . && cd node_modules/bip39 && npm run compile && mv bip39.js ../.. && cd ../.. && cp node_modules/xregexp/xregexp-all.js . && cd node_modules/sjcl && ./configure --with-sha1 && make && cd - && cp node_modules/sjcl/sjcl.js .",
+    "postinstall": "node_modules/bower/bin/bower install && browserify -r bitcoinjs-lib -s Bitcoin > bitcoinjs-npm.js && cp bower_components/jquery/dist/jquery.min.js . && cd node_modules/bip39 && npm run compile && mv bip39.js ../.. && cd ../.. && cp node_modules/xregexp/xregexp-all.js . && cd node_modules/sjcl && ./configure --with-sha1 && make && cd - && cp node_modules/sjcl/sjcl.js . && browserify node_modules/bip38/lib/bip38.js -o bip38.js && cp node_modules/bip38/lib/bip38.js .",
     "test": "node ./node_modules/karma/bin/karma start karma.conf.js"
   },
   "repository": {
@@ -19,6 +19,7 @@
   "homepage": "https://github.com/blockchain/My-Wallet-HD",
   "dependencies": {
     "xregexp": "^2.0.0",
+    "bip38": "^1.2.0",
     "bip39": "^2.1.0",
     "coffee": "0.0.1",
     "coffee-script": "^1.8.0",
