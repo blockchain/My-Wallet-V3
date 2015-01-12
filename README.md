@@ -24,6 +24,7 @@ Include the following files:
 * `bitcoinjs.js`
 * `bip39.js`
 * `sjcl.js`
+* `xregexp-all.js`
 * `hdwallet.js`
 * `HDWalletAccount.js`
 * `bower_components/cryptojslib/rollups/sha256.js`
