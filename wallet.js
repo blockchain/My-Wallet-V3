@@ -3920,8 +3920,6 @@ var MyWallet = new function() {
     }
 
     this.stretchPassword = function(password, salt, pbkdf2_iterations) {
-      return CryptoJS.PBKDF2(password, salt, { keySize: 256 / 32, iterations: pbkdf2_iterations })
-      
       // Stretch the password using PBKDF2
       // This uses sjcl for speed reasons (order of magnitude faster than CryptoJS using sjcl 1.0.1 vs CryptoJS 3.1.2)
       // sjcl defaults to sha256, but we need sha1 according to rfc 2898
