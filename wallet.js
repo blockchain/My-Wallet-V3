@@ -3849,8 +3849,8 @@ var MyWallet = new function() {
         //iso10126 with 10 iterations  (old default)
         if (pbkdf2_iterations != 10) {
             try {
-                var streched_password = CryptoJS.PBKDF2(password, salt, { keySize: 256 / 32, iterations: 10 })
-              
+                var streched_password = MyWallet.stretchPassword(password, salt, 10)
+
                 var decrypted = CryptoJS.AES.decrypt({ciphertext: payload, salt: ""}, streched_password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iv: iv}); 
         
                 var decoded = decrypted.toString(CryptoJS.enc.Utf8)
