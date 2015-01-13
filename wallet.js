@@ -2066,7 +2066,7 @@ var MyWallet = new function() {
             getPassword(function(pw, correct_password, wrong_password) {
                 if (MyWallet.validateSecondPassword(pw)) {
                     correct_password()
-                    sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, null);                    
+                    sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, pw);                    
                 } else {
                     wrong_password()
                 }
