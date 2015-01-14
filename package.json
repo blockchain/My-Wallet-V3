@@ -4,7 +4,7 @@
   "description": "hdwallet",
   "main": "wallet.js",
   "scripts": {
-    "postinstall": "node_modules/bower/bin/bower install && browserify -r bitcoinjs-lib -s Bitcoin > bitcoinjs-npm.js && cp bower_components/jquery/dist/jquery.min.js . && cd node_modules/bip39 && npm run compile && mv bip39.js ../.. && cd ../.. && cp node_modules/xregexp/xregexp-all.js . && cd node_modules/sjcl && ./configure --with-sha1 && make && cd - && cp node_modules/sjcl/sjcl.js . && browserify node_modules/bip38/lib/bip38.js -o bip38.js && cp node_modules/bip38/lib/bip38.js .",
+    "postinstall": "node_modules/bower/bin/bower install && browserify -r bitcoinjs-lib -s Bitcoin > bitcoinjs-npm.js && cp bower_components/jquery/dist/jquery.min.js . && cd node_modules/bip39 && npm run compile && mv bip39.js ../.. && cd ../.. && cp node_modules/xregexp/xregexp-all.js . && cd node_modules/sjcl && ./configure --with-sha1 && make && cd - && cp node_modules/sjcl/sjcl.js . && browserify -r through -r duplexer -r node_modules/bip38/lib/bip38.js:bip38 > bip38.js",
     "test": "node ./node_modules/karma/bin/karma start karma.conf.js"
   },
   "repository": {
