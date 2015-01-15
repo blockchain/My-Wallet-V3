@@ -2244,6 +2244,8 @@ var MyWallet = new function() {
 
     this.initializeHDWallet = function(passphrase, bip39Password, getPassword, success, error)  {
         function initializeHDWallet(passphrase, bip39Password, second_password, success, error) {
+            didUpgradeToHd = true;
+            
             var seedHexString = null;
             if (passphrase == null)
                 seedHexString = MyWallet.generateHDWalletSeedHex();
@@ -2406,9 +2408,10 @@ var MyWallet = new function() {
             out += ',\n	"tag_names" : ' + JSON.stringify(tag_names)
         }
 
-        out += ',\n	"hd_wallets" : [\n';
-
         if (MyWallet.getHDWallet() != null) {
+
+            out += ',\n	"hd_wallets" : [\n';
+
             out += '	{"seed_hex" : "'+ MyWallet.getHDWallet().getSeedHexString() +'",\n';
             out += '    "mnemonic_verified" : "'+ mnemonicVerified +'",\n';
             out += '    "default_account_idx" : "'+ defaultAccountIdx +'",\n';
@@ -2429,13 +2432,12 @@ var MyWallet = new function() {
             }
             out += "\n	]";
             out += '\n	}';
-        }
 
-        out += "\n	]";
+            out += "\n	]";
+        }
 
         out += '\n}';
 
-        //Write the address book
         return out;
     }
 
