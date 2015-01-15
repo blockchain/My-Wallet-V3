@@ -27,8 +27,6 @@
     "sjcl": "^1.0.1"
   },
   "devDependencies": {
-    "through": "^2.3.6",
-    "duplexer": "^0.1.1",
     "browserify": "^6.1.0",
     "karma": "^0.12.24",
     "karma-coffee-preprocessor": "^0.2.1",
