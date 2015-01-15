@@ -28,7 +28,9 @@ describe "Transaction", ->
     spyOn(MyWallet, "isActiveLegacyAddress").and.callFake((address)->
       activeLegacyAddresses.indexOf(address) > -1
     )
-    
+
+    spyOn(MyWallet, "getAccounts").and.returnValue(hdAccounts)
+
     spyOn(MyWallet, "getHDWallet").and.returnValue({
       getAccounts: () -> hdAccounts
       getAccount: (idx) ->  hdAccounts[idx]
