@@ -713,12 +713,14 @@ var MyWallet = new function() {
                         }
                     }
 
-                    for (var i in MyWallet.getHDWallet().getAccounts()) {
+                    for (var i in MyWallet.getAccounts()) {
                         var account = MyWallet.getHDWallet().getAccount(i);
                         account.extendedPrivateKey = MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, pw);
                     }
 
-                    MyWallet.getHDWallet().seedHex = MyWallet.decryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, pw);
+                    if (MyWallet.didUpgradeToHd()) {
+                        MyWallet.getHDWallet().seedHex = MyWallet.decryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, pw);
+                    }
 
                     MyWallet.setDoubleEncryption(false);
 
@@ -769,12 +771,14 @@ var MyWallet = new function() {
                 }
             }
 
-            for (var i in MyWallet.getHDWallet().getAccounts()) {
+            for (var i in MyWallet.getAccounts()) {
                 var account = MyWallet.getHDWallet().getAccount(i);
                 account.extendedPrivateKey = MyWallet.encryptSecretWithSecondPassword(account.extendedPrivateKey, password);
             }
 
-            MyWallet.getHDWallet().seedHex = MyWallet.encryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, password);
+            if (MyWallet.didUpgradeToHd()) {
+                MyWallet.getHDWallet().seedHex = MyWallet.encryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, password);
+            }
 
             dpasswordhash = hashPassword(sharedKey + password, wallet_options.pbkdf2_iterations);
 
@@ -1106,7 +1110,7 @@ var MyWallet = new function() {
                 }
             }
 
-            for (var j = 0; j < MyWallet.getHDWallet().getAccountsCount(); j++) {
+            for (var j = 0; j < MyWallet.getAccountsCount(); j++) {
                 var account = MyWallet.getHDWallet().getAccount(j);
                 if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
 
@@ -1147,7 +1151,7 @@ var MyWallet = new function() {
                 }
             }
 
-            for (var j = 0; j < MyWallet.getHDWallet().getAccountsCount(); j++) {
+            for (var j = 0; j < MyWallet.getAccountsCount(); j++) {
                 var account = MyWallet.getHDWallet().getAccount(j);
                 if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
 
@@ -1447,7 +1451,7 @@ var MyWallet = new function() {
               transaction.from.legacyAddresses.push({address: output.addr, amount: output.value});
               transaction.fee += output.value;
           } else {
-              for (var j in MyWallet.getHDWallet().getAccounts()) {
+              for (var j in MyWallet.getAccounts()) {
                   var account = MyWallet.getHDWallet().getAccount(j);
                   if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                       if (! isOrigin) {
@@ -1499,7 +1503,7 @@ var MyWallet = new function() {
               }
           } else {
               var toAccountSet = false;
-              for (var j in MyWallet.getHDWallet().getAccounts()) {
+              for (var j in MyWallet.getAccounts()) {
                   var account = MyWallet.getHDWallet().getAccount(j);
                   if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                       if (! toAccountSet) {
@@ -1599,7 +1603,7 @@ var MyWallet = new function() {
                     transaction.from_addresses.push(output.addr);
                 } else {
                     transaction.from_addresses.push(output.addr);
-                    for (var j in MyWallet.getHDWallet().getAccounts()) {
+                    for (var j in MyWallet.getAccounts()) {
                         var account = MyWallet.getHDWallet().getAccount(j);
                         if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                             transaction.from_account = parseInt(j);
@@ -1623,7 +1627,7 @@ var MyWallet = new function() {
                         transaction.intraWallet = true;
                 } else {
                     transaction.to_addresses.push(output.addr);
-                    for (var j in MyWallet.getHDWallet().getAccounts()) {
+                    for (var j in MyWallet.getAccounts()) {
                         var account = MyWallet.getHDWallet().getAccount(j);
                         if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                             transaction.to_account = parseInt(j);
@@ -2077,8 +2081,11 @@ var MyWallet = new function() {
     }
 
 
-
+    /** @returns {Array} Array of HD accounts */
     this.getAccounts = function() {
+        if (!MyWallet.didUpgradeToHd()) {
+            return [];
+        }
         return MyWallet.getHDWallet().getAccounts();
     }
 
@@ -2086,7 +2093,11 @@ var MyWallet = new function() {
         return MyWallet.getHDWallet().getAccount(idx)
     }
 
+    /** @returns {Number} Number of HD accounts */
     this.getAccountsCount = function() {
+        if (!MyWallet.didUpgradeToHd()) {
+            return 0;
+        }
         return MyWallet.getHDWallet().getAccountsCount();
     }
 
@@ -2200,7 +2211,7 @@ var MyWallet = new function() {
     }
 
     this.listenToHDWalletAccounts = function() {
-        for (var i in MyWallet.getHDWallet().getAccounts()) {
+        for (var i in MyWallet.getAccounts()) {
             var account = MyWallet.getHDWallet().getAccount(i);
             var accountExtendedPublicKey = account.getAccountExtendedKey(false);
             MyWallet.listenToHDWalletAccount(accountExtendedPublicKey);
@@ -2407,12 +2418,12 @@ var MyWallet = new function() {
 
             out += '	"accounts" : [\n';
 
-            for (var i in MyWallet.getHDWallet().getAccounts()) {
+            for (var i in MyWallet.getAccounts()) {
                 var account = MyWallet.getHDWallet().getAccount(i);
 
                 var accountJsonData = account.getAccountJsonData();
                 out += JSON.stringify(accountJsonData);
-                if (i < MyWallet.getHDWallet().getAccountsCount() - 1) {
+                if (i < MyWallet.getAccountsCount() - 1) {
                     out += ",\n";
                 }
             }
@@ -2838,7 +2849,7 @@ var MyWallet = new function() {
                 MyWallet.setLegacyAddressBalance(obj.addresses[i].address, obj.addresses[i].final_balance)
                 // addresses[obj.addresses[i].address].balance = obj.addresses[i].final_balance;
 
-            for (var j in MyWallet.getHDWallet().getAccounts()) {
+            for (var j in MyWallet.getAccounts()) {
                 var account = MyWallet.getHDWallet().getAccount(j);
 
                 var extPubKey = account.getAccountExtendedKey(false);
@@ -3678,7 +3689,7 @@ var MyWallet = new function() {
     this.encryptWallet = function(data, password) {
         return JSON.stringify({
             pbkdf2_iterations : MyWallet.getMainPasswordPbkdf2Iterations(),
-            version : 3.0,
+            version : MyWallet.didUpgradeToHd() ? 3.0 : 2.0,
             payload : MyWallet.encrypt(data, password, MyWallet.getMainPasswordPbkdf2Iterations())
         });
     }
