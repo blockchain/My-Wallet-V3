@@ -83,7 +83,10 @@ function _ImportExport() {
         } else {
             var ownerentropy = hex.slice(7, 7+8);
             var ownersalt = !hasLotSeq ? ownerentropy : ownerentropy.slice(0, 4);
+
             ImportExport.Crypto_scrypt(passphrase, ownersalt, 16384, 8, 8, 32, function(prefactorA) {
+
+
                 var passfactor;
                 
                 if (!hasLotSeq) {
@@ -152,6 +155,7 @@ function _ImportExport() {
         var PBKDF2_opts = {iterations: 1, keySize: dkLen/4, hasher: CryptoJS.algo.SHA256};
 
         B = CryptoJS.PBKDF2(passwd, salt, { iterations: 1, keySize: (p * 128 * r)/4, hasher: CryptoJS.algo.SHA256});
+        B = Bitcoin.convert.wordArrayToBuffer(B);
 
         try {
             var i = 0;
@@ -185,7 +189,10 @@ function _ImportExport() {
                     }
                     
                     if (worksDone == p) {
-                        callback(CryptoJS.PBKDF2(passwd, B, PBKDF2_opts));
+                        B = Bitcoin.Buffer.Buffer(B);
+                        B = Bitcoin.convert.bufferToWordArray(B);
+                        var ret = Bitcoin.convert.wordArrayToBuffer(CryptoJS.PBKDF2(passwd, B, PBKDF2_opts));
+                        callback(ret);
                     }
                 };
                 return worker;
@@ -198,7 +205,10 @@ function _ImportExport() {
         } catch (e) {
             window.setTimeout(function() {
                               scryptCore();
-                              callback(CryptoJS.PBKDF2(passwd, B, PBKDF2_opts));
+                              B = Bitcoin.convert.bufferToWordArray(B);
+                              var ret = Bitcoin.convert.wordArrayToBuffer(CryptoJS.PBKDF2(passwd, B, PBKDF2_opts));
+
+                              callback(ret);
                               }, 0);
         }
         
