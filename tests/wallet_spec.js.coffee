@@ -1,6 +1,14 @@
 describe "Wallet", ->
   
   callbacks = undefined
+
+  beforeEach ->
+    MyWallet.setDoubleEncryption(false)
+    spyOn(MyWallet, "backupWallet").and.callFake (method, success, error) ->
+      success()
+    
+    MyWallet.deleteHDWallet()
+    
   
   describe "stretchPassword()", ->
     it "should stretch a password", ->
@@ -67,7 +75,7 @@ describe "Wallet", ->
         return
 
   describe "createNewWallet()", ->
-    beforeEach ->
+    beforeEach ->      
       callbacks = 
         success: () ->
     
@@ -85,6 +93,8 @@ describe "Wallet", ->
       spyOn(MyWallet, "setLanguage").and.returnValue null
       spyOn(MyWallet, "setLocalSymbolCode").and.returnValue null
       
+      spyOn(MyWallet, "makeCustomWalletJSON").and.callThrough()
+      
     it "should create a wallet", ->
       MyWallet.createNewWallet("a@b.com", "1234567890", "en", "EUR", callbacks.success, callbacks.error)
 
@@ -96,6 +106,10 @@ describe "Wallet", ->
       expect(callbacks.error).toHaveBeenCalled()
       
     it "should create an HD wallet", ->
-      data = MyWallet.makeCustomWalletJSON(null, "68019bee-7a27-490b-ab8a-446c2749bf1f","78019bee-7a27-490b-ab8a-446c2749bf1f")
+      
+      MyWallet.createNewWallet("a@b.com", "1234567890", "en", "EUR", callbacks.success, callbacks.error)
+      
+      data = MyWallet.makeWalletJSON()
+      expect(JSON.parse(data)["hd_wallets"]).toBeDefined()
       expect(JSON.parse(data)["hd_wallets"].length).toBeGreaterThan(0)
       

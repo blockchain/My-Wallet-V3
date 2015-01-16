@@ -2127,7 +2127,10 @@ var MyWallet = new function() {
     }
 
     MyWallet.getHDWallet = function() {
-        return myHDWallet;
+      if (typeof myHDWallet === 'undefined') {
+        return null;
+      }
+      return myHDWallet;
     }
     
     this.setHDWallet = function(newValue) {
@@ -2232,6 +2235,11 @@ var MyWallet = new function() {
     }
 
     this.deleteHDWallet = function(successCallback, errorCallback) {
+      if(MyWallet.getHDWallet == undefined || MyWallet.getHDWallet() == null) {
+        if (successCallback)
+             successCallback();
+          return;
+        }
         this.setHDWallet(null);
         MyWallet.backupWallet('update', function() {
             if (successCallback)
@@ -3002,6 +3010,8 @@ var MyWallet = new function() {
                         }
                     }
                 }
+                
+                console.log(obj)
 
                 if (obj.hd_wallets && obj.hd_wallets.length > 0) {
                     didUpgradeToHd = true;

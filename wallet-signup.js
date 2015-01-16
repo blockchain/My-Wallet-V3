@@ -10,7 +10,7 @@ var MyWalletSignup = new function() {
 
         try {
             var data = MyWallet.makeCustomWalletJSON(null, guid, sharedKey);
-
+            
             //Everything looks ok, Encrypt the JSON output
             var crypted = MyWallet.encryptWallet(data, password);
             
@@ -103,11 +103,22 @@ var MyWalletSignup = new function() {
                 if (guid.length != 36 || sharedKey.length != 36) {
                   throw 'Error generating wallet identifier';
                 }
-                insertWallet(guid, sharedKey, password, {email : email}, function(message){
-                                 success(guid, sharedKey, password);
-                             }, function(e) {
-                                 error(e);
-                             }
+                
+                // Upgrade to HD immediately:
+                MyWallet.initializeHDWallet(
+                  null, 
+                  null, 
+                  function() {}, 
+                  function() {
+                    insertWallet(guid, sharedKey, password, {email : email}, function(message){
+                                     success(guid, sharedKey, password);
+                                 }, function(e) {
+                                     error(e);
+                                 })
+                  }, 
+                  function(e) {
+                     error(e)
+                  }
                 );
             } catch (e) {
                 error(e);
