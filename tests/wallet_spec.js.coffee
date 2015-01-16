@@ -1,5 +1,7 @@
 describe "Wallet", ->
   
+  callbacks = undefined
+  
   describe "stretchPassword()", ->
     it "should stretch a password", ->
       password = "1234567890"
@@ -63,3 +65,32 @@ describe "Wallet", ->
               expect(obj.success.calls.argsFor(0)[0].guid).toBe("cc90a34d-9eeb-49e7-95ef-9741b77de443")
         
         return
+
+  describe "createNewWallet()", ->
+    beforeEach ->
+      callbacks = 
+        success: () ->
+    
+        error: () ->
+      
+      spyOn(callbacks, "success")
+      spyOn(callbacks, "error")
+      
+      spyOn(MyWalletSignup, "generateUUIDs").and.callFake (n, success, error) ->
+        success(["68019bee-7a27-490b-ab8a-446c2749bf1f","78019bee-7a27-490b-ab8a-446c2749bf1f"]) # Fake UID and shared key
+      
+      spyOn(MyWallet, "securePost").and.callFake (name, post_data, success, error) ->
+        success("Successfully created new wallet")
+        
+      spyOn(MyWallet, "setLanguage").and.returnValue null
+      spyOn(MyWallet, "setLocalSymbolCode").and.returnValue null
+      
+    it "should create an HD wallet", ->
+      MyWallet.createNewWallet("a@b.com", "1234567890", "en", "EUR", callbacks.success, callbacks.error)
+
+      expect(callbacks.success).toHaveBeenCalled()
+      
+    it "password should be 10 characters or more", ->
+      MyWallet.createNewWallet("a@b.com", "1234", "en", "EUR", callbacks.success, callbacks.error)
+
+      expect(callbacks.error).toHaveBeenCalled()

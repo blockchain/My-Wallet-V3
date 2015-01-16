@@ -1,0 +1,2 @@
+BlockchainAPI = 
+  getRootURL: () -> ""

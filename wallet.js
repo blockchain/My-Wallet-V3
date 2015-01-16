@@ -3250,7 +3250,7 @@ var MyWallet = new function() {
     //Fetch information on a new wallet identfier
     this.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success,needs_two_factor_code, wrong_two_factor_code, authorization_required, other_error) {
 //        console.log('Set GUID ' + user_guid);
- 
+  
         if (didSetGuid) {
             MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error);
             return;
@@ -4235,8 +4235,9 @@ var MyWallet = new function() {
                 MyWallet.setLanguage(languageCode);
             if (currencyCode)
                 MyWallet.setLocalSymbolCode(currencyCode);
-            
+                        
             sharedKey = createdSharedKey;
+                        
             success(createdGuid, createdSharedKey, createdPassword);
             
         }, function (e) {

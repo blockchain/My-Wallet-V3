@@ -13,11 +13,11 @@ var MyWalletSignup = new function() {
 
             //Everything looks ok, Encrypt the JSON output
             var crypted = MyWallet.encryptWallet(data, password);
-
+            
             if (crypted.length == 0) {
                 throw 'Error encrypting the JSON output';
             }
-
+            
             //Now Decrypt the it again to double check for any possible corruption
             MyWallet.decryptWallet(crypted, password, function() {
                 try {
@@ -39,13 +39,13 @@ var MyWalletSignup = new function() {
                         sharedKey : sharedKey,
                         guid : guid
                     };
-                                   
+                                                       
                     $.extend(post_data, extra);
-                                   
+                                                       
                     MyWallet.securePost('wallet', post_data,
                     function(data) {
                         if (successcallback != null)
-                            successcallback(data);
+                          successcallback(data);
                     }, function(e) {
                         _errorcallback(e.responseText);
                     });
@@ -58,7 +58,7 @@ var MyWalletSignup = new function() {
         }
     }
 
-    function generateUUIDs(n, success, error) {
+    this.generateUUIDs = function(n, success, error) {
         MyWallet.sendEvent("msg", {type: "info", message: 'Generating Wallet Identifier', platform: "iOS"});
 
         $.ajax({
@@ -80,7 +80,7 @@ var MyWalletSignup = new function() {
     }
 
     this.generateNewWallet = function(password, email, success, error) {
-        generateUUIDs(2, function(uuids) {
+        this.generateUUIDs(2, function(uuids) {
             try {
                 var guid = uuids[0];
                 var sharedKey = uuids[1];
@@ -101,14 +101,14 @@ var MyWalletSignup = new function() {
                 }
 
                 if (guid.length != 36 || sharedKey.length != 36) {
-                    throw 'Error generating wallet identifier';
+                  throw 'Error generating wallet identifier';
                 }
-                
                 insertWallet(guid, sharedKey, password, {email : email}, function(message){
                                  success(guid, sharedKey, password);
                              }, function(e) {
                                  error(e);
-                             });
+                             }
+                );
             } catch (e) {
                 error(e);
             }
