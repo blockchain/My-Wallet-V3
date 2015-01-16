@@ -3011,8 +3011,6 @@ var MyWallet = new function() {
                     }
                 }
                 
-                console.log(obj)
-
                 if (obj.hd_wallets && obj.hd_wallets.length > 0) {
                     didUpgradeToHd = true;
                     var defaultHDWallet = obj.hd_wallets[0];
