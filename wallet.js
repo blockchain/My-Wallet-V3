@@ -3409,9 +3409,9 @@ var MyWallet = new function() {
         $.ajax({
             dataType: 'json',
             data: {format : 'plain'},
-            // xhrFields: {
-            //     withCredentials: true
-            // },
+            xhrFields: {
+                withCredentials: true
+            },
             type: "GET",
             url: BlockchainAPI.getRootURL() + 'wallet/poll-for-session-guid',
             success: function (obj) {
