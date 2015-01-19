@@ -2254,30 +2254,34 @@ var MyWallet = new function() {
         function initializeHDWallet(passphrase, bip39Password, second_password, success, error) {
             didUpgradeToHd = true;
             
-            var seedHexString = null;
-            if (passphrase == null)
-                seedHexString = MyWallet.generateHDWalletSeedHex();
-            else
+            var seedHexString;
+            if (passphrase) {
                 seedHexString = passphraseToPassphraseHexString(passphrase);
-        
-            MyWallet.buildHDWallet(seedHexString, [], bip39Password, second_password, success, error );
-        
-            secondPasswordCallback = function(password) {
-              // Password already verified so we're passing dummy callbacks for (in)correctness.
-              password(second_password, function() {}, function() {})
             }
-        
-            didCreateAccount = function() { success() }
-            failedToCreateAccount =  function(message) { error(message) }
-        
-            MyWallet.createAccount("Spending", secondPasswordCallback , didCreateAccount, failedToCreateAccount);
+            else {
+                seedHexString = MyWallet.generateHDWalletSeedHex();
+            }
+            
+            MyWallet.buildHDWallet(seedHexString, [], bip39Password, second_password, success, error);
+            
+            var secondPasswordCallback = null;
+            if (second_password) {
+                secondPasswordCallback = function(password) {
+                    // Password already verified so we're passing dummy callbacks for (in)correctness.
+                    password(second_password, function() {}, function() {})
+                }
+            }
+            
+            MyWallet.getHDWallet().createAccount("Spending", secondPasswordCallback);
+            
+            success();
         }
       
         if (this.getDoubleEncryption()) {
           getPassword(function(pw, correct_password, wrong_password) {
                 if (MyWallet.validateSecondPassword(pw)) {
                     correct_password()
-                  initializeHDWallet(passphrase, bip39Password, pw, success, error);                    
+                    initializeHDWallet(passphrase, bip39Password, pw, success, error);
                 } else {
                     wrong_password()
                     error()
