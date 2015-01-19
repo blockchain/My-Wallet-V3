@@ -2264,15 +2264,7 @@ var MyWallet = new function() {
             
             MyWallet.buildHDWallet(seedHexString, [], bip39Password, second_password, success, error);
             
-            var secondPasswordCallback = null;
-            if (second_password) {
-                secondPasswordCallback = function(password) {
-                    // Password already verified so we're passing dummy callbacks for (in)correctness.
-                    password(second_password, function() {}, function() {})
-                }
-            }
-            
-            MyWallet.getHDWallet().createAccount("Spending", secondPasswordCallback);
+            MyWallet.getHDWallet().createAccount("Spending", second_password);
             
             success();
         }
