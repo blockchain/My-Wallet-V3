@@ -1721,6 +1721,18 @@ var MyWallet = new function() {
       }
     }
 
+    this.getTransactionsForAccount = function(accountIdx, txOffset, numTx, success, error) {
+        var account = MyWallet.getHDWallet().getAccount(accountIdx);
+        var accountExtendedPublicKey = account.getAccountExtendedKey(false);
+
+        BlockchainAPI.async_get_history_with_addresses([accountExtendedPublicKey], function(data) {
+            if (success) success(data);
+        }, function() {
+            if (error) error();
+
+        }, tx_filter, txOffset, numTx);
+    }
+
     this.getBalanceForRedeemCode = function(privatekey, successCallback, errorCallback)  {
         try {
             var format = MyWallet.detectPrivateKeyFormat(privatekey);

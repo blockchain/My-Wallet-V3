@@ -1307,3 +1307,17 @@ redeem bitcoins sent from email or mobile
 
 {string}  - success or not
 
+
+#### `MyWallet.getTransactionsForAccount(accountIdx, txOffset, numTx, successCallback, errorCallback);`
+
+##### Parameters:
+
+{int}  - idx of account
+
+{int} - tx offset, with 0 meaning get newest tx
+
+{int} - number of transactions after txOffset
+
+{function} - success callback function
+
+{function} - error callback function
