@@ -63,12 +63,12 @@ describe "Wallet", ->
 
               spyOn(obj, "success")
 
-              spyOn(CryptoJS, "PBKDF2").and.returnValue(CryptoJS.enc.Hex.parse("338f6acb3fa8d4f2373c31a1cfe21dd6684a9ad62b4afff68e19d6b4cdabeea6"))
+              spyOn(MyWallet, "stretchPassword").and.returnValue(CryptoJS.enc.Hex.parse("338f6acb3fa8d4f2373c31a1cfe21dd6684a9ad62b4afff68e19d6b4cdabeea6"))
 
               MyWallet.decryptWallet(data, password, obj.success, obj.error)
 
-              expect(CryptoJS.PBKDF2).toHaveBeenCalledWith("testtest12", CryptoJS.enc.Hex.parse("6fe39f686c1dff370eb12cb70545c3eb"), { keySize: 256 / 32, iterations: 5000 })
-                
+              expect(MyWallet.stretchPassword).toHaveBeenCalledWith("testtest12", CryptoJS.enc.Hex.parse("6fe39f686c1dff370eb12cb70545c3eb"), 5000)
+
               expect(obj.success).toHaveBeenCalled()
               expect(obj.success.calls.argsFor(0)[0].guid).toBe("cc90a34d-9eeb-49e7-95ef-9741b77de443")
         
