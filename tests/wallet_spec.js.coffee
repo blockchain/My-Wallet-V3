@@ -113,3 +113,23 @@ describe "Wallet", ->
       expect(JSON.parse(data)["hd_wallets"]).toBeDefined()
       expect(JSON.parse(data)["hd_wallets"].length).toBeGreaterThan(0)
       
+  describe "setPbkdf2Iterations()", ->
+
+    it "should set the PBKDF2 iterations", ->
+      pbkdf2_iterations = 900
+
+      obj = {}
+      obj.success = () ->
+
+      obj.error = (e) ->
+
+      getPassword = (callback) ->
+        callback("")
+
+      spyOn(obj, "success")
+
+      MyWallet.setPbkdf2Iterations(pbkdf2_iterations, obj.success, obj.error, getPassword)
+
+      expect(obj.success).toHaveBeenCalled()
+
+      expect(MyWallet.getMainPasswordPbkdf2Iterations()).toBe(pbkdf2_iterations)

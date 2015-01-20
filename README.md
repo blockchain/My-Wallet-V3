@@ -98,13 +98,17 @@ var LegacyAddresses = MyWallet.getLegacyActiveAddresses();
 {bool}  - is main password correct
 
 
-#### `MyWallet.setPbkdf2Iterations(pbkdf2_iterations, success);`
+#### `MyWallet.setPbkdf2Iterations(pbkdf2_iterations, success, error, getPassword);`
 
 ##### Parameters:
 
 {int} - number of pbkdf2 iterations
 
 {function} - success callback function
+
+{function} - error callback function
+
+{function} - get the second password
 
 
 #### `MyWallet.setSecondPassword(password, success, error);`

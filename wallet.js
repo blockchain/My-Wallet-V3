@@ -151,9 +151,7 @@ var MyWallet = new function() {
     var isInitialized = false;
     var language = 'en'; //Current language
     var localSymbolCode = null; //Current local symbol
-    var old_encryption_version = 2.0;  //The old encryption version
     var supported_encryption_version = 3.0;  //The maxmimum supported encryption version
-    var encryption_version_used = 0.0; //The encryption version of the current wallet. Set by decryptWallet()
     var serverTimeOffset = 0; //Difference between server and client time
     var haveSetServerTime = false; //Whether or not we have synced with server time
     var sharedcoin_endpoint; //The URL to the sharedcoin node
@@ -603,58 +601,99 @@ var MyWallet = new function() {
         return round_data.toString();
     }
 
-    // TODO: This function needs a second password callback
-    // this.setPbkdf2Iterations = function(pbkdf2_iterations, success) {
-    //     var panic = function(e) {
-    //         console.log('Panic ' + e);
-    //
-    //         //If we caught an exception here the wallet could be in a inconsistent state
-    //         //We probably haven't synced it, so no harm done
-    //         //But for now panic!
-    //         window.location.reload();
-    //     };
-    //
-    //     MyWallet.getSecondPassword(function() {
-    //         try {
-    //             //If double encryption is enabled we need to rencrypt all keys
-    //             if (double_encryption) {
-    //                 //Rencrypt all keys
-    //                 for (var key in addresses) {
-    //                     var addr = addresses[key];
-    //
-    //                     if (addr.priv) {
-    //                         addr.priv = MyWallet.encrypt(MyWallet.decryptSecretWithSecondPasswordIfNeeded(addr.priv), sharedKey + dpassword, pbkdf2_iterations);
-    //
-    //                         if (!addr.priv) throw 'addr.priv is null';
-    //                     }
-    //                 }
-    //
-    //                 //Set the second password iterations
-    //                 wallet_options.pbkdf2_iterations = pbkdf2_iterations;
-    //
-    //                 //Generate a new password hash
-    //                 dpasswordhash = hashPassword(sharedKey + dpassword, pbkdf2_iterations);
-    //             }
-    //
-    //             //Must use new encryption format
-    //             encryption_version_used = 2.0;
-    //
-    //             //Set the main password pbkdf2 iterations
-    //             main_pbkdf2_iterations = pbkdf2_iterations;
-    //
-    //             MyWallet.backupWallet('update', function() {
-    //                 success();
-    //             }, function() {
-    //                 panic(e);
-    //             });
-    //
-    //         } catch (e) {
-    //             panic(e);
-    //         }
-    //     }, function (e) {
-    //         panic(e);
-    //     });
-    // }
+    /**
+     * Set the number of PBKDF2 iterations used for encrypting the wallet and also the private keys if the second password is enabled.
+     * @param {number} pbkdf2_iterations The number of PBKDF2 iterations.
+     * @param {function()} success Success callback function.
+     * @param {function(?Object)} error Error callback function.
+     * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
+     */
+    this.setPbkdf2Iterations = function(pbkdf2_iterations, success, error, getPassword) {
+        var panic = function(e) {
+            console.log('Panic ' + e);
+
+            error(e);
+
+            // If we caught an exception here the wallet could be in a inconsistent state
+            // We probably haven't synced it, so no harm done
+            // But for now panic!
+            window.location.reload();
+        };
+
+        /**
+         * Reencrypt data with password.
+         * The decrypt call uses the currently set number of iterations, the encrypt call uses the new number of iterations we're just setting
+         *
+         * @param {!string} data The data to encrypt.
+         * @param {!string} pw The password used for encryption.
+         */
+        var reencrypt = function(data, pw) {
+            MyWallet.encrypt(MyWallet.decryptSecretWithSecondPassword(data, pw), sharedKey + pw, pbkdf2_iterations);
+        };
+
+        try {
+            // If double encryption is enabled we need to re-encrypt all private keys
+            if(double_encryption) {
+                getPassword(function(pw, correct_password, wrong_password) {
+                    if (MyWallet.validateSecondPassword(pw)) {
+                        correct_password();
+
+                        // Re-encrypt all legacy keys
+                        for (var key in addresses) {
+                            var addr = addresses[key];
+
+                            if (addr.priv) {
+                                addr.priv = reencrypt(addr.priv, pw);
+
+                                if (!addr.priv) throw 'Error re-encrypting private key';
+                            }
+                        }
+
+                        // Re-encrypt all HD account keys
+                        for (var i in MyWallet.getAccounts()) {
+                            var account = MyWallet.getHDWallet().getAccount(i);
+                            account.extendedPrivateKey = reencrypt(account.extendedPrivateKey, pw);
+                        }
+
+                        // Re-encrypt the HD seed
+                        if (MyWallet.didUpgradeToHd()) {
+                            MyWallet.getHDWallet().seedHex = reencrypt(MyWallet.getHDWallet().seedHex, pw);
+                        }
+
+                        // Set the second password iterations
+                        wallet_options.pbkdf2_iterations = pbkdf2_iterations;
+
+                        // Generate a new password hash
+                        dpasswordhash = hashPassword(sharedKey + dpassword, pbkdf2_iterations);
+
+                        // Set the main password pbkdf2 iterations
+                        main_pbkdf2_iterations = pbkdf2_iterations;
+
+                        MyWallet.backupWallet('update', function() {
+                            success();
+                        }, function() {
+                            panic(e);
+                        });
+                    }
+                    else {
+                        wrong_password();
+                    }
+                });
+            }
+            else {
+                // Set the main password pbkdf2 iterations
+                main_pbkdf2_iterations = pbkdf2_iterations;
+
+                MyWallet.backupWallet('update', function() {
+                    success();
+                }, function() {
+                    panic(e);
+                });
+            }
+        } catch (e) {
+            panic(e);
+        }
+    };
 
     this.B58LegacyDecode = function(input) {
         var alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
@@ -678,7 +717,7 @@ var MyWallet = new function() {
         while (leadingZerosNum-- > 0) bytes.unshift(0);
 
         return bytes;
-    }
+    };
 
     this.unsetSecondPassword = function(success, error, getPassword) {
 
@@ -782,7 +821,7 @@ var MyWallet = new function() {
 
             dpasswordhash = hashPassword(sharedKey + password, wallet_options.pbkdf2_iterations);
 
-            if (! MyWallet.validateSecondPassword(password)) {
+            if (!MyWallet.validateSecondPassword(password)) {
                 throw "Invalid Second Password";
             }
 
@@ -803,7 +842,7 @@ var MyWallet = new function() {
             panic(e);
             error(e);
         }
-    }
+    };
 
     this.unArchiveLegacyAddr = function(addr) {
         var addr = addresses[addr];
@@ -3000,7 +3039,6 @@ var MyWallet = new function() {
                 }
 
                 if (rootContainer) {
-                    encryption_version_used = rootContainer.version;
                     main_pbkdf2_iterations = rootContainer.pbkdf2_iterations;
                     default_pbkdf2_iterations = main_pbkdf2_iterations;
                 }
@@ -3785,8 +3823,8 @@ var MyWallet = new function() {
             };
             
             if (obj && obj.payload && obj.pbkdf2_iterations) {
-                if (obj.version != supported_encryption_version && obj.version != old_encryption_version)
-                    throw 'Wallet version ' + obj.version + ' not supported';
+                if (obj.version > supported_encryption_version)
+                    throw 'Wallet version ' + obj.version + ' not supported. Please upgrade to the newest Blockchain Wallet.';
             
                 if (obj.pbkdf2_iterations > 0) {
                     MyWallet.decryptWebWorker(obj.payload, password, obj.pbkdf2_iterations, function(decrypted) {

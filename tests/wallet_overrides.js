@@ -2,14 +2,8 @@
 
 MyWallet.logout = function() {};
 
-MyWallet.setPbkdf2Iterations = function() {};
-
 MyWallet.sendEvent = function() {};
 
-var loadScript, playSound;
-
-loadScript = function(src, success, error) {
-  return success();
-};
+var playSound;
 
 playSound = function(id) {};
