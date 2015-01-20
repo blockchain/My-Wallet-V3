@@ -20,16 +20,12 @@ describe "HD Wallet", ->
       spyOn(observer, "success")
       spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
       spyOn(MyWallet, "generateHDWalletSeedHex").and.returnValue(seed)
-      spyOn(MyWallet, "createAccount").and.callFake((label, getPassword, success, error)->
-        success()
-      )
       
     describe "without 2nd password", ->
       beforeEach ->
         MyWallet.initializeHDWallet(null, null, null, observer.success, observer.error)
         
       it "should succeed", ->
-        expect(MyWallet.createAccount).toHaveBeenCalled()
         expect(observer.success).toHaveBeenCalled()
       
     describe "with a second password", ->
@@ -46,7 +42,6 @@ describe "HD Wallet", ->
         expect(observer.getPassword).toHaveBeenCalled()
         
       it "should succeed", ->
-        expect(MyWallet.createAccount).toHaveBeenCalled()
         expect(observer.success).toHaveBeenCalled()
   
   describe "buildHDWallet()", ->
