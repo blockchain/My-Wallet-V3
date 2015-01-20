@@ -914,7 +914,7 @@ unarchives address, backups wallet and refreshes balances
 {function} - function with signiture getPassword(success) where success has parameter pw for user inputed password
 
 
-#### `MyWallet.getTransactionsForLegacyAddresses(txOffset, numTx, successCallback, errorCallback);`
+#### `MyWallet.getRawTransactionsForLegacyAddresses(txOffset, numTx, successCallback, errorCallback);`
 
 ##### Parameters:
 
@@ -922,7 +922,7 @@ unarchives address, backups wallet and refreshes balances
 
 {int} - number of transactions after txOffset
 
-{function} - success callback function
+{function} - success callback function with transaction array
 
 {function} - error callback function
 
@@ -1319,7 +1319,7 @@ redeem bitcoins sent from email or mobile
 {string}  - success or not
 
 
-#### `MyWallet.getTransactionsForAccount(accountIdx, txOffset, numTx, successCallback, errorCallback);`
+#### `MyWallet.getRawTransactionsForAccount(accountIdx, txOffset, numTx, successCallback, errorCallback);`
 
 ##### Parameters:
 
@@ -1329,6 +1329,6 @@ redeem bitcoins sent from email or mobile
 
 {int} - number of transactions after txOffset
 
-{function} - success callback function
+{function} - success callback function with transaction array
 
 {function} - error callback function

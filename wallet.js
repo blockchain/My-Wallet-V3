@@ -1735,12 +1735,12 @@ var MyWallet = new function() {
       }
     }
 
-    this.getTransactionsForAccount = function(accountIdx, txOffset, numTx, success, error) {
+    this.getRawTransactionsForAccount = function(accountIdx, txOffset, numTx, success, error) {
         var account = MyWallet.getHDWallet().getAccount(accountIdx);
         var accountExtendedPublicKey = account.getAccountExtendedKey(false);
 
         BlockchainAPI.async_get_history_with_addresses([accountExtendedPublicKey], function(data) {
-            if (success) success(data);
+            if (success) success(data.txs);
         }, function() {
             if (error) error();
 
@@ -1879,11 +1879,11 @@ var MyWallet = new function() {
         });
     }
 
-    this.getTransactionsForLegacyAddresses = function(txOffset, numTx, success, error) {
+    this.getRawTransactionsForLegacyAddresses = function(txOffset, numTx, success, error) {
         var allAddresses = MyWallet.getLegacyActiveAddresses();
 
         BlockchainAPI.async_get_history_with_addresses(allAddresses, function(data) {
-            if (success) success(data);
+            if (success) success(data.txs);
         }, function() {
             if (error) error();
 
