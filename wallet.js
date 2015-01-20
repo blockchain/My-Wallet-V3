@@ -1088,10 +1088,12 @@ var MyWallet = new function() {
         }
     }
 
-    function calcTxResult(tx, is_new, checkCompleted) {
+    function calcTxResult(tx, is_new, checkCompleted, incrementAccountTxCount) {
         /* Calculate the result */
         var result = 0;
+        var account2HasIncrementAccountTxCount = {};
         for (var i = 0; i < tx.inputs.length; ++i) {
+
             var output = tx.inputs[i].prev_out;
 
             if (!output || !output.addr)
@@ -1113,6 +1115,10 @@ var MyWallet = new function() {
             for (var j = 0; j < MyWallet.getAccountsCount(); j++) {
                 var account = MyWallet.getHDWallet().getAccount(j);
                 if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
+                    if (incrementAccountTxCount && account2HasIncrementAccountTxCount[output.xpub] != true) {
+                        account2HasIncrementAccountTxCount[output.xpub] = true;
+                        account.n_tx += 1;
+                    }
 
                     var path = output.xpub.path.split("/");
                     path[1] = parseInt(path[1]);
@@ -1154,6 +1160,10 @@ var MyWallet = new function() {
             for (var j = 0; j < MyWallet.getAccountsCount(); j++) {
                 var account = MyWallet.getHDWallet().getAccount(j);
                 if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
+                    if (incrementAccountTxCount && account2HasIncrementAccountTxCount[output.xpub] != true) {
+                        account2HasIncrementAccountTxCount[output.xpub] = true;
+                        account.n_tx += 1;
+                    }
 
                     var path = output.xpub.path.split("/");
                     path[1] = parseInt(path[1]);
@@ -1223,7 +1233,7 @@ var MyWallet = new function() {
                             return;
                     }
 
-                    var result = calcTxResult(tx, true, false);
+                    var result = calcTxResult(tx, true, false, true);
 
                     tx.result = result;
 
@@ -1378,6 +1388,10 @@ var MyWallet = new function() {
 
     this.getBalanceForAccount = function(accountIdx) {
         return MyWallet.getHDWallet().getAccount(accountIdx).getBalance();
+    }
+
+    this.getNumberOfTransactionsForAccount = function(accountIdx) {
+        return MyWallet.getHDWallet().getAccount(accountIdx).n_tx;
     }
 
     this.getReceivingAddressForAccount = function(accountIdx) {
@@ -2889,6 +2903,7 @@ var MyWallet = new function() {
 
                 if (extPubKey == obj.addresses[i].address) {
                     account.setBalance(obj.addresses[i].final_balance);
+                    account.n_tx = obj.addresses[i].n_tx;
                 }
             }
         }
@@ -2897,7 +2912,7 @@ var MyWallet = new function() {
         for (var i = 0; i < obj.txs.length; ++i) {
             var tx = TransactionFromJSON(obj.txs[i]);
             //Don't use the result given by the api because it doesn't include archived addresses
-            tx.result = calcTxResult(tx, false, checkCompleted);
+            tx.result = calcTxResult(tx, false, checkCompleted, false);
 
             transactions.push(tx);
         }

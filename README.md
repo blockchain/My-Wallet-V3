@@ -1070,6 +1070,17 @@ sets account to `isArchived` and backups wallet
 {int}  - balance of account in satoshis
 
 
+#### `MyWallet.getNumberOfTransactionsForAccount(accountIdx);`
+
+##### Parameters:
+
+{int} - index of HD wallet account
+
+##### Returns:
+
+{int}  - number of transactions for account
+
+
 #### `MyWallet.getTransactionsForAccount(accountIdx);`
 
 ##### Parameters:
