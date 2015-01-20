@@ -1853,6 +1853,17 @@ var MyWallet = new function() {
         });
     }
 
+    this.getTransactionsForLegacyAddresses = function(txOffset, numTx, success, error) {
+        var allAddresses = MyWallet.getLegacyActiveAddresses();
+
+        BlockchainAPI.async_get_history_with_addresses(allAddresses, function(data) {
+            if (success) success(data);
+        }, function() {
+            if (error) error();
+
+        }, tx_filter, txOffset, numTx);
+    }
+
     this.sendFromLegacyAddressToAddress = function(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback, getPassword)  {
         if (double_encryption) {
             getPassword(function(pw, correct_password, wrong_password) {

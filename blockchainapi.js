@@ -141,6 +141,61 @@ var BlockchainAPI = new function() {
         });
     }
 
+    this.async_get_history_with_addresses = function(addresses, success, error, tx_filter, offset, n) {
+        var clientTime=(new Date()).getTime();
+
+        if (!tx_filter) tx_filter = 0;
+        if (!offset) offset = 0;
+        if (!n) n = 0;
+
+        var data = {
+            active : addresses.join('|'),
+            format : 'json',
+            filter : tx_filter,
+            offset : offset,
+            no_compact : true,
+            ct : clientTime,
+            n : n,
+            language : MyWallet.getLanguage(),
+            api_code : MyWallet.getAPICode(),
+            symbol_btc : symbol_btc.code,
+            symbol_local : symbol_local.code
+        };
+
+        retryAjax({
+            type: "POST",
+            dataType: 'json',
+            url: this.getRootURL() +'multiaddr',
+            data: data,
+            async: true,
+            timeout: AjaxTimeout,
+            success: function(obj) {
+                if (obj.error != null) {
+                    MyWallet.sendEvent("msg", {type: "error", message: obj.error, platform: ""});
+                }
+
+                MyWallet.handleNTPResponse(obj, clientTime);
+
+                try {
+                    success(obj);
+                } catch (e) {
+                    MyWallet.sendEvent("msg", {type: "error", message: e, platform: ""});
+
+                    error();
+                }
+            },
+            error : function(data) {
+
+                if (data.responseText)
+                    MyWallet.sendEvent("msg", {type: "error", message: data.responseText, platform: ""});
+                else
+                    MyWallet.sendEvent("msg", {type: "error", message: 'Error Restoring Wallet', platform: ""});
+
+                error();
+            }
+        });
+    }
+
     //Get the balances of multi addresses (Used for archived)
     this.get_balances = function(addresses, success, error) {
         MyWallet.sendEvent("msg", {type: "info", message: 'Getting Balances', platform: "iOS"});

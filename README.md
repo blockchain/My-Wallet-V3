@@ -914,6 +914,19 @@ unarchives address, backups wallet and refreshes balances
 {function} - function with signiture getPassword(success) where success has parameter pw for user inputed password
 
 
+#### `MyWallet.getTransactionsForLegacyAddresses(txOffset, numTx, successCallback, errorCallback);`
+
+##### Parameters:
+
+{int} - tx offset, with 0 meaning get newest tx
+
+{int} - number of transactions after txOffset
+
+{function} - success callback function
+
+{function} - error callback function
+
+
 
 HDWallet API
 ===========
