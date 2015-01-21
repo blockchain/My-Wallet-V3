@@ -2373,6 +2373,35 @@ var MyWallet = new function() {
         });
     }
 
+    /**
+     * Upgrade legacy wallet to HD wallet.
+     * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
+     * @param {?function()=} success Success callback function.
+     * @param {?function()=} error Error callback function.
+     */
+    this.upgradeToHDWallet = function(getPassword, succes, error) {
+        if (MyWallet.didUpgradeToHd()) {
+            success && success();
+            return;
+        }
+
+        MyWallet.initializeHDWallet(null, null, getPassword, succes, error);
+
+        MyWallet.backupWallet('update', function() {
+            success && success();
+        }, function() {
+            error && error();
+        });
+    };
+
+    /**
+     * Initialize HD wallet and create "Spending" account.
+     * @param {?string} passphrase HD passphrase to generate the seed. If null, a seed will be generated.
+     * @param {?string} bip39Password Password to protect the seed when generating seed from mnemonic.
+     * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
+     * @param {function()} success Success callback function.
+     * @param {function()} error Error callback function.
+     */
     this.initializeHDWallet = function(passphrase, bip39Password, getPassword, success, error)  {
         function initializeHDWallet(passphrase, bip39Password, second_password, success, error) {
             didUpgradeToHd = true;
@@ -2391,22 +2420,22 @@ var MyWallet = new function() {
             
             success();
         }
-      
+        
         if (this.getDoubleEncryption()) {
-          getPassword(function(pw, correct_password, wrong_password) {
+            getPassword(function(pw, correct_password, wrong_password) {
                 if (MyWallet.validateSecondPassword(pw)) {
-                    correct_password()
+                    correct_password();
                     initializeHDWallet(passphrase, bip39Password, pw, success, error);
                 } else {
-                    wrong_password()
-                    error()
+                    wrong_password();
+                    error();
                 }
             });            
 
         } else {
             initializeHDWallet(passphrase, bip39Password, null,  success, error);                    
         }
-    }
+    };
 
     MyWallet.getHDWalletPassphraseString = function(getPassword, successCallback, errorCallback) {
         if (this.getDoubleEncryption()) {
