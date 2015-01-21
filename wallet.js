@@ -140,7 +140,6 @@ var MyWallet = new function() {
     var logout_timeout; //setTimeout return value for the automatic logout
     var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
     var monitor_listeners = []; //success, errors, notices
-    var main_password_timeout = 60000;
     var isInitialized = false;
     var language = 'en'; //Current language
     var localSymbolCode = null; //Current local symbol
@@ -149,7 +148,6 @@ var MyWallet = new function() {
     var haveSetServerTime = false; //Whether or not we have synced with server time
     var sharedcoin_endpoint; //The URL to the sharedcoin node
     var disable_logout = false;
-    var haveBoundReady = false;
     var isRestoringWallet = false;
     var sync_pubkeys = false;
     var legacyAddressesNumTxFetched = 0;
