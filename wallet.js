@@ -623,6 +623,7 @@ var MyWallet = new function() {
         try {
             // If double encryption is enabled we need to re-encrypt all private keys
             if(double_encryption) {
+                return;
                 getPassword(function(pw, correct_password, wrong_password) {
                     if (MyWallet.validateSecondPassword(pw)) {
                         correct_password();
@@ -650,14 +651,16 @@ var MyWallet = new function() {
                         }
 
                         // Generate a new password hash
-                        dpasswordhash = hashPassword(sharedKey + dpassword, pbkdf2_iterations);
+                        dpasswordhash = hashPassword(sharedKey + pw, pbkdf2_iterations);
+                        console.log('>>>')
+                        console.log(dpasswordhash)
 
                         // Set the pbkdf2 iterations
                         wallet_options.pbkdf2_iterations = pbkdf2_iterations;
 
                         MyWallet.backupWallet('update', function() {
                             success();
-                        }, function() {
+                        }, function(e) {
                             panic(e);
                         });
                     }
@@ -672,7 +675,7 @@ var MyWallet = new function() {
 
                 MyWallet.backupWallet('update', function() {
                     success();
-                }, function() {
+                }, function(e) {
                     panic(e);
                 });
             }
@@ -3566,15 +3569,14 @@ var MyWallet = new function() {
         }
 
         var _errorcallback = function(e) {
-            MyWallet.sendEvent('on_backup_wallet_error')
+            MyWallet.sendEvent('on_backup_wallet_error');
 
             MyWallet.sendEvent("msg", {type: "error", message: 'Error Saving Wallet: ' + e, platform: ""});
 
-            //Fetch the wallet agin from server
+            // Re-fetch the wallet from server
             MyWallet.getWallet();
 
-            if (errorcallback != null)
-                errorcallback(e);
+            errorcallback && errorcallback(e);
         };
 
         try {
@@ -3631,9 +3633,9 @@ var MyWallet = new function() {
                             isSynchronizedWithServer = true;
                             MyWallet.disableLogout(false);
                             logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
-                            MyWallet.sendEvent('on_backup_wallet_success')
+                            MyWallet.sendEvent('on_backup_wallet_success');
                         }, function() {
-                            _errorcallback('Checksum Did Not Match Expected Value')
+                            _errorcallback('Checksum Did Not Match Expected Value');
                             MyWallet.disableLogout(false);
                         });
                     }, function(e) {
@@ -3649,7 +3651,7 @@ var MyWallet = new function() {
             _errorcallback(e);
             MyWallet.disableLogout(false);
         }
-    }
+    };
 
     this.isBase58 = function(str, base) {
         for (var i = 0; i < str.length; ++i) {
