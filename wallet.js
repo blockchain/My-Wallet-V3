@@ -140,7 +140,6 @@ var MyWallet = new function() {
     var logout_timeout; //setTimeout return value for the automatic logout
     var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
     var monitor_listeners = []; //success, errors, notices
-    var last_input_main_password; //The time the last password was entered
     var main_password_timeout = 60000;
     var isInitialized = false;
     var language = 'en'; //Current language
@@ -3445,9 +3444,6 @@ var MyWallet = new function() {
             isRestoringWallet = true;
 
             password = pw;
-
-            //Main Password times out after 10 minutes
-            last_input_main_password = new Date().getTime();
 
             //If we don't have any wallet data then we must have two factor authentication enabled
             if (encrypted_wallet_data == null || encrypted_wallet_data.length == 0) {
