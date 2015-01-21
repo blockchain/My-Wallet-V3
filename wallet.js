@@ -2379,13 +2379,13 @@ var MyWallet = new function() {
      * @param {?function()=} success Success callback function.
      * @param {?function()=} error Error callback function.
      */
-    this.upgradeToHDWallet = function(getPassword, succes, error) {
+    this.upgradeToHDWallet = function(getPassword, success, error) {
         if (MyWallet.didUpgradeToHd()) {
             success && success();
             return;
         }
 
-        MyWallet.initializeHDWallet(null, null, getPassword, succes, error);
+        MyWallet.initializeHDWallet(null, null, getPassword, success, error);
 
         MyWallet.backupWallet('update', function() {
             success && success();
