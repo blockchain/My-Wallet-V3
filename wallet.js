@@ -159,6 +159,8 @@ var MyWallet = new function() {
     var haveBoundReady = false;
     var isRestoringWallet = false;
     var sync_pubkeys = false;
+    var legacyAddressesNumTxFetched = 0;
+    var numOldTxsToFetchAtATime = 10; 
 
     var BigInteger = Bitcoin.BigInteger;
     var ECKey = Bitcoin.ECKey;
@@ -1131,6 +1133,7 @@ var MyWallet = new function() {
         /* Calculate the result */
         var result = 0;
         var account2HasIncrementAccountTxCount = {};
+        var hasCountedlegacyAddressesNTxs = false;
         for (var i = 0; i < tx.inputs.length; ++i) {
 
             var output = tx.inputs[i].prev_out;
@@ -1151,12 +1154,24 @@ var MyWallet = new function() {
                 }
             }
 
+            if (hasCountedlegacyAddressesNTxs == false && MyWallet.isActiveLegacyAddress(output.addr)) {
+                hasCountedlegacyAddressesNTxs = true;
+                if (! incrementAccountTxCount) {
+                    legacyAddressesNumTxFetched += 1;
+                } 
+            }
+
             for (var j = 0; j < MyWallet.getAccountsCount(); j++) {
                 var account = MyWallet.getHDWallet().getAccount(j);
                 if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
-                    if (incrementAccountTxCount && account2HasIncrementAccountTxCount[output.xpub] != true) {
+                    if (account2HasIncrementAccountTxCount[output.xpub] != true) {
                         account2HasIncrementAccountTxCount[output.xpub] = true;
-                        account.n_tx += 1;
+                        if (incrementAccountTxCount) {
+                            account.n_tx += 1;
+                        } else {
+                            account.n_tx += 1;
+                            account.numTxFetched += 1;
+                        }
                     }
 
                     var path = output.xpub.path.split("/");
@@ -1196,12 +1211,24 @@ var MyWallet = new function() {
                 }
             }
 
+            if (hasCountedlegacyAddressesNTxs == false && MyWallet.isActiveLegacyAddress(output.addr)) {
+                hasCountedlegacyAddressesNTxs = true;
+                if (! incrementAccountTxCount) {
+                    legacyAddressesNumTxFetched += 1;
+                } 
+            }
+
             for (var j = 0; j < MyWallet.getAccountsCount(); j++) {
                 var account = MyWallet.getHDWallet().getAccount(j);
                 if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
-                    if (incrementAccountTxCount && account2HasIncrementAccountTxCount[output.xpub] != true) {
+                    if (account2HasIncrementAccountTxCount[output.xpub] != true) {
                         account2HasIncrementAccountTxCount[output.xpub] = true;
-                        account.n_tx += 1;
+                        if (incrementAccountTxCount) {
+                            account.n_tx += 1;
+                        } else {
+                            account.n_tx += 1;
+                            account.numTxFetched += 1;
+                        }
                     }
 
                     var path = output.xpub.path.split("/");
@@ -1774,17 +1801,45 @@ var MyWallet = new function() {
       }
     }
 
-    this.getRawTransactionsForAccount = function(accountIdx, txOffset, numTx, success, error) {
+    this.fetchMoreTransactionsForAccount = function(accountIdx, success, error, didFetchOldestTransaction) {
+        function getRawTransactionsForAccount(accountIdx, txOffset, numTx, success, error) {
+            var account = MyWallet.getHDWallet().getAccount(accountIdx);
+            var accountExtendedPublicKey = account.getAccountExtendedKey(false);
+
+            BlockchainAPI.async_get_history_with_addresses([accountExtendedPublicKey], function(data) {
+                if (success) success(data.txs);
+            }, function() {
+                if (error) error();
+
+            }, tx_filter, txOffset, numTx);
+        }
+
         var account = MyWallet.getHDWallet().getAccount(accountIdx);
-        var accountExtendedPublicKey = account.getAccountExtendedKey(false);
+        getRawTransactionsForAccount(accountIdx, account.numTxFetched, numOldTxsToFetchAtATime, function(data) {
+            var processedTransactions = [];
 
-        BlockchainAPI.async_get_history_with_addresses([accountExtendedPublicKey], function(data) {
-            if (success) success(data.txs);
-        }, function() {
-            if (error) error();
+            for (var i in data) {
+                var tx = data[i];
+                
+                var tx = TransactionFromJSON(data[i]);
+                
+                var transaction = MyWallet.processTransaction(tx);  
+                processedTransactions.push(transaction);
+            }
 
-        }, tx_filter, txOffset, numTx);
+            
+            account.numTxFetched += processedTransactions.length;
+
+            if (processedTransactions.length < numOldTxsToFetchAtATime) {
+                didFetchOldestTransaction();
+            }
+
+            success(processedTransactions);
+        }, function(e) {
+            error(e);
+        });
     }
+
 
     this.getBalanceForRedeemCode = function(privatekey, successCallback, errorCallback)  {
         try {
@@ -1918,15 +1973,41 @@ var MyWallet = new function() {
         });
     }
 
-    this.getRawTransactionsForLegacyAddresses = function(txOffset, numTx, success, error) {
-        var allAddresses = MyWallet.getLegacyActiveAddresses();
+    this.fetchMoreTransactionsForLegacyAddresses = function(success, error, didFetchOldestTransaction) {
+        function getRawTransactionsForLegacyAddresses(txOffset, numTx, success, error) {
+            var allAddresses = MyWallet.getLegacyActiveAddresses();
 
-        BlockchainAPI.async_get_history_with_addresses(allAddresses, function(data) {
-            if (success) success(data.txs);
-        }, function() {
-            if (error) error();
+            BlockchainAPI.async_get_history_with_addresses(allAddresses, function(data) {
+                if (success) success(data.txs);
+            }, function() {
+                if (error) error();
 
-        }, tx_filter, txOffset, numTx);
+            }, tx_filter, txOffset, numTx);
+        }
+
+        getRawTransactionsForLegacyAddresses(legacyAddressesNumTxFetched, numOldTxsToFetchAtATime, function(data) {
+            var processedTransactions = [];
+
+            for (var i in data) {
+                var tx = data[i];
+                
+                var tx = TransactionFromJSON(data[i]);
+                
+                var transaction = MyWallet.processTransaction(tx);  
+                processedTransactions.push(transaction);
+            }
+
+            legacyAddressesNumTxFetched += processedTransactions.length;
+
+            if (processedTransactions.length < numOldTxsToFetchAtATime) {
+                didFetchOldestTransaction();
+            }
+
+            success(processedTransactions);        
+
+        }, function(e) {
+            console.log('error ' + e);
+        });
     }
 
     this.sendFromLegacyAddressToAddress = function(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback, getPassword)  {
@@ -2927,9 +3008,10 @@ var MyWallet = new function() {
         n_tx_filtered = obj.wallet.n_tx_filtered;
 
         for (var i = 0; i < obj.addresses.length; ++i) {
-            if (addresses[obj.addresses[i].address])
+            if (addresses[obj.addresses[i].address]) {
                 MyWallet.setLegacyAddressBalance(obj.addresses[i].address, obj.addresses[i].final_balance)
                 // addresses[obj.addresses[i].address].balance = obj.addresses[i].final_balance;
+            }
 
             for (var j in MyWallet.getAccounts()) {
                 var account = MyWallet.getHDWallet().getAccount(j);

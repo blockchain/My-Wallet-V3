@@ -8,6 +8,7 @@ function HDAccount(wallet, label, idx) {
         receiveAddressCount : 0,
         changeAddressCount : 0,
         n_tx : 0,
+        numTxFetched : 0,
         archived : false,
         address_labels: [],
         balance : null,
