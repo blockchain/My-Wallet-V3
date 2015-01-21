@@ -4,7 +4,8 @@ passphrase = "add imitate business carbon city orbit spray boss ribbon deposit b
 bip39Password = null
 
 second_password = "1234"
-seed_encrypted = "t1vHDdG6LJRAmfj9I3OI6u9hlQAdMIBJ9F82NB9fu2eswp66BT+pqiQl4GSAkqTnq3mr+BBruxTr8acdtAbArQ=="
+#seed_encrypted = "t1vHDdG6LJRAmfj9I3OI6u9hlQAdMIBJ9F82NB9fu2eswp66BT+pqiQl4GSAkqTnq3mr+BBruxTr8acdtAbArQ=="
+seed_encrypted = "sxEIXMF2oHQ5oxRLQbTdRpvqY7igVhcwZZ5cVtiClCic+7qWb49HtXFvvZV6LYvKg4YbXxlpXoZuAFZgmJ9CBg=="
 
 xpubAccountZero  = "xpub6CcRcFnKD32pPkjV8sVNG4WejGQwQTCaAs31e3NoaFSSnYWfBuEWNo3nKWVZotgtN1dpoYGwSxUVyVfNrrgE7YwpSrUWsqgK2LdmuGDCBMp"
 xprivAccountZero = "xprv9yd5CkFRNfUXBGf22qxMtvZvBEaSzzUioe7QqeyC1uuTukBWeMvFpzjJUEDswuWby8JmGR84wQHy75djYEAsAktvJa5B2QueQkzuNQiqS1C"

@@ -132,4 +132,4 @@ describe "Wallet", ->
 
       expect(obj.success).toHaveBeenCalled()
 
-      expect(MyWallet.getMainPasswordPbkdf2Iterations()).toBe(pbkdf2_iterations)
+      expect(MyWallet.getPbkdf2Iterations()).toBe(pbkdf2_iterations)

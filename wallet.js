@@ -1,8 +1,6 @@
 function valueToBigInt(valueBuffer) {
     if (valueBuffer instanceof Bitcoin.BigInteger) return valueBuffer;
 
-    // Prepend zero byte to prevent interpretation as negative integer
-    //return Bitcoin.BigInteger.fromByteArrayUnsigned(valueBuffer);
     return new Bitcoin.BigInteger.fromByteArrayUnsigned(valueBuffer);
 }
 
@@ -112,13 +110,10 @@ var MyWallet = new function() {
       "RUB" : "Russian Ruble"
     };
 
-    this.skip_init = false; //Set on sign up page
     var demo_guid = 'abcaa314-6f67-6705-b384-5d47fbe9d7cc';
     var encrypted_wallet_data; //Encrypted wallet data (Base64, AES 256)
     var guid; //Wallet identifier
-    var cVisible; //currently visible view
     var password; //Password
-    // var dpassword; //double encryption Password
     var dpasswordhash; //double encryption Password
     var sharedKey; //Shared key used to prove that the wallet has succesfully been decrypted, meaning you can't overwrite a wallet backup even if you have the guid
     var final_balance = 0; //Final Satoshi wallet balance
@@ -138,8 +133,7 @@ var MyWallet = new function() {
     var archTimer; //Delayed Backup wallet timer
     var mixer_fee = 0.5; //Default mixer fee 1.5%
     var recommend_include_fee = true; //Number of unconfirmed transactions in blockchain.info's memory pool
-    var default_pbkdf2_iterations = 10; //Not ideal, but limitations of using javascript
-    var main_pbkdf2_iterations = default_pbkdf2_iterations; //The number of pbkdf2 iterations used for the main password
+    var default_pbkdf2_iterations = 5000;
     var tx_notes = {}; //A map of transaction notes, hash -> note
     var auth_type; //The two factor authentication type used. 0 for none.
     var real_auth_type = 0; //The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
@@ -183,7 +177,7 @@ var MyWallet = new function() {
     var didUpgradeToHd = null;
 
     var wallet_options = {
-        pbkdf2_iterations : default_pbkdf2_iterations, //Number of pbkdf2 iterations to default to for second password and dpasswordhash
+        pbkdf2_iterations : default_pbkdf2_iterations, //Number of pbkdf2 iterations to default to for main password, second password and dpasswordhash
         fee_policy : 0,  //Default Fee policy (-1 Tight, 0 Normal, 1 High)
         html5_notifications : false, //HTML 5 Desktop notifications
         logout_time : 600000, //Default 10 minutes
@@ -342,17 +336,13 @@ var MyWallet = new function() {
         return wallet_options.logout_time;
     }
 
-    this.getSecondPasswordPbkdf2Iterations = function() {
-        return wallet_options.pbkdf2_iterations;
-    }
-
-    this.getMainPasswordPbkdf2Iterations = function() {
-        return main_pbkdf2_iterations;
-    }
-
     this.getDefaultPbkdf2Iterations = function() {
         return default_pbkdf2_iterations;
-    }
+    };
+
+    this.getPbkdf2Iterations = function() {
+        return wallet_options.pbkdf2_iterations;
+    };
 
     this.getSharedKey = function() {
         return sharedKey;
@@ -660,14 +650,11 @@ var MyWallet = new function() {
                             MyWallet.getHDWallet().seedHex = reencrypt(MyWallet.getHDWallet().seedHex, pw);
                         }
 
-                        // Set the second password iterations
-                        wallet_options.pbkdf2_iterations = pbkdf2_iterations;
-
                         // Generate a new password hash
                         dpasswordhash = hashPassword(sharedKey + dpassword, pbkdf2_iterations);
 
-                        // Set the main password pbkdf2 iterations
-                        main_pbkdf2_iterations = pbkdf2_iterations;
+                        // Set the pbkdf2 iterations
+                        wallet_options.pbkdf2_iterations = pbkdf2_iterations;
 
                         MyWallet.backupWallet('update', function() {
                             success();
@@ -681,8 +668,8 @@ var MyWallet = new function() {
                 });
             }
             else {
-                // Set the main password pbkdf2 iterations
-                main_pbkdf2_iterations = pbkdf2_iterations;
+                // Set the pbkdf2 iterations
+                wallet_options.pbkdf2_iterations = pbkdf2_iterations;
 
                 MyWallet.backupWallet('update', function() {
                     success();
@@ -720,9 +707,6 @@ var MyWallet = new function() {
     };
 
     this.unsetSecondPassword = function(success, error, getPassword) {
-
-      
-      
         var panic = function(e) {
             console.log('Panic ' + e);
 
@@ -731,8 +715,6 @@ var MyWallet = new function() {
             //But for now panic!
             window.location.reload();
         };
-
-        
 
         try {
             getPassword(function(pw, correct_password, wrong_password) {
@@ -771,20 +753,15 @@ var MyWallet = new function() {
                         panic(e);
                         error(e);
                     });
-                
-                
                 } else {
                     wrong_password()
                 }
-            });  
-      
-          
- 
+            });
         } catch (e) {
             panic(e);
             error(e);
         }
-    }
+    };
 
     this.setSecondPassword = function(password, success, error) {
         var panic = function(e) {
@@ -819,7 +796,7 @@ var MyWallet = new function() {
                 MyWallet.getHDWallet().seedHex = MyWallet.encryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, password);
             }
 
-            dpasswordhash = hashPassword(sharedKey + password, wallet_options.pbkdf2_iterations);
+            dpasswordhash = hashPassword(sharedKey + password, MyWallet.getPbkdf2Iterations());
 
             if (!MyWallet.validateSecondPassword(password)) {
                 throw "Invalid Second Password";
@@ -1237,7 +1214,7 @@ var MyWallet = new function() {
     }
 
     function generatePayloadChecksum() {        
-      return CryptoJS.SHA256(encrypted_wallet_data).toString();        
+        return CryptoJS.SHA256(encrypted_wallet_data).toString();
     }
 
     function wsSuccess(ws) {
@@ -1851,22 +1828,17 @@ var MyWallet = new function() {
     // TODO: refactor second password suppport
     this.sendToEmail = function(accountIdx, value, fixedFee, email, successCallback, errorCallback, getPassword)  {
         if (double_encryption) {
-            if (dpassword == null) {
-                getPassword(function(pw) {
-                    if (MyWallet.validateSecondPassword(pw)) {
-                        sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback);                    
-                    } else {
-                        MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
-                    }
-                });            
-            } else {
-                sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback);                    
-            }
+            getPassword(function(pw) {
+                if (MyWallet.validateSecondPassword(pw)) {
+                    sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback);
+                } else {
+                    MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
+                }
+            });
         } else {
             sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback);                    
         }
     }
-
 
     function sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback)  {
         var account = MyWallet.getHDWallet().getAccount(accountIdx);
@@ -2038,23 +2010,18 @@ var MyWallet = new function() {
 
     this.sendToMobile = function(accountIdx, value, fixedFee, mobile, successCallback, errorCallback, getPassword)  {
         if (double_encryption) {
-            if (dpassword == null) {
-                getPassword(function(pw) {
-                    if (MyWallet.validateSecondPassword(pw)) {
-                        sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback);                    
-                    } else {
-                        MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
-                    }
-                });            
-            } else {
-                sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback, getPassword);                    
-            }
+            getPassword(function(pw) {
+                if (MyWallet.validateSecondPassword(pw)) {
+                    sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback);
+                } else {
+                    MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
+                }
+            });
         } else {
-                sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback);                    
+            sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback);
         }
     }
 
-    // TODO: support second password
     function sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback)  {
         if (mobile.charAt(0) == '0')
             mobile = mobile.substring(1);
@@ -2062,7 +2029,6 @@ var MyWallet = new function() {
         if (mobile.charAt(0) != '+')
             mobile = '+' + mobile;
             //mobile = '+' + child.find('select[name="sms-country-code"]').val() + mobile;
-
 
         var miniKeyAddrobj = generateNewMiniPrivateKey();
         var address = miniKeyAddrobj.key.pub.getAddress().toString();
@@ -3039,15 +3005,13 @@ var MyWallet = new function() {
                 }
 
                 if (rootContainer) {
-                    main_pbkdf2_iterations = rootContainer.pbkdf2_iterations;
-                    default_pbkdf2_iterations = main_pbkdf2_iterations;
+                    wallet_options.pbkdf2_iterations = rootContainer.pbkdf2_iterations;
                 }
 
                 if (obj.double_encryption && obj.dpasswordhash) {
                     MyWallet.setDoubleEncryption(obj.double_encryption);
                     dpasswordhash = obj.dpasswordhash;
                 }
-
 
                 if (obj.options) {
                     $.extend(wallet_options, obj.options);
@@ -3154,144 +3118,6 @@ var MyWallet = new function() {
         }, error);
     }
 
-    this.getPassword = function(modal, success, error) {
-
-        if (!modal.is(':visible')) {
-            modal.trigger('hidden');
-            modal.unbind();
-        }
-
-        modal.modal({
-            keyboard: false,
-            backdrop: "static",
-            show: true
-        });
-
-        //Center
-        modal.center();
-
-        var input = modal.find('input[name="password"]');
-
-        //Virtual On-Screen Keyboard
-        var $write = input,
-            shift = false,
-            capslock = false;
-
-        modal.find('.vkeyboard li').unbind().click(function(){
-
-            var $this = $(this),
-                character = $this.html(); // If it's a lowercase letter, nothing happens to this variable
-
-            // Shift keys
-            if ($this.hasClass('left-shift') || $this.hasClass('right-shift')) {
-                $('.letter').toggleClass('uppercase');
-                $('.symbol span').toggle();
-
-                shift = (shift === true) ? false : true;
-                capslock = false;
-                return false;
-            }
-
-            // Caps lock
-            if ($this.hasClass('capslock')) {
-                $('.letter').toggleClass('uppercase');
-                capslock = true;
-                return false;
-            }
-
-            // Delete
-            if ($this.hasClass('delete')) {
-                var html = $write.val();
-
-                $write.val(html.substr(0, html.length - 1));
-                return false;
-            }
-
-            // Special characters
-            if ($this.hasClass('symbol')) character = $('span:visible', $this).html();
-            if ($this.hasClass('space')) character = ' ';
-            if ($this.hasClass('tab')) character = "\t";
-            if ($this.hasClass('return')) character = "\n";
-
-            // Uppercase letter
-            if ($this.hasClass('uppercase')) character = character.toUpperCase();
-
-            // Remove shift once a key is clicked.
-            if (shift === true) {
-                $('.symbol span').toggle();
-                if (capslock === false) $('.letter').toggleClass('uppercase');
-
-                shift = false;
-            }
-
-            // Add the character
-            $write.val($write.val() + character);
-        });
-
-        input.keypress(function(e) {
-            if(e.keyCode == 13) { //Pressed the return key
-                e.preventDefault();
-                modal.find('.btn.btn-primary').click();
-            }
-        });
-
-        input.val('');
-
-        var primary_button = modal.find('.btn.btn-primary');
-        primary_button.click(function() {
-            if (success) {
-                error = null;
-
-                var ccopy = success;
-                success = null;
-
-                setTimeout(function() {
-                    modal.modal('hide');
-
-                    ccopy(input.val());
-                }, 10);
-            } else {
-                modal.modal('hide');
-            }
-        });
-
-        var secondary_button = modal.find('.btn.btn-secondary');
-        secondary_button.click(function() {
-            if (error) {
-                var ccopy = error;
-
-                error = null;
-                success = null;
-
-                setTimeout(function() {
-                    modal.modal('hide');
-
-                    try { ccopy(); } catch (e) { MyWallet.sendEvent("msg", {type: "error", message: e, platform: ""}); }
-                }, 10);
-            } else {
-                modal.modal('hide');
-            }
-        });
-
-        modal.on('hidden', function () {
-            input.unbind();
-            secondary_button.unbind();
-            primary_button.unbind();
-            modal.unbind();
-
-            if (error) {
-                var ccopy = error;
-
-                error = null;
-                success = null;
-
-                setTimeout(function() {
-                    try { ccopy(); } catch (e) { MyWallet.sendEvent("msg", {type: "error", message: e, platform: ""}); }
-                }, 10);
-            }
-        });
-    }
-
     this.makePairingCode = function(success, error) {
         try {
             MyWallet.securePost('wallet', { method : 'pairing-encryption-password' }, function(encryption_phrase) {
@@ -3304,32 +3130,8 @@ var MyWallet = new function() {
         }
     }
 
-    this.getMainPassword = function(success, error) {
-        //If the user has input their password recently just call the success handler
-        if (last_input_main_password > new Date().getTime() - main_password_timeout)
-            return success(password);
-
-        MyWallet.getPassword($('#main-password-modal'), function(_password) {
-
-            if (password == _password) {
-                last_input_main_password = new Date().getTime();
-
-                if (success) {
-                    try { success(password); } catch (e) { MyWallet.sendEvent("msg", {type: "error", message: e, platform: ""}); }
-                }
-            } else {
-                MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
-
-                if (error) {
-                    try { error(); } catch (e) { MyWallet.sendEvent("msg", {type: "error", message: e, platform: ""}); }
-                }
-            }
-        }, error);
-    }
-
     //Fetch information on a new wallet identfier
     this.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success,needs_two_factor_code, wrong_two_factor_code, authorization_required, other_error) {
-//        console.log('Set GUID ' + user_guid);
   
         if (didSetGuid) {
             MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error);
@@ -3774,9 +3576,9 @@ var MyWallet = new function() {
 
     this.encryptWallet = function(data, password) {
         return JSON.stringify({
-            pbkdf2_iterations : MyWallet.getMainPasswordPbkdf2Iterations(),
+            pbkdf2_iterations : MyWallet.getPbkdf2Iterations(),
             version : MyWallet.didUpgradeToHd() ? 3.0 : 2.0,
-            payload : MyWallet.encrypt(data, password, MyWallet.getMainPasswordPbkdf2Iterations())
+            payload : MyWallet.encrypt(data, password, MyWallet.getPbkdf2Iterations())
         });
     }
 
@@ -3808,43 +3610,46 @@ var MyWallet = new function() {
             try {
                 var obj = $.parseJSON(data);
             } catch (e) {}
-                                    
+            
             var decryptNormal = function() {
                 try {
                     var decrypted = decryptAesWithStretchedPassword(obj.payload, password, obj.pbkdf2_iterations);
-                    // CryptoJS.AES.decrypt(obj.payload, password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iterations : obj.pbkdf2_iterations});
+
                     var root = $.parseJSON(decrypted);
-            
+
                     _success(root, obj);
                 } catch (e) {
                     _error('Error Decrypting Wallet. Please check your password is correct.');
                     MyWallet.sendEvent("msg", {type: "info", message: 'Error Decrypting Wallet. Please check your password is correct.', platform: "iOS"});
                 }
             };
-            
+
+            // Wallet v2+ format: wrapper with pbkdf2 iterations and payload with encrypted data
             if (obj && obj.payload && obj.pbkdf2_iterations) {
                 if (obj.version > supported_encryption_version)
                     throw 'Wallet version ' + obj.version + ' not supported. Please upgrade to the newest Blockchain Wallet.';
-            
+                
                 if (obj.pbkdf2_iterations > 0) {
                     MyWallet.decryptWebWorker(obj.payload, password, obj.pbkdf2_iterations, function(decrypted) {
-            
+                        
                         try {
                             var root = $.parseJSON(decrypted);
-            
+                            
                             _success(root, obj);
                         } catch (e) {
                             decryptNormal();
                         }
                     }, function(e) {
-            
                         decryptNormal();
                     });
                 } else {
                     decryptNormal();
                 }
-            } else {
-              MyWallet.decrypt(data, password, MyWallet.getDefaultPbkdf2Iterations(), function(decrypted) {
+            }
+            // TODO legacy format - what should we support here
+            // Legacy format: just encrypted data, pbkdf2 iterations can be 10 or maybe 1
+            else {
+                MyWallet.decrypt(data, password, 10, function(decrypted) {
                     try {
                         var root = $.parseJSON(decrypted);
 
@@ -3930,9 +3735,9 @@ var MyWallet = new function() {
                The conversions between different encodings can probably be achieved
                with fewer methods.
             */
-        
+
             var decoded = decryptAesWithStretchedPassword(data, password, pbkdf2_iterations);
-            
+
             if (decoded != null && decoded.length > 0) {
                 if (success(decoded)) {
                     return decoded;
@@ -4088,31 +3893,14 @@ var MyWallet = new function() {
     // Expects a secret (e.g. a private key, xpriv of seed hex) and the second
     // password. Returns the encrypted secret:
     this.encryptSecretWithSecondPassword = function(base58, password) {
-      return MyWallet.encrypt(base58, sharedKey + password, MyWallet.getSecondPasswordPbkdf2Iterations());
+      return MyWallet.encrypt(base58, sharedKey + password, MyWallet.getPbkdf2Iterations());
     }
     
-    // Expects an ecrypted secret (e.g. a private key, xpriv of seed hex) and 
+    // Expects an ecrypted secret (e.g. a private key, xpriv or seed hex) and
     // the second password. Returns the secret:
-    this.decryptSecretWithSecondPassword = function(secret, password) { 
-      return MyWallet.decrypt(secret, sharedKey + password, MyWallet.getSecondPasswordPbkdf2Iterations(), MyWallet.isBase58);
-    }
-    
-    // this.encodePK(priv) {
-   //       var base58 = Bitcoin.base58.encode(priv.toBuffer(32));
-   //
-   //       return MyWallet.encryptPK(base58);
-   //   }
-   //
-   //   this.decodePK = function(priv) {
-   //     if (!priv) throw 'null PK passed to decodePK';
-   //
-   //     var decrypted = MyWallet.decryptPK(priv);
-   //     if (decrypted != null) {
-   //         return MyWallet.B58LegacyDecode(decrypted);
-   //     }
-   //     return null;
-   //  }
-
+    this.decryptSecretWithSecondPassword = function(secret, password) {
+        return MyWallet.decrypt(secret, sharedKey + password, MyWallet.getPbkdf2Iterations(), MyWallet.isBase58);
+    };
 
     this.signmessage = function(address, message) {
         var addr = addresses[address];
@@ -4138,7 +3926,7 @@ var MyWallet = new function() {
 
         var thash = CryptoJS.SHA256(sharedKey + input);
 
-        var password_hash = hashPassword(thash, MyWallet.getSecondPasswordPbkdf2Iterations()-1);  //-1 because we have hashed once in the previous line
+        var password_hash = hashPassword(thash, MyWallet.getPbkdf2Iterations()-1);  //-1 because we have hashed once in the previous line
 
         if (password_hash == dpasswordhash) {
             return true;
@@ -4150,15 +3938,14 @@ var MyWallet = new function() {
     this.validateSecondPassword = function(input) {
         var thash = CryptoJS.SHA256(sharedKey + input);
 
-        var password_hash = hashPassword(thash, MyWallet.getSecondPasswordPbkdf2Iterations()-1);  //-1 because we have hashed once in the previous line
+        var password_hash = hashPassword(thash, MyWallet.getPbkdf2Iterations()-1);  //-1 because we have hashed once in the previous line
 
         if (password_hash == dpasswordhash) {
-            // dpassword = input;
             return true;
         }
 
         //Try 10 rounds
-        if (MyWallet.getSecondPasswordPbkdf2Iterations() != 10) {
+        if (MyWallet.getPbkdf2Iterations() != 10) {
             var iter_10_hash = hashPassword(thash, 10-1);  //-1 because we have hashed once in the previous line
 
             if (iter_10_hash == dpasswordhash) {
@@ -4172,7 +3959,6 @@ var MyWallet = new function() {
         //disable old crypto stuff
         //Otherwise try SHA256 + salt
         if (Crypto.util.bytesToHex(thash) == dpasswordhash) {
-            dpassword = input;
             dpasswordhash = password_hash;
             return true;
         }
@@ -4181,7 +3967,6 @@ var MyWallet = new function() {
         var leghash = Crypto.SHA256(input);
 
         if (leghash == dpasswordhash) {
-            dpassword = input;
             dpasswordhash = password_hash;
             return true;
         }
@@ -4297,18 +4082,6 @@ var MyWallet = new function() {
         }, function() {
             if (error)
                 error();
-        });
-    }
-
-    this.setMainPassword = function(new_password) {
-        MyWallet.getMainPassword(function() {
-            password = new_password;
-
-            MyWallet.backupWallet('update', function() {
-                MyWallet.logout();
-            }, function() {
-                MyWallet.logout();
-            });
         });
     }
 

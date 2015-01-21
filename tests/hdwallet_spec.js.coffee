@@ -48,7 +48,7 @@ describe "HD Wallet", ->
     
     describe "when opening an existing wallet", ->
       beforeEach ->
-        hdwallet = buildHDWallet(seed, accountsPayload,bip39Password)
+        hdwallet = buildHDWallet(seed, accountsPayload, bip39Password)
         
       it "should have accounts count be 2", ->
           expect(hdwallet.getAccountsCount()).toBe(2)
@@ -73,7 +73,7 @@ describe "HD Wallet", ->
         beforeEach ->
           # It might be better to refactor these tests at a higher level
           fake_seed = 0
-          hdwallet = buildHDWallet(fake_seed, accountsPayloadSecondPassword,null)
+          hdwallet = buildHDWallet(fake_seed, accountsPayloadSecondPassword, null)
           hdwallet.setSeedHexString(seed_encrypted)
                      
         it "should only know the encrypted xpriv", ->
@@ -84,7 +84,8 @@ describe "HD Wallet", ->
           expect(hdwallet.getSeedHexString()).toBe(seed_encrypted)
           
         it "decrypting the seed should work", ->
-          decrypted_seed = MyWallet.decryptSecretWithSecondPassword(hdwallet.getSeedHexString(),second_password)
+          console.log("decrypting the seed should work")
+          decrypted_seed = hdwallet.getSeedHexString(second_password)
           expect(decrypted_seed).toBe(seed)
         
     describe "when generating a new wallet", ->
