@@ -669,7 +669,7 @@ Get history and parse multiaddr json. Needs to be called by client in the succes
 {int} - index
 
 
-#### `MyWallet.update_IP_lock(ips, successCallback, errorCallback);`
+#### `MyWallet.setIPWhitelist(ips, successCallback, errorCallback);`
 
 ##### Parameters:
 
@@ -680,22 +680,36 @@ Get history and parse multiaddr json. Needs to be called by client in the succes
 {function} - error callback function
 
 
-#### `MyWallet.update_API_access(enabled, successCallback, errorCallback);`
+#### `MyWallet.enableApiAccess(successCallback, errorCallback);`
 
 ##### Parameters:
-
-{bool} - enabled or not
 
 {function} - success callback function
 
 {function} - error callback function
 
 
-#### `MyWallet.update_IP_lock_on(enabled, successCallback, errorCallback);`
+#### `MyWallet.disableApiAccess(successCallback, errorCallback);`
 
 ##### Parameters:
 
-{bool} - enabled or not
+{function} - success callback function
+
+{function} - error callback function
+
+
+#### `MyWallet.enableRestrictToWhiteListedIPs(successCallback, errorCallback);`
+
+##### Parameters:
+
+{function} - success callback function
+
+{function} - error callback function
+
+
+#### `MyWallet.disableRestrictToWhiteListedIPs(successCallback, errorCallback);`
+
+##### Parameters:
 
 {function} - success callback function
 
