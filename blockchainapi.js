@@ -254,6 +254,18 @@ var BlockchainAPI = new function() {
         });
     }
 
+    this.update_API_access = function(enabled, successCallback, errorCallback) {
+        updateKV('Updating Api Access', 'update-api-access-enabled', enabled ? 1 : 0, successCallback, errorCallback);
+    }
+
+    this.update_IP_lock = function(ips, successCallback, errorCallback) {
+        updateKV('Updating Locked Ip Addresses', 'update-ip-lock', ips, successCallback, errorCallback);
+    }
+
+    this.update_IP_lock_on = function(enabled, successCallback, errorCallback) {
+        updateKV('Updating IP Lock', 'update-ip-lock-on', enabled, successCallback, errorCallback);
+    }
+
     this.change_language = function(language, successCallback, errorCallback) {
         updateKV('Updating Language', 'update-language', language, successCallback, errorCallback);
     }

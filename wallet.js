@@ -2612,6 +2612,52 @@ var MyWallet = new function() {
         BlockchainAPI.get_account_info(successCallback, errorCallback);
     }
 
+    this.enableApiAccess = function(successCallback, errorCallback) {
+        MyWallet.update_API_access(true, successCallback, errorCallback);
+    }
+
+    this.disableApiAccess = function(successCallback, errorCallback) {
+        MyWallet.update_API_access(false, successCallback, errorCallback);
+    }
+    
+    this.update_API_access = function(enabled, successCallback, errorCallback) {
+        BlockchainAPI.update_API_access(enabled, function() {
+            if (successCallback)
+                successCallback();
+        }, function() {
+            if (errorCallback)
+               errorCallback();
+        });
+    }
+
+    this.setIPWhitelist = function(ips, successCallback, errorCallback) {
+        BlockchainAPI.update_IP_lock(ips, function() {
+            if (successCallback)
+                successCallback();
+        }, function() {
+            if (errorCallback)
+               errorCallback();
+        });
+    }
+
+    this.enableRestrictToWhiteListedIPs = function(successCallback, errorCallback) {
+        MyWallet.update_IP_lock_on(true, successCallback, errorCallback);
+    }
+
+    this.disableRestrictToWhiteListedIPs = function(successCallback, errorCallback) {
+        MyWallet.update_IP_lock_on(false, successCallback, errorCallback);
+    }
+
+    this.update_IP_lock_on = function(enabled, successCallback, errorCallback) {
+        BlockchainAPI.update_IP_lock_on(enabled, function() {
+            if (successCallback)
+                successCallback();
+        }, function() {
+            if (errorCallback)
+               errorCallback();
+        });
+    }
+
     this.change_language = function(language, successCallback, errorCallback) {
         BlockchainAPI.change_language(language, function() {
             MyWallet.setLanguage(language);

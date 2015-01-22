@@ -669,6 +669,52 @@ Get history and parse multiaddr json. Needs to be called by client in the succes
 {int} - index
 
 
+#### `MyWallet.setIPWhitelist(ips, successCallback, errorCallback);`
+
+##### Parameters:
+
+{string} - Multiple ip addresses should be comma separated. Use % as a wildcard. For example 127.0.0.% to whitelist 127.0.0.1-127.0.0.254.
+
+{function} - success callback function
+
+{function} - error callback function
+
+
+#### `MyWallet.enableApiAccess(successCallback, errorCallback);`
+
+##### Parameters:
+
+{function} - success callback function
+
+{function} - error callback function
+
+
+#### `MyWallet.disableApiAccess(successCallback, errorCallback);`
+
+##### Parameters:
+
+{function} - success callback function
+
+{function} - error callback function
+
+
+#### `MyWallet.enableRestrictToWhiteListedIPs(successCallback, errorCallback);`
+
+##### Parameters:
+
+{function} - success callback function
+
+{function} - error callback function
+
+
+#### `MyWallet.disableRestrictToWhiteListedIPs(successCallback, errorCallback);`
+
+##### Parameters:
+
+{function} - success callback function
+
+{function} - error callback function
+
 
 Legacy API
 ===========
