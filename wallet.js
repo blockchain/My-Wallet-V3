@@ -617,13 +617,22 @@ var MyWallet = new function() {
          * @param {!string} pw The password used for encryption.
          */
         var reencrypt = function(data, pw) {
-            MyWallet.encrypt(MyWallet.decryptSecretWithSecondPassword(data, pw), sharedKey + pw, pbkdf2_iterations);
+            return MyWallet.encrypt(MyWallet.decryptSecretWithSecondPassword(data, pw), sharedKey + pw, pbkdf2_iterations);
+        };
+
+        var setPbkdf2IterationsAndBackupWallet = function() {
+            wallet_options.pbkdf2_iterations = pbkdf2_iterations;
+
+            MyWallet.backupWallet('update', function() {
+                success();
+            }, function(e) {
+                panic(e);
+            });
         };
 
         try {
             // If double encryption is enabled we need to re-encrypt all private keys
             if(double_encryption) {
-                return;
                 getPassword(function(pw, correct_password, wrong_password) {
                     if (MyWallet.validateSecondPassword(pw)) {
                         correct_password();
@@ -643,26 +652,21 @@ var MyWallet = new function() {
                         for (var i in MyWallet.getAccounts()) {
                             var account = MyWallet.getHDWallet().getAccount(i);
                             account.extendedPrivateKey = reencrypt(account.extendedPrivateKey, pw);
+
+                            if (!account.extendedPrivateKey) throw 'Error re-encrypting account private key';
                         }
 
                         // Re-encrypt the HD seed
                         if (MyWallet.didUpgradeToHd()) {
                             MyWallet.getHDWallet().seedHex = reencrypt(MyWallet.getHDWallet().seedHex, pw);
+
+                            if (!MyWallet.getHDWallet().seedHex) throw 'Error re-encrypting wallet seed';
                         }
 
                         // Generate a new password hash
                         dpasswordhash = hashPassword(sharedKey + pw, pbkdf2_iterations);
-                        console.log('>>>')
-                        console.log(dpasswordhash)
 
-                        // Set the pbkdf2 iterations
-                        wallet_options.pbkdf2_iterations = pbkdf2_iterations;
-
-                        MyWallet.backupWallet('update', function() {
-                            success();
-                        }, function(e) {
-                            panic(e);
-                        });
+                        setPbkdf2IterationsAndBackupWallet();
                     }
                     else {
                         wrong_password();
@@ -670,14 +674,7 @@ var MyWallet = new function() {
                 });
             }
             else {
-                // Set the pbkdf2 iterations
-                wallet_options.pbkdf2_iterations = pbkdf2_iterations;
-
-                MyWallet.backupWallet('update', function() {
-                    success();
-                }, function(e) {
-                    panic(e);
-                });
+                setPbkdf2IterationsAndBackupWallet();
             }
         } catch (e) {
             panic(e);
@@ -2385,13 +2382,19 @@ var MyWallet = new function() {
             return;
         }
 
-        MyWallet.initializeHDWallet(null, null, getPassword, success, error);
-
-        MyWallet.backupWallet('update', function() {
-            success && success();
-        }, function() {
+        var _success = function() {
+            MyWallet.backupWallet('update', function() {
+                success && success();
+            }, function() {
+                error && error();
+            });
+        };
+        
+        var _error = function () {
             error && error();
-        });
+        };
+
+        MyWallet.initializeHDWallet(null, null, getPassword, _success, _error);
     };
 
     /**

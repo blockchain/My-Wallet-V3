@@ -114,7 +114,6 @@ describe "Wallet", ->
       expect(JSON.parse(data)["hd_wallets"].length).toBeGreaterThan(0)
       
   describe "setPbkdf2Iterations()", ->
-
     it "should set the PBKDF2 iterations", ->
       pbkdf2_iterations = 900
 
@@ -133,3 +132,6 @@ describe "Wallet", ->
       expect(obj.success).toHaveBeenCalled()
 
       expect(MyWallet.getPbkdf2Iterations()).toBe(pbkdf2_iterations)
+
+    it "should set the PBKDF2 iterations when 2nd password is enabled", ->
+      pending()
