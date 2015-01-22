@@ -140,8 +140,6 @@ var MyWallet = new function() {
     var logout_timeout; //setTimeout return value for the automatic logout
     var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
     var monitor_listeners = []; //success, errors, notices
-    var last_input_main_password; //The time the last password was entered
-    var main_password_timeout = 60000;
     var isInitialized = false;
     var language = 'en'; //Current language
     var localSymbolCode = null; //Current local symbol
@@ -150,7 +148,6 @@ var MyWallet = new function() {
     var haveSetServerTime = false; //Whether or not we have synced with server time
     var sharedcoin_endpoint; //The URL to the sharedcoin node
     var disable_logout = false;
-    var haveBoundReady = false;
     var isRestoringWallet = false;
     var sync_pubkeys = false;
     var legacyAddressesNumTxFetched = 0;
@@ -626,6 +623,7 @@ var MyWallet = new function() {
         try {
             // If double encryption is enabled we need to re-encrypt all private keys
             if(double_encryption) {
+                return;
                 getPassword(function(pw, correct_password, wrong_password) {
                     if (MyWallet.validateSecondPassword(pw)) {
                         correct_password();
@@ -653,14 +651,16 @@ var MyWallet = new function() {
                         }
 
                         // Generate a new password hash
-                        dpasswordhash = hashPassword(sharedKey + dpassword, pbkdf2_iterations);
+                        dpasswordhash = hashPassword(sharedKey + pw, pbkdf2_iterations);
+                        console.log('>>>')
+                        console.log(dpasswordhash)
 
                         // Set the pbkdf2 iterations
                         wallet_options.pbkdf2_iterations = pbkdf2_iterations;
 
                         MyWallet.backupWallet('update', function() {
                             success();
-                        }, function() {
+                        }, function(e) {
                             panic(e);
                         });
                     }
@@ -675,7 +675,7 @@ var MyWallet = new function() {
 
                 MyWallet.backupWallet('update', function() {
                     success();
-                }, function() {
+                }, function(e) {
                     panic(e);
                 });
             }
@@ -2373,6 +2373,35 @@ var MyWallet = new function() {
         });
     }
 
+    /**
+     * Upgrade legacy wallet to HD wallet.
+     * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
+     * @param {?function()=} success Success callback function.
+     * @param {?function()=} error Error callback function.
+     */
+    this.upgradeToHDWallet = function(getPassword, success, error) {
+        if (MyWallet.didUpgradeToHd()) {
+            success && success();
+            return;
+        }
+
+        MyWallet.initializeHDWallet(null, null, getPassword, success, error);
+
+        MyWallet.backupWallet('update', function() {
+            success && success();
+        }, function() {
+            error && error();
+        });
+    };
+
+    /**
+     * Initialize HD wallet and create "Spending" account.
+     * @param {?string} passphrase HD passphrase to generate the seed. If null, a seed will be generated.
+     * @param {?string} bip39Password Password to protect the seed when generating seed from mnemonic.
+     * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
+     * @param {function()} success Success callback function.
+     * @param {function()} error Error callback function.
+     */
     this.initializeHDWallet = function(passphrase, bip39Password, getPassword, success, error)  {
         function initializeHDWallet(passphrase, bip39Password, second_password, success, error) {
             didUpgradeToHd = true;
@@ -2391,22 +2420,22 @@ var MyWallet = new function() {
             
             success();
         }
-      
+        
         if (this.getDoubleEncryption()) {
-          getPassword(function(pw, correct_password, wrong_password) {
+            getPassword(function(pw, correct_password, wrong_password) {
                 if (MyWallet.validateSecondPassword(pw)) {
-                    correct_password()
+                    correct_password();
                     initializeHDWallet(passphrase, bip39Password, pw, success, error);
                 } else {
-                    wrong_password()
-                    error()
+                    wrong_password();
+                    error();
                 }
             });            
 
         } else {
             initializeHDWallet(passphrase, bip39Password, null,  success, error);                    
         }
-    }
+    };
 
     MyWallet.getHDWalletPassphraseString = function(getPassword, successCallback, errorCallback) {
         if (this.getDoubleEncryption()) {
@@ -3447,9 +3476,6 @@ var MyWallet = new function() {
 
             password = pw;
 
-            //Main Password times out after 10 minutes
-            last_input_main_password = new Date().getTime();
-
             //If we don't have any wallet data then we must have two factor authentication enabled
             if (encrypted_wallet_data == null || encrypted_wallet_data.length == 0) {
                 MyWallet.sendEvent("msg", {type: "info", message: 'Validating Authentication key', platform: "iOS"});
@@ -3573,15 +3599,14 @@ var MyWallet = new function() {
         }
 
         var _errorcallback = function(e) {
-            MyWallet.sendEvent('on_backup_wallet_error')
+            MyWallet.sendEvent('on_backup_wallet_error');
 
             MyWallet.sendEvent("msg", {type: "error", message: 'Error Saving Wallet: ' + e, platform: ""});
 
-            //Fetch the wallet agin from server
+            // Re-fetch the wallet from server
             MyWallet.getWallet();
 
-            if (errorcallback != null)
-                errorcallback(e);
+            errorcallback && errorcallback(e);
         };
 
         try {
@@ -3638,9 +3663,9 @@ var MyWallet = new function() {
                             isSynchronizedWithServer = true;
                             MyWallet.disableLogout(false);
                             logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
-                            MyWallet.sendEvent('on_backup_wallet_success')
+                            MyWallet.sendEvent('on_backup_wallet_success');
                         }, function() {
-                            _errorcallback('Checksum Did Not Match Expected Value')
+                            _errorcallback('Checksum Did Not Match Expected Value');
                             MyWallet.disableLogout(false);
                         });
                     }, function(e) {
@@ -3656,7 +3681,7 @@ var MyWallet = new function() {
             _errorcallback(e);
             MyWallet.disableLogout(false);
         }
-    }
+    };
 
     this.isBase58 = function(str, base) {
         for (var i = 0; i < str.length; ++i) {

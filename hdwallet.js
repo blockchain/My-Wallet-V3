@@ -38,7 +38,7 @@ function HDAccount(wallet, label, idx) {
                     break;
                 }
             }
-            
+
             return null;
         }, 
         setLabelForAddress : function(addressIdx, label) {
@@ -66,13 +66,20 @@ function HDAccount(wallet, label, idx) {
             return false;
         },
         getLabeledReceivingAddresses : function () {
-          var addresses = [];
-          for (var i in this.address_labels) {
-              var indexLabel = this.address_labels[i];
-              item = {'index' : indexLabel['index'], 'label' : indexLabel['label'], 'address' : this.wallet.getAddressAtIndex(indexLabel['index'])}
-              addresses.push(item)
-          }
-          return addresses;
+            var addresses = [];
+
+            for (var i in this.address_labels) {
+                var indexLabel = this.address_labels[i];
+
+                item = { 'index' : indexLabel['index'],
+                         'label' : indexLabel['label'],
+                         'address' : this.wallet.getAddressAtIndex(indexLabel['index'])
+                       };
+
+                addresses.push(item);
+            }
+
+            return addresses;
         }, 
         isArchived : function() {
             return this.archived;
@@ -81,22 +88,14 @@ function HDAccount(wallet, label, idx) {
             this.archived = archived;
         },
         isAddressPartOfAccount : function(address) {
-            if (this.wallet.addresses.indexOf(address) > -1)
-                return true;
-            if (this.wallet.changeAddresses.indexOf(address) > -1)
-                return true;
-
-            return false;
+            return (this.wallet.addresses.indexOf(address) > -1 ||
+                    this.wallet.changeAddresses.indexOf(address) > -1);
         },
         isAddressPartOfExternalAccountAddress : function(address) {
-            if (this.wallet.addresses.indexOf(address) > -1)
-                return true;
-            return false;
+            return (this.wallet.addresses.indexOf(address) > -1);
         },
         isAddressPartOfInternalAccountAddress : function(address) {
-            if (this.wallet.changeAddresses.indexOf(address) > -1)
-                return true;
-            return false;
+            return (this.wallet.changeAddresses.indexOf(address) > -1);
         },
         getAddresses : function() {
             while(this.wallet.addresses.length < this.receiveAddressCount) {
@@ -129,12 +128,12 @@ function HDAccount(wallet, label, idx) {
             return this.wallet.changeAddresses.length;
         },        
         getAccountExtendedKey : function(isPrivate) {
-            if (isPrivate)  
+            if (isPrivate) {
                 return this.extendedPrivateKey;
-                // return this.wallet.getAccountZero().toBase58();
-            else
+            }
+            else {
                 return this.extendedPublicKey;
-                // return this.wallet.getAccountZero().neutered().toBase58();
+            }
         },
         generateAddress : function() {
             return this.wallet.generateAddress();
@@ -156,13 +155,13 @@ function HDAccount(wallet, label, idx) {
         },                
         incBalance : function(amount) {
             if(this.balance == null) {
-              this.balance = 0;              
+                this.balance = 0;
             }
             this.balance += amount;
         },
         decBalance : function(amount) {
             if(this.balance == null) {
-              this.balance = 0;              
+                this.balance = 0;
             }
             this.balance -= amount;
         },
@@ -239,11 +238,11 @@ function HDWallet(seedHex, bip39Password, second_password, success, error) {
             this.seedHex = seedHex;
         },
         getSeedHexString : function(second_password) {
-          if(second_password == null) { 
-            return this.seedHex;
-          } else {
-            return MyWallet.decryptSecretWithSecondPassword(this.seedHex, second_password)
-          }
+            if(second_password == null) {
+                return this.seedHex;
+            } else {
+                return MyWallet.decryptSecretWithSecondPassword(this.seedHex, second_password);
+            }
         },
         getMasterHex : function(seedHex) {
             return BIP39.mnemonicToSeed(passphraseHexStringToPassphrase(seedHex), this.bip39Password);
@@ -252,8 +251,8 @@ function HDWallet(seedHex, bip39Password, second_password, success, error) {
             return this.accountArray.length;
         },
         getAccount : function(accountIdx) {
-          account = this.accountArray[accountIdx];
-          return account;
+            account = this.accountArray[accountIdx];
+            return account;
         },
         filterTransactionsForAccount : function(accountIdx, transactions, paidTo, tx_notes) {
             var account = this.accountArray[accountIdx];
@@ -262,11 +261,8 @@ function HDWallet(seedHex, bip39Password, second_password, success, error) {
 
             var filteredTransactions = [];
             var rawTxs = transactions.filter(function(element) {
-               return element.account_indexes.indexOf(idx) != -1;
+                return element.account_indexes.indexOf(idx) != -1;
             });
-
-            // console.log("Raw:");
-            // console.log(rawTxs);
 
             for (var i in rawTxs) {
                 var tx = rawTxs[i];
@@ -302,7 +298,7 @@ function HDWallet(seedHex, bip39Password, second_password, success, error) {
                         transaction.amount += output.value;
                     } else {
                         transaction.to_addresses.push(output.addr);
-                        if (! isOrigin) {
+                        if (!isOrigin) {
                             for (var j in this.getAccounts()) {
                                 var otherAccount = this.getAccount(j);
                                 if (otherAccount.getAccountExtendedKey(false) == output.xpub.m) {
@@ -324,7 +320,7 @@ function HDWallet(seedHex, bip39Password, second_password, success, error) {
                 }
 
                 transaction.note = tx_notes[tx.hash] ? tx_notes[tx.hash] : null;
-    
+
                 if (tx.time > 0) {
                     transaction.txTime = new Date(tx.time * 1000);
                 }
@@ -360,12 +356,18 @@ function HDWallet(seedHex, bip39Password, second_password, success, error) {
             return account;
         },
         createAccount : function(label, second_password) {
-            var seedHex = this.getSeedHexString(second_password)
+            var seedHex = this.getSeedHexString(second_password);
             var accountIdx = this.accountArray.length;
-              
-            var walletAccount = new HDWalletAccount(this.getMasterHex(seedHex));
-            //walletAccount.accountZero = walletAccount.getMasterKey().deriveHardened(0).derive(accountIdx);
 
+            var walletAccount = new HDWalletAccount(this.getMasterHex(seedHex));
+
+            /* BIP 44 defines the following 5 levels in BIP32 path:
+             * m / purpose' / coin_type' / account' / change / address_index
+             * Apostrophe in the path indicates that BIP32 hardened derivation is used.
+             *
+             * Purpose is a constant set to 44' following the BIP43 recommendation
+             * Registered coin types: 0' for Bitcoin
+             */
             walletAccount.accountZero = walletAccount.getMasterKey().deriveHardened(44).deriveHardened(0).deriveHardened(accountIdx);
             walletAccount.externalAccount = walletAccount.getAccountZero().derive(0);
             walletAccount.internalAccount = walletAccount.getAccountZero().derive(1);
@@ -418,7 +420,6 @@ function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallbac
 
     while(continueLookingAheadAccount) {
         var account = hdwallet.createAccount("Account " + accountIdx.toString(), secondPassword);
-        //console.log("accountIdx: " + accountIdx.toString());
 
 
         var lookAheadOffset = 0;
@@ -443,8 +444,6 @@ function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallbac
                     }
                 }
 
-                console.log("accountAddressIdx : " + accountAddressIdx);
-                console.log("lookAheadOffset : " + lookAheadOffset);
                 if (accountAddressIdx < lookAheadOffset) {
                     continueLookingAheadAddress = false;
                 }

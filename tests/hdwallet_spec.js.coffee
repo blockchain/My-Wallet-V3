@@ -84,7 +84,6 @@ describe "HD Wallet", ->
           expect(hdwallet.getSeedHexString()).toBe(seed_encrypted)
           
         it "decrypting the seed should work", ->
-          console.log("decrypting the seed should work")
           decrypted_seed = hdwallet.getSeedHexString(second_password)
           expect(decrypted_seed).toBe(seed)
         
