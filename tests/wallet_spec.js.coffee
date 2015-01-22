@@ -134,4 +134,30 @@ describe "Wallet", ->
       expect(MyWallet.getPbkdf2Iterations()).toBe(pbkdf2_iterations)
 
     it "should set the PBKDF2 iterations when 2nd password is enabled", ->
-      pending()
+      MyWallet.setDoubleEncryption(true)
+
+      observer = {}
+
+      observer.success = () ->
+      observer.error = () ->
+        console.log "error"
+
+      spyOn(observer, "success")
+      spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
+      observer.getPassword = (callback) ->
+        callback(second_password, (()->), (()->))
+      spyOn(observer, "getPassword").and.callThrough()
+
+      pbkdf2_iterations = 1100
+
+      # TODO test the reencryption with an address or HD account
+      addresses = {}
+
+      spyOn(MyWallet, "getAccounts").and.returnValue 0
+      spyOn(MyWallet, "didUpgradeToHd").and.returnValue false
+
+      MyWallet.setPbkdf2Iterations(pbkdf2_iterations, observer.success, observer.error, observer.getPassword)
+
+      expect(observer.success).toHaveBeenCalled()
+
+      expect(MyWallet.getPbkdf2Iterations()).toBe(pbkdf2_iterations)
