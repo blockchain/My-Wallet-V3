@@ -4227,6 +4227,24 @@ var MyWallet = new function() {
             }
         }
 
+        for (var i in MyWallet.getAccounts()) {
+            var account = MyWallet.getHDWallet().getAccount(i);
+
+            var decryptedpk;
+            if(second_password == null) {
+              decryptedpk = account.extendedPrivateKey;
+            } else {
+              decryptedpk = MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password);
+            }
+
+            try {
+                var hdWalletAccount = new HDWalletAccount(null);
+                hdWalletAccount.newNodeFromExtKey(decryptedpk);
+            } catch (e) {
+                throw 'Invalid extended private key';
+            }
+        }
+
         MyWallet.sendEvent("msg", {type: "success", message: 'wallet-success ' + 'Wallet verified.', platform: ""});
     }
 
