@@ -608,7 +608,6 @@ var MyWallet = new function() {
             // But for now panic!
             window.location.reload();
         };
-
         /**
          * Reencrypt data with password.
          * The decrypt call uses the currently set number of iterations, the encrypt call uses the new number of iterations we're just setting
@@ -2200,13 +2199,52 @@ var MyWallet = new function() {
         }
     }
 
+    this.archiveAccount = function(idx) {
+        var account = MyWallet.getHDWallet().getAccount(idx);
+        account.setIsArchived(true);
+        MyWallet.backupWalletDelayed();
+    }
 
+    this.unarchiveAccount = function(idx) {
+        var account = MyWallet.getHDWallet().getAccount(idx);
+        account.setIsArchived(false);
+        MyWallet.backupWalletDelayed();
+    }
+    
     /** @returns {Array} Array of HD accounts */
     this.getAccounts = function() {
         if (!MyWallet.didUpgradeToHd()) {
             return [];
         }
         return MyWallet.getHDWallet().getAccounts();
+
+        var accounts = MyWallet.getHDWallet().getAccounts();
+        var activeAccounts = [];
+        for (var i in accounts) {
+            var account = MyWallet.getHDWallet().getAccount(i);
+            if (! account.isArchived()) {
+                activeAccounts.push(account);
+            }
+
+        }
+        return activeAccounts;
+    }
+
+    /** @returns {Array} Array of archived HD accounts */
+    this.getArchivedAccounts = function() {
+        if (!MyWallet.didUpgradeToHd()) {
+            return [];
+        }
+        var accounts = MyWallet.getHDWallet().getAccounts();
+        var archivedAccounts = [];
+        for (var i in accounts) {
+            var account = MyWallet.getHDWallet().getAccount(i);
+            if (account.isArchived()) {
+                archivedAccounts.push(account);
+            }
+
+        }
+        return archivedAccounts;
     }
 
     this.getAccount = function(idx) {
@@ -4211,7 +4249,6 @@ var MyWallet = new function() {
                   decryptedpk = MyWallet.decryptSecretWithSecondPassword(addr.priv, second_password);
                 }
               
-                
                 var decodedpk = MyWallet.B58LegacyDecode(decryptedpk);
 
                 var privatekey = new ECKey(new BigInteger.fromBuffer(decodedpk), false);
