@@ -343,6 +343,20 @@ var BlockchainAPI = new function() {
         }, errorCallback, '?code='+code);
     }
 
+    this.resendEmailConfirmation = function(email, successCallback, errorCallback) {
+        updateKV('Resend Email Confirmation', 'update-email', email, successCallback, errorCallback);
+    }
+
+    this.verifyEmail = function(code, successCallback, errorCallback) {
+        MyWallet.securePost("wallet", { payload:code, length : code.length, method : 'verify-email  ' }, function(data) {
+            MyWallet.sendEvent("msg", {type: "success", message: data, platform: ""});
+            if (successCallback) successCallback(data);
+        }, function(data) {
+            MyWallet.sendEvent("msg", {type: "error", message: data.responseText, platform: ""});
+            if (errorCallback) errorCallback();
+        });
+    }
+
     this.verifyMobile = function(code, successCallback, errorCallback) {
         MyWallet.securePost("wallet", { payload:code, length : code.length, method : 'verify-sms' }, function(data) {
             MyWallet.sendEvent("msg", {type: "success", message: data, platform: ""});

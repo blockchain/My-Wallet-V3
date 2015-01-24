@@ -2789,6 +2789,28 @@ var MyWallet = new function() {
         });
     }
 
+    /**
+     * Verify email with code.
+     * @param {string} code verfication code.
+     * @param {function()} successCallback Success callback function.
+     * @param {function()} errorCallback Error callback function.
+     */
+    this.verifyEmail = function(code, successCallback, errorCallback) {
+        BlockchainAPI.verifyEmail(code, function(data) {
+            if (successCallback)
+                successCallback(data);
+        }, function() {
+            if (errorCallback)
+               errorCallback();
+        });
+    }
+
+    /**
+     * Verify mobile with code.
+     * @param {string} code verfication code.
+     * @param {function()} successCallback Success callback function.
+     * @param {function()} errorCallback Error callback function.
+     */
     this.verifyMobile = function(code, successCallback, errorCallback) {
         BlockchainAPI.verifyMobile(code, function(data) {
             if (successCallback)
@@ -2799,6 +2821,22 @@ var MyWallet = new function() {
         });
     }
 
+    /**
+     * resend email with verfication code.
+     * @param {string} email.
+     * @param {function()} successCallback Success callback function.
+     * @param {function()} errorCallback Error callback function.
+     */
+    this.resendEmailConfirmation = function(email, successCallback, errorCallback) {
+        BlockchainAPI.resendEmailConfirmation(email, function() {
+            if (successCallback)
+                successCallback();
+        }, function() {
+            if (errorCallback)
+               errorCallback();
+        });
+    }
+    
     this.disableSaveTwoFactor = function(successCallback, errorCallback) {
         BlockchainAPI.toggleSave2FA(true, function() {
             if (successCallback)
