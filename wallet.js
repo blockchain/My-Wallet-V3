@@ -1452,10 +1452,11 @@ var MyWallet = new function() {
     this.setLabelForAccountAddress = function(accountIdx, addressIdx, label, success, error) {
         if (! isAlphaNumericSpace(label)) {
             error();           
+        } else {
+            MyWallet.getHDWallet().getAccount(accountIdx).setLabelForAddress(addressIdx, label);
+            MyWallet.backupWalletDelayed();
+            success();
         }
-        MyWallet.getHDWallet().getAccount(accountIdx).setLabelForAddress(addressIdx, label);
-        MyWallet.backupWalletDelayed();
-        success();
     }
     
     this.getLabeledReceivingAddressesForAccount = function(accountIdx) {
