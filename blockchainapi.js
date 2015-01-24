@@ -348,7 +348,7 @@ var BlockchainAPI = new function() {
     }
 
     this.verifyEmail = function(code, successCallback, errorCallback) {
-        MyWallet.securePost("wallet", { payload:code, length : code.length, method : 'verify-email  ' }, function(data) {
+        MyWallet.securePost("wallet", { payload:code, length : code.length, method : 'verify-email' }, function(data) {
             MyWallet.sendEvent("msg", {type: "success", message: data, platform: ""});
             if (successCallback) successCallback(data);
         }, function(data) {
