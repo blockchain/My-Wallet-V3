@@ -623,8 +623,9 @@ var MyWallet = new function() {
         var setPbkdf2IterationsAndBackupWallet = function() {
             wallet_options.pbkdf2_iterations = pbkdf2_iterations;
 
-            MyWallet.backupWallet('update', function() {
-                success();
+            success();
+
+            MyWallet.backupWalletDelayed('update', function() {
             }, function(e) {
                 panic(e);
             });
