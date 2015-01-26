@@ -3396,19 +3396,17 @@ var MyWallet = new function() {
         MyWallet.fetchWalletJson(user_guid, shared_key, true, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_required, other_error);
     }
 
-    //Fetch information on a new wallet identfier
     /**
-     * Fetch information on a new wallet identfier
+     * Fetch wallet from server, decrypt and build wallet model.
      * @param {string} user_guid User GUID.
-     * @param {string} shared_key User shared key. (Nullable)
+     * @param {?string} shared_key User shared key.
      * @param {bool} resend_code Whether this is a resend or not.
      * @param {string} inputedPassword User password.
-     * @param {string} twoFACode User 2 factor code. (Nullable)
+     * @param {?string} twoFACode User 2 factor code.
      * @param {function()} success Success callback function.
-     * @param {function()} needs_two_factor_code Require 2 factor code callback function.
+     * @param {function(number)} needs_two_factor_code Require 2 factor code callback function.
      * @param {function()} wrong_two_factor_code 2 factor code incorrect callback function.
      * @param {function()} other_error Other error callback function.
-     * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
      */
     this.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_required, other_error) {
   
