@@ -1026,7 +1026,7 @@ var MyWallet = new function() {
         }
 
         if (opts == null)
-            opts = {};
+            opts = {compressed: true};
 
         var addr = opts.compressed ? MyWallet.getCompressedAddressString(key) : MyWallet.getUnCompressedAddressString(key);
 
