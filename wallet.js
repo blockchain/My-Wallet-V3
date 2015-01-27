@@ -1747,10 +1747,8 @@ var MyWallet = new function() {
             }
         }, function(e) {
             if (errorCallback) {
-                errorCallback(e);
+                errorCallback(new Error(e.responseText));
             }
-            //TODO: not clean
-            MyWallet.sendEvent("msg", {type: "error", message: e.responseText ? e.responseText : e.message, platform: ""});
         }, 0, true);
     }
 
@@ -2209,8 +2207,6 @@ var MyWallet = new function() {
             }, function(e) {
                 if (errorCallback) {
                     errorCallback(e);
-                } else {
-                    throw 'Account balance is 0.';
                 }
             });
         }
