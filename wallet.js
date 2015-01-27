@@ -1943,7 +1943,7 @@ var MyWallet = new function() {
                                 if (errorCallback)
                                     errorCallback(response);
                             });
-                        }, function(data) {
+                        }, function(e) { // Sent via email failed
                             if (errorCallback)
                                 errorCallback(e);
                         });
