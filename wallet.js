@@ -2200,8 +2200,11 @@ var MyWallet = new function() {
                 });
 
             }, function(e) {
-                if (errorCallback)
+                if (errorCallback) {
                     errorCallback(e);
+                } else {
+                    throw 'Account balance is 0.';
+                }
             });
         }
         
