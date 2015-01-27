@@ -1907,9 +1907,9 @@ var MyWallet = new function() {
             address, 
             email + ' Sent Via Email', 
             function() {    
-                MyWallet.backupWallet('update', function(unspent_outputs) {
+                MyWallet.backupWallet('update', function() {
                     MyWallet.sendEvent("msg", {type: "info", message: 'Generated new Bitcoin Address ' + address, platform: ""});
-                    MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function () {
+                    MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function (unspent_outputs) {
                         var account = MyWallet.getHDWallet().getAccount(accountIdx);
                         var extendedPrivateKey = null;
                         if (secondPassword != null) {
