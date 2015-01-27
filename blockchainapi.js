@@ -518,7 +518,7 @@ var BlockchainAPI = new function() {
                 }
                 
                 if (error) {
-                    error();
+                    error(e);
                     error = null;
                 }
             }

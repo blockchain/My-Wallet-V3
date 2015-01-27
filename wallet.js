@@ -521,13 +521,20 @@ var MyWallet = new function() {
         return addresses[address].priv;
     }
 
+    /**
+     * Set the label of a legacy address.
+     * @param {string} address The address to set the label for.
+     * @param {string} label The new label - must be alpha numeric with spaces, otherwise error() will be called.
+     * @param {function()=} success Success callback function.
+     * @param {function()=} error Error callback function.
+     */
     this.setLegacyAddressLabel = function(address, label, success, error) {
-        if (! isAlphaNumericSpace(label)) {
-            error();           
+        if (!isAlphaNumericSpace(label)) {
+            error && error();
         } else {
             addresses[address].label = label;
             MyWallet.backupWalletDelayed();
-            success();
+            success && success();
         }
     }
 
