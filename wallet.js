@@ -3094,7 +3094,7 @@ var MyWallet = new function() {
     }
 
     function isAlphaNumericSpace(input) {
-        return XRegExp("^\\p{L}[\\p{L} \\-,._']*$").test(input) || /^[\w\-,._  ]+$/.test(input);
+        return XRegExp("^\\p{L}[\\p{L}@ \\-,._']*$").test(input) || /^[\w\-,._  ]+$/.test(input);
     }
         
     function parseMultiAddressJSON(obj, cached, checkCompleted) {
