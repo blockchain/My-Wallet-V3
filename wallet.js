@@ -1884,32 +1884,39 @@ var MyWallet = new function() {
         if (double_encryption) {
             getPassword(function(pw) {
                 if (MyWallet.validateSecondPassword(pw)) {
-                    sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback);
+                    sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback, pw);
                 } else {
                     MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.', platform: ""});
                 }
             });
         } else {
-            sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback);                    
+            sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback, null);                    
         }
     }
 
-    function sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback)  {
+    function sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback, secondPassword)  {
         var account = MyWallet.getHDWallet().getAccount(accountIdx);
         var key = MyWallet.generateNewKey();
         var address = key.pub.getAddress().toString();
         var privateKey = key.toWIF();
+
         MyWallet.setLegacyAddressTag(address, 2);
+
+
         MyWallet.setLegacyAddressLabel(
             address, 
             email + ' Sent Via Email', 
-            function() {
+            function() {    
                 MyWallet.backupWallet('update', function(unspent_outputs) {
                     MyWallet.sendEvent("msg", {type: "info", message: 'Generated new Bitcoin Address ' + address, platform: ""});
-
                     MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function () {
                         var account = MyWallet.getHDWallet().getAccount(accountIdx);
-                        var extendedPrivateKey = MyWallet.decryptSecretWithSecondPasswordIfNeeded(account.extendedPrivateKey);
+                        var extendedPrivateKey = null;
+                        if (secondPassword != null) {
+                            extendedPrivateKey = MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, secondPassword);
+                        } else {
+                            extendedPrivateKey = account.extendedPrivateKey;
+                        }
                         var tx = MyWallet.getHDWallet().getAccount(accountIdx).createTx(address, value, fixedFee, unspent_outputs, extendedPrivateKey);
 
                         BlockchainAPI.sendViaEmail(email, tx, privateKey, function (data) {
