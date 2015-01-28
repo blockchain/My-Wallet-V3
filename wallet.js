@@ -2180,7 +2180,15 @@ var MyWallet = new function() {
                 var account = MyWallet.getHDWallet().getAccount(accountIdx);
                 var extendedPrivateKey = second_password == null ? account.extendedPrivateKey : MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password);
                 var tx = account.createTx(to, value, fixedFee, unspent_outputs, extendedPrivateKey);
+                var balance = account.getBalance();
                 BlockchainAPI.push_tx(tx, note, function(response) {
+
+                   if (value + fixedFee >= balance) {
+                        account.setUnspentOutputs([]);
+                        successCallback();
+                        return;
+                   }
+
                    MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function () {
                         if (successCallback)
                             successCallback(response);
