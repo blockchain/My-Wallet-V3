@@ -151,8 +151,6 @@ var SharedCoin = new function() {
 
                 console.log('Offer._pollForCompleted()');
 
-                MyWallet.sendEvent("msg", {type: "info", message: 'Waiting For Other Participants To Sign', platform: "iOS"});
-
                 retryAjax({
                     dataType: 'json',
                     type: "POST",
@@ -197,8 +195,6 @@ var SharedCoin = new function() {
             submit : function(success, error, complete) {
                 var self = this;
 
-                MyWallet.sendEvent("msg", {type: "info", message: 'Submitting Offer', platform: "iOS"});
-
                 retryAjax({
                     dataType: 'json',
                     type: "POST",
@@ -225,8 +221,6 @@ var SharedCoin = new function() {
                 var self = this;
 
                 console.log('Offer._pollForProposalID()');
-
-                MyWallet.sendEvent("msg", {type: "info", message: 'Waiting For Other Participants', platform: "iOS"});
 
                 retryAjax({
                     dataType: 'json',
@@ -279,8 +273,6 @@ var SharedCoin = new function() {
                 var self = this;
 
                 console.log('SharedCoin.getProposal()');
-
-                MyWallet.sendEvent("msg", {type: "info", message: 'Fetching Proposal', platform: "iOS"});
 
                 retryAjax({
                     dataType: 'json',
@@ -491,8 +483,6 @@ var SharedCoin = new function() {
                 console.log('Offer.submitInputScripts()');
 
                 var self = this;
-
-                MyWallet.sendEvent("msg", {type: "info", message: 'Submitting Signatures', platform: "iOS"});
 
                 LastSignatureSubmitTime = new Date().getTime();
 
@@ -1248,7 +1238,7 @@ var SharedCoin = new function() {
                                     total_balance += balance;
                                 }
 
-                                MyWallet.sendEvent("msg", {type: "success", message: formatBTC(total_balance) + ' recovered from intermediate addresses', platform: ""});
+                                MyWallet.sendEvent("msg", {type: "success", message: formatBTC(total_balance) + ' recovered from intermediate addresses'});
 
                                 if (total_balance > 0) {
                                     MyWallet.backupWalletDelayed('update', function() {
@@ -1298,7 +1288,7 @@ var SharedCoin = new function() {
                 }, function(e) {
                     self.prop('disabled', false);
                     self.text(original_text);
-                    MyWallet.sendEvent("msg", {type: "error", message: e, platform: ""});
+                    MyWallet.sendEvent("msg", {type: "error", message: e});
                 });
             });
         });
@@ -1350,7 +1340,7 @@ var SharedCoin = new function() {
 
                             MyWallet.disableLogout(false);
 
-                            MyWallet.sendEvent("msg", {type: "error", message: e, platform: ""});
+                            MyWallet.sendEvent("msg", {type: "error", message: e});
 
                             setTimeout(function() {
                                 if (plan && plan.c_stage >= 0) {
@@ -1369,7 +1359,7 @@ var SharedCoin = new function() {
                         var success = function(){
                             el.find('input,select,button').prop('disabled', false);
 
-                            MyWallet.sendEvent("msg", {type: "success", message: 'Sharedcoin Transaction Successfully Completed', platform: ""});
+                            MyWallet.sendEvent("msg", {type: "success", message: 'Sharedcoin Transaction Successfully Completed'});
 
                             MyWallet.disableLogout(false);
 
@@ -1379,10 +1369,10 @@ var SharedCoin = new function() {
                         }
 
                         if (input_value.compareTo(BigInteger.valueOf(SharedCoin.getMinimumOutputValue())) < 0) {
-                            MyWallet.sendEvent("msg", {type: "error", message: 'The Minimum Send Value is ' +  formatPrecision(SharedCoin.getMinimumOutputValue()), platform: ""});
+                            MyWallet.sendEvent("msg", {type: "error", message: 'The Minimum Send Value is ' +  formatPrecision(SharedCoin.getMinimumOutputValue())});
                             return;
                         } else if (input_value.compareTo(BigInteger.valueOf(SharedCoin.getMaximumOutputValue())) > 0) {
-                            MyWallet.sendEvent("msg", {type: "error", message: 'The Maximum Send Value is ' +  formatPrecision(SharedCoin.getMaximumOutputValue()), platform: ""});
+                            MyWallet.sendEvent("msg", {type: "error", message: 'The Maximum Send Value is ' +  formatPrecision(SharedCoin.getMaximumOutputValue())});
                             return;
                         }
 
@@ -1398,8 +1388,6 @@ var SharedCoin = new function() {
                             progressModal.setAddressAndAmount(address, value);
 
                             el.find('input,select,button').prop('disabled', true);
-
-                            MyWallet.sendEvent("msg", {type: "info", message: 'Constructing Plan. Please Wait.', platform: "iOS"});
 
                             var timeSinceLastSubmit = new Date().getTime() - LastSignatureSubmitTime;
 
@@ -1432,8 +1420,6 @@ var SharedCoin = new function() {
             }
         }
 
-        MyWallet.sendEvent("msg", {type: "info", message: 'Fetching SharedCoin Info', platform: "iOS"});
-
         retryAjax({
             dataType: 'json',
             type: "POST",
@@ -1463,14 +1449,14 @@ var SharedCoin = new function() {
 
                     repetitionsSelect.val(obj.recommended_iterations);
                 } catch (e) {
-                    MyWallet.sendEvent("msg", {type: "error", message: e, platform: ""});
+                    MyWallet.sendEvent("msg", {type: "error", message: e});
                 }
 
                 enableSendButton();
             },
             error : function(e) {
                 send_button.prop('disabled', true);
-                MyWallet.sendEvent("msg", {type: "error", message: e.responseText, platform: ""});
+                MyWallet.sendEvent("msg", {type: "error", message: e.responseText});
             }
         });
 

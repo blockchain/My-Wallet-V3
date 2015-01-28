@@ -7,8 +7,6 @@ var BlockchainAPI = new function() {
     }
 
     this.get_history = function(success, error, tx_filter, offset, n) {
-        MyWallet.sendEvent("msg", {type: "info", message: 'Loading transactions', platform: "iOS"});
-
         var clientTime=(new Date()).getTime();
 
         if (!tx_filter) tx_filter = 0;
@@ -54,7 +52,7 @@ var BlockchainAPI = new function() {
             timeout: AjaxTimeout,
             success: function(obj) {
                 if (obj.error != null) {
-                    MyWallet.sendEvent("msg", {type: "error", message: obj.error, platform: ""});
+                    MyWallet.sendEvent("msg", {type: "error", message: obj.error});
                 }
 
                 MyWallet.handleNTPResponse(obj, clientTime);
@@ -67,7 +65,7 @@ var BlockchainAPI = new function() {
 
                     success(obj);
                 } catch (e) {
-                    MyWallet.sendEvent("msg", {type: "error", message: e, platform: ""});
+                    MyWallet.sendEvent("msg", {type: "error", message: e});
 
                     error();
                 }
@@ -75,9 +73,9 @@ var BlockchainAPI = new function() {
             error : function(data) {
 
                 if (data.responseText)
-                    MyWallet.sendEvent("msg", {type: "error", message: data.responseText, platform: ""});
+                    MyWallet.sendEvent("msg", {type: "error", message: data.responseText});
                 else
-                    MyWallet.sendEvent("msg", {type: "error", message: 'Error Downloading Wallet Balance', platform: ""});
+                    MyWallet.sendEvent("msg", {type: "error", message: 'Error Downloading Wallet Balance'});
 
                 error();
             }
@@ -114,7 +112,7 @@ var BlockchainAPI = new function() {
             timeout: AjaxTimeout,
             success: function(obj) {
                 if (obj.error != null) {
-                    MyWallet.sendEvent("msg", {type: "error", message: obj.error, platform: ""});
+                    MyWallet.sendEvent("msg", {type: "error", message: obj.error});
                 }
 
                 MyWallet.handleNTPResponse(obj, clientTime);
@@ -122,7 +120,7 @@ var BlockchainAPI = new function() {
                 try {
                     success(obj);
                 } catch (e) {
-                    MyWallet.sendEvent("msg", {type: "error", message: e, platform: ""});
+                    MyWallet.sendEvent("msg", {type: "error", message: e});
 
                     error();
                 }
@@ -130,9 +128,9 @@ var BlockchainAPI = new function() {
             error : function(data) {
 
                 if (data.responseText)
-                    MyWallet.sendEvent("msg", {type: "error", message: data.responseText, platform: ""});
+                    MyWallet.sendEvent("msg", {type: "error", message: data.responseText});
                 else
-                    MyWallet.sendEvent("msg", {type: "error", message: 'Error Restoring Wallet', platform: ""});
+                    MyWallet.sendEvent("msg", {type: "error", message: 'Error Restoring Wallet'});
 
                 error();
             }
@@ -169,7 +167,7 @@ var BlockchainAPI = new function() {
             timeout: AjaxTimeout,
             success: function(obj) {
                 if (obj.error != null) {
-                    MyWallet.sendEvent("msg", {type: "error", message: obj.error, platform: ""});
+                    MyWallet.sendEvent("msg", {type: "error", message: obj.error});
                 }
 
                 MyWallet.handleNTPResponse(obj, clientTime);
@@ -177,7 +175,7 @@ var BlockchainAPI = new function() {
                 try {
                     success(obj);
                 } catch (e) {
-                    MyWallet.sendEvent("msg", {type: "error", message: e, platform: ""});
+                    MyWallet.sendEvent("msg", {type: "error", message: e});
 
                     error();
                 }
@@ -185,9 +183,9 @@ var BlockchainAPI = new function() {
             error : function(data) {
 
                 if (data.responseText)
-                    MyWallet.sendEvent("msg", {type: "error", message: data.responseText, platform: ""});
+                    MyWallet.sendEvent("msg", {type: "error", message: data.responseText});
                 else
-                    MyWallet.sendEvent("msg", {type: "error", message: 'Error Restoring Wallet', platform: ""});
+                    MyWallet.sendEvent("msg", {type: "error", message: 'Error Restoring Wallet'});
 
                 error();
             }
@@ -196,9 +194,6 @@ var BlockchainAPI = new function() {
 
     //Get the balances of multi addresses (Used for archived)
     this.get_balances = function(addresses, success, error) {
-        MyWallet.sendEvent("msg", {type: "info", message: 'Getting Balances', platform: "iOS"});
-            
-
         $.ajax({
             type: "POST",
             url: this.getRootURL() + 'multiaddr',
@@ -222,8 +217,6 @@ var BlockchainAPI = new function() {
 
     //Get the balance of an array of addresses
     this.get_balance = function(addresses, success, error) {
-        MyWallet.sendEvent("msg", {type: "info", message: 'Getting Balance', platform: "iOS"});
-
         this.get_balances(addresses, function(obj){
             var balance = 0;
             for (var key in obj) {
@@ -242,11 +235,11 @@ var BlockchainAPI = new function() {
         }
 
         MyWallet.securePost("wallet"+extra, { length : (value+'').length, payload : value+'', method : method }, function(data) {
-            MyWallet.sendEvent("msg", {type: "success", message: method + '-success' + data, platform: ""});
+            MyWallet.sendEvent("msg", {type: "success", message: method + '-success' + data});
 
             if (success) success();
         }, function(data) {
-            MyWallet.sendEvent("msg", {type: "error", message: method + '-error' + data.responseText, platform: ""});
+            MyWallet.sendEvent("msg", {type: "error", message: method + '-error' + data.responseText});
 
             if (error) error();
         });
@@ -329,7 +322,7 @@ var BlockchainAPI = new function() {
             if (successCallback)
                 successCallback(google_secret_url);
         }, function(data) {
-            MyWallet.sendEvent("msg", {type: "error", message: data.responseText, platform: ""});
+            MyWallet.sendEvent("msg", {type: "error", message: data.responseText});
             if (errorCallback)
                 errorCallback(data.responseText);
         });
@@ -349,20 +342,20 @@ var BlockchainAPI = new function() {
 
     this.verifyEmail = function(code, successCallback, errorCallback) {
         MyWallet.securePost("wallet", { payload:code, length : code.length, method : 'verify-email' }, function(data) {
-            MyWallet.sendEvent("msg", {type: "success", message: data, platform: ""});
+            MyWallet.sendEvent("msg", {type: "success", message: data});
             if (successCallback) successCallback(data);
         }, function(data) {
-            MyWallet.sendEvent("msg", {type: "error", message: data.responseText, platform: ""});
+            MyWallet.sendEvent("msg", {type: "error", message: data.responseText});
             if (errorCallback) errorCallback();
         });
     }
 
     this.verifyMobile = function(code, successCallback, errorCallback) {
         MyWallet.securePost("wallet", { payload:code, length : code.length, method : 'verify-sms' }, function(data) {
-            MyWallet.sendEvent("msg", {type: "success", message: data, platform: ""});
+            MyWallet.sendEvent("msg", {type: "success", message: data});
             if (successCallback) successCallback(data);
         }, function(data) {
-            MyWallet.sendEvent("msg", {type: "error", message: data.responseText, platform: ""});
+            MyWallet.sendEvent("msg", {type: "error", message: data.responseText});
             if (errorCallback) errorCallback();
         });
     }
@@ -418,7 +411,7 @@ var BlockchainAPI = new function() {
     }
 
     this.get_ticker = function(successCallback, errorCallback) {
-        MyWallet.sendEvent("msg", {type: "info", message: 'Getting Ticker Data', platform: ""});
+        MyWallet.sendEvent("msg", {type: "info", message: 'Getting Ticker Data'});
 
         $.ajax({
             type: "GET",
@@ -443,9 +436,9 @@ var BlockchainAPI = new function() {
 
         }, function(data) {
             if (data.responseText)
-                MyWallet.sendEvent("msg", {type: "error", message: data.responseText, platform: ""});
+                MyWallet.sendEvent("msg", {type: "error", message: data.responseText});
             else
-                MyWallet.sendEvent("msg", {type: "error", message: 'Error Downloading Account Settings', platform: ""});
+                MyWallet.sendEvent("msg", {type: "error", message: 'Error Downloading Account Settings'});
 
             if (errorCallback) errorCallback();
         });
@@ -453,8 +446,6 @@ var BlockchainAPI = new function() {
 
 
     this.resolve_firstbits = function(addr, success, error) {
-        MyWallet.sendEvent("msg", {type: "info", message: 'Querying Firstbits', platform: "iOS"});
-
         $.ajax({
             type: "GET",
             url: this.getRootURL() + 'q/resolvefirstbits/'+addr,
@@ -473,8 +464,6 @@ var BlockchainAPI = new function() {
     }
 
     this.get_rejection_reason = function(hexhash, got_reason, not_rejected, error) {
-        MyWallet.sendEvent("msg", {type: "info", message: 'Querying Rejection Reason', platform: "iOS"});
-
         $.ajax({
             type: "GET",
             url: this.getRootURL() + 'q/rejected/'+hexhash,
@@ -523,7 +512,7 @@ var BlockchainAPI = new function() {
                 }
             }
                         
-            MyWallet.sendEvent("msg", {type: "info", message: 'Pushing Transaction', platform: ""});
+            MyWallet.sendEvent("msg", {type: "info", message: 'Pushing Transaction'});
 
             var transactions = MyWallet.getTransactions();
 
@@ -542,21 +531,21 @@ var BlockchainAPI = new function() {
                     MyWallet.get_history(function() {
                         if (transactions.length == 0 || transactions[0].txIndex == first_tx_index) {
                             BlockchainAPI.get_rejection_reason(tx_hash, function(reason) {
-                                MyWallet.sendEvent("msg", {type: "error", message: reason, platform: ""});
+                                MyWallet.sendEvent("msg", {type: "error", message: reason});
                             }, function() {
                                 if (transactions.length == 0 || transactions[0].txIndex == first_tx_index) {
                                     MyWallet.get_history();
                                 }
                             }, function() {
                                 if (transactions.length == 0 || transactions[0].txIndex == first_tx_index) {
-                                    MyWallet.sendEvent("msg", {type: "error", message: 'Unknown Error Pushing Transaction', platform: ""});
+                                    MyWallet.sendEvent("msg", {type: "error", message: 'Unknown Error Pushing Transaction'});
                                 }
                             });
                         } else {
                             playSound('beep');
                         }
                     }, function() {
-                        MyWallet.sendEvent("msg", {type: "error", message: 'Unable to determine if transaction was submitted. Please re-login.', platform: ""});
+                        MyWallet.sendEvent("msg", {type: "error", message: 'Unable to determine if transaction was submitted. Please re-login.'});
                     });
                 }
 
@@ -690,7 +679,7 @@ var BlockchainAPI = new function() {
                     }
 
                     if (obj.notice != null) {
-                        MyWallet.sendEvent("msg", {type: "success", message: obj.notice, platform: ""});
+                        MyWallet.sendEvent("msg", {type: "success", message: obj.notice});
                     }
 
                     //Save the unspent cache

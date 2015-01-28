@@ -345,8 +345,6 @@ function startTxUI(el, type, pending_transaction, dont_ask_for_anon) {
                     //We have the transaction ready to send, check if were online or offline
                     var btn = self.modal.find('.btn.btn-primary');
 
-                    MyWallet.sendEvent("msg", {type: "info", message: 'Checking Connectivity', platform: "iOS"});
-
                     $.ajax({
                         timeout: 60000,
                         type: "GET",
@@ -851,7 +849,7 @@ function initNewTx() {
                                     throw 'Strange Script';
 
                             } catch(e) {
-                                MyWallet.sendEvent("msg", {type: "error", message: 'Error Saving Wallet: ' + e, platform: ""}); //Not a fatal error
+                                MyWallet.sendEvent("msg", {type: "error", message: 'Error Saving Wallet: ' + e}); //Not a fatal error
                                 continue;
                             }
 
@@ -985,7 +983,7 @@ function initNewTx() {
                             }
                         } catch (e) {
                             //An error, but probably recoverable
-                            MyWallet.sendEvent("msg", {type: "error", message: e, platform: ""});
+                            MyWallet.sendEvent("msg", {type: "error", message: e});
                         }
                     }
 
@@ -1492,7 +1490,7 @@ function initNewTx() {
             console.log(e);
 
             if(e) {
-                MyWallet.sendEvent("msg", {type: "error", message: e, platform: ""});
+                MyWallet.sendEvent("msg", {type: "error", message: e});
             }
         },
         on_begin_signing : function() {
