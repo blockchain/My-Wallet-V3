@@ -1747,7 +1747,7 @@ var MyWallet = new function() {
             }
         }, function(e) {
             if (errorCallback) {
-                errorCallback(e.responseText);
+                errorCallback(e.message || e.responseText);
             }
         }, 0, true);
     }
