@@ -62,11 +62,14 @@ Some events that we need to process:
 | :--- | :--- |
 | `did_multiaddr` | Populate wallet statistics on the UI |
 | `hd_wallets_does_not_exist` | Create an HD wallet |
+| `on_wallet_decrypt_finish` | Get wallet transaction history |
 
 
-To build an HD wallet with an existing legacy wallet, we must initialize after receiving event notification from MyWallet. Calling `initializeHDWallet` with `null` argument creates a new random wallet seed.
+To build an HD wallet with an existing legacy wallet, we must initialize after receiving event notification from MyWallet.
 ```javascript
-MyWallet.initializeHDWallet(null);
+var passphrase = MyWallet.generateHDWalletPassphrase();
+
+MyWallet.initializeHDWallet(passphrase, null, null, _successFun, _errorFun);
 ```
 
 
@@ -82,6 +85,13 @@ MyWallet.fetchWalletJSON(guid, null, null, pass, twoFactorCode,
 // Do stuff with the wallet
 var LegacyAddresses = MyWallet.getLegacyActiveAddresses();
 ```
+
+In order to fetch the wallet history, make a call to `get_history`:
+```javascript
+MyWallet.get_history(_successFun, _errorFun);
+```
+
+`get_history` will trigger the `did_multiaddr` event on completion, so the wallet stats and display can be updated.
 
 
 
