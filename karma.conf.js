@@ -4,7 +4,7 @@ module.exports = function(config) {
     
     frameworks: ['jasmine'],
     
-    browsers : ['Chrome'], // ['PhantomJS']
+    browsers : ['Chrome'],
     
     preprocessors: {
       '**/*.coffee': ['coffee']
@@ -46,7 +46,6 @@ module.exports = function(config) {
     
     plugins : [
             'karma-chrome-launcher',
-            'karma-phantomjs-launcher',
             'karma-jasmine',
             'karma-coffee-preprocessor'
             ]
