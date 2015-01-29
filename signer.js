@@ -1488,10 +1488,6 @@ function initNewTx() {
     pending_transaction.addListener({
         on_error : function(e) {
             console.log(e);
-
-            if(e) {
-                MyWallet.sendEvent("msg", {type: "error", message: e});
-            }
         },
         on_begin_signing : function() {
             this.start = new Date().getTime();
