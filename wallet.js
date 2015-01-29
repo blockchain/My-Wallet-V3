@@ -1730,7 +1730,7 @@ var MyWallet = new function() {
 
             account.setUnspentOutputs(obj.unspent_outputs);
 
-            MyWallet.sendEvent('hw_wallet_balance_updated');
+            MyWallet.sendEvent('hd_wallet_balance_updated');
             if (successCallback) {
                 successCallback(obj.unspent_outputs);
             }
