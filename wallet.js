@@ -1448,7 +1448,7 @@ var MyWallet = new function() {
     }
 
     this.setLabelForAccountAddress = function(accountIdx, addressIdx, label, success, error) {
-        if (! isAlphaNumericSpace(label)) {
+        if (label != "" && ! isAlphaNumericSpace(label)) {
             error();           
         } else {
             MyWallet.getHDWallet().getAccount(accountIdx).setLabelForAddress(addressIdx, label);
