@@ -1241,10 +1241,10 @@ var MyWallet = new function() {
     function wsSuccess(ws) {
         var last_on_change = null;
 
-        ws.onmessage = function(e) {
+        ws.onmessage = function(message) {
 
             try {
-                var obj = $.parseJSON(e.data);
+                var obj = $.parseJSON(message.data);
 
                 if (obj.op == 'on_change') {
                     var old_checksum = generatePayloadChecksum();
@@ -1305,9 +1305,12 @@ var MyWallet = new function() {
                 }
 
             } catch(e) {
-                console.log(e);
-
-                console.log(e.data);
+                if (message && message.data) {
+                    console.log('WebSocket error: ' + message.data);
+                }
+                else {
+                    console.log(e);
+                }
             }
         };
 
@@ -3196,15 +3199,25 @@ var MyWallet = new function() {
         success();
     }
 
-    this.getHistoryAndParseMultiAddressJSON = function() {
-        ///Get the list of transactions from the http API
-        MyWallet.get_history(null, function() {
+    /**
+     * Get the list of transactions from the http API.
+     * @param {function()=} success Success callback function.
+     */
+    this.getHistoryAndParseMultiAddressJSON = function(_success) {
+        var success = function() {
+            _success && _success();
+        };
+        
+        var error = function() {
             MyStore.get('multiaddr', function(multiaddrjson) {
                 if (multiaddrjson != null) {
                     parseMultiAddressJSON($.parseJSON(multiaddrjson), true, false);
+                    _success && _success();
                 }
             });
-        });
+        };
+        
+        MyWallet.get_history(success, error);
     }
 
     function checkWalletChecksum(payload_checksum, success, error) {
@@ -3247,13 +3260,15 @@ var MyWallet = new function() {
         });
     }
 
-    function internalRestoreWallet(success, error) {
+    function internalRestoreWallet(success, error, decrypt_success) {
         if (encrypted_wallet_data == null || encrypted_wallet_data.length == 0) {
             error('No Wallet Data To Decrypt');
             return;
         }
 
         MyWallet.decryptWallet(encrypted_wallet_data, password, function(obj, rootContainer) {
+            decrypt_success && decrypt_success();
+
             try {
                 sharedKey = obj.sharedKey;
 
@@ -3414,11 +3429,13 @@ var MyWallet = new function() {
      * @param {function(number)} needs_two_factor_code Require 2 factor code callback function.
      * @param {function()} wrong_two_factor_code 2 factor code incorrect callback function.
      * @param {function()} other_error Other error callback function.
+     * @param {function()=} fetch_success Called when wallet was fetched successfully.
+     * @param {function()=} decrypt_success Called when wallet was decrypted successfully.
      */
-    this.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_required, other_error) {
+    this.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_required, other_error, fetch_success, decrypt_success) {
   
         if (didSetGuid) {
-            MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error);
+            MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error, decrypt_success);
             return;
         }
  
@@ -3450,6 +3467,8 @@ var MyWallet = new function() {
             data : data,
             timeout: 60000,
             success: function(obj) {
+                fetch_success && fetch_success();
+
                 MyWallet.handleNTPResponse(obj, clientTime);
 
                 if (!obj.guid) {
@@ -3504,7 +3523,7 @@ var MyWallet = new function() {
                 }
 
                 didSetGuid = true;
-                MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error);
+                MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error, decrypt_success);
             },
             error : function(e) {
                 if(e.responseJSON && e.responseJSON.initial_error && !e.responseJSON.authorization_required) {
@@ -3518,6 +3537,7 @@ var MyWallet = new function() {
                         //But we can use the local cache
 
                         if (local_guid == user_guid && local_payload) {
+                            fetch_success && fetch_success();
                             MyWallet.setEncryptedWalletData(local_payload);
 
                             //Generate a new Checksum
@@ -3526,7 +3546,7 @@ var MyWallet = new function() {
                             auth_type = 0;
 
                             didSetGuid = true;
-                            MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error);
+                            MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error, decrypt_success);
                         }  else {
                             MyWallet.sendEvent('did_fail_set_guid');
 
@@ -3598,7 +3618,7 @@ var MyWallet = new function() {
         });
     }
 
-    this.restoreWallet = function(pw, two_factor_auth_key, success, wrong_two_factor_code, other_error) {
+    this.restoreWallet = function(pw, two_factor_auth_key, success, wrong_two_factor_code, other_error, decrypt_success) {
 
         if (isInitialized || isRestoringWallet) {
             return;
@@ -3649,7 +3669,7 @@ var MyWallet = new function() {
                                 isRestoringWallet = false;
 
                                 didDecryptWallet(success);
-                            }, _error);
+                            }, _error, decrypt_success);
                         } catch (e) {
                             _error(e);
                         }
@@ -3664,7 +3684,7 @@ var MyWallet = new function() {
                     isRestoringWallet = false;
 
                     didDecryptWallet(success);
-                }, _error);
+                }, _error, decrypt_success);
             }
         } catch (e) {
             _error(e);
@@ -3858,8 +3878,6 @@ var MyWallet = new function() {
 
     this.decryptWallet = function(data, password, success, error) {
         try {
-            MyWallet.sendEvent('loading_start_decrypt_wallet');
-
             var _success = function (root, obj) {
                 success && success(root, obj);
             }
