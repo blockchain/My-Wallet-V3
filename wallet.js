@@ -567,6 +567,9 @@ var MyWallet = new function() {
             dataType: dataType,
             type: "POST",
             timeout: 60000,
+            xhrFields: {
+               withCredentials: true
+            },
             url: BlockchainAPI.getRootURL() + url,
             data : clone,
             success: success,
