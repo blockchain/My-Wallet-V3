@@ -3464,6 +3464,11 @@ var MyWallet = new function() {
             type: "GET",
             dataType: 'json',
             url: BlockchainAPI.getRootURL() + 'wallet/'+user_guid,
+            // contentType: "application/json; charset=utf-8",
+            xhrFields: {
+                withCredentials: true
+            },
+            crossDomain: true,
             data : data,
             timeout: 60000,
             success: function(obj) {
@@ -3584,10 +3589,12 @@ var MyWallet = new function() {
 
         $.ajax({
             dataType: 'json',
+            // contentType: "application/json; charset=utf-8",
             data: {format : 'plain'},
             xhrFields: {
                 withCredentials: true
             },
+            crossDomain: true,
             type: "GET",
             url: BlockchainAPI.getRootURL() + 'wallet/poll-for-session-guid',
             success: function (obj) {
@@ -3652,6 +3659,11 @@ var MyWallet = new function() {
                 $.ajax({
                     timeout: 60000,
                     type: "POST",
+                    // contentType: "application/json; charset=utf-8",
+                    xhrFields: {
+                        withCredentials: true
+                    },
+                    crossDomain: true,
                     url: BlockchainAPI.getRootURL() + "wallet",
                     data :  { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : MyWallet.getAPICode()},
                     success: function(data) {
