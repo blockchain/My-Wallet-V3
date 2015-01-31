@@ -60,54 +60,54 @@ var MyWallet = new function() {
     var MyWallet = this;
 
     var languageCodeToLanguage = {
-      "de": "German",
-      "hi": "Hindi",
-      "no": "Norwegian",
-      "ru": "Russian",
-      "pt": "Portuguese",
-      "bg": "Bulgarian",
-      "fr": "French",
-      "zh-cn": "Chinese Simplified",
-      "hu": "Hungarian",
-      "sl": "Slovenian",
-      "id": "Indonesian",
-      "sv": "Swedish",
-      "ko": "Korean",
-      "el": "Greek",
-      "en": "English",
-      "it": "Italiano",
-      "es": "Spanish",
-      "vi": "Vietnam",
-      "th": "Thai",
-      "ja": "Japanese",
-      "pl": "Polski",
-      "da": "Danish",
-      "ro": "Romanian",
-      "nl": "Dutch",
-      "tr": "Turkish"
+        "de": "German",
+        "hi": "Hindi",
+        "no": "Norwegian",
+        "ru": "Russian",
+        "pt": "Portuguese",
+        "bg": "Bulgarian",
+        "fr": "French",
+        "zh-cn": "Chinese Simplified",
+        "hu": "Hungarian",
+        "sl": "Slovenian",
+        "id": "Indonesian",
+        "sv": "Swedish",
+        "ko": "Korean",
+        "el": "Greek",
+        "en": "English",
+        "it": "Italiano",
+        "es": "Spanish",
+        "vi": "Vietnam",
+        "th": "Thai",
+        "ja": "Japanese",
+        "pl": "Polski",
+        "da": "Danish",
+        "ro": "Romanian",
+        "nl": "Dutch",
+        "tr": "Turkish"
     };
     var currencyCodeToCurrency = {
-      "ISK" : "lcelandic Króna",
-      "HKD" : "Hong Kong Dollar",
-      "TWD" : "New Taiwan dollar",
-      "CHF" : "Swiss Franc",
-      "EUR" : "Euro",
-      "DKK" : "Danish Krone",
-      "CLP" : "Chilean, Peso",
-      "USD" : "U.S. dollar",
-      "CAD" : "Canadian Dollar",
-      "CNY" : "Chinese yuan",
-      "THB" : "Thai baht",
-      "AUD" : "Australian Dollar",
-      "SGD" : "Singapore Dollar",
-      "KRW" : "South Korean Won",
-      "JPY" : "Japanese Yen",
-      "PLN" : "Polish Zloty",
-      "GBP" : "Great British Pound",
-      "SEK" : "Swedish Krona",
-      "NZD" : "New Zealand Dollar",
-      "BRL" : "Brazil Real",
-      "RUB" : "Russian Ruble"
+        "ISK" : "lcelandic Króna",
+        "HKD" : "Hong Kong Dollar",
+        "TWD" : "New Taiwan dollar",
+        "CHF" : "Swiss Franc",
+        "EUR" : "Euro",
+        "DKK" : "Danish Krone",
+        "CLP" : "Chilean, Peso",
+        "USD" : "U.S. dollar",
+        "CAD" : "Canadian Dollar",
+        "CNY" : "Chinese yuan",
+        "THB" : "Thai baht",
+        "AUD" : "Australian Dollar",
+        "SGD" : "Singapore Dollar",
+        "KRW" : "South Korean Won",
+        "JPY" : "Japanese Yen",
+        "PLN" : "Polish Zloty",
+        "GBP" : "Great British Pound",
+        "SEK" : "Swedish Krona",
+        "NZD" : "New Zealand Dollar",
+        "BRL" : "Brazil Real",
+        "RUB" : "Russian Ruble"
     };
 
     var demo_guid = 'abcaa314-6f67-6705-b384-5d47fbe9d7cc';
@@ -589,7 +589,7 @@ var MyWallet = new function() {
     };
 
     /**
-    * @param {st ring} addr bitcoin address
+     * @param {st ring} addr bitcoin address
      * @param {string} label label
      * @return {boolean} success or not
      */
@@ -663,7 +663,7 @@ var MyWallet = new function() {
             type: "POST",
             timeout: 60000,
             xhrFields: {
-               withCredentials: true
+                withCredentials: true
             },
             url: BlockchainAPI.getRootURL() + url,
             data : clone,
@@ -790,7 +790,7 @@ var MyWallet = new function() {
             var alphaIndex = alphabet.indexOf(input[i]);
 
             bi = bi.add(BigInteger.valueOf(alphaIndex)
-                .multiply(base.pow(input.length - 1 -i)));
+                        .multiply(base.pow(input.length - 1 -i)));
 
             // This counts leading zero bytes
             if (input[i] == "1") leadingZerosNum++;
@@ -822,7 +822,7 @@ var MyWallet = new function() {
             getPassword(function(pw, correct_password, wrong_password) {
                 if (MyWallet.validateSecondPassword(pw)) {
                     correct_password();
-                
+
                     for (var key in addresses) {
 
                         var addr = addresses[key];
@@ -1044,9 +1044,9 @@ var MyWallet = new function() {
         case 'pubkeyhash':
             return Bitcoin.crypto.hash160(script.chunks[1]);
         case 'pubkey':
-          throw new Error("Script does not contain pubkey.");
+            throw new Error("Script does not contain pubkey.");
         default:
-          throw new Error("Encountered non-standard scriptSig");
+            throw new Error("Encountered non-standard scriptSig");
         }
     };
 
@@ -1170,11 +1170,11 @@ var MyWallet = new function() {
         var decoded_base_58 = second_password == null ? base58 : MyWallet.decryptSecretWithSecondPassword(encoded, second_password);
 
         var decoded_key = new ECKey(new BigInteger.fromBuffer(decoded_base_58), opts.compressed);
-        
+
         if (addr != MyWallet.getUnCompressedAddressString(key) && addr != MyWallet.getCompressedAddressString(key)) {
             throw 'Decoded Key address does not match generated address';
         }
- 
+
         if (addr != MyWallet.getUnCompressedAddressString(key) && addr != MyWallet.getCompressedAddressString(key)) {
             throw 'Decoded Key address does not match generated address';
         }
@@ -1644,7 +1644,7 @@ var MyWallet = new function() {
     };
     
     this.getLabeledReceivingAddressesForAccount = function(accountIdx) {
-      return MyWallet.getHDWallet().getAccount(accountIdx).getLabeledReceivingAddresses();
+        return MyWallet.getHDWallet().getAccount(accountIdx).getLabeledReceivingAddresses();
     };
 
     /**
@@ -1680,116 +1680,116 @@ var MyWallet = new function() {
     };
     
     this.processTransaction = function(tx) {
-      // console.log(JSON.stringify(tx))
-      var transaction = {from: {account: null, legacyAddresses: null, externalAddresses: null},
-                                         to: {account: null, legacyAddresses: null, externalAddresses: null},
-                                        fee: 0};
-      var isOrigin = false;
-      transaction.intraWallet = true;
-      for (var i = 0; i < tx.inputs.length; ++i) {
-          var output = tx.inputs[i].prev_out;
-          if (!output || !output.addr)
-              continue;
+        // console.log(JSON.stringify(tx))
+        var transaction = {from: {account: null, legacyAddresses: null, externalAddresses: null},
+                           to: {account: null, legacyAddresses: null, externalAddresses: null},
+                           fee: 0};
+        var isOrigin = false;
+        transaction.intraWallet = true;
+        for (var i = 0; i < tx.inputs.length; ++i) {
+            var output = tx.inputs[i].prev_out;
+            if (!output || !output.addr)
+                continue;
 
-          if (MyWallet.isActiveLegacyAddress(output.addr)) {
-              isOrigin = true;
-              if (transaction.from.legacyAddresses == null)
-                  transaction.from.legacyAddresses = [];
-              transaction.from.legacyAddresses.push({address: output.addr, amount: output.value});
-              transaction.fee += output.value;
-          } else {
-              for (var j in MyWallet.getAccounts()) {
-                  var account = MyWallet.getHDWallet().getAccount(j);
-                  if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
-                      if (! isOrigin) {
-                          isOrigin = true;
-                          transaction.from.account = {index: parseInt(j), amount: output.value};
-                          transaction.fee += output.value;
-                      } else {
-                          if (transaction.from.externalAddresses == null ||
-                              output.value > transaction.from.externalAddresses.amount) {
-                              transaction.from.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
-                             }
-                          transaction.fee += output.value;
-                      }
-                      break;
-                  }
-              }
-
-              if (! isOrigin) {
-                  if (transaction.from.externalAddresses == null ||
-                      output.value > transaction.from.externalAddresses.amount) {
-                      transaction.from.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
-                  }
-                  transaction.fee += output.value;
-                  transaction.intraWallet = false;
-              }
-          }
-      }
-
-      for (var i = 0; i < tx.out.length; ++i) {
-          var output = tx.out[i];
-          if (!output || !output.addr)
-              continue;
-
-          if (MyWallet.isActiveLegacyAddress(output.addr)) {
-              if (transaction.to.legacyAddresses == null)
-                  transaction.to.legacyAddresses = [];
-
-              var isFromLegacyAddresses = false;
-              for (var j in transaction.from.legacyAddresses) {
-                var addressAmount = transaction.from.legacyAddresses[j];
-                if (addressAmount.address == output.addr) {
-                  addressAmount.amount -= output.value;
-                  isFromLegacyAddresses = true;
+            if (MyWallet.isActiveLegacyAddress(output.addr)) {
+                isOrigin = true;
+                if (transaction.from.legacyAddresses == null)
+                    transaction.from.legacyAddresses = [];
+                transaction.from.legacyAddresses.push({address: output.addr, amount: output.value});
+                transaction.fee += output.value;
+            } else {
+                for (var j in MyWallet.getAccounts()) {
+                    var account = MyWallet.getHDWallet().getAccount(j);
+                    if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
+                        if (! isOrigin) {
+                            isOrigin = true;
+                            transaction.from.account = {index: parseInt(j), amount: output.value};
+                            transaction.fee += output.value;
+                        } else {
+                            if (transaction.from.externalAddresses == null ||
+                                output.value > transaction.from.externalAddresses.amount) {
+                                transaction.from.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
+                            }
+                            transaction.fee += output.value;
+                        }
+                        break;
+                    }
                 }
-              }
-              if (! isFromLegacyAddresses) {
-                  transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
-                  transaction.fee -= output.value;               
-              }
-          } else {
-              var toAccountSet = false;
-              for (var j in MyWallet.getAccounts()) {
-                  var account = MyWallet.getHDWallet().getAccount(j);
-                  if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
-                      if (! toAccountSet) {
-                          if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
-                              transaction.from.account.amount -= output.value;
-                          } else {
-                              transaction.to.account = {index: parseInt(j), amount: output.value};                                    
-                          }
-                          toAccountSet = true;
-                          transaction.fee -= output.value;
-                      } else {
-                          if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
-                              transaction.from.account.amount -= output.value;
-                          } else if ((transaction.to.externalAddresses == null ||
-                              output.value > transaction.to.externalAddresses.amount) &&
-                              (transaction.from.account != null ||
-                              transaction.from.legacyAddresses != null)) {
-                              transaction.to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
-                          }
-                          transaction.fee -= output.value;
-                      }
-                      break;
-                  }
-              }
 
-              if (! toAccountSet) {
-                  if ((transaction.to.externalAddresses == null ||
-                      output.value > transaction.to.externalAddresses.amount) &&
-                      (transaction.from.account != null ||
-                      transaction.from.legacyAddresses != null)) {
-                      transaction.to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
-                  }
-                  transaction.fee -= output.value;
-                  transaction.intraWallet = false;
-              }                    
-          }
-      }
+                if (! isOrigin) {
+                    if (transaction.from.externalAddresses == null ||
+                        output.value > transaction.from.externalAddresses.amount) {
+                        transaction.from.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
+                    }
+                    transaction.fee += output.value;
+                    transaction.intraWallet = false;
+                }
+            }
+        }
 
-      if (transaction.from.account == null && transaction.from.legacyAddresses == null) {
+        for (var i = 0; i < tx.out.length; ++i) {
+            var output = tx.out[i];
+            if (!output || !output.addr)
+                continue;
+
+            if (MyWallet.isActiveLegacyAddress(output.addr)) {
+                if (transaction.to.legacyAddresses == null)
+                    transaction.to.legacyAddresses = [];
+
+                var isFromLegacyAddresses = false;
+                for (var j in transaction.from.legacyAddresses) {
+                    var addressAmount = transaction.from.legacyAddresses[j];
+                    if (addressAmount.address == output.addr) {
+                        addressAmount.amount -= output.value;
+                        isFromLegacyAddresses = true;
+                    }
+                }
+                if (! isFromLegacyAddresses) {
+                    transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
+                    transaction.fee -= output.value;
+                }
+            } else {
+                var toAccountSet = false;
+                for (var j in MyWallet.getAccounts()) {
+                    var account = MyWallet.getHDWallet().getAccount(j);
+                    if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
+                        if (! toAccountSet) {
+                            if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
+                                transaction.from.account.amount -= output.value;
+                            } else {
+                                transaction.to.account = {index: parseInt(j), amount: output.value};
+                            }
+                            toAccountSet = true;
+                            transaction.fee -= output.value;
+                        } else {
+                            if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
+                                transaction.from.account.amount -= output.value;
+                            } else if ((transaction.to.externalAddresses == null ||
+                                        output.value > transaction.to.externalAddresses.amount) &&
+                                       (transaction.from.account != null ||
+                                        transaction.from.legacyAddresses != null)) {
+                                transaction.to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
+                            }
+                            transaction.fee -= output.value;
+                        }
+                        break;
+                    }
+                }
+
+                if (! toAccountSet) {
+                    if ((transaction.to.externalAddresses == null ||
+                         output.value > transaction.to.externalAddresses.amount) &&
+                        (transaction.from.account != null ||
+                         transaction.from.legacyAddresses != null)) {
+                        transaction.to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
+                    }
+                    transaction.fee -= output.value;
+                    transaction.intraWallet = false;
+                }
+            }
+        }
+
+        if (transaction.from.account == null && transaction.from.legacyAddresses == null) {
             var fromAmount = 0;
             if (transaction.to.account != null)
                 fromAmount += transaction.to.account.amount;
@@ -1798,26 +1798,26 @@ var MyWallet = new function() {
                 fromAmount += addressAmount.amount;
             }
             transaction.from.externalAddresses.amount = fromAmount;
-      }
+        }
 
-      transaction.hash = tx.hash;
-      
-      /* Typically processTransaction() is called directly after transactions
+        transaction.hash = tx.hash;
+
+        /* Typically processTransaction() is called directly after transactions
          have been downloaded from the server. In that case you could simply 
          reuse tx.confirmations. However processTransaction() can also be 
          called at a later time, e.g. if the user keeps their wallet open
          while waiting for a confirmation. */
-      transaction.confirmations = MyWallet.getConfirmationsForTx(MyWallet.getLatestBlock(), tx);
-      
-      transaction.txTime = tx.time;
-      transaction.note = tx_notes[tx.hash] ? tx_notes[tx.hash] : null;
-      transaction.tags = MyWallet.getTags(tx.hash);
-      transaction.size = tx.size;
-      transaction.tx_index = tx.txIndex;
-      transaction.block_height = tx.blockHeight;
-      transaction.result = tx.result;
-      // console.log(JSON.stringify(transaction))
-      return transaction;
+        transaction.confirmations = MyWallet.getConfirmationsForTx(MyWallet.getLatestBlock(), tx);
+
+        transaction.txTime = tx.time;
+        transaction.note = tx_notes[tx.hash] ? tx_notes[tx.hash] : null;
+        transaction.tags = MyWallet.getTags(tx.hash);
+        transaction.size = tx.size;
+        transaction.tx_index = tx.txIndex;
+        transaction.block_height = tx.blockHeight;
+        transaction.result = tx.result;
+        // console.log(JSON.stringify(transaction))
+        return transaction;
     };
 
     /**
@@ -1964,13 +1964,13 @@ var MyWallet = new function() {
     };
 
     this.recommendedTransactionFeeForAddress = function(address, balance) {
-      // TODO: calculate the correct fee:
-      var obj = initNewTx();
-      if(obj.base_fee) {
-        return parseInt(obj.base_fee);
-      } else {
-        return null;
-      }
+        // TODO: calculate the correct fee:
+        var obj = initNewTx();
+        if(obj.base_fee) {
+            return parseInt(obj.base_fee);
+        } else {
+            return null;
+        }
     };
 
     /**
@@ -2144,7 +2144,6 @@ var MyWallet = new function() {
 
                         BlockchainAPI.sendViaEmail(email, tx, privateKey, function (data) {
                             BlockchainAPI.push_tx(tx, null, function(response) {
-        
                                 var paidToSingle = {email:email, mobile: null, redeemedAt: null, address: address};
                                 paidTo[tx.getId()] = paidToSingle;
 
@@ -2242,7 +2241,7 @@ var MyWallet = new function() {
                 }
             });            
         } else {
-                sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback, null);                    
+            sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback, null);
         }
     };
 
@@ -2298,7 +2297,7 @@ var MyWallet = new function() {
                 }
             });            
         } else {
-                sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback, null);
+            sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback, null);
         }
     };
 
@@ -2392,7 +2391,7 @@ var MyWallet = new function() {
 
         if (mobile.charAt(0) != '+')
             mobile = '+' + mobile;
-            //mobile = '+' + child.find('select[name="sms-country-code"]').val() + mobile;
+        //mobile = '+' + child.find('select[name="sms-country-code"]').val() + mobile;
 
         var miniKeyAddrobj = generateNewMiniPrivateKey();
         var address = miniKeyAddrobj.key.pub.getAddress().toString();
@@ -2414,7 +2413,6 @@ var MyWallet = new function() {
                         BlockchainAPI.sendViaSMS(mobile, tx, privateKey, function (data) {
 
                             BlockchainAPI.push_tx(tx, null, function(response) {
-        
                                 var paidToSingle = {email: null, mobile: mobile, redeemedAt: null, address: address};
                                 paidTo[tx.getId()] = paidToSingle;
 
@@ -2470,13 +2468,13 @@ var MyWallet = new function() {
                 var balance = account.getBalance();
                 BlockchainAPI.push_tx(tx, note, function(response) {
 
-                   if (value + fixedFee >= balance) {
+                    if (value + fixedFee >= balance) {
                         account.setUnspentOutputs([]);
                         successCallback();
                         return;
-                   }
+                    }
 
-                   MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function () {
+                    MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function () {
                         if (successCallback)
                             successCallback(response);
                     }, function(e) {
@@ -2500,13 +2498,13 @@ var MyWallet = new function() {
             getPassword(function(pw, correct_password, wrong_password) {
                 if (MyWallet.validateSecondPassword(pw)) {
                     correct_password();
-                    sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, pw);                    
+                    sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, pw);
                 } else {
                     wrong_password();
                 }
             });            
         } else {
-             sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, null);            
+            sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, null);
         }
     };
 
@@ -2589,15 +2587,15 @@ var MyWallet = new function() {
      */
     this.createAccount = function(label, getPassword, success, error)  {
         if (double_encryption) {
-          getPassword(function(pw, correct_password, incorrect_password) {
-              if (MyWallet.validateSecondPassword(pw)) {
-                  correct_password();
-                  createAccount(label, pw, success, error);                    
-              } else {
-                  incorrect_password();
-                  error();
-              }
-          });            
+            getPassword(function(pw, correct_password, incorrect_password) {
+                if (MyWallet.validateSecondPassword(pw)) {
+                    correct_password();
+                    createAccount(label, pw, success, error);
+                } else {
+                    incorrect_password();
+                    error();
+                }
+            });
         } else {
             createAccount(label, null, success, error);                    
         }
@@ -2613,10 +2611,10 @@ var MyWallet = new function() {
     }
 
     MyWallet.getHDWallet = function() {
-      if (typeof myHDWallet === 'undefined') {
-        return null;
-      }
-      return myHDWallet;
+        if (typeof myHDWallet === 'undefined') {
+            return null;
+        }
+        return myHDWallet;
     };
     
     this.setHDWallet = function(newValue) {
@@ -2741,10 +2739,10 @@ var MyWallet = new function() {
     };
 
     this.deleteHDWallet = function(successCallback, errorCallback) {
-      if(MyWallet.getHDWallet == undefined || MyWallet.getHDWallet() == null) {
-        if (successCallback)
-             successCallback();
-          return;
+        if(MyWallet.getHDWallet == undefined || MyWallet.getHDWallet() == null) {
+            if (successCallback)
+                successCallback();
+            return;
         }
         this.setHDWallet(null);
         MyWallet.backupWallet('update', function() {
@@ -2833,7 +2831,7 @@ var MyWallet = new function() {
      */
     MyWallet.getHDWalletPassphraseString = function(getPassword, successCallback, errorCallback) {
         if (this.getDoubleEncryption()) {
-          getPassword(function(pw, correct_password, incorrect_password) {
+            getPassword(function(pw, correct_password, incorrect_password) {
                 if (MyWallet.validateSecondPassword(pw)) {
                     correct_password();
                     var seed = MyWallet.decryptSecretWithSecondPassword(MyWallet.getHDWallet().getSeedHexString(), pw);
@@ -3037,7 +3035,7 @@ var MyWallet = new function() {
                 successCallback();
         }, function() {
             if (errorCallback)
-               errorCallback();
+                errorCallback();
         });
     };
 
@@ -3052,7 +3050,7 @@ var MyWallet = new function() {
                 successCallback();
         }, function() {
             if (errorCallback)
-               errorCallback();
+                errorCallback();
         });
     };
 
@@ -3070,7 +3068,7 @@ var MyWallet = new function() {
                 successCallback();
         }, function() {
             if (errorCallback)
-               errorCallback();
+                errorCallback();
         });
     };
 
@@ -3082,7 +3080,7 @@ var MyWallet = new function() {
                 successCallback();
         }, function() {
             if (errorCallback)
-               errorCallback();
+                errorCallback();
         });
     };
 
@@ -3098,7 +3096,7 @@ var MyWallet = new function() {
                 successCallback();
         }, function() {
             if (errorCallback)
-               errorCallback();
+                errorCallback();
         });
     };
 
@@ -3113,7 +3111,7 @@ var MyWallet = new function() {
                 successCallback();
         }, function() {
             if (errorCallback)
-               errorCallback();
+                errorCallback();
         });
     };
 
@@ -3123,7 +3121,7 @@ var MyWallet = new function() {
                 successCallback();
         }, function() {
             if (errorCallback)
-               errorCallback();
+                errorCallback();
         });
     };
 
@@ -3133,7 +3131,7 @@ var MyWallet = new function() {
                 successCallback();
         }, function() {
             if (errorCallback)
-               errorCallback();
+                errorCallback();
         });
     };
 
@@ -3143,7 +3141,7 @@ var MyWallet = new function() {
                 successCallback();
         }, function() {
             if (errorCallback)
-               errorCallback();
+                errorCallback();
         });
     };
 
@@ -3153,7 +3151,7 @@ var MyWallet = new function() {
                 successCallback();
         }, function() {
             if (errorCallback)
-               errorCallback();
+                errorCallback();
         });
     };
 
@@ -3163,7 +3161,7 @@ var MyWallet = new function() {
                 successCallback();
         }, function() {
             if (errorCallback)
-               errorCallback();
+                errorCallback();
         });
     };
 
@@ -3179,7 +3177,7 @@ var MyWallet = new function() {
                 successCallback(data);
         }, function() {
             if (errorCallback)
-               errorCallback();
+                errorCallback();
         });
     };
 
@@ -3195,7 +3193,7 @@ var MyWallet = new function() {
                 successCallback(data);
         }, function() {
             if (errorCallback)
-               errorCallback();
+                errorCallback();
         });
     };
 
@@ -3211,7 +3209,7 @@ var MyWallet = new function() {
                 successCallback();
         }, function() {
             if (errorCallback)
-               errorCallback();
+                errorCallback();
         });
     };
     
@@ -3221,7 +3219,7 @@ var MyWallet = new function() {
                 successCallback();
         }, function() {
             if (errorCallback)
-               errorCallback();
+                errorCallback();
         });
     };
 
@@ -3231,7 +3229,7 @@ var MyWallet = new function() {
                 successCallback();
         }, function() {
             if (errorCallback)
-               errorCallback();
+                errorCallback();
         });
     };
 
@@ -3257,7 +3255,7 @@ var MyWallet = new function() {
                 successCallback(google_secret_url);
         }, function(e) {
             if (errorCallback)
-               errorCallback(e);
+                errorCallback(e);
         });
     };
 
@@ -3267,7 +3265,7 @@ var MyWallet = new function() {
                 successCallback();
         }, function() {
             if (errorCallback)
-               errorCallback();
+                errorCallback();
         });
     };
 
@@ -3707,7 +3705,7 @@ var MyWallet = new function() {
                     var key = obj.keys[i];
                     if (!key.addr || !isAlphaNumericSpace(key.addr)) {
                         MyWallet.sendEvent("msg", {type: "error", message: 'Your wallet contains an invalid address. This is a sign of possible corruption, please double check all your BTC is accounted for. Backup your wallet to remove this error.'});
-                            continue;
+                        continue;
                     }
 
                     if (key.tag == 1 || !isAlphaNumericSpace(key.tag)) {
@@ -3846,12 +3844,11 @@ var MyWallet = new function() {
      * @param {function()=} decrypt_success Called when wallet was decrypted successfully.
      */
     this.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_required, other_error, fetch_success, decrypt_success) {
-  
         if (didSetGuid) {
             MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error, decrypt_success);
             return;
         }
- 
+
         if (isInitialized) {
             other_error('Cannot Set GUID Once Initialized');
             return;
@@ -3945,10 +3942,10 @@ var MyWallet = new function() {
             },
             error : function(e) {
                 if(e.responseJSON && e.responseJSON.initial_error && !e.responseJSON.authorization_required) {
-                  other_error(e.responseJSON.initial_error);
-                  return;
+                    other_error(e.responseJSON.initial_error);
+                    return;
                 }
-              
+
                 MyStore.get('guid', function(local_guid) {
                     MyStore.get('payload', function(local_payload) {
                         //Error downloading wallet from server
@@ -4141,13 +4138,13 @@ var MyWallet = new function() {
     }
 
     this.getLocalWalletJson = function() {
-            var obj = null;
-            try {
-                var obj = $.parseJSON(localWalletJsonString);
-                return obj;
-            } catch (e) {
-                return null;
-            }
+        var obj = null;
+        try {
+            var obj = $.parseJSON(localWalletJsonString);
+            return obj;
+        } catch (e) {
+            return null;
+        }
     };
 
     //Can call multiple times in a row and it will backup only once after a certain delay of activity
@@ -4278,17 +4275,17 @@ var MyWallet = new function() {
         var salt = CryptoJS.lib.WordArray.random(16);
 
         var streched_password = MyWallet.stretchPassword(password, salt, pbkdf2_iterations);
-            
+
         var iv = salt; // Use the same value for IV and salt.
         
         var payload = CryptoJS.enc.Utf8.parse(data);
         
         // AES.encrypt takes an optional salt argument, which we don't use.
         var encrypted = CryptoJS.AES.encrypt(payload, streched_password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iv: iv});
-                        
+
         // Add IV to beginning of payload (using hex strings):                                 
         var res = iv.toString() + encrypted.ciphertext.toString();
-      
+
         // Return as Base64:
         return CryptoJS.enc.Hex.parse(res).toString(CryptoJS.enc.Base64);
     };
@@ -4395,13 +4392,13 @@ var MyWallet = new function() {
 
                 try {
                     switch (data.cmd) {
-                        case 'on_decrypt':
-                            success(data.data);
-                            worker.terminate();
-                            break;
-                        case 'on_error': {
-                            throw data.e;
-                        }
+                    case 'on_decrypt':
+                        success(data.data);
+                        worker.terminate();
+                        break;
+                    case 'on_error': {
+                        throw data.e;
+                    }
                     };
                 } catch (e) {
                     worker.terminate();
@@ -4425,21 +4422,21 @@ var MyWallet = new function() {
     //So we call success(data) and if it returns true the data was formatted correctly
     this.decrypt = function(data, password, pbkdf2_iterations, success, error) {
         //iso10126 with pbkdf2_iterations iterations
-     
+
         try {
             /* This is currently (2014-11-28) the default wallet format. 
-               There are two steps to decrypting the wallet. The first step is to
-               stretch the users password using PBKDF2. This essentially generates
-               an AES key which we need for the second step, which is to decrypt 
-               the payload using AES.
+             There are two steps to decrypting the wallet. The first step is to
+             stretch the users password using PBKDF2. This essentially generates
+             an AES key which we need for the second step, which is to decrypt
+             the payload using AES.
 
-               Strechting the password requires a salt. AES requires an IV. We use 
-               the same for both. It's the first 32 hexadecimals characters (i.e. 
-               16 bytes).
-          
-               The conversions between different encodings can probably be achieved
-               with fewer methods.
-            */
+             Strechting the password requires a salt. AES requires an IV. We use
+             the same for both. It's the first 32 hexadecimals characters (i.e.
+             16 bytes).
+
+             The conversions between different encodings can probably be achieved
+             with fewer methods.
+             */
 
             var decoded = decryptAesWithStretchedPassword(data, password, pbkdf2_iterations);
 
@@ -4448,7 +4445,6 @@ var MyWallet = new function() {
                     return decoded;
                 };
             };
-        
         } catch (e) {
             console.log(e);
         }
@@ -4459,9 +4455,9 @@ var MyWallet = new function() {
                 var streched_password = MyWallet.stretchPassword(password, salt, 10);
 
                 var decrypted = CryptoJS.AES.decrypt({ciphertext: payload, salt: ""}, streched_password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iv: iv}); 
-        
+
                 var decoded = decrypted.toString(CryptoJS.enc.Utf8);
-              
+
                 if (decoded != null && decoded.length > 0) {
                     if (success(decoded)) {
                         return decoded;
@@ -4473,9 +4469,9 @@ var MyWallet = new function() {
         }
 
         //Otherwise try the old default settings
-        
+
         // Disabled by Sjors on 2014-11-26, for lack of test wallet.
-        
+
         // try {
         //     var decoded = CryptoJS.AES.decrypt(data, password);
         //
@@ -4489,9 +4485,9 @@ var MyWallet = new function() {
         // }
 
         //OFB iso7816 padding with one iteration (old default)
-        
+
         // Disabled by Sjors on 2014-11-26, because the current CryptoJS doesn't support iso7816. 
-               
+
         // try {
         //     var decoded = CryptoJS.AES.decrypt(data, password, {mode: new CryptoJS.mode.OFB(CryptoJS.pad.Iso7816), iterations : 1});
         //
@@ -4536,7 +4532,7 @@ var MyWallet = new function() {
                 return hasher.encrypt.apply(hasher, arguments);
             };
         };
-      
+
         // need to convert CryptoJS word objects to sjcl word objects
         salt = sjcl.codec.hex.toBits(salt.toString(CryptoJS.enc.Hex));
         var streched_password = sjcl.misc.pbkdf2(password, salt, pbkdf2_iterations, 256, hmacSHA1);
@@ -4555,7 +4551,7 @@ var MyWallet = new function() {
         var salt = iv;
 
         var streched_password = MyWallet.stretchPassword(password, salt, pbkdf2_iterations);
-                  
+
         // Remove the first 16 bytes (IV) from the payload:
         var payload_hex_string = data_hex_string.slice(32);
         
@@ -4598,7 +4594,7 @@ var MyWallet = new function() {
     // Expects a secret (e.g. a private key, xpriv of seed hex) and the second
     // password. Returns the encrypted secret:
     this.encryptSecretWithSecondPassword = function(base58, password) {
-      return MyWallet.encrypt(base58, sharedKey + password, MyWallet.getPbkdf2Iterations());
+        return MyWallet.encrypt(base58, sharedKey + password, MyWallet.getPbkdf2Iterations());
     };
     
     // Expects an ecrypted secret (e.g. a private key, xpriv or seed hex) and
@@ -4674,21 +4670,21 @@ var MyWallet = new function() {
         }
 
         /*
-        //disable old crypto stuff
-        //Otherwise try SHA256 + salt
-        if (Crypto.util.bytesToHex(thash) == dpasswordhash) {
-            dpasswordhash = password_hash;
-            return true;
-        }
+         //disable old crypto stuff
+         //Otherwise try SHA256 + salt
+         if (Crypto.util.bytesToHex(thash) == dpasswordhash) {
+         dpasswordhash = password_hash;
+         return true;
+         }
 
-        //Legacy as I made a bit of a mistake creating a SHA256 hash without the salt included
-        var leghash = Crypto.SHA256(input);
+         //Legacy as I made a bit of a mistake creating a SHA256 hash without the salt included
+         var leghash = Crypto.SHA256(input);
 
-        if (leghash == dpasswordhash) {
-            dpasswordhash = password_hash;
-            return true;
-        }
-        //*/
+         if (leghash == dpasswordhash) {
+         dpasswordhash = password_hash;
+         return true;
+         }
+         //*/
 
         return false;
     };
@@ -4766,13 +4762,13 @@ var MyWallet = new function() {
 
             if (addr.priv != null) {
                 var decryptedpk;
-              
+
                 if(second_password == null) {
-                  decryptedpk = addr.priv;
+                    decryptedpk = addr.priv;
                 } else {
-                  decryptedpk = MyWallet.decryptSecretWithSecondPassword(addr.priv, second_password);
+                    decryptedpk = MyWallet.decryptSecretWithSecondPassword(addr.priv, second_password);
                 }
-              
+
                 var decodedpk = MyWallet.B58LegacyDecode(decryptedpk);
 
                 var privatekey = new ECKey(new BigInteger.fromBuffer(decodedpk), false);
@@ -4793,9 +4789,9 @@ var MyWallet = new function() {
 
             var decryptedpk;
             if(second_password == null) {
-              decryptedpk = account.extendedPrivateKey;
+                decryptedpk = account.extendedPrivateKey;
             } else {
-              decryptedpk = MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password);
+                decryptedpk = MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password);
             }
 
             try {
@@ -4835,11 +4831,10 @@ var MyWallet = new function() {
                 MyWallet.setLanguage(languageCode);
             if (currencyCode)
                 MyWallet.setLocalSymbolCode(currencyCode);
-                        
+
             sharedKey = createdSharedKey;
-                        
+
             success(createdGuid, createdSharedKey, createdPassword);
-            
         }, function (e) {
             error(e);
         });
