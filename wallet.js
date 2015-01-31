@@ -187,15 +187,21 @@ var MyWallet = new function() {
 
     this.didUpgradeToHd = function() {
         return didUpgradeToHd;
-    }
+    };
 
+    /**
+     * @param {string} val api code
+     */
     this.setAPICode = function(val) {
         api_code = val;
-    }
+    };
 
+    /**
+     * @return {string} api code
+     */
     this.getAPICode = function() {
         return api_code;
-    }
+    };
 
     this.setEncryptedWalletData = function(data) {
         if (!data || data.length == 0) {
@@ -218,38 +224,63 @@ var MyWallet = new function() {
         } catch (e) {
             console.log(e);
         }
-    }
+    };
 
+    /**
+     * set mnemonic to be verified and backups wallet
+     */
     this.didVerifyMnemonic = function() {
         mnemonicVerified = true;
         MyWallet.backupWalletDelayed();
-    }
+    };
 
+    /**
+     * @return {boolean} whether mnemonic is verified
+     */
     this.isMnemonicVerified = function() {
         return mnemonicVerified;
-    }
+    };
 
+    /**
+     * Set default Account Index and backup wallet.
+     * @param {number} accountIdx default Account Index
+     */
     this.setDefaultAccountIndex = function(accountIdx) {
         defaultAccountIdx = accountIdx;
         MyWallet.backupWalletDelayed();
-    }
+    };
 
+    /**
+     * @return {number} default Account Index
+     */
     this.getDefaultAccountIndex = function() {
         return defaultAccountIdx;
-    }
+    };
 
+    /**
+     * @return {boolean} is wallet payload synchronized with server
+     */
     this.isSynchronizedWithServer = function() {
         return isSynchronizedWithServer;
-    }
+    };
 
+    /**
+     * @param {number} val auth type
+     */
     this.setRealAuthType = function(val) {
         real_auth_type = val;
-    }
+    };
 
+    /**
+     * @return {number} 2FA type
+     */
     this.get2FAType = function() {
         return real_auth_type;
-    }
+    };
 
+    /**
+     * @return {string} 2FA type string
+     */
     this.get2FATypeString = function() {
         if (real_auth_type == 0) {
             return null;
@@ -265,15 +296,15 @@ var MyWallet = new function() {
         } else if (real_auth_type == 5) {
             return 'SMS';
         }
-    }
+    };
 
     this.addAdditionalSeeds = function(val) {
         wallet_options.additional_seeds.push(val);
-    }
+    };
 
     this.getAdditionalSeeds = function(val) {
         return wallet_options.additional_seeds;
-    }
+    };
 
     this.getLanguage = function() {
         if (language) {
@@ -281,48 +312,62 @@ var MyWallet = new function() {
         } else {
             return MyStore.get('language');            
         }
-    }
+    };
 
     this.setLanguage = function(_language) {
         MyStore.put('language', _language);
         language = _language;
-    }
+    };
 
+    /**
+     * Get currency code stored in memory or in local storage.
+     * @return {string} fiat currency code (e.g. USD)
+     */
     this.getLocalSymbolCode = function() {
         if (localSymbolCode) {
             return localSymbolCode;
         } else {
             return MyStore.get('localSymbolCode');            
         }
-    }
+    };
 
+    /**
+     * Store currency code in memory and in local storage.
+     * @param {string} code fiat currency code (e.g. USD)
+     */
     this.setLocalSymbolCode = function(code) {
         MyStore.put('localSymbolCode', code);
         symbol_local.code = code;
         localSymbolCode = code;
-    }
+    };
 
+    /**
+     * @return {Object} dictionary of available languages
+     */
     this.getLanguages = function() {
         return languageCodeToLanguage;
-    }
+    };
 
+    /**
+     * @return {Object} dictionary of available currencies
+     */
     this.getCurrencies = function() {
         return currencyCodeToCurrency;
-    }
+    };
 
     this.addEventListener = function(func) {
         event_listeners.push(func);
-    }
+    };
 
     this.sendEvent = function(event_name, obj) {
         for (var listener in event_listeners) {
             event_listeners[listener](event_name, obj)
         }
-    }
+    };
 
     this.getLogoutTime = function() {
         return wallet_options.logout_time;
-    }
+    };
 
     this.getDefaultPbkdf2Iterations = function() {
         return default_pbkdf2_iterations;
@@ -334,27 +379,27 @@ var MyWallet = new function() {
 
     this.getSharedKey = function() {
         return sharedKey;
-    }
+    };
 
     this.getSharedcoinEndpoint = function() {
         return sharedcoin_endpoint;
-    }
+    };
 
     this.disableLogout = function(value) {
         disable_logout = value;
-    }
+    };
 
     this.getFinalBalance = function() {
         return final_balance;
-    }
+    };
 
     this.getTotalSent = function() {
         return total_sent;
-    }
+    };
 
     this.getTotalReceived = function() {
         return total_received;
-    }
+    };
 
     this.setLogoutTime = function(logout_time) {
         wallet_options.logout_time = logout_time;
@@ -362,23 +407,23 @@ var MyWallet = new function() {
         clearInterval(logout_timeout);
 
         logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
-    }
+    };
 
     this.getDoubleEncryption = function() {
         return double_encryption;
-    }
+    };
     
     this.setDoubleEncryption = function(newValue) {
         double_encryption = newValue;
-    }
+    };
 
     this.getEncryptedWalletData = function() {
         return encrypted_wallet_data;
-    }
+    };
 
     this.getFeePolicy = function() {
         return wallet_options.fee_policy;
-    }
+    };
 
     this.setFeePolicy = function(policy) {
         if (policy != -1 && policy != 0 && policy != 1)
@@ -394,87 +439,126 @@ var MyWallet = new function() {
             if (errorCallback)
                 errorCallback();
         });
-    }
+    };
 
     this.setAlwaysKeepLocalBackup = function(val) {
         wallet_options.always_keep_local_backup = val;
-    }
+    };
 
     this.getAlwaysKeepLocalBackup = function() {
         return wallet_options.always_keep_local_backup;
-    }
+    };
 
     this.setNTransactionsPerPage = function(val) {
         wallet_options.transactions_per_page = val;
-    }
+    };
 
     this.getNTransactionsPerPage = function() {
         return wallet_options.transactions_per_page;
-    }
+    };
 
     this.getGuid = function() {
         return guid;
-    }
+    };
 
     this.getHTML5Notifications = function() {
         return wallet_options.html5_notifications;
-    }
+    };
 
     this.setHTML5Notifications = function(val) {
         wallet_options.html5_notifications = val;
-    }
+    };
 
     this.getNTransactions = function() {
         return n_tx;
-    }
+    };
 
+    /**
+     * @return {Array} get all transactions
+     */
     this.getTransactions = function() {
         return transactions;
-    }
+    };
     
+    /**
+     * @return {boolean} legacy Address Exists
+     */
     this.legacyAddressExists = function(address) {
         return addresses[address] != null;
-    }
+    };
 
+    /**
+     * @return {string} Legacy Address Tag
+     */
     this.getLegacyAddressTag = function(address) {
         return addresses[address].tag;
-    }
+    };
 
+    /**
+     * @param {string} address Bitcoin address.
+     * @param {string} tag The tag to set for the given address.
+     */
     this.setLegacyAddressTag = function(address, tag) {
         addresses[address].tag = tag;
-    }
+    };
 
     this.getAddressBook = function() {
         return address_book;
-    }
+    };
 
+    /**
+     * @return {Array} get legacy address label
+     */
     this.getLegacyAddressLabel = function(address) {
         if (addresses[address])
             return addresses[address].label;
         else
             return null;
-    }
+    };
 
+    /**
+     * @param {string} address bitcoin address
+     * @param {string} balance
+     */
     this.setLegacyAddressBalance = function(address, balance) {
         addresses[address].balance = balance;
-    }
+    };
 
+    /**
+     * @param {string} address bitcoin address
+     * @return {boolean} label
+     */
     this.getAddressBookLabel = function(address) {
         return address_book[address];
-    }
+    };
 
+    /**
+     * @param {string} addr bitcoin address
+     * @return {boolean} whether address is active
+     */
     this.isActiveLegacyAddress = function(addr) {
         return addresses[addr] != null && addresses[addr].tag != 2;
-    }
+    };
 
+    /**
+     * @param {string} address bitcoin address
+     * @return {boolean} whether address is watch only
+     */
     this.isWatchOnlyLegacyAddress = function(address) {
         return !addresses[address] || addresses[address].priv == null;
-    }
+    };
 
+    /**
+     * @param {string} address bitcoin address
+     * @return {number} balance
+     */
     this.getLegacyAddressBalance = function(address) {
         return addresses[address].balance;
-    }
+    };
 
+    /**
+     * @return {number} total Balance For Active Legacy Addresses
+     */
     this.getTotalBalanceForActiveLegacyAddresses = function() {
         var totalBalance = 0;
         for (var key in addresses) {
@@ -483,32 +567,40 @@ var MyWallet = new function() {
                 totalBalance += addr.balance;
         }
         return totalBalance;
-    }
+    };
 
     this.getMixerFee = function() {
         return mixer_fee;
-    }
+    };
 
     this.getRecommendIncludeFee = function() {
         return recommend_include_fee;
-    }
+    };
 
+    /**
+     * @param {string} addr bitcoin address
+     */
     this.deleteLegacyAddress = function(addr) {
         delete addresses[addr];
         MyWallet.backupWalletDelayed();
-    }
+    };
 
+    /**
+    * @param {st ring} addr bitcoin address
+     * @param {string} label label
+     * @return {boolean} success or not
+     */
     this.addAddressBookEntry = function(addr, label) {
         if (! isAlphaNumericSpace(label) || ! MyWallet.isValidAddress(addr))
             return false;       
         address_book[addr] = label;
         return true;
-    }
+    };
 
     //TODO Depreciate this. Need to restructure signer.js
     this.getPrivateKey = function(address) {
         return addresses[address].priv;
-    }
+    };
 
     /**
      * Set the label of a legacy address.
@@ -525,7 +617,7 @@ var MyWallet = new function() {
             MyWallet.backupWalletDelayed();
             success && success();
         }
-    }
+    };
 
     this.securePost = function(url, data, success, error) {
         var clone = jQuery.extend({}, data);
@@ -575,11 +667,15 @@ var MyWallet = new function() {
             success: success,
             error : error
         });
-    }
+    };
 
+    /**
+     * @param {string} _password main password
+     * @return {boolean} is main password correct
+     */
     this.isCorrectMainPassword = function(_password) {
         return password == _password;
-    }
+    };
 
     function hashPassword(password, iterations) {
         //N rounds of SHA 256
@@ -588,7 +684,7 @@ var MyWallet = new function() {
             round_data = CryptoJS.SHA256(round_data);
         }
         return round_data.toString();
-    }
+    };
 
     /**
      * Set the number of PBKDF2 iterations used for encrypting the wallet and also the private keys if the second password is enabled.
@@ -705,6 +801,10 @@ var MyWallet = new function() {
         return bytes;
     };
 
+    /**
+     * @param {function()} success callback function
+     * @param {function()} error callback function
+     */
     this.unsetSecondPassword = function(success, error, getPassword) {
         var panic = function(e) {
             console.log('Panic ' + e);
@@ -762,6 +862,12 @@ var MyWallet = new function() {
         }
     };
 
+
+    /**
+     * @param {string} password Second password
+     * @param {function()} success callback function
+     * @param {function()} error callback function
+     */
     this.setSecondPassword = function(password, success, error) {
         var panic = function(e) {
             console.log('Panic ');
@@ -820,6 +926,10 @@ var MyWallet = new function() {
         }
     };
 
+    /**
+     * Un-archive address, backup wallet and refreshes balances.
+     * @param {string} addr bitcoin address
+     */
     this.unArchiveLegacyAddr = function(addr) {
         var addr = addresses[addr];
         if (addr.tag == 2) {
@@ -832,8 +942,12 @@ var MyWallet = new function() {
         } else {
             MyWallet.sendEvent("msg", {type: "error", message: 'Cannot Unarchive This Address'});
         }
-    }
+    };
 
+    /**
+     * Archive address, backup wallet and refreshes balances.
+     * @param {string} addr bitcoin address
+     */
     this.archiveLegacyAddr = function(addr) {
         var addr = addresses[addr];
         if (addr.tag == null || addr.tag == 0) {
@@ -847,7 +961,12 @@ var MyWallet = new function() {
         } else {
             MyWallet.sendEvent("msg", {type: "error", message: 'Cannot Archive This Address'});
         }
-    }
+    };
+
+    /**
+     * Add watch only address, backup wallet and refreshes balances.
+     * @param {string} addressString bitcoin address
+     */
     this.addWatchOnlyLegacyAddress = function(addressString) {
         var address = Bitcoin.Address.fromBase58Check(addressString);
 
@@ -873,27 +992,27 @@ var MyWallet = new function() {
         } catch (e) {
             MyWallet.sendEvent("msg", {type: "error", message: e});
         }
-    }
+    };
 
     //temperary workaround instead instead of modding bitcoinjs to do it TODO: not efficient
     this.getCompressedAddressString = function(key) {
         return new ECKey(key.d, true).pub.getAddress().toString();
-    }
+    };
     this.getUnCompressedAddressString = function(key) {
         return new ECKey(key.d, false).pub.getAddress().toString();
-    }
+    };
     this.getCompressedPubKey = function(key) {
         return new ECKey(key.d, true).pub;
-    }
+    };
     this.getUncompressedPubKey = function(key) {
         return new ECKey(key.d, false).pub;
-    }
+    };
     this.getCompressedKey = function(key) {
         return new ECKey(key.d, true);
-    }
+    };
     this.getUnCompressedAddressString = function(key) {
         return new ECKey(key.d, false).pub.getAddress().toString();
-    }
+    };
 
     this.extractAddresses = function(script, addresses) {
         switch (Bitcoin.scripts.classifyOutput(script)) {
@@ -915,7 +1034,7 @@ var MyWallet = new function() {
         default:
             throw 'Encountered non-standard scriptPubKey';
         }
-    }
+    };
 
     this.simpleInPubKeyHash = function(script) {
         switch (Bitcoin.scripts.classifyInput(script)) {
@@ -926,8 +1045,15 @@ var MyWallet = new function() {
         default:
           throw new Error("Encountered non-standard scriptSig");
         }
-    }
+    };
 
+    /**
+     * import Private Key, backups wallet and refreshes balances
+     * @param {string} privateKeyString private Key
+     * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
+     * @param {function()} success callback function
+     * @param {function()} error callback function
+     */
     this.importPrivateKey = function(privateKeyString, getPassword, getBIP38Password, success, error) {
         function reallyInsertKey(key, compressed, pw) {
             try {
@@ -1013,7 +1139,7 @@ var MyWallet = new function() {
         } else {
             reallyInsertKey(key, (format == 'compsipa'), null)
         }
-    }
+    };
 
     //opts = {compressed, app_name, app_version, created_time}
     this.addPrivateKey = function(key, opts, second_password) {
@@ -1067,7 +1193,7 @@ var MyWallet = new function() {
         }
 
         return addr;
-    }
+    };
 
     this.generateNewKey = function(_password) {
         var key = Bitcoin.ECKey.makeRandom(true);
@@ -1076,7 +1202,7 @@ var MyWallet = new function() {
         if (MyWallet.addPrivateKey(key)) {
             return key;
         }
-    }
+    };
 
     function generateNewMiniPrivateKey() {
         while (true) {
@@ -1101,7 +1227,7 @@ var MyWallet = new function() {
                     return {key : eckey, miniKey : minikey};
             }
         }
-    }
+    };
 
     function calcTxResult(tx, is_new, checkCompleted, incrementAccountTxCount) {
         /* Calculate the result */
@@ -1388,19 +1514,19 @@ var MyWallet = new function() {
     function base58ToHex(x) { var bytes = MyWallet.decodePK(x); return Crypto.util.bytesToHex(bytes); }
     this.base58ToSipa = function(x, addr) {
         return MyWallet.pkBytesToSipa(MyWallet.decodePK(x), addr);
-    }
+    };
 
     this.getExtPrivKeyForAccount = function(accountIdx) {
         return MyWallet.getHDWallet().getAccount(accountIdx).getAccountExtendedKey(true);
-    }
+    };
 
     this.getExtPubKeyForAccount = function(accountIdx) {
         return MyWallet.getHDWallet().getAccount(accountIdx).getAccountExtendedKey(false);
-    }
+    };
 
     this.getLabelForAccount = function(accountIdx) {
         return MyWallet.getHDWallet().getAccount(accountIdx).getLabel();
-    }
+    };
 
     this.setLabelForAccount = function(accountIdx, label) {
         if (! isAlphaNumericSpace(label))
@@ -1408,50 +1534,50 @@ var MyWallet = new function() {
         MyWallet.getHDWallet().getAccount(accountIdx).setLabel(label);
         MyWallet.backupWalletDelayed();
         return true;
-    }
+    };
 
     this.isArchivedForAccount = function(accountIdx) {
         return MyWallet.getHDWallet().getAccount(accountIdx).isArchived();
-    }
+    };
 
     this.setIsArchivedForAccount = function(accountIdx, isArchived) {
         MyWallet.getHDWallet().getAccount(accountIdx).setIsArchived(isArchived);
         MyWallet.backupWalletDelayed('update', function() {
             MyWallet.get_history();
         });
-    }
+    };
 
     this.getAddressesForAccount = function(accountIdx) {
         return MyWallet.getHDWallet().getAccount(accountIdx).getAddresses();
-    }
+    };
 
     this.getChangeAddressesForAccount = function(accountIdx) {
         return MyWallet.getHDWallet().getAccount(accountIdx).getChangeAddresses();
-    }
+    };
 
     this.getBalanceForAccount = function(accountIdx) {
         return MyWallet.getHDWallet().getAccount(accountIdx).getBalance();
-    }
+    };
 
     this.getNumberOfTransactionsForAccount = function(accountIdx) {
         return MyWallet.getHDWallet().getAccount(accountIdx).n_tx;
-    }
+    };
 
     this.getReceivingAddressForAccount = function(accountIdx) {
         return MyWallet.getHDWallet().getAccount(accountIdx).getReceivingAddress();
-    }
+    };
     
     this.getReceivingAddressIndexForAccount = function(accountIdx) {
         return MyWallet.getHDWallet().getAccount(accountIdx).getReceivingAddressIndex();
-    }
+    };
 
     this.getAddressAtIdxForAccount = function(accountIdx, addressIdx) {
         return MyWallet.getHDWallet().getAccount(accountIdx).getAddressAtIdx(addressIdx);
-    }
+    };
 
     this.getLabelForAccountAddress = function(accountIdx, addressIdx) {     
         return MyWallet.getHDWallet().getAccount(accountIdx).getLabelForAddress(addressIdx);
-    }
+    };
 
     this.setLabelForAccountAddress = function(accountIdx, addressIdx, label, success, error) {
         if (label != "" && ! isAlphaNumericSpace(label)) {
@@ -1461,19 +1587,22 @@ var MyWallet = new function() {
             MyWallet.backupWalletDelayed();
             success();
         }
-    }
+    };
     
     this.getLabeledReceivingAddressesForAccount = function(accountIdx) {
       return MyWallet.getHDWallet().getAccount(accountIdx).getLabeledReceivingAddresses();
-    }
+    };
 
     this.unsetLabelForAccountAddress = function(accountIdx, addressIdx) {
         var success = MyWallet.getHDWallet().getAccount(accountIdx).unsetLabelForAddress(addressIdx);
         if (success)
             MyWallet.backupWalletDelayed();
         return success;
-    }
+    };
 
+    /**
+     * @return {Array} get all transactions with fields to_account, from_account, from_addresses, to_addresses, etc filled
+     */
     this.getAllTransactions = function() {
         var filteredTransactions = [];
 
@@ -1482,14 +1611,14 @@ var MyWallet = new function() {
         for (var i in rawTxs) {
             var tx = rawTxs[i]; 
 
-            var transaction = this.processTransaction(tx)
+            var transaction = this.processTransaction(tx);
 
             filteredTransactions.push(transaction);
         }
 
 
         return filteredTransactions;
-    }
+    };
     
     this.processTransaction = function(tx) {
       // console.log(JSON.stringify(tx))
@@ -1630,8 +1759,11 @@ var MyWallet = new function() {
       transaction.result = tx.result;
       // console.log(JSON.stringify(transaction))
       return transaction;
-    }
+    };
 
+    /**
+     * @return {Array} Legacy Transactions
+     */
     this.getLegacyTransactions = function() {
         var filteredTransactions = [];
 
@@ -1714,11 +1846,11 @@ var MyWallet = new function() {
         }
 
         return filteredTransactions;
-    }
+    };
 
     this.getTransactionsForAccount = function(accountIdx) {
         return MyWallet.getHDWallet().filterTransactionsForAccount(accountIdx, MyWallet.getTransactions(), paidTo, tx_notes);
-    }
+    };
 
     this.getAndSetUnspentOutputsForAccount = function(accountIdx, successCallback, errorCallback) {
         var account = MyWallet.getHDWallet().getAccount(accountIdx);
@@ -1745,7 +1877,7 @@ var MyWallet = new function() {
                 errorCallback(e.message || e.responseText);
             }
         }, 0, true);
-    }
+    };
 
     this.recommendedTransactionFeeForAccount = function(accountIdx, amount) {
         if (! isAccountRecommendedFeesValid) {
@@ -1762,11 +1894,11 @@ var MyWallet = new function() {
 
             return recommendedFee;
         }
-    }
+    };
 
     this.getPaidToDictionary = function()  {
         return paidTo;
-    }
+    };
 
     this.recommendedTransactionFeeForAddress = function(address, balance) {
       // TODO: calculate the correct fee:
@@ -1776,7 +1908,7 @@ var MyWallet = new function() {
       } else {
         return null;
       }
-    }
+    };
 
     this.fetchMoreTransactionsForAccount = function(accountIdx, success, error, didFetchOldestTransaction) {
         function getRawTransactionsForAccount(accountIdx, txOffset, numTx, success, error) {
@@ -1815,7 +1947,7 @@ var MyWallet = new function() {
         }, function(e) {
             error(e);
         });
-    }
+    };
 
 
     this.getBalanceForRedeemCode = function(privatekey, successCallback, errorCallback)  {
@@ -1837,7 +1969,7 @@ var MyWallet = new function() {
             if (errorCallback)
                 errorCallback();
         } 
-    }
+    };
 
     this.redeemFromEmailOrMobile = function(accountIdx, privatekey, successCallback, errorCallback)  {
         try {
@@ -1878,7 +2010,7 @@ var MyWallet = new function() {
             console.log(e);
             MyWallet.sendEvent("msg", {type: "error", message: 'Error Decoding Private Key. Could not claim coins.'});
         }        
-    }
+    };
 
     // TODO: refactor second password suppport
     this.sendToEmail = function(accountIdx, value, fixedFee, email, successCallback, errorCallback, getPassword)  {
@@ -1893,7 +2025,7 @@ var MyWallet = new function() {
         } else {
             sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback, null);                    
         }
-    }
+    };
 
     function sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback, secondPassword)  {
         var account = MyWallet.getHDWallet().getAccount(accountIdx);
@@ -1957,6 +2089,11 @@ var MyWallet = new function() {
         );
     }
 
+    /**
+     * @param {function():Array} successCallback success callback function with transaction array
+     * @param {function()} errorCallback callback function
+     * @param {function()} didFetchOldestTransaction callback is called when all transanctions for legacy addresses have been fetched
+     */
     this.fetchMoreTransactionsForLegacyAddresses = function(success, error, didFetchOldestTransaction) {
         function getRawTransactionsForLegacyAddresses(txOffset, numTx, success, error) {
             var allAddresses = MyWallet.getLegacyActiveAddresses();
@@ -1992,8 +2129,18 @@ var MyWallet = new function() {
         }, function(e) {
             console.log('error ' + e);
         });
-    }
+    };
 
+    /**
+     * @param {string} fromAddress from address
+     * @param {number} toAddress to address
+     * @param {number} amount send amount in satoshis
+     * @param {?number} feeAmount fee amount in satoshis
+     * @param {?string} note tx note
+     * @param {function()} successCallback callback function
+     * @param {function()} errorCallback callback function
+     * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
+     */
     this.sendFromLegacyAddressToAddress = function(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback, getPassword)  {
         if (double_encryption) {
             getPassword(function(pw, correct_password, wrong_password) {
@@ -2007,7 +2154,7 @@ var MyWallet = new function() {
         } else {
                 sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback, null);                    
         }
-    }
+    };
 
     function sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback, second_password)  {
         var obj = initNewTx();
@@ -2039,6 +2186,16 @@ var MyWallet = new function() {
         obj.start(second_password);
     }
 
+    /**
+     * @param {string} fromAddress from address
+     * @param {number} toIdx index of account
+     * @param {number} amount send amount in satoshis
+     * @param {?number} feeAmount fee amount in satoshis
+     * @param {?string} note tx note
+     * @param {function()} successCallback callback function
+     * @param {function()} errorCallback callback function
+     * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
+     */
     this.sendFromLegacyAddressToAccount = function(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback, getPassword)  {
         if (double_encryption) {
             getPassword(function(pw, correct_password, wrong_password) {
@@ -2053,7 +2210,7 @@ var MyWallet = new function() {
         } else {
                 sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback, null);
         }
-    }
+    };
 
     function sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback, second_password)  {
         var account = MyWallet.getHDWallet().getAccount(toIdx);
@@ -2087,19 +2244,25 @@ var MyWallet = new function() {
         obj.start(second_password);
     }
 
-
+    /**
+     * @param {string} fromAddress from address
+     * @param {number}  index of account
+     * @param {function()} successCallback callback function
+     * @param {function()} errorCallback callback function
+     * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
+     */
     this.sweepLegacyAddressToAccount = function(fromAddress, toIdx, successCallback, errorCallback, getPassword)  {
         var obj = initNewTx();
         var feeAmount = parseInt(obj.base_fee.toString());
         var amount = MyWallet.getLegacyAddressBalance(fromAddress) - feeAmount;
         MyWallet.sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, null, successCallback, errorCallback, getPassword);
-    }
+    };
 
     this.sendToAccount = function(fromIdx, toIdx, amount, feeAmount, note, successCallback, errorCallback, getPassword)  {
         var account = MyWallet.getHDWallet().getAccount(toIdx);
         var address = account.getReceivingAddress();
         MyWallet.sendBitcoinsForAccount(fromIdx, address, amount, feeAmount, note, successCallback, errorCallback, getPassword);
-    }
+    };
 
     this.sendToMobile = function(accountIdx, value, fixedFee, mobile, successCallback, errorCallback, getPassword)  {
         if (double_encryption) {
@@ -2113,7 +2276,7 @@ var MyWallet = new function() {
         } else {
             sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback);
         }
-    }
+    };
 
     function sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback)  {
         if (mobile.charAt(0) == '0')
@@ -2175,7 +2338,7 @@ var MyWallet = new function() {
                     });
                 });
             },
-            function() { console.log('Unexpected error')}
+            function() { console.log('Unexpected error'); }
         );
     }
 
@@ -2227,21 +2390,23 @@ var MyWallet = new function() {
         } else {
              sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, null);            
         }
-    }
+    };
 
     this.archiveAccount = function(idx) {
         var account = MyWallet.getHDWallet().getAccount(idx);
         account.setIsArchived(true);
         MyWallet.backupWalletDelayed();
-    }
+    };
 
     this.unarchiveAccount = function(idx) {
         var account = MyWallet.getHDWallet().getAccount(idx);
         account.setIsArchived(false);
         MyWallet.backupWalletDelayed();
-    }
+    };
     
-    /** @returns {Array} Array of HD accounts */
+    /**
+     * @return {Array} Array of HD accounts
+     */
     this.getAccounts = function() {
         if (!MyWallet.didUpgradeToHd()) {
             return [];
@@ -2258,9 +2423,11 @@ var MyWallet = new function() {
 
         }
         return activeAccounts;
-    }
+    };
 
-    /** @returns {Array} Array of archived HD accounts */
+    /**
+     * @return {Array} Array of archived HD accounts
+     */
     this.getArchivedAccounts = function() {
         if (!MyWallet.didUpgradeToHd()) {
             return [];
@@ -2275,19 +2442,21 @@ var MyWallet = new function() {
 
         }
         return archivedAccounts;
-    }
+    };
 
     this.getAccount = function(idx) {
         return MyWallet.getHDWallet().getAccount(idx)
-    }
+    };
 
-    /** @returns {Number} Number of HD accounts */
+    /**
+     * @return {Number} Number of HD accounts
+     */
     this.getAccountsCount = function() {
         if (!MyWallet.didUpgradeToHd()) {
             return 0;
         }
         return MyWallet.getHDWallet().getAccountsCount();
-    }
+    };
 
     this.createAccount = function(label, getPassword, success, error)  {
         if (double_encryption) {
@@ -2303,7 +2472,7 @@ var MyWallet = new function() {
         } else {
             createAccount(label, null, success, error);                    
         }
-    }
+    };
 
     // Assumes second password is needed if the argument is not null.
     function createAccount(label, second_password, success, error) {      
@@ -2319,16 +2488,16 @@ var MyWallet = new function() {
         return null;
       }
       return myHDWallet;
-    }
+    };
     
     this.setHDWallet = function(newValue) {
         myHDWallet = newValue;
-    }
+    };
     
 
     this.isValidateBIP39Mnemonic = function(mnemonic) {
         return isValidateMnemonic(mnemonic);
-    }
+    };
 
     this.recoverMyWalletHDWalletFromSeedHex = function(seedHex, bip39Password, getPassword, successCallback, errorCallback) {
         function recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, secondPassword, successCallback, errorCallback) {
@@ -2360,7 +2529,7 @@ var MyWallet = new function() {
         } else {
             recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, null, successCallback, errorCallback);                    
         }
-    }
+    };
 
     this.recoverMyWalletHDWalletFromMnemonic = function(passphrase, bip39Password, getPassword, successCallback, errorCallback) {
         function recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, secondPassword, successCallback, errorCallback) {
@@ -2392,14 +2561,14 @@ var MyWallet = new function() {
         } else {
             recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, null, successCallback, errorCallback);                    
         }
-    }
+    };
 
     this.listenToHDWalletAccount = function(accountExtendedPublicKey) {
         try {
             var msg = '{"op":"xpub_sub", "xpub":"'+ accountExtendedPublicKey +'"}';
             ws.send(msg);
         } catch (e) { }            
-    }
+    };
 
     this.listenToHDWalletAccounts = function() {
         for (var i in MyWallet.getAccounts()) {
@@ -2407,20 +2576,20 @@ var MyWallet = new function() {
             var accountExtendedPublicKey = account.getAccountExtendedKey(false);
             MyWallet.listenToHDWalletAccount(accountExtendedPublicKey);
         }
-    }
+    };
 
     this.buildHDWallet = function(seedHexString, accountsArrayPayload, second_password, success, error) {
         this.setHDWallet(buildHDWallet(seedHexString, accountsArrayPayload, second_password, success, error));
-    }
+    };
 
     this.generateHDWalletPassphrase = function() {
         return BIP39.generateMnemonic();
-    }
+    };
 
     this.generateHDWalletSeedHex = function() {
         var passPhrase = MyWallet.generateHDWalletPassphrase();
         return passphraseToPassphraseHexString(passPhrase);
-    }
+    };
 
     this.deleteHDWallet = function(successCallback, errorCallback) {
       if(MyWallet.getHDWallet == undefined || MyWallet.getHDWallet() == null) {
@@ -2436,7 +2605,7 @@ var MyWallet = new function() {
             if (errorCallback)
                 errorCallback();
         });
-    }
+    };
 
     /**
      * Upgrade legacy wallet to HD wallet.
@@ -2524,8 +2693,12 @@ var MyWallet = new function() {
             var seed = MyWallet.getHDWallet().getSeedHexString();
             successCallback(MyWallet.getHDWallet().getPassphraseString(seed));                    
         }  
-    }
+    };
 
+    /**
+     * @param {string} candidate candidate address
+     * @return {boolean} is valid address
+     */
     this.isValidAddress = function(candidate) {
         try {
             Bitcoin.Address.fromBase58Check(candidate);
@@ -2533,8 +2706,12 @@ var MyWallet = new function() {
         } catch (e) {
             return false;
         }
-    }
+    };
 
+    /**
+     * @param {string} candidate candidate PrivateKey
+     * @return {boolean} is valid PrivateKey
+     */
     this.isValidPrivateKey = function(candidate) {
         try {
             var format = MyWallet.detectPrivateKeyFormat(candidate);
@@ -2544,11 +2721,11 @@ var MyWallet = new function() {
         } catch (e) {
             return false;
         }
-    }
+    };
 
     this.makeWalletJSON = function(format) {
         return MyWallet.makeCustomWalletJSON(format, guid, sharedKey);
-    }
+    };
 
     this.makeCustomWalletJSON = function(format, guid, sharedKey) {
 
@@ -2666,27 +2843,39 @@ var MyWallet = new function() {
         out += '\n}';
 
         return out;
-    }
+    };
 
+    /**
+     * calls success callback with json object, or error callback with error object
+     * @param {function()} successcallback callback function
+     * @param {function()} errorcallback callback function
+     */
     this.get_ticker = function(successCallback, errorCallback) {
         BlockchainAPI.get_ticker(successCallback, errorCallback);
-    }
+    };
 
+    /**
+     * @param {number} time unix time
+     * @param {number} value amount in satoshis
+     * @param {string} currencyCode currency code
+     * @param {function()} successcallback callback function with fiat amount
+     * @param {function()} errorcallback callback function
+     */
     this.getFiatAtTime = function(time, value, currencyCode, successCallback, errorCallback) {
         BlockchainAPI.getFiatAtTime(time, value, currencyCode, successCallback, errorCallback);
-    }
+    };
 
     this.get_account_info = function(successCallback, errorCallback) {
         BlockchainAPI.get_account_info(successCallback, errorCallback);
-    }
+    };
 
     this.enableApiAccess = function(successCallback, errorCallback) {
         MyWallet.update_API_access(true, successCallback, errorCallback);
-    }
+    };
 
     this.disableApiAccess = function(successCallback, errorCallback) {
         MyWallet.update_API_access(false, successCallback, errorCallback);
-    }
+    };
     
     this.update_API_access = function(enabled, successCallback, errorCallback) {
         BlockchainAPI.update_API_access(enabled, function() {
@@ -2696,8 +2885,13 @@ var MyWallet = new function() {
             if (errorCallback)
                errorCallback();
         });
-    }
+    };
 
+    /**
+     * @param {string} ips Multiple ip addresses should be comma separated. Use % as a wildcard. For example 127.0.0.% to whitelist 127.0.0.1-127.0.0.254.
+     * @param {function()} successCallback callback function
+     * @param {function()} errorCallback callback function
+     */
     this.setIPWhitelist = function(ips, successCallback, errorCallback) {
         BlockchainAPI.update_IP_lock(ips, function() {
             if (successCallback)
@@ -2706,15 +2900,15 @@ var MyWallet = new function() {
             if (errorCallback)
                errorCallback();
         });
-    }
+    };
 
     this.enableRestrictToWhiteListedIPs = function(successCallback, errorCallback) {
         MyWallet.update_IP_lock_on(true, successCallback, errorCallback);
-    }
+    };
 
     this.disableRestrictToWhiteListedIPs = function(successCallback, errorCallback) {
         MyWallet.update_IP_lock_on(false, successCallback, errorCallback);
-    }
+    };
 
     this.update_IP_lock_on = function(enabled, successCallback, errorCallback) {
         BlockchainAPI.update_IP_lock_on(enabled, function() {
@@ -2724,7 +2918,7 @@ var MyWallet = new function() {
             if (errorCallback)
                errorCallback();
         });
-    }
+    };
 
     this.change_language = function(language, successCallback, errorCallback) {
         BlockchainAPI.change_language(language, function() {
@@ -2736,7 +2930,7 @@ var MyWallet = new function() {
             if (errorCallback)
                errorCallback();
         });
-    }
+    };
 
     this.change_local_currency = function(code, successCallback, errorCallback) {
         BlockchainAPI.change_local_currency(code, function() {
@@ -2752,7 +2946,7 @@ var MyWallet = new function() {
             if (errorCallback)
                errorCallback();
         });
-    }
+    };
 
     this.change_btc_currency = function(code, successCallback, errorCallback) {
         BlockchainAPI.change_btc_currency(code, function() {
@@ -2767,7 +2961,7 @@ var MyWallet = new function() {
             if (errorCallback)
                errorCallback();
         });
-    }
+    };
 
     this.update_tor_ip_block = function(enabled, successCallback, errorCallback) {
         BlockchainAPI.update_tor_ip_block(enabled ? 1 : 0, function() {
@@ -2777,7 +2971,7 @@ var MyWallet = new function() {
             if (errorCallback)
                errorCallback();
         });
-    }
+    };
 
     this.update_password_hint1 = function(value, successCallback, errorCallback) {
         BlockchainAPI.update_password_hint1(value, function() {
@@ -2787,7 +2981,7 @@ var MyWallet = new function() {
             if (errorCallback)
                errorCallback();
         });
-    }
+    };
 
     this.update_password_hint2 = function(value, successCallback, errorCallback) {
         BlockchainAPI.update_password_hint2(value, function() {
@@ -2797,7 +2991,7 @@ var MyWallet = new function() {
             if (errorCallback)
                errorCallback();
         });
-    }
+    };
 
     this.change_email = function(email, successCallback, errorCallback) {
         BlockchainAPI.change_email(email, function() {
@@ -2807,7 +3001,7 @@ var MyWallet = new function() {
             if (errorCallback)
                errorCallback();
         });
-    }
+    };
 
     this.changeMobileNumber = function(val, successCallback, errorCallback) {
         BlockchainAPI.changeMobileNumber(val, function() {
@@ -2817,12 +3011,12 @@ var MyWallet = new function() {
             if (errorCallback)
                errorCallback();
         });
-    }
+    };
 
     /**
      * Verify email with code.
      * @param {string} code verfication code.
-     * @param {function()} successCallback Success callback function.
+     * @param {function(Object)} successCallback Success callback function.
      * @param {function()} errorCallback Error callback function.
      */
     this.verifyEmail = function(code, successCallback, errorCallback) {
@@ -2833,12 +3027,12 @@ var MyWallet = new function() {
             if (errorCallback)
                errorCallback();
         });
-    }
+    };
 
     /**
      * Verify mobile with code.
      * @param {string} code verfication code.
-     * @param {function()} successCallback Success callback function.
+     * @param {function(Object)} successCallback Success callback function.
      * @param {function()} errorCallback Error callback function.
      */
     this.verifyMobile = function(code, successCallback, errorCallback) {
@@ -2849,10 +3043,10 @@ var MyWallet = new function() {
             if (errorCallback)
                errorCallback();
         });
-    }
+    };
 
     /**
-     * resend email with verfication code.
+     * Resend email with verfication code.
      * @param {string} email.
      * @param {function()} successCallback Success callback function.
      * @param {function()} errorCallback Error callback function.
@@ -2865,7 +3059,7 @@ var MyWallet = new function() {
             if (errorCallback)
                errorCallback();
         });
-    }
+    };
     
     this.disableSaveTwoFactor = function(successCallback, errorCallback) {
         BlockchainAPI.toggleSave2FA(true, function() {
@@ -2875,7 +3069,7 @@ var MyWallet = new function() {
             if (errorCallback)
                errorCallback();
         });
-    }
+    };
 
     this.enableSaveTwoFactor = function(successCallback, errorCallback) {
         BlockchainAPI.toggleSave2FA(false, function() {
@@ -2885,23 +3079,23 @@ var MyWallet = new function() {
             if (errorCallback)
                errorCallback();
         });
-    }
+    };
 
     this.unsetTwoFactor = function(successCallback, errorCallback) {
         BlockchainAPI.unsetTwoFactor(successCallback, errorCallback);
-    }
+    };
 
     this.setTwoFactorSMS = function(successCallback, errorCallback) {
         BlockchainAPI.setTwoFactorSMS(successCallback, errorCallback);
-    }
+    };
 
     this.setTwoFactorYubiKey = function(successCallback, errorCallback) {
         BlockchainAPI.setTwoFactorYubiKey(successCallback, errorCallback);
-    }
+    };
 
     this.setTwoFactorEmail = function(successCallback, errorCallback) {
         BlockchainAPI.setTwoFactorEmail(successCallback, errorCallback);
-    }
+    };
 
     this.setTwoFactorGoogleAuthenticator = function(successCallback, errorCallback) {
         BlockchainAPI.setTwoFactorGoogleAuthenticator(function(google_secret_url) {
@@ -2911,7 +3105,7 @@ var MyWallet = new function() {
             if (errorCallback)
                errorCallback(e);
         });
-    }
+    };
 
     this.confirmTwoFactorGoogleAuthenticator = function(code, successCallback, errorCallback) {
         BlockchainAPI.confirmTwoFactorGoogleAuthenticator(code, function() {
@@ -2921,7 +3115,7 @@ var MyWallet = new function() {
             if (errorCallback)
                errorCallback();
         });
-    }
+    };
 
     this.get_history_with_addresses = function(addresses, success, error) {
         BlockchainAPI.get_history_with_addresses(addresses, function(data) {
@@ -2930,7 +3124,7 @@ var MyWallet = new function() {
             if (error) error();
 
         }, tx_filter, tx_page*MyWallet.getNTransactionsPerPage(), MyWallet.getNTransactionsPerPage());
-    }
+    };
 
     this.get_history = function(success, error) {
         BlockchainAPI.get_history(function(data) {
@@ -2943,24 +3137,34 @@ var MyWallet = new function() {
             error && error();
 
         }, tx_filter, tx_page*MyWallet.getNTransactionsPerPage(), MyWallet.getNTransactionsPerPage());
-    }
+    };
 
+    /**
+     * Delete address from addressBook and backup wallet.
+     * @param {string} addr Bitcoin address
+     */
     this.deleteAddressBook = function(addr) {
         delete address_book[addr];
 
         MyWallet.backupWalletDelayed();
-    }
+    };
 
+    /**
+     * @return {Array} get all legacy addresses
+     */
     this.getAllLegacyAddresses = function() {
         var array = [];
         for (var key in addresses) {
             array.push(key);
         }
         return array;
-    }
+    };
 
-    //Find the preferred address to use for change
-    //Order deposit / request coins
+    /**
+     * Find the preferred address to use for change
+     * Order deposit / request coins
+     * @return {string} preferred address
+     */
     this.getPreferredLegacyAddress = function() {
         var preferred = null;
         for (var key in addresses) {
@@ -2981,12 +3185,18 @@ var MyWallet = new function() {
         }
 
         return preferred.addr;
-    }
+    };
 
+    /**
+     * @return {boolean} has legacy addresses
+     */
     this.hasLegacyAddresses = function() {
         return (Object.keys(addresses).length != 0);
-    }
+    };
 
+    /**
+     * @return {Array} legacy active addresses
+     */
     this.getLegacyActiveAddresses = function() {
         var array = [];
         for (var key in addresses) {
@@ -2996,9 +3206,12 @@ var MyWallet = new function() {
                 array.push(addr.addr);
         }
         return array;
-    }
+    };
 
 
+    /**
+     * @return {Array} archived addresses
+     */
     this.getLegacyArchivedAddresses = function() {
         var array = [];
         for (var key in addresses) {
@@ -3008,11 +3221,14 @@ var MyWallet = new function() {
                 array.push(addr.addr);
         }
         return array;
-    }
+    };
 
+    /**
+     * @return {Object} Latest block object
+     */
     this.getLatestBlock = function() {
         return latest_block;
-    }
+    };
 
     this.getConfirmationsForTx = function(latest_block, tx) {
         if (tx.blockHeight != null && tx.blockHeight > 0) {
@@ -3021,7 +3237,7 @@ var MyWallet = new function() {
             tx.setConfirmations(0);
             return 0;
         }
-    }
+    };
 
     function setLatestBlock(block) {
 
@@ -3037,37 +3253,61 @@ var MyWallet = new function() {
         }
     }
     
+    /**
+     * @param {string} tx_hash Transaction hash.
+     * @return {string} note
+     */
     this.getNote = function(tx_hash) {
         return tx_notes[tx_hash];
-    }
+    };
 
+    /**
+     * Delete transaction note and backup wallet.
+     * @param {string} tx_hash Transaction hash.
+     */
     this.deleteNote = function(tx_hash) {
         delete tx_notes[tx_hash];
 
-
         MyWallet.backupWalletDelayed();
-    }
+    };
 
+    /**
+     * @param {string} tx_hash Transaction hash.
+     * @param {string} text note
+     * @return {boolean} success or not
+     */
     this.setNote = function(tx_hash, text) {
         if (! isAlphaNumericSpace(text))
             return false;
         tx_notes[tx_hash] = text;
         MyWallet.backupWalletDelayed();
         return true;
-    }
+    };
 
+    /**
+     * @param {string} tx_hash Transaction hash.
+     * @return {Array} tags
+     */
     this.getTags = function(tx_hash) {
         return tx_tags[tx_hash] || [];
-    }
+    };
 
+    /**
+     * @param {string} tx_hash Transaction hash.
+     * @param {number} idx index
+     */
     this.setTag = function(tx_hash, idx) {
         if (tx_tags[tx_hash] == null) {
             tx_tags[tx_hash] = [];
         }
         tx_tags[tx_hash].push(idx);
         MyWallet.backupWalletDelayed();
-    }
+    };
 
+    /**
+     * @param {string} tx_hash Transaction hash.
+     * @param {number} idx index
+     */
     this.unsetTag = function(tx_hash, idx) {
         var tags = tx_tags[tx_hash];
         var index = tx_tags.indexOf(idx);
@@ -3075,28 +3315,43 @@ var MyWallet = new function() {
             tx_tags.splice(index, 1);
         }
         MyWallet.backupWalletDelayed();
-    }
+    };
 
+    /**
+     * @return {Array} Tag Names
+     */
     this.getTagNames = function() {
         return tag_names;
-    }
+    };
 
+    /**
+     * @param {string} name tag name
+     * @return {boolean} success or not
+     */
     this.addTag = function(name) {
         if (! isAlphaNumericSpace(name))
             return false;
         tag_names.push(name);
         MyWallet.backupWalletDelayed();
         return true;
-    }
+    };
 
+    /**
+     * @param {number} idx index
+     * @param {string} name tag name
+     * @return {boolean} success or not
+     */
     this.renameTag = function(idx, name) {
         if (! isAlphaNumericSpace(name))
             return false;
         tag_names[idx] = name;
         MyWallet.backupWalletDelayed();
         return true;
-    }
+    };
 
+    /**
+     * @param {number} idx index
+     */
     this.deleteTag = function(idx) {
         tag_names.splice(idx,1);
 
@@ -3108,12 +3363,12 @@ var MyWallet = new function() {
             }
         }
         //MyWallet.backupWalletDelayed();
-    }
+    };
 
     function isAlphaNumericSpace(input) {
         return XRegExp("^\\p{L}[\\p{L}@ \\-,._']*$").test(input) || /^[\w\-,._  ]+$/.test(input);
     }
-        
+
     function parseMultiAddressJSON(obj, cached, checkCompleted) {
         if (!cached) {
             if (obj.mixer_fee) {
@@ -3204,6 +3459,7 @@ var MyWallet = new function() {
 
     /**
      * Get the list of transactions from the http API.
+     * Needs to be called by client in the success callback of fetchWalletJson and after MyWallet.initializeHDWallet
      * @param {function()=} success Success callback function.
      */
     this.getHistoryAndParseMultiAddressJSON = function(_success) {
@@ -3221,7 +3477,7 @@ var MyWallet = new function() {
         };
         
         MyWallet.get_history(success, error);
-    }
+    };
 
     function checkWalletChecksum(payload_checksum, success, error) {
         var data = {method : 'wallet.aes.json', format : 'json', checksum : payload_checksum};
@@ -3261,7 +3517,7 @@ var MyWallet = new function() {
         }, function(e) {
             if (error) error();
         });
-    }
+    };
 
     function internalRestoreWallet(success, error, decrypt_success) {
         if (encrypted_wallet_data == null || encrypted_wallet_data.length == 0) {
@@ -3396,21 +3652,21 @@ var MyWallet = new function() {
     this.makePairingCode = function(success, error) {
         try {
             MyWallet.securePost('wallet', { method : 'pairing-encryption-password' }, function(encryption_phrase) {
-                success('1|' + guid + '|' + MyWallet.encrypt(sharedKey + '|' + CryptoJS.enc.Utf8.parse(password).toString(), encryption_phrase, 10))
+                success('1|' + guid + '|' + MyWallet.encrypt(sharedKey + '|' + CryptoJS.enc.Utf8.parse(password).toString(), encryption_phrase, 10));
             }, function(e) {
                 error(e);
             });
         } catch (e) {
             error(e);
         }
-    }
+    };
 
     /**
      * Fetch information on wallet identfier with resend code set to true
      * @param {string} user_guid User GUID.
-     * @param {string} shared_key User shared key. (Nullable)
+     * @param {?string} shared_key User shared key.
      * @param {string} inputedPassword User password.
-     * @param {string} twoFACode User 2 factor code. (Nullable)
+     * @param {?string} twoFACode User 2 factor code.
      * @param {function()} success Success callback function.
      * @param {function()} needs_two_factor_code Require 2 factor code callback function.
      * @param {function()} wrong_two_factor_code 2 factor code incorrect callback function.
@@ -3419,7 +3675,7 @@ var MyWallet = new function() {
      */
     this.resendTwoFactorSMS = function(user_guid, shared_key, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_required, other_error) {
         MyWallet.fetchWalletJson(user_guid, shared_key, true, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_required, other_error);
-    }
+    };
 
     /**
      * Fetch wallet from server, decrypt and build wallet model.
@@ -3583,7 +3839,7 @@ var MyWallet = new function() {
                 });
             }
         });
-    }
+    };
 
     this.pollForSessionGUID = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_received, other_error) {
         if (isPolling) return;
@@ -3626,7 +3882,7 @@ var MyWallet = new function() {
                 isPolling = false;
             }
         });
-    }
+    };
 
     this.restoreWallet = function(pw, two_factor_auth_key, success, wrong_two_factor_code, other_error, decrypt_success) {
 
@@ -3704,11 +3960,11 @@ var MyWallet = new function() {
         } catch (e) {
             _error(e);
         }
-    }
+    };
 
     this.getIsInitialized = function() {
         return isInitialized;
-    }
+    };
 
     function setIsInitialized() {
         if (isInitialized) return;
@@ -3720,7 +3976,7 @@ var MyWallet = new function() {
 
     this.connectWebSocket = function() {
         webSocketConnect(wsSuccess);
-    }
+    };
     
     function emailBackup() {
         MyWallet.securePost("wallet", { method : 'email-backup' }, function(data) {
@@ -3738,7 +3994,7 @@ var MyWallet = new function() {
             } catch (e) {
                 return null;
             }
-    }
+    };
 
     //Can call multiple times in a row and it will backup only once after a certain delay of activity
     this.backupWalletDelayed = function(method, success, error, extra) {
@@ -3756,7 +4012,7 @@ var MyWallet = new function() {
         archTimer = setTimeout(function (){
             MyWallet.backupWallet(method, success, error, extra);
         }, 3000);
-    }
+    };
 
     //Save the javascript wallet to the remote server
     this.backupWallet = function(method, successcallback, errorcallback) {
@@ -3862,26 +4118,26 @@ var MyWallet = new function() {
             }
         }
         return true;
-    }
+    };
 
     this.encrypt = function(data, password, pbkdf2_iterations) {
-      var salt = CryptoJS.lib.WordArray.random(16)      
+        var salt = CryptoJS.lib.WordArray.random(16);
 
-      var streched_password = MyWallet.stretchPassword(password, salt, pbkdf2_iterations)
+        var streched_password = MyWallet.stretchPassword(password, salt, pbkdf2_iterations);
             
-      var iv = salt // Use the same value for IV and salt.
+        var iv = salt; // Use the same value for IV and salt.
         
-      var payload = CryptoJS.enc.Utf8.parse(data)
+        var payload = CryptoJS.enc.Utf8.parse(data);
         
-      // AES.encrypt takes an optional salt argument, which we don't use.
-      var encrypted = CryptoJS.AES.encrypt(payload, streched_password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iv: iv}); 
+        // AES.encrypt takes an optional salt argument, which we don't use.
+        var encrypted = CryptoJS.AES.encrypt(payload, streched_password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iv: iv});
                         
-      // Add IV to beginning of payload (using hex strings):                                 
-      var res = iv.toString() + encrypted.ciphertext.toString();
+        // Add IV to beginning of payload (using hex strings):                                 
+        var res = iv.toString() + encrypted.ciphertext.toString();
       
-      // Return as Base64:
-      return CryptoJS.enc.Hex.parse(res).toString(CryptoJS.enc.Base64)
-    }
+        // Return as Base64:
+        return CryptoJS.enc.Hex.parse(res).toString(CryptoJS.enc.Base64);
+    };
 
     this.encryptWallet = function(data, password) {
         return JSON.stringify({
@@ -3889,17 +4145,17 @@ var MyWallet = new function() {
             version : MyWallet.didUpgradeToHd() ? 3.0 : 2.0,
             payload : MyWallet.encrypt(data, password, MyWallet.getPbkdf2Iterations())
         });
-    }
+    };
 
     this.decryptWallet = function(data, password, success, error) {
         try {
             var _success = function (root, obj) {
                 success && success(root, obj);
-            }
+            };
 
             var _error = function (e) {
                 error && error(e);
-            }
+            };
 
             //Test if the payload is valid json
             //If it is json then check the payload and pbkdf2_iterations keys are available
@@ -3965,17 +4221,17 @@ var MyWallet = new function() {
         } catch (e) {
             _error(e);
         }
-    }
+    };
 
     this.getWebWorkerLoadPrefix = function() {
         return BlockchainAPI.getRootURL() + resource + 'wallet/';
-    }
+    };
 
     this.decryptWebWorker = function(data, password, pbkdf2_iterations, success, _error) {
         var didError = false;
         var error = function(e) {
             if (!didError) { _error(e); didError = true; }
-        }
+        };
 
         try {
             var worker = new Worker(MyWallet.getWebWorkerLoadPrefix() + 'signer' + (min ? '.min.js' : '.js'));
@@ -4009,7 +4265,7 @@ var MyWallet = new function() {
         } catch (e) {
             error(e);
         }
-    }
+    };
 
     //When the ecryption format changes it can produce data which appears to decrypt fine but actually didn't
     //So we call success(data) and if it returns true the data was formatted correctly
@@ -4110,60 +4366,60 @@ var MyWallet = new function() {
         if (error) error();
 
         return null;
-    }
+    };
 
     this.decryptPasswordWithProcessedPin = function(data, password, pbkdf2_iterations) {
         return decryptAesWithStretchedPassword(data, password, pbkdf2_iterations);
-    }
+    };
 
     this.stretchPassword = function(password, salt, pbkdf2_iterations) {
-      // Stretch the password using PBKDF2
-      // This uses sjcl for speed reasons (order of magnitude faster than CryptoJS using sjcl 1.0.1 vs CryptoJS 3.1.2)
-      // sjcl defaults to sha256, but we need sha1 according to rfc 2898
-      var hmacSHA1 = function (key) {
-          var hasher = new sjcl.misc.hmac(key, sjcl.hash.sha1);
-          this.encrypt = function () {
-              return hasher.encrypt.apply(hasher, arguments);
-          };
-      };
+        // Stretch the password using PBKDF2
+        // This uses sjcl for speed reasons (order of magnitude faster than CryptoJS using sjcl 1.0.1 vs CryptoJS 3.1.2)
+        // sjcl defaults to sha256, but we need sha1 according to rfc 2898
+        var hmacSHA1 = function (key) {
+            var hasher = new sjcl.misc.hmac(key, sjcl.hash.sha1);
+            this.encrypt = function () {
+                return hasher.encrypt.apply(hasher, arguments);
+            };
+        };
       
-      // need to convert CryptoJS word objects to sjcl word objects
-      salt = sjcl.codec.hex.toBits(salt.toString(CryptoJS.enc.Hex))
-      var streched_password = sjcl.misc.pbkdf2(password, salt, pbkdf2_iterations, 256, hmacSHA1)
-      // convert back
-      return CryptoJS.enc.Hex.parse(sjcl.codec.hex.fromBits(streched_password))
-    }
+        // need to convert CryptoJS word objects to sjcl word objects
+        salt = sjcl.codec.hex.toBits(salt.toString(CryptoJS.enc.Hex));
+        var streched_password = sjcl.misc.pbkdf2(password, salt, pbkdf2_iterations, 256, hmacSHA1);
+        // convert back
+        return CryptoJS.enc.Hex.parse(sjcl.codec.hex.fromBits(streched_password));
+    };
 
     function decryptAesWithStretchedPassword(data, password, pbkdf2_iterations) {
         // Convert base64 string data to hex string
-        var data_hex_string = CryptoJS.enc.Base64.parse(data).toString()
+        var data_hex_string = CryptoJS.enc.Base64.parse(data).toString();
         
         // Pull out the Initialization vector from data (@see http://en.wikipedia.org/wiki/Initialization_vector )
-        var iv = CryptoJS.enc.Hex.parse(data_hex_string.slice(0,32))
+        var iv = CryptoJS.enc.Hex.parse(data_hex_string.slice(0,32));
         
         // We use same value for the PBKDF2 salt and the AES IV. But we do not use a salt in the AES encryption
-        var salt = iv
+        var salt = iv;
 
-        var streched_password = MyWallet.stretchPassword(password, salt, pbkdf2_iterations)
+        var streched_password = MyWallet.stretchPassword(password, salt, pbkdf2_iterations);
                   
         // Remove the first 16 bytes (IV) from the payload:
-        var payload_hex_string = data_hex_string.slice(32)
+        var payload_hex_string = data_hex_string.slice(32);
         
         // Paylod is cipthertext without IV as bytes
-        var payload = CryptoJS.enc.Hex.parse(payload_hex_string)
+        var payload = CryptoJS.enc.Hex.parse(payload_hex_string);
         
         // AES decryption expects a base 64 encoded payload:
-        var payload_base_64 = payload.toString(CryptoJS.enc.Base64)
+        var payload_base_64 = payload.toString(CryptoJS.enc.Base64);
         
         // AES.decrypt takes an optional salt argument, which we don't use.
         var decrypted = CryptoJS.AES.decrypt({ciphertext: payload, salt: ""}, streched_password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iv: iv});
         
         // Decrypted is returned as bytes, we convert it to a UTF8 String
-        var decoded = decrypted.toString(CryptoJS.enc.Utf8)
+        var decoded = decrypted.toString(CryptoJS.enc.Utf8);
         
         return decoded;
     }
-    
+
     this.handleNTPResponse = function(obj, clientTime) {
         //Calculate serverTimeOffset using NTP alog
         var nowTime = (new Date()).getTime();
@@ -4183,13 +4439,13 @@ var MyWallet = new function() {
 
             console.log('Server Time offset ' + serverTimeOffset + 'ms - This offset ' + thisOffset);
         }
-    }
+    };
 
     // Expects a secret (e.g. a private key, xpriv of seed hex) and the second
     // password. Returns the encrypted secret:
     this.encryptSecretWithSecondPassword = function(base58, password) {
       return MyWallet.encrypt(base58, sharedKey + password, MyWallet.getPbkdf2Iterations());
-    }
+    };
     
     // Expects an ecrypted secret (e.g. a private key, xpriv or seed hex) and
     // the second password. Returns the secret:
@@ -4197,6 +4453,11 @@ var MyWallet = new function() {
         return MyWallet.decrypt(secret, sharedKey + password, MyWallet.getPbkdf2Iterations(), MyWallet.isBase58);
     };
 
+    /**
+     * @param {st ring} address bitcoin address
+     * @param {string} message message
+     * @return {string} message signature in base64
+     */
     this.signmessage = function(address, message) {
         var addr = addresses[address];
 
@@ -4212,8 +4473,12 @@ var MyWallet = new function() {
 
         var signatureBuffer = Bitcoin.Message.sign(key, message, Bitcoin.networks.bitcoin);
         return signatureBuffer.toString("base64", 0, signatureBuffer.length);
-    }
+    };
 
+    /**
+     * @param {st ring} input second password
+     * @return {boolean} whether input matches set second password
+     */
     this.isCorrectSecondPassword = function(input) {
         if (! double_encryption) {
             throw 'No second password set';
@@ -4228,8 +4493,12 @@ var MyWallet = new function() {
         }
 
         return false;
-    }
+    };
 
+    /**
+     * @param {st ring} input second password
+     * @return {boolean} whether input matches second password
+     */
     this.validateSecondPassword = function(input) {
         var thash = CryptoJS.SHA256(sharedKey + input);
 
@@ -4268,7 +4537,7 @@ var MyWallet = new function() {
         //*/
 
         return false;
-    }
+    };
 
     this.runCompressedCheck = function() {
         var to_check = [];
@@ -4327,7 +4596,7 @@ var MyWallet = new function() {
                 });
             }
         });
-    }
+    };
 
     //Check the integreity of all keys in the wallet
     this.checkAllKeys = function(second_password) {
@@ -4384,7 +4653,7 @@ var MyWallet = new function() {
         }
 
         MyWallet.sendEvent("msg", {type: "success", message: 'wallet-success ' + 'Wallet verified.'});
-    }
+    };
 
     this.changePassword = function(new_password, success, error) {
         password = new_password;
@@ -4395,8 +4664,16 @@ var MyWallet = new function() {
             if (error)
                 error();
         });
-    }
+    };
 
+    /**
+     * @param {string} inputedEmail user email
+     * @param {string} inputedPassword user main password
+     * @param {string} languageCode fiat currency code (e.g. USD)
+     * @param {string} currencyCode language code (e.g. en)
+     * @param {function(string, string, string)} success callback function with guid, sharedkey and password
+     * @param {function(string)} error callback function with error message
+     */
     this.createNewWallet = function(inputedEmail, inputedPassword, languageCode, currencyCode, success, error) {
         MyWalletSignup.generateNewWallet(inputedPassword, inputedEmail, function(createdGuid, createdSharedKey, createdPassword) {
             MyStore.clear();
@@ -4412,7 +4689,7 @@ var MyWallet = new function() {
         }, function (e) {
             error(e);
         });
-    }
+    };
 
     function nKeys(obj) {
         var size = 0, key;
@@ -4448,7 +4725,7 @@ var MyWallet = new function() {
         if (disable_logout)
             return;
 
-        MyWallet.sendEvent('logging_out')
+        MyWallet.sendEvent('logging_out');
 
         if (guid == demo_guid) {
             window.location = BlockchainAPI.getRootURL() + 'wallet/logout';
@@ -4466,7 +4743,7 @@ var MyWallet = new function() {
                 }
             });
         }
-    }
+    };
 
     this.openWindow = function(url) {
         function _hasPopupBlocker(poppedWindow) {
@@ -4505,7 +4782,7 @@ var MyWallet = new function() {
         } else {
             return true;
         }
-    }
+    };
 
     function parseMiniKey(miniKey) {
         var check = Bitcoin.crypto.sha256(miniKey + "?");
@@ -4551,7 +4828,7 @@ var MyWallet = new function() {
         }
 
         throw 'Unknown Key Format ' + key;
-    }
+    };
 
     function buffertoByteArray(value) {
         return BigInteger.fromBuffer(value).toByteArray();
@@ -4563,9 +4840,9 @@ var MyWallet = new function() {
         if (format == 'base58') {
             key_bytes = buffertoByteArray(Bitcoin.base58.decode(value));
         } else if (format == 'base64') {
-            key_bytes = buffertoByteArray(new Bitcoin.Buffer.Buffer(value, 'base64'))
+            key_bytes = buffertoByteArray(new Bitcoin.Buffer.Buffer(value, 'base64'));
         } else if (format == 'hex') {
-            key_bytes = buffertoByteArray(new Bitcoin.Buffer.Buffer(value, 'hex'))
+            key_bytes = buffertoByteArray(new Bitcoin.Buffer.Buffer(value, 'hex'));
         } else if (format == 'mini') {
             key_bytes = buffertoByteArray(parseMiniKey(value));
         } else if (format == 'sipa') {
@@ -4588,5 +4865,5 @@ var MyWallet = new function() {
             throw 'Result not 32 or 33 bytes in length';
 
         return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format == 'compsipa'));
-    }
+    };
 };
