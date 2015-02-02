@@ -392,6 +392,10 @@ var MyWallet = new function() {
         disable_logout = value;
     };
 
+    this.isLogoutDisabled = function() {
+        return disable_logout;
+    }
+
     this.getFinalBalance = function() {
         return final_balance;
     };
