@@ -7,7 +7,14 @@ module.exports = function(config) {
     browsers : ['Chrome'],
     
     preprocessors: {
-      '**/*.coffee': ['coffee']
+      '**/*.coffee': ['coffee'],
+      'wallet.js' : ['coverage'],
+      'hdwallet.js' : ['coverage'],
+      'HDWalletAccount.js' : ['coverage'],
+      'blockchainapi.js' : ['coverage'],
+      'import-export.js' : ['coverage'],
+      'signer.js' : ['coverage'],
+      'wallet-signup.js' : ['coverage']
     },
 
     coffeePreprocessor: {
@@ -45,10 +52,19 @@ module.exports = function(config) {
     ],
     
     plugins : [
-            'karma-chrome-launcher',
-            'karma-jasmine',
-            'karma-coffee-preprocessor'
-            ]
+      'karma-chrome-launcher',
+      'karma-jasmine',
+      'karma-coffee-preprocessor',
+      'karma-coverage'
+    ],
+    
+    coverageReporter: {
+      type : 'html',
+      dir : 'coverage/'
+    },
+    
+    reporters: ['progress','coverage']
+    
     
   });
 };

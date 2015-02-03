@@ -21,3 +21,6 @@ bitcoinjs-npm.js
 jquery.min.js
 xregexp-all.js
 sjcl.js
+
+# Generate coverage reports
+coverage
