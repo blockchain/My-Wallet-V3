@@ -6898,9 +6898,11 @@ function BitcoinWrapper() {
 
                         function HDNode(K, chainCode, network, restoreFromState) {
                             network = network || networks.bitcoin;
-                            assert(Buffer.isBuffer(chainCode), "Expected Buffer, got " + chainCode);
-                            assert.equal(chainCode.length, 32, "Expected chainCode length of 32, got " + chainCode.length);
-                            assert(network.bip32, "Unknown BIP32 constants for network");
+                            if (! restoreFromState) {
+                                assert(Buffer.isBuffer(chainCode), "Expected Buffer, got " + chainCode);
+                                assert.equal(chainCode.length, 32, "Expected chainCode length of 32, got " + chainCode.length);
+                                assert(network.bip32, "Unknown BIP32 constants for network");                                
+                            }
                             this.chainCode = chainCode;
                             this.depth = 0;
                             this.index = 0;
