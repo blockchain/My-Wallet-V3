@@ -477,6 +477,8 @@ function buildHDWalletWorkIt(seedHexString, accountsArrayPayload, bip39Password,
         hdAccountState.wallet.changeAddresses = hdaccount.wallet.changeAddresses;
         hdAccountState.wallet.outputs = hdaccount.wallet.outputs;
 
+
+        hdAccountState.wallet.accountZero.extendedPublicKey = hdaccount.wallet.accountZero.toBase58(false);
         hdAccountState.wallet.accountZero.chainCode = hdaccount.wallet.accountZero.chainCode;
         hdAccountState.wallet.accountZero.depth = hdaccount.wallet.accountZero.depth;
         hdAccountState.wallet.accountZero.index = hdaccount.wallet.accountZero.index;
@@ -488,6 +490,7 @@ function buildHDWalletWorkIt(seedHexString, accountsArrayPayload, bip39Password,
         hdAccountState.wallet.accountZero.pubKey.Q.z = hdaccount.wallet.accountZero.pubKey.Q.z.toBuffer();
         hdAccountState.wallet.accountZero.pubKey.Q._zInv = hdaccount.wallet.accountZero.pubKey.Q._zInv;
 
+        hdAccountState.wallet.internalAccount.extendedPublicKey = hdaccount.wallet.accountZero.toBase58(false);
         hdAccountState.wallet.internalAccount.chainCode = hdaccount.wallet.internalAccount.chainCode;
         hdAccountState.wallet.internalAccount.depth = hdaccount.wallet.internalAccount.depth;
         hdAccountState.wallet.internalAccount.index = hdaccount.wallet.internalAccount.index;
@@ -499,6 +502,7 @@ function buildHDWalletWorkIt(seedHexString, accountsArrayPayload, bip39Password,
         hdAccountState.wallet.internalAccount.pubKey.Q.z = hdaccount.wallet.internalAccount.pubKey.Q.z.toBuffer();
         hdAccountState.wallet.internalAccount.pubKey.Q._zInv = hdaccount.wallet.internalAccount.pubKey.Q._zInv;
 
+        hdAccountState.wallet.externalAccount.extendedPublicKey = hdaccount.wallet.accountZero.toBase58(false);
         hdAccountState.wallet.externalAccount.chainCode = hdaccount.wallet.externalAccount.chainCode;
         hdAccountState.wallet.externalAccount.depth = hdaccount.wallet.externalAccount.depth;
         hdAccountState.wallet.externalAccount.index = hdaccount.wallet.externalAccount.index;
