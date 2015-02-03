@@ -355,6 +355,16 @@ function HDWallet(seedHex, bip39Password, second_password, success, error) {
 
             return account;
         },
+        createAccountFromExtKeyShell : function(label, possiblyEncryptedExtendedPrivateKey, extendedPublicKey) {
+            var accountIdx = this.accountArray.length;
+
+            var account = HDAccount(null, label, this.accountArray.length);
+            account.extendedPrivateKey = possiblyEncryptedExtendedPrivateKey;
+            account.extendedPublicKey = extendedPublicKey;
+            this.accountArray.push(account);
+
+            return account;
+        },
         createAccount : function(label, second_password) {
             var seedHex = this.getSeedHexString(second_password);
             var accountIdx = this.accountArray.length;
@@ -410,6 +420,100 @@ function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secon
     }
 
     return hdwallet;
+}
+
+function buildHDWalletShell(seedHexString, accountsArrayPayload, bip39Password, second_password, success, error) {
+    var hdwallet = HDWallet(seedHexString, bip39Password, second_password, success, error);
+
+    for (var i = 0; i < accountsArrayPayload.length; i++) {
+        var accountPayload = accountsArrayPayload[i];
+        var archived = accountPayload.archived;
+        if (archived == true)
+            continue;
+        var label = accountPayload.label;
+
+        // This is called when a wallet is loaded, not when it's initially created. 
+        // If second password is enabled then accountPayload.xpriv has already been 
+        // encrypted. We're keeping it in an encrypted state.
+        var hdaccount = hdwallet.createAccountFromExtKeyShell(label, accountPayload.xpriv, accountPayload.xpub);
+        hdaccount.setIsArchived(archived);
+        hdaccount.receiveAddressCount = accountPayload.receive_address_count ? accountPayload.receive_address_count : 0;
+        hdaccount.changeAddressCount = accountPayload.change_address_count ? accountPayload.change_address_count : 0;
+        hdaccount.address_labels = accountPayload.address_labels ? accountPayload.address_labels : [];
+    }
+
+    return hdwallet;
+}
+
+function buildHDWalletWorkIt(seedHexString, accountsArrayPayload, bip39Password, second_password) {
+    var hdwallet = HDWallet(seedHexString, bip39Password, second_password, null, null);
+
+    var hdwalletState = {};
+    hdwalletState.seedHex = hdwallet.seedHex;
+    hdwalletState.bip39Password = hdwallet.bip39Password;
+    hdwalletState.accountArray = [];
+
+
+    for (var i = 0; i < accountsArrayPayload.length; i++) {
+        var accountPayload = accountsArrayPayload[i];
+        var archived = accountPayload.archived;
+        if (archived == true)
+            continue;
+        var label = accountPayload.label;
+
+        var hdaccount = hdwallet.createAccountFromExtKey(label, accountPayload.xpriv, accountPayload.xpub);
+        hdaccount.setIsArchived(archived);
+        hdaccount.receiveAddressCount = accountPayload.receive_address_count ? accountPayload.receive_address_count : 0;
+        hdaccount.changeAddressCount = accountPayload.change_address_count ? accountPayload.change_address_count : 0;
+        hdaccount.address_labels = accountPayload.address_labels ? accountPayload.address_labels : [];
+
+        var hdAccountState = {};
+        hdAccountState.wallet = {};
+
+        hdAccountState.wallet.accountZero = {};
+        hdAccountState.wallet.internalAccount = {};
+        hdAccountState.wallet.externalAccount = {};
+        hdAccountState.wallet.addresses = hdaccount.wallet.addresses;
+        hdAccountState.wallet.changeAddresses = hdaccount.wallet.changeAddresses;
+        hdAccountState.wallet.outputs = hdaccount.wallet.outputs;
+
+        hdAccountState.wallet.accountZero.chainCode = hdaccount.wallet.accountZero.chainCode;
+        hdAccountState.wallet.accountZero.depth = hdaccount.wallet.accountZero.depth;
+        hdAccountState.wallet.accountZero.index = hdaccount.wallet.accountZero.index;
+        hdAccountState.wallet.accountZero.pubKey = {};
+        hdAccountState.wallet.accountZero.pubKey.compressed = hdaccount.wallet.accountZero.pubKey.compressed;
+        hdAccountState.wallet.accountZero.pubKey.Q = {};
+        hdAccountState.wallet.accountZero.pubKey.Q.x = hdaccount.wallet.accountZero.pubKey.Q.x.toBuffer();
+        hdAccountState.wallet.accountZero.pubKey.Q.y = hdaccount.wallet.accountZero.pubKey.Q.y.toBuffer();
+        hdAccountState.wallet.accountZero.pubKey.Q.z = hdaccount.wallet.accountZero.pubKey.Q.z.toBuffer();
+        hdAccountState.wallet.accountZero.pubKey.Q._zInv = hdaccount.wallet.accountZero.pubKey.Q._zInv;
+
+        hdAccountState.wallet.internalAccount.chainCode = hdaccount.wallet.internalAccount.chainCode;
+        hdAccountState.wallet.internalAccount.depth = hdaccount.wallet.internalAccount.depth;
+        hdAccountState.wallet.internalAccount.index = hdaccount.wallet.internalAccount.index;
+        hdAccountState.wallet.internalAccount.pubKey = {};
+        hdAccountState.wallet.internalAccount.pubKey.compressed = hdaccount.wallet.accountZero.pubKey.compressed;
+        hdAccountState.wallet.internalAccount.pubKey.Q = {};
+        hdAccountState.wallet.internalAccount.pubKey.Q.x = hdaccount.wallet.internalAccount.pubKey.Q.x.toBuffer();
+        hdAccountState.wallet.internalAccount.pubKey.Q.y = hdaccount.wallet.internalAccount.pubKey.Q.y.toBuffer();
+        hdAccountState.wallet.internalAccount.pubKey.Q.z = hdaccount.wallet.internalAccount.pubKey.Q.z.toBuffer();
+        hdAccountState.wallet.internalAccount.pubKey.Q._zInv = hdaccount.wallet.internalAccount.pubKey.Q._zInv;
+
+        hdAccountState.wallet.externalAccount.chainCode = hdaccount.wallet.externalAccount.chainCode;
+        hdAccountState.wallet.externalAccount.depth = hdaccount.wallet.externalAccount.depth;
+        hdAccountState.wallet.externalAccount.index = hdaccount.wallet.externalAccount.index;
+        hdAccountState.wallet.externalAccount.pubKey = {};
+        hdAccountState.wallet.externalAccount.pubKey.compressed = hdaccount.wallet.accountZero.pubKey.compressed;
+        hdAccountState.wallet.externalAccount.pubKey.Q = {};
+        hdAccountState.wallet.externalAccount.pubKey.Q.x = hdaccount.wallet.externalAccount.pubKey.Q.x.toBuffer();
+        hdAccountState.wallet.externalAccount.pubKey.Q.y = hdaccount.wallet.externalAccount.pubKey.Q.y.toBuffer();
+        hdAccountState.wallet.externalAccount.pubKey.Q.z = hdaccount.wallet.externalAccount.pubKey.Q.z.toBuffer();
+        hdAccountState.wallet.externalAccount.pubKey.Q._zInv = hdaccount.wallet.externalAccount.pubKey.Q._zInv;
+
+        hdwalletState.accountArray.push(hdAccountState);
+    }
+
+    return hdwalletState;
 }
 
 function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallback) {

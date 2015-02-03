@@ -152,6 +152,7 @@ var MyWallet = new function() {
     var legacyAddressesNumTxFetched = 0;
     var numOldTxsToFetchAtATime = 10; 
 
+    var Bitcoin = BitcoinWrapper();
     var BigInteger = Bitcoin.BigInteger;
     var ECKey = Bitcoin.ECKey;
     var buffer = Bitcoin.Buffer;
@@ -173,6 +174,7 @@ var MyWallet = new function() {
     var counter = 0;
     var isPolling = false;
     var didUpgradeToHd = null;
+    var xpubs = [];
 
     var wallet_options = {
         pbkdf2_iterations : default_pbkdf2_iterations, //Number of pbkdf2 iterations to default to for main password, second password and dpasswordhash
@@ -388,9 +390,9 @@ var MyWallet = new function() {
         return sharedcoin_endpoint;
     };
 
-    this.disableLogout = function(value) {
-        disable_logout = value;
-    };
+    this.isLogoutDisabled = function() {
+        return disable_logout;
+    }
 
     this.isLogoutDisabled = function() {
         return disable_logout;
@@ -2623,6 +2625,7 @@ var MyWallet = new function() {
     
     this.setHDWallet = function(newValue) {
         myHDWallet = newValue;
+        MyWallet.sendEvent('hd_wallet_set');
     };
     
 
@@ -2730,8 +2733,97 @@ var MyWallet = new function() {
     };
 
     this.buildHDWallet = function(seedHexString, accountsArrayPayload, second_password, success, error) {
-        this.setHDWallet(buildHDWallet(seedHexString, accountsArrayPayload, second_password, success, error));
+        this.setHDWallet(buildHDWalletShell(seedHexString, accountsArrayPayload, second_password, success, error));
+        MyWallet.buildHDWalletWorker(seedHexString, accountsArrayPayload, second_password, success, error);
     };
+
+    this.buildHDWalletWorker = function(seedHexString, accountsArrayPayload, second_password, success, error) {
+        var onmessageHDWallet = function(event) {
+            var data = event.data;       
+            var bitcoinWrapper = BitcoinWrapper();
+
+            var hdwalletState = buildHDWalletWorkIt(data.seedHexString, data.accountsArrayPayload, null, data.second_password);
+            postMessage(hdwalletState);  
+        };
+
+        var makeWorker = function() {
+            var workerUrl = null;
+            if (!workerUrl) {
+                var code = '(function buildHDWalletWorker() {\nonmessage = '+onmessageHDWallet.toString()+'\n'+buildHDWalletWorkIt.toString()+'\n'+HDWallet.toString()+'\n'+HDWalletAccount.toString()+HDAccount.toString()+'\n'+BitcoinWrapper.toString()+'})()';
+                var blob;
+                try {
+                    blob = new Blob([code], {type: "text/javascript"});
+                } catch(e) {
+                    window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder || window.MSBlobBuilder;
+                    blob = new BlobBuilder();
+                    blob.append(code);
+                    blob = blob.getBlob("text/javascript");
+                }
+                workerUrl = URL.createObjectURL(blob);
+            }
+            var worker = new Worker(workerUrl);
+            worker.onmessage = function(event) {
+                var data = event.data;
+                reconstructHDWallet(data, second_password, success, error);
+            };
+            return worker;
+        };
+
+        var worker = makeWorker();
+        var params = {
+            seedHexString : seedHexString,
+            accountsArrayPayload : accountsArrayPayload,
+            second_password : second_password
+        };
+
+        worker.postMessage(params);
+    }
+
+    function reconstructHDWallet(hdwalletState, second_password, success, error) {
+        for (var i = 0; i < hdwalletState.accountArray.length; i++) {
+            var accountPayload = hdwalletState.accountArray[i];
+            var archived = accountPayload.archived;
+            if (archived == true)
+                continue;
+            var label = accountPayload.address_labels;
+
+      
+            var walletAccount = new HDWalletAccount(null);
+
+            walletAccount.accountZero = Bitcoin.HDNode.fromBase58(accountPayload.extendedPublicKey, true);
+            walletAccount.accountZero.pubKey = Bitcoin.ECPubKey.fromBuffer(null, true);
+            walletAccount.accountZero.pubKey.compressed = accountPayload.wallet.accountZero.pubKey.compressed;
+            walletAccount.accountZero.pubKey.Q = new Bitcoin.Point(null, null, null, null, true);
+            walletAccount.accountZero.pubKey.Q.curve = Bitcoin.ecurve.getCurveByName("secp256k1");
+            walletAccount.accountZero.pubKey.Q.x = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.accountZero.pubKey.Q.x);
+            walletAccount.accountZero.pubKey.Q.y = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.accountZero.pubKey.Q.y);
+            walletAccount.accountZero.pubKey.Q.z = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.accountZero.pubKey.Q.z);
+            walletAccount.accountZero.pubKey.Q._zInv = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.accountZero.pubKey.Q._zInv);
+
+
+            walletAccount.internalAccount = Bitcoin.HDNode.fromBase58(accountPayload.extendedPublicKey, true);
+            walletAccount.internalAccount.pubKey = Bitcoin.ECPubKey.fromBuffer(null, true);
+            walletAccount.internalAccount.pubKey.compressed = accountPayload.wallet.internalAccount.pubKey.compressed;
+            walletAccount.internalAccount.pubKey.Q = new Bitcoin.Point(null, null, null, null, true);
+            walletAccount.internalAccount.pubKey.Q.curve = Bitcoin.ecurve.getCurveByName("secp256k1");
+            walletAccount.internalAccount.pubKey.Q.x = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.accountZero.pubKey.Q.x);
+            walletAccount.internalAccount.pubKey.Q.y = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.accountZero.pubKey.Q.y);
+            walletAccount.internalAccount.pubKey.Q.z = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.accountZero.pubKey.Q.z);
+            walletAccount.internalAccount.pubKey.Q._zInv = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.internalAccount.pubKey.Q._zInv);
+
+            walletAccount.externalAccount = Bitcoin.HDNode.fromBase58(accountPayload.extendedPublicKey, true);
+            walletAccount.externalAccount.pubKey = Bitcoin.ECPubKey.fromBuffer(null, true);
+            walletAccount.externalAccount.pubKey.compressed = accountPayload.wallet.externalAccount.pubKey.compressed;
+            walletAccount.externalAccount.pubKey.Q = new Bitcoin.Point(null, null, null, null, true);
+            walletAccount.externalAccount.pubKey.Q.curve = Bitcoin.ecurve.getCurveByName("secp256k1");
+            walletAccount.externalAccount.pubKey.Q.x = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.externalAccount.pubKey.Q.x);
+            walletAccount.externalAccount.pubKey.Q.y = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.externalAccount.pubKey.Q.y);
+            walletAccount.externalAccount.pubKey.Q.z = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.externalAccount.pubKey.Q.z);
+            walletAccount.externalAccount.pubKey.Q._zInv = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.externalAccount.pubKey.Q._zInv);
+
+            myHDWallet.accountArray[i].wallet = walletAccount;
+        }
+    }
 
     this.generateHDWalletPassphrase = function() {
         return BIP39.generateMnemonic();
@@ -3632,7 +3724,13 @@ var MyWallet = new function() {
             });
         };
         
-        MyWallet.get_history(success, error);
+        var addresses = xpubs.concat(MyWallet.getLegacyActiveAddresses());
+        BlockchainAPI.async_get_history_with_addresses(addresses, function(data) {
+            parseMultiAddressJSON(data, false, false);
+        }, function() {
+            if (error) error();
+
+        }, tx_filter, tx_page*MyWallet.getNTransactionsPerPage(), MyWallet.getNTransactionsPerPage());
     };
 
     function checkWalletChecksum(payload_checksum, success, error) {
@@ -3738,6 +3836,12 @@ var MyWallet = new function() {
                     didUpgradeToHd = true;
                     var defaultHDWallet = obj.hd_wallets[0];
                     if (haveBuildHDWallet == false) {
+                        xpubs = [];
+                        for (var i in defaultHDWallet.accounts) {
+                            var account  = defaultHDWallet.accounts[i];
+                            xpubs.push(account.xpub);
+                        }
+
                         MyWallet.buildHDWallet(defaultHDWallet.seed_hex, defaultHDWallet.accounts);
                         haveBuildHDWallet = true;
                     }
