@@ -2534,36 +2534,6 @@ var MyWallet = new function() {
             return [];
         }
         return MyWallet.getHDWallet().getAccounts();
-
-        var accounts = MyWallet.getHDWallet().getAccounts();
-        var activeAccounts = [];
-        for (var i in accounts) {
-            var account = MyWallet.getHDWallet().getAccount(i);
-            if (! account.isArchived()) {
-                activeAccounts.push(account);
-            }
-
-        }
-        return activeAccounts;
-    };
-
-    /**
-     * @return {Array} Array of archived HD accounts
-     */
-    this.getArchivedAccounts = function() {
-        if (!MyWallet.didUpgradeToHd()) {
-            return [];
-        }
-        var accounts = MyWallet.getHDWallet().getAccounts();
-        var archivedAccounts = [];
-        for (var i in accounts) {
-            var account = MyWallet.getHDWallet().getAccount(i);
-            if (account.isArchived()) {
-                archivedAccounts.push(account);
-            }
-
-        }
-        return archivedAccounts;
     };
 
     /**
