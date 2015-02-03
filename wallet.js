@@ -2733,8 +2733,13 @@ var MyWallet = new function() {
     };
 
     this.buildHDWallet = function(seedHexString, accountsArrayPayload, second_password, success, error) {
-        this.setHDWallet(buildHDWalletShell(seedHexString, accountsArrayPayload, second_password, success, error));
-        MyWallet.buildHDWalletWorker(seedHexString, accountsArrayPayload, second_password, success, error);
+        var useWebworker = true;
+        if (useWebworker) {
+            this.setHDWallet(buildHDWalletShell(seedHexString, accountsArrayPayload, second_password, success, error));
+            MyWallet.buildHDWalletWorker(seedHexString, accountsArrayPayload, second_password, success, error);
+        } else {
+            this.setHDWallet(buildHDWallet(seedHexString, accountsArrayPayload, second_password, success, error));
+        }
     };
 
     this.buildHDWalletWorker = function(seedHexString, accountsArrayPayload, second_password, success, error) {
