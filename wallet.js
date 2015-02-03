@@ -390,8 +390,8 @@ var MyWallet = new function() {
         return sharedcoin_endpoint;
     };
 
-    this.isLogoutDisabled = function() {
-        return disable_logout;
+    this.disableLogout = function(value) {
+        disable_logout = value;
     }
 
     this.isLogoutDisabled = function() {
