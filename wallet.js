@@ -2623,9 +2623,11 @@ var MyWallet = new function() {
         return myHDWallet;
     };
     
-    this.setHDWallet = function(newValue) {
+    this.setHDWallet = function(newValue, isShellWallet) {
         myHDWallet = newValue;
-        MyWallet.sendEvent('hd_wallet_set');
+        if (! isShellWallet) {
+            MyWallet.sendEvent('hd_wallet_set');
+        }
     };
     
 
@@ -2735,7 +2737,7 @@ var MyWallet = new function() {
     this.buildHDWallet = function(seedHexString, accountsArrayPayload, second_password, success, error) {
         var useWebworker = true;
         if (useWebworker) {
-            this.setHDWallet(buildHDWalletShell(seedHexString, accountsArrayPayload, second_password, success, error));
+            this.setHDWallet(buildHDWalletShell(seedHexString, accountsArrayPayload, second_password, success, error), true);
             MyWallet.buildHDWalletWorker(seedHexString, accountsArrayPayload, second_password, success, error);
         } else {
             this.setHDWallet(buildHDWallet(seedHexString, accountsArrayPayload, second_password, success, error));
