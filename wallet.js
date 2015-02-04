@@ -2066,7 +2066,7 @@ var MyWallet = new function() {
             var from_address;
             if (detectPrivateKeyFormat == 'base58' || detectPrivateKeyFormat == 'base64') {
                 from_address = MyWallet.getUnCompressedAddressString(privateKeyToSweep);
-            else {
+            } else {
                 from_address = MyWallet.getCompressedAddressString(privateKeyToSweep);
             }
 
