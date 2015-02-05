@@ -2626,7 +2626,7 @@ var MyWallet = new function() {
     this.recoverMyWalletHDWalletFromSeedHex = function(seedHex, bip39Password, getPassword, successCallback, errorCallback) {
         function recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, secondPassword, successCallback, errorCallback) {
             recoverHDWalletFromSeedHex(seedHex, bip39Password, secondPassword, function(hdWallet) {
-                this.setHDWallet(hdWallet);
+                MyWallet.setHDWallet(hdWallet);
 
                 if (successCallback)
                     successCallback();
@@ -2666,7 +2666,7 @@ var MyWallet = new function() {
     this.recoverMyWalletHDWalletFromMnemonic = function(passphrase, bip39Password, getPassword, successCallback, errorCallback) {
         function recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, secondPassword, successCallback, errorCallback) {
             recoverHDWalletFromMnemonic(passphrase, bip39Password, secondPassword, function(hdWallet) {
-                this.setHDWallet(hdWallet);
+                MyWallet.setHDWallet(hdWallet);
 
                 if (successCallback)
                     successCallback();
