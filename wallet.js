@@ -2272,7 +2272,7 @@ var MyWallet = new function() {
         obj.addListener({
             on_success : function(e) {
                 if (successCallback)
-                    successCallback();
+                    successCallback(obj.getId());
             },
             on_start : function(e) {
             },
@@ -2330,7 +2330,7 @@ var MyWallet = new function() {
         obj.addListener({
             on_success : function(e) {
                 if (successCallback)
-                    successCallback();
+                    successCallback(obj.getId());
             },
             on_start : function(e) {
             },
@@ -2479,16 +2479,15 @@ var MyWallet = new function() {
                 var tx = account.createTx(to, value, fixedFee, unspent_outputs, extendedPrivateKey);
                 var balance = account.getBalance();
                 BlockchainAPI.push_tx(tx, note, function(response) {
-
                     if (value + fixedFee >= balance) {
                         account.setUnspentOutputs([]);
-                        successCallback();
+                        successCallback(tx.getId());
                         return;
                     }
 
                     MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function () {
                         if (successCallback)
-                            successCallback(response);
+                            successCallback(tx.getId());
                     }, function(e) {
                         if (errorCallback)
                             errorCallback(e);
