@@ -175,6 +175,7 @@ var MyWallet = new function() {
     var isPolling = false;
     var didUpgradeToHd = null;
     var xpubs = [];
+    var useBuildHDWalletWebworker = false;
 
     var wallet_options = {
         pbkdf2_iterations : default_pbkdf2_iterations, //Number of pbkdf2 iterations to default to for main password, second password and dpasswordhash
@@ -2709,9 +2710,12 @@ var MyWallet = new function() {
         }
     };
 
+    this.setUseBuildHDWalletWebworker = function(enabled) {
+        useBuildHDWalletWebworker = enabled;
+    }
+
     this.buildHDWallet = function(seedHexString, accountsArrayPayload, second_password, success, error) {
-        var useWebworker = true;
-        if (useWebworker) {
+        if (useBuildHDWalletWebworker) {
             this.setHDWallet(buildHDWalletShell(seedHexString, accountsArrayPayload, second_password, success, error), true);
             MyWallet.buildHDWalletWorker(seedHexString, accountsArrayPayload, second_password, success, error);
         } else {
