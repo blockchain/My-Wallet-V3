@@ -488,31 +488,31 @@ function buildHDWalletWorkIt(seedHexString, accountsArrayPayload, bip39Password,
         hdAccountState.wallet.accountZero.pubKey.Q.x = hdaccount.wallet.accountZero.pubKey.Q.x.toBuffer();
         hdAccountState.wallet.accountZero.pubKey.Q.y = hdaccount.wallet.accountZero.pubKey.Q.y.toBuffer();
         hdAccountState.wallet.accountZero.pubKey.Q.z = hdaccount.wallet.accountZero.pubKey.Q.z.toBuffer();
-        hdAccountState.wallet.accountZero.pubKey.Q._zInv = hdaccount.wallet.accountZero.pubKey.Q._zInv;
+        hdAccountState.wallet.accountZero.pubKey.Q._zInv = hdaccount.wallet.accountZero.pubKey.Q._zInv.toBuffer();
 
-        hdAccountState.wallet.internalAccount.extendedPublicKey = hdaccount.wallet.accountZero.neutered().toBase58();
+        hdAccountState.wallet.internalAccount.extendedPublicKey = hdaccount.wallet.internalAccount.neutered().toBase58();
         hdAccountState.wallet.internalAccount.chainCode = hdaccount.wallet.internalAccount.chainCode;
         hdAccountState.wallet.internalAccount.depth = hdaccount.wallet.internalAccount.depth;
         hdAccountState.wallet.internalAccount.index = hdaccount.wallet.internalAccount.index;
         hdAccountState.wallet.internalAccount.pubKey = {};
-        hdAccountState.wallet.internalAccount.pubKey.compressed = hdaccount.wallet.accountZero.pubKey.compressed;
+        hdAccountState.wallet.internalAccount.pubKey.compressed = hdaccount.wallet.internalAccount.pubKey.compressed;
         hdAccountState.wallet.internalAccount.pubKey.Q = {};
         hdAccountState.wallet.internalAccount.pubKey.Q.x = hdaccount.wallet.internalAccount.pubKey.Q.x.toBuffer();
         hdAccountState.wallet.internalAccount.pubKey.Q.y = hdaccount.wallet.internalAccount.pubKey.Q.y.toBuffer();
         hdAccountState.wallet.internalAccount.pubKey.Q.z = hdaccount.wallet.internalAccount.pubKey.Q.z.toBuffer();
-        hdAccountState.wallet.internalAccount.pubKey.Q._zInv = hdaccount.wallet.internalAccount.pubKey.Q._zInv;
+        hdAccountState.wallet.internalAccount.pubKey.Q._zInv = hdaccount.wallet.internalAccount.pubKey.Q._zInv.toBuffer();
 
-        hdAccountState.wallet.externalAccount.extendedPublicKey = hdaccount.wallet.accountZero.neutered().toBase58();
+        hdAccountState.wallet.externalAccount.extendedPublicKey = hdaccount.wallet.externalAccount.neutered().toBase58();
         hdAccountState.wallet.externalAccount.chainCode = hdaccount.wallet.externalAccount.chainCode;
         hdAccountState.wallet.externalAccount.depth = hdaccount.wallet.externalAccount.depth;
         hdAccountState.wallet.externalAccount.index = hdaccount.wallet.externalAccount.index;
         hdAccountState.wallet.externalAccount.pubKey = {};
-        hdAccountState.wallet.externalAccount.pubKey.compressed = hdaccount.wallet.accountZero.pubKey.compressed;
+        hdAccountState.wallet.externalAccount.pubKey.compressed = hdaccount.wallet.externalAccount.pubKey.compressed;
         hdAccountState.wallet.externalAccount.pubKey.Q = {};
         hdAccountState.wallet.externalAccount.pubKey.Q.x = hdaccount.wallet.externalAccount.pubKey.Q.x.toBuffer();
         hdAccountState.wallet.externalAccount.pubKey.Q.y = hdaccount.wallet.externalAccount.pubKey.Q.y.toBuffer();
         hdAccountState.wallet.externalAccount.pubKey.Q.z = hdaccount.wallet.externalAccount.pubKey.Q.z.toBuffer();
-        hdAccountState.wallet.externalAccount.pubKey.Q._zInv = hdaccount.wallet.externalAccount.pubKey.Q._zInv;
+        hdAccountState.wallet.externalAccount.pubKey.Q._zInv = hdaccount.wallet.externalAccount.pubKey.Q._zInv.toBuffer();
 
         hdwalletState.accountArray.push(hdAccountState);
     }

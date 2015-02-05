@@ -175,7 +175,7 @@ var MyWallet = new function() {
     var isPolling = false;
     var didUpgradeToHd = null;
     var xpubs = [];
-    var useBuildHDWalletWebworker = false;
+    var useBuildHDWalletWebworker = true;
 
     var wallet_options = {
         pbkdf2_iterations : default_pbkdf2_iterations, //Number of pbkdf2 iterations to default to for main password, second password and dpasswordhash
@@ -2766,6 +2766,7 @@ var MyWallet = new function() {
     }
 
     function reconstructHDWallet(hdwalletState, second_password, success, error) {
+        var restoreFromState = true;
         for (var i = 0; i < hdwalletState.accountArray.length; i++) {
             var accountPayload = hdwalletState.accountArray[i];
             var archived = accountPayload.archived;
@@ -2776,7 +2777,7 @@ var MyWallet = new function() {
       
             var walletAccount = new HDWalletAccount(null);
 
-            walletAccount.accountZero = Bitcoin.HDNode.fromBase58(accountPayload.wallet.accountZero.extendedPublicKey, true);
+            walletAccount.accountZero = Bitcoin.HDNode.fromBase58(accountPayload.wallet.accountZero.extendedPublicKey, restoreFromState);
             walletAccount.accountZero.pubKey = Bitcoin.ECPubKey.fromBuffer(null, true);
             walletAccount.accountZero.pubKey.compressed = accountPayload.wallet.accountZero.pubKey.compressed;
             walletAccount.accountZero.pubKey.Q = new Bitcoin.Point(null, null, null, null, true);
@@ -2786,17 +2787,17 @@ var MyWallet = new function() {
             walletAccount.accountZero.pubKey.Q.z = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.accountZero.pubKey.Q.z);
             walletAccount.accountZero.pubKey.Q._zInv = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.accountZero.pubKey.Q._zInv);
 
-            walletAccount.internalAccount = Bitcoin.HDNode.fromBase58(accountPayload.wallet.internalAccount.extendedPublicKey, true);
+            walletAccount.internalAccount = Bitcoin.HDNode.fromBase58(accountPayload.wallet.internalAccount.extendedPublicKey, restoreFromState);
             walletAccount.internalAccount.pubKey = Bitcoin.ECPubKey.fromBuffer(null, true);
             walletAccount.internalAccount.pubKey.compressed = accountPayload.wallet.internalAccount.pubKey.compressed;
             walletAccount.internalAccount.pubKey.Q = new Bitcoin.Point(null, null, null, null, true);
             walletAccount.internalAccount.pubKey.Q.curve = Bitcoin.ecurve.getCurveByName("secp256k1");
-            walletAccount.internalAccount.pubKey.Q.x = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.accountZero.pubKey.Q.x);
-            walletAccount.internalAccount.pubKey.Q.y = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.accountZero.pubKey.Q.y);
-            walletAccount.internalAccount.pubKey.Q.z = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.accountZero.pubKey.Q.z);
+            walletAccount.internalAccount.pubKey.Q.x = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.internalAccount.pubKey.Q.x);
+            walletAccount.internalAccount.pubKey.Q.y = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.internalAccount.pubKey.Q.y);
+            walletAccount.internalAccount.pubKey.Q.z = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.internalAccount.pubKey.Q.z);
             walletAccount.internalAccount.pubKey.Q._zInv = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.internalAccount.pubKey.Q._zInv);
 
-            walletAccount.externalAccount = Bitcoin.HDNode.fromBase58(accountPayload.wallet.externalAccount.extendedPublicKey, true);
+            walletAccount.externalAccount = Bitcoin.HDNode.fromBase58(accountPayload.wallet.externalAccount.extendedPublicKey, restoreFromState);
             walletAccount.externalAccount.pubKey = Bitcoin.ECPubKey.fromBuffer(null, true);
             walletAccount.externalAccount.pubKey.compressed = accountPayload.wallet.externalAccount.pubKey.compressed;
             walletAccount.externalAccount.pubKey.Q = new Bitcoin.Point(null, null, null, null, true);
