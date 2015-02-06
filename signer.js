@@ -74,55 +74,60 @@ function IsCanonicalSignature(vchSig) {
 }
 
 
-try {
-//Init WebWorker
-//Window is not defined in WebWorker
+var initWebWorker = function() {
+  try {
+  //Init WebWorker
+  //Window is not defined in WebWorker
     if (typeof window == "undefined" || !window) {
-        var window = {};
+          var window = {};
 
-        self.addEventListener('message', function(e) {
-            var data = e.data;
-            try {
-                switch (data.cmd) {
-                    case 'seed':
-                        var word_array = Crypto.util.bytesToWords(Crypto.util.hexToBytes(data.seed));
+          self.addEventListener('message', function(e) {
+              var data = e.data;
+              try {
+                  switch (data.cmd) {
+                      case 'seed':
+                          var word_array = Crypto.util.bytesToWords(Crypto.util.hexToBytes(data.seed));
 
-                        for (var i in word_array) {
-                            rng_seed_int(word_array[i]);
-                        }
-                        break;
-                    case 'decrypt':
-                        var decoded = Crypto.AES.decrypt(data.data, data.password, { mode: new Crypto.mode.CBC(Crypto.pad.iso10126), iterations : data.pbkdf2_iterations});
+                          for (var i in word_array) {
+                              rng_seed_int(word_array[i]);
+                          }
+                          break;
+                      case 'decrypt':
+                          var decoded = Crypto.AES.decrypt(data.data, data.password, { mode: new Crypto.mode.CBC(Crypto.pad.iso10126), iterations : data.pbkdf2_iterations});
 
-                        self.postMessage({cmd : 'on_decrypt', data : decoded});
+                          self.postMessage({cmd : 'on_decrypt', data : decoded});
 
-                        break;
-                    case 'load_resource':
-                        importScripts(data.path);
-                        break;
-                    case 'sign_input':
-                        var tx = new Bitcoin.Transaction(data.tx);
+                          break;
+                      case 'load_resource':
+                          importScripts(data.path);
+                          break;
+                      case 'sign_input':
+                          var tx = new Bitcoin.Transaction(data.tx);
 
-                        var connected_script = new Bitcoin.Script(data.connected_script);
+                          var connected_script = new Bitcoin.Script(data.connected_script);
 
-                        var signed_script = signInput(tx, data.outputN, data.priv_to_use, connected_script);
+                          var signed_script = signInput(tx, data.outputN, data.priv_to_use, connected_script);
 
-                        if (signed_script) {
-                            self.postMessage({cmd : 'on_sign', script : signed_script, outputN : data.outputN});
-                        } else {
-                            throw 'Unknown Error Signing Script ' + data.outputN;
-                        }
-                        break;
-                    default:
-                        throw 'Unknown Command';
-                };
-            } catch (e) {
-                self.postMessage({cmd : 'on_error', e : exceptionToString(e)});
-            }
-        }, false);
-    }
-} catch (e) { }
+                          if (signed_script) {
+                              self.postMessage({cmd : 'on_sign', script : signed_script, outputN : data.outputN});
+                          } else {
+                              throw 'Unknown Error Signing Script ' + data.outputN;
+                          }
+                          break;
+                      default:
+                          throw 'Unknown Command';
+                  };
+              } catch (e) {
+                  self.postMessage({cmd : 'on_error', e : exceptionToString(e)});
+              }
+          }, false);
+      }
+  } catch (e) { }
+}
 
+var internet_explorer = (/internet explorer/i).test(window.navigator.userAgent) || (/MSIE/i).test(window.navigator.userAgent)
+
+if(!internet_explorer) { initWebWorker() }
 
 function resolveAddress(label) {
     label = $.trim(label);
