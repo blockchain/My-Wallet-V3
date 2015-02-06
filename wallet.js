@@ -2714,12 +2714,16 @@ var MyWallet = new function() {
         useBuildHDWalletWebworker = enabled;
     }
 
-    this.buildHDWallet = function(seedHexString, accountsArrayPayload, second_password, success, error) {
+    this.buildHDWallet = function(seedHexString, accountsArrayPayload, secondPasswordCallback, successCallback, errorCallback) {
         if (useBuildHDWalletWebworker) {
-            this.setHDWallet(buildHDWalletShell(seedHexString, accountsArrayPayload, second_password, success, error), true);
-            MyWallet.buildHDWalletWorker(seedHexString, accountsArrayPayload, second_password, success, error);
+            success = function() { MyWallet.sendEvent('hd_wallet_set'); successCallback() }
+            error   = function() { errorCallback() }
+                        
+            this.setHDWallet(buildHDWalletShell(seedHexString, accountsArrayPayload, secondPasswordCallback), true);
+            // Do not pass a second password callback:
+            MyWallet.buildHDWalletWorker(seedHexString, accountsArrayPayload, undefined, success, error);
         } else {
-            this.setHDWallet(buildHDWallet(seedHexString, accountsArrayPayload, second_password, success, error));
+            this.setHDWallet(buildHDWallet(seedHexString, accountsArrayPayload, secondPasswordCallback, successCallback, errorCallback));
         }
     };
 
@@ -2809,6 +2813,7 @@ var MyWallet = new function() {
 
             myHDWallet.accountArray[i].wallet = walletAccount;
         }
+        success()
     }
 
     this.generateHDWalletPassphrase = function() {
@@ -3827,8 +3832,9 @@ var MyWallet = new function() {
                             var account  = defaultHDWallet.accounts[i];
                             xpubs.push(account.xpub);
                         }
-
-                        MyWallet.buildHDWallet(defaultHDWallet.seed_hex, defaultHDWallet.accounts);
+                        
+                        // We're not passing a second password, success or error callback...
+                        MyWallet.buildHDWallet(defaultHDWallet.seed_hex, defaultHDWallet.accounts, undefined, function() {}, function() {});
                         haveBuildHDWallet = true;
                     }
                     if (defaultHDWallet.mnemonic_verified) {

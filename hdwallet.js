@@ -225,7 +225,7 @@ function passphraseToPassphraseHexString(passphrase) {
 // wallet. We don't have access to the internal double_encryption variable
 // here.
 
-function HDWallet(seedHex, bip39Password, second_password, success, error) {
+function HDWallet(seedHex, bip39Password, second_password) {
 
     var walletObject = {
         seedHex : second_password == null ? seedHex : MyWallet.encryptSecretWithSecondPassword(seedHex, second_password),
@@ -422,8 +422,8 @@ function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secon
     return hdwallet;
 }
 
-function buildHDWalletShell(seedHexString, accountsArrayPayload, bip39Password, second_password, success, error) {
-    var hdwallet = HDWallet(seedHexString, bip39Password, second_password, success, error);
+function buildHDWalletShell(seedHexString, accountsArrayPayload, bip39Password, second_password) {
+    var hdwallet = HDWallet(seedHexString, bip39Password, second_password);
 
     for (var i = 0; i < accountsArrayPayload.length; i++) {
         var accountPayload = accountsArrayPayload[i];
