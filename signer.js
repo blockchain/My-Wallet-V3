@@ -125,7 +125,7 @@ var initWebWorker = function() {
   } catch (e) { }
 }
 
-var internet_explorer = (/internet explorer/i).test(window.navigator.userAgent) || (/MSIE/i).test(window.navigator.userAgent)
+var internet_explorer = !(typeof window == "undefined" || !window) && ((/internet explorer/i).test(window.navigator.userAgent) || (/MSIE/i).test(window.navigator.userAgent))
 
 if(!internet_explorer) { initWebWorker() }
 
