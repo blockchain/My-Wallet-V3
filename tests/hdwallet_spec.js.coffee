@@ -23,6 +23,7 @@ describe "HD Wallet", ->
       
     describe "without 2nd password", ->
       beforeEach ->
+        MyWallet.setUseBuildHDWalletWebworker(false);
         MyWallet.initializeHDWallet(null, null, null, observer.success, observer.error)
         
       it "should succeed", ->
