@@ -2273,7 +2273,7 @@ var MyWallet = new function() {
         obj.addListener({
             on_success : function(e) {
                 if (successCallback)
-                    successCallback(obj.getId());
+                    successCallback(obj.tx.getId());
             },
             on_start : function(e) {
             },
@@ -2331,7 +2331,7 @@ var MyWallet = new function() {
         obj.addListener({
             on_success : function(e) {
                 if (successCallback)
-                    successCallback(obj.getId());
+                    successCallback(obj.tx.getId());
             },
             on_start : function(e) {
             },
