@@ -2716,7 +2716,12 @@ var MyWallet = new function() {
 
     this.buildHDWallet = function(seedHexString, accountsArrayPayload, secondPasswordCallback, successCallback, errorCallback) {
         if (useBuildHDWalletWebworker) {
-            success = function() { MyWallet.sendEvent('hd_wallet_set'); successCallback() }
+            success = function() { 
+              MyWallet.sendEvent('hd_wallet_set'); 
+              if(successCallback) {
+                successCallback() 
+              }
+            }
             error   = function() { errorCallback() }
                         
             this.setHDWallet(buildHDWalletShell(seedHexString, accountsArrayPayload, secondPasswordCallback), true);
