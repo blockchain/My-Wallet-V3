@@ -3718,9 +3718,9 @@ var MyWallet = new function() {
         var addresses = xpubs.concat(MyWallet.getLegacyActiveAddresses());
         BlockchainAPI.async_get_history_with_addresses(addresses, function(data) {
             parseMultiAddressJSON(data, false, false);
+            success && success();
         }, function() {
-            if (error) error();
-
+            error && error();
         }, tx_filter, tx_page*MyWallet.getNTransactionsPerPage(), MyWallet.getNTransactionsPerPage());
     };
 
