@@ -2660,8 +2660,8 @@ var MyWallet = new function() {
      * @param {string} passphrase seed in words
      * @param {?string} bip39Password
      * @param {function()} getPassword
-     * @param {function()} successCallback success callback function
-     * @param {function()} errorCallback error callback function
+     * @param {function()=} successCallback success callback function
+     * @param {function()=} errorCallback error callback function
      */
     this.recoverMyWalletHDWalletFromMnemonic = function(passphrase, bip39Password, getPassword, successCallback, errorCallback) {
         function recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, secondPassword, successCallback, errorCallback) {
@@ -2712,18 +2712,19 @@ var MyWallet = new function() {
 
     this.setUseBuildHDWalletWebworker = function(enabled) {
         useBuildHDWalletWebworker = enabled;
-    }
+    };
 
     this.buildHDWallet = function(seedHexString, accountsArrayPayload, secondPasswordCallback, successCallback, errorCallback) {
         if (useBuildHDWalletWebworker) {
-            success = function() { 
-              MyWallet.sendEvent('hd_wallet_set'); 
-              if(successCallback) {
-                successCallback() 
-              }
-            }
-            error   = function() { errorCallback() }
-                        
+            var success = function() { 
+                MyWallet.sendEvent('hd_wallet_set'); 
+                successCallback && successCallback();
+            };
+
+            var error = function() {
+                errorCallback && errorCallback();
+            };
+
             this.setHDWallet(buildHDWalletShell(seedHexString, accountsArrayPayload, secondPasswordCallback), true);
             // Do not pass a second password callback:
             MyWallet.buildHDWalletWorker(seedHexString, accountsArrayPayload, undefined, success, error);
@@ -2772,7 +2773,7 @@ var MyWallet = new function() {
         };
 
         worker.postMessage(params);
-    }
+    };
 
     function reconstructHDWallet(hdwalletState, second_password, success, error) {
         var restoreFromState = true;
@@ -2818,7 +2819,8 @@ var MyWallet = new function() {
 
             myHDWallet.accountArray[i].wallet = walletAccount;
         }
-        success()
+
+        success();
     }
 
     this.generateHDWalletPassphrase = function() {
