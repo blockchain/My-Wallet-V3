@@ -175,16 +175,17 @@ function HDAccount(wallet, label, idx) {
             return this.balance = null;
         },
         createTx : function(to, value, fixedFee, unspentOutputs, extendedPrivateKey) {
+            var gap_limit = 20;
             var utxos = this.wallet.getUnspentOutputs();
 
             var sendAccount = new HDWalletAccount(null);
             sendAccount.newNodeFromExtKey(extendedPrivateKey);
 
-            for (var i = 0; i < this.receiveAddressCount; i++) {
+            for (var i = 0; i < this.receiveAddressCount+gap_limit; i++) {
                 sendAccount.generateAddress();
             }
 
-            for (var i = 0; i < this.changeAddressCount; i++) {
+            for (var i = 0; i < this.changeAddressCount+gap_limit; i++) {
                 sendAccount.generateChangeAddress();
             }
 
