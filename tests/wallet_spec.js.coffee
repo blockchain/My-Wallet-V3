@@ -100,11 +100,6 @@ describe "Wallet", ->
 
       expect(callbacks.success).toHaveBeenCalled()
       
-    it "password should be 10 characters or more", ->
-      MyWallet.createNewWallet("a@b.com", "1234", "en", "EUR", callbacks.success, callbacks.error)
-
-      expect(callbacks.error).toHaveBeenCalled()
-      
     it "should create an HD wallet", ->
       
       MyWallet.createNewWallet("a@b.com", "1234567890", "en", "EUR", callbacks.success, callbacks.error)
