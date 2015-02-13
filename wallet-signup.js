@@ -83,10 +83,6 @@ var MyWalletSignup = new function() {
 
                 rng_seed_time();
 
-                if (password.length < 10) {
-                    throw 'Passwords must be at least 10 characters long';
-                }
-
                 if (password.length > 255) {
                     throw 'Passwords must be at shorter than 256 characters';
                 }
