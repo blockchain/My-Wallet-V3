@@ -2526,9 +2526,16 @@ var MyWallet = new function() {
         MyWallet.backupWalletDelayed();
     };
 
-    this.unarchiveAccount = function(idx) {
+    /**
+     * @param {number} accountIdx index of account
+     * @param {?function(number)} successcallback success callback function with account balance
+     */
+    this.unarchiveAccount = function(idx, successcallback) {
         var account = MyWallet.getHDWallet().getAccount(idx);
         account.setIsArchived(false);
+        if (successcallback) {
+            successcallback(account.getBalance());            
+        }
         MyWallet.backupWalletDelayed();
     };
     
