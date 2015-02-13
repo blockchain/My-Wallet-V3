@@ -620,7 +620,7 @@ var MyWallet = new function() {
      * @param {function()=} error Error callback function.
      */
     this.setLegacyAddressLabel = function(address, label, success, error) {
-        if (!isAlphaNumericSpace(label)) {
+        if (label.length > 0 && !isAlphaNumericSpace(label)) {
             error && error();
         } else {
             addresses[address].label = label;
