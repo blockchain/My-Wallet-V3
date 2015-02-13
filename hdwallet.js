@@ -231,6 +231,7 @@ function HDWallet(seedHex, bip39Password, second_password) {
     var walletObject = {
         seedHex : second_password == null ? seedHex : MyWallet.encryptSecretWithSecondPassword(seedHex, second_password),
         bip39Password : bip39Password,
+        numTxFetched : 0,
         accountArray : [],
         getPassphraseString : function(seedHex) {
             return passphraseHexStringToPassphrase(seedHex);

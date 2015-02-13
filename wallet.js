@@ -1981,6 +1981,51 @@ var MyWallet = new function() {
     };
 
     /**
+     * @param {function(Array)} successCallback success callback function with transaction array
+     * @param {function()} errorCallback error callback function
+     * @param {function()} didFetchOldestTransaction callback is called when all transanctions for the specified account has been fetched
+     */
+    this.fetchMoreTransactionsForAccounts = function(success, error, didFetchOldestTransaction) {
+        function getRawTransactionsForAccounts(txOffset, numTx, success, error) {
+            var addresses = [];
+            for (var i in MyWallet.getAccounts()) {
+                var account = MyWallet.getHDWallet().getAccount(i);
+                addresses.push(account.getAccountExtendedKey(false));
+            }
+
+            BlockchainAPI.async_get_history_with_addresses(addresses, function(data) {
+                if (success) success(data.txs);
+            }, function() {
+                if (error) error();
+
+            }, tx_filter, txOffset, numTx);
+        }
+
+        getRawTransactionsForAccounts(MyWallet.getHDWallet().numTxFetched, numOldTxsToFetchAtATime, function(data) {
+            var processedTransactions = [];
+
+            for (var i in data) {
+                var tx = data[i];
+                
+                var tx = TransactionFromJSON(data[i]);
+                
+                var transaction = MyWallet.processTransaction(tx);  
+                processedTransactions.push(transaction);
+            }
+            
+            MyWallet.getHDWallet().numTxFetched += processedTransactions.length;
+
+            if (processedTransactions.length < numOldTxsToFetchAtATime) {
+                didFetchOldestTransaction();
+            }
+
+            success(processedTransactions);
+        }, function(e) {
+            error(e);
+        });
+    };
+
+    /**
      * @param {number} accountIdx idx of account
      * @param {function(Array)} successCallback success callback function with transaction array
      * @param {function()} errorCallback error callback function
