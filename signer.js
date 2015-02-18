@@ -125,7 +125,11 @@ var initWebWorker = function() {
   } catch (e) { }
 }
 
-if(! (browserDetection().browser == "ie" && browserDetection().version < 11)) {  initWebWorker() }
+// Use web worker based on browser - ignore browserDetection on iOS (window undefined)
+if((typeof(window) === "undefined" && typeof(browserDetection) === "undefined") ||
+   !(browserDetection().browser == "ie" && browserDetection().version < 11)) {
+    initWebWorker();
+}
 
 function resolveAddress(label) {
     label = $.trim(label);
