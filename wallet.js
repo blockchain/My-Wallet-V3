@@ -3038,17 +3038,17 @@ var MyWallet = new function() {
         else if (format == 'base58')
             encode_func = base58ToBase58;
 
-        var out = '{\n	"guid" : "'+guid+'",\n	"sharedKey" : "'+sharedKey+'",\n';
+        var out = '{\n  "guid" : "'+guid+'",\n  "sharedKey" : "'+sharedKey+'",\n';
 
         if (double_encryption && dpasswordhash != null && encode_func == noConvert) {
-            out += '	"double_encryption" : '+double_encryption+',\n	"dpasswordhash" : "'+dpasswordhash+'",\n';
+            out += '  "double_encryption" : '+double_encryption+',\n  "dpasswordhash" : "'+dpasswordhash+'",\n';
         }
 
         if (wallet_options) {
-            out += '	"options" : ' + JSON.stringify(wallet_options)+',\n';
+            out += '  "options" : ' + JSON.stringify(wallet_options)+',\n';
         }
 
-        out += '	"keys" : [\n';
+        out += '  "keys" : [\n';
 
         var atLeastOne = false;
 
@@ -3073,7 +3073,7 @@ var MyWallet = new function() {
             //balance property should not be saved
             delete addr.balance;
 
-            out += JSON.stringify(addr) + ',\n';
+            out += '    ' + JSON.stringify(addr) + ',\n';
 
             atLeastOne = true;
         }
@@ -3082,60 +3082,61 @@ var MyWallet = new function() {
             out = out.substring(0, out.length-2);
         }
 
-        out += "\n	]";
+        out += "\n  ]";
 
         if (nKeys(address_book) > 0) {
-            out += ',\n	"address_book" : [\n';
+            out += ',\n  "address_book" : [\n';
 
             for (var key in address_book) {
-                out += '	{"addr" : "'+ key +'",\n';
-                out += '	 "label" : "'+ address_book[key] + '"},\n';
+                out += '    {"addr" : "'+ key +'",\n';
+                out += '     "label" : "'+ address_book[key] + '"},\n';
             }
 
             //Remove the extra comma
             out = out.substring(0, out.length-2);
 
-            out += "\n	]";
+            out += "\n  ]";
         }
 
         if (nKeys(tx_notes) > 0) {
-            out += ',\n	"tx_notes" : ' + JSON.stringify(tx_notes);
+            out += ',\n  "tx_notes" : ' + JSON.stringify(tx_notes);
         }
 
         if (nKeys(tx_tags) > 0) {
-            out += ',\n	"tx_tags" : ' + JSON.stringify(tx_tags);
+            out += ',\n  "tx_tags" : ' + JSON.stringify(tx_tags);
         }
 
         if (tag_names != null) {
-            out += ',\n	"tag_names" : ' + JSON.stringify(tag_names);
+            out += ',\n  "tag_names" : ' + JSON.stringify(tag_names);
         }
 
         if (MyWallet.getHDWallet() != null) {
 
-            out += ',\n	"hd_wallets" : [\n';
+            out += ',\n  "hd_wallets" : [\n';
 
-            out += '	{"seed_hex" : "'+ MyWallet.getHDWallet().getSeedHexString() +'",\n';
-            out += '    "mnemonic_verified" : "'+ mnemonicVerified +'",\n';
-            out += '    "default_account_idx" : "'+ defaultAccountIdx +'",\n';
+            out += '    {\n';
+            out += '      "seed_hex" : "'+ MyWallet.getHDWallet().getSeedHexString() +'",\n';
+            out += '      "mnemonic_verified" : '+ mnemonicVerified +',\n';
+            out += '      "default_account_idx" : '+ defaultAccountIdx +',\n';
             if (paidTo != null) {
-                out += '"paidTo" : ' + JSON.stringify(paidTo) +',\n';
+                out += '      "paidTo" : ' + JSON.stringify(paidTo) +',\n';
             }
 
-            out += '	"accounts" : [\n';
+            out += '      "accounts" : [\n';
 
             for (var i in MyWallet.getAccounts()) {
                 var account = MyWallet.getHDWallet().getAccount(i);
 
                 var accountJsonData = account.getAccountJsonData();
-                out += JSON.stringify(accountJsonData);
+                out += '        ' + JSON.stringify(accountJsonData);
                 if (i < MyWallet.getAccountsCount() - 1) {
                     out += ",\n";
                 }
             }
-            out += "\n	]";
-            out += '\n	}';
+            out += "\n      ]";
+            out += '\n    }';
 
-            out += "\n	]";
+            out += "\n  ]";
         }
 
         out += '\n}';
