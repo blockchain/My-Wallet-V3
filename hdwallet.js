@@ -138,6 +138,30 @@ function HDAccount(wallet, label, idx) {
         generateAddress : function() {
             return this.wallet.generateAddress();
         },
+        generateAddressFromPath : function(path) {
+			var components = path.split("/");
+			
+			if (components[0] != 'M') {
+				throw 'Invalid Path Prefix';
+			}
+			
+			if (components.length != 3) {
+				throw 'Invalid Path Length';
+			}
+			
+			var accountIndex = components[1];
+			var addressIndex = components[2];
+			
+			var wallet = this.wallet;
+
+			var mK = (accountIndex == 0) ? wallet.getExternalAccount() : wallet.getInternalAccount();
+		 	
+            var address = mK.derive(addressIndex).getAddress();
+            
+            wallet.addresses.push(address.toString());
+        	
+        	return address;
+        },
         undoGenerateAddress : function() {
             return this.wallet.addresses.pop();
         },
@@ -181,14 +205,15 @@ function HDAccount(wallet, label, idx) {
             var sendAccount = new HDWalletAccount(null);
             sendAccount.newNodeFromExtKey(extendedPrivateKey);
 
-            for (var i = 0; i < this.receiveAddressCount+gap_limit; i++) {
-                sendAccount.generateAddress();
-            }
-
-            for (var i = 0; i < this.changeAddressCount+gap_limit; i++) {
-                sendAccount.generateChangeAddress();
-            }
-
+			for (var i : unspentOutputs) {
+				var unspent = unspentOutputs[i];
+				
+				//TODO need to make sure xpub matches extendedPrivateKey
+				if (unspent.xpub) { 
+					sendAccount.generateAddressFromPath(unspent.path);
+				} 	
+			}
+			
             sendAccount.setUnspentOutputs(unspentOutputs);
             var changeAddress = sendAccount.getChangeAddressAtIndex(this.changeAddressCount);
             
