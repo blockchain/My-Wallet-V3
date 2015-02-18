@@ -125,9 +125,7 @@ var initWebWorker = function() {
   } catch (e) { }
 }
 
-var internet_explorer = !(typeof window == "undefined" || !window) && ((/internet explorer/i).test(window.navigator.userAgent) || (/MSIE/i).test(window.navigator.userAgent))
-
-if(!internet_explorer) { initWebWorker() }
+if(browserDetection().browser != "ie") { initWebWorker() }
 
 function resolveAddress(label) {
     label = $.trim(label);
