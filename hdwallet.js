@@ -210,7 +210,7 @@ function HDAccount(wallet, label, idx) {
 				
 				//TODO need to make sure xpub matches extendedPrivateKey
 				if (unspent.xpub) { 
-					sendAccount.generateAddressFromPath(unspent.path);
+					sendAccount.generateAddressFromPath(unspent.xpub.path);
 				} 	
 			}
 			
