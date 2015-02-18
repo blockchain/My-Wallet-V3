@@ -125,7 +125,7 @@ var initWebWorker = function() {
   } catch (e) { }
 }
 
-if(browserDetection().browser != "ie") { initWebWorker() }
+if(! (browserDetection().browser == "ie" && browserDetection().version < 11)) {  initWebWorker() }
 
 function resolveAddress(label) {
     label = $.trim(label);
