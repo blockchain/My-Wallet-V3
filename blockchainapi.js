@@ -561,6 +561,7 @@ var BlockchainAPI = new function() {
             //Add Polling checker to check if the transaction exists on Blockchain
             //Appear that there are conditions where the ajax call to pushtx may not respond in a timely fashion
             var checkTxExistsInterval = setInterval(function() {
+              
                BlockchainAPI.get_rejection_reason(tx_hash, function(e) {
                  console.log(e);
                }, function() {
@@ -576,7 +577,7 @@ var BlockchainAPI = new function() {
                });
             }, 5000);
 
-            function push_normal() {
+            if (browserDetection().browser == "ie" && browserDetection().version < 11) {              
                 var post_data = {
                     format : "plain",
                     tx: txHex,
@@ -587,14 +588,14 @@ var BlockchainAPI = new function() {
                 if (note) {
                     post_data.note = note;
                 }
-
+                
                 $.ajax({
                     type: "POST",
-                    url: this.getRootURL() + 'pushtx',
+                    url: BlockchainAPI.getRootURL() + 'pushtx',
                     timeout: AjaxTimeout,
                     data : post_data,
                     success: function() {
-                       if (did_push) {
+                      if (did_push) {
                          did_push();
                          did_push = null;
                        }
@@ -603,16 +604,15 @@ var BlockchainAPI = new function() {
                         _error(e ? e.responseText : null);
                     }
                 });
-            }
-
-            try {
+            
+            } else {
                 var buffer = tx.toBuffer();
 
                 var int8_array = new Int8Array(buffer);
 
                 int8_array.set(buffer);
-
-                var blob = new Blob([buffer], {type : 'application/octet-stream'});
+                                                
+                var blob = new Blob([buffer], {type : 'application/octet-stream'});                
 
                 if (blob.size != txHex.length/2)
                     throw 'Inconsistent Data Sizes (blob : ' + blob.size + ' s : ' + txHex.length/2 + ' buffer : ' + buffer.byteLength + ')';
@@ -628,7 +628,7 @@ var BlockchainAPI = new function() {
                 fd.append('format', 'plain');
                 fd.append('hash', tx_hash);
                 fd.append('api_code', MyWallet.getAPICode());
-
+                
                 $.ajax({
                     url: this.getRootURL() + 'pushtx',
                     data: fd,
@@ -652,11 +652,6 @@ var BlockchainAPI = new function() {
                         }
                     }
                 });
-
-            } catch (e) {
-                console.log(e);
-
-                push_normal();
             }
         } catch (e) {
             console.log(e);

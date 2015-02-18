@@ -2797,7 +2797,7 @@ var MyWallet = new function() {
         var makeWorker = function() {
             var workerUrl = null;
             if (!workerUrl) {
-                var code = '(function buildHDWalletWorker() {\nonmessage = '+onmessageHDWallet.toString()+'\n'+buildHDWalletWorkIt.toString()+'\n'+HDWallet.toString()+'\n'+HDWalletAccount.toString()+HDAccount.toString()+'\n'+BitcoinWrapper.toString()+'})()';
+                var code = 'onmessage = '+onmessageHDWallet.toString()+'\n'+buildHDWalletWorkIt.toString()+'\n'+HDWallet.toString()+'\n'+HDWalletAccount.toString()+HDAccount.toString()+'\n'+BitcoinWrapper.toString();
                 var blob;
                 try {
                     blob = new Blob([code], {type: "text/javascript"});
