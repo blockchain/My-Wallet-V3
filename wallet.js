@@ -1403,11 +1403,13 @@ var MyWallet = new function() {
 
                     var tx = TransactionFromJSON(obj.x);
 
+                    var tx_processed = MyWallet.processTransaction(tx);
+                    var tx_account = tx_processed.to.account;
+
                     //Check if this is a duplicate
                     //Maybe should have a map_prev to check for possible double spends
                     for (var key in transactions) {
-                        if (transactions[key].txIndex == tx.txIndex)
-                            return;
+                        if (transactions[key].txIndex == tx.txIndex) return;
                     }
 
                     var result = calcTxResult(tx, true, false, true);
@@ -1415,6 +1417,8 @@ var MyWallet = new function() {
                     tx.result = result;
 
                     final_balance += result;
+
+                    if (tx_account) MyWallet.getAccount(tx_account.index).setBalance(final_balance);
 
                     n_tx++;
 
