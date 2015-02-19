@@ -577,7 +577,8 @@ var BlockchainAPI = new function() {
                });
             }, 5000);
 
-            if (browserDetection().browser == "ie" && browserDetection().version < 11) {              
+            if (!(typeof(window) === "undefined" || typeof(browserDetection) === "undefined") &&
+                browserDetection().browser == "ie" && browserDetection().version < 11) {
                 var post_data = {
                     format : "plain",
                     tx: txHex,
