@@ -2643,6 +2643,7 @@ var MyWallet = new function() {
     function createAccount(label, second_password, success, error) {      
         var account = MyWallet.getHDWallet().createAccount(label, second_password);
         var accountExtendedPublicKey = account.getAccountExtendedKey(false);
+        account.setBalance(0);
         MyWallet.listenToHDWalletAccount(accountExtendedPublicKey);
         success();
         MyWallet.backupWalletDelayed();
