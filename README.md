@@ -21,7 +21,7 @@ Include the following files:
 * `shared.js`
 * `blockchainapi.js`
 * `bower_components/jquery/dist/jquery.js`
-* `bitcoinjs.js`
+* `browserify.js`
 * `bip38.js`
 * `bip39.js`
 * `sjcl.js`
