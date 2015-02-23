@@ -18,6 +18,7 @@ npm-debug.log
 bip38.js
 bip39.js
 bitcoinjs-npm.js
+browserify-imports.js
 jquery.min.js
 xregexp-all.js
 sjcl.js

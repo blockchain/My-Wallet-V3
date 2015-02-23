@@ -1,17 +1,15 @@
 function HDWalletAccount(seed, network) {
-    var assert = Bitcoin.assert;
-    var Address = Bitcoin.Address;
-    var HDNode = Bitcoin.HDNode;
-    var Transaction = Bitcoin.Transaction;
-    var networks = Bitcoin.networks;
-    var Buffer = Bitcoin.Buffer.Buffer;
+    // var assert = Bitcoin.assert;
+    // var Address = Bitcoin.Address;
+    // var HDNode = Bitcoin.HDNode;
+    // var networks = fields;
+    var Bitcoin = Browserify.Bitcoin;
 
-    network = network || networks.bitcoin;
+    network = network || Browserify.Bitcoin.networks.bitcoin;
 
     // Stored in a closure to make accidental serialization less likely
     var masterkey = null;
     var me = this;
-    this.accountZero = null;
     this.internalAccount = null;
     this.externalAccount = null;
 
@@ -22,11 +20,18 @@ function HDWalletAccount(seed, network) {
     this.outputs = {};
 
     // Make a new master key
-    this.newNodeFromExtKey = function(extKey) {
-        this.accountZero = Bitcoin.HDNode.fromBase58(extKey);
-        this.externalAccount = this.accountZero.derive(0);
-        this.internalAccount = this.accountZero.derive(1);
-
+    this.newNodeFromExtKey = function(extKey, cache) {
+        
+      
+        if(cache == undefined) {
+          var accountZero = Bitcoin.HDNode.fromBase58(extKey); 
+          this.externalAccount = accountZero.derive(0);
+          this.internalAccount = accountZero.derive(1);
+        } else {
+          this.externalAccount = new Bitcoin.HDNode(cache.externalAccountPubKey, cache.externalAccountChainCode)
+          this.internalAccount = new Bitcoin.HDNode(cache.internalAccountPubKey, cache.internalAccountChainCode)
+        }
+        
         me.addresses = [];
         me.changeAddresses = [];
 
@@ -40,9 +45,9 @@ function HDWalletAccount(seed, network) {
 
         // HD first-level child derivation method should be hardened
         // See https://bitcointalk.org/index.php?topic=405179.msg4415254#msg4415254
-        this.accountZero = masterkey.deriveHardened(0);
-        this.externalAccount = this.accountZero.derive(0);
-        this.internalAccount = this.accountZero.derive(1);
+        var accountZero = masterkey.deriveHardened(0);
+        this.externalAccount = accountZero.derive(0);
+        this.internalAccount = accountZero.derive(1);
 
         me.addresses = [];
         me.changeAddresses = [];
@@ -111,7 +116,7 @@ function HDWalletAccount(seed, network) {
             assert.equal(hash.length, 32, "Expected hash length of 32, got " + hash.length);
             assert.equal(typeof index, "number", "Expected number index, got " + index);
             assert.doesNotThrow(function() {
-                Address.fromBase58Check(address);
+                Bitcoin.Address.fromBase58Check(address);
             }, "Expected Base58 Address, got " + address);
             assert.equal(typeof value, "number", "Expected number value, got " + value);
             var key = utxo.hash + ":" + utxo.index;
@@ -192,7 +197,7 @@ function HDWalletAccount(seed, network) {
             var address;
 
             try {
-                address = Address.fromOutputScript(txOut.script, network).toString();
+                address = Bitcoin.Address.fromOutputScript(txOut.script, network).toString();
             } catch(e) {
                 if (!(e.message.match(/has no matching Address/))) {
                     throw e;
@@ -240,7 +245,7 @@ function HDWalletAccount(seed, network) {
         var subTotal = value;
         var addresses = [];
 
-        var tx = new Transaction();
+        var tx = new Bitcoin.Transaction();
         tx.addOutput(to, value);
 
         for (var i = 0; i < utxos.length; ++i) {
@@ -316,10 +321,6 @@ function HDWalletAccount(seed, network) {
 
     this.getMasterKey = function() {
         return masterkey;
-    };
-
-    this.getAccountZero = function() {
-        return this.accountZero;
     };
 
     this.getinternalAccount = function() {

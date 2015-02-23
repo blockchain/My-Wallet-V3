@@ -12,7 +12,10 @@
     "url": "https://blockchain.info"
   },
   "contributors": [
-    "Tim Lee"
+    "Tim Lee",
+    "Mark Pflueger",
+    "Sjors Provoost",
+    "Ben Reeves"
   ],
   "main": "wallet.js",
   "repository": {
@@ -20,14 +23,18 @@
     "url": "https://github.com/blockchain/My-Wallet-HD.git"
   },
   "scripts": {
-    "postinstall": "node_modules/bower/bin/bower install && browserify -r bitcoinjs-lib -s Bitcoin > bitcoinjs-npm.js && cp bower_components/jquery/dist/jquery.min.js . && cd node_modules/bip39 && npm run compile && mv bip39.js ../.. && cd ../.. && cp node_modules/xregexp/xregexp-all.js . && cd node_modules/sjcl && ./configure --with-sha1 && make && cd - && cp node_modules/sjcl/sjcl.js .",
+    "postinstall": "node_modules/bower/bin/bower install && browserify -s Browserify browserify-imports.js > browserify.js && cp bower_components/jquery/dist/jquery.min.js . && cd node_modules/bip39 && npm run compile && mv bip39.js ../.. && cd ../.. && cp node_modules/xregexp/xregexp-all.js . && cd node_modules/sjcl && ./configure --with-sha1 && make && cd - && cp node_modules/sjcl/sjcl.js .",
     "test": "node ./node_modules/karma/bin/karma start karma.conf.js"
   },
   "dependencies": {
-    "bitcoinjs-lib": "~1.4.3",
     "bip39": "~2.1.0",
     "sjcl": "~1.0.2",
-    "xregexp": "~2.0.0"
+    "xregexp": "~2.0.0",
+    "bigi": "^1.4.0",
+    "assert": "^1.3.0",
+    "bs58": "^2.0.1",
+    "bitcoinjs-lib": "git://github.com/sjors/bitcoinjs-lib#8a38a24",
+    "json-buffer": "^2.0.11"
   },
   "devDependencies": {
     "browserify": "~8.1.1",

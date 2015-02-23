@@ -56,6 +56,13 @@ function formatPrecision(x) {
 }
 //-----
 
+var BigInteger = Browserify.BigInteger;
+var Buffer = Browserify.Buffer.Buffer;
+var Bitcoin = Browserify.Bitcoin;
+var ECKey = Bitcoin.ECKey;
+var assert = Browserify.assert;
+var JSONB = Browserify.JSONB;
+
 var MyWallet = new function() {
     var MyWallet = this;
 
@@ -151,12 +158,6 @@ var MyWallet = new function() {
     var sync_pubkeys = false;
     var legacyAddressesNumTxFetched = 0;
     var numOldTxsToFetchAtATime = 10; 
-
-    var Bitcoin = BitcoinWrapper();
-    var BigInteger = Bitcoin.BigInteger;
-    var ECKey = Bitcoin.ECKey;
-    var buffer = Bitcoin.Buffer;
-
     var myHDWallet = null;
     var isSynchronizedWithServer = true;
     var localWalletJsonString = null;
@@ -175,7 +176,6 @@ var MyWallet = new function() {
     var isPolling = false;
     var didUpgradeToHd = null;
     var xpubs = [];
-    var useBuildHDWalletWebworker = true;
 
     var wallet_options = {
         pbkdf2_iterations : default_pbkdf2_iterations, //Number of pbkdf2 iterations to default to for main password, second password and dpasswordhash
@@ -1166,7 +1166,7 @@ var MyWallet = new function() {
 
         var addr = opts.compressed ? MyWallet.getCompressedAddressString(key) : MyWallet.getUnCompressedAddressString(key);
 
-        var base58 = Bitcoin.base58.encode(key.d.toBuffer(32));
+        var base58 = Browserify.Base58.encode(key.d.toBuffer(32));
         
         var encoded = second_password == null ? base58 : MyWallet.encryptSecretWithSecondPassword(base58, second_password);
 
@@ -1221,7 +1221,7 @@ var MyWallet = new function() {
             var key = Bitcoin.ECKey.makeRandom(false);
 
             //Make Candidate Mini Key
-            var minikey = 'S' + Bitcoin.base58.encode(key.d.toBuffer(32)).substr(0, 21);
+            var minikey = 'S' + Browserify.Base58.encode(key.d.toBuffer(32)).substr(0, 21);
 
             //Append ? & hash it again
             var bytes_appended = Crypto.SHA256(minikey + '?', {asBytes: true});
@@ -1518,7 +1518,7 @@ var MyWallet = new function() {
 
         bytes = bytes.concat(checksum.slice(0, 4));
 
-        var privWif = Bitcoin.base58.encode(new buffer.Buffer(bytes));
+        var privWif = Browserify.Base58.encode(new Buffer(bytes));
 
         return privWif;
     };
@@ -1932,7 +1932,7 @@ var MyWallet = new function() {
         BlockchainAPI.get_unspent([account.extendedPublicKey], function (obj) {
 
             obj.unspent_outputs.forEach(function(utxo) {
-                var txBuffer = new Bitcoin.Buffer.Buffer(utxo.tx_hash, "hex");
+                var txBuffer = new Buffer(utxo.tx_hash, "hex");
                 Array.prototype.reverse.call(txBuffer)
                 utxo.hash = txBuffer.toString("hex");
                 utxo.index = utxo.tx_output_n;
@@ -2128,7 +2128,7 @@ var MyWallet = new function() {
                 var to_address = account.getReceivingAddress(); 
                 obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(to_address), value : amount});
                 obj.from_addresses = [from_address];
-                obj.extra_private_keys[from_address] = Bitcoin.base58.encode(privateKeyToSweep.d.toBuffer(32));
+                obj.extra_private_keys[from_address] = Browserify.Base58.encode(privateKeyToSweep.d.toBuffer(32));
                 obj.ready_to_send_header = 'Bitcoins Ready to Claim.';
 
                 obj.addListener({
@@ -2767,118 +2767,9 @@ var MyWallet = new function() {
         }
     };
 
-    this.setUseBuildHDWalletWebworker = function(enabled) {
-        useBuildHDWalletWebworker = enabled;
-    };
-
     this.buildHDWallet = function(seedHexString, accountsArrayPayload, secondPasswordCallback, successCallback, errorCallback) {
-        if (useBuildHDWalletWebworker) {
-            var success = function() { 
-                MyWallet.sendEvent('hd_wallet_set'); 
-                successCallback && successCallback();
-            };
-
-            var error = function() {
-                errorCallback && errorCallback();
-            };
-
-            this.setHDWallet(buildHDWalletShell(seedHexString, accountsArrayPayload, secondPasswordCallback), true);
-            // Do not pass a second password callback:
-            MyWallet.buildHDWalletWorker(seedHexString, accountsArrayPayload, undefined, success, error);
-        } else {
-            this.setHDWallet(buildHDWallet(seedHexString, accountsArrayPayload, secondPasswordCallback, successCallback, errorCallback));
-        }
+        this.setHDWallet(buildHDWallet(seedHexString, accountsArrayPayload, secondPasswordCallback, successCallback, errorCallback));
     };
-
-    this.buildHDWalletWorker = function(seedHexString, accountsArrayPayload, second_password, success, error) {
-        var onmessageHDWallet = function(event) {
-            var data = event.data;       
-            var bitcoinWrapper = BitcoinWrapper();
-
-            var hdwalletState = buildHDWalletWorkIt(data.seedHexString, data.accountsArrayPayload, null, data.second_password);
-            postMessage(hdwalletState);  
-        };
-
-        var makeWorker = function() {
-            var workerUrl = null;
-            if (!workerUrl) {
-                var code = 'onmessage = '+onmessageHDWallet.toString()+'\n'+buildHDWalletWorkIt.toString()+'\n'+HDWallet.toString()+'\n'+HDWalletAccount.toString()+HDAccount.toString()+'\n'+BitcoinWrapper.toString();
-                var blob;
-                try {
-                    blob = new Blob([code], {type: "text/javascript"});
-                } catch(e) {
-                    window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder || window.MSBlobBuilder;
-                    blob = new BlobBuilder();
-                    blob.append(code);
-                    blob = blob.getBlob("text/javascript");
-                }
-                workerUrl = URL.createObjectURL(blob);
-            }
-            var worker = new Worker(workerUrl);
-            worker.onmessage = function(event) {
-                var data = event.data;
-                reconstructHDWallet(data, second_password, success, error);
-            };
-            return worker;
-        };
-
-        var worker = makeWorker();
-        var params = {
-            seedHexString : seedHexString,
-            accountsArrayPayload : accountsArrayPayload,
-            second_password : second_password
-        };
-
-        worker.postMessage(params);
-    };
-
-    function reconstructHDWallet(hdwalletState, second_password, success, error) {
-        var restoreFromState = true;
-        for (var i = 0; i < hdwalletState.accountArray.length; i++) {
-            var accountPayload = hdwalletState.accountArray[i];
-            var archived = accountPayload.archived;
-            if (archived == true)
-                continue;
-            var label = accountPayload.address_labels;
-
-      
-            var walletAccount = new HDWalletAccount(null);
-
-            walletAccount.accountZero = Bitcoin.HDNode.fromBase58(accountPayload.wallet.accountZero.extendedPublicKey, restoreFromState);
-            walletAccount.accountZero.pubKey = Bitcoin.ECPubKey.fromBuffer(null, true);
-            walletAccount.accountZero.pubKey.compressed = accountPayload.wallet.accountZero.pubKey.compressed;
-            walletAccount.accountZero.pubKey.Q = new Bitcoin.Point(null, null, null, null, true);
-            walletAccount.accountZero.pubKey.Q.curve = Bitcoin.ecurve.getCurveByName("secp256k1");
-            walletAccount.accountZero.pubKey.Q.x = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.accountZero.pubKey.Q.x);
-            walletAccount.accountZero.pubKey.Q.y = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.accountZero.pubKey.Q.y);
-            walletAccount.accountZero.pubKey.Q.z = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.accountZero.pubKey.Q.z);
-            walletAccount.accountZero.pubKey.Q._zInv = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.accountZero.pubKey.Q._zInv);
-
-            walletAccount.internalAccount = Bitcoin.HDNode.fromBase58(accountPayload.wallet.internalAccount.extendedPublicKey, restoreFromState);
-            walletAccount.internalAccount.pubKey = Bitcoin.ECPubKey.fromBuffer(null, true);
-            walletAccount.internalAccount.pubKey.compressed = accountPayload.wallet.internalAccount.pubKey.compressed;
-            walletAccount.internalAccount.pubKey.Q = new Bitcoin.Point(null, null, null, null, true);
-            walletAccount.internalAccount.pubKey.Q.curve = Bitcoin.ecurve.getCurveByName("secp256k1");
-            walletAccount.internalAccount.pubKey.Q.x = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.internalAccount.pubKey.Q.x);
-            walletAccount.internalAccount.pubKey.Q.y = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.internalAccount.pubKey.Q.y);
-            walletAccount.internalAccount.pubKey.Q.z = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.internalAccount.pubKey.Q.z);
-            walletAccount.internalAccount.pubKey.Q._zInv = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.internalAccount.pubKey.Q._zInv);
-
-            walletAccount.externalAccount = Bitcoin.HDNode.fromBase58(accountPayload.wallet.externalAccount.extendedPublicKey, restoreFromState);
-            walletAccount.externalAccount.pubKey = Bitcoin.ECPubKey.fromBuffer(null, true);
-            walletAccount.externalAccount.pubKey.compressed = accountPayload.wallet.externalAccount.pubKey.compressed;
-            walletAccount.externalAccount.pubKey.Q = new Bitcoin.Point(null, null, null, null, true);
-            walletAccount.externalAccount.pubKey.Q.curve = Bitcoin.ecurve.getCurveByName("secp256k1");
-            walletAccount.externalAccount.pubKey.Q.x = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.externalAccount.pubKey.Q.x);
-            walletAccount.externalAccount.pubKey.Q.y = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.externalAccount.pubKey.Q.y);
-            walletAccount.externalAccount.pubKey.Q.z = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.externalAccount.pubKey.Q.z);
-            walletAccount.externalAccount.pubKey.Q._zInv = Bitcoin.BigInteger.fromBuffer(accountPayload.wallet.externalAccount.pubKey.Q._zInv);
-
-            myHDWallet.accountArray[i].wallet = walletAccount;
-        }
-
-        success();
-    }
 
     this.generateHDWalletPassphrase = function() {
         return BIP39.generateMnemonic();
@@ -5157,21 +5048,21 @@ var MyWallet = new function() {
         var key_bytes = null;
 
         if (format == 'base58') {
-            key_bytes = buffertoByteArray(Bitcoin.base58.decode(value));
+            key_bytes = buffertoByteArray(Browserify.Base58.decode(value));
         } else if (format == 'base64') {
-            key_bytes = buffertoByteArray(new Bitcoin.Buffer.Buffer(value, 'base64'));
+            key_bytes = buffertoByteArray(new Buffer(value, 'base64'));
         } else if (format == 'hex') {
-            key_bytes = buffertoByteArray(new Bitcoin.Buffer.Buffer(value, 'hex'));
+            key_bytes = buffertoByteArray(new Buffer(value, 'hex'));
         } else if (format == 'mini') {
             key_bytes = buffertoByteArray(parseMiniKey(value));
         } else if (format == 'sipa') {
-            var tbytes = buffertoByteArray(Bitcoin.base58.decode(value));
+            var tbytes = buffertoByteArray(Browserify.Base58.decode(value));
             tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
             tbytes.shift();
             key_bytes = tbytes.slice(0, tbytes.length - 4);
 
         } else if (format == 'compsipa') {
-            var tbytes = buffertoByteArray(Bitcoin.base58.decode(value));
+            var tbytes = buffertoByteArray(Browserify.Base58.decode(value));
             tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
             tbytes.shift();
             tbytes.pop();
@@ -5182,7 +5073,7 @@ var MyWallet = new function() {
 
         if (key_bytes.length != 32 && key_bytes.length != 33)
             throw 'Result not 32 or 33 bytes in length';
-
+        
         return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format == 'compsipa'));
     };
 };

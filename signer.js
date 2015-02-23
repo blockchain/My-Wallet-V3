@@ -689,7 +689,7 @@ function setReviewTransactionContent(modal, tx, sendTxInAmounts, sendTxOutAmount
 
         var addr = null;
         try {
-            addr = new Bitcoin.Address(MyWallet.simpleInPubKeyHash(input.script), Bitcoin.networks.bitcoin.pubKeyHash);
+            addr = new Bitcoin.Address(MyWallet.simpleInPubKeyHash(input.script), Browserify.Bitcoin.networks.bitcoin.pubKeyHash);
         } catch(e) {
             addr = 'Unable To Decode Address';
         }

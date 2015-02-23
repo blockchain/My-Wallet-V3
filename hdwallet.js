@@ -12,6 +12,7 @@ function HDAccount(wallet, label, idx) {
         archived : false,
         address_labels: [],
         balance : null,
+        cache: {},
         getAccountJsonData : function() {
             var accountJsonData = {
                 label : this.getLabel(),
@@ -20,7 +21,8 @@ function HDAccount(wallet, label, idx) {
                 change_address_count : this.changeAddressCount,
                 xpriv : this.extendedPrivateKey,
                 xpub : this.extendedPublicKey,
-                address_labels: this.address_labels
+                address_labels: this.address_labels,
+                cache: this.cache
             };
             return accountJsonData;
         },
@@ -138,6 +140,12 @@ function HDAccount(wallet, label, idx) {
         generateAddress : function() {
             return this.wallet.generateAddress();
         },
+        generateCache : function() {
+            this.cache.externalAccountPubKey = JSONB.stringify(this.wallet.externalAccount.pubKey.toBuffer())
+            this.cache.externalAccountChainCode = JSONB.stringify(this.wallet.externalAccount.chainCode)
+            this.cache.internalAccountPubKey = JSONB.stringify(this.wallet.internalAccount.pubKey.toBuffer())
+            this.cache.internalAccountChainCode = JSONB.stringify(this.wallet.internalAccount.chainCode)
+        },
         generateAddressFromPath : function(account, path) {
 	    var components = path.split("/");
 	    
@@ -234,7 +242,7 @@ function HDAccount(wallet, label, idx) {
             try {
                 //12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX is dummy address, first ever bitcoin address
                 var tx = this.createTx("12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX", amount, null, null);
-                return this.wallet.estimatePaddedFee(tx, Bitcoin.networks.bitcoin);
+                return this.wallet.estimatePaddedFee(tx, Browserify.Bitcoin.networks.bitcoin);
             } catch (e) {
                 return 10000;
             }
@@ -379,16 +387,17 @@ function HDWallet(seedHex, bip39Password, second_password) {
         // This is called when a wallet is loaded, not when it's initially created. 
         // If second password is enabled then accountPayload.xpriv has already been 
         // encrypted. We're keeping it in an encrypted state.
-        createAccountFromExtKey : function(label, possiblyEncryptedExtendedPrivateKey, extendedPublicKey) {
+        createAccountFromExtKey : function(label, possiblyEncryptedExtendedPrivateKey, extendedPublicKey, cache) {
             var accountIdx = this.accountArray.length;
 
             var walletAccount = new HDWalletAccount(null);
 
-            walletAccount.newNodeFromExtKey(extendedPublicKey);
+            walletAccount.newNodeFromExtKey(extendedPublicKey, cache);
 
             var account = HDAccount(walletAccount, label, this.accountArray.length);
             account.extendedPrivateKey = possiblyEncryptedExtendedPrivateKey;
             account.extendedPublicKey = extendedPublicKey;
+                        
             this.accountArray.push(account);
 
             return account;
@@ -416,17 +425,19 @@ function HDWallet(seedHex, bip39Password, second_password) {
              * Purpose is a constant set to 44' following the BIP43 recommendation
              * Registered coin types: 0' for Bitcoin
              */
-            walletAccount.accountZero = walletAccount.getMasterKey().deriveHardened(44).deriveHardened(0).deriveHardened(accountIdx);
-            walletAccount.externalAccount = walletAccount.getAccountZero().derive(0);
-            walletAccount.internalAccount = walletAccount.getAccountZero().derive(1);
-
+            var accountZero = walletAccount.getMasterKey().deriveHardened(44).deriveHardened(0).deriveHardened(accountIdx);
+            walletAccount.externalAccount = accountZero.derive(0);
+            walletAccount.internalAccount = accountZero.derive(1);
+            
             var account = HDAccount(walletAccount, label, this.accountArray.length);
             
-            var extendedPrivateKey = walletAccount.getAccountZero().toBase58();
-            var extendedPublicKey =  walletAccount.getAccountZero().neutered().toBase58();
+            var extendedPrivateKey = accountZero.toBase58();
+            var extendedPublicKey =  accountZero.neutered().toBase58();
             
             account.extendedPrivateKey = second_password == null ? extendedPrivateKey : MyWallet.encryptSecretWithSecondPassword(extendedPrivateKey, second_password);
             account.extendedPublicKey = extendedPublicKey;
+            
+            account.generateCache()
 
             this.accountArray.push(account);
             
@@ -450,7 +461,24 @@ function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secon
         // This is called when a wallet is loaded, not when it's initially created. 
         // If second password is enabled then accountPayload.xpriv has already been 
         // encrypted. We're keeping it in an encrypted state.
-        var hdaccount = hdwallet.createAccountFromExtKey(label, accountPayload.xpriv, accountPayload.xpub);
+        
+        var hdaccount;
+        if(accountPayload.cache == undefined || accountPayload.cache.externalAccountPubKey == undefined) {          
+          hdaccount = hdwallet.createAccountFromExtKey(label, accountPayload.xpriv, accountPayload.xpub);
+          hdaccount.generateCache()
+          MyWallet.backupWalletDelayed()          
+        } else {
+          cache = {
+            externalAccountPubKey: Bitcoin.ECPubKey.fromBuffer(JSONB.parse(accountPayload.cache.externalAccountPubKey)),
+            externalAccountChainCode: JSONB.parse(accountPayload.cache.externalAccountChainCode),
+            internalAccountPubKey: Bitcoin.ECPubKey.fromBuffer(JSONB.parse(accountPayload.cache.internalAccountPubKey)),
+            internalAccountChainCode: JSONB.parse(accountPayload.cache.internalAccountChainCode)
+          }
+          
+          hdaccount = hdwallet.createAccountFromExtKey(label, accountPayload.xpriv, accountPayload.xpub, cache);
+          hdaccount.cache = accountPayload.cache
+        }
+        
         hdaccount.setIsArchived(archived);
         hdaccount.receiveAddressCount = accountPayload.receive_address_count ? accountPayload.receive_address_count : 0;
         hdaccount.changeAddressCount = accountPayload.change_address_count ? accountPayload.change_address_count : 0;
@@ -481,81 +509,6 @@ function buildHDWalletShell(seedHexString, accountsArrayPayload, bip39Password, 
     }
 
     return hdwallet;
-}
-
-function buildHDWalletWorkIt(seedHexString, accountsArrayPayload, bip39Password, second_password) {
-    var hdwallet = HDWallet(seedHexString, bip39Password, second_password, null, null);
-
-    var hdwalletState = {};
-    hdwalletState.seedHex = hdwallet.seedHex;
-    hdwalletState.bip39Password = hdwallet.bip39Password;
-    hdwalletState.accountArray = [];
-
-
-    for (var i = 0; i < accountsArrayPayload.length; i++) {
-        var accountPayload = accountsArrayPayload[i];
-        var archived = accountPayload.archived;
-        if (archived == true)
-            continue;
-        var label = accountPayload.label;
-
-        var hdaccount = hdwallet.createAccountFromExtKey(label, accountPayload.xpriv, accountPayload.xpub);
-        hdaccount.setIsArchived(archived);
-        hdaccount.receiveAddressCount = accountPayload.receive_address_count ? accountPayload.receive_address_count : 0;
-        hdaccount.changeAddressCount = accountPayload.change_address_count ? accountPayload.change_address_count : 0;
-        hdaccount.address_labels = accountPayload.address_labels ? accountPayload.address_labels : [];
-
-        var hdAccountState = {};
-        hdAccountState.wallet = {};
-
-        hdAccountState.wallet.accountZero = {};
-        hdAccountState.wallet.internalAccount = {};
-        hdAccountState.wallet.externalAccount = {};
-        hdAccountState.wallet.addresses = hdaccount.wallet.addresses;
-        hdAccountState.wallet.changeAddresses = hdaccount.wallet.changeAddresses;
-        hdAccountState.wallet.outputs = hdaccount.wallet.outputs;
-
-
-        hdAccountState.wallet.accountZero.extendedPublicKey = hdaccount.wallet.accountZero.neutered().toBase58();
-        hdAccountState.wallet.accountZero.chainCode = hdaccount.wallet.accountZero.chainCode;
-        hdAccountState.wallet.accountZero.depth = hdaccount.wallet.accountZero.depth;
-        hdAccountState.wallet.accountZero.index = hdaccount.wallet.accountZero.index;
-        hdAccountState.wallet.accountZero.pubKey = {};
-        hdAccountState.wallet.accountZero.pubKey.compressed = hdaccount.wallet.accountZero.pubKey.compressed;
-        hdAccountState.wallet.accountZero.pubKey.Q = {};
-        hdAccountState.wallet.accountZero.pubKey.Q.x = hdaccount.wallet.accountZero.pubKey.Q.x.toBuffer();
-        hdAccountState.wallet.accountZero.pubKey.Q.y = hdaccount.wallet.accountZero.pubKey.Q.y.toBuffer();
-        hdAccountState.wallet.accountZero.pubKey.Q.z = hdaccount.wallet.accountZero.pubKey.Q.z.toBuffer();
-        hdAccountState.wallet.accountZero.pubKey.Q._zInv = hdaccount.wallet.accountZero.pubKey.Q._zInv.toBuffer();
-
-        hdAccountState.wallet.internalAccount.extendedPublicKey = hdaccount.wallet.internalAccount.neutered().toBase58();
-        hdAccountState.wallet.internalAccount.chainCode = hdaccount.wallet.internalAccount.chainCode;
-        hdAccountState.wallet.internalAccount.depth = hdaccount.wallet.internalAccount.depth;
-        hdAccountState.wallet.internalAccount.index = hdaccount.wallet.internalAccount.index;
-        hdAccountState.wallet.internalAccount.pubKey = {};
-        hdAccountState.wallet.internalAccount.pubKey.compressed = hdaccount.wallet.internalAccount.pubKey.compressed;
-        hdAccountState.wallet.internalAccount.pubKey.Q = {};
-        hdAccountState.wallet.internalAccount.pubKey.Q.x = hdaccount.wallet.internalAccount.pubKey.Q.x.toBuffer();
-        hdAccountState.wallet.internalAccount.pubKey.Q.y = hdaccount.wallet.internalAccount.pubKey.Q.y.toBuffer();
-        hdAccountState.wallet.internalAccount.pubKey.Q.z = hdaccount.wallet.internalAccount.pubKey.Q.z.toBuffer();
-        hdAccountState.wallet.internalAccount.pubKey.Q._zInv = hdaccount.wallet.internalAccount.pubKey.Q._zInv.toBuffer();
-
-        hdAccountState.wallet.externalAccount.extendedPublicKey = hdaccount.wallet.externalAccount.neutered().toBase58();
-        hdAccountState.wallet.externalAccount.chainCode = hdaccount.wallet.externalAccount.chainCode;
-        hdAccountState.wallet.externalAccount.depth = hdaccount.wallet.externalAccount.depth;
-        hdAccountState.wallet.externalAccount.index = hdaccount.wallet.externalAccount.index;
-        hdAccountState.wallet.externalAccount.pubKey = {};
-        hdAccountState.wallet.externalAccount.pubKey.compressed = hdaccount.wallet.externalAccount.pubKey.compressed;
-        hdAccountState.wallet.externalAccount.pubKey.Q = {};
-        hdAccountState.wallet.externalAccount.pubKey.Q.x = hdaccount.wallet.externalAccount.pubKey.Q.x.toBuffer();
-        hdAccountState.wallet.externalAccount.pubKey.Q.y = hdaccount.wallet.externalAccount.pubKey.Q.y.toBuffer();
-        hdAccountState.wallet.externalAccount.pubKey.Q.z = hdaccount.wallet.externalAccount.pubKey.Q.z.toBuffer();
-        hdAccountState.wallet.externalAccount.pubKey.Q._zInv = hdaccount.wallet.externalAccount.pubKey.Q._zInv.toBuffer();
-
-        hdwalletState.accountArray.push(hdAccountState);
-    }
-
-    return hdwalletState;
 }
 
 function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallback) {
