@@ -1,11 +1,7 @@
 function HDWalletAccount(seed, network) {
-    // var assert = Bitcoin.assert;
-    // var Address = Bitcoin.Address;
-    // var HDNode = Bitcoin.HDNode;
-    // var networks = fields;
     var Bitcoin = Browserify.Bitcoin;
 
-    network = network || Browserify.Bitcoin.networks.bitcoin;
+    network = network || Bitcoin.networks.bitcoin;
 
     // Stored in a closure to make accidental serialization less likely
     var masterkey = null;

@@ -76,7 +76,7 @@ function _ImportExport() {
                 var decryptedBytes = Bitcoin.convert.wordArrayToBuffer(decryptedWords);
                 for (var x = 0; x < 32; x++) { decryptedBytes[x] ^= derivedBytes[x]; }
                 
-                decrypted = Bitcoin.BigInteger.fromBuffer(decryptedBytes);
+                decrypted = BigInteger.fromBuffer(decryptedBytes);
                 
                 verifyHashAndReturn();
             });
@@ -92,11 +92,11 @@ function _ImportExport() {
                 if (!hasLotSeq) {
                     passfactor = prefactorA;
                 } else {
-                    var prefactorB = Bitcoin.Buffer.Buffer.concat([prefactorA, ownerentropy]);
+                    var prefactorB = Buffer.concat([prefactorA, ownerentropy]);
                     passfactor = Bitcoin.crypto.hash256(prefactorB);
                 }
                 
-                var kp = new Bitcoin.ECKey(Bitcoin.BigInteger.fromBuffer(passfactor));
+                var kp = new Bitcoin.ECKey(BigInteger.fromBuffer(passfactor));
                 
                 var passpoint = kp.pub.toBuffer();
                 
@@ -112,21 +112,21 @@ function _ImportExport() {
                     
                     for (var i = 0; i < 16; i++) { unencryptedpart2Bytes[i] ^= derived[i+16]; }
                     
-                    var encryptedpart1 = Bitcoin.Buffer.Buffer.concat([hex.slice(15, 15+8), unencryptedpart2Bytes.slice(0, 0+8)]);
+                    var encryptedpart1 = Buffer.concat([hex.slice(15, 15+8), unencryptedpart2Bytes.slice(0, 0+8)]);
                     
                     var unencryptedpart1 = CryptoJS.AES.decrypt({ciphertext: Bitcoin.convert.bufferToWordArray(encryptedpart1)}, k, AES_opts);
                     
                     var unencryptedpart1Bytes = Bitcoin.convert.wordArrayToBuffer(unencryptedpart1)
                     for (var i = 0; i < 16; i++) { unencryptedpart1Bytes[i] ^= derived[i]; }
                     
-                    var seedb = Bitcoin.Buffer.Buffer.concat([unencryptedpart1Bytes.slice(0, 0+16), unencryptedpart2Bytes.slice(8, 8+8)]);
+                    var seedb = Buffer.concat([unencryptedpart1Bytes.slice(0, 0+16), unencryptedpart2Bytes.slice(8, 8+8)]);
                     
                     var factorb = Bitcoin.crypto.hash256(seedb);
                     
                     // secp256k1: N
-                    var N = Bitcoin.BigInteger.fromHex('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141');
+                    var N = BigInteger.fromHex('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141');
                     
-                    decrypted = Bitcoin.BigInteger.fromBuffer(passfactor).multiply(Bitcoin.BigInteger.fromBuffer(factorb)).remainder(N);
+                    decrypted = BigInteger.fromBuffer(passfactor).multiply(BigInteger.fromBuffer(factorb)).remainder(N);
                     
                     verifyHashAndReturn();
                 });
@@ -189,7 +189,7 @@ function _ImportExport() {
                     }
                     
                     if (worksDone == p) {
-                        B = Bitcoin.Buffer.Buffer(B);
+                        B = Buffer(B);
                         B = Bitcoin.convert.bufferToWordArray(B);
                         var ret = Bitcoin.convert.wordArrayToBuffer(CryptoJS.PBKDF2(passwd, B, PBKDF2_opts));
                         callback(ret);
