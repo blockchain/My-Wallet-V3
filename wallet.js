@@ -1065,12 +1065,13 @@ var MyWallet = new function() {
      * @param {function()} success callback function
      * @param {function()} error callback function
      */
-    this.importPrivateKey = function(privateKeyString, getPassword, getBIP38Password, success, error) {
+    this.importPrivateKey = function(privateKeyString, getPassword, getBIP38Password, success, alreadyImportedCallback, error) {
         function reallyInsertKey(key, compressed, pw) {
           try {
                 if (MyWallet.legacyAddressExists(key.pub.getAddress().toString()) &&
                     !MyWallet.isWatchOnlyLegacyAddress(key.pub.getAddress().toString())) {
-                    throw 'Key already imported';
+                    alreadyImportedCallback()
+                    return
                 }
                 
                 var address = MyWallet.addPrivateKey(key, {compressed : compressed, app_name : APP_NAME, app_version : APP_VERSION}, pw);
