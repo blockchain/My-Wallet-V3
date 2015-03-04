@@ -34,7 +34,8 @@
     "assert": "^1.3.0",
     "bs58": "^2.0.1",
     "bitcoinjs-lib": "git://github.com/sjors/bitcoinjs-lib#8a38a24",
-    "json-buffer": "^2.0.11"
+    "json-buffer": "^2.0.11",
+    "sha256": "^0.1.1"
   },
   "devDependencies": {
     "browserify": "~8.1.1",

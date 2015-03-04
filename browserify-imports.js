@@ -4,5 +4,6 @@ module.exports = {
   Buffer: require('buffer'),
   assert: require('assert'),
   Base58: require('bs58'),
-  JSONB: require('json-buffer')
+  JSONB: require('json-buffer'),
+  SHA256: require('sha256')
 }

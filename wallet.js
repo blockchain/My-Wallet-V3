@@ -62,6 +62,7 @@ var Bitcoin = Browserify.Bitcoin;
 var ECKey = Bitcoin.ECKey;
 var assert = Browserify.assert;
 var JSONB = Browserify.JSONB;
+var SHA256 = Browserify.SHA256;
 
 var MyWallet = new function() {
     var MyWallet = this;
@@ -1066,7 +1067,7 @@ var MyWallet = new function() {
      */
     this.importPrivateKey = function(privateKeyString, getPassword, getBIP38Password, success, error) {
         function reallyInsertKey(key, compressed, pw) {
-            try {
+          try {
                 if (MyWallet.legacyAddressExists(key.pub.getAddress().toString()) &&
                     !MyWallet.isWatchOnlyLegacyAddress(key.pub.getAddress().toString())) {
                     throw 'Key already imported';
