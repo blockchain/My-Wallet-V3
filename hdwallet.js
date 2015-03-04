@@ -242,7 +242,7 @@ function HDAccount(wallet, label, idx) {
             try {
                 //12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX is dummy address, first ever bitcoin address
                 var tx = this.createTx("12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX", amount, null, null);
-                return this.wallet.estimatePaddedFee(tx, Browserify.Bitcoin.networks.bitcoin);
+                return this.wallet.estimatePaddedFee(tx, Bitcoin.networks.bitcoin);
             } catch (e) {
                 return 10000;
             }
@@ -448,8 +448,8 @@ function HDWallet(seedHex, bip39Password, second_password) {
     return walletObject;
 }
 
-function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, second_password, success, error) {
-    var hdwallet = HDWallet(seedHexString, bip39Password, second_password, success, error);
+function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secondPassword, success, error) {
+    var hdwallet = HDWallet(seedHexString, bip39Password, secondPassword);
 
     for (var i = 0; i < accountsArrayPayload.length; i++) {
         var accountPayload = accountsArrayPayload[i];
@@ -485,28 +485,7 @@ function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secon
         hdaccount.address_labels = accountPayload.address_labels ? accountPayload.address_labels : [];
     }
 
-    return hdwallet;
-}
-
-function buildHDWalletShell(seedHexString, accountsArrayPayload, bip39Password, second_password) {
-    var hdwallet = HDWallet(seedHexString, bip39Password, second_password);
-
-    for (var i = 0; i < accountsArrayPayload.length; i++) {
-        var accountPayload = accountsArrayPayload[i];
-        var archived = accountPayload.archived;
-        if (archived == true)
-            continue;
-        var label = accountPayload.label;
-
-        // This is called when a wallet is loaded, not when it's initially created. 
-        // If second password is enabled then accountPayload.xpriv has already been 
-        // encrypted. We're keeping it in an encrypted state.
-        var hdaccount = hdwallet.createAccountFromExtKeyShell(label, accountPayload.xpriv, accountPayload.xpub);
-        hdaccount.setIsArchived(archived);
-        hdaccount.receiveAddressCount = accountPayload.receive_address_count ? accountPayload.receive_address_count : 0;
-        hdaccount.changeAddressCount = accountPayload.change_address_count ? accountPayload.change_address_count : 0;
-        hdaccount.address_labels = accountPayload.address_labels ? accountPayload.address_labels : [];
-    }
+    success && success();
 
     return hdwallet;
 }

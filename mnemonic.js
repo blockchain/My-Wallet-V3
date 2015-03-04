@@ -119,7 +119,7 @@ function mn_encode_pass(obj, success, error) {
 }
 
 function mn_encode_pass_v2(str_bytes, success, error) {
-    var words = Crypto.util.bytesToWords(new Bitcoin.BigInteger(str_bytes).toByteArrayUnsigned());
+    var words = Crypto.util.bytesToWords(new BigInteger(str_bytes).toByteArrayUnsigned());
 
     var out = [];
 

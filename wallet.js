@@ -1,7 +1,7 @@
 function valueToBigInt(valueBuffer) {
-    if (valueBuffer instanceof Bitcoin.BigInteger) return valueBuffer;
+    if (valueBuffer instanceof BigInteger) return valueBuffer;
 
-    return new Bitcoin.BigInteger.fromByteArrayUnsigned(valueBuffer);
+    return new BigInteger.fromByteArrayUnsigned(valueBuffer);
 }
 
 function formatValueBitcoin(valueBuffer) {
@@ -22,9 +22,9 @@ function parseValueBitcoin(valueString) {
     var fractionalPart = valueComp[1] || "0";
     while (fractionalPart.length < 8) fractionalPart += "0";
     fractionalPart = fractionalPart.replace(/^0+/g, '');
-    var value = Bitcoin.BigInteger.valueOf(parseInt(integralPart));
-    value = value.multiply(Bitcoin.BigInteger.valueOf(100000000));
-    value = value.add(Bitcoin.BigInteger.valueOf(parseInt(fractionalPart)));
+    var value = BigInteger.valueOf(parseInt(integralPart));
+    value = value.multiply(BigInteger.valueOf(100000000));
+    value = value.add(BigInteger.valueOf(parseInt(fractionalPart)));
     return value;
 }
 
@@ -32,7 +32,7 @@ function parseValueBitcoin(valueString) {
 //Should find somewhere else for these
 //user precision (e.g. BTC or mBTC) to satoshi big int
 function precisionToSatoshiBN(x) {
-    return parseValueBitcoin(x).divide(Bitcoin.BigInteger.valueOf(Math.pow(10, sShift(symbol_btc)).toString()));
+    return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, sShift(symbol_btc)).toString()));
 }
 
 //user precision (e.g. 0.02 BTC or 0.02 mBTC) to BTC decimal
@@ -42,7 +42,7 @@ function precisionToBTC(x) {
 
 //Satoshi BN to precision decimal
 function precisionFromSatoshi(x) {
-    return formatValueBitcoin(x.multiply(Bitcoin.BigInteger.valueOf(Math.pow(10, sShift(symbol_btc)))));
+    return formatValueBitcoin(x.multiply(BigInteger.valueOf(Math.pow(10, sShift(symbol_btc)))));
 }
 
 //BTC decimal to user precision (e.g. BdeleteAddressTC or mBTC)
@@ -1233,7 +1233,7 @@ var MyWallet = new function() {
                 //SHA256
                 var bytes = Crypto.SHA256(minikey, {asBytes: true});
 
-                var eckey = new Bitcoin.ECKey(new Bitcoin.BigInteger.fromBuffer(bytes), false);
+                var eckey = new Bitcoin.ECKey(new BigInteger.fromBuffer(bytes), false);
 
                 if (MyWallet.addPrivateKey(eckey))
                     return {key : eckey, miniKey : minikey};
@@ -2125,7 +2125,7 @@ var MyWallet = new function() {
 
                 var obj = initNewTx();
                 obj.fee = obj.base_fee; //Always include a fee
-                var amount = Bitcoin.BigInteger.valueOf(value).subtract(obj.fee);
+                var amount = BigInteger.valueOf(value).subtract(obj.fee);
                 var to_address = account.getReceivingAddress(); 
                 obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(to_address), value : amount});
                 obj.from_addresses = [from_address];
@@ -2312,11 +2312,11 @@ var MyWallet = new function() {
         var obj = initNewTx();
         
         if (feeAmount != null)
-            obj.fee = Bitcoin.BigInteger.valueOf(feeAmount);
+            obj.fee = BigInteger.valueOf(feeAmount);
         else
             obj.fee = obj.base_fee;
 
-        obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(toAddress), value : Bitcoin.BigInteger.valueOf(amount)});
+        obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(toAddress), value : BigInteger.valueOf(amount)});
         obj.from_addresses = [fromAddress];
         obj.ready_to_send_header = 'Bitcoins Ready to Send.';
 
@@ -2369,12 +2369,12 @@ var MyWallet = new function() {
         var obj = initNewTx();
 
         if (feeAmount != null)
-            obj.fee = Bitcoin.BigInteger.valueOf(feeAmount);
+            obj.fee = BigInteger.valueOf(feeAmount);
         else
             obj.fee = obj.base_fee;
 
         var to_address = account.getReceivingAddress(); 
-        obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(to_address), value : Bitcoin.BigInteger.valueOf(amount)});
+        obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(to_address), value : BigInteger.valueOf(amount)});
         obj.from_addresses = [fromAddress];
         obj.ready_to_send_header = 'Bitcoins Ready to Send.';
 
@@ -2768,8 +2768,8 @@ var MyWallet = new function() {
         }
     };
 
-    this.buildHDWallet = function(seedHexString, accountsArrayPayload, secondPasswordCallback, successCallback, errorCallback) {
-        this.setHDWallet(buildHDWallet(seedHexString, accountsArrayPayload, secondPasswordCallback, successCallback, errorCallback));
+    this.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Password, secondPassword, successCallback, errorCallback) {
+        this.setHDWallet(buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secondPassword, successCallback, errorCallback));
     };
 
     this.generateHDWalletPassphrase = function() {
@@ -3790,8 +3790,8 @@ var MyWallet = new function() {
                             xpubs.push(account.xpub);
                         }
                         
-                        // We're not passing a second password, success or error callback...
-                        MyWallet.buildHDWallet(defaultHDWallet.seed_hex, defaultHDWallet.accounts, undefined, build_hd_success, function() {});
+                        // We're not passing a bip39 or second password
+                        MyWallet.buildHDWallet(defaultHDWallet.seed_hex, defaultHDWallet.accounts, undefined, undefined, build_hd_success);
                         haveBuildHDWallet = true;
                     }
                     if (defaultHDWallet.mnemonic_verified) {
