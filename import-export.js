@@ -181,53 +181,56 @@ function _ImportExport() {
 
         B = wordArrayToBuffer(B);
         
-        try {
-            var i = 0;
-            var worksDone = 0;
-            var makeWorker = function() {
-                if (!workerUrl) {
-                    var code = '('+scryptCore.toString()+')()';
-                    var blob;
-                    try {
-                        blob = new Blob([code], {type: "text/javascript"});
-                    } catch(e) {
-                        window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder || window.MSBlobBuilder;
-                        blob = new BlobBuilder();
-                        blob.append(code);
-                        blob = blob.getBlob("text/javascript");
-                    }
-                    workerUrl = URL.createObjectURL(blob);
-                }
-                var worker = new Worker(workerUrl);
-                worker.onmessage = function(event) {
-                    var Bi = event.data[0], Bslice = event.data[1];
-                    worksDone++;
-                    
-                    if (i < p) {
-                        worker.postMessage([N, r, p, B, i++]);
-                    }
-                    
-                    var length = Bslice.length, destPos = Bi * 128 * r, srcPos = 0;
-                    while (length--) {
-                        B[destPos++] = Bslice[srcPos++];
-                    }
-                    
-                    if (worksDone == p) {
-                        B = Buffer(B);
-                        B = bufferToWordArray(B);
-
-                        var ret = wordArrayToBuffer(CryptoJS.PBKDF2(passwd, B, PBKDF2_opts));
-                        callback(ret);
-                    }
-                };
-                return worker;
-            };
-            var workers = [makeWorker()];
-            workers[0].postMessage([N, r, p, B, i++]);
-            if (p > 1) {
-                workers[1].postMessage([N, r, p, B, i++]);
-            }
-        } catch (e) {
+        // There is a bug in the web worker below, so it's not used currently.
+        
+        // try {
+        //     var i = 0;
+        //     var worksDone = 0;
+        //     var makeWorker = function() {
+        //         if (!workerUrl) {
+        //             var code = '('+scryptCore.toString()+')()';
+        //             var blob;
+        //             try {
+        //                 blob = new Blob([code], {type: "text/javascript"});
+        //             } catch(e) {
+        //                 window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder || window.MSBlobBuilder;
+        //                 blob = new BlobBuilder();
+        //                 blob.append(code);
+        //                 blob = blob.getBlob("text/javascript");
+        //             }
+        //             workerUrl = URL.createObjectURL(blob);
+        //         }
+        //         var worker = new Worker(workerUrl);
+        //         worker.onmessage = function(event) {
+        //             var Bi = event.data[0], Bslice = event.data[1];
+        //             worksDone++;
+        //
+        //             if (i < p) {
+        //                 worker.postMessage([N, r, p, B, i++]);
+        //             }
+        //
+        //             var length = Bslice.length, destPos = Bi * 128 * r, srcPos = 0;
+        //             while (length--) {
+        //                 B[destPos++] = Bslice[srcPos++];
+        //             }
+        //
+        //             if (worksDone == p) {
+        //                 B = Buffer(B);
+        //                 B = bufferToWordArray(B);
+        //
+        //                 var ret = wordArrayToBuffer(CryptoJS.PBKDF2(passwd, B, PBKDF2_opts));
+        //                 callback(ret);
+        //             }
+        //         };
+        //         return worker;
+        //     };
+        //     var workers = [makeWorker()];
+        //     workers[0].postMessage([N, r, p, B, i++]);
+        //     if (p > 1) {
+        //         workers[1].postMessage([N, r, p, B, i++]);
+        //     }
+        // } catch (e) {
+            // Called in Firefox and IE which don't support Blob web workers with CSP enabled.
             window.setTimeout(function() {
                               scryptCore();
                               B = bufferToWordArray(B);
@@ -235,7 +238,7 @@ function _ImportExport() {
 
                               callback(ret);
                               }, 0);
-        }
+        // }
         
         // using this function to enclose everything needed to create a worker (but also invokable directly for synchronous use)
         function scryptCore() {
