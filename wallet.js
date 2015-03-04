@@ -2811,7 +2811,11 @@ var MyWallet = new function() {
         }
 
         var _success = function() {
-            success && success();
+            MyWallet.backupWalletDelayed('update', function() {
+                success && success();
+            }, function() {
+                error && error();
+            });
         };
         
         var _error = function () {
