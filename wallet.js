@@ -2811,11 +2811,7 @@ var MyWallet = new function() {
         }
 
         var _success = function() {
-            MyWallet.backupWallet('update', function() {
-                success && success();
-            }, function() {
-                error && error();
-            });
+            success && success();
         };
         
         var _error = function () {
