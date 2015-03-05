@@ -485,9 +485,7 @@ function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secon
         hdaccount.address_labels = accountPayload.address_labels ? accountPayload.address_labels : [];
     }
 
-    success && success();
-
-    return hdwallet;
+    success && success(hdwallet);
 }
 
 function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallback) {

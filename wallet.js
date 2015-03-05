@@ -2642,7 +2642,7 @@ var MyWallet = new function() {
     };
 
     // Assumes second password is needed if the argument is not null.
-    function createAccount(label, second_password, success, error) {      
+    function createAccount(label, second_password, success, error) {    
         var account = MyWallet.getHDWallet().createAccount(label, second_password);
         var accountExtendedPublicKey = account.getAccountExtendedKey(false);
         account.setBalance(0);
@@ -2770,7 +2770,13 @@ var MyWallet = new function() {
     };
 
     this.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Password, secondPassword, successCallback, errorCallback) {
-        this.setHDWallet(buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secondPassword, successCallback, errorCallback));
+        
+        var _success = function(hdWallet) {
+            MyWallet.setHDWallet(hdWallet);
+            successCallback && successCallback()
+        }
+        
+        buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secondPassword, _success, errorCallback)
     };
 
     this.generateHDWalletPassphrase = function() {
@@ -2812,10 +2818,9 @@ var MyWallet = new function() {
 
         var _success = function() {
             MyWallet.backupWalletDelayed('update', function() {
-                success && success();
-            }, function() {
-                error && error();
-            });
+            }, function() { });
+            
+            success && success();
         };
         
         var _error = function () {
@@ -2838,17 +2843,22 @@ var MyWallet = new function() {
             didUpgradeToHd = true;
             
             var seedHexString;
+                        
             if (passphrase) {
                 seedHexString = passphraseToPassphraseHexString(passphrase);
             }
             else {
                 seedHexString = MyWallet.generateHDWalletSeedHex();
             }
-            
+                        
             MyWallet.buildHDWallet(seedHexString, [], bip39Password, second_password, success, error);
-            
-            MyWallet.getHDWallet().createAccount("Spending", second_password);
-            
+                                    
+            account = MyWallet.getHDWallet().createAccount("Spending", second_password);
+                        
+            account.setBalance(0);
+                        
+            MyWallet.listenToHDWalletAccount(account.getAccountExtendedKey(false));
+                        
             success();
         }
         
