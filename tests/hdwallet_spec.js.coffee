@@ -11,11 +11,10 @@ describe "HD Wallet", ->
   
   describe "initializeHDWallet()", ->
     beforeEach ->
-      observer = {}
-      
-      observer.success = () ->
-      observer.error = () ->
-        console.log "error"
+      observer =
+        success: () ->
+        error: () ->
+          console.log "error"
       
       spyOn(observer, "success")
       spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
@@ -23,7 +22,6 @@ describe "HD Wallet", ->
       
     describe "without 2nd password", ->
       beforeEach ->
-        MyWallet.setUseBuildHDWalletWebworker(false);
         MyWallet.initializeHDWallet(null, null, null, observer.success, observer.error)
         
       it "should succeed", ->
@@ -39,6 +37,11 @@ describe "HD Wallet", ->
         
         MyWallet.initializeHDWallet(null, null, observer.getPassword, observer.success, observer.error)
         
+        # Not sure why this gets called:
+        MyWallet.backupWallet = () ->
+        MyWallet.backupWalletDelayed = () ->
+          
+        
       it "should ask for it", ->         
         expect(observer.getPassword).toHaveBeenCalled()
         
@@ -49,7 +52,19 @@ describe "HD Wallet", ->
     
     describe "when opening an existing wallet", ->
       beforeEach ->
-        hdwallet = buildHDWallet(seed, accountsPayload, bip39Password)
+        observer =
+          success: () ->
+          error: () ->
+            console.log "error"
+            
+        spyOn(observer, "success")
+        spyOn(observer, "error")
+            
+        hdwallet = buildHDWallet(seed, accountsPayload, bip39Password, null, observer.success, observer.error)
+        
+      it "should succeed", ->
+        expect(observer.success).toHaveBeenCalled()
+        expect(observer.error).not.toHaveBeenCalled()
         
       it "should have accounts count be 2", ->
           expect(hdwallet.getAccountsCount()).toBe(2)
