@@ -2625,7 +2625,7 @@ var MyWallet = new function() {
      * @param {function()} success called when account creation was successful
      * @param {function()} error called when account creation failed
      */
-    this.createAccount = function(label, getPassword, success, error)  {
+    this.createAccount = function(label, getPassword, success, error) {
         if (double_encryption) {
             getPassword(function(pw, correct_password, incorrect_password) {
                 if (MyWallet.validateSecondPassword(pw)) {
@@ -2658,13 +2658,12 @@ var MyWallet = new function() {
         return myHDWallet;
     };
     
-    this.setHDWallet = function(newValue, isShellWallet) {
+    this.setHDWallet = function(newValue) {
         myHDWallet = newValue;
-        if (! isShellWallet && newValue ) {
+        if (newValue) {
             MyWallet.sendEvent('hd_wallet_set');
         }
     };
-    
 
     /**
      * @param {string} mnemonic mnemonic
@@ -2770,12 +2769,11 @@ var MyWallet = new function() {
     };
 
     this.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Password, secondPassword, successCallback, errorCallback) {
-        
         var _success = function(hdWallet) {
             MyWallet.setHDWallet(hdWallet);
             successCallback && successCallback()
         }
-        
+
         buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secondPassword, _success, errorCallback)
     };
 
@@ -2817,12 +2815,11 @@ var MyWallet = new function() {
         }
 
         var _success = function() {
-            MyWallet.backupWalletDelayed('update', function() {
-            }, function() { });
-            
+            MyWallet.backupWalletDelayed('update');
+
             success && success();
         };
-        
+
         var _error = function () {
             error && error();
         };
@@ -2841,27 +2838,27 @@ var MyWallet = new function() {
     this.initializeHDWallet = function(passphrase, bip39Password, getPassword, success, error)  {
         function initializeHDWallet(passphrase, bip39Password, second_password, success, error) {
             didUpgradeToHd = true;
-            
+
             var seedHexString;
-                        
+
             if (passphrase) {
                 seedHexString = passphraseToPassphraseHexString(passphrase);
             }
             else {
                 seedHexString = MyWallet.generateHDWalletSeedHex();
             }
-                        
+
             MyWallet.buildHDWallet(seedHexString, [], bip39Password, second_password, success, error);
-                                    
+
             account = MyWallet.getHDWallet().createAccount("Spending", second_password);
-                        
+
             account.setBalance(0);
-                        
+
             MyWallet.listenToHDWalletAccount(account.getAccountExtendedKey(false));
-                        
+
             success();
         }
-        
+
         if (this.getDoubleEncryption()) {
             getPassword(function(pw, correct_password, wrong_password) {
                 if (MyWallet.validateSecondPassword(pw)) {
