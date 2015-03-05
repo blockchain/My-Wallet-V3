@@ -723,7 +723,7 @@ var MyWallet = new function() {
          * @param {!string} pw The password used for encryption.
          */
         var reencrypt = function(data, pw) {
-            return MyWallet.encrypt(MyWallet.decryptSecretWithSecondPassword(data, pw), sharedKey + pw, pbkdf2_iterations);
+            return MyWallet.encrypt(MyWallet.decryptSecretWithSecondPassword(data, pw, sharedKey), sharedKey + pw, pbkdf2_iterations);
         };
 
         var setPbkdf2IterationsAndBackupWallet = function() {
@@ -837,7 +837,7 @@ var MyWallet = new function() {
 
                         if (addr.priv) {
                             console.log(addr.priv);
-                            addr.priv = MyWallet.decryptSecretWithSecondPassword(addr.priv, pw);
+                            addr.priv = MyWallet.decryptSecretWithSecondPassword(addr.priv, pw, sharedKey);
                             console.log(addr.priv);
 
                             if (!addr.priv) throw 'addr.priv is null';
@@ -846,11 +846,11 @@ var MyWallet = new function() {
 
                     for (var i in MyWallet.getAccounts()) {
                         var account = MyWallet.getHDWallet().getAccount(i);
-                        account.extendedPrivateKey = MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, pw);
+                        account.extendedPrivateKey = MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, pw, sharedKey);
                     }
 
                     if (MyWallet.didUpgradeToHd()) {
-                        MyWallet.getHDWallet().seedHex = MyWallet.decryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, pw);
+                        MyWallet.getHDWallet().seedHex = MyWallet.decryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, pw, sharedKey);
                     }
 
                     MyWallet.setDoubleEncryption(false);
@@ -897,7 +897,7 @@ var MyWallet = new function() {
                 var addr = addresses[key];
 
                 if (addr.priv) {
-                    addr.priv = MyWallet.encryptSecretWithSecondPassword(addr.priv, password);
+                    addr.priv = MyWallet.encryptSecretWithSecondPassword(addr.priv, password, sharedKey);
 
                     if (!addr.priv) throw 'addr.priv is null';
                 }
@@ -905,11 +905,11 @@ var MyWallet = new function() {
 
             for (var i in MyWallet.getAccounts()) {
                 var account = MyWallet.getHDWallet().getAccount(i);
-                account.extendedPrivateKey = MyWallet.encryptSecretWithSecondPassword(account.extendedPrivateKey, password);
+                account.extendedPrivateKey = MyWallet.encryptSecretWithSecondPassword(account.extendedPrivateKey, password, sharedKey);
             }
 
             if (MyWallet.didUpgradeToHd()) {
-                MyWallet.getHDWallet().seedHex = MyWallet.encryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, password);
+                MyWallet.getHDWallet().seedHex = MyWallet.encryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, password, sharedKey);
             }
 
             dpasswordhash = hashPassword(sharedKey + password, MyWallet.getPbkdf2Iterations());
@@ -1170,13 +1170,13 @@ var MyWallet = new function() {
 
         var base58 = Browserify.Base58.encode(key.d.toBuffer(32));
         
-        var encoded = second_password == null ? base58 : MyWallet.encryptSecretWithSecondPassword(base58, second_password);
+        var encoded = second_password == null ? base58 : MyWallet.encryptSecretWithSecondPassword(base58, second_password, sharedKey);
 
         if (encoded == null) {
             throw 'Error Encoding key';
         }
         
-        var decoded_base_58 = second_password == null ? base58 : MyWallet.decryptSecretWithSecondPassword(encoded, second_password);
+        var decoded_base_58 = second_password == null ? base58 : MyWallet.decryptSecretWithSecondPassword(encoded, second_password, sharedKey);
 
         var decoded_key = new ECKey(new BigInteger.fromBuffer(decoded_base_58), opts.compressed);
 
@@ -2200,7 +2200,7 @@ var MyWallet = new function() {
                         var account = MyWallet.getHDWallet().getAccount(accountIdx);
                         var extendedPrivateKey = null;
                         if (secondPassword != null) {
-                            extendedPrivateKey = MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, secondPassword);
+                            extendedPrivateKey = MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, secondPassword, sharedKey);
                         } else {
                             extendedPrivateKey = account.extendedPrivateKey;
                         }
@@ -2527,7 +2527,7 @@ var MyWallet = new function() {
         function sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, second_password) {
             MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function (unspent_outputs) {
                 var account = MyWallet.getHDWallet().getAccount(accountIdx);
-                var extendedPrivateKey = second_password == null ? account.extendedPrivateKey : MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password);
+                var extendedPrivateKey = second_password == null ? account.extendedPrivateKey : MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password, sharedKey);
                 var tx = account.createTx(to, value, fixedFee, unspent_outputs, extendedPrivateKey);
                 var balance = account.getBalance();
                 BlockchainAPI.push_tx(tx, note, function(response) {
@@ -2885,7 +2885,7 @@ var MyWallet = new function() {
             getPassword(function(pw, correct_password, incorrect_password) {
                 if (MyWallet.validateSecondPassword(pw)) {
                     correct_password();
-                    var seed = MyWallet.decryptSecretWithSecondPassword(MyWallet.getHDWallet().getSeedHexString(), pw);
+                    var seed = MyWallet.decryptSecretWithSecondPassword(MyWallet.getHDWallet().getSeedHexString(), pw, sharedKey);
                     successCallback(MyWallet.getHDWallet().getPassphraseString(seed));                    
                 } else {
                     incorrect_password();
@@ -4518,6 +4518,9 @@ var MyWallet = new function() {
         //iso10126 with 10 iterations  (old default)
         if (pbkdf2_iterations != 10) {
             try {
+                console.log("Salt:");
+                console.log(salt);
+                console.log("is defined...");
                 var streched_password = MyWallet.stretchPassword(password, salt, 10);
 
                 var decrypted = CryptoJS.AES.decrypt({ciphertext: payload, salt: ""}, streched_password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iv: iv}); 
@@ -4659,13 +4662,13 @@ var MyWallet = new function() {
 
     // Expects a secret (e.g. a private key, xpriv of seed hex) and the second
     // password. Returns the encrypted secret:
-    this.encryptSecretWithSecondPassword = function(base58, password) {
+    this.encryptSecretWithSecondPassword = function(base58, password, sharedKey) {
         return MyWallet.encrypt(base58, sharedKey + password, MyWallet.getPbkdf2Iterations());
     };
     
     // Expects an ecrypted secret (e.g. a private key, xpriv or seed hex) and
     // the second password. Returns the secret:
-    this.decryptSecretWithSecondPassword = function(secret, password) {
+    this.decryptSecretWithSecondPassword = function(secret, password, sharedKey) {
         return MyWallet.decrypt(secret, sharedKey + password, MyWallet.getPbkdf2Iterations(), MyWallet.isBase58);
     };
 
@@ -4845,7 +4848,7 @@ var MyWallet = new function() {
                 }
 
                 if (second_password != null) {
-                    addr.priv = MyWallet.encryptSecretWithSecondPassword(decryptedpk, second_password);
+                    addr.priv = MyWallet.encryptSecretWithSecondPassword(decryptedpk, second_password, sharedKey);
                 }
             }
         }
@@ -4857,7 +4860,7 @@ var MyWallet = new function() {
             if(second_password == null) {
                 decryptedpk = account.extendedPrivateKey;
             } else {
-                decryptedpk = MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password);
+                decryptedpk = MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password, sharedKey);
             }
 
             try {
