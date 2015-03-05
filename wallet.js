@@ -2660,7 +2660,7 @@ var MyWallet = new function() {
     
     this.setHDWallet = function(newValue, isShellWallet) {
         myHDWallet = newValue;
-        if (! isShellWallet) {
+        if (! isShellWallet && newValue ) {
             MyWallet.sendEvent('hd_wallet_set');
         }
     };
