@@ -15,9 +15,7 @@ node_modules
 npm-debug.log
 
 # Generated js files
-bip38.js
 bip39.js
-bitcoinjs-npm.js
 browserify.js
 jquery.min.js
 xregexp-all.js
