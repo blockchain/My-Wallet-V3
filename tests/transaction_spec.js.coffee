@@ -7,8 +7,57 @@ hdAccounts = undefined
   
 describe "Transaction", ->  
   beforeEach ->
-    defaultSampleTx = {"hash":"b0cf5a859187e9c0cd7f7836fac88ade98713021eb2c3bcb92d677ac4a2a45ba","size":226,"txIndex":72945763,"time":1419598158,"inputs":[{"sequence":4294967295,"prev_out":{"spent":true,"tx_index":72943968,"type":0,"addr":"1MaCbDwkC74tiEDSnchASxiAARHh94CVSG","value":140000,"xpub":{"path":"M/1/2","m":"xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5"},"n":1,"script":"76a914e1a9ead4802fa084d8c8de33c0acd0238fced51888ac"},"script":"483045022100bb6d6bd543631c2ed603f5e0cdb7e2fe09c04afdf32b4440c7d20a355259aa8b022020ad057e9dc665ef30401994a3c2afcc155e17eb4285aa9ae7b5bf9be3664eb10121029c0283f9e06fd48a44def3f362307284f7433084a440c6523b1a34d097c96fbc"}],"out":[{"spent":false,"tx_index":72945763,"type":0,"addr":"1FeerpCgswvGRLVKme759C96DUBtf7SvA2","value":75196,"n":0,"script":"76a914a0b0c129bb55f8cfade30e02477dc5e504da607388ac"},{"spent":false,"tx_index":72945763,"type":0,"addr":"1MaCbDwkC74tiEDSnchASxiAARHh94CVSG","value":54804,"xpub":{"path":"M/1/2","m":"xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5"},"n":1,"script":"76a914e1a9ead4802fa084d8c8de33c0acd0238fced51888ac"}],"result":-85196,"blockHeight":335985,"balance":1768749,"account_indexes":[0,0],"confirmations":8}
-
+    defaultSampleTx = 
+      'hash': 'b0cf5a859187e9c0cd7f7836fac88ade98713021eb2c3bcb92d677ac4a2a45ba'
+      'size': 226
+      'txIndex': 72945763
+      'time': 1419598158
+      'inputs': [ {
+        'sequence': 4294967295
+        'prev_out':
+          'spent': true
+          'tx_index': 72943968
+          'type': 0
+          'addr': '1MaCbDwkC74tiEDSnchASxiAARHh94CVSG'
+          'value': 140000
+          'xpub':
+            'path': 'M/1/2'
+            'm': 'xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5'
+          'n': 1
+          'script': '76a914e1a9ead4802fa084d8c8de33c0acd0238fced51888ac'
+        'script': '483045022100bb6d6bd543631c2ed603f5e0cdb7e2fe09c04afdf32b4440c7d20a355259aa8b022020ad057e9dc665ef30401994a3c2afcc155e17eb4285aa9ae7b5bf9be3664eb10121029c0283f9e06fd48a44def3f362307284f7433084a440c6523b1a34d097c96fbc'
+      } ]
+      'out': [
+        {
+          'spent': false
+          'tx_index': 72945763
+          'type': 0
+          'addr': '1FeerpCgswvGRLVKme759C96DUBtf7SvA2'
+          'value': 75196
+          'n': 0
+          'script': '76a914a0b0c129bb55f8cfade30e02477dc5e504da607388ac'
+        }
+        {
+          'spent': false
+          'tx_index': 72945763
+          'type': 0
+          'addr': '1MaCbDwkC74tiEDSnchASxiAARHh94CVSG'
+          'value': 54804
+          'xpub':
+            'path': 'M/1/2'
+            'm': 'xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5'
+          'n': 1
+          'script': '76a914e1a9ead4802fa084d8c8de33c0acd0238fced51888ac'
+        }
+      ]
+      'result': -85196
+      'blockHeight': 335985
+      'balance': 1768749
+      'account_indexes': [
+        0
+        0
+      ]
+      'confirmations': 8
     
     # externalAddreses = []
     # changeAddresses = []
@@ -22,6 +71,10 @@ describe "Transaction", ->
       {
         getAccountExtendedKey: () -> 
           "xpub6DWoQTdpQcaSm4q9pj9A5EZdCs3NcmM5x8aRoi3VAGXJUCkJhmREWMCaAahs9nhMq7RnseKBV4uwkqCP8g43sEnMXRfFes2BxGagJqZfS5A"
+      }
+      {
+        getAccountExtendedKey: () ->
+          "xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ"
       }
     ]
     
@@ -68,7 +121,7 @@ describe "Transaction", ->
 
         tx = {"hash":"b0cf5a859187e9c0cd7f7836fac88ade98713021eb2c3bcb92d677ac4a2a45ba","size":226,"txIndex":72945763,"time":1419598158,"inputs":[{"sequence":4294967295,"prev_out":{"spent":true,"tx_index":72943968,"type":0,"addr":"1MaCbDwkC74tiEDSnchASxiAARHh94CVSG","value":140000,"xpub":{"path":"M/1/2","m":"xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5"},"n":1,"script":"76a914e1a9ead4802fa084d8c8de33c0acd0238fced51888ac"},"script":"483045022100bb6d6bd543631c2ed603f5e0cdb7e2fe09c04afdf32b4440c7d20a355259aa8b022020ad057e9dc665ef30401994a3c2afcc155e17eb4285aa9ae7b5bf9be3664eb10121029c0283f9e06fd48a44def3f362307284f7433084a440c6523b1a34d097c96fbc"}],"out":[{"spent":false,"tx_index":72945763,"type":0,"addr":"1FeerpCgswvGRLVKme759C96DUBtf7SvA2","value":75196,"n":0,"script":"76a914a0b0c129bb55f8cfade30e02477dc5e504da607388ac"},{"spent":false,"tx_index":72945763,"type":0,"addr":"1MaCbDwkC74tiEDSnchASxiAARHh94CVSG","value":54804,"xpub":{"path":"M/1/2","m":"xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5"},"n":1,"script":"76a914e1a9ead4802fa084d8c8de33c0acd0238fced51888ac"}],"result":-85196,"blockHeight":335985,"balance":1768749,"account_indexes":[0,0],"confirmations":8}
         transaction = {"from":{"account":{"index":0,"amount":85196},"legacyAddresses":null,"externalAddresses":null},"to":{"account":null,"legacyAddresses":null,"externalAddresses":{"addressWithLargestOutput":"1FeerpCgswvGRLVKme759C96DUBtf7SvA2","amount":75196}},"fee":10000,"intraWallet":false,"hash":"b0cf5a859187e9c0cd7f7836fac88ade98713021eb2c3bcb92d677ac4a2a45ba","confirmations":8,"txTime":1419598158,"note":null,"tags":[],"size":226,"tx_index":72945763,"block_height":335985,"result":-85196}
-      
+  
         expect(MyWallet.processTransaction(tx)).toEqual(transaction)
       
       it "should be recognized if there's no change", ->
@@ -80,8 +133,10 @@ describe "Transaction", ->
         pending()
         
     describe "from external address to account", ->
-      it "...", ->
-        pending()
+      it "should be recognized", ->
+        tx = {"hash":"68ca0a6593f546ab50a41f70b3241795f80d16b8ede7a238f3b9a5b6520f6a6d","size":225,"txIndex":79746098,"time":1425659266,"inputs":[{"sequence":4294967295,"prev_out":{"spent":true,"tx_index":79692064,"type":0,"addr":"1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg","value":176330919,"n":1,"script":"76a91477f6416372b875ec857768f6f464323efff129c088ac"},"script":"47304402201e5f48767ce73968fabf6db87297f05c17e48b6b3df709f6fd265d830e391cf1022028f89c3ca371eec7f89d945eeafdbc457696a5235937a5e16021efaed6028367012103296fb539b5de86874336a26b0099250630434073a265e0fba22165aace87db46"}],"out":[{"spent":false,"tx_index":79746098,"type":0,"addr":"1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX","value":100000,"xpub":{"path":"M/0/0","m":"xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ"},"n":0,"script":"76a9148452ffa018aef2c941ed559d0de0132c3f67eebe88ac"},{"spent":false,"tx_index":79746098,"type":0,"addr":"1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg","value":176220919,"n":1,"script":"76a91477f6416372b875ec857768f6f464323efff129c088ac"}],"result":100000,"blockHeight":346444,"balance":100000,"account_indexes":[0],"confirmations":3}
+        transaction = {"from":{"account":null,"legacyAddresses":null,"externalAddresses":{"addressWithLargestOutput":"1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg","amount":100000}},"to":{"account":{"index":2,"amount":100000},"legacyAddresses":null,"externalAddresses":null},"fee":10000,"intraWallet":false,"hash":"68ca0a6593f546ab50a41f70b3241795f80d16b8ede7a238f3b9a5b6520f6a6d","confirmations":3,"txTime":1425659266,"note":null,"tags":[],"size":225,"tx_index":79746098,"block_height":346444,"result":100000}
+        expect(MyWallet.processTransaction(tx)).toEqual(transaction)
     
     describe "between accounts", ->
       it "should be recognized", ->
