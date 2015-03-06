@@ -271,9 +271,8 @@ function passphraseToPassphraseHexString(passphrase) {
 // here.
 
 function HDWallet(seedHex, bip39Password, second_password) {
-
     var walletObject = {
-        seedHex : second_password == null ? seedHex : MyWallet.encryptSecretWithSecondPassword(seedHex, second_password),
+        seedHex : second_password == null ? seedHex : MyWallet.encryptSecretWithSecondPassword(seedHex, second_password, MyWallet.getSharedKey()),
         bip39Password : bip39Password,
         numTxFetched : 0,
         accountArray : [],
@@ -286,8 +285,8 @@ function HDWallet(seedHex, bip39Password, second_password) {
         getSeedHexString : function(second_password) {
             if(second_password == null) {
                 return this.seedHex;
-            } else {
-                return MyWallet.decryptSecretWithSecondPassword(this.seedHex, second_password);
+            } else {       
+                return MyWallet.decryptSecretWithSecondPassword(this.seedHex, second_password, MyWallet.getSharedKey());
             }
         },
         getMasterHex : function(seedHex) {
@@ -434,7 +433,7 @@ function HDWallet(seedHex, bip39Password, second_password) {
             var extendedPrivateKey = accountZero.toBase58();
             var extendedPublicKey =  accountZero.neutered().toBase58();
 
-            account.extendedPrivateKey = second_password == null ? extendedPrivateKey : MyWallet.encryptSecretWithSecondPassword(extendedPrivateKey, second_password);
+            account.extendedPrivateKey = second_password == null ? extendedPrivateKey : MyWallet.encryptSecretWithSecondPassword(extendedPrivateKey, second_password, MyWallet.getSharedKey());
             account.extendedPublicKey = extendedPublicKey;
 
             account.generateCache();
