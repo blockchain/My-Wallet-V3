@@ -1100,11 +1100,14 @@ var MyWallet = new function() {
         }
 
         if (format == 'bip38') {
-            getBIP38Password(function(_password, wrong_password) {
+            getBIP38Password(function(_password, correct_password, wrong_password) {
+                MyWallet.disableLogout(true);
                 ImportExport.parseBIP38toECKey(
                     privateKeyString, 
                     _password, 
                     function(key, isCompPoint) {
+                        MyWallet.disableLogout(false);
+                        correct_password();
                         if(double_encryption) {
                             getPassword(function(pw, correct_password, wrong_password) {
                                 if (MyWallet.validateSecondPassword(pw)) {
@@ -1119,8 +1122,12 @@ var MyWallet = new function() {
                             reallyInsertKey(key, isCompPoint, null);
                         }
                     }, 
-                    wrong_password,
+                    function() {
+                        MyWallet.disableLogout(false);
+                        wrong_password();
+                    },
                     function(e) {
+                        MyWallet.disableLogout(false);
                         error(e);
                     }
                 );
