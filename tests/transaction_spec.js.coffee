@@ -200,9 +200,70 @@ describe "Transaction", ->
       
       ##########################################################################
       it "should be recognized if there's no change", ->
-        # TODO: find tx where one account address was completely emptied
-        pending()
-      
+        # tx where one account address was completely emptied
+        # pending()
+        tx = 
+          'hash': '62636544b31da6a14a419ab1ee3a253bb1ebca65175d351ba4bb54b00b896a87'
+          'size': 191
+          'txIndex': 79823045
+          'time': 1425727751
+          'inputs': [ {
+            'sequence': 4294967295
+            'prev_out':
+              'spent': true
+              'tx_index': 79822173
+              'type': 0
+              'addr': '1PuxdAtRwPkbFy9M4ete7GZdZmvVWCiSJN'
+              'value': 110000
+              'xpub':
+                'path': 'M/0/3'
+                'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
+              'n': 0
+              'script': '76a914fb56d45b9ee3ed21ef7d45b9323e17dcf023afd888ac'
+            'script': '47304402203a8c22629e87fd8be70f802977f6d911343f3e333001a30f1bb68ffd92b01f08022019af7f2d8e56922ce65dee249168d095d6d057d1a69393c06c7ee436650a1891012102b37b3c21a106b104d9ac346bd80fd54f4c77930a58cb590c75911d027238ad8a'
+          } ]
+          'out': [ {
+            'spent': false
+            'tx_index': 79823045
+            'type': 0
+            'addr': '1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg'
+            'value': 100000
+            'n': 0
+            'script': '76a91477f6416372b875ec857768f6f464323efff129c088ac'
+          } ]
+          'result': -110000
+          'blockHeight': 346553
+          'balance': 0
+          'account_indexes': [ 0 ]
+          'confirmations': 6
+
+        transaction = 
+          'from':
+            'account':
+              'index': 2
+              'amount': 110000
+            'legacyAddresses': null
+            'externalAddresses': null
+          'to':
+            'account': null
+            'legacyAddresses': null
+            'externalAddresses':
+              'addressWithLargestOutput': '1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg'
+              'amount': 100000
+          'fee': 10000
+          'intraWallet': false
+          'hash': '62636544b31da6a14a419ab1ee3a253bb1ebca65175d351ba4bb54b00b896a87'
+          'confirmations': 6
+          'txTime': 1425727751
+          'note': null
+          'tags': []
+          'size': 191
+          'tx_index': 79823045
+          'block_height': 346553
+          'result': -110000
+
+        expect(MyWallet.processTransaction(tx)).toEqual(transaction)
+
       ##########################################################################
       it "should be recognized if there were multiple input addresses", ->
         tx = 
