@@ -652,7 +652,7 @@ function initNewTx() {
                         if (tmp_cache[inputAddress]) {
                             connected_script.priv_to_use = tmp_cache[inputAddress];
                         } else if (self.extra_private_keys && self.extra_private_keys[inputAddress]) {
-                            connected_script.priv_to_use = Bitcoin.base58.decode(self.extra_private_keys[inputAddress]);
+                            connected_script.priv_to_use = self.extra_private_keys[inputAddress];
                         } else if (MyWallet.legacyAddressExists(inputAddress) && !MyWallet.isWatchOnlyLegacyAddress(inputAddress)) {
                             try {
                                 connected_script.priv_to_use = second_password == null ? MyWallet.getPrivateKey(inputAddress) : MyWallet.decryptSecretWithSecondPassword(MyWallet.getPrivateKey(inputAddress), second_password);
