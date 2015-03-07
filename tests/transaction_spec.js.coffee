@@ -205,8 +205,89 @@ describe "Transaction", ->
       
       ##########################################################################
       it "should be recognized if there were multiple input addresses", ->
-        # TODO: find tx where multiple addresses within the account were used to spend
-        pending()
+        tx = 
+          'hash': 'f18ad9a8b2c4f7d864b1623d5a826184d2c755834993a9152067d6f4e3311f6d'
+          'size': 339
+          'txIndex': 79821031
+          'time': 1425723873
+          'inputs': [
+            {
+              'sequence': 4294967295
+              'prev_out':
+                'spent': true
+                'tx_index': 79815620
+                'type': 0
+                'addr': '1JEqeTrUo1nUHosimX8u9kpdkvdom2ekwQ'
+                'value': 110000
+                'xpub':
+                  'path': 'M/0/2'
+                  'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
+                'n': 0
+                'script': '76a914bd182744a3b7da33cd848382bd8b78d0e5901c3688ac'
+              'script': '47304402205502e152e38e845ddfc4e94d7cf94a259a00fd99d1fc044820b8bd752b3f734b022070d17c6b105275027d0a6b3c5b10e73b1c7f326e934c4a5691d15e709c5ced1d0121036b586fe3c0bbfb845d767236a7b7db6f3249a74707510871bbd5d29a552beef0'
+            }
+            {
+              'sequence': 4294967295
+              'prev_out':
+                'spent': true
+                'tx_index': 79746098
+                'type': 0
+                'addr': '1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX'
+                'value': 100000
+                'xpub':
+                  'path': 'M/0/0'
+                  'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
+                'n': 0
+                'script': '76a9148452ffa018aef2c941ed559d0de0132c3f67eebe88ac'
+              'script': '4830450221008c81908e2b44541d083d25cd3c5d0d58f77dde15c07fe603ca91b360111f480a02200c8d994d44f15d46495dbcb08e5cd7fa402a57e71d3e48ccfaf250cb5ff64517012102105b66c058566ccbdf2602492d84b960f4dbdd05b860de5e559edc08197eeb8e'
+            }
+          ]
+          'out': [ {
+            'spent': false
+            'tx_index': 79821031
+            'type': 0
+            'addr': '1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg'
+            'value': 200000
+            'n': 0
+            'script': '76a91477f6416372b875ec857768f6f464323efff129c088ac'
+          } ]
+          'result': -210000
+          'blockHeight': 346547
+          'balance': 0
+          'account_indexes': [
+            0
+            0
+          ]
+          'confirmations': 3
+
+        transaction = 
+          'from':
+            'account':
+              'index': 2
+              'amount': 110000
+            'legacyAddresses': null
+            'externalAddresses':
+              'addressWithLargestOutput': '1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX'
+              'amount': 100000
+          'to':
+            'account': null
+            'legacyAddresses': null
+            'externalAddresses':
+              'addressWithLargestOutput': '1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg'
+              'amount': 200000
+          'fee': 10000
+          'intraWallet': false
+          'hash': 'f18ad9a8b2c4f7d864b1623d5a826184d2c755834993a9152067d6f4e3311f6d'
+          'confirmations': 3
+          'txTime': 1425723873
+          'note': null
+          'tags': []
+          'size': 339
+          'tx_index': 79821031
+          'block_height': 346547
+          'result': -210000     
+
+        expect(MyWallet.processTransaction(tx)).toEqual(transaction)
         
     describe "from external address to account", ->
       ##########################################################################
