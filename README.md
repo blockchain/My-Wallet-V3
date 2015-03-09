@@ -6,6 +6,7 @@ Javascript Model for blockchain wallet.
 
 ```sh
 npm install
+grunt dist
 ```
 
 ## Tests
@@ -16,25 +17,7 @@ npm test
 
 ## Getting Started
 
-Include the following files:
-
-* `shared.js`
-* `blockchainapi.js`
-* `bower_components/jquery/dist/jquery.js`
-* `browserify.js`
-* `bip38.js`
-* `bip39.js`
-* `sjcl.js`
-* `xregexp-all.js`
-* `hdwallet.js`
-* `HDWalletAccount.js`
-* `bower_components/cryptojslib/rollups/sha256.js`
-* `bower_components/cryptojslib/rollups/aes.js`
-* `bower_components/cryptojslib/rollups/pbkdf2.js`
-* `bower_components/cryptojslib/components/cipher-core.js`
-* `bower_components/cryptojslib/components/pad-iso10126.js`
-* `crypto-util-legacy.js`
-* `wallet.js`
+Load `dist/my-wallet.js` or `dist/my-wallet.js.min`.
 
 
 Disable logout, if desired, for development work:
@@ -92,3 +75,24 @@ MyWallet.get_history(_successFun, _errorFun);
 ```
 
 `get_history` will trigger the `did_multiaddr` event on completion, so the wallet stats and display can be updated.
+
+## Debug / Developement
+
+Include the following files instead of `my-wallet.js` for easier debugging:
+
+* `shared.js`
+* `blockchainapi.js`
+* `bower_components/jquery/dist/jquery.js`
+* `browserify.js`
+* `build/bip39.js`
+* `build/sjcl.js`
+* `build/xregexp-all.js`
+* `hdwallet.js`
+* `HDWalletAccount.js`
+* `bower_components/cryptojslib/rollups/sha256.js`
+* `bower_components/cryptojslib/rollups/aes.js`
+* `bower_components/cryptojslib/rollups/pbkdf2.js`
+* `bower_components/cryptojslib/components/cipher-core.js`
+* `bower_components/cryptojslib/components/pad-iso10126.js`
+* `crypto-util-legacy.js`
+* `wallet.js`

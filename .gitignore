@@ -15,11 +15,8 @@ node_modules
 npm-debug.log
 
 # Generated js files
-bip39.js
-browserify.js
-jquery.min.js
-xregexp-all.js
-sjcl.js
+build
+dist
 
-# Generate coverage reports
+# Generated coverage reports
 coverage
