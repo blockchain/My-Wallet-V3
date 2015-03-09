@@ -33,8 +33,8 @@ module.exports = function(config) {
     
     files: [
       'bower_components/jquery/dist/jquery.js',
-      'browserify.js',
-      'bip39.js',
+      'build/browserify.js',
+      'build/bip39.js',
       'hdwallet.js',
       'HDWalletAccount.js',
       'wallet-signup.js',
@@ -45,9 +45,9 @@ module.exports = function(config) {
       'bower_components/cryptojslib/components/pad-iso10126.js',
       'bower_components/cryptojslib/components/mode-ecb.js',
       'bower_components/cryptojslib/components/pad-nopadding.js',
-      'sjcl.js',
+      'build/sjcl.js',
       'crypto-util-legacy.js',
-      'xregexp-all.js',
+      'build/xregexp-all.js',
       'wallet.js',
       'import-export.js',
       'tests/**/*.js',
