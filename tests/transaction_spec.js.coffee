@@ -22,10 +22,14 @@ describe "Transaction", ->
           'value': 140000
           'xpub':
             'path': 'M/1/2'
-            'm': 'xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5'
+            'm': 'xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQML\
+                  E4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5'
           'n': 1
           'script': '76a914e1a9ead4802fa084d8c8de33c0acd0238fced51888ac'
-        'script': '483045022100bb6d6bd543631c2ed603f5e0cdb7e2fe09c04afdf32b4440c7d20a355259aa8b022020ad057e9dc665ef30401994a3c2afcc155e17eb4285aa9ae7b5bf9be3664eb10121029c0283f9e06fd48a44def3f362307284f7433084a440c6523b1a34d097c96fbc'
+        'script': '483045022100bb6d6bd543631c2ed603f5e0cdb7e2fe09c04afdf32b4440\
+                   c7d20a355259aa8b022020ad057e9dc665ef30401994a3c2afcc155e17eb\
+                   4285aa9ae7b5bf9be3664eb10121029c0283f9e06fd48a44def3f3623072\
+                   84f7433084a440c6523b1a34d097c96fbc'
       } ]
       'out': [
         {
@@ -45,7 +49,8 @@ describe "Transaction", ->
           'value': 54804
           'xpub':
             'path': 'M/1/2'
-            'm': 'xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5'
+            'm': 'xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQML\
+                  E4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5'
           'n': 1
           'script': '76a914e1a9ead4802fa084d8c8de33c0acd0238fced51888ac'
         }
@@ -71,15 +76,18 @@ describe "Transaction", ->
     hdAccounts = [
       {
         getAccountExtendedKey: () -> 
-          "xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5"
+          "xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZ\
+           HSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5"
       }
       {
         getAccountExtendedKey: () -> 
-          "xpub6DWoQTdpQcaSm4q9pj9A5EZdCs3NcmM5x8aRoi3VAGXJUCkJhmREWMCaAahs9nhMq7RnseKBV4uwkqCP8g43sEnMXRfFes2BxGagJqZfS5A"
+          "xpub6DWoQTdpQcaSm4q9pj9A5EZdCs3NcmM5x8aRoi3VAGXJUCkJhmREWMCaAahs9nhM\
+           q7RnseKBV4uwkqCP8g43sEnMXRfFes2BxGagJqZfS5A"
       }
       {
         getAccountExtendedKey: () ->
-          "xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ"
+          "xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZk\
+           LjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ"
       }
     ]
     
@@ -102,8 +110,10 @@ describe "Transaction", ->
         
     # Terminology:
     # account: an HD wallet account (which has external and change addresses)
-    # legacy address: an non-HD address for which we have the private key or a watch-only address
-    # external address: an address outside our wallet (not to be confused with "external address" inside an HD account)
+    # legacy address: an non-HD address for which we have 
+    #                 the private key or a watch-only address
+    # external address: an address outside our wallet (not to be confused 
+    #                   with "external address" inside an HD account)
     
   describe "processTransaction()", ->
     beforeEach ->
@@ -117,10 +127,12 @@ describe "Transaction", ->
         pending()
       ##########################################################################
       it "should be recognized if sender is change address", ->
-        # This shouldn't happen (every tx has a new change address), but we need to be able to process it.
+        # This shouldn't happen (every tx has a new change address), but we 
+        # need to be able to process it.
       
         # b0cf5a859187e9c0cd7f7836fac88ade98713021eb2c3bcb92d677ac4a2a45ba
-        # Sent 0.00075196 BTC from account index 0 to address 1FeerpCgswvGRLVKme759C96DUBtf7SvA2
+        # Sent 0.00075196 BTC from account index 0 
+        #   to address 1FeerpCgswvGRLVKme759C96DUBtf7SvA2
         #      0.0001 mining fee
         # From address:   1MaCbDwkC74tiEDSnchASxiAARHh94CVSG
         # Change address: 1MaCbDwkC74tiEDSnchASxiAARHh94CVSG 
@@ -139,10 +151,14 @@ describe "Transaction", ->
               'value': 140000
               'xpub':
                 'path': 'M/1/2'
-                'm': 'xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5'
+                'm': 'xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpN\
+                      sQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5'
               'n': 1
               'script': '76a914e1a9ead4802fa084d8c8de33c0acd0238fced51888ac'
-            'script': '483045022100bb6d6bd543631c2ed603f5e0cdb7e2fe09c04afdf32b4440c7d20a355259aa8b022020ad057e9dc665ef30401994a3c2afcc155e17eb4285aa9ae7b5bf9be3664eb10121029c0283f9e06fd48a44def3f362307284f7433084a440c6523b1a34d097c96fbc'
+            'script': '483045022100bb6d6bd543631c2ed603f5e0cdb7e2fe09c04afdf32b\
+                       4440c7d20a355259aa8b022020ad057e9dc665ef30401994a3c2afcc\
+                       155e17eb4285aa9ae7b5bf9be3664eb10121029c0283f9e06fd48a44\
+                       def3f362307284f7433084a440c6523b1a34d097c96fbc'
           } ]
           'out': [
             {
@@ -162,7 +178,8 @@ describe "Transaction", ->
               'value': 54804
               'xpub':
                 'path': 'M/1/2'
-                'm': 'xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5'
+                'm': 'xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpN\
+                      sQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5'
               'n': 1
               'script': '76a914e1a9ead4802fa084d8c8de33c0acd0238fced51888ac'
             }
@@ -222,10 +239,14 @@ describe "Transaction", ->
               'value': 110000
               'xpub':
                 'path': 'M/0/3'
-                'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
+                'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9G\
+                      f9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
               'n': 0
               'script': '76a914fb56d45b9ee3ed21ef7d45b9323e17dcf023afd888ac'
-            'script': '47304402203a8c22629e87fd8be70f802977f6d911343f3e333001a30f1bb68ffd92b01f08022019af7f2d8e56922ce65dee249168d095d6d057d1a69393c06c7ee436650a1891012102b37b3c21a106b104d9ac346bd80fd54f4c77930a58cb590c75911d027238ad8a'
+            'script': '47304402203a8c22629e87fd8be70f802977f6d911343f3e333001a3\
+                       0f1bb68ffd92b01f08022019af7f2d8e56922ce65dee249168d095d6\
+                       d057d1a69393c06c7ee436650a1891012102b37b3c21a106b104d9ac\
+                       346bd80fd54f4c77930a58cb590c75911d027238ad8a'
           } ]
           'out': [ {
             'spent': false
@@ -287,10 +308,14 @@ describe "Transaction", ->
                 'value': 110000
                 'xpub':
                   'path': 'M/0/2'
-                  'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
+                  'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp\
+                        9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
                 'n': 0
                 'script': '76a914bd182744a3b7da33cd848382bd8b78d0e5901c3688ac'
-              'script': '47304402205502e152e38e845ddfc4e94d7cf94a259a00fd99d1fc044820b8bd752b3f734b022070d17c6b105275027d0a6b3c5b10e73b1c7f326e934c4a5691d15e709c5ced1d0121036b586fe3c0bbfb845d767236a7b7db6f3249a74707510871bbd5d29a552beef0'
+              'script': '47304402205502e152e38e845ddfc4e94d7cf94a259a00fd99d1fc\
+                         044820b8bd752b3f734b022070d17c6b105275027d0a6b3c5b10e7\
+                         3b1c7f326e934c4a5691d15e709c5ced1d0121036b586fe3c0bbfb\
+                         845d767236a7b7db6f3249a74707510871bbd5d29a552beef0'
             }
             {
               'sequence': 4294967295
@@ -302,10 +327,14 @@ describe "Transaction", ->
                 'value': 100000
                 'xpub':
                   'path': 'M/0/0'
-                  'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
+                  'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp\
+                        9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
                 'n': 0
                 'script': '76a9148452ffa018aef2c941ed559d0de0132c3f67eebe88ac'
-              'script': '4830450221008c81908e2b44541d083d25cd3c5d0d58f77dde15c07fe603ca91b360111f480a02200c8d994d44f15d46495dbcb08e5cd7fa402a57e71d3e48ccfaf250cb5ff64517012102105b66c058566ccbdf2602492d84b960f4dbdd05b860de5e559edc08197eeb8e'
+              'script': '4830450221008c81908e2b44541d083d25cd3c5d0d58f77dde15c0\
+                         7fe603ca91b360111f480a02200c8d994d44f15d46495dbcb08e5c\
+                         d7fa402a57e71d3e48ccfaf250cb5ff64517012102105b66c05856\
+                         6ccbdf2602492d84b960f4dbdd05b860de5e559edc08197eeb8e'
             }
           ]
           'out': [ {
@@ -373,7 +402,10 @@ describe "Transaction", ->
               'value': 176330919
               'n': 1
               'script': '76a91477f6416372b875ec857768f6f464323efff129c088ac'
-            'script': '47304402201e5f48767ce73968fabf6db87297f05c17e48b6b3df709f6fd265d830e391cf1022028f89c3ca371eec7f89d945eeafdbc457696a5235937a5e16021efaed6028367012103296fb539b5de86874336a26b0099250630434073a265e0fba22165aace87db46'
+            'script': '47304402201e5f48767ce73968fabf6db87297f05c17e48b6b3df709\
+                       f6fd265d830e391cf1022028f89c3ca371eec7f89d945eeafdbc4576\
+                       96a5235937a5e16021efaed6028367012103296fb539b5de86874336\
+                       a26b0099250630434073a265e0fba22165aace87db46'
           } ]
           'out': [
             {
@@ -384,7 +416,8 @@ describe "Transaction", ->
               'value': 100000
               'xpub':
                 'path': 'M/0/0'
-                'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
+                'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9G\
+                      f9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
               'n': 0
               'script': '76a9148452ffa018aef2c941ed559d0de0132c3f67eebe88ac'
             }
@@ -449,10 +482,14 @@ describe "Transaction", ->
               'value': 250000
               'xpub':
                 'path': 'M/0/6'
-                'm': 'xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5'
+                'm': 'xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpN\
+                      sQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5'
               'n': 0
               'script': '76a914217e9754dba345774e0cdf1ebd66a97badf159f788ac'
-            'script': '473044022073cdd867c68c5edc805a1bb1cb7682529de8e9eadde28e9160e6a6e1c759b49402203b28d93525aba094722867192f112d64f7aaac6070d9a2dfe1afdb6726f99ac2012103dbe5601359b5096eb1499ac03d801ddc64d5357de486e5765ea1eb8aedcd93a6'
+            'script': '473044022073cdd867c68c5edc805a1bb1cb7682529de8e9eadde28e\
+                       9160e6a6e1c759b49402203b28d93525aba094722867192f112d64f7\
+                       aaac6070d9a2dfe1afdb6726f99ac2012103dbe5601359b5096eb149\
+                       9ac03d801ddc64d5357de486e5765ea1eb8aedcd93a6'
           } ]
           'out': [
             {
@@ -463,7 +500,8 @@ describe "Transaction", ->
               'value': 100000
               'xpub':
                 'path': 'M/0/5'
-                'm': 'xpub6DWoQTdpQcaSm4q9pj9A5EZdCs3NcmM5x8aRoi3VAGXJUCkJhmREWMCaAahs9nhMq7RnseKBV4uwkqCP8g43sEnMXRfFes2BxGagJqZfS5A'
+                'm': 'xpub6DWoQTdpQcaSm4q9pj9A5EZdCs3NcmM5x8aRoi3VAGXJUCkJhmREW\
+                      MCaAahs9nhMq7RnseKBV4uwkqCP8g43sEnMXRfFes2BxGagJqZfS5A'
               'n': 0
               'script': '76a914dd345ac3cbd65e9e108daac72c7ad629fccaff2b88ac'
             }
@@ -475,7 +513,8 @@ describe "Transaction", ->
               'value': 140000
               'xpub':
                 'path': 'M/1/2'
-                'm': 'xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5'
+                'm': 'xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpN\
+                      sQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5'
               'n': 1
               'script': '76a914e1a9ead4802fa084d8c8de33c0acd0238fced51888ac'
             }
@@ -537,7 +576,11 @@ describe "Transaction", ->
               'value': 100000
               'n': 0
               'script': '76a914078d35591e340799ee96968936e8b2ea8ce504a688ac'
-            'script': '4730440220365779bbc2b5f83d575f32a0bdc01630aff96d71d1845fad5f55d91f1012a3b4022068993156c45fd5ac779a5eed6848cd6acc26490ba0cbbc1362403437de945b20014104748bed81c1f6c72a63d2e9d39756ec17488cd5298f53f87dcbcb2bc6ea5e4bd046336d7411c16e08c00390481d67dc448535596ac7361159f359ca357a7da2ee'
+            'script': '4730440220365779bbc2b5f83d575f32a0bdc01630aff96d71d1845f\
+                       ad5f55d91f1012a3b4022068993156c45fd5ac779a5eed6848cd6acc\
+                       26490ba0cbbc1362403437de945b20014104748bed81c1f6c72a63d2\
+                       e9d39756ec17488cd5298f53f87dcbcb2bc6ea5e4bd046336d7411c1\
+                       6e08c00390481d67dc448535596ac7361159f359ca357a7da2ee'
           } ]
           'out': [
             {
@@ -593,13 +636,89 @@ describe "Transaction", ->
         
         result = MyWallet.processTransaction(tx)
         
-        expect(result["from"]).toEqual(transaction["from"]) # Amount should be ex. change
-        expect(result["to"]).toEqual(transaction["to"]) # It shouldn't include the change
+        # Amount should be ex. change
+        expect(result["from"]).toEqual(transaction["from"])
+        # It shouldn't include the change 
+        expect(result["to"]).toEqual(transaction["to"]) 
         
     describe "between legacy addresses", ->
       ##########################################################################
-      it "...", ->
-        pending()
+      it "should be recognized", ->
+        tx = 
+          'hash': '7134e24bdc3a26522e251dfd1e4c2f94b2fb63541d65eda323a87456bb80de9f'
+          'size': 258
+          'txIndex': 80032677
+          'time': 1425918981
+          'inputs': [ {
+            'sequence': 4294967295
+            'prev_out':
+              'spent': true
+              'tx_index': 80021322
+              'type': 0
+              'addr': '1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX'
+              'value': 50000
+              'n': 0
+              'script': '76a9147acf6bb7b804392ed3f3537a4f999220cf1c4e8288ac'
+            'script': '483045022100a7aab5963bd754a39e24a0e81781f6f22f2c6ed28baf\
+                       88d59b74703d4ab4232a022055ef9718955fc2782df97d8a9b6644e3\
+                       bbe2dc9421071bb66b129ca92248224a0141044ca8bee9fa5d4e372a\
+                       00e65116db5eeb8920bb796c12beaeb994e2026b411d3837494022cc\
+                       ed88832dac7a494a47de55fc90dcd5e20bbc96f116c44773167a87'
+          } ]
+          'out': [
+            {
+              'spent': false
+              'tx_index': 80032677
+              'type': 0
+              'addr': '1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF'
+              'value': 30000
+              'n': 0
+              'script': '76a914fd342e1afdf81720024ec3bdeaeb6e2753973d0d88ac'
+            }
+            {
+              'spent': false
+              'tx_index': 80032677
+              'type': 0
+              'addr': '1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX'
+              'value': 10000
+              'n': 1
+              'script': '76a9147acf6bb7b804392ed3f3537a4f999220cf1c4e8288ac'
+            }
+          ]
+          'result': -10000
+          'blockHeight': null
+          'balance': 170000
+          'account_indexes': []
+          'confirmations': 0
+
+        transaction = 
+          'from':
+            'account': null
+            'legacyAddresses': [ {
+              'address': '1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX'
+              'amount': 40000
+            } ]
+            'externalAddresses': null
+          'to':
+            'account': null
+            'legacyAddresses': [ {
+              'address': '1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF'
+              'amount': 30000
+            } ]
+            'externalAddresses': null
+          'fee': 20000
+          'intraWallet': true
+          'hash': '7134e24bdc3a26522e251dfd1e4c2f94b2fb63541d65eda323a87456bb80de9f'
+          'confirmations': 0
+          'txTime': 1425918981
+          'note': null
+          'tags': []
+          'size': 258
+          'tx_index': 80032677
+          'block_height': null
+          'result': -10000
+
+        expect(MyWallet.processTransaction(tx)).toEqual(transaction)
         
     describe "from legacy address to account", ->
       ##########################################################################
@@ -619,7 +738,11 @@ describe "Transaction", ->
               'value': 100000
               'n': 0
               'script': '76a914fd342e1afdf81720024ec3bdeaeb6e2753973d0d88ac'
-            'script': '47304402200b6456e842e53fd8aafb2d2e17b22b93eae657c8d3be70e044920ccc788b6ff002202355b990ef026d1d25c16158ceeeb22718752a7aceead065aeaa7bdc0a4c9d93014104be6fba00626de654c2992f4e35d03cacd8685ee723e94262c57ebd3113c0b7d6742316b6aa9438a1ebebfbe5979a3a0e22d1b96a7d83703b2ee23fc22f9ce7e8'
+            'script': '47304402200b6456e842e53fd8aafb2d2e17b22b93eae657c8d3be70\
+                       e044920ccc788b6ff002202355b990ef026d1d25c16158ceeeb22718\
+                       752a7aceead065aeaa7bdc0a4c9d93014104be6fba00626de654c299\
+                       2f4e35d03cacd8685ee723e94262c57ebd3113c0b7d6742316b6aa94\
+                       38a1ebebfbe5979a3a0e22d1b96a7d83703b2ee23fc22f9ce7e8'
           } ]
           'out': [
             {
@@ -630,7 +753,8 @@ describe "Transaction", ->
               'value': 60000
               'xpub':
                 'path': 'M/0/5'
-                'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
+                'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9G\
+                      f9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
               'n': 0
               'script': '76a914a48f7ee3c3cc27562c196679cad8c38c75ef46fd88ac'
             }
@@ -696,10 +820,14 @@ describe "Transaction", ->
               'value': 100000
               'xpub':
                 'path': 'M/0/4'
-                'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
+                'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9G\
+                      f9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
               'n': 0
               'script': '76a914d9f912e7a05c413cb887f752cbc30a606898512888ac'
-            'script': '483045022100ecf7f6f74fa2a1ed815f66e1d7af7bc5c9bdfaa7b3ac16116d678ddfe3df164e022026a1ce2395d157a48070398b57696c8339a535b97f86993881624ee0a498663b012103a5b4b1010b03bf21632efc7e6d96bad9553ee121330bc5cffce69ebbe034f007'
+            'script': '483045022100ecf7f6f74fa2a1ed815f66e1d7af7bc5c9bdfaa7b3ac\
+                       16116d678ddfe3df164e022026a1ce2395d157a48070398b57696c83\
+                       39a535b97f86993881624ee0a498663b012103a5b4b1010b03bf2163\
+                       2efc7e6d96bad9553ee121330bc5cffce69ebbe034f007'
           } ]
           'out': [
             {
@@ -719,7 +847,8 @@ describe "Transaction", ->
               'value': 40000
               'xpub':
                 'path': 'M/1/0'
-                'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
+                'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9G\
+                      f9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
               'n': 1
               'script': '76a914d930f7f7cbfde68eb30d1a6b5efc6d368c1b78a588ac'
             }
@@ -783,7 +912,10 @@ describe "Transaction", ->
               'value': 3288490
               'n': 1
               'script': '76a914573fe9a70f096cd747f076a9323f453c9114ad7988ac'
-            'script': '483045022100d183490a2e9e978a0deb4fe06cd54211904aebbe8b6b3fbb1c5f2fd847655ab502203dffa200b1419b3a083f8b430e2be25fe8b0eff80d74707104c4ceaf272ab1a601210250f530ecfcb81861cd48a8849db546c48f1fad45377fcf33189e733c3024d6a0'
+            'script': '483045022100d183490a2e9e978a0deb4fe06cd54211904aebbe8b6b\
+                       3fbb1c5f2fd847655ab502203dffa200b1419b3a083f8b430e2be25f\
+                       e8b0eff80d74707104c4ceaf272ab1a601210250f530ecfcb81861cd\
+                       48a8849db546c48f1fad45377fcf33189e733c3024d6a0'
           } ]
           'out': [
             {
@@ -839,8 +971,10 @@ describe "Transaction", ->
 
         result = MyWallet.processTransaction(tx)
         
-        expect(result["from"]).toEqual(transaction["from"]) # Amount should be ex. change
-        expect(result["to"]).toEqual(transaction["to"]) # It shouldn't include the change
+        # Amount should be ex. change
+        expect(result["from"]).toEqual(transaction["from"])
+        # It shouldn't include the change 
+        expect(result["to"]).toEqual(transaction["to"]) 
     
     describe "confirmations", ->
       ##########################################################################
