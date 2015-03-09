@@ -20,14 +20,14 @@ module.exports = (grunt) ->
           'ie.js'
           'build/browserify.js'
           "shared.js"
-          'bower_components/cryptojslib/rollups/sha256.js'
-          'bower_components/cryptojslib/rollups/aes.js'
-          'bower_components/cryptojslib/rollups/pbkdf2.js'
-          'bower_components/cryptojslib/components/cipher-core.js'
-          'bower_components/cryptojslib/components/pad-iso10126.js'
-          'bower_components/cryptojslib/components/mode-ecb.js'
-          'bower_components/cryptojslib/components/pad-nopadding.js'
-          'node_modules/sjcl/sjcl.js'
+          'build/bower_components/cryptojslib/rollups/sha256.js'
+          'build/bower_components/cryptojslib/rollups/aes.js'
+          'build/bower_components/cryptojslib/rollups/pbkdf2.js'
+          'build/bower_components/cryptojslib/components/cipher-core.js'
+          'build/bower_components/cryptojslib/components/pad-iso10126.js'
+          'build/bower_components/cryptojslib/components/mode-ecb.js'
+          'build/bower_components/cryptojslib/components/pad-nopadding.js'
+          'build/sjcl.js'
           'crypto-util-legacy.js'
           'blockchainapi.js'
           'signer.js'
@@ -78,6 +78,10 @@ module.exports = (grunt) ->
         command: () ->
            'cd build && npm install --no-optional'
            
+      bower_install_dependencies:
+        command: () ->
+           'cd build && bower install'
+           
     shrinkwrap: {}
 
       
@@ -109,6 +113,7 @@ module.exports = (grunt) ->
     "shell:check_dependencies"
     "clean:shrinkwrap"
     "shell:npm_install_dependencies"
+    "shell:bower_install_dependencies"
     "concat:mywallet"
     "uglify:mywallet"
   ]

@@ -20,8 +20,8 @@
     "tests"
   ],
   "dependencies": {
-    "cryptojslib": "~3.1.2",
+    "cryptojslib": "3.1.2",
     "jquery": "1.11.1",
-    "browserdetection": "~0.3.3"
+    "browserdetection": "0.3.3"
   }
 }

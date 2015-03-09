@@ -14,14 +14,98 @@
 require 'json'
 require 'open-uri'
 
-http_options = {:http_basic_authentication=>[ENV['GITHUB_USER'], ENV['GITHUB_PASSWORD']]}
+whitelist = JSON.parse(File.read('dependency-whitelist.json'))
+
+##########
+# Common #
+##########
+
+def check_commits!(deps, whitelist, output, type)
+  http_options = {:http_basic_authentication=>[ENV['GITHUB_USER'], ENV['GITHUB_PASSWORD']]}
+  
+  deps.keys.each do |key|
+    if whitelist["ignore"].include? key
+      # output["dependencies"][key] = deps[key]
+      next
+    end
+
+    dep = deps[key]
+    if whitelist[key]
+      # puts key
+      # For Bower it expects a version formatted like "1.2.3" and will use that exact version.
+      requested_version = type == :npm ? dep['version'] : dep
+      # puts requested_version
+      # puts whitelist[key]['version']
+      
+      if requested_version > whitelist[key]['version']
+        abort "#{ key } version #{ requested_version } has not been whitelisted yet. Most recent: #{ whitelist[key]['version'] }"
+        # TODO: generate URL showing all commits since the last whitelisted one
+        # TODO: allow fallback to older version if range permits
+        next
+      end
+
+      url = "https://api.github.com/repos/#{ whitelist[key]["repo"] }/tags"
+      # puts url
+      tags = JSON.load(open(url, http_options))
+
+      tag = nil
+
+      tags.each do |candidate|
+        if candidate["name"] == "v#{ requested_version }" || candidate["name"] == dep['version']
+          tag = candidate
+          break
+        end
+      end
+
+      if !tag.nil?
+        # Check if tagged commit matches whitelist commit (this or earlier version)
+        if whitelist[key]["commits"].include?(tag["commit"]["sha"])
+          output["dependencies"][key] = "#{ whitelist[key]["repo"] }##{ tag["commit"]["sha"] }"
+
+        else
+          abort "Error: v#{ dep['version'] } of #{ key } does not match the whitelist."
+          next
+        end
+
+
+      else
+        puts "Warn: no Github tag found for v#{ dep['version'] } of #{ key }."
+        # Look through the list of commits instead:
+        url = "https://api.github.com/repos/#{ whitelist[key]["repo"] }/commits"
+        # puts url
+        commits = JSON.load(open(url, http_options))
+        commit = nil
+
+        commits.each do |candidate|
+          if candidate["sha"] == whitelist[key]['commits'].first
+            commit = candidate
+
+            break
+          end
+        end
+
+        if !commit.nil?
+          output["dependencies"][key] = "#{ whitelist[key]["repo"] }##{ commit["sha"] }"
+        else
+          puts "Error: no Github commit #{ whitelist[key]["commits"].first } of #{ key }."
+          next
+        end
+      end
+      
+    else
+      abort "#{key} not whitelisted!"
+    end
+  end
+end
+
+#########
+# NPM   #
+#########
 
 package = JSON.parse(File.read('package.json'))
 
 shrinkwrap = JSON.parse(File.read('npm-shrinkwrap.json'))
 deps = shrinkwrap["dependencies"]
-
-whitelist = JSON.parse(File.read('dependency-whitelist.json'))
 
 output = package.dup
 output["dependencies"] = {}
@@ -35,77 +119,27 @@ output.delete("repository")
 output["scripts"].delete("test")
 output["scripts"]["postinstall"] = "browserify -s Browserify ../browserify-imports.js > browserify.js && cd node_modules/bip39 && npm run compile && mv bip39.js ../.. && cd ../.. && cp node_modules/xregexp/xregexp-all.js . && cd node_modules/sjcl && ./configure --with-sha1 && make && cd - && cp node_modules/sjcl/sjcl.js ."
 
-deps.keys.each do |key|
-  if whitelist["ignore"].include? key
-    # output["dependencies"][key] = deps[key]
-    next
-  end
-    
-  dep = deps[key]
-  if whitelist[key]
-    if dep['version'] > whitelist[key]['version']
-      abort "#{ key } version #{ dep['version'] } has not been whitelisted yet. Most recent: #{ whitelist[key]['version'] }"     
-      # TODO: generate URL showing all commits since the last whitelisted one
-      # TODO: allow fallback to older version if range permits
-      next
-    end
-    
-    # TODO: get pointer to Github on NPM: https://www.npmjs.com/package/bigi
-    url = "https://api.github.com/repos/#{ whitelist[key]["repo"] }/tags"
-    # puts url
-    tags = JSON.load(open(url, http_options))
-    
-    tag = nil
-    
-    tags.each do |candidate|
-      if candidate["name"] == "v#{ dep['version'] }" || candidate["name"] == dep['version']
-        tag = candidate
-        break
-      end
-    end
-    
-    if !tag.nil?
-      # Check if tagged commit matches whitelist commit (this or earlier version)
-      if whitelist[key]["commits"].include?(tag["commit"]["sha"])
-        output["dependencies"][key] = "#{ whitelist[key]["repo"] }##{ tag["commit"]["sha"] }"
-        
-      else
-        abort "Error: v#{ dep['version'] } of #{ key } does not match the whitelist."
-        next
-      end
-      
-      
-    else
-      puts "Warn: no Github tag found for v#{ dep['version'] } of #{ key }."
-      # Look through the list of commits instead:
-      url = "https://api.github.com/repos/#{ whitelist[key]["repo"] }/commits"
-      # puts url
-      commits = JSON.load(open(url, http_options))
-      commit = nil
-      
-      commits.each do |candidate|
-        if candidate["sha"] == whitelist[key]['commits'].first
-          commit = candidate
-          
-          break
-        end
-      end
-      
-      if !commit.nil?
-        output["dependencies"][key] = "#{ whitelist[key]["repo"] }##{ commit["sha"] }"
-      else
-        puts "Error: no Github commit #{ whitelist[key]["commits"].first } of #{ key }."
-        next
-      end
-      
-    end
+check_commits!(deps, whitelist, output, :npm)
 
-  else
-    abort "#{key} not whitelisted!"  
-  end
-end
+
+# TODO: shrinkwrap each subdependency and/or disallow packages to install dependencies themselves?
 
 File.write("build/package.json", JSON.pretty_generate(output))
 
-# TODO: shrinkwrap each subdependency and/or disallow packages to install dependencies themselves?
-# TODO: check bower dependencies
+#########
+# Bower #
+#########
+
+bower = JSON.parse(File.read('bower.json'))
+output = bower.dup
+output.delete("authors")
+output.delete("main")
+output.delete("ignore")
+output.delete("license")
+output.delete("keywords")
+
+deps = bower["dependencies"]
+
+check_commits!(deps, whitelist, output, :bower)
+
+File.write("build/bower.json", JSON.pretty_generate(output))

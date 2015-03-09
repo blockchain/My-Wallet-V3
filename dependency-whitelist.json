@@ -1,5 +1,5 @@
 {
-  "ignore" : ["grunt", "jasmine-core"],
+  "ignore" : ["grunt", "jasmine-core", "jquery"],
   "assert" : {
     "version": "1.3.0",
     "commits" : ["cc3c9020e9ca440bdc431f92570d676dd8a89a3c"],
@@ -44,5 +44,15 @@
     "version": "2.0.0",
     "commits" : ["fc69aaf7d9cd56ac06e0cda6cdf2e4625c7dcaf3"],
     "repo" : "slevithan/XRegExp"
+  },
+  "cryptojslib" : {
+    "version": "3.1.2",
+    "commits" : ["1c6bda1e3de6269d0b219cc0b525766640ca22ac"],
+    "repo" : "sytelus/CryptoJS"
+  },
+  "browserdetection" : {
+    "version": "0.3.3",
+    "commits" : ["97f9718f8811e0a058c5296d69a879de7754ad91"],
+    "repo" : "sub2home/browser-detection"
   }
 }
