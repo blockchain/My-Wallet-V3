@@ -20,9 +20,28 @@ whitelist = JSON.parse(File.read('dependency-whitelist.json'))
 # Common #
 ##########
 
+def getJSONfromURL(url)
+  if ENV['GITHUB_USER'] and ENV['GITHUB_PASSWORD']
+    http_options = {:http_basic_authentication=>[ENV['GITHUB_USER'], ENV['GITHUB_PASSWORD']]}
+    json = JSON.load(open(url, http_options))
+  else
+    json = JSON.load(open(url))
+  end  
+  return json
+end
+# apply_math = lambda do |auth, , nom|
+#   a.send(fn, b)
+# end
+ 
+# add = apply_math.curry.(:+)
+# subtract = apply_math.curry.(:-)
+# multiply = apply_math.curry.(:*)
+# divide = apply_math.curry.(:/)
+
+
 def check_commits!(deps, whitelist, output, type)
-  # http_options = {:http_basic_authentication=>['pernas','HTSq123P9Mq1jv2']}
-  http_options = {:http_basic_authentication=>[ENV['GITHUB_USER'], ENV['GITHUB_PASSWORD']]}
+
+  # http_options = {:http_basic_authentication=>[ENV['GITHUB_USER'], ENV['GITHUB_PASSWORD']]}
   
   deps.keys.each do |key|
     if whitelist["ignore"].include? key
@@ -45,18 +64,7 @@ def check_commits!(deps, whitelist, output, type)
         next
       end
 
-      if ENV['GITHUB_USER']
-        url = "https://api.github.com/repos/#{ whitelist[key]["repo"] }/tags"
-        tags = JSON.load(open(url, http_options))
-      else
-        url = "https://api.github.com/repos/#{ whitelist[key]["repo"] }/tags"
-        tags = JSON.load(open(url))
-      end
-
-      # url = "https://api.github.com/repos/#{ whitelist[key]["repo"] }/tags"
-      # puts url
-      
-
+      tags = getJSONfromURL("https://api.github.com/repos/#{ whitelist[key]["repo"] }/tags")
       tag = nil
 
       tags.each do |candidate|
@@ -81,16 +89,7 @@ def check_commits!(deps, whitelist, output, type)
         puts "Warn: no Github tag found for v#{ dep['version'] } of #{ key }."
         # Look through the list of commits instead:
         
-        # puts url
-
-        if ENV['GITHUB_USER']
-          url = "https://api.github.com/repos/#{ whitelist[key]["repo"] }/commits"
-          commits = JSON.load(open(url, http_options))
-        else
-          url = "https://api.github.com/repos/#{ whitelist[key]["repo"] }/commits"
-          commits = JSON.load(open(url))
-        end
-
+        commits = getJSONfromURL("https://api.github.com/repos/#{ whitelist[key]["repo"] }/commits")
         commit = nil
 
         commits.each do |candidate|
