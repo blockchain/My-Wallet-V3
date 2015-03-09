@@ -65,6 +65,7 @@ describe "Transaction", ->
       "1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h"
       "14msrp3yc4JRZEu49u7zYeAkKer4ETH6ag"
       "1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX"
+      "1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF"
     ]
     
     hdAccounts = [
@@ -602,8 +603,80 @@ describe "Transaction", ->
         
     describe "from legacy address to account", ->
       ##########################################################################
-      it "...", ->
-        pending()
+      it "should be recognized", ->
+        tx = 
+          'hash': '6c3224f1bd35ec8e57fc8494c65f6964ba4eec8eba1a1b6c77410a480cba6a01'
+          'size': 257
+          'txIndex': 80026565
+          'time': 1425915550
+          'inputs': [ {
+            'sequence': 4294967295
+            'prev_out':
+              'spent': true
+              'tx_index': 80012356
+              'type': 0
+              'addr': '1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF'
+              'value': 100000
+              'n': 0
+              'script': '76a914fd342e1afdf81720024ec3bdeaeb6e2753973d0d88ac'
+            'script': '47304402200b6456e842e53fd8aafb2d2e17b22b93eae657c8d3be70e044920ccc788b6ff002202355b990ef026d1d25c16158ceeeb22718752a7aceead065aeaa7bdc0a4c9d93014104be6fba00626de654c2992f4e35d03cacd8685ee723e94262c57ebd3113c0b7d6742316b6aa9438a1ebebfbe5979a3a0e22d1b96a7d83703b2ee23fc22f9ce7e8'
+          } ]
+          'out': [
+            {
+              'spent': false
+              'tx_index': 80026565
+              'type': 0
+              'addr': '1G17iiPgRyYz6mV1Wtc6w1Spjc8svYDeZC'
+              'value': 60000
+              'xpub':
+                'path': 'M/0/5'
+                'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
+              'n': 0
+              'script': '76a914a48f7ee3c3cc27562c196679cad8c38c75ef46fd88ac'
+            }
+            {
+              'spent': false
+              'tx_index': 80026565
+              'type': 0
+              'addr': '1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF'
+              'value': 30000
+              'n': 1
+              'script': '76a914fd342e1afdf81720024ec3bdeaeb6e2753973d0d88ac'
+            }
+          ]
+          'result': -10000
+          'blockHeight': null
+          'balance': 120000
+          'account_indexes': [ 0 ]
+          'confirmations': 0
+
+        transaction = 
+          'from':
+            'account': null
+            'legacyAddresses': [ {
+              'address': '1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF'
+              'amount': 70000
+            } ]
+            'externalAddresses': null
+          'to':
+            'account':
+              'index': 2
+              'amount': 60000
+            'legacyAddresses': []
+            'externalAddresses': null
+          'fee': 40000
+          'intraWallet': true
+          'hash': '6c3224f1bd35ec8e57fc8494c65f6964ba4eec8eba1a1b6c77410a480cba6a01'
+          'confirmations': 0
+          'txTime': 1425915550
+          'note': null
+          'tags': []
+          'size': 257
+          'tx_index': 80026565
+          'block_height': null
+          'result': -10000
+
+        expect(MyWallet.processTransaction(tx)).toEqual(transaction)
         
     describe "from account to legacy address", ->
       ##########################################################################
