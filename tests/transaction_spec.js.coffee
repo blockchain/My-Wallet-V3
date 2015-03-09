@@ -61,7 +61,11 @@ describe "Transaction", ->
     
     # externalAddreses = []
     # changeAddresses = []
-    activeLegacyAddresses = ["1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h", "14msrp3yc4JRZEu49u7zYeAkKer4ETH6ag"]
+    activeLegacyAddresses = [
+      "1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h"
+      "14msrp3yc4JRZEu49u7zYeAkKer4ETH6ag"
+      "1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX"
+    ]
     
     hdAccounts = [
       {
@@ -603,8 +607,86 @@ describe "Transaction", ->
         
     describe "from account to legacy address", ->
       ##########################################################################
-      it "...", ->
-        pending()
+      it "should be recognized", ->
+        tx = 
+          'hash': '9d470a7518f3f98b865f2c68f4a39f64138fc61807ba4168764b104798800911'
+          'size': 226
+          'txIndex': 80021322
+          'time': 1425912653
+          'inputs': [ {
+            'sequence': 4294967295
+            'prev_out':
+              'spent': true
+              'tx_index': 80022351
+              'type': 0
+              'addr': '1LsY1aj5PfnrH9EJg3zyRw5cu26E77ZyoE'
+              'value': 100000
+              'xpub':
+                'path': 'M/0/4'
+                'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
+              'n': 0
+              'script': '76a914d9f912e7a05c413cb887f752cbc30a606898512888ac'
+            'script': '483045022100ecf7f6f74fa2a1ed815f66e1d7af7bc5c9bdfaa7b3ac16116d678ddfe3df164e022026a1ce2395d157a48070398b57696c8339a535b97f86993881624ee0a498663b012103a5b4b1010b03bf21632efc7e6d96bad9553ee121330bc5cffce69ebbe034f007'
+          } ]
+          'out': [
+            {
+              'spent': false
+              'tx_index': 80021322
+              'type': 0
+              'addr': '1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX'
+              'value': 50000
+              'n': 0
+              'script': '76a9147acf6bb7b804392ed3f3537a4f999220cf1c4e8288ac'
+            }
+            {
+              'spent': false
+              'tx_index': 80021322
+              'type': 0
+              'addr': '1LoQJ2ZVxqe669WcTNeF7MzWcA9sS3fguQ'
+              'value': 40000
+              'xpub':
+                'path': 'M/1/0'
+                'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
+              'n': 1
+              'script': '76a914d930f7f7cbfde68eb30d1a6b5efc6d368c1b78a588ac'
+            }
+          ]
+          'result': -10000
+          'blockHeight': 346868
+          'balance': 190000
+          'account_indexes': [
+            0
+            0
+          ]
+          'confirmations': 0
+
+        transaction = 
+          'from':
+            'account':
+              'index': 2
+              'amount': 60000
+            'legacyAddresses': null
+            'externalAddresses': null
+          'to':
+            'account': null
+            'legacyAddresses': [ {
+              'address': '1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX'
+              'amount': 50000
+            } ]
+            'externalAddresses': null
+          'fee': 10000
+          'intraWallet': true
+          'hash': '9d470a7518f3f98b865f2c68f4a39f64138fc61807ba4168764b104798800911'
+          'confirmations': 0
+          'txTime': 1425912653
+          'note': null
+          'tags': []
+          'size': 226
+          'tx_index': 80021322
+          'block_height': 346868
+          'result': -10000
+
+        expect(MyWallet.processTransaction(tx)).toEqual(transaction)
         
     describe "from external address to legacy address", ->
       ##########################################################################
