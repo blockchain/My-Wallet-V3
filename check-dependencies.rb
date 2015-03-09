@@ -21,6 +21,7 @@ whitelist = JSON.parse(File.read('dependency-whitelist.json'))
 ##########
 
 def check_commits!(deps, whitelist, output, type)
+  # http_options = {:http_basic_authentication=>['pernas','HTSq123P9Mq1jv2']}
   http_options = {:http_basic_authentication=>[ENV['GITHUB_USER'], ENV['GITHUB_PASSWORD']]}
   
   deps.keys.each do |key|
@@ -44,9 +45,17 @@ def check_commits!(deps, whitelist, output, type)
         next
       end
 
-      url = "https://api.github.com/repos/#{ whitelist[key]["repo"] }/tags"
+      if ENV['GITHUB_USER']
+        url = "https://api.github.com/repos/#{ whitelist[key]["repo"] }/tags"
+        tags = JSON.load(open(url, http_options))
+      else
+        url = "https://api.github.com/repos/#{ whitelist[key]["repo"] }/tags"
+        tags = JSON.load(open(url))
+      end
+
+      # url = "https://api.github.com/repos/#{ whitelist[key]["repo"] }/tags"
       # puts url
-      tags = JSON.load(open(url, http_options))
+      
 
       tag = nil
 
@@ -71,9 +80,17 @@ def check_commits!(deps, whitelist, output, type)
       else
         puts "Warn: no Github tag found for v#{ dep['version'] } of #{ key }."
         # Look through the list of commits instead:
-        url = "https://api.github.com/repos/#{ whitelist[key]["repo"] }/commits"
+        
         # puts url
-        commits = JSON.load(open(url, http_options))
+
+        if ENV['GITHUB_USER']
+          url = "https://api.github.com/repos/#{ whitelist[key]["repo"] }/commits"
+          commits = JSON.load(open(url, http_options))
+        else
+          url = "https://api.github.com/repos/#{ whitelist[key]["repo"] }/commits"
+          commits = JSON.load(open(url))
+        end
+
         commit = nil
 
         commits.each do |candidate|
