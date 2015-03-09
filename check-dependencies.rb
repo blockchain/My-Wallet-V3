@@ -44,8 +44,9 @@ deps.keys.each do |key|
   dep = deps[key]
   if whitelist[key]
     if dep['version'] > whitelist[key]['version']
-      puts "#{ key } version #{ dep['version'] } has not been whitelisted yet. Most recent: #{ whitelist[key]['version'] }"     
+      abort "#{ key } version #{ dep['version'] } has not been whitelisted yet. Most recent: #{ whitelist[key]['version'] }"     
       # TODO: generate URL showing all commits since the last whitelisted one
+      # TODO: allow fallback to older version if range permits
       next
     end
     
@@ -69,7 +70,7 @@ deps.keys.each do |key|
         output["dependencies"][key] = "#{ whitelist[key]["repo"] }##{ tag["commit"]["sha"] }"
         
       else
-        puts "Error: v#{ dep['version'] } of #{ key } does not match the whitelist."
+        abort "Error: v#{ dep['version'] } of #{ key } does not match the whitelist."
         next
       end
       
@@ -100,17 +101,11 @@ deps.keys.each do |key|
     end
 
   else
-    puts "#{key} not whitelisted!"  
+    abort "#{key} not whitelisted!"  
   end
 end
 
 File.write("build/package.json", JSON.pretty_generate(output))
 
-# check sub-dependencies...
-
-# Run npm install in build (grunt?)
 # TODO: shrinkwrap each subdependency and/or disallow packages to install dependencies themselves?
-
-# Grunt should delete the shrinkwrap file
-
 # TODO: check bower dependencies

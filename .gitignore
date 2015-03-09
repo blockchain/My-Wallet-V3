@@ -13,6 +13,7 @@ bower_components
 # Node
 node_modules
 npm-debug.log
+npm-shrinkwrap.json
 
 # Generated js files
 build
