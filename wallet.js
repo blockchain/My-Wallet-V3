@@ -2321,8 +2321,10 @@ var MyWallet = new function() {
         else
             obj.fee = obj.base_fee;
 
-        obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(toAddress), value : BigInteger.valueOf(amount)});
-        obj.from_addresses = [fromAddress];
+        obj.to_addresses.push({ address: Bitcoin.Address.fromBase58Check(toAddress), value : BigInteger.valueOf(amount) });
+
+        obj.from_addresses = fromAddress ? [fromAddress] : MyWallet.getLegacyActiveAddresses();
+
         obj.ready_to_send_header = 'Bitcoins Ready to Send.';
 
         obj.addListener({
@@ -2379,8 +2381,10 @@ var MyWallet = new function() {
             obj.fee = obj.base_fee;
 
         var to_address = account.getReceivingAddress(); 
-        obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(to_address), value : BigInteger.valueOf(amount)});
-        obj.from_addresses = [fromAddress];
+        obj.to_addresses.push({ address: Bitcoin.Address.fromBase58Check(to_address), value : BigInteger.valueOf(amount) });
+
+        obj.from_addresses = fromAddress ? [fromAddress] : MyWallet.getLegacyActiveAddresses();
+
         obj.ready_to_send_header = 'Bitcoins Ready to Send.';
 
         obj.addListener({
