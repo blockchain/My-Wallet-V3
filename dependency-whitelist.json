@@ -1,0 +1,48 @@
+{
+  "ignore" : ["grunt", "jasmine-core"],
+  "assert" : {
+    "version": "1.3.0",
+    "commits" : ["cc3c9020e9ca440bdc431f92570d676dd8a89a3c"],
+    "repo" : "defunctzombie/commonjs-assert"
+  },
+  "bigi" : {
+    "version": "1.4.0",
+    "commits" : ["7897bc32837379603559b5a17d904c3d2b9b97de"],
+    "repo" : "cryptocoinjs/bigi"
+  },
+  "bip39" : {
+    "version": "2.1.0",
+    "commits" : ["69c0e2b6651fab5dbe030f51a479c2edac828d02", "1e60a65062137aad04a5ba8587d387b318d9b545"],
+    "repo" : "weilu/bip39"
+  },
+  "bitcoinjs-lib" : {
+    "version": "1.5.0",
+    "commits" : ["09d8e440de71352e04e61a1129662c04f8de6d11"],
+    "repo" : "bitcoinjs/bitcoinjs-lib"
+  },
+  "bs58" : {
+    "version": "2.0.1",
+    "commits" : ["d3ee704d5f6e9d450333395ba17ce5c654f19d72"],
+    "repo" : "cryptocoinjs/bs58"
+  },
+  "json-buffer" : {
+    "version": "2.0.11",
+    "commits" : ["30d41f371889e61f6ded06f3cd18aec0920fa7f7"],
+    "repo" : "dominictarr/json-buffer"
+  },
+  "sha256" : {
+    "version": "0.1.1",
+    "commits" : ["6aa3967608b38e55a5d4f328453ca798821e67d2"],
+    "repo" : "cryptocoinjs/sha256"
+  },
+  "sjcl" : {
+    "version": "1.0.2",
+    "commits" : ["0f8fe271941fdd65e4a22ac6b4b29384cfb8fc33"],
+    "repo" : "bitwiseshiftleft/sjcl"
+  },
+  "xregexp" : {
+    "version": "2.0.0",
+    "commits" : ["fc69aaf7d9cd56ac06e0cda6cdf2e4625c7dcaf3"],
+    "repo" : "slevithan/XRegExp"
+  }
+}

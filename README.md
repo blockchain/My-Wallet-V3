@@ -6,7 +6,7 @@ Javascript Model for blockchain wallet.
 
 ```sh
 npm install
-grunt dist
+grunt build
 ```
 
 ## Tests
@@ -17,7 +17,7 @@ npm test
 
 ## Getting Started
 
-Load `dist/my-wallet.js` or `dist/my-wallet.js.min`.
+Load `dist/my-wallet.js`.
 
 
 Disable logout, if desired, for development work:
@@ -96,3 +96,7 @@ Include the following files instead of `my-wallet.js` for easier debugging:
 * `bower_components/cryptojslib/components/pad-iso10126.js`
 * `crypto-util-legacy.js`
 * `wallet.js`
+
+## Distribution
+
+Run `GITHUB_USER=... GITHUB_PASSWORD=... grunt dist` to check all dependencies against `dependency-whitelist.json` and generate `my-wallet.min.js``.

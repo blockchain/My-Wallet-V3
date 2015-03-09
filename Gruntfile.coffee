@@ -5,6 +5,8 @@ module.exports = (grunt) ->
     clean: {
       build: ["build"]
       dist: ["dist"]
+      shrinkwrap: 
+        src: ["npm-shrinkwrap.json"]
     }
 
     concat:
@@ -68,9 +70,15 @@ module.exports = (grunt) ->
     },
         
     shell: 
-      pending: 
+      check_dependencies: 
         command: () -> 
-           '...'
+           'mkdir -p build && ruby check-dependencies.rb'
+        
+      npm_install_dependencies:
+        command: () ->
+           'cd build && npm install --no-optional'
+           
+    shrinkwrap: {}
 
       
   
@@ -81,6 +89,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks('grunt-contrib-clean')
   grunt.loadNpmTasks('grunt-contrib-watch')
   grunt.loadNpmTasks('grunt-shell')
+  grunt.loadNpmTasks('grunt-shrinkwrap')
         
   grunt.registerTask "default", [
     "watch"
@@ -89,11 +98,17 @@ module.exports = (grunt) ->
   # The build task could do some things that are currently in npm postinstall
   grunt.registerTask "build", [
     # "clean" # Too aggresive
+    "concat:mywallet"
   ]
     
+  # GITHUB_USER=... GITHUB_PASSWORD=... grunt dist
   grunt.registerTask "dist", [
+    "clean:build" # We re-run 'npm install' after the whitelist process
     "clean:dist"
-    "build"
+    "shrinkwrap"
+    "shell:check_dependencies"
+    "clean:shrinkwrap"
+    "shell:npm_install_dependencies"
     "concat:mywallet"
     "uglify:mywallet"
   ]
