@@ -786,7 +786,7 @@ describe "Transaction", ->
               'amount': 30000
             } ]
             'externalAddresses': null
-          'fee': 20000
+          'fee': 10000
           'intraWallet': true
           'hash': '7134e24bdc3a26522e251dfd1e4c2f94b2fb63541d65eda323a87456bb80de9f'
           'confirmations': 0
@@ -868,7 +868,7 @@ describe "Transaction", ->
               'amount': 60000
             'legacyAddresses': []
             'externalAddresses': null
-          'fee': 40000
+          'fee': 10000
           'intraWallet': true
           'hash': '6c3224f1bd35ec8e57fc8494c65f6964ba4eec8eba1a1b6c77410a480cba6a01'
           'confirmations': 0

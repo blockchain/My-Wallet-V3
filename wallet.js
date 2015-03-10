@@ -1766,8 +1766,8 @@ var MyWallet = new function() {
                 }
                 if (! isFromLegacyAddresses) {
                     transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
-                    transaction.fee -= output.value;
                 }
+                transaction.fee -= output.value;
             } else {
                 var toAccountSet = false;
                 for (var j in MyWallet.getAccounts()) {
