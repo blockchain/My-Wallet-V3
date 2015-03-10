@@ -76,7 +76,7 @@ module.exports = (grunt) ->
         
       npm_install_dependencies:
         command: () ->
-           'cd build && npm install --no-optional'
+           'cd build && npm install'
            
       bower_install_dependencies:
         command: () ->
@@ -107,7 +107,7 @@ module.exports = (grunt) ->
     
   # GITHUB_USER=... GITHUB_PASSWORD=... grunt dist
   grunt.registerTask "dist", [
-    "clean:build" # We re-run 'npm install' after the whitelist process
+    "clean:build"
     "clean:dist"
     "shrinkwrap"
     "shell:check_dependencies"

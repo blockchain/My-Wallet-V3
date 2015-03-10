@@ -39,13 +39,11 @@ end
 # divide = apply_math.curry.(:/)
 
 
-def check_commits!(deps, whitelist, output, type)
-
-  # http_options = {:http_basic_authentication=>[ENV['GITHUB_USER'], ENV['GITHUB_PASSWORD']]}
+def check_commits!(deps, whitelist, output_deps, type)
   
   deps.keys.each do |key|
     if whitelist["ignore"].include? key
-      # output["dependencies"][key] = deps[key]
+      output_deps.delete(key)
       next
     end
 
@@ -77,7 +75,11 @@ def check_commits!(deps, whitelist, output, type)
       if !tag.nil?
         # Check if tagged commit matches whitelist commit (this or earlier version)
         if whitelist[key]["commits"].include?(tag["commit"]["sha"])
-          output["dependencies"][key] = "#{ whitelist[key]["repo"] }##{ tag["commit"]["sha"] }"
+          if type == :npm
+            output_deps[key] = {"version" => "#{ whitelist[key]["repo"] }##{ tag["commit"]["sha"] }"}
+          else
+            output_deps[key] = "#{ whitelist[key]["repo"] }##{ tag["commit"]["sha"] }"
+          end
 
         else
           abort "Error: v#{ dep['version'] } of #{ key } does not match the whitelist."
@@ -101,13 +103,21 @@ def check_commits!(deps, whitelist, output, type)
         end
 
         if !commit.nil?
-          output["dependencies"][key] = "#{ whitelist[key]["repo"] }##{ commit["sha"] }"
+          if type == :npm
+            output_deps[key] = {"version" => "#{ whitelist[key]["repo"] }##{ commit["sha"] }"}
+          else
+            output_deps[key] = "#{ whitelist[key]["repo"] }##{ commit["sha"] }"
+          end
         else
           puts "Error: no Github commit #{ whitelist[key]["commits"].first } of #{ key }."
           next
         end
       end
-      
+
+      if type == :npm && deps[key]["dependencies"]
+        output_deps[key]["dependencies"] = {}
+        check_commits!(deps[key]["dependencies"], whitelist, output_deps[key]["dependencies"], type)
+      end
     else
       abort "#{key} not whitelisted!"
     end
@@ -118,13 +128,24 @@ end
 # NPM   #
 #########
 
-package = JSON.parse(File.read('package.json'))
-
 shrinkwrap = JSON.parse(File.read('npm-shrinkwrap.json'))
 deps = shrinkwrap["dependencies"]
 
+output = JSON.parse(File.read('npm-shrinkwrap.json')) # More reliable than cloning
+output_deps = output["dependencies"]
+
+check_commits!(deps, whitelist, output_deps, :npm)
+
+# TODO: shrinkwrap each subdependency and/or disallow packages to install dependencies themselves?
+
+File.write("build/npm-shrinkwrap.json", JSON.pretty_generate(output))
+
+
+package = JSON.parse(File.read('package.json'))
+
 output = package.dup
-output["dependencies"] = {}
+
+# output["dependencies"] = {}
 output["devDependencies"] = {}
 output.delete("author")
 output.delete("contributors")
@@ -135,12 +156,8 @@ output.delete("repository")
 output["scripts"].delete("test")
 output["scripts"]["postinstall"] = "browserify -s Browserify ../browserify-imports.js > browserify.js && cd node_modules/bip39 && npm run compile && mv bip39.js ../.. && cd ../.. && cp node_modules/xregexp/xregexp-all.js . && cd node_modules/sjcl && ./configure --with-sha1 && make && cd - && cp node_modules/sjcl/sjcl.js ."
 
-check_commits!(deps, whitelist, output, :npm)
-
-
-# TODO: shrinkwrap each subdependency and/or disallow packages to install dependencies themselves?
-
 File.write("build/package.json", JSON.pretty_generate(output))
+
 
 #########
 # Bower #
@@ -156,6 +173,6 @@ output.delete("keywords")
 
 deps = bower["dependencies"]
 
-check_commits!(deps, whitelist, output, :bower)
+check_commits!(deps, whitelist, output["dependencies"], :bower)
 
 File.write("build/bower.json", JSON.pretty_generate(output))

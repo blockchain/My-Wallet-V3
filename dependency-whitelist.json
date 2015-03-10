@@ -1,5 +1,5 @@
 {
-  "ignore" : ["grunt", "jasmine-core", "jquery"],
+  "ignore" : ["grunt", "jasmine-core", "jquery", "istanbul", "esprima", "typeforce", "convert-hex", "convert-string"],
   "assert" : {
     "version": "1.3.0",
     "commits" : ["cc3c9020e9ca440bdc431f92570d676dd8a89a3c"],
@@ -16,8 +16,8 @@
     "repo" : "weilu/bip39"
   },
   "bitcoinjs-lib" : {
-    "version": "1.5.0",
-    "commits" : ["09d8e440de71352e04e61a1129662c04f8de6d11"],
+    "version": "1.5.1",
+    "commits" : ["2dafb80c00941a9c30c279b7fd2cad023a8c38b1", "09d8e440de71352e04e61a1129662c04f8de6d11"],
     "repo" : "bitcoinjs/bitcoinjs-lib"
   },
   "bs58" : {
@@ -54,5 +54,35 @@
     "version": "0.3.3",
     "commits" : ["97f9718f8811e0a058c5296d69a879de7754ad91"],
     "repo" : "sub2home/browser-detection"
+  },
+  "util" : {
+    "version" : "0.10.3",
+    "commits" : ["b5d10a26402c3b60ce496e675a13c58bbed47801"],
+    "repo" : "defunctzombie/node-util"
+  },
+  "inherits" : {
+    "version" : "2.0.1",
+    "commits" : ["3af5a10c6b51f9e99d9f90394645d7ea630d5eaa"],
+    "repo" : "isaacs/inherits"
+  },
+  "pbkdf2-compat" : {
+    "version" : "3.0.3",
+    "commits" : ["8bdd89160bcaae6ce87f827587b7036c6eabe13f", "20fe1b956e7d6c8cfe8db9f9d8e4ea889dc94e41"],
+    "repo" : "crypto-browserify/pbkdf2"
+  },
+  "bs58check" : {
+    "version" : "1.0.4",
+    "commits" : ["35a35b4cda438e5a59079eabf440b8b70981f572"],
+    "repo" : "dcousens/bs58check"
+  },
+  "ecurve" : {
+    "version" : "1.0.1",
+    "commits" : ["59cd2495f5a60436c20603a02c2dbc2c81e6f829"],
+    "repo" : "cryptocoinjs/ecurve"
+  },
+  "convert-hex" : {
+    "version" : "0.1.0",
+    "commits" : [""],
+    "repo" : ""
   }
 }
