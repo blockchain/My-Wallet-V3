@@ -20,6 +20,16 @@ whitelist = JSON.parse(File.read('dependency-whitelist.json'))
 # Common #
 ##########
 
+def first_two_digits_match_or_lower_than(left, right)
+  # e.g. "~1.1.2" and "1.1.3" matches
+  #      "~1.1.0" and "1.2.0" matches
+  a = left.gsub("~", "")
+  b = right.gsub("~", "")
+  
+  a.split(".")[0].to_i <= b.split(".")[0].to_i && a.split(".")[1].to_i <= b.split(".")[1].to_i
+end
+
+
 def getJSONfromURL(url)
   if ENV['GITHUB_USER'] and ENV['GITHUB_PASSWORD']
     http_options = {:http_basic_authentication=>[ENV['GITHUB_USER'], ENV['GITHUB_PASSWORD']]}
@@ -42,23 +52,28 @@ end
 def check_commits!(deps, whitelist, output_deps, type)
   
   deps.keys.each do |key|
-    if whitelist["ignore"].include? key
-      output_deps.delete(key)
+    if whitelist["ignore"].include? key # Skip check
+      unless ["angular", "angular-mocks", "angular-animate", "angular-bootstrap", "angular-cookies", "angular-sanitize", "bootstrap-css-only"].include? key   # Skip package altoghether 
+        output_deps.delete(key)
+      end
       next
     end
 
     dep = deps[key]
     if whitelist[key]
       # puts key
-      # For Bower it expects a version formatted like "1.2.3" and will use that exact version.
+      # For Bower it expects a version formatted like "1.2.3" or "~1.2.3". It will use the highest match exact version.
       requested_version = type == :npm ? dep['version'] : dep
-      # puts requested_version
-      # puts whitelist[key]['version']
       
-      if requested_version > whitelist[key]['version']
+      requested_version = requested_version.split("#").last # e.g. "pernas/angular-password-entropy#0.1.3" -> "0.1.3"
+      
+      if !(["~", "0", "1", "2", "3", "4", "5", "6","7", "8", "9"].include?(requested_version[0]))
+        abort "Version format not supported: #{ key } #{ requested_version }"
+      elsif requested_version[0] != "~" && requested_version <= whitelist[key]['version']
+      elsif requested_version[0] == "~" and first_two_digits_match_or_lower_than(requested_version, whitelist[key]['version'])
+      else
         abort "#{ key } version #{ requested_version } has not been whitelisted yet. Most recent: #{ whitelist[key]['version'] }"
         # TODO: generate URL showing all commits since the last whitelisted one
-        # TODO: allow fallback to older version if range permits
         next
       end
 
@@ -66,7 +81,12 @@ def check_commits!(deps, whitelist, output_deps, type)
       tag = nil
 
       tags.each do |candidate|
-        if candidate["name"] == "v#{ requested_version }" || candidate["name"] == dep['version']
+        if candidate["name"] == "v#{ requested_version }" || candidate["name"] == requested_version
+          tag = candidate
+          break
+        elsif requested_version[0] == "~" && first_two_digits_match_or_lower_than(requested_version, candidate["name"])
+          # TODO: warn if not using the latest version in range
+          
           tag = candidate
           break
         end
@@ -146,7 +166,12 @@ package = JSON.parse(File.read('package.json'))
 output = package.dup
 
 # output["dependencies"] = {}
-output["devDependencies"] = {}
+
+# Remove unessential dev dependencies:
+output["devDependencies"].keys.each do |devDep|
+  output["devDependencies"].delete(devDep) unless ["grunt-contrib-clean", "grunt-contrib-concat", "grunt-surround", "grunt-contrib-coffee"].include?(devDep)
+end
+
 output.delete("author")
 output.delete("contributors")
 output.delete("homepage")
@@ -154,7 +179,13 @@ output.delete("bugs")
 output.delete("license")
 output.delete("repository")
 output["scripts"].delete("test")
-output["scripts"]["postinstall"] = "browserify -s Browserify ../browserify-imports.js > browserify.js && cd node_modules/bip39 && npm run compile && mv bip39.js ../.. && cd ../.. && cp node_modules/xregexp/xregexp-all.js . && cd node_modules/sjcl && ./configure --with-sha1 && make && cd - && cp node_modules/sjcl/sjcl.js ."
+if package["name"] == "My-Wallet-HD"
+  output["scripts"]["postinstall"] = "browserify -s Browserify ../browserify-imports.js > browserify.js && cd node_modules/bip39 && npm run compile && mv bip39.js ../.. && cd ../.. && cp node_modules/xregexp/xregexp-all.js . && cd node_modules/sjcl && ./configure --with-sha1 && make && cd - && cp node_modules/sjcl/sjcl.js ."
+elsif package["name"] == "angular-blockchain-wallet"
+  output["scripts"].delete("postinstall")
+else
+  abort("Package renamed? " + package["name"])
+end
 
 File.write("build/package.json", JSON.pretty_generate(output))
 
@@ -170,6 +201,7 @@ output.delete("main")
 output.delete("ignore")
 output.delete("license")
 output.delete("keywords")
+# output.delete("devDependencies") # TODO don't load LocalStorageModule in production
 
 deps = bower["dependencies"]
 
