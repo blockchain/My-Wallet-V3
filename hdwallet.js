@@ -146,32 +146,6 @@ function HDAccount(wallet, label, idx) {
             this.cache.internalAccountPubKey = JSONB.stringify(this.wallet.internalAccount.pubKey.toBuffer());
             this.cache.internalAccountChainCode = JSONB.stringify(this.wallet.internalAccount.chainCode);
         },
-        generateAddressFromPath : function(account, path) {
-	    var components = path.split("/");
-	    
-	    if (components[0] != 'M') {
-		throw 'Invalid Path Prefix';
-	    }
-	    
-	    if (components.length != 3) {
-		throw 'Invalid Path Length';
-	    }
-
-	    var receiveOrChange = parseInt(components[1]);
-	    var addressIndex = parseInt(components[2]);
-
-            var address;
-
-            if (receiveOrChange === 0) {
-                address = account.externalAccount.derive(addressIndex);
-            } else {
-                address = account.internalAccount.derive(addressIndex);
-            }
-            
-            this.wallet.addresses.push(address.toString());
-            
-            return address;
-        },
         undoGenerateAddress : function() {
             return this.wallet.addresses.pop();
         },
@@ -209,34 +183,12 @@ function HDAccount(wallet, label, idx) {
             return this.balance = null;
         },
         createTx : function(to, value, fixedFee, unspentOutputs, extendedPrivateKey) {
-            var gap_limit = 20;
-            var utxos = this.wallet.getUnspentOutputs();
-
             var sendAccount = new HDWalletAccount(null);
             sendAccount.newNodeFromExtKey(extendedPrivateKey);
 
-            for (var i = 0; i < this.receiveAddressCount+gap_limit; i++) {
-                sendAccount.generateAddress();
-            }
-
-            for (var i = 0; i < this.changeAddressCount+gap_limit; i++) {
-                sendAccount.generateChangeAddress();
-            }
-
-            // TODO better solution - only create addrs for the outputs needed
-	    // for (var i = 0; i < unspentOutputs.length; i++) {
-	    //     var unspent = unspentOutputs[i];
-
-	    //     //TODO need to make sure xpub matches extendedPrivateKey
-	    //     if (unspent.xpub) {
-	    //         this.generateAddressFromPath(sendAccount, unspent.xpub.path);
-	    //     }
-	    // }
-
-            sendAccount.setUnspentOutputs(unspentOutputs);
             var changeAddress = sendAccount.getChangeAddressAtIndex(this.changeAddressCount);
 
-            return sendAccount.createTx(to, value, fixedFee, changeAddress);
+            return sendAccount.createTx(to, value, fixedFee, unspentOutputs, changeAddress);
         },
         recommendedTransactionFee : function(amount) {
             try {

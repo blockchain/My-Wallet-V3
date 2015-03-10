@@ -233,23 +233,20 @@ function HDWalletAccount(seed, network) {
         });
     }
 
-    this.createTx = function(to, value, fixedFee, changeAddress) {
+    this.createTx = function(to, value, fixedFee, unspentOutputs, changeAddress) {
         assert(value > network.dustThreshold, value + ' must be above dust threshold (' + network.dustThreshold + ' Satoshis)');
 
-        var utxos = getCandidateOutputs(value);
+        var utxos = getCandidateOutputs(unspentOutputs, value);
         var accum = 0;
         var subTotal = value;
-        var addresses = [];
 
         var tx = new Bitcoin.Transaction();
         tx.addOutput(to, value);
 
         for (var i = 0; i < utxos.length; ++i) {
             var utxo = utxos[i];
-            addresses.push(utxo.address);
 
-            var outpoint = utxo.from.split(':');
-            tx.addInput(outpoint[0], parseInt(outpoint[1]));
+            tx.addInput(utxo.hash, utxo.index);
 
             var fee = fixedFee == undefined ? estimateFeePadChangeOutput(tx) : fixedFee;
 
@@ -266,17 +263,17 @@ function HDWalletAccount(seed, network) {
             }
         }
 
-        assert(accum >= subTotal, 'Not enough funds (incl. fee): ' + accum + ' < ' + subTotal);
+        assert(accum >= subTotal, 'Insufficient funds. Value Needed ' +  subTotal + '. Available amount ' + accum);
 
-        this.signWith(tx, addresses);
+        this.signWith(tx, utxos);
         return tx;
     };
 
-    function getCandidateOutputs() {
+    function getCandidateOutputs(unspentOutputs, value) {
         var unspent = [];
 
-        for (var key in me.outputs) {
-            var output = me.outputs[key];
+        for (var key in unspentOutputs) {
+            var output = unspentOutputs[key];
             if (!output.pending) {
                 unspent.push(output);
             }
@@ -303,11 +300,39 @@ function HDWalletAccount(seed, network) {
         return me.changeAddresses[me.changeAddresses.length - 1];
     };
 
-    this.signWith = function(tx, addresses) {
-        assert.equal(tx.ins.length, addresses.length, 'Number of addresses must match number of transaction inputs');
+    this.generateAddressFromPath = function(account, path) {
+        var components = path.split("/");
+        
+        if (components[0] != 'M') {
+            throw 'Invalid Path Prefix';
+        }
+        
+        if (components.length != 3) {
+            throw 'Invalid Path Length';
+        }
+        
+        var receiveOrChange = parseInt(components[1]);
+        var addressIndex = parseInt(components[2]);
+        
+        var address;
+        
+        if (receiveOrChange === 0) {
+            address = account.externalAccount.derive(addressIndex);
+        } else {
+            address = account.internalAccount.derive(addressIndex);
+        }
+        
+        return address;
+    };
+    
+    this.signWith = function(tx, unspentOutputs) {
+        tx.ins.forEach(function(input, i) {
+            var unspent = unspentOutputs[i];
 
-        addresses.forEach(function(address, i) {
-            var key = me.getPrivateKeyForAddress(address);
+            if (unspent.xpub) {
+                var pub = me.generateAddressFromPath(me, unspent.xpub.path);
+                var key = pub.privKey;
+            }
 
             tx.sign(i, key);
         });
