@@ -183,6 +183,7 @@ function HDAccount(wallet, label, idx) {
             return this.balance = null;
         },
         createTx : function(to, value, fixedFee, unspentOutputs, extendedPrivateKey) {
+            // Create the send account (same account as current account, but created with xpriv and thus able to generate private keys)
             var sendAccount = new HDWalletAccount(null);
             sendAccount.newNodeFromExtKey(extendedPrivateKey);
 
