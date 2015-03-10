@@ -122,9 +122,89 @@ describe "Transaction", ->
     describe "from account to external address", ->
       ##########################################################################
       it "should be recognized", ->
-        # TODO: find transaction spent from account to an external address where
-        #       a change address was correctly generated
-        pending()
+        tx = 
+          'hash': 'cfb77ea99f7d97e551afae96e1fe028e56933621d8cc4342b399fba03bfe8826'
+          'size': 226
+          'txIndex': 80064446
+          'time': 1425942592
+          'inputs': [ {
+            'sequence': 4294967295
+            'prev_out':
+              'spent': true
+              'tx_index': 80026565
+              'type': 0
+              'addr': '1G17iiPgRyYz6mV1Wtc6w1Spjc8svYDeZC'
+              'value': 60000
+              'xpub':
+                'path': 'M/0/5'
+                'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9G\
+                      f9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
+              'n': 0
+              'script': '76a914a48f7ee3c3cc27562c196679cad8c38c75ef46fd88ac'
+            'script': '483045022100a6a6cc37ff7995b90468ef17b38ab601e388ec270490\
+                       97830c84bd0005aab312022003bbf361181ab25f64bdca9ea48b2a1c\
+                       64c735b93b126e3178ae9d059ac06f5b012103fd78acfd990b9891c5\
+                       cc09a8a7d912859f96ac896987cd23ce09fc62f03bb44e'
+          } ]
+          'out': [
+            {
+              'spent': false
+              'tx_index': 80064446
+              'type': 0
+              'addr': '1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg'
+              'value': 30000
+              'n': 0
+              'script': '76a91477f6416372b875ec857768f6f464323efff129c088ac'
+            }
+            {
+              'spent': false
+              'tx_index': 80064446
+              'type': 0
+              'addr': '1MrLgA3A65AXNdAEHBLC2qCLHQ24oZzBeJ'
+              'value': 20000
+              'xpub':
+                'path': 'M/1/1'
+                'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9G\
+                      f9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
+              'n': 1
+              'script': '76a914e4b7525e31d7aea0157581ff640a04d27be9067188ac'
+            }
+          ]
+          'result': -40000
+          'blockHeight': 346920
+          'balance': 130000
+          'account_indexes': [
+            0
+            0
+          ]
+          'confirmations': 71
+
+        transaction = 
+          'from':
+            'account':
+              'index': 2
+              'amount': 40000
+            'legacyAddresses': null
+            'externalAddresses': null
+          'to':
+            'account': null
+            'legacyAddresses': null
+            'externalAddresses':
+              'addressWithLargestOutput': '1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg'
+              'amount': 30000
+          'fee': 10000
+          'intraWallet': false
+          'hash': 'cfb77ea99f7d97e551afae96e1fe028e56933621d8cc4342b399fba03bfe8826'
+          'confirmations': 71
+          'txTime': 1425942592
+          'note': null
+          'tags': []
+          'size': 226
+          'tx_index': 80064446
+          'block_height': 346920
+          'result': -40000
+
+        expect(MyWallet.processTransaction(tx)).toEqual(transaction)
       ##########################################################################
       it "should be recognized if sender is change address", ->
         # This shouldn't happen (every tx has a new change address), but we 
