@@ -77,7 +77,9 @@ def check_commits!(deps, whitelist, output_deps, type)
         next
       end
 
-      tags = getJSONfromURL("https://api.github.com/repos/#{ whitelist[key]["repo"] }/tags")
+      url = "https://api.github.com/repos/#{ whitelist[key]["repo"] }/tags"
+      # puts url
+      tags = getJSONfromURL(url)
       tag = nil
 
       tags.each do |candidate|
@@ -111,7 +113,9 @@ def check_commits!(deps, whitelist, output_deps, type)
         puts "Warn: no Github tag found for v#{ dep['version'] } of #{ key }."
         # Look through the list of commits instead:
         
-        commits = getJSONfromURL("https://api.github.com/repos/#{ whitelist[key]["repo"] }/commits")
+        url = "https://api.github.com/repos/#{ whitelist[key]["repo"] }/commits"
+        # puts url
+        commits = getJSONfromURL(url)
         commit = nil
 
         commits.each do |candidate|
