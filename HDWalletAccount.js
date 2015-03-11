@@ -14,11 +14,13 @@ function HDWalletAccount(seed, network) {
     this.changeAddresses = [];
     // Transaction output data
     this.outputs = {};
+    
+    // In-memory cache for generated keys
+    var keyCache = [];
+    var changeKeyCache = [];
 
     // Make a new master key
     this.newNodeFromExtKey = function(extKey, cache) {
-        
-      
         if(cache == undefined) {
           var accountZero = Bitcoin.HDNode.fromBase58(extKey); 
           this.externalAccount = accountZero.derive(0);
@@ -27,9 +29,12 @@ function HDWalletAccount(seed, network) {
           this.externalAccount = new Bitcoin.HDNode(cache.externalAccountPubKey, cache.externalAccountChainCode)
           this.internalAccount = new Bitcoin.HDNode(cache.internalAccountPubKey, cache.internalAccountChainCode)
         }
-        
+
         me.addresses = [];
         me.changeAddresses = [];
+
+        keyCache = [];
+        changeKeyCache = [];
 
         me.outputs = {};
     };
@@ -48,6 +53,9 @@ function HDWalletAccount(seed, network) {
         me.addresses = [];
         me.changeAddresses = [];
 
+        keyCache = [];
+        changeKeyCache = [];
+
         me.outputs = {};
     };
 
@@ -56,23 +64,49 @@ function HDWalletAccount(seed, network) {
     }
 
     this.getAddressAtIndex = function(idx) {
+        if (keyCache[idx]) {
+            return keyCache[idx].getAddress().toString();
+        }
+
         var key = this.externalAccount.derive(idx);
+        keyCache[idx] = key;
         return key.getAddress().toString();
     };
 
     this.getChangeAddressAtIndex = function(idx) {
+        if (changeKeyCache[idx]) {
+            return changeKeyCache[idx].getAddress().toString();
+        }
+
         var key = this.internalAccount.derive(idx);
+        changeKeyCache[idx] = key;
         return key.getAddress().toString();
     };
 
     this.generateAddress = function() {
-        var key = this.externalAccount.derive(this.addresses.length);
+        var index = this.addresses.length;
+        var key;
+        if (keyCache[index]) {
+            key = keyCache[index];
+        }
+        else {
+            key = this.externalAccount.derive(index);
+        }
+
         this.addresses.push(key.getAddress().toString());
         return this.addresses[this.addresses.length - 1];
     };
 
     this.generateChangeAddress = function() {
-        var key = this.internalAccount.derive(this.changeAddresses.length);
+        var index = this.changeAddresses.length;
+        var key;
+        if (changeKeyCache[index]) {
+            key = changeKeyCache[index];
+        }
+        else {
+            key = this.internalAccount.derive(index);
+        }
+
         this.changeAddresses.push(key.getAddress().toString());
         return this.changeAddresses[this.changeAddresses.length - 1];
     };
@@ -300,7 +334,7 @@ function HDWalletAccount(seed, network) {
         return me.changeAddresses[me.changeAddresses.length - 1];
     };
 
-    this.generateAddressFromPath = function(account, path) {
+    this.generateKeyFromPath = function(path) {
         var components = path.split("/");
         
         if (components[0] != 'M') {
@@ -312,25 +346,39 @@ function HDWalletAccount(seed, network) {
         }
         
         var receiveOrChange = parseInt(components[1]);
-        var addressIndex = parseInt(components[2]);
+        var index = parseInt(components[2]);
         
-        var address;
+        var key;
         
         if (receiveOrChange === 0) {
-            address = account.externalAccount.derive(addressIndex);
+            // Receive
+            if (keyCache[index]) {
+                key = keyCache[index];
+            }
+            else {
+                key = this.externalAccount.derive(index);
+                keyCache[index] = key;
+            }
         } else {
-            address = account.internalAccount.derive(addressIndex);
+            // Change
+            if (changeKeyCache[index]) {
+                key = changeKeyCache[index];
+            }
+            else {
+                key = this.internalAccount.derive(index);
+                changeKeyCache[index] = key;
+            }
         }
-        
-        return address;
+
+        return key;
     };
-    
+
     this.signWith = function(tx, unspentOutputs) {
         tx.ins.forEach(function(input, i) {
             var unspent = unspentOutputs[i];
 
             if (unspent.xpub) {
-                var pub = me.generateAddressFromPath(me, unspent.xpub.path);
+                var pub = me.generateKeyFromPath(unspent.xpub.path);
                 var key = pub.privKey;
             }
 
@@ -353,10 +401,18 @@ function HDWalletAccount(seed, network) {
     };
 
     this.getPrivateKey = function(index) {
+        if (keyCache[index]) {
+            return keyCache[index].privKey;
+        }
+
         return this.externalAccount.derive(index).privKey;
     };
 
     this.getInternalPrivateKey = function(index) {
+        if (changeKeyCache[index]) {
+            return changeKeyCache[index].privKey;
+        }
+
         return this.internalAccount.derive(index).privKey;
     };
 
