@@ -650,10 +650,11 @@ var MyWallet = new function() {
 
             clone.sharedKey = tSKUID;
             clone.sKTimestamp = timestamp;
-            clone.sKDebugHexHash = SKHashHex;
-            clone.sKDebugTimeOffset = serverTimeOffset;
-            clone.sKDebugOriginalClientTime = now;
-            clone.sKDebugOriginalSharedKey = sharedKey; //Debugging only needs removing ASAP
+            // Debugging only
+//            clone.sKDebugHexHash = SKHashHex;
+//            clone.sKDebugTimeOffset = serverTimeOffset;
+//            clone.sKDebugOriginalClientTime = now;
+//            clone.sKDebugOriginalSharedKey = sharedKey;
         }
 
         if (!data.guid)
