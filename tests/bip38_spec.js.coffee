@@ -51,8 +51,8 @@ describe "BIP38", ->
   #     ImportExport.Crypto_scrypt(p,b,16384, 8, 8, 64, observer.success)
   #     expect(observer.success).toHaveBeenCalled()
   
-  describe "parseBIP38toECKey(testvector1)", ->
-    it "should work", ->
+  describe "parseBIP38toECKey()", ->
+    it "when called with correct password should fire success with the right params", ->
       observer = 
         success: (key) ->
           console.log("Success!")
@@ -68,9 +68,15 @@ describe "BIP38", ->
       spyOn(observer, "success")
       spyOn(observer, "wrong_password")
 
-      ImportExport.parseBIP38toECKey(privKeyStr, password, observer.success)
-  
+      k = Bitcoin.ECKey
+            .fromWIF "5KN7MzqK5wt2TP1fQCYyHBtDrXdJuXbUzm4A9rKAteGu3Qi5CVR" 
+      k.pub.Q._zInv = k.pub.Q.z.modInverse k.pub.Q.curve.p unless k.pub.Q._zInv?
+      ImportExport.parseBIP38toECKey  privKeyStr 
+                                     ,password
+                                     ,observer.success
+                                     ,observer.wrong_password
+                                     ,observer.error
+
       expect(ImportExport.Crypto_scrypt).toHaveBeenCalled()
-      # theECKey = "vectorprivatekeyinbase58".toECKey()
-      # expect(observer.success).toHaveBeenCalled(theECKey)
+      expect(observer.success).toHaveBeenCalledWith(k, false);
       expect(observer.wrong_password).not.toHaveBeenCalled()
