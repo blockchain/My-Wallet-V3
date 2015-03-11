@@ -4822,7 +4822,10 @@ var MyWallet = new function() {
         });
     };
 
-    //Check the integreity of all keys in the wallet
+    /**
+     * Check the integrity of all keys in the wallet
+     * @param {string?} second_password Second password to decrypt private keys if set
+     */
     this.checkAllKeys = function(second_password) {
         for (var key in addresses) {
             var addr = addresses[key];
