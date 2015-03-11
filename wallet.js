@@ -1059,10 +1059,12 @@ var MyWallet = new function() {
     };
 
     /**
-     * import Private Key, backups wallet and refreshes balances
+     * Import Private Key, backup wallet and refresh balances
      * @param {string} privateKeyString private Key
      * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
+     * @param {function(function(string, function, function))} getBIP38Password Get the BIP38 password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getBIP38Password function if the right or wrong password was entered.
      * @param {function()} success callback function
+     * @param {function()} alreadyImportedCallback callback function in case the key already exists in the wallet
      * @param {function()} error callback function
      */
     this.importPrivateKey = function(privateKeyString, getPassword, getBIP38Password, success, alreadyImportedCallback, error) {
