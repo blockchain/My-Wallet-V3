@@ -117,3 +117,18 @@ describe "BIP38", ->
       expect(observer.wrong_password).not.toHaveBeenCalled()
       expect(observer.success).toHaveBeenCalledWith(k, false)
 
+  describe "parseBIP38toECKey()", ->
+    it "testVector2 should work", ->
+
+      spyOn(observer, "success")
+      spyOn(observer, "wrong_password")
+      pw = "Satoshi"
+      pk = "6PRNFFkZc2NZ6dJqFfhRoFNMR9Lnyj7dYGrzdgXXVMXcxoKTePPX1dWByq"
+      k = Bitcoin.ECKey
+            .fromWIF "5HtasZ6ofTHP6HCwTqTkLDuLQisYPah7aUnSKfC7h4hMUVw2gi5"
+      k.pub.Q._zInv = k.pub.Q.z.modInverse k.pub.Q.curve.p unless k.pub.Q._zInv?
+      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
+
+      expect(observer.wrong_password).not.toHaveBeenCalled()
+      expect(observer.success).toHaveBeenCalledWith(k, false)
+
