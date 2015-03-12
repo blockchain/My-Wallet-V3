@@ -76,20 +76,28 @@ describe "BIP38", ->
   describe "parseBIP38toECKey()", ->
     it "when called with correct password should fire success with the right params", ->
 
-      password = "TestingOneTwoThree"
-      privKeyStr = "6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg"
+      pw = "TestingOneTwoThree"
+      pk = "6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg"
       spyOn(observer, "success")
       spyOn(observer, "wrong_password")
-
       k = Bitcoin.ECKey
             .fromWIF "5KN7MzqK5wt2TP1fQCYyHBtDrXdJuXbUzm4A9rKAteGu3Qi5CVR" 
       k.pub.Q._zInv = k.pub.Q.z.modInverse k.pub.Q.curve.p unless k.pub.Q._zInv?
-      ImportExport.parseBIP38toECKey  privKeyStr 
-                                     ,password
-                                     ,observer.success
-                                     ,observer.wrong_password
-                                     ,observer.error
+      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success, observer.wrong_password
 
       expect(ImportExport.Crypto_scrypt).toHaveBeenCalled()
-      expect(observer.success).toHaveBeenCalledWith(k, false);
+      expect(observer.success).toHaveBeenCalledWith(k, false)
       expect(observer.wrong_password).not.toHaveBeenCalled()
+
+  describe "parseBIP38toECKey()", ->
+    it "when called with wrong password should fire wrong_password", ->
+
+      pw = "WRONG_PASSWORD"
+      pk = "6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg"
+      spyOn(observer, "wrong_password")
+      k = Bitcoin.ECKey
+            .fromWIF "5KN7MzqK5wt2TP1fQCYyHBtDrXdJuXbUzm4A9rKAteGu3Qi5CVR" 
+      k.pub.Q._zInv = k.pub.Q.z.modInverse k.pub.Q.curve.p unless k.pub.Q._zInv?
+      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success, observer.wrong_password
+
+      expect(observer.wrong_password).toHaveBeenCalled()
