@@ -69,9 +69,13 @@ describe "BIP38", ->
   #     ImportExport.Crypto_scrypt(p,b,16384, 8, 8, 64, observer.success)
   #     expect(observer.success).toHaveBeenCalled()
   
+  describe "Crypto_scrypt", ->
+    it "should be tested with small parameters", ->
+      pending()
+
   describe "parseBIP38toECKey()", ->
     it "when called with correct password should fire success with the right params", ->
-      
+
       password = "TestingOneTwoThree"
       privKeyStr = "6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg"
       spyOn(observer, "success")
