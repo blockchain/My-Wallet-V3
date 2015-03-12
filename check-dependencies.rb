@@ -20,11 +20,9 @@ whitelist = JSON.parse(File.read('dependency-whitelist.json'))
 # Common #
 ##########
 
-def first_two_digits_match_or_lower_than(left, right)
-  # e.g. "~1.1.2" and "1.1.3" matches
-  #      "~1.1.0" and "1.2.0" matches
-  a = left.gsub("~", "")
-  b = right.gsub("~", "")
+def first_two_digits_match(a, b)
+  # e.g. "1.1.x" and "1.1.3" matches
+  #      "1.1.x" and "1.2.0" does not match
   
   a.split(".")[0].to_i <= b.split(".")[0].to_i && a.split(".")[1].to_i <= b.split(".")[1].to_i
 end
@@ -62,15 +60,17 @@ def check_commits!(deps, whitelist, output_deps, type)
     dep = deps[key]
     if whitelist[key]
       # puts key
-      # For Bower it expects a version formatted like "1.2.3" or "~1.2.3". It will use the highest match exact version.
+      # For Bower it expects a version formatted like "1.2.3" or "1.2.x". It will use the highest match exact version.
       requested_version = type == :npm ? dep['version'] : dep
       
       requested_version = requested_version.split("#").last # e.g. "pernas/angular-password-entropy#0.1.3" -> "0.1.3"
       
-      if !(["~", "0", "1", "2", "3", "4", "5", "6","7", "8", "9"].include?(requested_version[0]))
+      requested_digits = requested_version.split(".")
+      
+      if requested_version[0] == "~" || requested_digits.length != 3 || requested_digits[2] == "x"
         abort "Version format not supported: #{ key } #{ requested_version }"
-      elsif requested_version[0] != "~" && requested_version <= whitelist[key]['version']
-      elsif requested_version[0] == "~" and first_two_digits_match_or_lower_than(requested_version, whitelist[key]['version'])
+      elsif requested_digits[2] != "*" && requested_version == whitelist[key]['version'] # Exact match
+      elsif requested_digits[2] == "*" and first_two_digits_match(requested_version, whitelist[key]['version'])
       else
         abort "#{ key } version #{ requested_version } has not been whitelisted yet. Most recent: #{ whitelist[key]['version'] }"
         # TODO: generate URL showing all commits since the last whitelisted one
@@ -86,7 +86,7 @@ def check_commits!(deps, whitelist, output_deps, type)
         if candidate["name"] == "v#{ requested_version }" || candidate["name"] == requested_version
           tag = candidate
           break
-        elsif requested_version[0] == "~" && first_two_digits_match_or_lower_than(requested_version, candidate["name"])
+        elsif requested_digits[2] == "*" && first_two_digits_match(requested_version, candidate["name"])
           # TODO: warn if not using the latest version in range
           
           tag = candidate
@@ -133,7 +133,7 @@ def check_commits!(deps, whitelist, output_deps, type)
             output_deps[key] = "#{ whitelist[key]["repo"] }##{ commit["sha"] }"
           end
         else
-          puts "Error: no Github commit #{ whitelist[key]["commits"].first } of #{ key }."
+          throw "Error: no Github commit #{ whitelist[key]["commits"].first } of #{ key }."
           next
         end
       end
