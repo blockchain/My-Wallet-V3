@@ -132,3 +132,22 @@ describe "BIP38", ->
       expect(observer.wrong_password).not.toHaveBeenCalled()
       expect(observer.success).toHaveBeenCalledWith(k, false)
 
+  describe "parseBIP38toECKey()", ->
+    it "testVector3 should work", ->
+      pending()
+      ###############################################################
+      # Note: The non-standard UTF-8 characters in this passphrase 
+      #   should be NFC normalized to result in a passphrase 
+      #   of 0xcf9300f0909080f09f92a9 before further processing
+      ###############################################################
+      # spyOn(observer, "success")
+      # spyOn(observer, "wrong_password")
+      # pw = "ϓ␀𐐀💩"
+      # pk = "6PRW5o9FLp4gJDDVqJQKJFTpMvdsSGJxMYHtHaQBF3ooa8mwD69bapcDQn"
+      # k = Bitcoin.ECKey
+      #       .fromWIF "5Jajm8eQ22H3pGWLEVCXyvND8dQZhiQhoLJNKjYXk9roUFTMSZ4"
+      # k.pub.Q._zInv = k.pub.Q.z.modInverse k.pub.Q.curve.p unless k.pub.Q._zInv?
+      # ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
+
+      # expect(observer.wrong_password).not.toHaveBeenCalled()
+      # expect(observer.success).toHaveBeenCalledWith(k, false)
