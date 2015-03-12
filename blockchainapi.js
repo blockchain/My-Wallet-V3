@@ -13,8 +13,7 @@ var BlockchainAPI = new function() {
         if (!offset) offset = 0;
         if (!n) n = 0;
 
-        var allAddresses = MyWallet.getLegacyActiveAddresses();
-        //var allAddresses = []; // temporary disable fetching none HD wallet addresses
+        var allAddresses = MyWallet.getAllLegacyAddresses();
         var myHDWallet = MyWallet.getHDWallet();
         if (myHDWallet != null) {
             for (var i in myHDWallet.getAccounts()) {
@@ -29,7 +28,6 @@ var BlockchainAPI = new function() {
                 allAddresses.push(paidTo[tx_hash].address);                
             }
         }
-
 
         var data = {
             active : allAddresses.join('|'),
