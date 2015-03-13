@@ -97,51 +97,52 @@ describe "BIP38", ->
       expect(observer.success).toHaveBeenCalledWith(k, false)
       expect(observer.wrong_password).not.toHaveBeenCalled()
 
-  describe "parseBIP38toECKey()", ->
     it "when called with wrong password should fire wrong_password", ->
 
+      spyOn(observer, "success")
+      spyOn(observer, "wrong_password")
       pw = "WRONG_PASSWORD"
       pk = "6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg"
-      spyOn(observer, "wrong_password")
-      k = Bitcoin.ECKey
-            .fromWIF "5KN7MzqK5wt2TP1fQCYyHBtDrXdJuXbUzm4A9rKAteGu3Qi5CVR" 
-      k.pub.Q._zInv = k.pub.Q.z.modInverse k.pub.Q.curve.p unless k.pub.Q._zInv?
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success, observer.wrong_password
+
+      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
 
       expect(observer.wrong_password).toHaveBeenCalled()
 
-  describe "parseBIP38toECKey()", ->
-    it "testVector1 should work", ->
+    it "(testvector1) No compression, no EC multiply, Test 1 , should work", ->
 
       spyOn(observer, "success")
       spyOn(observer, "wrong_password")
+      expectedWIF = "5KN7MzqK5wt2TP1fQCYyHBtDrXdJuXbUzm4A9rKAteGu3Qi5CVR"
+      expectedCompression = false;
       pw = "TestingOneTwoThree"
       pk = "6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg"
-      k = Bitcoin.ECKey
-            .fromWIF "5KN7MzqK5wt2TP1fQCYyHBtDrXdJuXbUzm4A9rKAteGu3Qi5CVR"
-      k.pub.Q._zInv = k.pub.Q.z.modInverse k.pub.Q.curve.p unless k.pub.Q._zInv?
+
       ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
+      computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
+      computedCompression = observer.success.calls.argsFor(0)[1]
 
       expect(observer.wrong_password).not.toHaveBeenCalled()
-      expect(observer.success).toHaveBeenCalledWith(k, false)
+      expect(computedWIF).toEqual(expectedWIF)
+      expect(computedCompression).toEqual(expectedCompression)
 
-  describe "parseBIP38toECKey()", ->
-    it "testVector2 should work", ->
+    it "(testvector2) No compression, no EC multiply, Test 2, should work", ->
 
       spyOn(observer, "success")
       spyOn(observer, "wrong_password")
+      expectedWIF = "5HtasZ6ofTHP6HCwTqTkLDuLQisYPah7aUnSKfC7h4hMUVw2gi5"
+      expectedCompression = false;
       pw = "Satoshi"
       pk = "6PRNFFkZc2NZ6dJqFfhRoFNMR9Lnyj7dYGrzdgXXVMXcxoKTePPX1dWByq"
-      k = Bitcoin.ECKey
-            .fromWIF "5HtasZ6ofTHP6HCwTqTkLDuLQisYPah7aUnSKfC7h4hMUVw2gi5"
-      k.pub.Q._zInv = k.pub.Q.z.modInverse k.pub.Q.curve.p unless k.pub.Q._zInv?
+
       ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
+      computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
+      computedCompression = observer.success.calls.argsFor(0)[1]
 
       expect(observer.wrong_password).not.toHaveBeenCalled()
-      expect(observer.success).toHaveBeenCalledWith(k, false)
+      expect(computedWIF).toEqual(expectedWIF)
+      expect(computedCompression).toEqual(expectedCompression)
 
-  describe "parseBIP38toECKey()", ->
-    it "testVector3 should work", ->
+    it "(testvector3) No compression, no EC multiply, Test 3, should work", ->
       pending()
       ###############################################################
       # Note: The non-standard UTF-8 characters in this passphrase 
@@ -160,38 +161,41 @@ describe "BIP38", ->
       # expect(observer.wrong_password).not.toHaveBeenCalled()
       # expect(observer.success).toHaveBeenCalledWith(k, false)
 
-  describe "parseBIP38toECKey()", ->
-    it "testVector4 should work", ->
+    it "(testvector4) Compression, no EC multiply, Test 1, should work", ->
 
       spyOn(observer, "success")
       spyOn(observer, "wrong_password")
+      expectedWIF = "L44B5gGEpqEDRS9vVPz7QT35jcBG2r3CZwSwQ4fCewXAhAhqGVpP"
+      expectedCompression = true;
       pw = "TestingOneTwoThree"
       pk = "6PYNKZ1EAgYgmQfmNVamxyXVWHzK5s6DGhwP4J5o44cvXdoY7sRzhtpUeo"
-      k = Bitcoin.ECKey
-            .fromWIF "L44B5gGEpqEDRS9vVPz7QT35jcBG2r3CZwSwQ4fCewXAhAhqGVpP"
-      k.pub.Q._zInv = k.pub.Q.z.modInverse k.pub.Q.curve.p unless k.pub.Q._zInv?
+
       ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
+      computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
+      computedCompression = observer.success.calls.argsFor(0)[1]
 
       expect(observer.wrong_password).not.toHaveBeenCalled()
-      expect(observer.success).toHaveBeenCalledWith(k, true)
+      expect(computedWIF).toEqual(expectedWIF)
+      expect(computedCompression).toEqual(expectedCompression)
 
-  describe "parseBIP38toECKey()", ->
-    it "testVector5 should work", ->
+    it "(testvector5) Compression, no EC multiply, Test 2, should work", ->
 
       spyOn(observer, "success")
       spyOn(observer, "wrong_password")
+      expectedWIF = "KwYgW8gcxj1JWJXhPSu4Fqwzfhp5Yfi42mdYmMa4XqK7NJxXUSK7"
+      expectedCompression = true;
       pw = "Satoshi"
       pk = "6PYLtMnXvfG3oJde97zRyLYFZCYizPU5T3LwgdYJz1fRhh16bU7u6PPmY7"
-      k = Bitcoin.ECKey
-            .fromWIF "KwYgW8gcxj1JWJXhPSu4Fqwzfhp5Yfi42mdYmMa4XqK7NJxXUSK7"
-      k.pub.Q._zInv = k.pub.Q.z.modInverse k.pub.Q.curve.p unless k.pub.Q._zInv?
+
       ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
+      computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
+      computedCompression = observer.success.calls.argsFor(0)[1]
 
       expect(observer.wrong_password).not.toHaveBeenCalled()
-      expect(observer.success).toHaveBeenCalledWith(k, true)
+      expect(computedWIF).toEqual(expectedWIF)
+      expect(computedCompression).toEqual(expectedCompression)
 
-  describe "parseBIP38toECKey()", ->
-    it "testVector6 should work", ->
+    it "(testvector6) No compression, EC multiply, no lot/sequence numbers, Test 1, should work", ->
 
       spyOn(observer, "success")
       spyOn(observer, "wrong_password")
@@ -199,7 +203,7 @@ describe "BIP38", ->
       expectedCompression = false;
       pw = "TestingOneTwoThree"
       pk = "6PfQu77ygVyJLZjfvMLyhLMQbYnu5uguoJJ4kMCLqWwPEdfpwANVS76gTX"
-      
+
       ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
       computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
       computedCompression = observer.success.calls.argsFor(0)[1]
