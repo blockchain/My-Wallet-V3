@@ -21,7 +21,8 @@ describe "BIP38", ->
     testVector3 = "ϓ␀𐐀💩" + "f4e775a8" + "16384" + "8" + "8" + "64"
     testVector4 = "TestingOneTwoThree" + "43be4179" + "16384" + "8" + "8" + "64"
     testVector5 = "Satoshi" + "26e017d2" + "16384" + "8" + "8" + "64"
-
+    testVector6 = "TestingOneTwoThree" + "a50dba6772cb9383" + "16384" + "8" + "8" + "32"
+    testVector61 = "020eac136e97ce6bf3e2bceb65d906742f7317b6518c54c64353c43dcc36688c47" + "62b5b722a50dba6772cb9383" + "1024"+"1"+"1"+"64"
     # images of Crypto_scrypt
     Crypto_scrypt_cache = {}
     Crypto_scrypt_cache[wrongPassword] = 
@@ -42,12 +43,19 @@ describe "BIP38", ->
     Crypto_scrypt_cache[testVector5] = 
       Buffer "0478e3e18d96ae2fbe033e3261944670c0ead16336890e4af46f55851ae211d22c\
               97d288383bfd14983e5c574dafeb66f31b16bad037d40a6467019840ffa323","hex"
+    Crypto_scrypt_cache[testVector6] = 
+      Buffer "c8ff7a1c8c8898a0361e477fa8f0f05c00d07c5d9626f00b03c0140a307c98f4","hex"
+    Crypto_scrypt_cache[testVector61] = 
+      Buffer "da2d320e2ca088575369601e94dd71f210fc69c047a3d0f48bdbaab595916dc7b8\
+              d083ea2678b5a71558c0fb0efa58b565227d05adf0c25fa0b9a74755477827","hex"
+
 
     # mock used inside parseBIP38toECKey
     spyOn(ImportExport, "Crypto_scrypt").and.callFake(
       (password, salt, N, r, p, dkLen, callback) ->
-        keyTest = password + salt.toString("hex") + (N).toString() + 
+        keyTest = password.toString("hex") + salt.toString("hex") + (N).toString() + 
                   (r).toString() + (p).toString() + (dkLen).toString()
+        console.log("x: " + keyTest);
         Image = Crypto_scrypt_cache[keyTest]
         if Image?
           callback Image
@@ -181,3 +189,21 @@ describe "BIP38", ->
 
       expect(observer.wrong_password).not.toHaveBeenCalled()
       expect(observer.success).toHaveBeenCalledWith(k, true)
+
+  describe "parseBIP38toECKey()", ->
+    it "testVector6 should work", ->
+
+      spyOn(observer, "success")
+      spyOn(observer, "wrong_password")
+      expectedWIF = "5K4caxezwjGCGfnoPTZ8tMcJBLB7Jvyjv4xxeacadhq8nLisLR2"
+      expectedCompression = false;
+      pw = "TestingOneTwoThree"
+      pk = "6PfQu77ygVyJLZjfvMLyhLMQbYnu5uguoJJ4kMCLqWwPEdfpwANVS76gTX"
+      
+      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
+      computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
+      computedCompression = observer.success.calls.argsFor(0)[1]
+
+      expect(observer.wrong_password).not.toHaveBeenCalled()
+      expect(computedWIF).toEqual(expectedWIF)
+      expect(computedCompression).toEqual(expectedCompression)
