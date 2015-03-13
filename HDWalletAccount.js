@@ -377,9 +377,7 @@ function HDWalletAccount(seed, network) {
         listener.on_begin_signing && listener.on_begin_signing();
 
         tx.ins.forEach(function(input, i) {
-            setTimeout(function() {
-                listener.on_sign_progress && listener.on_sign_progress(i+1);
-            }, 0);
+            listener.on_sign_progress && listener.on_sign_progress(i+1);
             
             var unspent = unspentOutputs[i];
 
