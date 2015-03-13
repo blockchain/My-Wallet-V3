@@ -30,6 +30,9 @@ describe "BIP38", ->
     testVector8 = "MOLON LABE" + "4fca5a97" + "16384" + "8" + "8" + "32"
     testVector81 = "02a6bf1824208903aa344833d614f7fa3ba46f4f8d57b2e219a1cfac961a9b7395" + 
                    "bb458cef4fca5a974040f001" + "1024"+"1"+"1"+"64"
+    testVector9 = "ΜΟΛΩΝ ΛΑΒΕ" + "c40ea76f" + "16384" + "8" + "8" + "32"
+    testVector91 = "030a7a6f6536951f1cdf450e9ef6c1f615b904af58f7c17598cec3274e6769d3ef" + 
+                   "494af136c40ea76fc501a001" + "1024"+"1"+"1"+"64"
     # images of Crypto_scrypt
     Crypto_scrypt_cache = {}
     Crypto_scrypt_cache[wrongPassword] = 
@@ -65,6 +68,12 @@ describe "BIP38", ->
     Crypto_scrypt_cache[testVector81] = 
       Buffer "a8bc4ad35fb69cc37f129abb458245e4523c97133b22a5cad88035f99d0b1d50ff\
               c8317a1eaea330e1e17305539ec5c5ce36168a35d6d13fefa21d5e2cb1c1e9","hex"
+    Crypto_scrypt_cache[testVector9] = 
+      Buffer "147562b11c3a361365d89c1a2e5bed186c43c3c2d964632d17b2a56f96fc3110","hex"
+    Crypto_scrypt_cache[testVector91] = 
+      Buffer "1471d24b21c21e164f48237e9a5f0926493bf6118373a0d2e18387a7c345646d68\
+              89d2c30be9721874f10844fb98794de1caba62bb659a51492d4f33ca3237d7","hex"
+
 
     # mock used inside parseBIP38toECKey
     spyOn(ImportExport, "Crypto_scrypt").and.callFake(
@@ -253,6 +262,23 @@ describe "BIP38", ->
       expectedCompression = false;
       pw = "MOLON LABE"
       pk = "6PgNBNNzDkKdhkT6uJntUXwwzQV8Rr2tZcbkDcuC9DZRsS6AtHts4Ypo1j"
+
+      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
+      computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
+      computedCompression = observer.success.calls.argsFor(0)[1]
+
+      expect(observer.wrong_password).not.toHaveBeenCalled()
+      expect(computedWIF).toEqual(expectedWIF)
+      expect(computedCompression).toEqual(expectedCompression)
+
+   it "(testvector9) No compression, EC multiply, lot/sequence numbers, Test 2, should work", ->
+
+      spyOn(observer, "success")
+      spyOn(observer, "wrong_password")
+      expectedWIF = "5KMKKuUmAkiNbA3DazMQiLfDq47qs8MAEThm4yL8R2PhV1ov33D"
+      expectedCompression = false;
+      pw = "ΜΟΛΩΝ ΛΑΒΕ"
+      pk = "6PgGWtx25kUg8QWvwuJAgorN6k9FbE25rv5dMRwu5SKMnfpfVe5mar2ngH"
 
       ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
       computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
