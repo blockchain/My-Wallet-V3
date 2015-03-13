@@ -2256,7 +2256,7 @@ var MyWallet = new function() {
      */
     this.fetchMoreTransactionsForLegacyAddresses = function(success, error, didFetchOldestTransaction) {
         function getRawTransactionsForLegacyAddresses(txOffset, numTx, success, error) {
-            var allAddresses = MyWallet.getAllLegacyAddresses();
+            var allAddresses = MyWallet.getLegacyActiveAddresses();
 
             BlockchainAPI.async_get_history_with_addresses(allAddresses, function(data) {
                 if (success) success(data.txs);
@@ -3691,7 +3691,7 @@ var MyWallet = new function() {
             });
         };
         
-        var addresses = xpubs.concat(MyWallet.getAllLegacyAddresses());
+        var addresses = xpubs.concat(MyWallet.getLegacyActiveAddresses());
         BlockchainAPI.async_get_history_with_addresses(addresses, function(data) {
             parseMultiAddressJSON(data, false, false);
             success && success();
@@ -4280,7 +4280,7 @@ var MyWallet = new function() {
                 throw 'Error encrypting the JSON output';
             }
             
-            //Now Decrypt the wallet again to double check for any possible corruption
+            //Now Decrypt the it again to double check for any possible corruption
             MyWallet.decryptWallet(crypted, password, function(obj) {
                 try {
                     var old_checksum = payload_checksum;
