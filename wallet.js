@@ -1286,7 +1286,7 @@ var MyWallet = new function() {
 
             for (var j = 0; j < MyWallet.getAccountsCount(); j++) {
                 var account = MyWallet.getHDWallet().getAccount(j);
-                if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
+                if (!account.isArchived() && output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                     if (account2HasIncrementAccountTxCount[output.xpub] != true) {
                         account2HasIncrementAccountTxCount[output.xpub] = true;
                         if (incrementAccountTxCount) {
@@ -1343,7 +1343,7 @@ var MyWallet = new function() {
 
             for (var j = 0; j < MyWallet.getAccountsCount(); j++) {
                 var account = MyWallet.getHDWallet().getAccount(j);
-                if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
+                if (!account.isArchived() && output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                     if (account2HasIncrementAccountTxCount[output.xpub] != true) {
                         account2HasIncrementAccountTxCount[output.xpub] = true;
                         if (incrementAccountTxCount) {
@@ -1723,7 +1723,7 @@ var MyWallet = new function() {
             } else {
                 for (var j in MyWallet.getAccounts()) {
                     var account = MyWallet.getHDWallet().getAccount(j);
-                    if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
+                    if (!account.isArchived() && output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                         if (! isOrigin) {
                             isOrigin = true;
                             transaction.from.account = {index: parseInt(j), amount: output.value};
@@ -1775,7 +1775,7 @@ var MyWallet = new function() {
                 var toAccountSet = false;
                 for (var j in MyWallet.getAccounts()) {
                     var account = MyWallet.getHDWallet().getAccount(j);
-                    if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
+                    if (!account.isArchived() && output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
                         if (! toAccountSet) {
                             if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
                                 transaction.from.account.amount -= output.value;
@@ -2002,11 +2002,14 @@ var MyWallet = new function() {
      * @param {function()} didFetchOldestTransaction callback is called when all transanctions for the specified account has been fetched
      */
     this.fetchMoreTransactionsForAccounts = function(success, error, didFetchOldestTransaction) {
+
         function getRawTransactionsForAccounts(txOffset, numTx, success, error) {
             var addresses = [];
             for (var i in MyWallet.getAccounts()) {
                 var account = MyWallet.getHDWallet().getAccount(i);
-                addresses.push(account.getAccountExtendedKey(false));
+                if(!account.isArchived()) {
+                    addresses.push(account.getAccountExtendedKey(false));
+                }
             }
 
             BlockchainAPI.async_get_history_with_addresses(addresses, function(data) {
@@ -2053,7 +2056,7 @@ var MyWallet = new function() {
             var accountExtendedPublicKey = account.getAccountExtendedKey(false);
 
             BlockchainAPI.async_get_history_with_addresses([accountExtendedPublicKey], function(data) {
-                if (success) success(data.txs);
+                if (success) success(data);
             }, function() {
                 if (error) error();
 
@@ -2064,12 +2067,13 @@ var MyWallet = new function() {
         getRawTransactionsForAccount(accountIdx, account.numTxFetched, numOldTxsToFetchAtATime, function(data) {
             var processedTransactions = [];
 
-            for (var i in data) {
-                var tx = data[i];
+            for (var i in data.txs) {
+                var tx = data.txs[i];
                 
-                var tx = TransactionFromJSON(data[i]);
+                var tx = TransactionFromJSON(data.txs[i]);
                 
                 var transaction = MyWallet.processTransaction(tx);  
+                                
                 processedTransactions.push(transaction);
             }
 
@@ -2079,8 +2083,8 @@ var MyWallet = new function() {
             if (processedTransactions.length < numOldTxsToFetchAtATime) {
                 didFetchOldestTransaction();
             }
-
-            success(processedTransactions);
+    
+            success(processedTransactions, data.wallet.final_balance);
         }, function(e) {
             error(e);
         });
@@ -2593,12 +2597,37 @@ var MyWallet = new function() {
      * @param {?function(number)} successcallback success callback function with account balance
      */
     this.unarchiveAccount = function(idx, successcallback) {
-        var account = MyWallet.getHDWallet().getAccount(idx);
-        account.setIsArchived(false);
-        if (successcallback) {
-            successcallback(account.getBalance());            
-        }
-        MyWallet.backupWalletDelayed();
+        var archivedAccount = MyWallet.getHDWallet().getAccount(idx);
+            
+        var walletAccount = new HDWalletAccount(null);
+
+        walletAccount.newNodeFromExtKey(archivedAccount.extendedPublicKey);
+
+        var account = HDAccount(walletAccount, archivedAccount.label, idx);
+            
+        account.generateCache();
+        
+        account.extendedPrivateKey = archivedAccount.extendedPrivateKey;
+        account.extendedPublicKey = archivedAccount.extendedPublicKey;
+        
+        MyWallet.getHDWallet().replaceAccount(idx, account);
+        
+        
+        MyWallet.fetchMoreTransactionsForAccount(idx,function(txs, balance) {
+            account.setBalance(balance);
+            
+            MyWallet.listenToHDWalletAccount(account.extendedPrivateKey);
+                        
+            if (successcallback) {
+                successcallback(txs);
+            }
+        }, function(error) {
+            console.log("Failed to fetch transactions");
+        }, function() {}
+        )
+        
+        MyWallet.backupWalletDelayed();   
+ 
     };
     
     /**
@@ -2774,8 +2803,10 @@ var MyWallet = new function() {
     this.listenToHDWalletAccounts = function() {
         for (var i in MyWallet.getAccounts()) {
             var account = MyWallet.getHDWallet().getAccount(i);
-            var accountExtendedPublicKey = account.getAccountExtendedKey(false);
-            MyWallet.listenToHDWalletAccount(accountExtendedPublicKey);
+            if(!account.isArchived()) {
+                var accountExtendedPublicKey = account.getAccountExtendedKey(false);
+                MyWallet.listenToHDWalletAccount(accountExtendedPublicKey);
+            }
         }
     };
 
@@ -3635,12 +3666,14 @@ var MyWallet = new function() {
 
             for (var j in MyWallet.getAccounts()) {
                 var account = MyWallet.getHDWallet().getAccount(j);
+                
+                if(!account.isArchived()) {
+                    var extPubKey = account.getAccountExtendedKey(false);
 
-                var extPubKey = account.getAccountExtendedKey(false);
-
-                if (extPubKey == obj.addresses[i].address) {
-                    account.setBalance(obj.addresses[i].final_balance);
-                    account.n_tx = obj.addresses[i].n_tx;
+                    if (extPubKey == obj.addresses[i].address) {
+                        account.setBalance(obj.addresses[i].final_balance);
+                        account.n_tx = obj.addresses[i].n_tx;
+                    }
                 }
             }
         }
@@ -3806,7 +3839,10 @@ var MyWallet = new function() {
                         xpubs = [];
                         for (var i in defaultHDWallet.accounts) {
                             var account  = defaultHDWallet.accounts[i];
-                            xpubs.push(account.xpub);
+
+                            if(!account.archived) {
+                                xpubs.push(account.xpub);
+                            }
                         }
                         
                         // We're not passing a bip39 or second password
