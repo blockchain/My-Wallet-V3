@@ -78,16 +78,19 @@ describe "Transaction", ->
         getAccountExtendedKey: () -> 
           "xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZ\
            HSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5"
+        isArchived: () -> false
       }
       {
         getAccountExtendedKey: () -> 
           "xpub6DWoQTdpQcaSm4q9pj9A5EZdCs3NcmM5x8aRoi3VAGXJUCkJhmREWMCaAahs9nhM\
            q7RnseKBV4uwkqCP8g43sEnMXRfFes2BxGagJqZfS5A"
+        isArchived: () -> false
       }
       {
         getAccountExtendedKey: () ->
           "xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZk\
            LjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ"
+        isArchived: () -> false
       }
     ]
     
