@@ -80,7 +80,6 @@ describe "BIP38", ->
       (password, salt, N, r, p, dkLen, callback) ->
         keyTest = password.toString("hex") + salt.toString("hex") + (N).toString() + 
                   (r).toString() + (p).toString() + (dkLen).toString()
-        console.log("x: " + keyTest);
         Image = Crypto_scrypt_cache[keyTest]
         if Image?
           callback Image
