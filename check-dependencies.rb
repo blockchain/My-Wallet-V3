@@ -46,6 +46,13 @@ end
 # multiply = apply_math.curry.(:*)
 # divide = apply_math.curry.(:/)
 
+def set_dep(requested_version, whitelisted_repo_key, sha)
+  if requested_version.include?("git+ssh") # Preserve URL
+    return "#{ requested_version.split("#").first }##{ sha }"
+  else
+    return "#{ whitelisted_repo_key }##{ sha }"
+  end
+end
 
 def check_commits!(deps, whitelist, output_deps, type)
   
@@ -100,7 +107,7 @@ def check_commits!(deps, whitelist, output_deps, type)
           if type == :npm
             output_deps[key] = {"version" => "#{ whitelist[key]["repo"] }##{ tag["commit"]["sha"] }"}
           else
-            output_deps[key] = "#{ whitelist[key]["repo"] }##{ tag["commit"]["sha"] }"
+            output_deps[key] = set_dep(type == :npm ? dep['version'] : dep, whitelist[key]["repo"], tag["commit"]["sha"])
           end
 
         else
@@ -130,7 +137,7 @@ def check_commits!(deps, whitelist, output_deps, type)
           if type == :npm
             output_deps[key] = {"version" => "#{ whitelist[key]["repo"] }##{ commit["sha"] }"}
           else
-            output_deps[key] = "#{ whitelist[key]["repo"] }##{ commit["sha"] }"
+            output_deps[key] = set_dep(type == :npm ? dep['version'] : dep, whitelist[key]["repo"], commit["sha"])
           end
         else
           throw "Error: no Github commit #{ whitelist[key]["commits"].first } of #{ key }."
