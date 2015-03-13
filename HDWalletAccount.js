@@ -267,7 +267,7 @@ function HDWalletAccount(seed, network) {
         });
     }
 
-    this.createTx = function(to, value, fixedFee, unspentOutputs, changeAddress) {
+    this.createTx = function(to, value, fixedFee, unspentOutputs, changeAddress, listener) {
         assert(value > network.dustThreshold, value + ' must be above dust threshold (' + network.dustThreshold + ' Satoshis)');
 
         var utxos = getCandidateOutputs(unspentOutputs, value);
@@ -299,7 +299,7 @@ function HDWalletAccount(seed, network) {
 
         assert(accum >= subTotal, 'Insufficient funds. Value Needed ' +  subTotal + '. Available amount ' + accum);
 
-        this.signWith(tx, utxos);
+        this.signWith(tx, utxos, listener);
         return tx;
     };
 
@@ -373,8 +373,14 @@ function HDWalletAccount(seed, network) {
         return key;
     };
 
-    this.signWith = function(tx, unspentOutputs) {
+    this.signWith = function(tx, unspentOutputs, listener) {
+        listener.on_begin_signing && listener.on_begin_signing();
+
         tx.ins.forEach(function(input, i) {
+            setTimeout(function() {
+                listener.on_sign_progress && listener.on_sign_progress(i+1);
+            }, 0);
+            
             var unspent = unspentOutputs[i];
 
             if (unspent.xpub) {
@@ -384,6 +390,8 @@ function HDWalletAccount(seed, network) {
 
             tx.sign(i, key);
         });
+
+        listener.on_finish_signing && listener.on_finish_signing();
 
         return tx;
     };

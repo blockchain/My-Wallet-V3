@@ -182,19 +182,19 @@ function HDAccount(wallet, label, idx) {
         resetBalance : function() {
             return this.balance = null;
         },
-        createTx : function(to, value, fixedFee, unspentOutputs, extendedPrivateKey) {
+        createTx : function(to, value, fixedFee, unspentOutputs, extendedPrivateKey, listener) {
             // Create the send account (same account as current account, but created with xpriv and thus able to generate private keys)
             var sendAccount = new HDWalletAccount(null);
             sendAccount.newNodeFromExtKey(extendedPrivateKey);
 
             var changeAddress = sendAccount.getChangeAddressAtIndex(this.changeAddressCount);
 
-            return sendAccount.createTx(to, value, fixedFee, unspentOutputs, changeAddress);
+            return sendAccount.createTx(to, value, fixedFee, unspentOutputs, changeAddress, listener);
         },
         recommendedTransactionFee : function(amount) {
             try {
                 //12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX is dummy address, first ever bitcoin address
-                var tx = this.createTx("12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX", amount, null, null);
+                var tx = this.createTx("12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX", amount, null, null, null);
                 return this.wallet.estimatePaddedFee(tx, Bitcoin.networks.bitcoin);
             } catch (e) {
                 return 10000;
