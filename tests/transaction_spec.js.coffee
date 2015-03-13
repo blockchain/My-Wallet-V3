@@ -63,7 +63,7 @@ describe "Transaction", ->
         0
       ]
       'confirmations': 8
-    
+
     # externalAddreses = []
     # changeAddresses = []
     activeLegacyAddresses = [
@@ -105,10 +105,6 @@ describe "Transaction", ->
       getAccount: (idx) ->  hdAccounts[idx]
     })
     
-    spyOn(MyWallet, "getConfirmationsForTx").and.callFake((block, tx)->
-      tx.confirmations
-    )
-    
     spyOn(MyWallet, "getLatestBlock").and.returnValue(true)
         
     # Terminology:
@@ -121,6 +117,10 @@ describe "Transaction", ->
   describe "processTransaction()", ->
     beforeEach ->
       spyOn(MyWallet, "getTags").and.returnValue([])
+
+      spyOn(MyWallet, "getConfirmationsForTx").and.callFake(
+        (block, tx)-> tx.confirmations
+      )
     
     describe "from account to external address", ->
       ##########################################################################
@@ -1067,6 +1067,31 @@ describe "Transaction", ->
 
   describe "getConfirmationsForTx()", ->
     ##########################################################################
-    it "...", ->
-      pending()
+    it "a tx with null confirmations should return 0 and tx.setConfirmations(0) should be called.", ->
+      latestBlock = 
+        height: 335984
+      defaultSampleTx.blockHeight = null
+      defaultSampleTx.setConfirmations = (c) -> c 
+      spyOn(defaultSampleTx, "setConfirmations")
       
+      conf = MyWallet.getConfirmationsForTx latestBlock, defaultSampleTx
+      
+      expect(defaultSampleTx.setConfirmations).toHaveBeenCalled()
+      expect(defaultSampleTx.setConfirmations).toHaveBeenCalledWith(0)
+      expect(conf).toEqual(0)
+      
+    it "defaultSampleTx should have 100 confirmations with the mocked latest block", ->
+      latestBlock = 
+        height: 336084
+
+      conf = MyWallet.getConfirmationsForTx latestBlock, defaultSampleTx
+      
+      expect(conf).toEqual(100)
+
+    it "defaultSampleTx should have 1 confirmation with the mocked latest block", ->
+      latestBlock = 
+        height: 335985
+
+      conf = MyWallet.getConfirmationsForTx latestBlock, defaultSampleTx
+
+      expect(conf).toEqual(1)
