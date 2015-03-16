@@ -236,17 +236,11 @@ describe "BIP38", ->
       expect(computedCompression).toEqual(expectedCompression)
 
     it "(testvector3) No compression, no EC multiply, Test 3, should work", ->
-      # pending()
-      ###############################################################
-      # Note: The non-standard UTF-8 characters in this passphrase 
-      #   should be NFC normalized to result in a passphrase 
-      #   of 0xcf9300f0909080f09f92a9 before further processing
-      ###############################################################
+
       spyOn(observer, "success")
       spyOn(observer, "wrong_password")
-      # pw = "ϓ␀𐐀💩"
-      # we must add NFC normalization on parseBIP38toECKey()
-      pw = Buffer("cf9300f0909080f09f92a9","hex").toString();
+
+      pw = String.fromCodePoint(0x03d2, 0x0301, 0x0000, 0x00010400, 0x0001f4a9)
       pk = "6PRW5o9FLp4gJDDVqJQKJFTpMvdsSGJxMYHtHaQBF3ooa8mwD69bapcDQn"
       k = Bitcoin.ECKey
             .fromWIF "5Jajm8eQ22H3pGWLEVCXyvND8dQZhiQhoLJNKjYXk9roUFTMSZ4"

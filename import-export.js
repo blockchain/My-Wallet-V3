@@ -21,6 +21,10 @@ function _ImportExport() {
     
     this.parseBIP38toECKey = function(base58Encrypted, passphrase, success, wrong_password, error) {
         var hex;
+
+        // Unicode NFC normalization
+        passphrase = Unorm.nfc(passphrase);
+
         try {
           hex = Browserify.Base58.decode(base58Encrypted);
         } catch (e) {
