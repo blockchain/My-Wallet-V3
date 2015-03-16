@@ -63,6 +63,7 @@ var ECKey = Bitcoin.ECKey;
 var assert = Browserify.assert;
 var JSONB = Browserify.JSONB;
 var SHA256 = Browserify.SHA256;
+var Unorm = Browserify.Unorm;
 
 var MyWallet = new function() {
     var MyWallet = this;

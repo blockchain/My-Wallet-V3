@@ -84,5 +84,10 @@
     "version" : "0.1.0",
     "commits" : [""],
     "repo" : ""
+  },
+  "unorm" : {
+    "version" : "1.3.3",
+    "commits" : ["abf1c87decccba61b7a285006ea32291ae0b7da9"],
+    "repo" : "walling/unorm"
   }
 }
