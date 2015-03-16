@@ -2302,25 +2302,27 @@ var MyWallet = new function() {
      * @param {number} amount send amount in satoshis
      * @param {?number} feeAmount fee amount in satoshis
      * @param {?string} note tx note
-     * @param {Object} listener callback functions for success, error and progress
+     * @param {function()} successCallback callback function
+     * @param {function()} errorCallback callback function
+     * @param {Object} listener callback functions for send progress
      * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
      */
-    this.sendFromLegacyAddressToAddress = function(fromAddress, toAddress, amount, feeAmount, note, listener, getPassword)  {
+    this.sendFromLegacyAddressToAddress = function(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback, listener, getPassword)  {
         if (double_encryption) {
             getPassword(function(pw, correct_password, wrong_password) {
                 if (MyWallet.validateSecondPassword(pw)) {
                     correct_password();
-                    sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, listener, pw);
+                    sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback, listener, pw);
                 } else {
                     wrong_password();
                 }
             });            
         } else {
-            sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, listener, null);
+            sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback, listener, null);
         }
     };
 
-    function sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, listener, second_password)  {
+    function sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback, listener, second_password)  {
         var obj = initNewTx();
         
         if (feeAmount != null)
@@ -2334,6 +2336,8 @@ var MyWallet = new function() {
 
         obj.ready_to_send_header = 'Bitcoins Ready to Send.';
 
+        listener.on_success = successCallback;
+        listener.on_error = errorCallback;
         obj.addListener(listener);
 
         obj.note = note;
@@ -2347,26 +2351,28 @@ var MyWallet = new function() {
      * @param {number} amount send amount in satoshis
      * @param {?number} feeAmount fee amount in satoshis
      * @param {?string} note tx note
-     * @param {Object} listener callback functions for success, error and progress
+     * @param {function()} successCallback callback function
+     * @param {function()} errorCallback callback function
+     * @param {Object} listener callback functions for send progress
      * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
      */
-    this.sendFromLegacyAddressToAccount = function(fromAddress, toIdx, amount, feeAmount, note, listener, getPassword)  {
+    this.sendFromLegacyAddressToAccount = function(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback, listener, getPassword)  {
         if (double_encryption) {
             getPassword(function(pw, correct_password, wrong_password) {
                 if (MyWallet.validateSecondPassword(pw)) {
                     correct_password()
-                    sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, listener, pw);
+                    sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback, listener, pw);
                 } else {
                     wrong_password()
                     errorCallback()
                 }
             });            
         } else {
-            sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, listener, null);
+            sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback, listener, null);
         }
     };
 
-    function sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, listener, second_password)  {
+    function sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback, listener, second_password)  {
         var account = MyWallet.getHDWallet().getAccount(toIdx);
         var obj = initNewTx();
 
@@ -2382,6 +2388,8 @@ var MyWallet = new function() {
 
         obj.ready_to_send_header = 'Bitcoins Ready to Send.';
 
+        listener.on_success = successCallback;
+        listener.on_error = errorCallback;
         obj.addListener(listener);
 
         obj.note = note;
@@ -2392,14 +2400,16 @@ var MyWallet = new function() {
     /**
      * @param {string} fromAddress from address
      * @param {number}  index of account
-     * @param {Object} listener callback functions for success, error and progress
+     * @param {function()} successCallback callback function
+     * @param {function()} errorCallback callback function
+     * @param {Object} listener callback functions for send progress
      * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
      */
-    this.sweepLegacyAddressToAccount = function(fromAddress, toIdx, listener, getPassword)  {
+    this.sweepLegacyAddressToAccount = function(fromAddress, toIdx, successCallback, errorCallback, listener, getPassword)  {
         var obj = initNewTx();
         var feeAmount = parseInt(obj.base_fee.toString());
         var amount = MyWallet.getLegacyAddressBalance(fromAddress) - feeAmount;
-        MyWallet.sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, null, listener, getPassword);
+        MyWallet.sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, null, successCallback, errorCallback, listener, getPassword);
     };
 
     /**
@@ -2408,13 +2418,15 @@ var MyWallet = new function() {
      * @param {number} amount send amount in satoshis
      * @param {?number} feeAmount fee amount in satoshis
      * @param {?string} note tx note
-     * @param {Object} listener callback functions for success, error and progress
+     * @param {function()} successCallback callback function
+     * @param {function()} errorCallback callback function
+     * @param {Object} listener callback functions for send progress
      * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
      */
-    this.sendToAccount = function(fromIdx, toIdx, amount, feeAmount, note, listener, getPassword)  {
+    this.sendToAccount = function(fromIdx, toIdx, amount, feeAmount, note, successCallback, errorCallback, listener, getPassword)  {
         var account = MyWallet.getHDWallet().getAccount(toIdx);
         var address = account.getReceivingAddress();
-        MyWallet.sendBitcoinsForAccount(fromIdx, address, amount, feeAmount, note, listener, getPassword);
+        MyWallet.sendBitcoinsForAccount(fromIdx, address, amount, feeAmount, note, successCallback, errorCallback, listener, getPassword);
     };
 
     /**
@@ -2508,12 +2520,14 @@ var MyWallet = new function() {
      * @param {number} value send amount in satoshis
      * @param {?number} fixedFee fee amount in satoshis
      * @param {?string} note optional tx note
-     * @param {Object} listener callback functions for success, error and progress
+     * @param {function()} successCallback callback function
+     * @param {function()} errorCallback callback function
+     * @param {Object} listener callback functions for send progress
      * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
      */
-    this.sendBitcoinsForAccount = function(accountIdx, to, value, fixedFee, note, listener, getPassword) {
+    this.sendBitcoinsForAccount = function(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, listener, getPassword) {
         // second_password must be null if not needed.
-        function sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, listener, second_password) {
+        function sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, listener, second_password) {
             MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function (unspent_outputs) {
                 var account = MyWallet.getHDWallet().getAccount(accountIdx);
                 var extendedPrivateKey = second_password == null ? account.extendedPrivateKey : MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password, sharedKey);
@@ -2522,21 +2536,21 @@ var MyWallet = new function() {
                 BlockchainAPI.push_tx(tx, note, function(response) {
                     if (value + fixedFee >= balance) {
                         account.setUnspentOutputs([]);
-                        listener.on_success && listener.on_success(tx.getId());
+                        successCallback && successCallback(tx.getId());
                         return;
                     }
 
                     MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function () {
-                        listener.on_success && listener.on_success(tx.getId());
+                        successCallback && successCallback(tx.getId());
                     }, function(e) {
-                        listener.on_error && listener.on_error(e);
+                        errorCallback && errorCallback(e);
                     });
                 }, function(response) {
-                    listener.on_error && listener.on_error(e);
+                    errorCallback && errorCallback(e);
                 });
 
             }, function(e) {
-                listener.on_error && listener.on_error(e);
+                errorCallback && errorCallback(e);
             });
         }
         
@@ -2545,13 +2559,13 @@ var MyWallet = new function() {
             getPassword(function(pw, correct_password, wrong_password) {
                 if (MyWallet.validateSecondPassword(pw)) {
                     correct_password();
-                    sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, listener, pw);
+                    sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, listener, pw);
                 } else {
                     wrong_password();
                 }
             });            
         } else {
-            sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, listener, null);
+            sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, listener, null);
         }
     };
 
