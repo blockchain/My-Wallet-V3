@@ -100,3 +100,17 @@ Include the following files instead of `my-wallet.js` for easier debugging:
 ## Distribution
 
 Run `GITHUB_USER=... GITHUB_PASSWORD=... grunt dist` to check all dependencies against `dependency-whitelist.json` and generate `my-wallet.min.js``.
+
+## Adding a browserified dependency
+
+
+1. npm install newpackage --save
+2. Add the require in browserify-imports.js
+3. npm install
+
+
+### Whitelist dependencies
+
+1. Add the tagged version and the commit hash to dependency-whitelist.json.
+2. Run grunt dist
+
