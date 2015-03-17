@@ -1240,17 +1240,17 @@ var MyWallet = new function() {
             var minikey = 'S' + Browserify.Base58.encode(key.d.toBuffer(32)).substr(0, 21);
 
             //Append ? & hash it again
-            var bytes_appended = Crypto.SHA256(minikey + '?', {asBytes: true});
+            var bytes_appended = SHA256(minikey + '?', {asBytes: true});
 
             //If zero byte then the key is valid
             if (bytes_appended[0] == 0) {
 
                 //SHA256
-                var bytes = Crypto.SHA256(minikey, {asBytes: true});
+                var bytes = SHA256(minikey, {asBytes: true});
 
                 var eckey = new Bitcoin.ECKey(new BigInteger.fromBuffer(bytes), false);
 
-                if (MyWallet.addPrivateKey(eckey))
+                if (MyWallet.addPrivateKey(eckey, {compressed: false}))
                     return {key : eckey, miniKey : minikey};
             }
         }
@@ -2443,82 +2443,87 @@ var MyWallet = new function() {
      * @param {function()} successCallback success callback function
      * @param {function()} errorCallback error callback function
      */
-    this.sendToMobile = function(accountIdx, value, fixedFee, mobile, successCallback, errorCallback, getPassword)  {
+    this.sendToMobile = function(accountIdx, value, fixedFee, mobile, successCallback, errorCallback, listener, getPassword)  {
         if (double_encryption) {
-            getPassword(function(pw) {
+            getPassword(function(pw, correct_password, wrong_password) {
                 if (MyWallet.validateSecondPassword(pw)) {
-                    sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback);
+                    correct_password();
+                    sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback, listener, pw);
                 } else {
-                    MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.'});
+                    wrong_password();
                 }
             });
         } else {
-            sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback);
+            sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback, listener, null);
+        }
+        
+        function sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback, listener, secondPassword)  {
+            if (mobile.charAt(0) == '0')
+                mobile = mobile.substring(1);
+
+            if (mobile.charAt(0) != '+')
+                mobile = '+' + mobile;
+            //mobile = '+' + child.find('select[name="sms-country-code"]').val() + mobile;
+
+            var miniKeyAddrobj = generateNewMiniPrivateKey();
+            var address = miniKeyAddrobj.key.pub.getAddress().toString();
+            var privateKey = miniKeyAddrobj.key.toWIF();
+
+            MyWallet.setLegacyAddressTag(address, 2);
+            MyWallet.setLegacyAddressLabel(
+                address, 
+                mobile + ' Sent Via SMS',
+                function() {
+                    MyWallet.backupWallet('update', function() {
+                        MyWallet.sendEvent("msg", {type: "info", message: 'Generated new Bitcoin Address ' + address + address});
+
+                        MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function (unspent_outputs) {
+                            var account = MyWallet.getHDWallet().getAccount(accountIdx);
+                            var extendedPrivateKey = null;
+                            if (secondPassword != null) {
+                                extendedPrivateKey = MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, secondPassword, sharedKey);
+                            } else {
+                                extendedPrivateKey = account.extendedPrivateKey;
+                            }
+                            var tx = account.createTx(address, value, fixedFee, unspent_outputs, extendedPrivateKey, listener);
+                            BlockchainAPI.sendViaSMS(mobile, tx, privateKey, function (data) {
+
+                                BlockchainAPI.push_tx(tx, null, function(response) {
+                                    var paidToSingle = {email: null, mobile: mobile, redeemedAt: null, address: address};
+                                    paidTo[tx.getId()] = paidToSingle;
+
+                                    MyWallet.backupWallet('update', function() {
+
+                                        MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function () {
+                                            if (successCallback)
+                                                successCallback(response);
+                                        }, function(e) {
+                                            if (errorCallback)
+                                                errorCallback(e);
+                                        });
+                                    }, function() {
+                                        if (errorCallback)
+                                            errorCallback();
+                                    });
+
+                                }, function(response) {
+                                    if (errorCallback)
+                                        errorCallback(response);
+                                });
+                            }, function(data) {
+                                if (errorCallback)
+                                    errorCallback(e);   
+                            });
+                        }, function(e) {
+                            if (errorCallback)
+                                errorCallback(e);
+                        });
+                    });
+                },
+                function() { console.log('Unexpected error'); }
+            );
         }
     };
-
-    function sendToMobile(accountIdx, value, fixedFee, mobile, successCallback, errorCallback)  {
-        if (mobile.charAt(0) == '0')
-            mobile = mobile.substring(1);
-
-        if (mobile.charAt(0) != '+')
-            mobile = '+' + mobile;
-        //mobile = '+' + child.find('select[name="sms-country-code"]').val() + mobile;
-
-        var miniKeyAddrobj = generateNewMiniPrivateKey();
-        var address = miniKeyAddrobj.key.pub.getAddress().toString();
-        var privateKey = miniKeyAddrobj.key.toWIF();
-
-        MyWallet.setLegacyAddressTag(address, 2);
-        MyWallet.setLegacyAddressLabel(
-            address, 
-            mobile + ' Sent Via SMS',
-            function() {
-                MyWallet.backupWallet('update', function() {
-                    MyWallet.sendEvent("msg", {type: "info", message: 'Generated new Bitcoin Address ' + address + address});
-
-                    MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function (unspent_outputs) {
-                        var account = MyWallet.getHDWallet().getAccount(accountIdx);
-                        var extendedPrivateKey = MyWallet.decryptSecretWithSecondPasswordIfNeeded(account.extendedPrivateKey);
-                        var tx = MyWallet.getHDWallet().getAccount(accountIdx).createTx(address, value, fixedFee, unspent_outputs, extendedPrivateKey);
-
-                        BlockchainAPI.sendViaSMS(mobile, tx, privateKey, function (data) {
-
-                            BlockchainAPI.push_tx(tx, null, function(response) {
-                                var paidToSingle = {email: null, mobile: mobile, redeemedAt: null, address: address};
-                                paidTo[tx.getId()] = paidToSingle;
-
-                                MyWallet.backupWallet('update', function() {
-
-                                    MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function () {
-                                        if (successCallback)
-                                            successCallback(response);
-                                    }, function(e) {
-                                        if (errorCallback)
-                                            errorCallback(e);
-                                    });
-                                }, function() {
-                                    if (errorCallback)
-                                        errorCallback();
-                                });
-
-                            }, function(response) {
-                                if (errorCallback)
-                                    errorCallback(response);
-                            });
-                        }, function(data) {
-                            if (errorCallback)
-                                errorCallback(e);   
-                        });
-                    }, function(e) {
-                        if (errorCallback)
-                            errorCallback(e);
-                    });
-                });
-            },
-            function() { console.log('Unexpected error'); }
-        );
-    }
 
     /**
      * @param {number} accountIdx index of account
@@ -3600,8 +3605,10 @@ var MyWallet = new function() {
         //MyWallet.backupWalletDelayed();
     };
 
+    // Must allow the following characters:
+    // + : needed for sent to phone number labels
     function isAlphaNumericSpace(input) {
-        return XRegExp("^\\p{L}[\\p{L}@ \\-,._']*$").test(input) || /^[\w\-,._  ]+$/.test(input);
+        return XRegExp("^\\p{L}[\\p{L}@ \\-,._']*$").test(input) || /^[\w\-+,._  ]+$/.test(input);
     }
 
     function parseMultiAddressJSON(obj, cached, checkCompleted) {
