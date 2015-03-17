@@ -130,6 +130,7 @@ function HDWalletAccount(seed, network) {
 
     this.setUnspentOutputs = function(utxo) {
         console.warn("setUnspentOutputs is deprecated, please use the constructor option instead");
+        
         var a = processUnspentOutputs(utxo);
         this.outputs = processUnspentOutputs(utxo);
     };

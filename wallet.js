@@ -2182,80 +2182,84 @@ var MyWallet = new function() {
      * @param {function()} errorCallback error callback function
      * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
      */
-    this.sendToEmail = function(accountIdx, value, fixedFee, email, successCallback, errorCallback, getPassword)  {
+    this.sendToEmail = function(accountIdx, value, fixedFee, email, successCallback, errorCallback, listener, getPassword)  {
         if (double_encryption) {
-            getPassword(function(pw) {
+            getPassword(function(pw, correct_password, wrong_password) {
                 if (MyWallet.validateSecondPassword(pw)) {
-                    sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback, pw);
+                    correct_password();
+                    sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback, listener, pw);
                 } else {
+                    wrong_password();
                     MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.'});
                 }
             });
         } else {
-            sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback, null);                    
+            sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback, listener, null);                    
         }
-    };
+        
+        function sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback, listener, secondPassword)  {
+            var account = MyWallet.getHDWallet().getAccount(accountIdx);
+            var key = MyWallet.generateNewKey();
+            var address = key.pub.getAddress().toString();
+            var privateKey = key.toWIF();
 
-    function sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback, secondPassword)  {
-        var account = MyWallet.getHDWallet().getAccount(accountIdx);
-        var key = MyWallet.generateNewKey();
-        var address = key.pub.getAddress().toString();
-        var privateKey = key.toWIF();
-
-        MyWallet.setLegacyAddressTag(address, 2);
+            MyWallet.setLegacyAddressTag(address, 2);
 
 
-        MyWallet.setLegacyAddressLabel(
-            address, 
-            email + ' Sent Via Email', 
-            function() {    
-                MyWallet.backupWallet('update', function() {
-                    MyWallet.sendEvent("msg", {type: "info", message: 'Generated new Bitcoin Address ' + address});
-                    MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function (unspent_outputs) {
-                        var account = MyWallet.getHDWallet().getAccount(accountIdx);
-                        var extendedPrivateKey = null;
-                        if (secondPassword != null) {
-                            extendedPrivateKey = MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, secondPassword, sharedKey);
-                        } else {
-                            extendedPrivateKey = account.extendedPrivateKey;
-                        }
-                        var tx = MyWallet.getHDWallet().getAccount(accountIdx).createTx(address, value, fixedFee, unspent_outputs, extendedPrivateKey);
+            MyWallet.setLegacyAddressLabel(
+                address, 
+                email + ' Sent Via Email', 
+                function() {    
+                    MyWallet.backupWallet('update', function() {
+                        MyWallet.sendEvent("msg", {type: "info", message: 'Generated new Bitcoin Address ' + address});
+                        MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function (unspent_outputs) {
+                            var account = MyWallet.getHDWallet().getAccount(accountIdx);
+                            var extendedPrivateKey = null;
+                            if (secondPassword != null) {
+                                extendedPrivateKey = MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, secondPassword, sharedKey);
+                            } else {
+                                extendedPrivateKey = account.extendedPrivateKey;
+                            }
+                            var tx = MyWallet.getHDWallet().getAccount(accountIdx).createTx(address, value, fixedFee, unspent_outputs, extendedPrivateKey, listener);
+                            BlockchainAPI.sendViaEmail(email, tx, privateKey, function (data) {
+                                BlockchainAPI.push_tx(tx, null, function(response) {
+                                    var paidToSingle = {email:email, mobile: null, redeemedAt: null, address: address};
+                                    paidTo[tx.getId()] = paidToSingle;
 
-                        BlockchainAPI.sendViaEmail(email, tx, privateKey, function (data) {
-                            BlockchainAPI.push_tx(tx, null, function(response) {
-                                var paidToSingle = {email:email, mobile: null, redeemedAt: null, address: address};
-                                paidTo[tx.getId()] = paidToSingle;
+                                    MyWallet.backupWallet('update', function() {
 
-                                MyWallet.backupWallet('update', function() {
-
-                                    MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function () {
-                                        if (successCallback)
-                                            successCallback(response);
-                                    }, function(e) {
+                                        MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function () {
+                                            if (successCallback)
+                                                successCallback(response);
+                                        }, function(e) {
+                                            if (errorCallback)
+                                                errorCallback(e);
+                                        });
+                                    }, function() {
                                         if (errorCallback)
-                                            errorCallback(e);
+                                            errorCallback();
                                     });
-                                }, function() {
+                                }, function(response) {
                                     if (errorCallback)
-                                        errorCallback();
+                                        errorCallback(response);
                                 });
-                            }, function(response) {
+                            }, function(e) { // Sent via email failed
                                 if (errorCallback)
-                                    errorCallback(response);
+                                    errorCallback(e);
                             });
-                        }, function(e) { // Sent via email failed
+                        }, function(e) {
                             if (errorCallback)
                                 errorCallback(e);
                         });
-                    }, function(e) {
-                        if (errorCallback)
-                            errorCallback(e);
                     });
-                });
-            }, 
-            function() { console.log('Unexpected error'); }
-        );
-    }
+                }, 
+                function() { console.log('Unexpected error'); }
+            );
+        }
+        
+    };
+
+
 
     /**
      * @param {function():Array} successCallback success callback function with transaction array
