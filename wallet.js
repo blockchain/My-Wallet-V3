@@ -223,15 +223,17 @@ var MyWallet = new function() {
         //Generate a new Checksum
         payload_checksum = generatePayloadChecksum();
 
-        try {
-            //Save Payload when two factor authentication is disabled
-            if (real_auth_type == 0 || wallet_options.always_keep_local_backup)
-                MyStore.put('payload', encrypted_wallet_data);
-            else
-                MyStore.remove('payload');
-        } catch (e) {
-            console.log(e);
-        }
+
+        // Disable local wallet cache
+        // try {
+        //     //Save Payload when two factor authentication is disabled
+        //     if (real_auth_type == 0 || wallet_options.always_keep_local_backup)
+        //         MyStore.put('payload', encrypted_wallet_data);
+        //     else
+        //         MyStore.remove('payload');
+        // } catch (e) {
+        //     console.log(e);
+        // }
     };
 
     /**
@@ -4043,23 +4045,25 @@ var MyWallet = new function() {
                     return;
                 }
 
-                MyStore.get('guid', function(local_guid) {
-                    MyStore.get('payload', function(local_payload) {
-                        //Error downloading wallet from server
-                        //But we can use the local cache
-
-                        if (local_guid == user_guid && local_payload) {
-                            fetch_success && fetch_success();
-                            MyWallet.setEncryptedWalletData(local_payload);
-
-                            //Generate a new Checksum
-                            guid = local_guid;
-                            payload_checksum = generatePayloadChecksum();
-                            auth_type = 0;
-
-                            didSetGuid = true;
-                            MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error, decrypt_success, build_hd_success);
-                        }  else {
+                // Disabled fallback to local cache.
+                
+                // MyStore.get('guid', function(local_guid) {
+                //     MyStore.get('payload', function(local_payload) {
+                //         //Error downloading wallet from server
+                //         //But we can use the local cache
+                //
+                //         if (local_guid == user_guid && local_payload) {
+                //             fetch_success && fetch_success();
+                //             MyWallet.setEncryptedWalletData(local_payload);
+                //
+                //             //Generate a new Checksum
+                //             guid = local_guid;
+                //             payload_checksum = generatePayloadChecksum();
+                //             auth_type = 0;
+                //
+                //             didSetGuid = true;
+                //             MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error, decrypt_success, build_hd_success);
+                //         }  else {
                             MyWallet.sendEvent('did_fail_set_guid');
 
                             try {
@@ -4082,9 +4086,9 @@ var MyWallet = new function() {
                                 MyWallet.sendEvent("msg", {type: "error", message: e.responseText});
                             else
                                 MyWallet.sendEvent("msg", {type: "error", message: 'Error changing wallet identifier'});
-                        }
-                    });
-                });
+                //         }
+                //     });
+                // });
             }
         });
     };
