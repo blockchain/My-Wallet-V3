@@ -652,12 +652,11 @@ var MyWallet = new function() {
             clone.sharedKey = tSKUID;
             clone.sKTimestamp = timestamp;
             
-            // @ifdef DEBUG
+            // Needed for debugging and as a fallback if totp scheme doesn't work on server
             clone.sKDebugHexHash = SKHashHex;
             clone.sKDebugTimeOffset = serverTimeOffset;
             clone.sKDebugOriginalClientTime = now;
             clone.sKDebugOriginalSharedKey = sharedKey;
-            // @endif 
         }
 
         if (!data.guid)
