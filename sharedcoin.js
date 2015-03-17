@@ -996,7 +996,7 @@ var SharedCoin = new function() {
                 error(e);
             }
 
-            var newTx = initNewTx();
+            var newTx = Signer.initNewTx();
 
             //Get the from address, if any
             var from_select = el.find('select[name="from"]');

@@ -45,11 +45,13 @@ module.exports = function(config) {
       'bower_components/cryptojslib/components/pad-iso10126.js',
       'bower_components/cryptojslib/components/mode-ecb.js',
       'bower_components/cryptojslib/components/pad-nopadding.js',
+      'bower_components/browserdetection/src/browser-detection.js',
       'build/sjcl.js',
       'crypto-util-legacy.js',
       'build/xregexp-all.js',
       'wallet.js',
       'import-export.js',
+      'signer.js',
       'tests/**/*.js',
       'tests/**/*.js.coffee'
     ],
