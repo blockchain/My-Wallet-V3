@@ -24,6 +24,10 @@ describe "Spend", ->
   describe "sendToEmail()", ->
     it "...", ->
       pending()
+  
+  describe "generateNewMiniPrivateKey()", ->
+    it "...", ->
+      pending()
 
   describe "sendToMobile()", ->
     it "...", ->
@@ -44,36 +48,40 @@ describe "Spend", ->
       pending()
 
   describe "sendFromLegacyAddressToAddress()", ->
-    it "...", ->
-      # observer = 
-      #   correct_password: () ->
-      #     console.log("Correct password!")
-      #   wrong_password: () ->
-      #     console.log("Wrong password!")
-      
-      # spyOn(observer, "correct_password")
-      # spyOn(observer, "wrong_password")
+    mockedObj = undefined
+    observer = undefined
+
+    beforeEach ->
+
       mockedObj =
-              to_addresses : []
-              fee : BigInteger.ZERO
-              base_fee : BigInteger.valueOf(10000)
-              ready_to_send_header : 'Transaction Ready to Send.'
-              addListener: () -> return 
-              start: () -> return
-              
+              to_addresses: []
+              fee: BigInteger.ZERO
+              base_fee: BigInteger.valueOf(10000)
+              ready_to_send_header: 'Transaction Ready to Send.'
+              listeners : []
+              addListener: (listener) -> 
+                this.listeners.push(listener);
+              start: () -> this.listeners[0].on_success()
+
       observer = 
         success: () -> return 
         error: () -> return
         listener: () -> return
         getPassword: () -> return
-
+        correct_password: () -> return
+        wrong_password: () -> return 
+      
+      spyOn(observer, "correct_password")
+      spyOn(observer, "wrong_password")
       spyOn(observer, 'success')
       spyOn(observer, 'error')
       spyOn(observer, 'listener')
       spyOn(observer, 'getPassword')
-      spyOn(mockedObj, 'addListener')
-      spyOn(mockedObj, 'start')
-      spyOn(Signer, "initNewTx").and.callFake(()-> return mockedObj)
+      spyOn(mockedObj, 'addListener').and.callThrough()
+      spyOn(mockedObj, 'start').and.callThrough()
+      spyOn(Signer, "initNewTx").and.callFake(()-> return mockedObj)      
+
+    it "should contruct the expected transaction object", ->
 
       from   = "1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF"
       to     = "1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h"
@@ -81,7 +89,7 @@ describe "Spend", ->
       fee    = 15000
       note   = "That is an expensive toy"
 
-      MyWallet.setDoubleEncryption(false) 
+      MyWallet.setDoubleEncryption(false)
       MyWallet.sendFromLegacyAddressToAddress( from
                                              , to
                                              , amount
@@ -94,9 +102,11 @@ describe "Spend", ->
       )
 
       expect(Signer.initNewTx).toHaveBeenCalled()
-      expect(BigInteger.valueOf(15000).equals(mockedObj.fee)).toBe(true)
+      expect(BigInteger.valueOf(fee).equals(mockedObj.fee)).toBe(true)
       expect([from]).toEqual(mockedObj.from_addresses)
-      expect(note).toBe(mockedObj.note)
-      # expect([to]).toEqual(mockedObj.to_addresses)   
+      expect(BigInteger.valueOf(amount).equals(mockedObj.to_addresses[0].value)).toBe(true)
+      expect(to).toBe(mockedObj.to_addresses[0].address.toString())
+      expect(note).toBe(mockedObj.note)   
+      # expect(mockedObj.addListener).toHaveBeenCalled()
       expect(mockedObj.start).toHaveBeenCalled()
-      # pending()
+      expect(observer.success).toHaveBeenCalled()
