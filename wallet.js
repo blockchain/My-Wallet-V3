@@ -651,11 +651,13 @@ var MyWallet = new function() {
 
             clone.sharedKey = tSKUID;
             clone.sKTimestamp = timestamp;
-            // Debugging only
+            
+            // @ifdef DEBUG
             clone.sKDebugHexHash = SKHashHex;
             clone.sKDebugTimeOffset = serverTimeOffset;
             clone.sKDebugOriginalClientTime = now;
             clone.sKDebugOriginalSharedKey = sharedKey;
+            // @endif 
         }
 
         if (!data.guid)

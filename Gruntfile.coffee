@@ -2,12 +2,11 @@ module.exports = (grunt) ->
   
   grunt.initConfig
     pkg: grunt.file.readJSON("package.json")
-    clean: {
+    clean: 
       build: ["build"]
       dist: ["dist"]
       shrinkwrap: 
         src: ["npm-shrinkwrap.json"]
-    }
 
     concat:
       options:
@@ -29,14 +28,14 @@ module.exports = (grunt) ->
           'build/bower_components/cryptojslib/components/pad-nopadding.js'
           'build/sjcl.js'
           'crypto-util-legacy.js'
-          'blockchainapi.js'
-          'signer.js'
-          'wallet.js'
-          'wallet-signup.js'
-          'HDWalletAccount.js'
-          'hdwallet.js'
+          'build/blockchainapi.processed.js'
+          'build/signer.processed.js'
+          'build/wallet.processed.js'
+          'build/wallet-signup.processed.js'
+          'build/HDWalletAccount.processed.js'
+          'build/hdwallet.processed.js'
           'mnemonic.js'
-          'import-export.js'
+          'build/import-export.processed.js'
           'build/bip39.js'
           'build/xregexp-all.js'
         ]
@@ -67,7 +66,7 @@ module.exports = (grunt) ->
         ],
         tasks: ['build'],
       },
-    },
+    }
         
     shell: 
       check_dependencies: 
@@ -83,8 +82,24 @@ module.exports = (grunt) ->
            'cd build && bower install'
            
     shrinkwrap: {}
+    
+    env: 
+      build: 
+        DEBUG: "1"
+        
+      production:
+        PRODUCTION: "1"
 
-      
+    preprocess:     
+      multifile:
+        files: 
+          'build/blockchainapi.processed.js'  : 'blockchainapi.js'
+          'build/signer.processed.js'         : 'signer.js'
+          'build/wallet.processed.js'         : 'wallet.js'
+          'build/wallet-signup.processed.js'  : 'wallet-signup.js'
+          'build/HDWalletAccount.processed.js': 'HDWalletAccount.js'
+          'build/hdwallet.processed.js'       : 'hdwallet.js'
+          'build/import-export.processed.js'  : 'import-export.js'
   
   # Load the plugin that provides the "uglify" task.
   grunt.loadNpmTasks "grunt-contrib-uglify"
@@ -94,6 +109,8 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks('grunt-contrib-watch')
   grunt.loadNpmTasks('grunt-shell')
   grunt.loadNpmTasks('grunt-shrinkwrap')
+  grunt.loadNpmTasks('grunt-preprocess')
+  grunt.loadNpmTasks('grunt-env');
         
   grunt.registerTask "default", [
     "watch"
@@ -101,12 +118,15 @@ module.exports = (grunt) ->
   
   # The build task could do some things that are currently in npm postinstall
   grunt.registerTask "build", [
+    "env:build"
     # "clean" # Too aggresive
+    "preprocess"
     "concat:mywallet"
   ]
     
   # GITHUB_USER=... GITHUB_PASSWORD=... grunt dist
   grunt.registerTask "dist", [
+    "env:production"
     "clean:build"
     "clean:dist"
     "shrinkwrap"
@@ -114,6 +134,7 @@ module.exports = (grunt) ->
     "clean:shrinkwrap"
     "shell:npm_install_dependencies"
     "shell:bower_install_dependencies"
+    "preprocess"
     "concat:mywallet"
     "uglify:mywallet"
   ]
