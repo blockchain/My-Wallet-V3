@@ -656,7 +656,7 @@ Signer = {
                                 connected_script.priv_to_use = self.extra_private_keys[inputAddress];
                             } else if (MyWallet.legacyAddressExists(inputAddress) && !MyWallet.isWatchOnlyLegacyAddress(inputAddress)) {
                                 try {
-                                    connected_script.priv_to_use = second_password == null ? MyWallet.getPrivateKey(inputAddress) : MyWallet.decryptSecretWithSecondPassword(MyWallet.getPrivateKey(inputAddress), second_password);
+                                    connected_script.priv_to_use = second_password == null ? MyWallet.getPrivateKey(inputAddress) : MyWallet.decryptSecretWithSecondPassword(MyWallet.getPrivateKey(inputAddress), second_password, MyWallet.getSharedKey());
                                 } catch (e) {
                                     console.log(e);
                                 }
