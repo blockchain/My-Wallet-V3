@@ -303,11 +303,37 @@ describe "Spend", ->
         expect(mockedObj.start).toHaveBeenCalledWith("ThisIsACorrectPass")
         expect(observer.success).toHaveBeenCalled()
 
-    describe "importPrivateKey()", ->
-      it "...", ->
-        pending()
-
     describe "sweepLegacyAddressToAccount()", ->
+      it "should empty a legacy address to an account address", ->
+
+        data.to = 0
+        spyOn(MyWallet, "getLegacyAddressBalance")
+          .and.callFake((fromAddr)-> 1000000)
+        spyOn(MyWallet, "sendFromLegacyAddressToAccount")
+
+        # expected_to_addr = "1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX"
+        expectedAmount = 1000000 - 10000
+        MyWallet.setDoubleEncryption(false)
+
+        MyWallet.sweepLegacyAddressToAccount  data.from
+                                            , data.to
+                                            , observer.success
+                                            , observer.error
+                                            , observer.listener
+                                            , observer.getPassword
+
+        expect(MyWallet.sendFromLegacyAddressToAccount)
+          .toHaveBeenCalledWith  data.from
+                               , data.to
+                               , expectedAmount
+                               , data.fee
+                               , null
+                               , observer.success
+                               , observer.error
+                               , observer.listener
+                               , observer.getPassword
+
+    describe "importPrivateKey()", ->
       it "...", ->
         pending()
   ##############################################################################
