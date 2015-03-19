@@ -57,18 +57,13 @@ var BlockchainAPI = new function() {
 
                 MyWallet.handleNTPResponse(obj, clientTime);
 
-                try {
-                    //Cache results to show next login
-                    if (offset == 0 && tx_filter == 0) {
-                        MyStore.put('multiaddr', JSON.stringify(obj));
-                    }
-
-                    success(obj);
-                } catch (e) {
-                    MyWallet.sendEvent("msg", {type: "error", message: e});
-
-                    error();
+                //Cache results to show next login
+                if (offset == 0 && tx_filter == 0) {
+                    MyStore.put('multiaddr', JSON.stringify(obj));
                 }
+
+                success && success(obj);
+               
             },
             error : function(data) {
 
@@ -117,13 +112,7 @@ var BlockchainAPI = new function() {
 
                 MyWallet.handleNTPResponse(obj, clientTime);
 
-                try {
-                    success(obj);
-                } catch (e) {
-                    MyWallet.sendEvent("msg", {type: "error", message: e});
-
-                    error();
-                }
+                success && success(obj);
             },
             error : function(data) {
 
@@ -172,13 +161,7 @@ var BlockchainAPI = new function() {
 
                 MyWallet.handleNTPResponse(obj, clientTime);
 
-                try {
-                    success(obj);
-                } catch (e) {
-                    MyWallet.sendEvent("msg", {type: "error", message: e});
-
-                    error();
-                }
+                success && success(obj);
             },
             error : function(data) {
 
