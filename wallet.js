@@ -167,7 +167,6 @@ var MyWallet = new function() {
     var tx_tags = {};
     var tag_names = [];
     var paidTo = {};
-    var paidToAddressesToBalance = {};
     var mnemonicVerified = false;
     var defaultAccountIdx = 0;
     var didSetGuid = false;
@@ -1264,7 +1263,7 @@ var MyWallet = new function() {
         for (var i = 0; i < tx.inputs.length; ++i) {
 
             var output = tx.inputs[i].prev_out;
-
+            
             if (!output || !output.addr)
                 continue;
 
@@ -1313,10 +1312,6 @@ var MyWallet = new function() {
                     tx.account_indexes.push(parseInt(j));
                     result -= parseInt(output.value);
                 }
-            }
-
-            if (output.addr in paidToAddressesToBalance) {
-                paidToAddressesToBalance[output.addr] -= value;
             }
         }
 
@@ -1372,19 +1367,6 @@ var MyWallet = new function() {
                 }
             }
 
-            if (output.addr in paidToAddressesToBalance) {
-                paidToAddressesToBalance[output.addr] += value;
-            }
-
-        }
-
-        for (var tx_hash in paidTo) {
-            if (paidTo[tx_hash].redeemedAt == null &&
-                paidToAddressesToBalance[paidTo[tx_hash].address] == 0) {
-                paidTo[tx_hash].redeemedAt = tx.time;
-                delete paidToAddressesToBalance[paidTo[tx_hash].address];
-                MyWallet.sendEvent("paid_to_bitcoins_claimed", {address: paidTo[tx_hash].address});
-            }
         }
 
         return result;
@@ -1490,13 +1472,6 @@ var MyWallet = new function() {
 
                 if (MyWallet.getHDWallet() != null)
                     MyWallet.listenToHDWalletAccounts();
-
-                var paidTo = MyWallet.getPaidToDictionary();
-                for (var tx_hash in paidTo) {
-                    if (paidTo[tx_hash].redeemedAt == null) {
-                        msg += '{"op":"addr_sub", "addr":"'+ paidTo[tx_hash].address +'"}';
-                    }
-                }
 
             } catch (e) {
                 MyWallet.sendEvent("msg", {type: "error", message: 'error with websocket'});
@@ -1708,11 +1683,14 @@ var MyWallet = new function() {
     
     this.processTransaction = function(tx) {
         // console.log(JSON.stringify(tx))
-        var transaction = {from: {account: null, legacyAddresses: null, externalAddresses: null},
-                           to: {account: null, legacyAddresses: null, externalAddresses: null},
-                           fee: 0};
+        var transaction = {
+            from: {account: null, legacyAddresses: null, externalAddresses: null},
+            to: {account: null, legacyAddresses: null, externalAddresses: null, email: null, mobile: null},
+            fee: 0,
+            intraWallet: null
+        };
         var isOrigin = false;
-        transaction.intraWallet = true;
+
         for (var i = 0; i < tx.inputs.length; ++i) {
             var output = tx.inputs[i].prev_out;
             if (!output || !output.addr)
@@ -1752,6 +1730,10 @@ var MyWallet = new function() {
                     transaction.intraWallet = false;
                 }
             }
+            
+            if(transaction.intraWallet == null) {
+               transaction.intraWallet = true; 
+            }
         }
 
         for (var i = 0; i < tx.out.length; ++i) {
@@ -1775,6 +1757,13 @@ var MyWallet = new function() {
                     transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
                 }
                 transaction.fee -= output.value;
+            } else if (MyWallet.getPaidToDictionary() && (paidToItem = MyWallet.getPaidToDictionary()[tx.hash]) && paidToItem.address == output.addr ) {
+                if(paidToItem.email) {
+                    transaction.to.email = {email: paidToItem.email, redeemedAt: paidToItem.redeemedAt}
+                } else if (paidToItem.mobile) {
+                    transaction.to.mobile = {number: paidToItem.mobile, redeemedAt: paidToItem.redeemedAt}
+                };
+                transaction.intraWallet = false;
             } else {
                 var toAccountSet = false;
                 for (var j in MyWallet.getAccounts()) {
@@ -2093,6 +2082,61 @@ var MyWallet = new function() {
             error(e);
         });
     };
+    
+    this.markPaidToEntryRedeemed = function(tx_hash, time) {
+        paidTo[tx_hash].redeemedAt = time;
+    }
+ 
+    // Reads from and writes to global paidTo
+    this.checkForRecentlyRedeemed = function() {
+        var paidToAddressesToMonitor = [];
+        
+        for (var tx_hash in MyWallet.getPaidToDictionary()) {
+            var localPaidTo = MyWallet.getPaidToDictionary()[tx_hash] 
+            if (localPaidTo.redeemedAt == null) {
+                paidToAddressesToMonitor.push(localPaidTo.address);
+            }
+        }
+        
+        if(paidToAddressesToMonitor.length == 0)
+            return;
+
+        MyWallet.fetchRawTransactionsAndBalanceForAddresses(paidToAddressesToMonitor,
+        function(transactions, balances){
+            for(var i in balances) {
+                if(balances[i].final_balance == 0 && balances[i].n_tx > 0) {
+            
+                    redeemedAt = null;
+                                
+                    // Find corresponding transaction:
+                    for(var j in transactions) {
+                        for(var k in transactions[j].inputs) {
+                            if(balances[i].address === transactions[j].inputs[k].prev_out.addr) {
+                                // Set redeem time
+                                redeemedAt = transactions[j].time;
+                            }
+                        }
+                    }
+            
+                    // Mark as redeemed:
+                    for(var tx_hash in MyWallet.getPaidToDictionary()) {
+                        var paidToEntry = MyWallet.getPaidToDictionary()[tx_hash];
+                        if(balances[i].address === paidToEntry.address) {
+                            MyWallet.markPaidToEntryRedeemed(tx_hash, redeemedAt || 1)
+                            MyWallet.backupWalletDelayed();
+                            // If redeem time not known, set to default time.
+                        }
+                    }
+                
+            
+            
+                }                                    
+            }
+        },
+        function() {
+            console.log("Could not check if email/sms btc have been redeemed.");
+        });
+    };
 
 
     /**
@@ -2259,7 +2303,21 @@ var MyWallet = new function() {
         
     };
 
+    /**
+     * @param { Array } list of addresses
+     * @param {function():Array} successCallback success callback function with transaction array
+     * @param {function()} errorCallback callback function
+     */
+    this.fetchRawTransactionsAndBalanceForAddresses = function(addresses, success, error) {
+        BlockchainAPI.async_get_history_with_addresses(addresses, function(data) {
+            if (success) success( data.txs, data.addresses);
+        }, function() {
+            if (error) error();
 
+        }, tx_filter, 0);
+
+     
+    };
 
     /**
      * @param {function():Array} successCallback success callback function with transaction array
@@ -3471,7 +3529,7 @@ var MyWallet = new function() {
     };
 
     this.getConfirmationsForTx = function(latest_block, tx) {
-        if (tx.blockHeight != null && tx.blockHeight > 0) {
+        if (latest_block && tx.blockHeight != null && tx.blockHeight > 0) {
             return latest_block.height - tx.blockHeight + 1;
         } else {
             tx.setConfirmations(0);
@@ -3777,7 +3835,7 @@ var MyWallet = new function() {
 
         MyWallet.decryptWallet(encrypted_wallet_data, password, function(obj, rootContainer) {
             decrypt_success && decrypt_success();
-
+            
             try {
                 sharedKey = obj.sharedKey;
 
@@ -3857,14 +3915,9 @@ var MyWallet = new function() {
                     }
 
                     if (defaultHDWallet.paidTo != null) {
-                        for (var tx_hash in defaultHDWallet.paidTo) {
-                            paidTo[tx_hash] = defaultHDWallet.paidTo[tx_hash];
-
-                            if (paidTo[tx_hash].redeemedAt == null) {
-                                paidToAddressesToBalance[paidTo[tx_hash].address] = 0;
-                            }
-                        }
-                    }                
+                        paidTo = defaultHDWallet.paidTo;
+                        MyWallet.checkForRecentlyRedeemed(defaultHDWallet.paidTo);
+                    }
 
                 } else {
                     didUpgradeToHd = false;
