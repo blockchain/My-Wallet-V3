@@ -73,7 +73,7 @@ describe "Spend", ->
         isArchived: () -> false
         getReceivingAddress: () -> "1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX"
         getAccountExtendedKey : (p) -> if p then this.extendedPrivateKey else this.extendedPublicKey 
-        setUnspentOutputs: (utxo) -> console.log("setUnspentOutputCalled")        
+        setUnspentOutputs: (utxo) -> return      
       }
     ]
 
@@ -317,56 +317,30 @@ describe "Spend", ->
   ## END LEGACY ADDRESS TESTS
 
   describe "sendBitcoinsForAccount()", ->
-    it "TEST NOT FINISHED", ->
-
-      getUnspendMock = 'unspent_outputs': [
-        {
-          'tx_hash': '100be2539cd2088ceeb4e306a567438bda6735ac5dd6fd162a18d1741bb06f7f'
-          'tx_hash_big_endian': '7f6fb01b74d1182a16fdd65dac3567da8b4367a506e3b4ee8c08d29c53e20b10'
-          'tx_index': 81047728
-          'tx_output_n': 1
-          'script': '76a91418fc20c88ee4201e1fc31dfe25a5f5881614aa2188ac'
-          'xpub':
-            'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
-            'path': 'M/1/2'
-          'value': 10000
-          'value_hex': '2710'
-          'confirmations': 5
-        }
-        {
-          'tx_hash': '1d1e3fe810e7b4b7c337b4e13435fadc5336e0e54bb8e146f2daa8f8d5430ff4'
-          'tx_hash_big_endian': 'f40f43d5f8a8daf246e1b84be5e03653dcfa3534e1b437c3b7b4e710e83f1e1d'
-          'tx_index': 81049372
-          'tx_output_n': 1
-          'script': '76a914024e6d12c55008a2b6383fc86131bb72d74cfc3c88ac'
-          'xpub':
-            'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
-            'path': 'M/1/5'
-          'value': 860000
-          'value_hex': '0d1f60'
-          'confirmations': 0
-        }
-      ]
-
-      tx = {"version":1,"locktime":0,"ins":[{"hash":{"type":"Buffer","data":[29,30,63,232,16,231,180,183,195,55,180,225,52,53,250,220,83,54,224,229,75,184,225,70,242,218,168,248,213,67,15,244]},"index":1,"script":{"buffer":{"type":"Buffer","data":[72,48,69,2,33,0,194,221,147,243,70,20,184,69,104,161,205,158,199,39,200,88,103,104,22,242,68,247,172,188,106,106,24,203,163,204,73,58,2,32,105,176,17,205,102,140,112,234,196,228,202,26,230,244,128,11,111,25,62,168,195,32,124,246,176,66,122,90,235,148,105,178,1,33,3,158,196,165,25,251,213,203,67,247,41,156,114,4,27,26,194,122,116,243,186,194,224,167,235,233,40,231,129,179,228,171,156]},"chunks":[{"type":"Buffer","data":[48,69,2,33,0,194,221,147,243,70,20,184,69,104,161,205,158,199,39,200,88,103,104,22,242,68,247,172,188,106,106,24,203,163,204,73,58,2,32,105,176,17,205,102,140,112,234,196,228,202,26,230,244,128,11,111,25,62,168,195,32,124,246,176,66,122,90,235,148,105,178,1]},{"type":"Buffer","data":[3,158,196,165,25,251,213,203,67,247,41,156,114,4,27,26,194,122,116,243,186,194,224,167,235,233,40,231,129,179,228,171,156]}]},"sequence":4294967295}],"outs":[{"script":{"buffer":{"type":"Buffer","data":[118,169,20,119,246,65,99,114,184,117,236,133,119,104,246,244,100,50,62,255,241,41,192,136,172]},"chunks":[118,169,{"type":"Buffer","data":[119,246,65,99,114,184,117,236,133,119,104,246,244,100,50,62,255,241,41,192]},136,172]},"value":20000},{"script":{"buffer":{"type":"Buffer","data":[118,169,20,45,94,100,226,250,127,5,209,243,37,234,219,16,225,55,122,246,77,194,174,136,172]},"chunks":[118,169,{"type":"Buffer","data":[45,94,100,226,250,127,5,209,243,37,234,219,16,225,55,122,246,77,194,174]},136,172]},"value":830000}]}
+    it "the transaction has been pushed to the network", ->
+      # What we mocked?
+      # - all the methods in the account object (hdwallet.js)
+      #    - createTx, getBalance, getAccountExtendedKey, setUnspentOutputs
+      # - BlockchainAPI calls
+      #    - get_unspent, push_tx 
+      getUnspendMock = {"unspent_outputs":[{"tx_hash":"100be2539cd2088ceeb4e306a567438bda6735ac5dd6fd162a18d1741bb06f7f","tx_hash_big_endian":"7f6fb01b74d1182a16fdd65dac3567da8b4367a506e3b4ee8c08d29c53e20b10","tx_index":81047728,"tx_output_n":1,"script":"76a91418fc20c88ee4201e1fc31dfe25a5f5881614aa2188ac","xpub":{"m":"xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ","path":"M/1/2"},"value":10000,"value_hex":"2710","confirmations":30},{"tx_hash":"17cba71f08fc8e7af50088d87f94fa7ce8d70dfaa74c4544eccbf261eaeca2e9","tx_hash_big_endian":"e9a2ecea61f2cbec44454ca7fa0dd7e87cfa947fd88800f57a8efc081fa7cb17","tx_index":81073644,"tx_output_n":1,"script":"76a914d36f60cc98e0f36946f7e30e7652ebe65f3d0f7388ac","xpub":{"m":"xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ","path":"M/1/7"},"value":800000,"value_hex":"0c3500","confirmations":0}]}
+      tx = Bitcoin.Transaction.fromHex "010000000117cba71f08fc8e7af50088d87f94fa7ce8d70dfaa74c4544eccbf261eaeca2e9010000006a4730440220596b5654ad1d6955c75636125637fa5870457de6535c63ffea2a534efa0bcb9d02203419ab6603a8ea944d485f4a7db3a99ab7a62dfb99c7b64e10d72ab1be64a38c01210349802adc55cc58eca077ab42b9fe10037146bd61cca9f8b6abf729c8126237a9ffffffff02204e0000000000001976a91477f6416372b875ec857768f6f464323efff129c088acd0bf0b00000000001976a914fe7e2afa1b1878ca20185b036200fdb9ba7acebc88ac00000000"
       hdAccounts[0].createTx = () -> tx
-      hdAccounts[0].getBalance = () -> 870000
+      hdAccounts[0].getBalance = () -> 810000
 
-      window.BlockchainAPI = 
-        push_tx: (tx, note, success, error) -> 
-          console.log("API: push_tx mock called.")
-          success
-        get_unspent: (xpubList,success,error,conf,nocache) -> 
-          console.log("API: get_unspent mock called.")
-          success(getUnspendMock)
+      window.BlockchainAPI =
+        get_unspent: () -> return
+        push_tx: () -> return
 
+      spyOn(BlockchainAPI, "get_unspent")
+        .and.callFake((xpubList,success,error,conf,nocache) -> 
+          success(getUnspendMock))
 
+      spyOn(BlockchainAPI, "push_tx")
+         .and.callFake((tx, note, success, error) -> success())
 
       data.from = 0 #iDX
-      # spyOn(BlockchainAPI, "push_tx")
-      #   .and.callFake(()-> console.log "Fuck yeah!")
       MyWallet.setDoubleEncryption(false)
-      console.log "The beginning of the drama"
       MyWallet.sendBitcoinsForAccount  data.from
                                      , data.to
                                      , data.amount
@@ -377,8 +351,10 @@ describe "Spend", ->
                                      , observer.listener
                                      , null  # this must be null if double encrypt is false
 
-      expect(101).toBe(101)
-      expect(MyWallet.getHDWallet).toHaveBeenCalled();
+      # we have to review what we expect!
+      expect(BlockchainAPI.push_tx).toHaveBeenCalled()
+      transaction = BlockchainAPI.push_tx.calls.argsFor(0)[0].toHex()
+      expect(transaction).toBe(tx.toHex())
 
   describe "generateNewMiniPrivateKey()", ->
     it "should do something...mini :)", ->
