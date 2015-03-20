@@ -1249,7 +1249,7 @@ var MyWallet = new function() {
 
                 var eckey = new Bitcoin.ECKey(new BigInteger.fromBuffer(bytes), false);
 
-                if (MyWallet.addPrivateKey(eckey, {compressed: false}))
+                if (MyWallet.addPrivateKey(eckey, {compressed: true}))
                     return {key : eckey, miniKey : minikey};
             }
         }
@@ -2145,24 +2145,24 @@ var MyWallet = new function() {
      * @param {function()} errorCallback error callback function
      */
     this.getBalanceForRedeemCode = function(privatekey, successCallback, errorCallback)  {
-        try {
-            var format = MyWallet.detectPrivateKeyFormat(privatekey);
-            var privateKeyToSweep = MyWallet.privateKeyStringToKey(privatekey, format);
-            var from_address = MyWallet.getCompressedAddressString(privateKeyToSweep);
+        var format = MyWallet.detectPrivateKeyFormat(privatekey);
+        if(format == null) {
+            errorCallback("Unkown private key format"); 
+            return;
+        }
+        var privateKeyToSweep = MyWallet.privateKeyStringToKey(privatekey, format);
+        var from_address_compressed = MyWallet.getCompressedAddressString(privateKeyToSweep);
+        var from_address_uncompressed = MyWallet.getUnCompressedAddressString(privateKeyToSweep);
 
-            BlockchainAPI.get_balance([from_address], function(value) {
-                if (successCallback)
-                    successCallback(value);
-            }, function() {
-                MyWallet.sendEvent("msg", {type: "error", message: 'Error Getting Address Balance'});
-                if (errorCallback)
-                    errorCallback();
-            });
-        } catch (e) {
-            MyWallet.sendEvent("msg", {type: "error", message: 'Error Decoding Private Key. Could not claim coins.'});
+
+        BlockchainAPI.get_balance([from_address_compressed, from_address_uncompressed], function(value) {
+            if (successCallback)
+                successCallback(value);
+        }, function() {
+            MyWallet.sendEvent("msg", {type: "error", message: 'Error Getting Address Balance'});
             if (errorCallback)
                 errorCallback();
-        } 
+        });
     };
 
     /**
@@ -2178,9 +2178,10 @@ var MyWallet = new function() {
             
             var format = MyWallet.detectPrivateKeyFormat(privatekey);
             var privateKeyToSweep = MyWallet.privateKeyStringToKey(privatekey, format);
-            var from_address = MyWallet.getCompressedAddressString(privateKeyToSweep);
+            var from_address_compressed = MyWallet.getCompressedAddressString(privateKeyToSweep);
+            var from_address_uncompressed = MyWallet.getUnCompressedAddressString(privateKeyToSweep);
             
-            BlockchainAPI.get_balance([from_address], function(value) {
+            BlockchainAPI.get_balance([from_address_compressed, from_address_uncompressed], function(value) {
                 var obj = Signer.initNewTx();
                 obj.fee = obj.base_fee; //Always include a fee
                                 
@@ -2188,8 +2189,10 @@ var MyWallet = new function() {
                 
                 var to_address = account.getReceivingAddress(); 
                 obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(to_address), value : amount});
-                obj.from_addresses = [from_address];
-                obj.extra_private_keys[from_address] = privatekey; //Browserify.Base58.encode(privateKeyToSweep.d.toBuffer(32));
+                obj.from_addresses = [from_address_compressed, from_address_uncompressed];
+                obj.extra_private_keys[from_address_compressed] = privatekey;
+                obj.extra_private_keys[from_address_uncompressed] = privatekey;
+                
                 obj.ready_to_send_header = 'Bitcoins Ready to Claim.';
                 
                 obj.addListener({
@@ -2524,8 +2527,7 @@ var MyWallet = new function() {
             //mobile = '+' + child.find('select[name="sms-country-code"]').val() + mobile;
 
             var miniKeyAddrobj = generateNewMiniPrivateKey();
-            var address = miniKeyAddrobj.key.pub.getAddress().toString();
-            var privateKey = miniKeyAddrobj.key.toWIF();
+            var address = MyWallet.getCompressedAddressString(miniKeyAddrobj.key);
 
             MyWallet.setLegacyAddressTag(address, 2);
             MyWallet.setLegacyAddressLabel(
@@ -2544,7 +2546,7 @@ var MyWallet = new function() {
                                 extendedPrivateKey = account.extendedPrivateKey;
                             }
                             var tx = account.createTx(address, value, fixedFee, unspent_outputs, extendedPrivateKey, listener);
-                            BlockchainAPI.sendViaSMS(mobile, tx, privateKey, function (data) {
+                            BlockchainAPI.sendViaSMS(mobile, tx, miniKeyAddrobj.miniKey, function (data) {
 
                                 BlockchainAPI.push_tx(tx, null, function(response) {
                                     var paidToSingle = {email: null, mobile: mobile, redeemedAt: null, address: address};
@@ -5147,7 +5149,9 @@ var MyWallet = new function() {
                 return 'mini';
         }
 
-        throw 'Unknown Key Format ' + key;
+        return null;
+        
+        console.error('Unknown Key Format ' + key);
     };
 
     function buffertoByteArray(value) {

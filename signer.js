@@ -165,9 +165,11 @@ function signInput(tx, inputN, base58Key, connected_script, type) {
 
     var inputBitcoinAddress = Bitcoin.Address.fromOutputScript(connected_script);
     
-    var decoded = MyWallet.B58LegacyDecode(base58Key);
+    var format = MyWallet.detectPrivateKeyFormat(base58Key);
+    var key = MyWallet.privateKeyStringToKey(base58Key, format);
     
-    var key = new Bitcoin.ECKey(new BigInteger.fromBuffer(decoded), false);
+    // var decoded = MyWallet.B58LegacyDecode(base58Key);
+    // var key = new Bitcoin.ECKey(new BigInteger.fromBuffer(decoded), false);
 
     // var key = new Bitcoin.ECKey(new BigInteger.fromBuffer(base58Key), false);
     
