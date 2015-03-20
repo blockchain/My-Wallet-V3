@@ -2599,30 +2599,22 @@ var MyWallet = new function() {
     this.sendBitcoinsForAccount = function(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, listener, getPassword) {
         // second_password must be null if not needed.
         function sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, listener, second_password) {
-            MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function (unspent_outputs) {
-                var account = MyWallet.getHDWallet().getAccount(accountIdx);
-                var extendedPrivateKey = second_password == null ? account.extendedPrivateKey : MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password, sharedKey);
-                var tx = account.createTx(to, value, fixedFee, unspent_outputs, extendedPrivateKey, listener);
-                var balance = account.getBalance();
-                BlockchainAPI.push_tx(tx, note, function(response) {
-                    if (value + fixedFee >= balance) {
-                        account.setUnspentOutputs([]);
-                        successCallback && successCallback(tx.getId());
-                        return;
-                    }
-
-                    MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function () {
-                        successCallback && successCallback(tx.getId());
-                    }, function(e) {
-                        errorCallback && errorCallback(e);
-                    });
-                }, function(response) {
-                    errorCallback && errorCallback(e);
-                });
-
-            }, function(e) {
-                errorCallback && errorCallback(e);
-            });
+            MyWallet.getAndSetUnspentOutputsForAccount(
+                accountIdx,
+                function (unspent_outputs) {
+                    var account = MyWallet.getHDWallet().getAccount(accountIdx);
+                    var extendedPrivateKey = second_password == null ? account.extendedPrivateKey : MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password, sharedKey);
+                    var tx = account.createTx(to, value, fixedFee, unspent_outputs, extendedPrivateKey, listener);
+                    var balance = account.getBalance();
+                    BlockchainAPI.push_tx(
+                        tx,
+                        note,
+                        function(response) { successCallback && successCallback(tx.getId()); },
+                        function(response) { errorCallback && errorCallback(e);}
+                    );
+                },
+                function(e) { errorCallback && errorCallback(e);}
+            );
         }
         
         
