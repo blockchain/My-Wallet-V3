@@ -318,28 +318,64 @@ describe "Spend", ->
 
   describe "sendBitcoinsForAccount()", ->
     it "the transaction has been pushed to the network", ->
-      # What we mocked?
+      # Mocked objects
       # - all the methods in the account object (hdwallet.js)
       #    - createTx, getBalance, getAccountExtendedKey, setUnspentOutputs
       # - BlockchainAPI calls
       #    - get_unspent, push_tx 
-      getUnspendMock = {"unspent_outputs":[{"tx_hash":"100be2539cd2088ceeb4e306a567438bda6735ac5dd6fd162a18d1741bb06f7f","tx_hash_big_endian":"7f6fb01b74d1182a16fdd65dac3567da8b4367a506e3b4ee8c08d29c53e20b10","tx_index":81047728,"tx_output_n":1,"script":"76a91418fc20c88ee4201e1fc31dfe25a5f5881614aa2188ac","xpub":{"m":"xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ","path":"M/1/2"},"value":10000,"value_hex":"2710","confirmations":30},{"tx_hash":"17cba71f08fc8e7af50088d87f94fa7ce8d70dfaa74c4544eccbf261eaeca2e9","tx_hash_big_endian":"e9a2ecea61f2cbec44454ca7fa0dd7e87cfa947fd88800f57a8efc081fa7cb17","tx_index":81073644,"tx_output_n":1,"script":"76a914d36f60cc98e0f36946f7e30e7652ebe65f3d0f7388ac","xpub":{"m":"xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ","path":"M/1/7"},"value":800000,"value_hex":"0c3500","confirmations":0}]}
-      tx = Bitcoin.Transaction.fromHex "010000000117cba71f08fc8e7af50088d87f94fa7ce8d70dfaa74c4544eccbf261eaeca2e9010000006a4730440220596b5654ad1d6955c75636125637fa5870457de6535c63ffea2a534efa0bcb9d02203419ab6603a8ea944d485f4a7db3a99ab7a62dfb99c7b64e10d72ab1be64a38c01210349802adc55cc58eca077ab42b9fe10037146bd61cca9f8b6abf729c8126237a9ffffffff02204e0000000000001976a91477f6416372b875ec857768f6f464323efff129c088acd0bf0b00000000001976a914fe7e2afa1b1878ca20185b036200fdb9ba7acebc88ac00000000"
-      hdAccounts[0].createTx = () -> tx
-      hdAccounts[0].getBalance = () -> 810000
+      data.from = 0 #iDX
+      getUnspendMock = 'unspent_outputs': [
+        {
+          'tx_hash': '100be2539cd2088ceeb4e306a567438bda6735ac5dd6fd162a18d1741bb06f7f'
+          'tx_hash_big_endian': '7f6fb01b74d1182a16fdd65dac3567da8b4367a506e3b4ee8c08d29c53e20b10'
+          'tx_index': 81047728
+          'tx_output_n': 1
+          'script': '76a91418fc20c88ee4201e1fc31dfe25a5f5881614aa2188ac'
+          'xpub':
+            'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcK\
+                  ETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
+            'path': 'M/1/2'
+          'value': 10000
+          'value_hex': '2710'
+          'confirmations': 30
+        }
+        {
+          'tx_hash': '17cba71f08fc8e7af50088d87f94fa7ce8d70dfaa74c4544eccbf261eaeca2e9'
+          'tx_hash_big_endian': 'e9a2ecea61f2cbec44454ca7fa0dd7e87cfa947fd88800f57a8efc081fa7cb17'
+          'tx_index': 81073644
+          'tx_output_n': 1
+          'script': '76a914d36f60cc98e0f36946f7e30e7652ebe65f3d0f7388ac'
+          'xpub':
+            'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcK\
+                  ETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
+            'path': 'M/1/7'
+          'value': 800000
+          'value_hex': '0c3500'
+          'confirmations': 0
+        }
+      ]
+      tx = Bitcoin.Transaction.fromHex "010000000117cba71f08fc8e7af50088d87f94fa\
+           7ce8d70dfaa74c4544eccbf261eaeca2e9010000006a4730440220596b5654ad1d695\
+           5c75636125637fa5870457de6535c63ffea2a534efa0bcb9d02203419ab6603a8ea94\
+           4d485f4a7db3a99ab7a62dfb99c7b64e10d72ab1be64a38c01210349802adc55cc58e\
+           ca077ab42b9fe10037146bd61cca9f8b6abf729c8126237a9ffffffff02204e000000\
+           0000001976a91477f6416372b875ec857768f6f464323efff129c088acd0bf0b00000\
+           000001976a914fe7e2afa1b1878ca20185b036200fdb9ba7acebc88ac00000000"
+      hdAccounts[data.from].createTx = () -> tx
+      hdAccounts[data.from].getBalance = () -> 810000
 
       window.BlockchainAPI =
         get_unspent: () -> return
         push_tx: () -> return
 
       spyOn(BlockchainAPI, "get_unspent")
-        .and.callFake((xpubList,success,error,conf,nocache) -> 
-          success(getUnspendMock))
-
+        .and.callFake((xpubList,success,error,conf,nocache) -> success(getUnspendMock))
       spyOn(BlockchainAPI, "push_tx")
          .and.callFake((tx, note, success, error) -> success())
+      spyOn(MyWallet.getHDWallet(),"getAccount").and.callThrough()
+      spyOn(hdAccounts[data.from], 'createTx').and.callThrough()
+      spyOn(hdAccounts[data.from], 'getBalance').and.callThrough()
 
-      data.from = 0 #iDX
       MyWallet.setDoubleEncryption(false)
       MyWallet.sendBitcoinsForAccount  data.from
                                      , data.to
@@ -351,13 +387,27 @@ describe "Spend", ->
                                      , observer.listener
                                      , null  # this must be null if double encrypt is false
 
-      # we have to review what we expect!
+      expect(MyWallet.getHDWallet().getAccount).toHaveBeenCalledWith(data.from)
+      expect(BlockchainAPI.get_unspent).toHaveBeenCalled()
+      xpub = BlockchainAPI.get_unspent.calls.argsFor(0)[0][0]
+      expect(xpub).toBe(hdAccounts[0].extendedPublicKey)
+      expect(hdAccounts[data.from].getBalance).toHaveBeenCalled()
+      expect(hdAccounts[data.from].createTx)
+        .toHaveBeenCalledWith(
+           data.to
+          ,data.amount
+          ,data.fee
+          ,getUnspendMock.unspent_outputs
+          ,hdAccounts[data.from].getAccountExtendedKey(true)
+          ,observer.listener)
       expect(BlockchainAPI.push_tx).toHaveBeenCalled()
       transaction = BlockchainAPI.push_tx.calls.argsFor(0)[0].toHex()
       expect(transaction).toBe(tx.toHex())
+      expect(observer.success).toHaveBeenCalled()
+      expect(observer.error).not.toHaveBeenCalled()
 
   describe "generateNewMiniPrivateKey()", ->
-    it "should do something...mini :)", ->
+    it "...", ->
       # this is not a public function on MyWallet
       pending()
 
