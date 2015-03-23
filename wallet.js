@@ -2936,15 +2936,17 @@ var MyWallet = new function() {
                 seedHexString = MyWallet.generateHDWalletSeedHex();
             }
 
-            MyWallet.buildHDWallet(seedHexString, [], bip39Password, second_password, success, error);
+            var _success = function () {
+                account = MyWallet.getHDWallet().createAccount("Spending", second_password);
 
-            account = MyWallet.getHDWallet().createAccount("Spending", second_password);
+                account.setBalance(0);
 
-            account.setBalance(0);
+                MyWallet.listenToHDWalletAccount(account.getAccountExtendedKey(false));
 
-            MyWallet.listenToHDWalletAccount(account.getAccountExtendedKey(false));
+                success();
+            };
 
-            success();
+            MyWallet.buildHDWallet(seedHexString, [], bip39Password, second_password, _success, error);
         }
 
         if (this.getDoubleEncryption()) {
