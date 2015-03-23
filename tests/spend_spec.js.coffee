@@ -316,13 +316,20 @@ describe "Spend", ->
   ##############################################################################
   ## END LEGACY ADDRESS TESTS
 
-  describe "sendBitcoinsForAccount()", ->
-    it "the transaction has been pushed to the network", ->
+  ##############################################################################
+  ## SendBitcoinsForAccount TESTS
+  describe "Send", ->
+
+    getUnspendMock = undefined
+    tx             = undefined
+    beforeEach ->  
       # Mocked objects
-      # - all the methods in the account object (hdwallet.js)
+      # - all the methods in the accoupnt object (hdwallet.js)
       #    - createTx, getBalance, getAccountExtendedKey, setUnspentOutputs
       # - BlockchainAPI calls
       #    - get_unspent, push_tx 
+      # - MyWallet
+      #    - decryptSecretWithSecondPassword and validateSecondPassword
       data.from = 0 #iDX
       getUnspendMock = 'unspent_outputs': [
         {
@@ -372,40 +379,98 @@ describe "Spend", ->
         .and.callFake((xpubList,success,error,conf,nocache) -> success(getUnspendMock))
       spyOn(BlockchainAPI, "push_tx")
          .and.callFake((tx, note, success, error) -> success())
-      spyOn(MyWallet.getHDWallet(),"getAccount").and.callThrough()
-      spyOn(hdAccounts[data.from], 'createTx').and.callThrough()
-      spyOn(hdAccounts[data.from], 'getBalance').and.callThrough()
 
-      MyWallet.setDoubleEncryption(false)
-      MyWallet.sendBitcoinsForAccount  data.from
-                                     , data.to
-                                     , data.amount
-                                     , data.fee
-                                     , data.note
-                                     , observer.success
-                                     , observer.error
-                                     , observer.listener
-                                     , null  # this must be null if double encrypt is false
+    describe "sendBitcoinsForAccount()", ->
+      it "the transaction has been pushed to the network", ->
 
-      expect(MyWallet.getHDWallet().getAccount).toHaveBeenCalledWith(data.from)
-      expect(BlockchainAPI.get_unspent).toHaveBeenCalled()
-      xpub = BlockchainAPI.get_unspent.calls.argsFor(0)[0][0]
-      expect(xpub).toBe(hdAccounts[0].extendedPublicKey)
-      expect(hdAccounts[data.from].getBalance).toHaveBeenCalled()
-      expect(hdAccounts[data.from].createTx)
-        .toHaveBeenCalledWith(
-           data.to
-          ,data.amount
-          ,data.fee
-          ,getUnspendMock.unspent_outputs
-          ,hdAccounts[data.from].getAccountExtendedKey(true)
-          ,observer.listener)
-      expect(BlockchainAPI.push_tx).toHaveBeenCalled()
-      transaction = BlockchainAPI.push_tx.calls.argsFor(0)[0].toHex()
-      expect(transaction).toBe(tx.toHex())
-      expect(observer.success).toHaveBeenCalled()
-      expect(observer.error).not.toHaveBeenCalled()
+        spyOn(MyWallet.getHDWallet(),"getAccount").and.callThrough()
+        spyOn(hdAccounts[data.from], 'createTx').and.callThrough()
+        spyOn(hdAccounts[data.from], 'getBalance').and.callThrough()
 
+        MyWallet.setDoubleEncryption(false)
+        MyWallet.sendBitcoinsForAccount  data.from
+                                       , data.to
+                                       , data.amount
+                                       , data.fee
+                                       , data.note
+                                       , observer.success
+                                       , observer.error
+                                       , observer.listener
+                                       , null  # this must be null if double encrypt is false
+
+        expect(MyWallet.getHDWallet().getAccount).toHaveBeenCalledWith(data.from)
+        expect(BlockchainAPI.get_unspent).toHaveBeenCalled()
+        xpub = BlockchainAPI.get_unspent.calls.argsFor(0)[0][0]
+        expect(xpub).toBe(hdAccounts[0].extendedPublicKey)
+        expect(hdAccounts[data.from].getBalance).toHaveBeenCalled()
+        expect(hdAccounts[data.from].createTx)
+          .toHaveBeenCalledWith(
+             data.to
+            ,data.amount
+            ,data.fee
+            ,getUnspendMock.unspent_outputs
+            ,hdAccounts[data.from].getAccountExtendedKey(true)
+            ,observer.listener)
+        expect(BlockchainAPI.push_tx).toHaveBeenCalled()
+        transaction = BlockchainAPI.push_tx.calls.argsFor(0)[0].toHex()
+        expect(transaction).toBe(tx.toHex())
+        expect(observer.success).toHaveBeenCalled()
+        expect(observer.error).not.toHaveBeenCalled()
+
+      it "with double encryption enabled and wrong password", ->
+
+        data.from = 0 #iDX
+        spyOn(MyWallet, "validateSecondPassword").and.callFake((pw)-> false)
+        MyWallet.setDoubleEncryption(true)
+        MyWallet.sendBitcoinsForAccount  data.from
+                                       , data.to
+                                       , data.amount
+                                       , data.fee
+                                       , data.note
+                                       , observer.success
+                                       , observer.error
+                                       , observer.listener
+                                       , observer.getPassword
+
+        modalFuncValidatePass = observer.getPassword.calls.argsFor(0)[0]
+        modalFuncValidatePass  "ThisIsAWrongPass"
+                             , observer.correct_password
+                             , observer.wrong_password
+        expect(observer.getPassword).toHaveBeenCalled()
+        expect(MyWallet.validateSecondPassword).toHaveBeenCalled()
+        expect(observer.wrong_password).toHaveBeenCalled()
+        expect(observer.correct_password).not.toHaveBeenCalled()
+
+      it "with double encryption enabled and correct password", ->
+
+        data.from = 0 #iDX
+        spyOn(MyWallet, "decryptSecretWithSecondPassword")
+          .and.returnValue(hdAccounts[data.from].getAccountExtendedKey(true))
+        spyOn(MyWallet, "validateSecondPassword").and.callFake((pw)-> true)
+        MyWallet.setDoubleEncryption(true)
+        MyWallet.sendBitcoinsForAccount  data.from
+                                       , data.to
+                                       , data.amount
+                                       , data.fee
+                                       , data.note
+                                       , observer.success
+                                       , observer.error
+                                       , observer.listener
+                                       , observer.getPassword
+
+        modalFuncValidatePass = observer.getPassword.calls.argsFor(0)[0]
+        modalFuncValidatePass  "ThisIsACorrectPass"
+                             , observer.correct_password
+                             , observer.wrong_password
+
+        expect(observer.getPassword).toHaveBeenCalled()
+        expect(MyWallet.validateSecondPassword).toHaveBeenCalled()
+        expect(observer.wrong_password).not.toHaveBeenCalled()
+        expect(observer.correct_password).toHaveBeenCalled()
+        expect(MyWallet.decryptSecretWithSecondPassword).toHaveBeenCalled()
+        expect(observer.success).toHaveBeenCalled()
+
+  ##############################################################################
   describe "generateNewMiniPrivateKey()", ->
     it "...", ->
       # this is not a public function on MyWallet
