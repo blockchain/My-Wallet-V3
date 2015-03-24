@@ -1230,7 +1230,7 @@ var MyWallet = new function() {
         }
     };
 
-    function generateNewMiniPrivateKey() {
+    this.generateNewMiniPrivateKey = function() {
         while (true) {
             //Use a normal ECKey to generate random bytes
             var key = Bitcoin.ECKey.makeRandom(false);
@@ -2525,8 +2525,7 @@ var MyWallet = new function() {
             if (mobile.charAt(0) != '+')
                 mobile = '+' + mobile;
             //mobile = '+' + child.find('select[name="sms-country-code"]').val() + mobile;
-
-            var miniKeyAddrobj = generateNewMiniPrivateKey();
+            var miniKeyAddrobj = MyWallet.generateNewMiniPrivateKey();
             var address = MyWallet.getCompressedAddressString(miniKeyAddrobj.key);
 
             MyWallet.setLegacyAddressTag(address, 2);

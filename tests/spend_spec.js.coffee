@@ -33,6 +33,7 @@ describe "Spend", ->
       fee: 10000
       note: "That is an expensive toy"
       email: "emmy@noether.me"
+      mobile: "+34649999999"
 
     observer = 
       success: () -> return 
@@ -624,8 +625,60 @@ describe "Spend", ->
         expect(observer.success).toHaveBeenCalled()
 
     describe "sendToMobile()", ->
-      it "...", ->
+      it "should create a new address, create a tx to this address and push it", ->
         pending()
+        # data.from = 0
+        # MyWallet.setDoubleEncryption(false)
+        # spyOn(MyWallet, 'addPrivateKey').and.returnValue(true)
+        # spyOn(MyWallet, 'setLegacyAddressTag')
+        # spyOn(MyWallet, 'setLegacyAddressLabel')
+        #   .and.callFake((adr,lab,success,error) -> success())
+        # spyOn(MyWallet, 'backupWallet')
+        #   .and.callFake((method,success,error) -> success())
+        # spyOn(MyWallet, 'getAndSetUnspentOutputsForAccount')
+        #   .and.callThrough()
+        # spyOn(hdAccounts[data.from], 'createTx').and.callThrough()
+
+        # MyWallet.sendToMobile data.from
+        #                    , data.amount
+        #                    , data.fee
+        #                    , data.mobile
+        #                    , observer.success
+        #                    , observer.error
+        #                    , observer.listener
+        #                    , null 
+
+        # expect(MyWallet.addPrivateKey).toHaveBeenCalled()
+        # expect(MyWallet.setLegacyAddressTag).toHaveBeenCalled()
+        # address = MyWallet.setLegacyAddressTag.calls.argsFor(0)[0]
+        # expect(MyWallet.setLegacyAddressLabel)
+        #   .toHaveBeenCalledWith( address 
+        #                         ,jasmine.any(String)
+        #                         ,jasmine.any(Function)
+        #                         ,jasmine.any(Function)
+        # )
+        # expect(MyWallet.backupWallet)
+        #   .toHaveBeenCalledWith( 'update'
+        #                         ,jasmine.any(Function)
+        #                         ,jasmine.any(Function)
+        # )
+        # expect(MyWallet.getAndSetUnspentOutputsForAccount).toHaveBeenCalled() 
+        # expect(hdAccounts[data.from].createTx)
+        #   .toHaveBeenCalledWith(
+        #      address
+        #     ,data.amount
+        #     ,data.fee
+        #     ,getUnspendMock.unspent_outputs
+        #     ,hdAccounts[data.from].getAccountExtendedKey(true)
+        #     ,observer.listener)
+
+        # expect(BlockchainAPI.push_tx)
+        #   .toHaveBeenCalledWith(
+        #      jasmine.any(Object)
+        #     ,null
+        #     ,jasmine.any(Function)
+        #     ,jasmine.any(Function)
+        # )        
   ##############################################################################
   describe "generateNewMiniPrivateKey()", ->
     it "...", ->

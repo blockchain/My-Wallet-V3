@@ -6,31 +6,6 @@ function exceptionToString(err) {
     return "toString(): " + " value: [" + err.toString() + "]";
 }
 
-function generateNewMiniPrivateKey() {
-    while (true) {
-        //Use a normal ECKey to generate random bytes
-        var key = Bitcoin.ECKey.makeRandom(false);
-
-        //Make Candidate Mini Key
-        var minikey = 'S' + Bitcoin.base58.encode(key.d.toBuffer(32)).substr(0, 21);
-
-        //Append ? & hash it again
-        var bytes_appended = Crypto.SHA256(minikey + '?', {asBytes: true});
-
-        //If zero byte then the key is valid
-        if (bytes_appended[0] == 0) {
-
-            //SHA256
-            var bytes = Crypto.SHA256(minikey, {asBytes: true});
-
-            var eckey = new Bitcoin.ECKey(new BigInteger.fromBuffer(bytes), false);
-
-            if (MyWallet.addPrivateKey(eckey))
-                return {key : eckey, miniKey : minikey};
-        }
-    }
-}
-
 function IsCanonicalSignature(vchSig) {
     if (vchSig.length < 9)
         throw 'Non-canonical signature: too short';
