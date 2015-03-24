@@ -1,6 +1,6 @@
 # MyWallet
 
-Javascript Model for blockchain wallet.
+JavaScript Model for Blockchain.info wallet.
 
 ## Install
 
@@ -13,6 +13,12 @@ grunt build
 
 ```sh
 npm test
+```
+
+## Clean
+
+```sh
+rm -rf bower_components/ build/ dist/ node_modules/
 ```
 
 ## Getting Started
@@ -80,22 +86,22 @@ MyWallet.get_history(_successFun, _errorFun);
 
 Include the following files instead of `my-wallet.js` for easier debugging:
 
-* `shared.js`
-* `blockchainapi.js`
+* `src/shared.js`
+* `src/blockchainapi.js`
 * `bower_components/jquery/dist/jquery.js`
 * `browserify.js`
 * `build/bip39.js`
 * `build/sjcl.js`
 * `build/xregexp-all.js`
-* `hdwallet.js`
-* `HDWalletAccount.js`
+* `src/hdwallet.js`
+* `src/HDWalletAccount.js`
 * `bower_components/cryptojslib/rollups/sha256.js`
 * `bower_components/cryptojslib/rollups/aes.js`
 * `bower_components/cryptojslib/rollups/pbkdf2.js`
 * `bower_components/cryptojslib/components/cipher-core.js`
 * `bower_components/cryptojslib/components/pad-iso10126.js`
-* `crypto-util-legacy.js`
-* `wallet.js`
+* `src/crypto-util-legacy.js`
+* `src/wallet.js`
 
 ## Distribution
 
@@ -103,11 +109,9 @@ Run `GITHUB_USER=... GITHUB_PASSWORD=... grunt dist` to check all dependencies a
 
 ## Adding a browserified dependency
 
-
 1. npm install newpackage --save
 2. Add the require in browserify-imports.js
 3. npm install
-
 
 ### Whitelist dependencies
 

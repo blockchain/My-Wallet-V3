@@ -1,4 +1,5 @@
 module.exports = function(config) {
+
   config.set({
     basePath : './',
     
@@ -8,13 +9,13 @@ module.exports = function(config) {
     
     preprocessors: {
       '**/*.coffee': ['coffee'],
-      'wallet.js' : ['coverage'],
-      'hdwallet.js' : ['coverage'],
-      'HDWalletAccount.js' : ['coverage'],
-      'blockchainapi.js' : ['coverage'],
-      'import-export.js' : ['coverage'],
-      'signer.js' : ['coverage'],
-      'wallet-signup.js' : ['coverage']
+      'src/wallet.js' : ['coverage'],
+      'src/hdwallet.js' : ['coverage'],
+      'src/HDWalletAccount.js' : ['coverage'],
+      'src/blockchainapi.js' : ['coverage'],
+      'src/import-export.js' : ['coverage'],
+      'src/signer.js' : ['coverage'],
+      'src/wallet-signup.js' : ['coverage']
     },
 
     coffeePreprocessor: {
@@ -33,11 +34,6 @@ module.exports = function(config) {
     
     files: [
       'bower_components/jquery/dist/jquery.js',
-      'build/browserify.js',
-      'build/bip39.js',
-      'hdwallet.js',
-      'HDWalletAccount.js',
-      'wallet-signup.js',
       'bower_components/cryptojslib/rollups/sha256.js',
       'bower_components/cryptojslib/rollups/aes.js',
       'bower_components/cryptojslib/rollups/pbkdf2.js',
@@ -46,12 +42,17 @@ module.exports = function(config) {
       'bower_components/cryptojslib/components/mode-ecb.js',
       'bower_components/cryptojslib/components/pad-nopadding.js',
       'bower_components/browserdetection/src/browser-detection.js',
+      'build/browserify.js',
+      'build/bip39.js',
       'build/sjcl.js',
-      'crypto-util-legacy.js',
       'build/xregexp-all.js',
-      'wallet.js',
-      'import-export.js',
-      'signer.js',
+      'src/hdwallet.js',
+      'src/HDWalletAccount.js',
+      'src/wallet-signup.js',
+      'src/crypto-util-legacy.js',
+      'src/wallet.js',
+      'src/import-export.js',
+      'src/signer.js',
       'tests/**/*.js',
       'tests/**/*.js.coffee'
     ],
@@ -71,6 +72,6 @@ module.exports = function(config) {
     
     reporters: ['progress','coverage']
     
-    
   });
+
 };

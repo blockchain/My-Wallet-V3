@@ -1,6 +1,6 @@
 {
   "name": "My-Wallet-HD",
-  "version": "0.5.0",
+  "version": "0.9.0",
   "description": "Blockchain.info JavaScript Wallet",
   "homepage": "https://github.com/blockchain/My-Wallet-HD",
   "bugs": {
@@ -12,10 +12,11 @@
     "url": "https://blockchain.info"
   },
   "contributors": [
+    "Ben Reeves",
     "Tim Lee",
-    "Mark Pflueger",
+    "Mark Pfluger",
     "Sjors Provoost",
-    "Ben Reeves"
+    "Jaume Pernas"
   ],
   "main": "wallet.js",
   "repository": {
@@ -23,7 +24,7 @@
     "url": "https://github.com/blockchain/My-Wallet-HD.git"
   },
   "scripts": {
-    "postinstall": "mkdir -p build && node_modules/bower/bin/bower install && browserify -s Browserify browserify-imports.js > build/browserify.js && cd node_modules/bip39 && npm run compile && mv bip39.js ../../build && cd ../.. && cp node_modules/xregexp/xregexp-all.js build && cd node_modules/sjcl && ./configure --with-sha1 && make && cd - && cp node_modules/sjcl/sjcl.js build",
+    "postinstall": "mkdir -p build && node_modules/bower/bin/bower install && browserify -s Browserify src/browserify-imports.js > build/browserify.js && cd node_modules/bip39 && npm run compile && cp bip39.js ../../build && cd - && cp node_modules/xregexp/xregexp-all.js build && cd node_modules/sjcl && ./configure --with-sha1 && make && cd - && cp node_modules/sjcl/sjcl.js build",
     "test": "node ./node_modules/karma/bin/karma start karma.conf.js"
   },
   "dependencies": {

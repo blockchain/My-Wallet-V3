@@ -16,9 +16,21 @@ module.exports = (grunt) ->
         src: [
           'bower_components/jquery/dist/jquery.js'
           'bower_components/browserdetection/src/browser-detection.js'
-          'ie.js'
+          'src/shared.js'
+          'src/ie.js'
+          'src/crypto-util-legacy.js'
+          'src/mnemonic.js'
           'build/browserify.js'
-          "shared.js"
+          'build/sjcl.js'
+          'build/blockchainapi.processed.js'
+          'build/signer.processed.js'
+          'build/wallet.processed.js'
+          'build/wallet-signup.processed.js'
+          'build/HDWalletAccount.processed.js'
+          'build/hdwallet.processed.js'
+          'build/import-export.processed.js'
+          'build/bip39.js'
+          'build/xregexp-all.js'
           'build/bower_components/cryptojslib/rollups/sha256.js'
           'build/bower_components/cryptojslib/rollups/aes.js'
           'build/bower_components/cryptojslib/rollups/pbkdf2.js'
@@ -26,18 +38,6 @@ module.exports = (grunt) ->
           'build/bower_components/cryptojslib/components/pad-iso10126.js'
           'build/bower_components/cryptojslib/components/mode-ecb.js'
           'build/bower_components/cryptojslib/components/pad-nopadding.js'
-          'build/sjcl.js'
-          'crypto-util-legacy.js'
-          'build/blockchainapi.processed.js'
-          'build/signer.processed.js'
-          'build/wallet.processed.js'
-          'build/wallet-signup.processed.js'
-          'build/HDWalletAccount.processed.js'
-          'build/hdwallet.processed.js'
-          'mnemonic.js'
-          'build/import-export.processed.js'
-          'build/bip39.js'
-          'build/xregexp-all.js'
         ]
         dest: "dist/my-wallet.js"
         
@@ -53,16 +53,16 @@ module.exports = (grunt) ->
     watch: {
       scripts: {
         files: [
-          'ie.js'
-          'shared.js'
-          'blockchainapi.js'
-          'signer.js'
-          'wallet.js'
-          'wallet-signup.js'
-          'HDWalletAccount.js'
-          'hdwallet.js'
-          'mnemonic.js'
-          'import-export.js'
+          'src/ie.js'
+          'src/shared.js'
+          'src/blockchainapi.js'
+          'src/signer.js'
+          'src/wallet.js'
+          'src/wallet-signup.js'
+          'src/HDWalletAccount.js'
+          'src/hdwallet.js'
+          'src/mnemonic.js'
+          'src/import-export.js'
         ],
         tasks: ['build'],
       },
@@ -93,13 +93,13 @@ module.exports = (grunt) ->
     preprocess:     
       multifile:
         files: 
-          'build/blockchainapi.processed.js'  : 'blockchainapi.js'
-          'build/signer.processed.js'         : 'signer.js'
-          'build/wallet.processed.js'         : 'wallet.js'
-          'build/wallet-signup.processed.js'  : 'wallet-signup.js'
-          'build/HDWalletAccount.processed.js': 'HDWalletAccount.js'
-          'build/hdwallet.processed.js'       : 'hdwallet.js'
-          'build/import-export.processed.js'  : 'import-export.js'
+          'build/blockchainapi.processed.js'  : 'src/blockchainapi.js'
+          'build/signer.processed.js'         : 'src/signer.js'
+          'build/wallet.processed.js'         : 'src/wallet.js'
+          'build/wallet-signup.processed.js'  : 'src/wallet-signup.js'
+          'build/HDWalletAccount.processed.js': 'src/HDWalletAccount.js'
+          'build/hdwallet.processed.js'       : 'src/hdwallet.js'
+          'build/import-export.processed.js'  : 'src/import-export.js'
   
   # Load the plugin that provides the "uglify" task.
   grunt.loadNpmTasks "grunt-contrib-uglify"
