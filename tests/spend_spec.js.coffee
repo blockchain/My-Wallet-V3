@@ -32,6 +32,7 @@ describe "Spend", ->
       amount: 600000
       fee: 10000
       note: "That is an expensive toy"
+      email: "emmy@noether.me"
 
     observer = 
       success: () -> return 
@@ -73,7 +74,7 @@ describe "Spend", ->
         isArchived: () -> false
         getReceivingAddress: () -> "1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX"
         getAccountExtendedKey : (p) -> if p then this.extendedPrivateKey else this.extendedPublicKey 
-        setUnspentOutputs: (utxo) -> return      
+        setUnspentOutputs: (utxo) -> return
       }
     ]
 
@@ -374,11 +375,20 @@ describe "Spend", ->
       window.BlockchainAPI =
         get_unspent: () -> return
         push_tx: () -> return
+        sendViaEmail: () -> return
 
       spyOn(BlockchainAPI, "get_unspent")
-        .and.callFake((xpubList,success,error,conf,nocache) -> success(getUnspendMock))
+        .and.callFake((xpubList,success,error,conf,nocache) -> 
+          # console.log "GET_UNSPENT MOCK USED"
+          success(getUnspendMock))
       spyOn(BlockchainAPI, "push_tx")
-         .and.callFake((tx, note, success, error) -> success())
+        .and.callFake((tx, note, success, error) ->
+          # console.log "PUSH MOCK USED" 
+          success())
+      spyOn(BlockchainAPI, "sendViaEmail")
+        .and.callFake((email, tx, privateKey, success, error) ->
+          # console.log "sendViaEmail MOCK USED" 
+          success())
 
     describe "sendBitcoinsForAccount()", ->
       it "the transaction has been pushed to the network", ->
@@ -470,6 +480,93 @@ describe "Spend", ->
         expect(MyWallet.decryptSecretWithSecondPassword).toHaveBeenCalled()
         expect(observer.success).toHaveBeenCalled()
 
+    describe "sendToAccount()", ->
+      it "should call sendBitcoinsForAccount with the expected address.", ->
+        data.from = 0 #iDX
+        data.to = 0 #iDX
+        adr = "18dRLjdquhJeCLc9iBuRYvNZWrp9wY4Qur"
+        hdAccounts[data.to].getReceivingAddress = () -> adr
+        spyOn(MyWallet, 'sendBitcoinsForAccount').and.callThrough()
+        MyWallet.sendToAccount data.from
+                             , data.to
+                             , data.amount
+                             , data.fee
+                             , data.note
+                             , observer.success
+                             , observer.error
+                             , observer.listener
+                             , observer.getPassword 
+
+        expect(MyWallet.sendBitcoinsForAccount)
+          .toHaveBeenCalledWith  data.from
+                               , adr
+                               , data.amount
+                               , data.fee
+                               , data.note
+                               , observer.success
+                               , observer.error
+                               , observer.listener
+                               , observer.getPassword
+
+    describe "sendToEmail()", ->
+      it "should create a new address, create a tx to this address and push it", ->
+
+        data.from = 0
+        MyWallet.setDoubleEncryption(false)
+        spyOn(MyWallet, 'addPrivateKey').and.returnValue(true)
+        spyOn(MyWallet, 'setLegacyAddressTag')
+        spyOn(MyWallet, 'setLegacyAddressLabel')
+          .and.callFake((adr,lab,success,error) -> success())
+        spyOn(MyWallet, 'backupWallet')
+          .and.callFake((method,success,error) -> success())
+        spyOn(MyWallet, 'getAndSetUnspentOutputsForAccount')
+          .and.callThrough()
+        spyOn(hdAccounts[data.from], 'createTx').and.callThrough()
+
+        MyWallet.sendToEmail data.from
+                           , data.amount
+                           , data.fee
+                           , data.email
+                           , observer.success
+                           , observer.error
+                           , observer.listener
+                           , null 
+
+        expect(MyWallet.addPrivateKey).toHaveBeenCalled()
+        expect(MyWallet.setLegacyAddressTag).toHaveBeenCalled()
+        address = MyWallet.setLegacyAddressTag.calls.argsFor(0)[0]
+        expect(MyWallet.setLegacyAddressLabel)
+          .toHaveBeenCalledWith( address 
+                                ,jasmine.any(String)
+                                ,jasmine.any(Function)
+                                ,jasmine.any(Function)
+        )
+        expect(MyWallet.backupWallet)
+          .toHaveBeenCalledWith( 'update'
+                                ,jasmine.any(Function)
+                                ,jasmine.any(Function)
+        )
+        expect(MyWallet.getAndSetUnspentOutputsForAccount).toHaveBeenCalled() 
+        expect(hdAccounts[data.from].createTx)
+          .toHaveBeenCalledWith(
+             address
+            ,data.amount
+            ,data.fee
+            ,getUnspendMock.unspent_outputs
+            ,hdAccounts[data.from].getAccountExtendedKey(true)
+            ,observer.listener)
+
+        expect(BlockchainAPI.push_tx)
+          .toHaveBeenCalledWith(
+             jasmine.any(Object)
+            ,null
+            ,jasmine.any(Function)
+            ,jasmine.any(Function)
+        )
+
+    describe "sendToMobile()", ->
+      it "...", ->
+        pending()
   ##############################################################################
   describe "generateNewMiniPrivateKey()", ->
     it "...", ->
@@ -477,18 +574,6 @@ describe "Spend", ->
       pending()
 
   describe "redeemFromEmailOrMobile()", ->
-    it "...", ->
-      pending()
-
-  describe "sendToAccount()", ->
-    it "...", ->
-      pending()
-
-  describe "sendToEmail()", ->
-    it "...", ->
-      pending()
-
-  describe "sendToMobile()", ->
     it "...", ->
       pending()
 
