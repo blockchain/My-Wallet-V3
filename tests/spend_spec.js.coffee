@@ -564,6 +564,65 @@ describe "Spend", ->
             ,jasmine.any(Function)
         )
 
+      it "with double encryption and wrong password", ->
+
+        data.from = 0
+        spyOn(MyWallet, "validateSecondPassword").and.callFake((pw)-> false)
+        MyWallet.setDoubleEncryption(true)
+
+        MyWallet.sendToEmail data.from
+                           , data.amount
+                           , data.fee
+                           , data.email
+                           , observer.success
+                           , observer.error
+                           , observer.listener
+                           , observer.getPassword
+
+        modalFuncValidatePass = observer.getPassword.calls.argsFor(0)[0]
+        modalFuncValidatePass  "ThisIsAWrongPass"
+                             , observer.correct_password
+                             , observer.wrong_password
+        expect(observer.getPassword).toHaveBeenCalled()
+        expect(MyWallet.validateSecondPassword).toHaveBeenCalled()
+        expect(observer.wrong_password).toHaveBeenCalled()
+        expect(observer.correct_password).not.toHaveBeenCalled()
+
+      it "with double encryption enabled and correct password", ->
+
+        data.from = 0
+        spyOn(MyWallet, "validateSecondPassword").and.callFake((pw)-> true)
+        spyOn(MyWallet, "decryptSecretWithSecondPassword")
+          .and.returnValue(hdAccounts[data.from].getAccountExtendedKey(true))
+        MyWallet.setDoubleEncryption(true)
+        spyOn(MyWallet, 'addPrivateKey').and.returnValue(true)
+        spyOn(MyWallet, 'setLegacyAddressTag')
+        spyOn(MyWallet, 'setLegacyAddressLabel')
+          .and.callFake((adr,lab,success,error) -> success())
+        spyOn(MyWallet, 'backupWallet')
+          .and.callFake((method,success,error) -> success())
+        
+        MyWallet.sendToEmail data.from
+                           , data.amount
+                           , data.fee
+                           , data.email
+                           , observer.success
+                           , observer.error
+                           , observer.listener
+                           , observer.getPassword
+
+        modalFuncValidatePass = observer.getPassword.calls.argsFor(0)[0]
+        modalFuncValidatePass  "ThisIsACorrectPass"
+                             , observer.correct_password
+                             , observer.wrong_password
+
+        expect(observer.getPassword).toHaveBeenCalled()
+        expect(MyWallet.validateSecondPassword).toHaveBeenCalled()
+        expect(observer.wrong_password).not.toHaveBeenCalled()
+        expect(observer.correct_password).toHaveBeenCalled()
+        expect(MyWallet.decryptSecretWithSecondPassword).toHaveBeenCalled()
+        expect(observer.success).toHaveBeenCalled()
+
     describe "sendToMobile()", ->
       it "...", ->
         pending()
