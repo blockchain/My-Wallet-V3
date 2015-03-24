@@ -652,22 +652,19 @@ var BlockchainAPI = new function() {
             timeout: AjaxTimeout,
             data: {active : fromAddresses.join('|'), format : 'json', api_code : MyWallet.getAPICode(), confirmations : confirmations ? confirmations : 0},
             success: function(obj) {
-                try {
-                    if (obj.error != null) {
-                        throw obj.error;
-                    }
-
-                    if (obj.notice != null) {
-                        MyWallet.sendEvent("msg", {type: "success", message: obj.notice});
-                    }
-
-                    //Save the unspent cache
-                    MyStore.put('unspent', JSON.stringify(obj));
-
-                    success(obj);
-                } catch (e) {
-                    error(e);
+                if (obj.error != null) {
+                    error(obj.error);
+                    return;
                 }
+
+                if (obj.notice != null) {
+                    MyWallet.sendEvent("msg", {type: "success", message: obj.notice});
+                }
+
+                //Save the unspent cache
+                MyStore.put('unspent', JSON.stringify(obj));
+
+                success(obj);
             },
             error: function (data) {
                 //Try and look for unspent outputs in the cache

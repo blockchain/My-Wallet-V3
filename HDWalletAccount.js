@@ -22,12 +22,12 @@ function HDWalletAccount(seed, network) {
     // Make a new master key
     this.newNodeFromExtKey = function(extKey, cache) {
         if(cache == undefined) {
-          var accountZero = Bitcoin.HDNode.fromBase58(extKey); 
-          this.externalAccount = accountZero.derive(0);
-          this.internalAccount = accountZero.derive(1);
+            var accountZero = Bitcoin.HDNode.fromBase58(extKey);
+            this.externalAccount = accountZero.derive(0);
+            this.internalAccount = accountZero.derive(1);
         } else {
-          this.externalAccount = new Bitcoin.HDNode(cache.externalAccountPubKey, cache.externalAccountChainCode)
-          this.internalAccount = new Bitcoin.HDNode(cache.internalAccountPubKey, cache.internalAccountChainCode)
+            this.externalAccount = new Bitcoin.HDNode(cache.externalAccountPubKey, cache.externalAccountChainCode)
+            this.internalAccount = new Bitcoin.HDNode(cache.internalAccountPubKey, cache.internalAccountChainCode)
         }
 
         me.addresses = [];
