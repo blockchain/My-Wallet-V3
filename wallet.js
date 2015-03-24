@@ -1231,6 +1231,7 @@ var MyWallet = new function() {
     };
 
     this.generateNewMiniPrivateKey = function() {
+        // Documentation: https://en.bitcoin.it/wiki/Mini_private_key_format
         while (true) {
             //Use a normal ECKey to generate random bytes
             var key = Bitcoin.ECKey.makeRandom(false);
