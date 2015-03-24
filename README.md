@@ -18,7 +18,7 @@ npm test
 ## Clean
 
 ```sh
-rm -rf bower_components/ build/ dist/ node_modules/
+rm -rf bower_components/ build/ dist/ node_modules/ coverage/
 ```
 
 ## Getting Started
