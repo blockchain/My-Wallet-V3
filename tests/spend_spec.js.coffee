@@ -681,9 +681,22 @@ describe "Spend", ->
         # )        
   ##############################################################################
   describe "generateNewMiniPrivateKey()", ->
-    it "...", ->
-      # this is not a public function on MyWallet
-      pending()
+    it "create a well formatted pair of key, miniKey", ->
+
+      spyOn(Bitcoin.ECKey, 'makeRandom')
+        .and.callFake(() -> 
+          Bitcoin.ECKey.fromWIF "5K59WVEboZDoaQTRGJQtkpquNsd6LBczjES8nDqXAh7p49iy2jf")
+      spyOn(MyWallet, 'addPrivateKey').and.returnValue(true)
+
+      expectedWIF = "5JgQTisqR2v6vcsJnP71JF2mnm2nQdtSPk9Dh8jmwXtoytuD6aB"
+      keys = MyWallet.generateNewMiniPrivateKey()
+      checkMiniKey = SHA256(keys.miniKey + '?', {asBytes: true})[0]
+
+      expect(Bitcoin.ECKey.makeRandom).toHaveBeenCalled()
+      expect(MyWallet.addPrivateKey).toHaveBeenCalled()
+      expect(checkMiniKey).toBe(0)
+      expect(keys.miniKey).toBe('SC8okrRqGVS9B5R7Kssqfp')
+      expect(keys.key.toWIF()).toBe(expectedWIF)
 
   describe "redeemFromEmailOrMobile()", ->
     it "...", ->
