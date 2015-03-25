@@ -16,18 +16,19 @@ var Signer = new function() {
 
   var generated_addresses = [];
   this.to_addresses = [];
-  this.fee = BigInteger.ZERO;
-  var extra_private_keys = {};
+  this.from_addresses = [];
+  this.fee;
+  this.extra_private_keys = {};
   var listeners = [];
   var is_cancelled = false;
-  this.base_fee = BigInteger.valueOf(10000);
-  var min_free_output_size = BigInteger.valueOf(1000000);
-  var min_non_standard_output_size = BigInteger.valueOf(5460);
+  this.base_fee = "undefined";
+  var min_free_output_size;
+  var min_non_standard_output_size;
   var allow_adjust = true;
   this.ready_to_send_header = 'Transaction Ready to Send.';
   var min_input_confirmations = 0;
   var do_not_use_unspent_cache = false;
-  var min_input_size = BigInteger.ZERO;
+  var min_input_size;
   var did_specify_fee_manually = false;
   var sendTxInAmounts = [];
   var sendTxOutAmounts = [];
@@ -39,6 +40,12 @@ var Signer = new function() {
   }
 
   this.init = function() {
+    this.fee = BigInteger.ZERO;
+    this.base_fee = BigInteger.valueOf(10000);
+    min_free_output_size = BigInteger.valueOf(1000000);
+    min_non_standard_output_size = BigInteger.valueOf(5460);
+    min_input_size = BigInteger.ZERO;
+
     this.addListener({
       on_error : function(e) {
         console.log(e);
@@ -55,14 +62,14 @@ var Signer = new function() {
   };
 
   this.addListener = function(listener) {
-    this.listeners.push(listener);
+    listeners.push(listener);
   };
 
   function invoke(cb, obj, ob2) {
-    for (var key in this.listeners) {
+    for (var key in listeners) {
       try {
-        if (this.listeners[key][cb])
-          this.listeners[key][cb].call(this, obj, ob2);
+        if (listeners[key][cb])
+          listeners[key][cb].call(this, obj, ob2);
       } catch(e) {
         console.log(e);
       }
@@ -79,7 +86,7 @@ var Signer = new function() {
       invoke('on_start');
       BlockchainAPI.get_unspent(self.from_addresses, function (obj) {
         try {
-          if (self.is_cancelled) {
+          if (is_cancelled) {
             throw 'Transaction Cancelled';
           }
 
@@ -114,26 +121,26 @@ var Signer = new function() {
 
           self.makeTransaction(second_password);
         } catch (e) {
-          self.error(e);
+          default_error(e);
         }
       }, function(e) {
-        self.error(e);
-      }, self.min_input_confirmations, self.do_not_use_unspent_cache);
+        default_error(e);
+      }, min_input_confirmations, do_not_use_unspent_cache);
     } catch (e) {
-      self.error(e);
+      default_error(e);
     }
   };
 
   function isSelectedValueSufficient(txValue, availableValue) {
-    return availableValue.compareTo(txValue) == 0 || availableValue.compareTo(txValue.add(this.min_free_output_size)) >= 0;
+    return availableValue.compareTo(txValue) == 0 || availableValue.compareTo(txValue.add(min_free_output_size)) >= 0;
   }
 
   //Select Outputs and Construct transaction
-  function makeTransaction(second_password) {
+  this.makeTransaction = function(second_password) {
     var self = this;
 
     try {
-      if (self.is_cancelled) {
+      if (is_cancelled) {
         throw 'Transaction Cancelled';
       }
 
@@ -197,13 +204,13 @@ var Signer = new function() {
             }
 
             //Ignore inputs less than min_input_size
-            if (out.value.compareTo(self.min_input_size) < 0) {
+            if (out.value.compareTo(min_input_size) < 0) {
               continue;
             }
 
             //If the output happens to be greater than tx value then we can make this transaction with one input only
             //So discard the previous selected outs
-            //out.value.compareTo(self.min_free_output_size) >= 0 because we want to prefer a change output of greater than 0.01 BTC
+            //out.value.compareTo(min_free_output_size) >= 0 because we want to prefer a change output of greater than 0.01 BTC
             //Unless we have the extact tx value
             if (out.value.compareTo(txValue) == 0 || isSelectedValueSufficient(txValue, out.value)) {
               self.selected_outputs = [addr_input_obj.transactionInputDict];
@@ -250,21 +257,21 @@ var Signer = new function() {
       }
 
       function insufficientError() {
-        self.error('Insufficient funds. Value Needed ' +  formatBTC(txValue.toString()) + '. Available amount ' + formatBTC(availableValue.toString()));
+        default_error('Insufficient funds. Value Needed ' +  formatBTC(txValue.toString()) + '. Available amount ' + formatBTC(availableValue.toString()));
       }
 
       var difference = availableValue.subtract(txValue);
 
       if (difference.compareTo(BigInteger.ZERO) < 0) {
         //Can only adjust when there is one recipient
-        if (self.to_addresses.length == 1 && availableValue.compareTo(BigInteger.ZERO) > 0 && self.allow_adjust) {
+        if (self.to_addresses.length == 1 && availableValue.compareTo(BigInteger.ZERO) > 0 && allow_adjust) {
           insufficient_funds(txValue, availableValue, function() {
 
             //Subtract the difference from the to address
             var adjusted = self.to_addresses[0].value.add(difference);
             if (adjusted.compareTo(BigInteger.ZERO) > 0 && adjusted.compareTo(txValue) <= 0) {
               self.to_addresses[0].value = adjusted;
-              makeTransaction(second_password);
+              self.makeTransaction(second_password);
 
               return;
             } else {
@@ -281,32 +288,32 @@ var Signer = new function() {
       }
 
       if (self.selected_outputs.length == 0) {
-        self.error('No Available Outputs To Spend.');
+        default_error('No Available Outputs To Spend.');
         return;
       }
 
       var sendTx = new Bitcoin.Transaction();
 
-      this.sendTxInAmounts = [];
+      sendTxInAmounts = [];
       for (var i = 0; i < self.selected_outputs.length; i++) {
         var transactionInputDict = self.selected_outputs[i];
         sendTx.addInput(transactionInputDict.outpoint.hash, transactionInputDict.outpoint.index);
-        this.sendTxInAmounts.push(transactionInputDict.outpoint.value);
+        sendTxInAmounts.push(transactionInputDict.outpoint.value);
       }
 
-      this.sendTxOutAmounts = [];
+      sendTxOutAmounts = [];
       for (var i =0; i < self.to_addresses.length; ++i) {
         var addrObj = self.to_addresses[i];
         if (addrObj.m != null) {
           sendTx.addOutputScript(Bitcoin.scripts.multisigOutput(addrObj.m, addrObj.pubkeys), parseInt(addrObj.value));
-          this.sendTxOutAmounts.push(addrObj.value);
+          sendTxOutAmounts.push(addrObj.value);
         } else {
           sendTx.addOutput(addrObj.address, parseInt(addrObj.value));
-          this.sendTxOutAmounts.push(addrObj.value);
+          sendTxOutAmounts.push(addrObj.value);
         }
 
         //If less than 0.01 BTC force fee
-        if (addrObj.value.compareTo(self.min_free_output_size) < 0) {
+        if (addrObj.value.compareTo(min_free_output_size) < 0) {
           forceFee = true;
         }
       }
@@ -316,7 +323,7 @@ var Signer = new function() {
 
       //Consume the change if it would create a very small none standard output
       //Perhaps this behaviour should be user specified
-      if (changeValue.compareTo(self.min_non_standard_output_size) > 0) {
+      if (changeValue.compareTo(min_non_standard_output_size) > 0) {
         if (self.change_address != null) //If change address speicified return to that
           sendTx.addOutput(self.change_address, parseInt(changeValue));
         else if (addresses_used.length > 0) { //Else return to a random from address if specified
@@ -324,10 +331,10 @@ var Signer = new function() {
         } else { //Otherwise return to random unarchived
           sendTx.addOutput(Bitcoin.Address.fromBase58Check(MyWallet.getPreferredLegacyAddress()), parseInt(changeValue));
         }
-        this.sendTxOutAmounts.push(changeValue);
+        sendTxOutAmounts.push(changeValue);
 
         //If less than 0.01 BTC force fee
-        if (changeValue.compareTo(self.min_free_output_size) < 0) {
+        if (changeValue.compareTo(min_free_output_size) < 0) {
           forceFee = true;
         }
       }
@@ -360,7 +367,7 @@ var Signer = new function() {
        }
 
        sendTx.addOutputScript(Bitcoin.Script.createPubKeyScript(tbytes), 0);
-       this.sendTxOutAmounts.push(0);
+       sendTxOutAmounts.push(0);
 
        ibyte += 120;
        }
@@ -382,18 +389,18 @@ var Signer = new function() {
         //Forced Fee
         self.fee = self.base_fee.multiply(BigInteger.valueOf(kilobytes));
 
-        makeTransaction(second_password);
+        self.makeTransaction(second_password);
       };
 
       //Priority under 57 million requires a 0.0005 BTC transaction fee (see https://en.bitcoin.it/wiki/Transaction_fees)
       if (fee_is_zero && (forceFee || kilobytes > 1)) {
-        if (self.fee && self.did_specify_fee_manually) {
+        if (self.fee && did_specify_fee_manually) {
           ask_to_increase_fee(function() {
             set_fee_auto();
           }, function() {
             self.tx = sendTx;
-            determinePrivateKeys(function() {
-              signInputs();
+            self.determinePrivateKeys(function() {
+              self.signInputs();
             }, second_password);
           }, self.fee, self.base_fee.multiply(BigInteger.valueOf(kilobytes)));
         } else {
@@ -406,19 +413,19 @@ var Signer = new function() {
         }, function() {
           self.tx = sendTx;
 
-          determinePrivateKeys(function() {
-            signInputs();
+          self.determinePrivateKeys(function() {
+            self.signInputs();
           }, second_password);
         });
       } else {
         self.tx = sendTx;
 
-        determinePrivateKeys(function() {
-          signInputs();
+        self.determinePrivateKeys(function() {
+          self.signInputs();
         }, second_password);
       }
     } catch (e) {
-      this.error(e);
+      default_error(e);
     }
   }
 
@@ -434,11 +441,11 @@ var Signer = new function() {
     no();
   }
 
-  function determinePrivateKeys(success, second_password) {
+  this.determinePrivateKeys = function(success, second_password) {
     var self = this;
 
     try {
-      if (self.is_cancelled) {
+      if (is_cancelled) {
         throw 'Transaction Cancelled';
       }
 
@@ -471,7 +478,7 @@ var Signer = new function() {
             }
           }
           if (connected_script.priv_to_use == null) {
-            self.error("No private key found!");
+            default_error("No private key found!");
             // //No private key found, ask the user to provide it
             // ask_for_private_key(function (key) {
             //
@@ -479,12 +486,12 @@ var Signer = new function() {
             //         if (inputAddress == MyWallet.getUnCompressedAddressString(key) || inputAddress == MyWallet.getCompressedAddressString(key)) {
             //             self.extra_private_keys[inputAddress] = Bitcoin.Base58.encode(key.priv);
             //
-            //             determinePrivateKeys(success); //Try Again
+            //             self.determinePrivateKeys(success); //Try Again
             //         } else {
             //             throw 'The private key you entered does not match the bitcoin address';
             //         }
             //     } catch (e) {
-            //         self.error(e);
+            //         default_error(e);
             //     }
             // }, function(e) {
             //     //User did not provide it, try and re-construct without it
@@ -494,7 +501,7 @@ var Signer = new function() {
             //     });
             //
             //     //Remake the transaction without the address
-            //     makeTransaction();
+            //     self.makeTransaction();
             //
             // }, inputAddress);
 
@@ -509,11 +516,11 @@ var Signer = new function() {
 
       success();
     } catch (e) {
-      self.error(e);
+      default_error(e);
     }
   }
 
-  function signWebWorker(success, _error) {
+  this.signWebWorker = function(success, _error) {
     var didError = false;
     var error = function(e) {
       if (!didError) { _error(e); didError = true; }
@@ -589,13 +596,13 @@ var Signer = new function() {
     }
   }
 
-  function signNormal(success, error) {
+  this.signNormal = function(success, error) {
     var self = this;
     var outputN = 0;
 
     var signOne = function() {
       setTimeout(function() {
-        if (self.is_cancelled) {
+        if (is_cancelled) {
           error();
           return;
         }
@@ -634,7 +641,7 @@ var Signer = new function() {
     signOne();
   }
 
-  function signInputs() {
+  this.signInputs = function() {
     var self = this;
 
     try {
@@ -644,18 +651,18 @@ var Signer = new function() {
         invoke('on_finish_signing');
 
         self.is_ready = true;
-        ask_to_send();
+        self.ask_to_send();
       };
 
-      signWebWorker(success, function(e) {
+      self.signWebWorker(success, function(e) {
         console.log(e);
 
-        signNormal(success, function(e){
-          self.error(e);
+        self.signNormal(success, function(e){
+          default_error(e);
         });
       });
     } catch (e) {
-      self.error(e);
+      default_error(e);
     }
   }
 
@@ -672,50 +679,50 @@ var Signer = new function() {
   this.cancel = function() {
     if (!this.has_pushed) {
       terminateWorkers();
-      this.error('Transaction Cancelled');
+      default_error('Transaction Cancelled');
     }
   };
 
-  function send() {
+  this.send = function() {
     var self = this;
 
-    if (self.is_cancelled) {
-      self.error('This transaction has already been cancelled');
+    if (is_cancelled) {
+      default_error('This transaction has already been cancelled');
       return;
     }
 
     if (!self.is_ready) {
-      self.error('Transaction is not ready to send yet');
+      default_error('Transaction is not ready to send yet');
       return;
     }
 
     invoke('on_before_send');
 
-    if (self.generated_addresses.length > 0) {
+    if (generated_addresses.length > 0) {
       self.has_saved_addresses = true;
 
       MyWallet.backupWallet('update', function() {
-        pushTx();
+        self.pushTx();
       }, function() {
-        self.error('Error Backing Up Wallet. Cannot Save Newly Generated Keys.');
+        default_error('Error Backing Up Wallet. Cannot Save Newly Generated Keys.');
       });
     } else {
-      pushTx();
+      self.pushTx();
     }
   }
 
-  function pushTx() {
+  this.pushTx = function() {
     var self = this;
 
-    if (self.is_cancelled) //Only call once
+    if (is_cancelled) //Only call once
       return;
 
     self.has_pushed = true;
 
     BlockchainAPI.push_tx(self.tx, self.note, function(response) {
-      self.success(response);
+      default_success(response);
     }, function(response) {
-      self.error(response);
+      default_error(response);
     });
   }
 
@@ -723,20 +730,20 @@ var Signer = new function() {
     error('Cannot ask for private key without user interaction disabled');
   }
 
-  function ask_to_send() {
-    send(); //By Default Just Send
+  this.ask_to_send = function() {
+    this.send(); //By Default Just Send
   }
 
-  this.error = function(error) {
-    if (this.is_cancelled) //Only call once
+  default_error = function(error) {
+    if (is_cancelled) //Only call once
       return;
 
-    this.is_cancelled = true;
+    is_cancelled = true;
 
-    if (!this.has_pushed && this.generated_addresses.length > 0) {
+    if (!this.has_pushed && generated_addresses.length > 0) {
       //When an error occurs during send (or user cancelled) we need to remove the addresses we generated
-      for (var i = 0; i < this.generated_addresses.length; ++i) {
-        MyWallet.deleteLegacyAddress(this.generated_addresses[i]);
+      for (var i = 0; i < generated_addresses.length; ++i) {
+        MyWallet.deleteLegacyAddress(generated_addresses[i]);
       }
 
       if (this.has_saved_addresses)
@@ -746,7 +753,7 @@ var Signer = new function() {
     invoke('on_error', error);
   };
 
-  this.success = function() {
+  default_success = function() {
     invoke('on_success');
   };
 
