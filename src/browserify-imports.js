@@ -7,4 +7,4 @@ module.exports = {
   JSONB: require('json-buffer'),
   SHA256: require('sha256'),
   Unorm: require('unorm')
-}
+};
