@@ -1,145 +1,3 @@
-function exceptionToString(err) {
-  var vDebug = "";
-  for (var prop in err)  {
-    vDebug += "property: "+ prop+ " value: ["+ err[prop]+ "]\n";
-  }
-  return "toString(): " + " value: [" + err.toString() + "]";
-}
-
-function IsCanonicalSignature(vchSig) {
-  if (vchSig.length < 9)
-    throw 'Non-canonical signature: too short';
-  if (vchSig.length > 73)
-    throw 'Non-canonical signature: too long';
-  var nHashType = vchSig[vchSig.length - 1];
-  if (nHashType != Bitcoin.Transaction.SIGHASH_ALL && nHashType != Bitcoin.Transaction.SIGHASH_NONE && nHashType != Bitcoin.Transaction.SIGHASH_SINGLE && nHashType != Bitcoin.Transaction.SIGHASH_ANYONECANPAY)
-    throw 'Non-canonical signature: unknown hashtype byte ' + nHashType;
-  if (vchSig[0] != 0x30)
-    throw 'Non-canonical signature: wrong type';
-  if (vchSig[1] != vchSig.length-3)
-    throw 'Non-canonical signature: wrong length marker';
-  var nLenR = vchSig[3];
-  if (5 + nLenR >= vchSig.length)
-    throw 'Non-canonical signature: S length misplaced';
-  var nLenS = vchSig[5+nLenR];
-  if (nLenR+nLenS+7 != vchSig.length)
-    throw 'Non-canonical signature: R+S length mismatch';
-
-  var n = 4;
-  if (vchSig[n-2] != 0x02)
-    throw 'Non-canonical signature: R value type mismatch';
-  if (nLenR == 0)
-    throw 'Non-canonical signature: R length is zero';
-  if (vchSig[n+0] & 0x80)
-    throw 'Non-canonical signature: R value negative';
-  if (nLenR > 1 && (vchSig[n+0] == 0x00) && !(vchSig[n+1] & 0x80))
-    throw 'Non-canonical signature: R value excessively padded';
-
-  var n = 6+nLenR;
-  if (vchSig[n-2] != 0x02)
-    throw 'Non-canonical signature: S value type mismatch';
-  if (nLenS == 0)
-    throw 'Non-canonical signature: S length is zero';
-  if (vchSig[n+0] & 0x80)
-    throw 'Non-canonical signature: S value negative';
-  if (nLenS > 1 && (vchSig[n+0] == 0x00) && !(vchSig[n+1] & 0x80))
-    throw 'Non-canonical signature: S value excessively padded';
-
-  return true;
-}
-
-
-var initWebWorker = function() {
-  try {
-    //Init WebWorker
-    //Window is not defined in WebWorker
-    if (typeof window == "undefined" || !window) {
-      var window = {};
-
-      self.addEventListener('message', function(e) {
-        var data = e.data;
-        try {
-          switch (data.cmd) {
-          case 'seed':
-            var word_array = Crypto.util.bytesToWords(Crypto.util.hexToBytes(data.seed));
-
-            for (var i in word_array) {
-              rng_seed_int(word_array[i]);
-            }
-            break;
-          case 'decrypt':
-            var decoded = Crypto.AES.decrypt(data.data, data.password, { mode: new Crypto.mode.CBC(Crypto.pad.iso10126), iterations : data.pbkdf2_iterations});
-
-            self.postMessage({cmd : 'on_decrypt', data : decoded});
-
-            break;
-          case 'load_resource':
-            importScripts(data.path);
-            break;
-          case 'sign_input':
-            var tx = new Bitcoin.Transaction(data.tx);
-
-            var connected_script = new Bitcoin.Script(data.connected_script);
-
-            var signed_script = signInput(tx, data.outputN, data.priv_to_use, connected_script);
-
-            if (signed_script) {
-              self.postMessage({cmd : 'on_sign', script : signed_script, outputN : data.outputN});
-            } else {
-              throw 'Unknown Error Signing Script ' + data.outputN;
-            }
-            break;
-          default:
-            throw 'Unknown Command';
-          };
-        } catch (e) {
-          self.postMessage({cmd : 'on_error', e : exceptionToString(e)});
-        }
-      }, false);
-    }
-  } catch (e) { }
-};
-
-// Use web worker based on browser - ignore browserDetection on iOS (browserDetection undefined)
-if(typeof(browserDetection) === "undefined" ||
-   !(browserDetection().browser == "ie" && browserDetection().version < 11)) {
-  initWebWorker();
-}
-
-function signInput(tx, inputN, base58Key, connected_script, type) {
-  type = type ? type : Bitcoin.Transaction.SIGHASH_ALL;
-
-  var inputBitcoinAddress = Bitcoin.Address.fromOutputScript(connected_script);
-
-  var format = MyWallet.detectPrivateKeyFormat(base58Key);
-  var key = MyWallet.privateKeyStringToKey(base58Key, format);
-
-  // var decoded = MyWallet.B58LegacyDecode(base58Key);
-  // var key = new Bitcoin.ECKey(new BigInteger.fromBuffer(decoded), false);
-
-  // var key = new Bitcoin.ECKey(new BigInteger.fromBuffer(base58Key), false);
-
-  if (MyWallet.getUnCompressedAddressString(key) == inputBitcoinAddress.toString()) {
-  } else if (MyWallet.getCompressedAddressString(key) == inputBitcoinAddress.toString()) {
-    key = new Bitcoin.ECKey(key.d, true);
-  } else {
-    throw 'Private key does not match bitcoin address ' + inputBitcoinAddress.toString() + ' != ' + MyWallet.getUnCompressedAddressString(key) + ' | '+ MyWallet.getCompressedAddressString(key);
-  }
-  var signature = tx.signInput(inputN, connected_script, key);
-
-  if (!IsCanonicalSignature(signature)) {
-    throw 'IsCanonicalSignature returned false';
-  }
-
-  tx.setInputScript(inputN, Bitcoin.scripts.pubKeyHashInput(signature, key.pub));
-
-  if (tx.ins[inputN].script == null) {
-    throw 'Error creating input script';
-  }
-
-  return tx.ins[inputN].script;
-}
-
 
 // pending_transaction {
 //   change_address : BitcoinAddress
@@ -154,28 +12,53 @@ function signInput(tx, inputN, base58Key, connected_script, type) {
 //   on_before_send : function
 // }
 
-var Signer = {
-  generated_addresses : [],
-  to_addresses : [], // export
-  fee : BigInteger.ZERO, // export
-  extra_private_keys : {},
-  listeners : [],
-  is_cancelled : false,
-  base_fee : BigInteger.valueOf(10000), // export
-  min_free_output_size : BigInteger.valueOf(1000000),
-  min_non_standard_output_size : BigInteger.valueOf(5460),
-  allow_adjust : true,
-  ready_to_send_header : 'Transaction Ready to Send.', // export
-  min_input_confirmations : 0,
-  do_not_use_unspent_cache : false,
-  min_input_size : BigInteger.ZERO,
-  did_specify_fee_manually : false,
-  sendTxInAmounts : [],
-  sendTxOutAmounts : [],
-  addListener : function(listener) {
+var Signer = new function() {
+
+  var generated_addresses = [];
+  this.to_addresses = [];
+  this.fee = BigInteger.ZERO;
+  var extra_private_keys = {};
+  var listeners = [];
+  var is_cancelled = false;
+  this.base_fee = BigInteger.valueOf(10000);
+  var min_free_output_size = BigInteger.valueOf(1000000);
+  var min_non_standard_output_size = BigInteger.valueOf(5460);
+  var allow_adjust = true;
+  this.ready_to_send_header = 'Transaction Ready to Send.';
+  var min_input_confirmations = 0;
+  var do_not_use_unspent_cache = false;
+  var min_input_size = BigInteger.ZERO;
+  var did_specify_fee_manually = false;
+  var sendTxInAmounts = [];
+  var sendTxOutAmounts = [];
+
+  // Use web worker based on browser - ignore browserDetection on iOS (browserDetection undefined)
+  if(typeof(browserDetection) === "undefined" ||
+     !(browserDetection().browser == "ie" && browserDetection().version < 11)) {
+    initWebWorker();
+  }
+
+  this.init = function() {
+    this.addListener({
+      on_error : function(e) {
+        console.log(e);
+      },
+      on_begin_signing : function() {
+        this.start = new Date().getTime();
+      },
+      on_finish_signing : function() {
+        console.log('Signing Took ' + (new Date().getTime() - this.start) + 'ms');
+      }
+    });
+
+    return this;
+  };
+
+  this.addListener = function(listener) {
     this.listeners.push(listener);
-  },
-  invoke : function (cb, obj, ob2) {
+  };
+
+  function invoke(cb, obj, ob2) {
     for (var key in this.listeners) {
       try {
         if (this.listeners[key][cb])
@@ -184,15 +67,16 @@ var Signer = {
         console.log(e);
       }
     }
-  },
-  start : function(second_password) {
+  }
+
+  this.start = function(second_password) {
     if(second_password == undefined) {
       second_password = null;
     }
     var self = this;
 
     try {
-      self.invoke('on_start');
+      invoke('on_start');
       BlockchainAPI.get_unspent(self.from_addresses, function (obj) {
         try {
           if (self.is_cancelled) {
@@ -238,12 +122,14 @@ var Signer = {
     } catch (e) {
       self.error(e);
     }
-  },
-  isSelectedValueSufficient : function(txValue, availableValue) {
+  };
+
+  function isSelectedValueSufficient(txValue, availableValue) {
     return availableValue.compareTo(txValue) == 0 || availableValue.compareTo(txValue.add(this.min_free_output_size)) >= 0;
-  },
+  }
+
   //Select Outputs and Construct transaction
-  makeTransaction : function(second_password) {
+  function makeTransaction(second_password) {
     var self = this;
 
     try {
@@ -319,7 +205,7 @@ var Signer = {
             //So discard the previous selected outs
             //out.value.compareTo(self.min_free_output_size) >= 0 because we want to prefer a change output of greater than 0.01 BTC
             //Unless we have the extact tx value
-            if (out.value.compareTo(txValue) == 0 || self.isSelectedValueSufficient(txValue, out.value)) {
+            if (out.value.compareTo(txValue) == 0 || isSelectedValueSufficient(txValue, out.value)) {
               self.selected_outputs = [addr_input_obj.transactionInputDict];
 
               unspent_copy[i] = null; //Mark it null so we know it is used
@@ -343,7 +229,7 @@ var Signer = {
 
               availableValue = availableValue.add(out.value);
 
-              if (self.isSelectedValueSufficient(txValue, availableValue))
+              if (isSelectedValueSufficient(txValue, availableValue))
                 break;
             }
           } catch (e) {
@@ -352,7 +238,7 @@ var Signer = {
           }
         }
 
-        if (self.isSelectedValueSufficient(txValue, availableValue)) {
+        if (isSelectedValueSufficient(txValue, availableValue)) {
           break;
         }
 
@@ -372,13 +258,13 @@ var Signer = {
       if (difference.compareTo(BigInteger.ZERO) < 0) {
         //Can only adjust when there is one recipient
         if (self.to_addresses.length == 1 && availableValue.compareTo(BigInteger.ZERO) > 0 && self.allow_adjust) {
-          self.insufficient_funds(txValue, availableValue, function() {
+          insufficient_funds(txValue, availableValue, function() {
 
             //Subtract the difference from the to address
             var adjusted = self.to_addresses[0].value.add(difference);
             if (adjusted.compareTo(BigInteger.ZERO) > 0 && adjusted.compareTo(txValue) <= 0) {
               self.to_addresses[0].value = adjusted;
-              self.makeTransaction(second_password);
+              makeTransaction(second_password);
 
               return;
             } else {
@@ -496,18 +382,18 @@ var Signer = {
         //Forced Fee
         self.fee = self.base_fee.multiply(BigInteger.valueOf(kilobytes));
 
-        self.makeTransaction(second_password);
+        makeTransaction(second_password);
       };
 
       //Priority under 57 million requires a 0.0005 BTC transaction fee (see https://en.bitcoin.it/wiki/Transaction_fees)
       if (fee_is_zero && (forceFee || kilobytes > 1)) {
         if (self.fee && self.did_specify_fee_manually) {
-          self.ask_to_increase_fee(function() {
+          ask_to_increase_fee(function() {
             set_fee_auto();
           }, function() {
             self.tx = sendTx;
-            self.determinePrivateKeys(function() {
-              self.signInputs();
+            determinePrivateKeys(function() {
+              signInputs();
             }, second_password);
           }, self.fee, self.base_fee.multiply(BigInteger.valueOf(kilobytes)));
         } else {
@@ -515,36 +401,40 @@ var Signer = {
           set_fee_auto();
         }
       } else if (fee_is_zero && (MyWallet.getRecommendIncludeFee() || priority < 77600000)) {
-        self.ask_for_fee(function() {
+        ask_for_fee(function() {
           set_fee_auto();
         }, function() {
           self.tx = sendTx;
 
-          self.determinePrivateKeys(function() {
-            self.signInputs();
+          determinePrivateKeys(function() {
+            signInputs();
           }, second_password);
         });
       } else {
         self.tx = sendTx;
 
-        self.determinePrivateKeys(function() {
-          self.signInputs();
+        determinePrivateKeys(function() {
+          signInputs();
         }, second_password);
       }
     } catch (e) {
       this.error(e);
     }
-  },
-  ask_for_fee : function(yes, no) {
+  }
+
+  function ask_for_fee(yes, no) {
     yes();
-  },
-  ask_to_increase_fee : function(yes, no, customFee, recommendedFee) {
+  }
+
+  function ask_to_increase_fee(yes, no, customFee, recommendedFee) {
     yes();
-  },
-  insufficient_funds : function(amount_required, amount_available, yes, no) {
+  }
+
+  function insufficient_funds(amount_required, amount_available, yes, no) {
     no();
-  },
-  determinePrivateKeys: function(success, second_password) {
+  }
+
+  function determinePrivateKeys(success, second_password) {
     var self = this;
 
     try {
@@ -583,13 +473,13 @@ var Signer = {
           if (connected_script.priv_to_use == null) {
             self.error("No private key found!");
             // //No private key found, ask the user to provide it
-            // self.ask_for_private_key(function (key) {
+            // ask_for_private_key(function (key) {
             //
             //     try {
             //         if (inputAddress == MyWallet.getUnCompressedAddressString(key) || inputAddress == MyWallet.getCompressedAddressString(key)) {
             //             self.extra_private_keys[inputAddress] = Bitcoin.Base58.encode(key.priv);
             //
-            //             self.determinePrivateKeys(success); //Try Again
+            //             determinePrivateKeys(success); //Try Again
             //         } else {
             //             throw 'The private key you entered does not match the bitcoin address';
             //         }
@@ -604,7 +494,7 @@ var Signer = {
             //     });
             //
             //     //Remake the transaction without the address
-            //     self.makeTransaction();
+            //     makeTransaction();
             //
             // }, inputAddress);
 
@@ -621,8 +511,9 @@ var Signer = {
     } catch (e) {
       self.error(e);
     }
-  },
-  signWebWorker : function(success, _error) {
+  }
+
+  function signWebWorker(success, _error) {
     var didError = false;
     var error = function(e) {
       if (!didError) { _error(e); didError = true; }
@@ -644,14 +535,14 @@ var Signer = {
           try {
             switch (data.cmd) {
             case 'on_sign':
-              self.invoke('on_sign_progress', parseInt(data.outputN)+1);
+              invoke('on_sign_progress', parseInt(data.outputN)+1);
 
               self.tx.ins[data.outputN].script = new Bitcoin.Script(data.script);
 
               ++nSigned;
 
               if (nSigned == self.tx.ins.length) {
-                self.terminateWorkers();
+                terminateWorkers();
                 success();
               }
 
@@ -665,7 +556,7 @@ var Signer = {
             }
             };
           } catch (e) {
-            self.terminateWorkers();
+            terminateWorkers();
             error(e);
           }
         }, false);
@@ -696,8 +587,9 @@ var Signer = {
     } catch (e) {
       error(e);
     }
-  },
-  signNormal : function(success, error) {
+  }
+
+  function signNormal(success, error) {
     var self = this;
     var outputN = 0;
 
@@ -709,7 +601,7 @@ var Signer = {
         }
 
         try {
-          self.invoke('on_sign_progress', outputN+1);
+          invoke('on_sign_progress', outputN+1);
 
           var connected_script = self.selected_outputs[outputN].script;
 
@@ -740,32 +632,34 @@ var Signer = {
     };
 
     signOne();
-  },
-  signInputs : function() {
+  }
+
+  function signInputs() {
     var self = this;
 
     try {
-      self.invoke('on_begin_signing');
+      invoke('on_begin_signing');
 
       var success = function() {
-        self.invoke('on_finish_signing');
+        invoke('on_finish_signing');
 
         self.is_ready = true;
-        self.ask_to_send();
+        ask_to_send();
       };
 
-      self.signWebWorker(success, function(e) {
+      signWebWorker(success, function(e) {
         console.log(e);
 
-        self.signNormal(success, function(e){
+        signNormal(success, function(e){
           self.error(e);
         });
       });
     } catch (e) {
       self.error(e);
     }
-  },
-  terminateWorkers : function() {
+  }
+
+  function terminateWorkers() {
     if (this.worker) {
       for (var i = 0; i < this.worker.length; ++i)  {
         try {
@@ -773,14 +667,16 @@ var Signer = {
         } catch (e) { }
       }
     }
-  },
-  cancel : function() {
+  }
+
+  this.cancel = function() {
     if (!this.has_pushed) {
-      this.terminateWorkers();
+      terminateWorkers();
       this.error('Transaction Cancelled');
     }
-  },
-  send : function() {
+  };
+
+  function send() {
     var self = this;
 
     if (self.is_cancelled) {
@@ -793,21 +689,22 @@ var Signer = {
       return;
     }
 
-    self.invoke('on_before_send');
+    invoke('on_before_send');
 
     if (self.generated_addresses.length > 0) {
       self.has_saved_addresses = true;
 
       MyWallet.backupWallet('update', function() {
-        self.pushTx();
+        pushTx();
       }, function() {
         self.error('Error Backing Up Wallet. Cannot Save Newly Generated Keys.');
       });
     } else {
-      self.pushTx();
+      pushTx();
     }
-  },
-  pushTx : function() {
+  }
+
+  function pushTx() {
     var self = this;
 
     if (self.is_cancelled) //Only call once
@@ -820,14 +717,17 @@ var Signer = {
     }, function(response) {
       self.error(response);
     });
-  },
-  ask_for_private_key : function(success, error) {
+  }
+
+  function ask_for_private_key(success, error) {
     error('Cannot ask for private key without user interaction disabled');
-  },
-  ask_to_send : function() {
-    this.send(); //By Default Just Send
-  },
-  error : function(error) {
+  }
+
+  function ask_to_send() {
+    send(); //By Default Just Send
+  }
+
+  this.error = function(error) {
     if (this.is_cancelled) //Only call once
       return;
 
@@ -843,25 +743,146 @@ var Signer = {
         MyWallet.backupWallet();
     }
 
-    this.invoke('on_error', error);
-  },
-  success : function() {
-    this.invoke('on_success');
-  },
-  init : function() {
+    invoke('on_error', error);
+  };
 
-    pending_transaction.addListener({
-      on_error : function(e) {
-        console.log(e);
-      },
-      on_begin_signing : function() {
-        this.start = new Date().getTime();
-      },
-      on_finish_signing : function() {
-        console.log('Signing Took ' + (new Date().getTime() - this.start) + 'ms');
-      }
-    });
+  this.success = function() {
+    invoke('on_success');
+  };
 
-    return pending_transaction;
+  function exceptionToString(err) {
+    var vDebug = "";
+    for (var prop in err)  {
+      vDebug += "property: "+ prop+ " value: ["+ err[prop]+ "]\n";
+    }
+    return "toString(): " + " value: [" + err.toString() + "]";
   }
+
+  function IsCanonicalSignature(vchSig) {
+    if (vchSig.length < 9)
+      throw 'Non-canonical signature: too short';
+    if (vchSig.length > 73)
+      throw 'Non-canonical signature: too long';
+    var nHashType = vchSig[vchSig.length - 1];
+    if (nHashType != Bitcoin.Transaction.SIGHASH_ALL && nHashType != Bitcoin.Transaction.SIGHASH_NONE && nHashType != Bitcoin.Transaction.SIGHASH_SINGLE && nHashType != Bitcoin.Transaction.SIGHASH_ANYONECANPAY)
+      throw 'Non-canonical signature: unknown hashtype byte ' + nHashType;
+    if (vchSig[0] != 0x30)
+      throw 'Non-canonical signature: wrong type';
+    if (vchSig[1] != vchSig.length-3)
+      throw 'Non-canonical signature: wrong length marker';
+    var nLenR = vchSig[3];
+    if (5 + nLenR >= vchSig.length)
+      throw 'Non-canonical signature: S length misplaced';
+    var nLenS = vchSig[5+nLenR];
+    if (nLenR+nLenS+7 != vchSig.length)
+      throw 'Non-canonical signature: R+S length mismatch';
+
+    var n = 4;
+    if (vchSig[n-2] != 0x02)
+      throw 'Non-canonical signature: R value type mismatch';
+    if (nLenR == 0)
+      throw 'Non-canonical signature: R length is zero';
+    if (vchSig[n+0] & 0x80)
+      throw 'Non-canonical signature: R value negative';
+    if (nLenR > 1 && (vchSig[n+0] == 0x00) && !(vchSig[n+1] & 0x80))
+      throw 'Non-canonical signature: R value excessively padded';
+
+    var n = 6+nLenR;
+    if (vchSig[n-2] != 0x02)
+      throw 'Non-canonical signature: S value type mismatch';
+    if (nLenS == 0)
+      throw 'Non-canonical signature: S length is zero';
+    if (vchSig[n+0] & 0x80)
+      throw 'Non-canonical signature: S value negative';
+    if (nLenS > 1 && (vchSig[n+0] == 0x00) && !(vchSig[n+1] & 0x80))
+      throw 'Non-canonical signature: S value excessively padded';
+
+    return true;
+  }
+
+  function initWebWorker() {
+    try {
+      //Init WebWorker
+      //Window is not defined in WebWorker
+      if (typeof window == "undefined" || !window) {
+        var window = {};
+
+        self.addEventListener('message', function(e) {
+          var data = e.data;
+          try {
+            switch (data.cmd) {
+            case 'seed':
+              var word_array = Crypto.util.bytesToWords(Crypto.util.hexToBytes(data.seed));
+
+              for (var i in word_array) {
+                rng_seed_int(word_array[i]);
+              }
+              break;
+            case 'decrypt':
+              var decoded = Crypto.AES.decrypt(data.data, data.password, { mode: new Crypto.mode.CBC(Crypto.pad.iso10126), iterations : data.pbkdf2_iterations});
+
+              self.postMessage({cmd : 'on_decrypt', data : decoded});
+
+              break;
+            case 'load_resource':
+              importScripts(data.path);
+              break;
+            case 'sign_input':
+              var tx = new Bitcoin.Transaction(data.tx);
+
+              var connected_script = new Bitcoin.Script(data.connected_script);
+
+              var signed_script = signInput(tx, data.outputN, data.priv_to_use, connected_script);
+
+              if (signed_script) {
+                self.postMessage({cmd : 'on_sign', script : signed_script, outputN : data.outputN});
+              } else {
+                throw 'Unknown Error Signing Script ' + data.outputN;
+              }
+              break;
+            default:
+              throw 'Unknown Command';
+            };
+          } catch (e) {
+            self.postMessage({cmd : 'on_error', e : exceptionToString(e)});
+          }
+        }, false);
+      }
+    } catch (e) { }
+  };
+
+  function signInput(tx, inputN, base58Key, connected_script, type) {
+    type = type ? type : Bitcoin.Transaction.SIGHASH_ALL;
+
+    var inputBitcoinAddress = Bitcoin.Address.fromOutputScript(connected_script);
+
+    var format = MyWallet.detectPrivateKeyFormat(base58Key);
+    var key = MyWallet.privateKeyStringToKey(base58Key, format);
+
+    // var decoded = MyWallet.B58LegacyDecode(base58Key);
+    // var key = new Bitcoin.ECKey(new BigInteger.fromBuffer(decoded), false);
+
+    // var key = new Bitcoin.ECKey(new BigInteger.fromBuffer(base58Key), false);
+
+    if (MyWallet.getUnCompressedAddressString(key) == inputBitcoinAddress.toString()) {
+    } else if (MyWallet.getCompressedAddressString(key) == inputBitcoinAddress.toString()) {
+      key = new Bitcoin.ECKey(key.d, true);
+    } else {
+      throw 'Private key does not match bitcoin address ' + inputBitcoinAddress.toString() + ' != ' + MyWallet.getUnCompressedAddressString(key) + ' | '+ MyWallet.getCompressedAddressString(key);
+    }
+    var signature = tx.signInput(inputN, connected_script, key);
+
+    if (!IsCanonicalSignature(signature)) {
+      throw 'IsCanonicalSignature returned false';
+    }
+
+    tx.setInputScript(inputN, Bitcoin.scripts.pubKeyHashInput(signature, key.pub));
+
+    if (tx.ins[inputN].script == null) {
+      throw 'Error creating input script';
+    }
+
+    return tx.ins[inputN].script;
+  }
+
 };
