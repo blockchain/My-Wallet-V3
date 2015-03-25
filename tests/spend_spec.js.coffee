@@ -377,6 +377,7 @@ describe "Spend", ->
         get_unspent: () -> return
         push_tx: () -> return
         sendViaEmail: () -> return
+        sendViaSMS: () -> return
 
       spyOn(BlockchainAPI, "get_unspent")
         .and.callFake((xpubList,success,error,conf,nocache) -> 
@@ -389,6 +390,10 @@ describe "Spend", ->
       spyOn(BlockchainAPI, "sendViaEmail")
         .and.callFake((email, tx, privateKey, success, error) ->
           # console.log "sendViaEmail MOCK USED" 
+          success())
+      spyOn(BlockchainAPI, "sendViaSMS")
+        .and.callFake((mobile, tx, miniKeyAddrobj, success, error) ->
+          console.log "sendViaSMS MOCK USED" 
           success())
 
     describe "sendBitcoinsForAccount()", ->
@@ -626,62 +631,71 @@ describe "Spend", ->
 
     describe "sendToMobile()", ->
       it "should create a new address, create a tx to this address and push it", ->
-        pending()
-        # data.from = 0
-        # MyWallet.setDoubleEncryption(false)
-        # spyOn(MyWallet, 'addPrivateKey').and.returnValue(true)
-        # spyOn(MyWallet, 'setLegacyAddressTag')
-        # spyOn(MyWallet, 'setLegacyAddressLabel')
-        #   .and.callFake((adr,lab,success,error) -> success())
-        # spyOn(MyWallet, 'backupWallet')
-        #   .and.callFake((method,success,error) -> success())
-        # spyOn(MyWallet, 'getAndSetUnspentOutputsForAccount')
-        #   .and.callThrough()
-        # spyOn(hdAccounts[data.from], 'createTx').and.callThrough()
+        # pending()
+        data.from = 0
+        MyWallet.setDoubleEncryption(false)
+        spyOn(MyWallet, 'addPrivateKey').and.returnValue(true)
+        spyOn(MyWallet, 'setLegacyAddressTag')
+        spyOn(MyWallet, 'setLegacyAddressLabel')
+          .and.callFake((adr,lab,success,error) -> success())
+        spyOn(MyWallet, 'backupWallet')
+          .and.callFake((method,success,error) -> success())
+        spyOn(MyWallet, 'getAndSetUnspentOutputsForAccount')
+          .and.callThrough()
+        spyOn(hdAccounts[data.from], 'createTx').and.callThrough()
 
-        # MyWallet.sendToMobile data.from
-        #                    , data.amount
-        #                    , data.fee
-        #                    , data.mobile
-        #                    , observer.success
-        #                    , observer.error
-        #                    , observer.listener
-        #                    , null 
+        # Mock the generation of a mini private key
+        spyOn(Bitcoin.ECKey, 'makeRandom')
+          .and.callFake(() -> 
+            Bitcoin.ECKey.fromWIF "5K59WVEboZDoaQTRGJQtkpquNsd6LBczjES8nDqXAh7p49iy2jf")
 
-        # expect(MyWallet.addPrivateKey).toHaveBeenCalled()
-        # expect(MyWallet.setLegacyAddressTag).toHaveBeenCalled()
-        # address = MyWallet.setLegacyAddressTag.calls.argsFor(0)[0]
-        # expect(MyWallet.setLegacyAddressLabel)
-        #   .toHaveBeenCalledWith( address 
-        #                         ,jasmine.any(String)
-        #                         ,jasmine.any(Function)
-        #                         ,jasmine.any(Function)
-        # )
-        # expect(MyWallet.backupWallet)
-        #   .toHaveBeenCalledWith( 'update'
-        #                         ,jasmine.any(Function)
-        #                         ,jasmine.any(Function)
-        # )
-        # expect(MyWallet.getAndSetUnspentOutputsForAccount).toHaveBeenCalled() 
-        # expect(hdAccounts[data.from].createTx)
-        #   .toHaveBeenCalledWith(
-        #      address
-        #     ,data.amount
-        #     ,data.fee
-        #     ,getUnspendMock.unspent_outputs
-        #     ,hdAccounts[data.from].getAccountExtendedKey(true)
-        #     ,observer.listener)
+        MyWallet.sendToMobile data.from
+                            , data.amount
+                            , data.fee
+                            , data.mobile
+                            , observer.success
+                            , observer.error
+                            , observer.listener
+                            , null 
 
-        # expect(BlockchainAPI.push_tx)
-        #   .toHaveBeenCalledWith(
-        #      jasmine.any(Object)
-        #     ,null
-        #     ,jasmine.any(Function)
-        #     ,jasmine.any(Function)
-        # )        
+        expect(MyWallet.addPrivateKey).toHaveBeenCalled()
+        expect(MyWallet.setLegacyAddressTag).toHaveBeenCalled()
+        address = MyWallet.setLegacyAddressTag.calls.argsFor(0)[0]
+        expect(MyWallet.setLegacyAddressLabel)
+          .toHaveBeenCalledWith( address 
+                                ,jasmine.any(String)
+                                ,jasmine.any(Function)
+                                ,jasmine.any(Function)
+        )
+        expect(MyWallet.backupWallet)
+          .toHaveBeenCalledWith( 'update'
+                                ,jasmine.any(Function)
+                                ,jasmine.any(Function)
+        )
+        expect(MyWallet.getAndSetUnspentOutputsForAccount).toHaveBeenCalled() 
+        expect(hdAccounts[data.from].createTx)
+          .toHaveBeenCalledWith(
+             address
+            ,data.amount
+            ,data.fee
+            ,getUnspendMock.unspent_outputs
+            ,hdAccounts[data.from].getAccountExtendedKey(true)
+            ,observer.listener)
+
+        expect(BlockchainAPI.push_tx)
+          .toHaveBeenCalledWith(
+             jasmine.any(Object)
+            ,null
+            ,jasmine.any(Function)
+            ,jasmine.any(Function)
+        )        
   ##############################################################################
   describe "generateNewMiniPrivateKey()", ->
     it "create a well formatted pair of key, miniKey", ->
+
+      # I should add a test for a bad formatted key
+      ## Just test twice making the make random a mock with state 
+      ## (first time answer bad key and second time answer good key)
 
       spyOn(Bitcoin.ECKey, 'makeRandom')
         .and.callFake(() -> 
