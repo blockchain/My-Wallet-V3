@@ -2615,7 +2615,7 @@ var MyWallet = new function() {
 
     walletAccount.newNodeFromExtKey(archivedAccount.extendedPublicKey);
 
-    var account = HDAccount(walletAccount, archivedAccount.label, idx);
+    var account = new HDAccount(walletAccount, archivedAccount.label, idx);
 
     account.generateCache();
 
