@@ -594,7 +594,7 @@ var Signer = new function() {
     } catch (e) {
       error(e);
     }
-  }
+  };
 
   this.signNormal = function(success, error) {
     var self = this;
@@ -639,7 +639,7 @@ var Signer = new function() {
     };
 
     signOne();
-  }
+  };
 
   this.signInputs = function() {
     var self = this;
@@ -664,7 +664,7 @@ var Signer = new function() {
     } catch (e) {
       default_error(e);
     }
-  }
+  };
 
   function terminateWorkers() {
     if (this.worker) {
@@ -709,7 +709,7 @@ var Signer = new function() {
     } else {
       self.pushTx();
     }
-  }
+  };
 
   this.pushTx = function() {
     var self = this;
@@ -724,7 +724,7 @@ var Signer = new function() {
     }, function(response) {
       default_error(response);
     });
-  }
+  };
 
   function ask_for_private_key(success, error) {
     error('Cannot ask for private key without user interaction disabled');
@@ -732,7 +732,7 @@ var Signer = new function() {
 
   this.ask_to_send = function() {
     this.send(); //By Default Just Send
-  }
+  };
 
   default_error = function(error) {
     if (is_cancelled) //Only call once
