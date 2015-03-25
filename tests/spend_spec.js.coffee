@@ -51,7 +51,7 @@ describe "Spend", ->
     spyOn(observer, 'getPassword').and.callThrough()
     spyOn(mockedObj, 'addListener').and.callThrough()
     spyOn(mockedObj, 'start').and.callThrough()
-    spyOn(Signer, "initNewTx").and.callFake(()-> return mockedObj)
+    spyOn(Signer, "init").and.callFake(()-> return mockedObj)
 
     # activeLegacyAddresses = [
     #   "1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h"
@@ -125,7 +125,7 @@ describe "Spend", ->
                                                , observer.listener
                                                , observer.getPassword
 
-        expect(Signer.initNewTx).toHaveBeenCalled()
+        expect(Signer.init).toHaveBeenCalled()
         expect(BigInteger.valueOf(data.fee).equals(mockedObj.fee)).toBe(true)
         expect(mockedObj.from_addresses).toEqual([data.from])
         expect(BigInteger.valueOf(data.amount)
@@ -223,7 +223,7 @@ describe "Spend", ->
                                                , observer.listener
                                                , observer.getPassword
 
-        expect(Signer.initNewTx).toHaveBeenCalled()
+        expect(Signer.init).toHaveBeenCalled()
         expect(BigInteger.valueOf(data.fee).equals(mockedObj.fee)).toBe(true)
         expect(mockedObj.from_addresses).toEqual([data.from])
         expect(BigInteger.valueOf(data.amount)

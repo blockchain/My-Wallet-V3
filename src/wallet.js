@@ -1949,7 +1949,7 @@ var MyWallet = new function() {
 
   this.recommendedTransactionFeeForAddress = function(address, balance) {
     // TODO: calculate the correct fee:
-    var obj = Signer.initNewTx();
+    var obj = Signer.init();
     if(obj.base_fee) {
       return parseInt(obj.base_fee);
     } else {
@@ -2149,7 +2149,7 @@ var MyWallet = new function() {
       var from_address_uncompressed = MyWallet.getUnCompressedAddressString(privateKeyToSweep);
 
       BlockchainAPI.get_balance([from_address_compressed, from_address_uncompressed], function(value) {
-        var obj = Signer.initNewTx();
+        var obj = Signer.init();
         obj.fee = obj.base_fee; //Always include a fee
 
         var amount = BigInteger.valueOf(value).subtract(obj.fee);
@@ -2358,7 +2358,7 @@ var MyWallet = new function() {
   };
 
   function sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback, listener, second_password)  {
-    var obj = Signer.initNewTx();
+    var obj = Signer.init();
     if (feeAmount != null)
       obj.fee = BigInteger.valueOf(feeAmount);
     else
@@ -2408,7 +2408,7 @@ var MyWallet = new function() {
 
   function sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback, listener, second_password)  {
     var account = MyWallet.getHDWallet().getAccount(toIdx);
-    var obj = Signer.initNewTx();
+    var obj = Signer.init();
 
     if (feeAmount != null)
       obj.fee = BigInteger.valueOf(feeAmount);
@@ -2440,7 +2440,7 @@ var MyWallet = new function() {
    * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
    */
   this.sweepLegacyAddressToAccount = function(fromAddress, toIdx, successCallback, errorCallback, listener, getPassword)  {
-    var obj = Signer.initNewTx();
+    var obj = Signer.init();
     var feeAmount = parseInt(obj.base_fee.toString());
     var amount = MyWallet.getLegacyAddressBalance(fromAddress) - feeAmount;
     MyWallet.sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, null, successCallback, errorCallback, listener, getPassword);
