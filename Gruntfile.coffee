@@ -19,7 +19,6 @@ module.exports = (grunt) ->
           'src/shared.js'
           'src/ie.js'
           'src/crypto-util-legacy.js'
-          'src/mnemonic.js'
           'build/browserify.js'
           'build/sjcl.js'
           'build/blockchainapi.processed.js'
@@ -61,7 +60,6 @@ module.exports = (grunt) ->
           'src/wallet-signup.js'
           'src/HDWalletAccount.js'
           'src/hdwallet.js'
-          'src/mnemonic.js'
           'src/import-export.js'
         ],
         tasks: ['build'],
