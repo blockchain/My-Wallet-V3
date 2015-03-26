@@ -4,6 +4,8 @@ var HDAccount = function(seed, network, label, idx) {
 
   network = network || Bitcoin.networks.bitcoin;
 
+  var self = this;
+
   this.label = label;
   this.idx = idx;
   this.extendedPrivateKey = null;
@@ -19,7 +21,6 @@ var HDAccount = function(seed, network, label, idx) {
 
   // Stored in a closure to make accidental serialization less likely
   var masterkey = null;
-  var me = this;
   this.internalAccount = null;
   this.externalAccount = null;
 
@@ -43,13 +44,13 @@ var HDAccount = function(seed, network, label, idx) {
     this.externalAccount = accountZero.derive(0);
     this.internalAccount = accountZero.derive(1);
 
-    me.addresses = [];
-    me.changeAddresses = [];
+    self.addresses = [];
+    self.changeAddresses = [];
 
     keyCache = [];
     changeKeyCache = [];
 
-    me.outputs = {};
+    self.outputs = {};
   };
 
   // Make a new master key
@@ -63,13 +64,13 @@ var HDAccount = function(seed, network, label, idx) {
       this.internalAccount = new Bitcoin.HDNode(cache.internalAccountPubKey, cache.internalAccountChainCode);
     }
 
-    me.addresses = [];
-    me.changeAddresses = [];
+    self.addresses = [];
+    self.changeAddresses = [];
 
     keyCache = [];
     changeKeyCache = [];
 
-    me.outputs = {};
+    self.outputs = {};
   };
 
   this.getAddressAtIndex = function(idx) {
@@ -118,12 +119,6 @@ var HDAccount = function(seed, network, label, idx) {
 
     this.changeAddresses.push(key.getAddress().toString());
     return this.changeAddresses[this.changeAddresses.length - 1];
-  };
-
-  this.getBalance = function() {
-    return this.getUnspentOutputs().reduce(function(memo, output){
-      return memo + output.value;
-    }, 0);
   };
 
   this.getUnspentOutputs = function() {
@@ -247,7 +242,7 @@ var HDAccount = function(seed, network, label, idx) {
       if (isMyAddress(address)) {
         var output = txid + ':' + i;
 
-        me.outputs[output] = {
+        self.outputs[output] = {
           from: output,
           value: txOut.value,
           address: address,
@@ -264,54 +259,18 @@ var HDAccount = function(seed, network, label, idx) {
 
       var output = txinId + ':' + txIn.index;
 
-      if (!(output in me.outputs)) {
+      if (!(output in self.outputs)) {
         return;
       }
 
       if (isPending) {
-        me.outputs[output].to = txid + ':' + i;
-        me.outputs[output].pending = true;
+        self.outputs[output].to = txid + ':' + i;
+        self.outputs[output].pending = true;
       } else {
-        delete me.outputs[output];
+        delete self.outputs[output];
       }
     });
   }
-
-  this.createTx = function(to, value, fixedFee, unspentOutputs, changeAddress, listener) {
-    assert(value > network.dustThreshold, value + ' must be above dust threshold (' + network.dustThreshold + ' Satoshis)');
-
-    var utxos = getCandidateOutputs(unspentOutputs, value);
-    var accum = 0;
-    var subTotal = value;
-
-    var tx = new Bitcoin.Transaction();
-    tx.addOutput(to, value);
-
-    for (var i = 0; i < utxos.length; ++i) {
-      var utxo = utxos[i];
-
-      tx.addInput(utxo.hash, utxo.index);
-
-      var fee = fixedFee == undefined ? estimateFeePadChangeOutput(tx) : fixedFee;
-
-      accum += utxo.value;
-      subTotal = value + fee;
-      if (accum >= subTotal) {
-        var change = accum - subTotal;
-
-        if (change > network.dustThreshold) {
-          tx.addOutput(changeAddress || getChangeAddress(), change);
-        }
-
-        break;
-      }
-    }
-
-    assert(accum >= subTotal, 'Insufficient funds. Value Needed ' +  subTotal + '. Available amount ' + accum);
-
-    this.signWith(tx, utxos, listener);
-    return tx;
-  };
 
   function getCandidateOutputs(unspentOutputs, value) {
     var unspent = [];
@@ -338,10 +297,10 @@ var HDAccount = function(seed, network, label, idx) {
   };
 
   this.getChangeAddress = function() {
-    if(me.changeAddresses.length === 0) {
-      me.generateChangeAddress();
+    if(self.changeAddresses.length === 0) {
+      self.generateChangeAddress();
     }
-    return me.changeAddresses[me.changeAddresses.length - 1];
+    return self.changeAddresses[self.changeAddresses.length - 1];
   };
 
   this.generateKeyFromPath = function(path) {
@@ -392,7 +351,7 @@ var HDAccount = function(seed, network, label, idx) {
       var unspent = unspentOutputs[i];
 
       if (unspent.xpub) {
-        var pub = me.generateKeyFromPath(unspent.xpub.path);
+        var pub = self.generateKeyFromPath(unspent.xpub.path);
         var key = pub.privKey;
       }
 
@@ -444,11 +403,11 @@ var HDAccount = function(seed, network, label, idx) {
   };
 
   function isReceiveAddress(address){
-    return me.addresses.indexOf(address) > -1;
+    return self.addresses.indexOf(address) > -1;
   }
 
   function isChangeAddress(address){
-    return me.changeAddresses.indexOf(address) > -1;
+    return self.changeAddresses.indexOf(address) > -1;
   }
 
   function isMyAddress(address) {
@@ -614,6 +573,42 @@ var HDAccount = function(seed, network, label, idx) {
     return this.balance = null;
   };
 
+  function createTxReal(to, value, fixedFee, unspentOutputs, changeAddress, listener) {
+    assert(value > network.dustThreshold, value + ' must be above dust threshold (' + network.dustThreshold + ' Satoshis)');
+
+    var utxos = getCandidateOutputs(unspentOutputs, value);
+    var accum = 0;
+    var subTotal = value;
+
+    var tx = new Bitcoin.Transaction();
+    tx.addOutput(to, value);
+
+    for (var i = 0; i < utxos.length; ++i) {
+      var utxo = utxos[i];
+
+      tx.addInput(utxo.hash, utxo.index);
+
+      var fee = fixedFee == undefined ? estimateFeePadChangeOutput(tx) : fixedFee;
+
+      accum += utxo.value;
+      subTotal = value + fee;
+      if (accum >= subTotal) {
+        var change = accum - subTotal;
+
+        if (change > network.dustThreshold) {
+          tx.addOutput(changeAddress || getChangeAddress(), change);
+        }
+
+        break;
+      }
+    }
+
+    assert(accum >= subTotal, 'Insufficient funds. Value Needed ' +  subTotal + '. Available amount ' + accum);
+
+    self.signWith(tx, utxos, listener);
+    return tx;
+  };
+
   this.createTx = function(to, value, fixedFee, unspentOutputs, extendedPrivateKey, listener) {
     // Create the send account (same account as current account, but created with xpriv and thus able to generate private keys)
     var sendAccount = new HDAccount();
@@ -621,13 +616,13 @@ var HDAccount = function(seed, network, label, idx) {
 
     var changeAddress = sendAccount.getChangeAddressAtIndex(this.changeAddressCount);
 
-    return sendAccount.createTx(to, value, fixedFee, unspentOutputs, changeAddress, listener);
+    return sendAccount.createTxReal(to, value, fixedFee, unspentOutputs, changeAddress, listener);
   };
 
   this.recommendedTransactionFee = function(amount) {
     try {
       //12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX is dummy address, first ever bitcoin address
-      var tx = this.createTx("12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX", amount, null, null, null);
+      var tx = this.createTxReal("12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX", amount, null, null, null);
       return this.estimatePaddedFee(tx, Bitcoin.networks.bitcoin);
     } catch (e) {
       return 10000;
