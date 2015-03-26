@@ -381,19 +381,15 @@ describe "Spend", ->
 
       spyOn(BlockchainAPI, "get_unspent")
         .and.callFake((xpubList,success,error,conf,nocache) -> 
-          # console.log "GET_UNSPENT MOCK USED"
           success(getUnspendMock))
       spyOn(BlockchainAPI, "push_tx")
         .and.callFake((tx, note, success, error) ->
-          # console.log "PUSH MOCK USED" 
           success())
       spyOn(BlockchainAPI, "sendViaEmail")
         .and.callFake((email, tx, privateKey, success, error) ->
-          # console.log "sendViaEmail MOCK USED" 
           success())
       spyOn(BlockchainAPI, "sendViaSMS")
         .and.callFake((mobile, tx, miniKeyAddrobj, success, error) ->
-          console.log "sendViaSMS MOCK USED" 
           success())
 
     describe "sendBitcoinsForAccount()", ->
@@ -569,6 +565,7 @@ describe "Spend", ->
             ,jasmine.any(Function)
             ,jasmine.any(Function)
         )
+        expect(observer.success).toHaveBeenCalled()
 
       it "with double encryption and wrong password", ->
 
@@ -631,7 +628,7 @@ describe "Spend", ->
 
     describe "sendToMobile()", ->
       it "should create a new address, create a tx to this address and push it", ->
-        # pending()
+        
         data.from = 0
         MyWallet.setDoubleEncryption(false)
         spyOn(MyWallet, 'addPrivateKey').and.returnValue(true)
@@ -643,8 +640,6 @@ describe "Spend", ->
         spyOn(MyWallet, 'getAndSetUnspentOutputsForAccount')
           .and.callThrough()
         spyOn(hdAccounts[data.from], 'createTx').and.callThrough()
-
-        # Mock the generation of a mini private key
         spyOn(Bitcoin.ECKey, 'makeRandom')
           .and.callFake(() -> 
             Bitcoin.ECKey.fromWIF "5K59WVEboZDoaQTRGJQtkpquNsd6LBczjES8nDqXAh7p49iy2jf")
@@ -688,25 +683,95 @@ describe "Spend", ->
             ,null
             ,jasmine.any(Function)
             ,jasmine.any(Function)
-        )        
+        )
+        expect(observer.success).toHaveBeenCalled()
+
+      it "with double encryption and wrong password", ->
+
+        data.from = 0
+        spyOn(MyWallet, "validateSecondPassword").and.callFake((pw)-> false)
+        MyWallet.setDoubleEncryption(true)
+
+        MyWallet.sendToMobile data.from
+                            , data.amount
+                            , data.fee
+                            , data.mobile
+                            , observer.success
+                            , observer.error
+                            , observer.listener
+                            , observer.getPassword
+
+        modalFuncValidatePass = observer.getPassword.calls.argsFor(0)[0]
+        modalFuncValidatePass  "ThisIsAWrongPass"
+                             , observer.correct_password
+                             , observer.wrong_password
+
+        expect(observer.getPassword).toHaveBeenCalled()
+        expect(MyWallet.validateSecondPassword).toHaveBeenCalled()
+        expect(observer.wrong_password).toHaveBeenCalled()
+        expect(observer.correct_password).not.toHaveBeenCalled()
+
+      it "with double encryption enabled and correct password", ->
+
+        data.from = 0
+        spyOn(MyWallet, "validateSecondPassword").and.callFake((pw)-> true)
+        spyOn(MyWallet, "decryptSecretWithSecondPassword")
+          .and.returnValue(hdAccounts[data.from].getAccountExtendedKey(true))
+        MyWallet.setDoubleEncryption(true)
+        spyOn(MyWallet, 'addPrivateKey').and.returnValue(true)
+        spyOn(MyWallet, 'setLegacyAddressTag')
+        spyOn(MyWallet, 'setLegacyAddressLabel')
+          .and.callFake((adr,lab,success,error) -> success())
+        spyOn(MyWallet, 'backupWallet')
+          .and.callFake((method,success,error) -> success())
+        spyOn(MyWallet, 'getAndSetUnspentOutputsForAccount')
+          .and.callThrough()
+        spyOn(hdAccounts[data.from], 'createTx').and.callThrough()
+        spyOn(Bitcoin.ECKey, 'makeRandom')
+          .and.callFake(() -> 
+            Bitcoin.ECKey.fromWIF "5K59WVEboZDoaQTRGJQtkpquNsd6LBczjES8nDqXAh7p49iy2jf")
+
+        MyWallet.sendToMobile data.from
+                            , data.amount
+                            , data.fee
+                            , data.mobile
+                            , observer.success
+                            , observer.error
+                            , observer.listener
+                            , observer.getPassword
+
+        modalFuncValidatePass = observer.getPassword.calls.argsFor(0)[0]
+        modalFuncValidatePass  "ThisIsACorrectPass"
+                             , observer.correct_password
+                             , observer.wrong_password
+
+        expect(observer.getPassword).toHaveBeenCalled()
+        expect(MyWallet.validateSecondPassword).toHaveBeenCalled()
+        expect(observer.wrong_password).not.toHaveBeenCalled()
+        expect(observer.correct_password).toHaveBeenCalled()
+        expect(MyWallet.decryptSecretWithSecondPassword).toHaveBeenCalled()
+        expect(observer.success).toHaveBeenCalled()
+
   ##############################################################################
   describe "generateNewMiniPrivateKey()", ->
     it "create a well formatted pair of key, miniKey", ->
 
-      # I should add a test for a bad formatted key
-      ## Just test twice making the make random a mock with state 
-      ## (first time answer bad key and second time answer good key)
-
-      spyOn(Bitcoin.ECKey, 'makeRandom')
-        .and.callFake(() -> 
-          Bitcoin.ECKey.fromWIF "5K59WVEboZDoaQTRGJQtkpquNsd6LBczjES8nDqXAh7p49iy2jf")
       spyOn(MyWallet, 'addPrivateKey').and.returnValue(true)
+      do () ->
+        secondCall = false
+        k1 = "5K59WVEboZDoaQTRGJQtkpquNsd6LBczjES8nDqXAh7p49iy2jf"
+        k2 = "5JuoYF5MJXoPNsPXDw177hc5kWBmqP2zYp7inxDefy4C1Ca7sLW"
+        k  = undefined
+        spyOn(Bitcoin.ECKey, 'makeRandom')
+          .and.callFake(() ->
+              if secondCall then k = k1 else secondCall = true; k = k2 
+              return Bitcoin.ECKey.fromWIF k)
 
       expectedWIF = "5JgQTisqR2v6vcsJnP71JF2mnm2nQdtSPk9Dh8jmwXtoytuD6aB"
       keys = MyWallet.generateNewMiniPrivateKey()
       checkMiniKey = SHA256(keys.miniKey + '?', {asBytes: true})[0]
 
-      expect(Bitcoin.ECKey.makeRandom).toHaveBeenCalled()
+      expect(Bitcoin.ECKey.makeRandom.calls.count()).toEqual(2);
       expect(MyWallet.addPrivateKey).toHaveBeenCalled()
       expect(checkMiniKey).toBe(0)
       expect(keys.miniKey).toBe('SC8okrRqGVS9B5R7Kssqfp')
