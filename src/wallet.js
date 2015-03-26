@@ -1505,6 +1505,21 @@ var MyWallet = new function() {
   this.getLabelForAccount = function(accountIdx) {
     return MyWallet.getHDWallet().getAccount(accountIdx).getLabel();
   };
+  
+  /**
+   * Validates proposed label for account
+   * @param {string} label account label
+   * @return {boolean} success or not
+   */
+  this.validateAccountLabel = function(label) {
+    if (! isAlphaNumericSpace(label))
+      return false;
+    
+    if (!label || label == "" || label.length > 17)
+      return false;
+    
+    return true;
+  };
 
   /**
    * Set label for account and backup wallet.
@@ -1513,8 +1528,9 @@ var MyWallet = new function() {
    * @return {boolean} success or not
    */
   this.setLabelForAccount = function(accountIdx, label) {
-    if (! isAlphaNumericSpace(label))
+    if (!this.validateAccountLabel(label))
       return false;
+      
     MyWallet.getHDWallet().getAccount(accountIdx).setLabel(label);
     MyWallet.backupWalletDelayed();
     return true;
@@ -2676,10 +2692,11 @@ var MyWallet = new function() {
    * @param {function()} error called when account creation failed
    */
   this.createAccount = function(label, getPassword, success, error) {
-    if(!label || label == "" || label.length > 17) {
-        error("Invalid label");
-        return;
+    if(!this.validateAccountLabel(label)) {
+      error("Invalid label");
+      return;
     }
+      
     if (double_encryption) {
       getPassword(function(pw, correct_password, incorrect_password) {
         if (MyWallet.validateSecondPassword(pw)) {
