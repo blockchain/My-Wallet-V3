@@ -2676,6 +2676,10 @@ var MyWallet = new function() {
    * @param {function()} error called when account creation failed
    */
   this.createAccount = function(label, getPassword, success, error) {
+    if(!label || label == "" || label.length > 17) {
+        error("Invalid label");
+        return;
+    }
     if (double_encryption) {
       getPassword(function(pw, correct_password, incorrect_password) {
         if (MyWallet.validateSecondPassword(pw)) {
