@@ -17,11 +17,9 @@ var Signer = new function() {
   var generated_addresses = [];
   this.to_addresses = [];
   this.from_addresses = [];
-  this.fee;
   this.extra_private_keys = {};
   var listeners = [];
   var is_cancelled = false;
-  this.base_fee = "undefined";
   var min_free_output_size;
   var min_non_standard_output_size;
   var allow_adjust = true;
@@ -45,6 +43,21 @@ var Signer = new function() {
     min_free_output_size = BigInteger.valueOf(1000000);
     min_non_standard_output_size = BigInteger.valueOf(5460);
     min_input_size = BigInteger.ZERO;
+      
+    generated_addresses = [];
+    this.to_addresses = [];
+    this.from_addresses = [];
+    this.extra_private_keys = {};
+    listeners = [];
+    is_cancelled = false;
+    allow_adjust = true;
+    this.ready_to_send_header = 'Transaction Ready to Send.';
+    min_input_confirmations = 0;
+    do_not_use_unspent_cache = false;
+    min_input_size;
+    did_specify_fee_manually = false;
+    sendTxInAmounts = [];
+    sendTxOutAmounts = [];
 
     this.addListener({
       on_error : function(e) {
