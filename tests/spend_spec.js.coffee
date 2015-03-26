@@ -51,7 +51,6 @@ describe "Spend", ->
     spyOn(observer, 'getPassword').and.callThrough()
     spyOn(mockedObj, 'addListener').and.callThrough()
     spyOn(mockedObj, 'start').and.callThrough()
-    spyOn(Signer, "init").and.callFake(()-> return mockedObj)
 
     # activeLegacyAddresses = [
     #   "1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h"
@@ -89,6 +88,7 @@ describe "Spend", ->
   ## LEGACY ADDRESS TESTS
   describe "Legacy Address", ->
     beforeEach ->
+      spyOn(Signer, "init").and.callFake(()-> return mockedObj)
     ############################################################################
     ############# LEGACY ADDR TO ACC
     describe "sendFromLegacyAddressToAccount()", ->
@@ -378,6 +378,7 @@ describe "Spend", ->
         push_tx: () -> return
         sendViaEmail: () -> return
         sendViaSMS: () -> return
+        get_balance: () -> return
 
       spyOn(BlockchainAPI, "get_unspent")
         .and.callFake((xpubList,success,error,conf,nocache) -> 
@@ -391,6 +392,9 @@ describe "Spend", ->
       spyOn(BlockchainAPI, "sendViaSMS")
         .and.callFake((mobile, tx, miniKeyAddrobj, success, error) ->
           success())
+      spyOn(BlockchainAPI, "get_balance")
+        .and.callFake((addresses, success, error) ->
+          success(1000000))
 
     describe "sendBitcoinsForAccount()", ->
       it "the transaction has been pushed to the network", ->
@@ -752,6 +756,78 @@ describe "Spend", ->
         expect(MyWallet.decryptSecretWithSecondPassword).toHaveBeenCalled()
         expect(observer.success).toHaveBeenCalled()
 
+    describe "redeemFromEmailOrMobile()", ->
+      it "should redeem funds with a well formatted key", ->
+
+        obj =
+          to_addresses: []
+          fee: BigInteger.ZERO
+          base_fee: BigInteger.valueOf(10000)
+          listeners: []
+          extra_private_keys: {}
+          addListener: (listener) ->
+            this.listeners.push(listener);
+          start: (pass) -> this.listeners[0].on_success()
+
+        spyOn(Signer, "init").and.callFake(()-> obj)
+        spyOn(obj, 'start').and.callThrough()
+        spyOn(obj, 'addListener').and.callThrough()
+
+        data.from = 0
+        miniPrv   = "SC8okrRqGVS9B5R7Kssqfp"
+
+        MyWallet.redeemFromEmailOrMobile data.from
+                                       , miniPrv
+                                       , observer.success
+                                       , observer.error
+
+        fundsToRedeem = BigInteger.valueOf(1000000);
+        finalFunds = fundsToRedeem.subtract(BigInteger.valueOf(10000))
+        expect(finalFunds.equals(obj.to_addresses[0].value)).toBe(true)
+        expect(obj.to_addresses[0].address.toString())
+          .toBe("1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX")
+        expect(obj.addListener).toHaveBeenCalled()
+        expect(obj.start).toHaveBeenCalled()
+        expect(observer.success).toHaveBeenCalled()
+
+    describe "redeemFromEmailOrMobile()", ->
+      it "bad formatted key", ->
+        pending()
+        # obj =
+        #   to_addresses: []
+        #   fee: BigInteger.ZERO
+        #   base_fee: BigInteger.valueOf(10000)
+        #   listeners: []
+        #   extra_private_keys: {}
+        #   addListener: (listener) ->
+        #     this.listeners.push(listener);
+        #   start: (pass) -> this.listeners[0].on_success()
+
+        # spyOn(Signer, "init").and.callFake(()-> obj)
+        # spyOn(obj, 'start').and.callThrough()
+        # spyOn(obj, 'addListener').and.callThrough()
+
+        # data.from = 0
+        # miniPrv   = "SC8okrRqGVS9B5R7KssqfX"
+
+        # MyWallet.redeemFromEmailOrMobile data.from
+        #                                , miniPrv
+        #                                , observer.success
+        #                                , observer.error
+
+        # # fundsToRedeem = BigInteger.valueOf(1000000);
+        # # finalFunds = fundsToRedeem.subtract(BigInteger.valueOf(10000))
+        # # expect(finalFunds.equals(obj.to_addresses[0].value)).toBe(true)
+        # # expect(obj.to_addresses[0].address.toString())
+        # #   .toBe("1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX")
+        # # expect(obj.addListener).toHaveBeenCalled()
+        # # expect(obj.start).toHaveBeenCalled()
+        # expect(observer.success).not.toHaveBeenCalled()
+        # expect(observer.error).toHaveBeenCalled()
+
+    describe "importPrivateKey()", ->
+      it "...", ->
+        pending()
   ##############################################################################
   describe "generateNewMiniPrivateKey()", ->
     it "create a well formatted pair of key, miniKey", ->
@@ -776,11 +852,3 @@ describe "Spend", ->
       expect(checkMiniKey).toBe(0)
       expect(keys.miniKey).toBe('SC8okrRqGVS9B5R7Kssqfp')
       expect(keys.key.toWIF()).toBe(expectedWIF)
-
-  describe "redeemFromEmailOrMobile()", ->
-    it "...", ->
-      pending()
-
-  describe "importPrivateKey()", ->
-    it "...", ->
-      pending()
