@@ -1,12 +1,26 @@
-var HDWalletAccount = function(seed, network) {
+var HDAccount = function(seed, network, label, idx) {
 
   var Bitcoin = Browserify.Bitcoin;
 
   network = network || Bitcoin.networks.bitcoin;
 
+  var self = this;
+
+  this.label = label;
+  this.idx = idx;
+  this.extendedPrivateKey = null;
+  this.extendedPublicKey = null;
+  this.receiveAddressCount = 0;
+  this.changeAddressCount = 0;
+  this.n_tx = 0;
+  this.numTxFetched = 0;
+  this.archived = false;
+  this.address_labels= [];
+  this.balance = null;
+  this.cache= {};
+
   // Stored in a closure to make accidental serialization less likely
   var masterkey = null;
-  var me = this;
   this.internalAccount = null;
   this.externalAccount = null;
 
@@ -20,6 +34,25 @@ var HDWalletAccount = function(seed, network) {
   var keyCache = [];
   var changeKeyCache = [];
 
+  if (seed) {
+    seed = seed || crypto.randomBytes(32);
+    masterkey = Bitcoin.HDNode.fromSeedBuffer(seed, network);
+
+    // HD first-level child derivation method should be hardened
+    // See https://bitcointalk.org/index.php?topic=405179.msg4415254#msg4415254
+    var accountZero = masterkey.deriveHardened(0);
+    this.externalAccount = accountZero.derive(0);
+    this.internalAccount = accountZero.derive(1);
+
+    self.addresses = [];
+    self.changeAddresses = [];
+
+    keyCache = [];
+    changeKeyCache = [];
+
+    self.outputs = {};
+  };
+
   // Make a new master key
   this.newNodeFromExtKey = function(extKey, cache) {
     if(cache == undefined) {
@@ -31,38 +64,14 @@ var HDWalletAccount = function(seed, network) {
       this.internalAccount = new Bitcoin.HDNode(cache.internalAccountPubKey, cache.internalAccountChainCode);
     }
 
-    me.addresses = [];
-    me.changeAddresses = [];
+    self.addresses = [];
+    self.changeAddresses = [];
 
     keyCache = [];
     changeKeyCache = [];
 
-    me.outputs = {};
+    self.outputs = {};
   };
-
-  // Make a new master key
-  this.newMasterKey = function(seed) {
-    seed = seed || crypto.randomBytes(32);
-    masterkey = Bitcoin.HDNode.fromSeedBuffer(seed, network);
-
-    // HD first-level child derivation method should be hardened
-    // See https://bitcointalk.org/index.php?topic=405179.msg4415254#msg4415254
-    var accountZero = masterkey.deriveHardened(0);
-    this.externalAccount = accountZero.derive(0);
-    this.internalAccount = accountZero.derive(1);
-
-    me.addresses = [];
-    me.changeAddresses = [];
-
-    keyCache = [];
-    changeKeyCache = [];
-
-    me.outputs = {};
-  };
-
-  if (seed) {
-    this.newMasterKey(seed);
-  }
 
   this.getAddressAtIndex = function(idx) {
     if (keyCache[idx]) {
@@ -110,12 +119,6 @@ var HDWalletAccount = function(seed, network) {
 
     this.changeAddresses.push(key.getAddress().toString());
     return this.changeAddresses[this.changeAddresses.length - 1];
-  };
-
-  this.getBalance = function() {
-    return this.getUnspentOutputs().reduce(function(memo, output){
-      return memo + output.value;
-    }, 0);
   };
 
   this.getUnspentOutputs = function() {
@@ -239,7 +242,7 @@ var HDWalletAccount = function(seed, network) {
       if (isMyAddress(address)) {
         var output = txid + ':' + i;
 
-        me.outputs[output] = {
+        self.outputs[output] = {
           from: output,
           value: txOut.value,
           address: address,
@@ -256,54 +259,18 @@ var HDWalletAccount = function(seed, network) {
 
       var output = txinId + ':' + txIn.index;
 
-      if (!(output in me.outputs)) {
+      if (!(output in self.outputs)) {
         return;
       }
 
       if (isPending) {
-        me.outputs[output].to = txid + ':' + i;
-        me.outputs[output].pending = true;
+        self.outputs[output].to = txid + ':' + i;
+        self.outputs[output].pending = true;
       } else {
-        delete me.outputs[output];
+        delete self.outputs[output];
       }
     });
   }
-
-  this.createTx = function(to, value, fixedFee, unspentOutputs, changeAddress, listener) {
-    assert(value > network.dustThreshold, value + ' must be above dust threshold (' + network.dustThreshold + ' Satoshis)');
-
-    var utxos = getCandidateOutputs(unspentOutputs, value);
-    var accum = 0;
-    var subTotal = value;
-
-    var tx = new Bitcoin.Transaction();
-    tx.addOutput(to, value);
-
-    for (var i = 0; i < utxos.length; ++i) {
-      var utxo = utxos[i];
-
-      tx.addInput(utxo.hash, utxo.index);
-
-      var fee = fixedFee == undefined ? estimateFeePadChangeOutput(tx) : fixedFee;
-
-      accum += utxo.value;
-      subTotal = value + fee;
-      if (accum >= subTotal) {
-        var change = accum - subTotal;
-
-        if (change > network.dustThreshold) {
-          tx.addOutput(changeAddress || getChangeAddress(), change);
-        }
-
-        break;
-      }
-    }
-
-    assert(accum >= subTotal, 'Insufficient funds. Value Needed ' +  subTotal + '. Available amount ' + accum);
-
-    this.signWith(tx, utxos, listener);
-    return tx;
-  };
 
   function getCandidateOutputs(unspentOutputs, value) {
     var unspent = [];
@@ -330,10 +297,10 @@ var HDWalletAccount = function(seed, network) {
   };
 
   this.getChangeAddress = function() {
-    if(me.changeAddresses.length === 0) {
-      me.generateChangeAddress();
+    if(self.changeAddresses.length === 0) {
+      self.generateChangeAddress();
     }
-    return me.changeAddresses[me.changeAddresses.length - 1];
+    return self.changeAddresses[self.changeAddresses.length - 1];
   };
 
   this.generateKeyFromPath = function(path) {
@@ -384,7 +351,7 @@ var HDWalletAccount = function(seed, network) {
       var unspent = unspentOutputs[i];
 
       if (unspent.xpub) {
-        var pub = me.generateKeyFromPath(unspent.xpub.path);
+        var pub = self.generateKeyFromPath(unspent.xpub.path);
         var key = pub.privKey;
       }
 
@@ -436,15 +403,230 @@ var HDWalletAccount = function(seed, network) {
   };
 
   function isReceiveAddress(address){
-    return me.addresses.indexOf(address) > -1;
+    return self.addresses.indexOf(address) > -1;
   }
 
   function isChangeAddress(address){
-    return me.changeAddresses.indexOf(address) > -1;
+    return self.changeAddresses.indexOf(address) > -1;
   }
 
   function isMyAddress(address) {
     return isReceiveAddress(address) || isChangeAddress(address);
   }
+
+
+  this.getAccountJsonData = function() {
+    var accountJsonData = {
+      label : this.getLabel(),
+      archived : this.isArchived(),
+      receive_address_count : this.receiveAddressCount,
+      change_address_count : this.changeAddressCount,
+      xpriv : this.extendedPrivateKey,
+      xpub : this.extendedPublicKey,
+      address_labels: this.address_labels,
+      cache: this.cache
+    };
+    return accountJsonData;
+  };
+
+  this.getLabel = function() {
+    return this.label;
+  };
+
+  this.setLabel = function(label) {
+    this.label = label;
+  };
+
+  this.getLabelForAddress = function(addressIdx) {
+    for (var i in this.address_labels) {
+      var indexLabel = this.address_labels[i];
+      if (indexLabel.index == addressIdx) {
+        return indexLabel.label;
+        break;
+      }
+    }
+
+    return null;
+  };
+
+  this.setLabelForAddress = function(addressIdx, label) {
+    for (var i in this.address_labels) {
+      var indexLabel = this.address_labels[i];
+      if (indexLabel.index == addressIdx) {
+        this.address_labels.splice(i, 1);
+        break;
+      }
+    }
+
+    if (addressIdx == this.receiveAddressCount) {
+      this.receiveAddressCount++;
+    }
+    this.address_labels.push({'index': addressIdx, 'label': label});
+  };
+
+  this.unsetLabelForAddress = function(addressIdx) {
+    for (var i in this.address_labels) {
+      var indexLabel = this.address_labels[i];
+      if (indexLabel.index == addressIdx) {
+        this.address_labels.splice(i, 1);
+        return true;
+      }
+    }
+    return false;
+  };
+
+  this.getLabeledReceivingAddresses = function () {
+    var addresses = [];
+
+    for (var i in this.address_labels) {
+      var indexLabel = this.address_labels[i];
+
+      var item = { 'index' : indexLabel['index'],
+                   'label' : indexLabel['label'],
+                   'address' : this.getAddressAtIndex(indexLabel['index'])
+                 };
+
+      addresses.push(item);
+    }
+
+    return addresses;
+  };
+
+  this.isArchived = function() {
+    return this.archived;
+  };
+
+  this.setIsArchived = function(archived) {
+    this.archived = archived;
+  };
+
+  this.getReceivingAddress = function() {
+    return this.getAddressAtIndex(this.receiveAddressCount);
+  };
+
+  this.getReceivingAddressIndex = function() {
+    return this.receiveAddressCount;
+  };
+
+  this.getAddressesCount = function() {
+    return this.addresses.length;
+  };
+
+  this.getChangeAddresses = function() {
+    while(this.changeAddresses.length < this.changeAddressCount) {
+      this.generateChangeAddress();
+    }
+    return this.changeAddresses;
+  };
+
+  this.getChangeAddressesCount = function() {
+    return this.changeAddresses.length;
+  };
+
+  this.getAccountExtendedKey = function(isPrivate) {
+    if (isPrivate) {
+      return this.extendedPrivateKey;
+    }
+    else {
+      return this.extendedPublicKey;
+    }
+  };
+
+  this.generateCache = function() {
+    this.cache.externalAccountPubKey = JSONB.stringify(this.externalAccount.pubKey.toBuffer());
+    this.cache.externalAccountChainCode = JSONB.stringify(this.externalAccount.chainCode);
+    this.cache.internalAccountPubKey = JSONB.stringify(this.internalAccount.pubKey.toBuffer());
+    this.cache.internalAccountChainCode = JSONB.stringify(this.internalAccount.chainCode);
+  };
+
+  this.undoGenerateAddress = function() {
+    return this.addresses.pop();
+  };
+
+  this.undoGenerateChangeAddress = function() {
+    return this.changeAddresses.pop();
+  };
+
+  this.incBalance = function(amount) {
+    if(this.balance == null) {
+      this.balance = 0;
+    }
+    this.balance += amount;
+  };
+
+  this.decBalance = function(amount) {
+    if(this.balance == null) {
+      this.balance = 0;
+    }
+    this.balance -= amount;
+  };
+
+  this.getBalance = function() {
+    return this.balance;
+  };
+
+  this.setBalance = function(balance) {
+    return this.balance = balance;
+  };
+
+  this.resetBalance = function() {
+    return this.balance = null;
+  };
+
+  this.createTxReal = function(to, value, fixedFee, unspentOutputs, changeAddress, listener) {
+    assert(value > network.dustThreshold, value + ' must be above dust threshold (' + network.dustThreshold + ' Satoshis)');
+
+    var utxos = getCandidateOutputs(unspentOutputs, value);
+    var accum = 0;
+    var subTotal = value;
+
+    var tx = new Bitcoin.Transaction();
+    tx.addOutput(to, value);
+
+    for (var i = 0; i < utxos.length; ++i) {
+      var utxo = utxos[i];
+
+      tx.addInput(utxo.hash, utxo.index);
+
+      var fee = fixedFee == undefined ? estimateFeePadChangeOutput(tx) : fixedFee;
+
+      accum += utxo.value;
+      subTotal = value + fee;
+      if (accum >= subTotal) {
+        var change = accum - subTotal;
+
+        if (change > network.dustThreshold) {
+          tx.addOutput(changeAddress || getChangeAddress(), change);
+        }
+
+        break;
+      }
+    }
+
+    assert(accum >= subTotal, 'Insufficient funds. Value Needed ' +  subTotal + '. Available amount ' + accum);
+
+    this.signWith(tx, utxos, listener);
+    return tx;
+  };
+
+  this.createTx = function(to, value, fixedFee, unspentOutputs, extendedPrivateKey, listener) {
+    // Create the send account (same account as current account, but created with xpriv and thus able to generate private keys)
+    var sendAccount = new HDAccount();
+    sendAccount.newNodeFromExtKey(extendedPrivateKey);
+
+    var changeAddress = sendAccount.getChangeAddressAtIndex(this.changeAddressCount);
+
+    return sendAccount.createTxReal(to, value, fixedFee, unspentOutputs, changeAddress, listener);
+  };
+
+  this.recommendedTransactionFee = function(amount) {
+    try {
+      //12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX is dummy address, first ever bitcoin address
+      var tx = this.createTx("12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX", amount, null, null, null);
+      return this.estimatePaddedFee(tx, Bitcoin.networks.bitcoin);
+    } catch (e) {
+      return 10000;
+    }
+  };
 
 };
