@@ -25,8 +25,8 @@ module.exports = (grunt) ->
           'build/signer.processed.js'
           'build/wallet.processed.js'
           'build/wallet-signup.processed.js'
-          'build/HDWalletAccount.processed.js'
-          'build/hdwallet.processed.js'
+          'build/hd-account.processed.js'
+          'build/hd-wallet.processed.js'
           'build/import-export.processed.js'
           'build/bip39.js'
           'build/xregexp-all.js'
@@ -58,8 +58,8 @@ module.exports = (grunt) ->
           'src/signer.js'
           'src/wallet.js'
           'src/wallet-signup.js'
-          'src/HDWalletAccount.js'
-          'src/hdwallet.js'
+          'src/hd-wallet.js'
+          'src/hd-account.js'
           'src/import-export.js'
         ],
         tasks: ['build'],
@@ -95,8 +95,8 @@ module.exports = (grunt) ->
           'build/signer.processed.js'         : 'src/signer.js'
           'build/wallet.processed.js'         : 'src/wallet.js'
           'build/wallet-signup.processed.js'  : 'src/wallet-signup.js'
-          'build/HDWalletAccount.processed.js': 'src/HDWalletAccount.js'
-          'build/hdwallet.processed.js'       : 'src/hdwallet.js'
+          'build/hd-wallet.processed.js'      : 'src/hd-wallet.js'
+          'build/hd-account.processed.js': 'src/hd-account.js'
           'build/import-export.processed.js'  : 'src/import-export.js'
   
   # Load the plugin that provides the "uglify" task.

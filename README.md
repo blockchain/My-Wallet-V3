@@ -93,8 +93,8 @@ Include the following files instead of `my-wallet.js` for easier debugging:
 * `build/bip39.js`
 * `build/sjcl.js`
 * `build/xregexp-all.js`
-* `src/hdwallet.js`
-* `src/HDWalletAccount.js`
+* `src/hd-wallet.js`
+* `src/hd-account.js`
 * `bower_components/cryptojslib/rollups/sha256.js`
 * `bower_components/cryptojslib/rollups/aes.js`
 * `bower_components/cryptojslib/rollups/pbkdf2.js`
