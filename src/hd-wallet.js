@@ -142,8 +142,7 @@ var HDWallet = function(seedHex, bip39Password, second_password) {
 
   this.createArchivedAccount = function(label, possiblyEncryptedExtendedPrivateKey, extendedPublicKey) {
     var accountIdx = this.accountArray.length;
-    var walletAccount = new HDWalletAccount(null);
-    var account = new HDAccount(walletAccount, label, this.accountArray.length);
+    var account = new HDAccount(null, null, label, accountIdx);
     account.extendedPrivateKey = possiblyEncryptedExtendedPrivateKey;
     account.extendedPublicKey = extendedPublicKey;
 
@@ -155,12 +154,8 @@ var HDWallet = function(seedHex, bip39Password, second_password) {
   // encrypted. We're keeping it in an encrypted state.
   this.createAccountFromExtKey = function(label, possiblyEncryptedExtendedPrivateKey, extendedPublicKey, cache) {
     var accountIdx = this.accountArray.length;
-
-    var walletAccount = new HDWalletAccount(null);
-
-    walletAccount.newNodeFromExtKey(extendedPublicKey, cache);
-
-    var account = new HDAccount(walletAccount, label, this.accountArray.length);
+    var account = new HDAccount(null, null, label, accountIdx);
+    account.newNodeFromExtKey(extendedPublicKey, cache);
     account.extendedPrivateKey = possiblyEncryptedExtendedPrivateKey;
     account.extendedPublicKey = extendedPublicKey;
 
@@ -171,7 +166,7 @@ var HDWallet = function(seedHex, bip39Password, second_password) {
     var seedHex = this.getSeedHexString(second_password);
     var accountIdx = this.accountArray.length;
 
-    var walletAccount = new HDWalletAccount(this.getMasterHex(seedHex));
+    var account = new HDAccount(this.getMasterHex(seedHex), null, label, accountIdx);
 
     /* BIP 44 defines the following 5 levels in BIP32 path:
      * m / purpose' / coin_type' / account' / change / address_index
@@ -180,11 +175,9 @@ var HDWallet = function(seedHex, bip39Password, second_password) {
      * Purpose is a constant set to 44' following the BIP43 recommendation
      * Registered coin types: 0' for Bitcoin
      */
-    var accountZero = walletAccount.getMasterKey().deriveHardened(44).deriveHardened(0).deriveHardened(accountIdx);
-    walletAccount.externalAccount = accountZero.derive(0);
-    walletAccount.internalAccount = accountZero.derive(1);
-
-    var account = new HDAccount(walletAccount, label, this.accountArray.length);
+    var accountZero = account.getMasterKey().deriveHardened(44).deriveHardened(0).deriveHardened(accountIdx);
+    account.externalAccount = accountZero.derive(0);
+    account.internalAccount = accountZero.derive(1);
 
     var extendedPrivateKey = accountZero.toBase58();
     var extendedPublicKey =  accountZero.neutered().toBase58();

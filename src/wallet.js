@@ -1542,22 +1542,6 @@ var MyWallet = new function() {
 
   /**
    * @param {number} accountIdx index of HD wallet account
-   * @return {array} addresses for account
-   */
-  this.getAddressesForAccount = function(accountIdx) {
-    return MyWallet.getHDWallet().getAccount(accountIdx).getAddresses();
-  };
-
-  /**
-   * @param {number} accountIdx index of HD wallet account
-   * @return {array} change addresses for account
-   */
-  this.getChangeAddressesForAccount = function(accountIdx) {
-    return MyWallet.getHDWallet().getAccount(accountIdx).getChangeAddresses();
-  };
-
-  /**
-   * @param {number} accountIdx index of HD wallet account
    * @return {number} balance of account in satoshis
    */
   this.getBalanceForAccount = function(accountIdx) {
@@ -1587,19 +1571,6 @@ var MyWallet = new function() {
   /**
    * @param {number} accountIdx index of HD wallet account
    * @param {number} addressIdx index of address of HD wallet account
-   * @return {string} address from account idx and address idx
-   */
-  this.getAddressAtIdxForAccount = function(accountIdx, addressIdx) {
-    return MyWallet.getHDWallet().getAccount(accountIdx).getAddressAtIdx(addressIdx);
-  };
-
-  this.getLabelForAccountAddress = function(accountIdx, addressIdx) {
-    return MyWallet.getHDWallet().getAccount(accountIdx).getLabelForAddress(addressIdx);
-  };
-
-  /**
-   * @param {number} accountIdx index of HD wallet account
-   * @param {number} addressIdx index of address of HD wallet account
    * @param {string} label label
    * @return {string} success or not
    */
@@ -1615,18 +1586,6 @@ var MyWallet = new function() {
 
   this.getLabeledReceivingAddressesForAccount = function(accountIdx) {
     return MyWallet.getHDWallet().getAccount(accountIdx).getLabeledReceivingAddresses();
-  };
-
-  /**
-   * @param {number} accountIdx index of HD wallet account
-   * @param {number} addressIdx index of address of HD wallet account
-   * @return {string} success or not
-   */
-  this.unsetLabelForAccountAddress = function(accountIdx, addressIdx) {
-    var success = MyWallet.getHDWallet().getAccount(accountIdx).unsetLabelForAddress(addressIdx);
-    if (success)
-      MyWallet.backupWalletDelayed();
-    return success;
   };
 
   /**
@@ -2611,11 +2570,8 @@ var MyWallet = new function() {
   this.unarchiveAccount = function(idx, successcallback) {
     var archivedAccount = MyWallet.getHDWallet().getAccount(idx);
 
-    var walletAccount = new HDWalletAccount(null);
-
-    walletAccount.newNodeFromExtKey(archivedAccount.extendedPublicKey);
-
-    var account = new HDAccount(walletAccount, archivedAccount.label, idx);
+    var account = new HDAccount(null, null, archivedAccount.label, idx);
+    account.newNodeFromExtKey(archivedAccount.extendedPublicKey);
 
     account.generateCache();
 
@@ -4922,7 +4878,7 @@ var MyWallet = new function() {
       }
 
       try {
-        var hdWalletAccount = new HDWalletAccount(null);
+        var hdWalletAccount = new HDAccount();
         hdWalletAccount.newNodeFromExtKey(decryptedpk);
       } catch (e) {
         throw 'Invalid extended private key';
@@ -5022,45 +4978,6 @@ var MyWallet = new function() {
           window.location.reload();
         }
       });
-    }
-  };
-
-  this.openWindow = function(url) {
-    function _hasPopupBlocker(poppedWindow) {
-      var result = false;
-
-      try {
-        if (typeof poppedWindow == 'undefined' || !poppedWindow) {
-          // Safari with popup blocker... leaves the popup window handle undefined
-          result = true;
-        }
-        else if (poppedWindow && poppedWindow.closed) {
-          // This happens if the user opens and closes the client window...
-          // Confusing because the handle is still available, but it's in a "closed" state.
-          // We're not saying that the window is not being blocked, we're just saying
-          // that the window has been closed before the test could be run.
-          result = false;
-        }
-        else if (poppedWindow && poppedWindow.test) {
-          // This is the actual test. The client window should be fine.
-          result = false;
-        }
-      } catch (err) {
-        //if (console) {
-        //    console.warn("Could not access popup window", err);
-        //}
-      }
-
-      return result;
-    }
-
-    window.open(url, null, "scroll=1,status=1,location=1,toolbar=1");
-
-    if (_hasPopupBlocker(window)) {
-      MyWallet.sendEvent("msg", {type: "error", message: "Popup Blocked. Try and click again."});
-      return false;
-    } else {
-      return true;
     }
   };
 
