@@ -573,7 +573,7 @@ var HDAccount = function(seed, network, label, idx) {
     return this.balance = null;
   };
 
-  function createTxReal(to, value, fixedFee, unspentOutputs, changeAddress, listener) {
+  this.createTxReal = function(to, value, fixedFee, unspentOutputs, changeAddress, listener) {
     assert(value > network.dustThreshold, value + ' must be above dust threshold (' + network.dustThreshold + ' Satoshis)');
 
     var utxos = getCandidateOutputs(unspentOutputs, value);
@@ -605,7 +605,7 @@ var HDAccount = function(seed, network, label, idx) {
 
     assert(accum >= subTotal, 'Insufficient funds. Value Needed ' +  subTotal + '. Available amount ' + accum);
 
-    self.signWith(tx, utxos, listener);
+    this.signWith(tx, utxos, listener);
     return tx;
   };
 
@@ -616,13 +616,13 @@ var HDAccount = function(seed, network, label, idx) {
 
     var changeAddress = sendAccount.getChangeAddressAtIndex(this.changeAddressCount);
 
-    return createTxReal(to, value, fixedFee, unspentOutputs, changeAddress, listener);
+    return sendAccount.createTxReal(to, value, fixedFee, unspentOutputs, changeAddress, listener);
   };
 
   this.recommendedTransactionFee = function(amount) {
     try {
       //12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX is dummy address, first ever bitcoin address
-      var tx = createTxReal("12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX", amount, null, null, null);
+      var tx = this.createTxReal("12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX", amount, null, null, null);
       return this.estimatePaddedFee(tx, Bitcoin.networks.bitcoin);
     } catch (e) {
       return 10000;
