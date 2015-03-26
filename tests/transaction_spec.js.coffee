@@ -126,95 +126,105 @@ describe "Transaction", ->
       )
     
     describe "from account to external address", ->
-      tx = 
-        'hash': 'cfb77ea99f7d97e551afae96e1fe028e56933621d8cc4342b399fba03bfe8826'
-        'size': 226
-        'txIndex': 80064446
-        'time': 1425942592
-        'inputs': [ {
-          'sequence': 4294967295
-          'prev_out':
-            'spent': true
-            'tx_index': 80026565
-            'type': 0
-            'addr': '1G17iiPgRyYz6mV1Wtc6w1Spjc8svYDeZC'
-            'value': 60000
-            'xpub':
-              'path': 'M/0/5'
-              'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9G\
-                    f9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
-            'n': 0
-            'script': '76a914a48f7ee3c3cc27562c196679cad8c38c75ef46fd88ac'
-          'script': '483045022100a6a6cc37ff7995b90468ef17b38ab601e388ec270490\
-                     97830c84bd0005aab312022003bbf361181ab25f64bdca9ea48b2a1c\
-                     64c735b93b126e3178ae9d059ac06f5b012103fd78acfd990b9891c5\
-                     cc09a8a7d912859f96ac896987cd23ce09fc62f03bb44e'
-        } ]
-        'out': [
-          {
-            'spent': false
-            'tx_index': 80064446
-            'type': 0
-            'addr': '1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg'
-            'value': 30000
-            'n': 0
-            'script': '76a91477f6416372b875ec857768f6f464323efff129c088ac'
-          }
-          {
-            'spent': false
-            'tx_index': 80064446
-            'type': 0
-            'addr': '1MrLgA3A65AXNdAEHBLC2qCLHQ24oZzBeJ'
-            'value': 20000
-            'xpub':
-              'path': 'M/1/1'
-              'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9G\
-                    f9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
-            'n': 1
-            'script': '76a914e4b7525e31d7aea0157581ff640a04d27be9067188ac'
-          }
-        ]
-        'result': -40000
-        'blockHeight': 346920
-        'balance': 130000
-        'account_indexes': [
-          0
-          0
-        ]
-        'confirmations': 71
-
-      transaction = 
-        'from':
-          'account':
-            'index': 2
-            'amount': 40000
-          'legacyAddresses': null
-          'externalAddresses': null
-        'to':
-          'account': null
-          'legacyAddresses': null
-          'externalAddresses':
-            'addressWithLargestOutput': '1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg'
-            'amount': 30000
-          'email': null 
-          'mobile': null
-        'fee': 10000
-        'intraWallet': false
-        'hash': 'cfb77ea99f7d97e551afae96e1fe028e56933621d8cc4342b399fba03bfe8826'
-        'confirmations': 71
-        'txTime': 1425942592
-        'note': null
-        'tags': []
-        'size': 226
-        'tx_index': 80064446
-        'block_height': 346920
-        'result': -40000
-        
-      ##########################################################################
-      it "should be recognized", ->
-        result = MyWallet.processTransaction(tx)
-        expect(MyWallet.processTransaction(tx)).toEqual(transaction)
       
+      tx = undefined
+      transaction = undefined
+      
+      beforeEach ->
+        tx = 
+          'hash': 'cfb77ea99f7d97e551afae96e1fe028e56933621d8cc4342b399fba03bfe8826'
+          'size': 226
+          'txIndex': 80064446
+          'time': 1425942592
+          'inputs': [ {
+            'sequence': 4294967295
+            'prev_out':
+              'spent': true
+              'tx_index': 80026565
+              'type': 0
+              'addr': '1G17iiPgRyYz6mV1Wtc6w1Spjc8svYDeZC'
+              'value': 60000
+              'xpub':
+                'path': 'M/0/5'
+                'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9G\
+                      f9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
+              'n': 0
+              'script': '76a914a48f7ee3c3cc27562c196679cad8c38c75ef46fd88ac'
+            'script': '483045022100a6a6cc37ff7995b90468ef17b38ab601e388ec270490\
+                       97830c84bd0005aab312022003bbf361181ab25f64bdca9ea48b2a1c\
+                       64c735b93b126e3178ae9d059ac06f5b012103fd78acfd990b9891c5\
+                       cc09a8a7d912859f96ac896987cd23ce09fc62f03bb44e'
+          } ]
+          'out': [
+            {
+              'spent': false
+              'tx_index': 80064446
+              'type': 0
+              'addr': '1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg'
+              'value': 30000
+              'n': 0
+              'script': '76a91477f6416372b875ec857768f6f464323efff129c088ac'
+            }
+            {
+              'spent': false
+              'tx_index': 80064446
+              'type': 0
+              'addr': '1MrLgA3A65AXNdAEHBLC2qCLHQ24oZzBeJ'
+              'value': 20000
+              'xpub':
+                'path': 'M/1/1'
+                'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9G\
+                      f9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
+              'n': 1
+              'script': '76a914e4b7525e31d7aea0157581ff640a04d27be9067188ac'
+            }
+          ]
+          'result': -40000
+          'blockHeight': 346920
+          'balance': 130000
+          'account_indexes': [
+            0
+            0
+          ]
+          'confirmations': 71
+          
+        transaction = 
+          'from':
+            'account':
+              'index': 2
+              'amount': 40000
+            'legacyAddresses': null
+            'externalAddresses': null
+          'to':
+            'account': null
+            'legacyAddresses': null
+            'externalAddresses':
+              'addressWithLargestOutput': '1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg'
+              'amount': 30000
+            'email': null 
+            'mobile': null
+          'fee': 10000
+          'intraWallet': false
+          'hash': 'cfb77ea99f7d97e551afae96e1fe028e56933621d8cc4342b399fba03bfe8826'
+          'confirmations': 71
+          'txTime': 1425942592
+          'note': null
+          'tags': []
+          'size': 226
+          'tx_index': 80064446
+          'block_height': 346920
+          'result': -40000
+            
+                
+      it "should recognize from account", ->
+        expect(MyWallet.processTransaction(tx).from).toEqual(transaction.from)
+    
+      it "should recognize to address", ->
+        expect(MyWallet.processTransaction(tx).to).toEqual(transaction.to)
+    
+      it "should have the correct amount", ->
+        expect(MyWallet.processTransaction(tx).result).toEqual(transaction.result)
+    
       it "should not be intra wallet", ->
        result = MyWallet.processTransaction(tx)
        expect(result.intraWallet).toBe(false)  
@@ -391,104 +401,12 @@ describe "Transaction", ->
         expect(MyWallet.processTransaction(tx)).toEqual(transaction)
 
       ##########################################################################
-      it "should be recognized if there were multiple input addresses", ->
-        tx = 
-          'hash': 'f18ad9a8b2c4f7d864b1623d5a826184d2c755834993a9152067d6f4e3311f6d'
-          'size': 339
-          'txIndex': 79821031
-          'time': 1425723873
-          'inputs': [
-            {
-              'sequence': 4294967295
-              'prev_out':
-                'spent': true
-                'tx_index': 79815620
-                'type': 0
-                'addr': '1JEqeTrUo1nUHosimX8u9kpdkvdom2ekwQ'
-                'value': 110000
-                'xpub':
-                  'path': 'M/0/2'
-                  'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp\
-                        9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
-                'n': 0
-                'script': '76a914bd182744a3b7da33cd848382bd8b78d0e5901c3688ac'
-              'script': '47304402205502e152e38e845ddfc4e94d7cf94a259a00fd99d1fc\
-                         044820b8bd752b3f734b022070d17c6b105275027d0a6b3c5b10e7\
-                         3b1c7f326e934c4a5691d15e709c5ced1d0121036b586fe3c0bbfb\
-                         845d767236a7b7db6f3249a74707510871bbd5d29a552beef0'
-            }
-            {
-              'sequence': 4294967295
-              'prev_out':
-                'spent': true
-                'tx_index': 79746098
-                'type': 0
-                'addr': '1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX'
-                'value': 100000
-                'xpub':
-                  'path': 'M/0/0'
-                  'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp\
-                        9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
-                'n': 0
-                'script': '76a9148452ffa018aef2c941ed559d0de0132c3f67eebe88ac'
-              'script': '4830450221008c81908e2b44541d083d25cd3c5d0d58f77dde15c0\
-                         7fe603ca91b360111f480a02200c8d994d44f15d46495dbcb08e5c\
-                         d7fa402a57e71d3e48ccfaf250cb5ff64517012102105b66c05856\
-                         6ccbdf2602492d84b960f4dbdd05b860de5e559edc08197eeb8e'
-            }
-          ]
-          'out': [ {
-            'spent': false
-            'tx_index': 79821031
-            'type': 0
-            'addr': '1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg'
-            'value': 200000
-            'n': 0
-            'script': '76a91477f6416372b875ec857768f6f464323efff129c088ac'
-          } ]
-          'result': -210000
-          'blockHeight': 346547
-          'balance': 0
-          'account_indexes': [
-            0
-            0
-          ]
-          'confirmations': 3
-
-        transaction = 
-          'from':
-            'account':
-              'index': 2
-              'amount': 110000
-            'legacyAddresses': null
-            'externalAddresses':
-              'addressWithLargestOutput': '1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX'
-              'amount': 100000
-          'to':
-            'account': null
-            'legacyAddresses': null
-            'externalAddresses':
-              'addressWithLargestOutput': '1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg'
-              'amount': 200000
-            'email': null 
-            'mobile': null
-          'fee': 10000
-          'intraWallet': false
-          'hash': 'f18ad9a8b2c4f7d864b1623d5a826184d2c755834993a9152067d6f4e3311f6d'
-          'confirmations': 3
-          'txTime': 1425723873
-          'note': null
-          'tags': []
-          'size': 339
-          'tx_index': 79821031
-          'block_height': 346547
-          'result': -210000     
-
-        expect(MyWallet.processTransaction(tx)).toEqual(transaction)
         
     describe "from external address to account", ->
-      ##########################################################################
-      it "should be recognized", ->
+      tx = undefined
+      transaction = undefined
+      
+      beforeEach ->
         tx =
           'hash': '68ca0a6593f546ab50a41f70b3241795f80d16b8ede7a238f3b9a5b6520f6a6d'
           'size': 225
@@ -565,8 +483,20 @@ describe "Transaction", ->
           'tx_index': 79746098
           'block_height': 346444
           'result': 100000
-
-        expect(MyWallet.processTransaction(tx)).toEqual(transaction)
+      ##########################################################################
+      it "should recognize from address", ->
+        expect(MyWallet.processTransaction(tx).from).toEqual(transaction.from)
+    
+      it "should recognize to account", ->
+        expect(MyWallet.processTransaction(tx).to).toEqual(transaction.to)
+    
+      it "should have the correct amount", ->
+        expect(MyWallet.processTransaction(tx).result).toEqual(transaction.result)
+    
+      it "should not be intra wallet", ->
+       result = MyWallet.processTransaction(tx)
+       expect(result.intraWallet).toBe(false)  
+    
     
     describe "between accounts", ->
       tx =
@@ -656,12 +586,18 @@ describe "Transaction", ->
         'size': 225
         'tx_index': 72943968
         'block_height': 335980
-        'result': -10000
+        'result': 100000
         
       ##########################################################################
-      it "should be recognized", ->
-        expect(MyWallet.processTransaction(tx)).toEqual(transaction)
-        
+      it "should recognize from account", ->
+        expect(MyWallet.processTransaction(tx).from).toEqual(transaction.from)
+      
+      it "should recognize to account", ->
+        expect(MyWallet.processTransaction(tx).to).toEqual(transaction.to)
+      
+      it "should have the correct amount", ->
+        expect(MyWallet.processTransaction(tx).result).toEqual(transaction.result)
+              
       it "should be intra wallet", ->
        result = MyWallet.processTransaction(tx)
        expect(result.intraWallet).toBe(true)
@@ -743,14 +679,16 @@ describe "Transaction", ->
         'tx_index': 72943525
         'block_height': 335980
         'result': -30000
-                      
-      it "should be recognized", ->
-        result = MyWallet.processTransaction(tx)
-        
-        # Amount should be ex. change
-        expect(result["from"]).toEqual(transaction["from"])
-        # It shouldn't include the change 
-        expect(result["to"]).toEqual(transaction["to"]) 
+              
+              
+      it "should recognize from address", ->
+        expect(MyWallet.processTransaction(tx).from).toEqual(transaction.from)
+      
+      it "should recognize to address", ->
+        expect(MyWallet.processTransaction(tx).to).toEqual(transaction.to)
+      
+      it "should have the correct amount", ->
+        expect(MyWallet.processTransaction(tx).result).toEqual(transaction.result)
         
       it "should not be intra wallet", ->
        result = MyWallet.processTransaction(tx)
@@ -831,10 +769,16 @@ describe "Transaction", ->
         'size': 258
         'tx_index': 80032677
         'block_height': null
-        'result': -10000
+        'result': 30000
         
-      it "should be recognized", ->
-        expect(MyWallet.processTransaction(tx)).toEqual(transaction)
+      it "should recognize from address", ->
+        expect(MyWallet.processTransaction(tx).from).toEqual(transaction.from)
+      
+      it "should recognize to address", ->
+        expect(MyWallet.processTransaction(tx).to).toEqual(transaction.to)
+      
+      it "should have the correct amount", ->
+        expect(MyWallet.processTransaction(tx).result).toEqual(transaction.result)
       
       it "should be intra wallet", ->
        result = MyWallet.processTransaction(tx)
@@ -918,19 +862,28 @@ describe "Transaction", ->
         'size': 257
         'tx_index': 80026565
         'block_height': null
-        'result': -10000
+        'result': 60000
         
       ##########################################################################
-      it "should be recognized", ->
-        expect(MyWallet.processTransaction(tx)).toEqual(transaction)
-        
+      it "should recognize from address", ->
+        expect(MyWallet.processTransaction(tx).from).toEqual(transaction.from)
+      
+      it "should recognize to account", ->
+        expect(MyWallet.processTransaction(tx).to).toEqual(transaction.to)
+      
+      it "should have the correct amount", ->
+        expect(MyWallet.processTransaction(tx).result).toEqual(transaction.result)
+      
       it "should be intra wallet", ->
        result = MyWallet.processTransaction(tx)
        expect(result.intraWallet).toBe(true)
         
     describe "from account to legacy address", ->
-      ##########################################################################
-      it "should be recognized", ->
+      tx = undefined
+      transaction = undefined
+      
+      beforeEach ->
+        ##########################################################################
         tx = 
           'hash': '9d470a7518f3f98b865f2c68f4a39f64138fc61807ba4168764b104798800911'
           'size': 226
@@ -1014,9 +967,20 @@ describe "Transaction", ->
           'size': 226
           'tx_index': 80021322
           'block_height': 346868
-          'result': -10000
+          'result': 50000
 
-        expect(MyWallet.processTransaction(tx)).toEqual(transaction)
+      it "should recognize from account", ->
+        expect(MyWallet.processTransaction(tx).from).toEqual(transaction.from)
+    
+      it "should recognize to address", ->
+        expect(MyWallet.processTransaction(tx).to).toEqual(transaction.to)
+    
+      it "should have the correct amount", ->
+        expect(MyWallet.processTransaction(tx).result).toEqual(transaction.result)
+    
+      it "should be intra wallet", ->
+       result = MyWallet.processTransaction(tx)
+       expect(result.intraWallet).toBe(true)
         
     describe "from external address to legacy address", ->
       ##########################################################################

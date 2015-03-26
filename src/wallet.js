@@ -1671,7 +1671,7 @@ var MyWallet = new function() {
       from: {account: null, legacyAddresses: null, externalAddresses: null},
       to: {account: null, legacyAddresses: null, externalAddresses: null, email: null, mobile: null},
       fee: 0,
-      intraWallet: null
+      intraWallet: null,
     };
     var isOrigin = false;
 
@@ -1724,7 +1724,7 @@ var MyWallet = new function() {
       var output = tx.out[i];
       if (!output || !output.addr)
         continue;
-
+      
       if (MyWallet.isActiveLegacyAddress(output.addr)) {
         if (transaction.to.legacyAddresses == null)
           transaction.to.legacyAddresses = [];
@@ -1815,10 +1815,42 @@ var MyWallet = new function() {
     transaction.size = tx.size;
     transaction.tx_index = tx.txIndex;
     transaction.block_height = tx.blockHeight;
-    transaction.result = tx.result;
+    
+    transaction.result = this.calculateTransactionResult(transaction)
+    
     // console.log(JSON.stringify(transaction))
     return transaction;
   };
+  
+  this.calculateTransactionResult = function(transaction) {
+    
+    totalOurs = function(toOrFrom) {
+      var result = 0;
+      
+      if(toOrFrom.account) {
+        result = result + toOrFrom.account.amount;
+      } else if (toOrFrom.legacyAddresses && toOrFrom.legacyAddresses.length > 0) {
+        for(var i in toOrFrom.legacyAddresses) {
+          var legacyAddress = toOrFrom.legacyAddresses[i];
+          result += legacyAddress.amount;
+        }
+      }
+      
+      return result;
+    }
+    
+    var result = 0;
+    
+    if (transaction.intraWallet) {
+      result = result + totalOurs(transaction.to);
+    } else {
+      result = result + totalOurs(transaction.to) - totalOurs(transaction.from);
+    }
+    
+    return result;
+    
+ 
+  }
 
   /**
    * @return {Array} Legacy Transactions
