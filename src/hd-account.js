@@ -622,7 +622,7 @@ var HDAccount = function(seed, network, label, idx) {
   this.recommendedTransactionFee = function(amount) {
     try {
       //12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX is dummy address, first ever bitcoin address
-      var tx = this.createTxReal("12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX", amount, null, null, null);
+      var tx = this.createTx("12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX", amount, null, null, null);
       return this.estimatePaddedFee(tx, Bitcoin.networks.bitcoin);
     } catch (e) {
       return 10000;
