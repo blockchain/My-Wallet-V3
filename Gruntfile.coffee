@@ -30,7 +30,6 @@ module.exports = (grunt) ->
           'build/wallet-signup.processed.js'
           'build/hd-account.processed.js'
           'build/hd-wallet.processed.js'
-          'build/import-export.processed.js'
           'build/bip39.js'
           'build/xregexp-all.js'
           'build/bower_components/cryptojslib/rollups/sha256.js'
@@ -103,8 +102,7 @@ module.exports = (grunt) ->
           'build/wallet.processed.js'         : 'src/wallet.js'
           'build/wallet-signup.processed.js'  : 'src/wallet-signup.js'
           'build/hd-wallet.processed.js'      : 'src/hd-wallet.js'
-          'build/hd-account.processed.js': 'src/hd-account.js'
-          'build/import-export.processed.js'  : 'src/import-export.js'
+          'build/hd-account.processed.js'     : 'src/hd-account.js'
 
   
   # Load the plugin that provides the "uglify" task.

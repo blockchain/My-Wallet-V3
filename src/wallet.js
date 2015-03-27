@@ -30,6 +30,7 @@ var assert = Browserify.assert;
 var JSONB = Browserify.JSONB;
 var SHA256 = Browserify.SHA256;
 var Unorm = Browserify.Unorm;
+var ImportExport = Browserify.ImportExport;
 
 var MyWallet = new function() {
 

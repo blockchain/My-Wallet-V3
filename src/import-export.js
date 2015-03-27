@@ -1,3 +1,10 @@
+var Bitcoin = require('bitcoinjs-lib');
+var BigInteger = require('bigi');
+var assert = require('assert');
+var Base58 = require('bs58');
+var Unorm = require('unorm');
+var SHA256 = require('sha256');
+
 var ImportExport = new function() {
 
   function bufferToWordArray(buffer) {
@@ -28,7 +35,7 @@ var ImportExport = new function() {
     passphrase = Unorm.nfc(passphrase);
 
     try {
-      hex = Browserify.Base58.decode(base58Encrypted);
+      hex = Base58.decode(base58Encrypted);
     } catch (e) {
       error('Invalid Private Key');
       return;
@@ -449,3 +456,5 @@ var ImportExport = new function() {
   };
 
 };
+
+module.exports = ImportExport;

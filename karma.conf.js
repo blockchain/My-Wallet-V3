@@ -54,7 +54,6 @@ module.exports = function(config) {
       'src/crypto-util-legacy.js',
       'src/wallet-store.js',
       'src/wallet.js',
-      'src/import-export.js',
       'src/signer.js',
       'tests/**/*.js',
       'tests/**/*.js.coffee'
