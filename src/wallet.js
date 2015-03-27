@@ -35,31 +35,6 @@ var MyWallet = new function() {
 
   var MyWallet = this;
 
-
-  var currencyCodeToCurrency = {
-    "ISK" : "lcelandic Króna",
-    "HKD" : "Hong Kong Dollar",
-    "TWD" : "New Taiwan Dollar",
-    "CHF" : "Swiss Franc",
-    "EUR" : "Euro",
-    "DKK" : "Danish Krone",
-    "CLP" : "Chilean, Peso",
-    "USD" : "U.S. Dollar",
-    "CAD" : "Canadian Dollar",
-    "CNY" : "Chinese Yuan",
-    "THB" : "Thai Baht",
-    "AUD" : "Australian Dollar",
-    "SGD" : "Singapore Dollar",
-    "KRW" : "South Korean Won",
-    "JPY" : "Japanese Yen",
-    "PLN" : "Polish Zloty",
-    "GBP" : "Great British Pound",
-    "SEK" : "Swedish Krona",
-    "NZD" : "New Zealand Dollar",
-    "BRL" : "Brazil Real",
-    "RUB" : "Russian Ruble"
-  };
-
   var demo_guid = 'abcaa314-6f67-6705-b384-5d47fbe9d7cc';
   var encrypted_wallet_data; //Encrypted wallet data (Base64, AES 256)
   var guid; //Wallet identifier
@@ -289,15 +264,6 @@ var MyWallet = new function() {
     MyStore.put('localSymbolCode', code);
     symbol_local.code = code;
     localSymbolCode = code;
-  };
-
-
-
-  /**
-   * @return {Object} dictionary of available currencies
-   */
-  this.getCurrencies = function() {
-    return currencyCodeToCurrency;
   };
 
   this.addEventListener = function(func) {

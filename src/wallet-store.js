@@ -28,6 +28,31 @@ var WalletStore = new function() {
     "tr": "Turkish"
   };
 
+  var currencyCodeToCurrency = {
+    "ISK" : "lcelandic Króna",
+    "HKD" : "Hong Kong Dollar",
+    "TWD" : "New Taiwan dollar",
+    "CHF" : "Swiss Franc",
+    "EUR" : "Euro",
+    "DKK" : "Danish Krone",
+    "CLP" : "Chilean, Peso",
+    "USD" : "U.S. dollar",
+    "CAD" : "Canadian Dollar",
+    "CNY" : "Chinese yuan",
+    "THB" : "Thai baht",
+    "AUD" : "Australian Dollar",
+    "SGD" : "Singapore Dollar",
+    "KRW" : "South Korean Won",
+    "JPY" : "Japanese Yen",
+    "PLN" : "Polish Zloty",
+    "GBP" : "Great British Pound",
+    "SEK" : "Swedish Krona",
+    "NZD" : "New Zealand Dollar",
+    "BRL" : "Brazil Real",
+    "RUB" : "Russian Ruble"
+  };
+
+
   /**
    * @return {Object} dictionary of available languages
    */
@@ -35,6 +60,12 @@ var WalletStore = new function() {
     return languageCodeToLanguage;
   };
 
+  /**
+   * @return {Object} dictionary of available currencies
+   */
+  this.getCurrencies = function() {
+    return currencyCodeToCurrency;
+  };
   
 
 };
