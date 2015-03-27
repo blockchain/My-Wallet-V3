@@ -17,8 +17,16 @@ npm test
 
 ## Clean
 
+Clean generated files:
+
 ```sh
-rm -rf bower_components/ build/ dist/ node_modules/ coverage/
+grunt clean
+```
+
+Remove all installed dependencies:
+
+```sh
+rm -rf bower_components/ node_modules/
 ```
 
 ## Getting Started

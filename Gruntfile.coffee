@@ -5,6 +5,7 @@ module.exports = (grunt) ->
     clean: 
       build: ["build"]
       dist: ["dist"]
+      test: ["coverage"]
       shrinkwrap: 
         src: ["npm-shrinkwrap.json"]
 
