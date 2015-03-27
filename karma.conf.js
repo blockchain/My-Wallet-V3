@@ -13,7 +13,8 @@ module.exports = function(config) {
       'src/wallet.js' : ['coverage'],
       'src/hd-wallet.js' : ['coverage'],
       'src/hd-account.js' : ['coverage'],
-      'src/blockchainapi.js' : ['coverage'],
+      'src/blockchain-api.js' : ['coverage'],
+      'src/blockchain-settings-api.js' : ['coverage'],
       'src/import-export.js' : ['coverage'],
       'src/signer.js' : ['coverage'],
       'src/wallet-signup.js' : ['coverage']

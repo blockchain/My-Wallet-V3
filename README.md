@@ -95,21 +95,22 @@ MyWallet.get_history(_successFun, _errorFun);
 Include the following files instead of `my-wallet.js` for easier debugging:
 
 * `src/shared.js`
-* `src/blockchainapi.js`
-* `bower_components/jquery/dist/jquery.js`
-* `browserify.js`
+* `src/blockchain-api.js`
+* `src/blockchain-settings-api.js`
+* `src/crypto-util-legacy.js`
+* `src/wallet.js`
+* `src/hd-wallet.js`
+* `src/hd-account.js`
+* `build/browserify.js`
 * `build/bip39.js`
 * `build/sjcl.js`
 * `build/xregexp-all.js`
-* `src/hd-wallet.js`
-* `src/hd-account.js`
+* `bower_components/jquery/dist/jquery.js`
 * `bower_components/cryptojslib/rollups/sha256.js`
 * `bower_components/cryptojslib/rollups/aes.js`
 * `bower_components/cryptojslib/rollups/pbkdf2.js`
 * `bower_components/cryptojslib/components/cipher-core.js`
 * `bower_components/cryptojslib/components/pad-iso10126.js`
-* `src/crypto-util-legacy.js`
-* `src/wallet.js`
 
 ## Distribution
 

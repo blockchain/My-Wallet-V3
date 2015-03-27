@@ -22,7 +22,8 @@ module.exports = (grunt) ->
           'src/crypto-util-legacy.js'
           'build/browserify.js'
           'build/sjcl.js'
-          'build/blockchainapi.processed.js'
+          'build/blockchain-api.processed.js'
+          'build/blockchain-settings-api.processed.js'
           'build/signer.processed.js'
           'build/wallet-store.processed.js'
           'build/wallet.processed.js'
@@ -56,7 +57,8 @@ module.exports = (grunt) ->
         files: [
           'src/ie.js'
           'src/shared.js'
-          'src/blockchainapi.js'
+          'src/blockchain-api.js'
+          'src/blockchain-settings-api.js'
           'src/signer.js'
           'src/wallet.js'
           'src/wallet-signup.js'
@@ -94,7 +96,8 @@ module.exports = (grunt) ->
     preprocess:     
       multifile:
         files: 
-          'build/blockchainapi.processed.js'  : 'src/blockchainapi.js'
+          'build/blockchain-api.processed.js'  : 'src/blockchain-api.js'
+          'build/blockchain-settings-api.processed.js'  : 'src/blockchain-settings-api.js'
           'build/signer.processed.js'         : 'src/signer.js'
           'build/wallet-store.processed.js'   : 'src/wallet-store.js'
           'build/wallet.processed.js'         : 'src/wallet.js'
