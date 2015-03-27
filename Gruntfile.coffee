@@ -23,6 +23,7 @@ module.exports = (grunt) ->
           'build/sjcl.js'
           'build/blockchainapi.processed.js'
           'build/signer.processed.js'
+          'build/wallet-store.processed.js'
           'build/wallet.processed.js'
           'build/wallet-signup.processed.js'
           'build/hd-account.processed.js'
@@ -61,6 +62,7 @@ module.exports = (grunt) ->
           'src/hd-wallet.js'
           'src/hd-account.js'
           'src/import-export.js'
+          'src/wallet-store.js'
         ],
         tasks: ['build'],
       },
@@ -93,11 +95,13 @@ module.exports = (grunt) ->
         files: 
           'build/blockchainapi.processed.js'  : 'src/blockchainapi.js'
           'build/signer.processed.js'         : 'src/signer.js'
+          'build/wallet-store.processed.js'   : 'src/wallet-store.js'
           'build/wallet.processed.js'         : 'src/wallet.js'
           'build/wallet-signup.processed.js'  : 'src/wallet-signup.js'
           'build/hd-wallet.processed.js'      : 'src/hd-wallet.js'
           'build/hd-account.processed.js': 'src/hd-account.js'
           'build/import-export.processed.js'  : 'src/import-export.js'
+
   
   # Load the plugin that provides the "uglify" task.
   grunt.loadNpmTasks "grunt-contrib-uglify"

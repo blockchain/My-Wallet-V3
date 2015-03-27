@@ -9,6 +9,7 @@ module.exports = function(config) {
     
     preprocessors: {
       '**/*.coffee': ['coffee'],
+      'src/wallet-store.js' : ['coverage'],
       'src/wallet.js' : ['coverage'],
       'src/hd-wallet.js' : ['coverage'],
       'src/hd-account.js' : ['coverage'],
@@ -50,6 +51,7 @@ module.exports = function(config) {
       'src/hd-account.js',
       'src/wallet-signup.js',
       'src/crypto-util-legacy.js',
+      'src/wallet-store.js',
       'src/wallet.js',
       'src/import-export.js',
       'src/signer.js',
