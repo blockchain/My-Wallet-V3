@@ -807,9 +807,7 @@ var MyWallet = new function() {
             var addr = addresses[key];
 
             if (addr.priv) {
-              console.log(addr.priv);
               addr.priv = MyWallet.decryptSecretWithSecondPassword(addr.priv, pw, sharedKey);
-              console.log(addr.priv);
 
               if (!addr.priv) throw 'addr.priv is null';
             }
