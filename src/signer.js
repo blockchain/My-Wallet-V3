@@ -54,7 +54,6 @@ var Signer = new function() {
     this.ready_to_send_header = 'Transaction Ready to Send.';
     min_input_confirmations = 0;
     do_not_use_unspent_cache = false;
-    min_input_size;
     did_specify_fee_manually = false;
     sendTxInAmounts = [];
     sendTxOutAmounts = [];
