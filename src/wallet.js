@@ -3913,17 +3913,11 @@ var MyWallet = new function() {
   /**
    * Fetch information on wallet identfier with resend code set to true
    * @param {string} user_guid User GUID.
-   * @param {?string} shared_key User shared key.
-   * @param {string} inputedPassword User password.
-   * @param {?string} twoFACode User 2 factor code.
    * @param {function()} success Success callback function.
-   * @param {function()} needs_two_factor_code Require 2 factor code callback function.
-   * @param {function()} wrong_two_factor_code 2 factor code incorrect callback function.
-   * @param {function()} other_error Other error callback function.
-   * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
+   * @param {function()} error Error callback function.
    */
-  this.resendTwoFactorSMS = function(user_guid, shared_key, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_required, other_error) {
-    MyWallet.fetchWalletJson(user_guid, shared_key, true, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_required, other_error);
+  this.resendTwoFactorSMS = function(user_guid, success, error) {
+    MyWallet.fetchWalletJson(user_guid, null, true, null, null, success, function() {}, null, null, error);
   };
 
   /**
@@ -3942,7 +3936,7 @@ var MyWallet = new function() {
    * @param {function()=} build_hd_success Called when the HD part of the wallet was initialized successfully.
    */
   this.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_required, other_error, fetch_success, decrypt_success, build_hd_success) {
-    if (didSetGuid) {
+    if (!resend_code && didSetGuid) {
       MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error, decrypt_success, build_hd_success);
       return;
     }
