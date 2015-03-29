@@ -2,7 +2,7 @@ var BlockchainSettingsAPI = new function() {
 
   this.get_account_info = function(success, error) {
     MyWallet.securePost("wallet", {method : 'get-info', format : 'json'}, function(data) {
-      typeof(success) === "function" && success();
+      typeof(success) === "function" && success(data);
 
     }, function(data) {
       if (data.responseText)
@@ -15,7 +15,9 @@ var BlockchainSettingsAPI = new function() {
   };
 
   function updateKV(txt, method, value, success, error, extra) {
-    value = value.trim();
+    if(typeof value == "string") {
+      value = value.trim();
+    }
 
     extra = extra || '';
 
@@ -44,7 +46,7 @@ var BlockchainSettingsAPI = new function() {
   };
 
   this.update_IP_lock_on = function(enabled, success, error) {
-    updateKV('Updating IP Lock', 'update-ip-lock-on', enabled, success, error);
+    updateKV('Updating IP Lock', 'update-ip-lock-on', enabled ? 1 : 0, success, error);
   };
 
   this.change_language = function(language, success, error) {
