@@ -149,7 +149,7 @@ describe "Wallet", ->
       addresses = {}
 
       spyOn(MyWallet, "getAccounts").and.returnValue 0
-      spyOn(MyWallet, "didUpgradeToHd").and.returnValue false
+      spyOn(WalletStore, "didUpgradeToHd").and.returnValue false
 
       MyWallet.setPbkdf2Iterations(pbkdf2_iterations, observer.success, observer.error, observer.getPassword)
 

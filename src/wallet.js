@@ -90,7 +90,6 @@ var MyWallet = new function() {
   var api_code = "0";
   var counter = 0;
   var isPolling = false;
-  var didUpgradeToHd = null;
 
   var wallet_options = {
     pbkdf2_iterations : default_pbkdf2_iterations, //Number of pbkdf2 iterations to default to for main password, second password and dpasswordhash
@@ -101,13 +100,6 @@ var MyWallet = new function() {
     always_keep_local_backup : false, //Whether to always keep a backup in localStorage regardless of two factor authentication
     transactions_per_page : 30, //Number of transactions per page
     additional_seeds : []
-  };
-
-  /**
-   * @return {boolean} returns whether an hd wallet exist in json or null if unknown
-   */
-  this.didUpgradeToHd = function() {
-    return didUpgradeToHd;
   };
 
   /**
@@ -646,7 +638,7 @@ var MyWallet = new function() {
             }
 
             // Re-encrypt the HD seed
-            if (MyWallet.didUpgradeToHd()) {
+            if (WalletStore.didUpgradeToHd()) {
               MyWallet.getHDWallet().seedHex = reencrypt(MyWallet.getHDWallet().seedHex, pw);
 
               if (!MyWallet.getHDWallet().seedHex) throw 'Error re-encrypting wallet seed';
@@ -729,7 +721,7 @@ var MyWallet = new function() {
             account.extendedPrivateKey = MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, pw, sharedKey);
           }
 
-          if (MyWallet.didUpgradeToHd()) {
+          if (WalletStore.didUpgradeToHd()) {
             MyWallet.getHDWallet().seedHex = MyWallet.decryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, pw, sharedKey);
           }
 
@@ -788,7 +780,7 @@ var MyWallet = new function() {
         account.extendedPrivateKey = MyWallet.encryptSecretWithSecondPassword(account.extendedPrivateKey, password, MyWallet.getSharedKey());
       }
 
-      if (MyWallet.didUpgradeToHd()) {
+      if (WalletStore.didUpgradeToHd()) {
         MyWallet.getHDWallet().seedHex = MyWallet.encryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, password, MyWallet.getSharedKey());
       }
 
@@ -1512,26 +1504,6 @@ var MyWallet = new function() {
 
   this.getLabeledReceivingAddressesForAccount = function(accountIdx) {
     return MyWallet.getHDWallet().getAccount(accountIdx).getLabeledReceivingAddresses();
-  };
-
-  /**
-   * @return {Array} get all transactions with fields to_account, from_account, from_addresses, to_addresses, etc filled
-   */
-  this.getAllTransactions = function() {
-    var filteredTransactions = [];
-
-    var rawTxs = WalletStore.getTransactions();
-
-    for (var i in rawTxs) {
-      var tx = rawTxs[i];
-
-      var transaction = this.processTransaction(tx);
-
-      filteredTransactions.push(transaction);
-    }
-
-
-    return filteredTransactions;
   };
 
   this.processTransaction = function(tx) {
@@ -2585,7 +2557,7 @@ var MyWallet = new function() {
    * @return {Array} Array of HD accounts
    */
   this.getAccounts = function() {
-    if (!MyWallet.didUpgradeToHd()) {
+    if (!WalletStore.didUpgradeToHd()) {
       return [];
     }
     return MyWallet.getHDWallet().getAccounts();
@@ -2603,7 +2575,7 @@ var MyWallet = new function() {
    * @return {Number} Number of HD accounts
    */
   this.getAccountsCount = function() {
-    if (!MyWallet.didUpgradeToHd()) {
+    if (!WalletStore.didUpgradeToHd()) {
       return 0;
     }
     return MyWallet.getHDWallet().getAccountsCount();
@@ -2807,7 +2779,7 @@ var MyWallet = new function() {
    * @param {?function()=} error Error callback function.
    */
   this.upgradeToHDWallet = function(getPassword, success, error) {
-    if (MyWallet.didUpgradeToHd()) {
+    if (WalletStore.didUpgradeToHd()) {
       success && success();
       return;
     }
@@ -2835,8 +2807,8 @@ var MyWallet = new function() {
    */
   this.initializeHDWallet = function(passphrase, bip39Password, getPassword, success, error)  {
     function initializeHDWallet(passphrase, bip39Password, second_password, success, error) {
-      didUpgradeToHd = true;
-
+      
+      WalletStore.setDidUpgradeToHd(true)
       var seedHexString;
 
       if (passphrase) {
@@ -3555,7 +3527,7 @@ var MyWallet = new function() {
         }
 
         if (obj.hd_wallets && obj.hd_wallets.length > 0) {
-          didUpgradeToHd = true;
+          WalletStore.setDidUpgradeToHd(true);
           var defaultHDWallet = obj.hd_wallets[0];
           if (haveBuildHDWallet == false) {
             WalletStore.setEmptyXpubs();
@@ -3588,7 +3560,7 @@ var MyWallet = new function() {
           }
 
         } else {
-          didUpgradeToHd = false;
+          WalletStore.setDidUpgradeToHd(false);
           MyWallet.sendEvent('hd_wallets_does_not_exist');
         }
 
@@ -4119,7 +4091,7 @@ var MyWallet = new function() {
   this.encryptWallet = function(data, password) {
     return JSON.stringify({
       pbkdf2_iterations : MyWallet.getPbkdf2Iterations(),
-      version : MyWallet.didUpgradeToHd() ? 3.0 : 2.0,
+      version : WalletStore.didUpgradeToHd() ? 3.0 : 2.0,
       payload : MyWallet.encrypt(data, password, MyWallet.getPbkdf2Iterations())
     });
   };

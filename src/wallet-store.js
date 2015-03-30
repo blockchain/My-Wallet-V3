@@ -55,6 +55,9 @@ var WalletStore = new function() {
   var mnemonicVerified = false;
   var xpubs = [];
   var transactions = []; //List of all transactions (initially populated from /multiaddr updated through websockets)
+  var didUpgradeToHd = null;
+
+  //////////////////////////////////////////////////////////////////////////////
 
   this.getLanguages = function() {
     return languageCodeToLanguage;
@@ -93,8 +96,26 @@ var WalletStore = new function() {
     return transactions;
   };
 
+  this.getAllTransactions = function() {
+    var filteredTransactions = [];
+    var rawTxs = WalletStore.getTransactions();
+    for (var i in rawTxs) {
+      var transaction = MyWallet.processTransaction(rawTxs[i]);
+      filteredTransactions.push(transaction);
+    }
+    return filteredTransactions;
+  };
+
   // this.pushTransaction = function(tx) {
   //   transactions.push(tx);
   // };
+
+  this.didUpgradeToHd = function() {
+    return didUpgradeToHd;
+  };
+
+  this.setDidUpgradeToHd = function(bool) {
+    didUpgradeToHd = bool;
+  };
 
 };
