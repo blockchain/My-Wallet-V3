@@ -54,6 +54,7 @@ var WalletStore = new function() {
 
   var mnemonicVerified = false;
   var xpubs = [];
+  var transactions = []; //List of all transactions (initially populated from /multiaddr updated through websockets)
 
   this.getLanguages = function() {
     return languageCodeToLanguage;
@@ -83,9 +84,17 @@ var WalletStore = new function() {
   this.pushXpub = function(xpub) {
     xpubs.push(xpub);
   };
-  
+
   this.getXpubs = function() {
     return xpubs;
   };
+
+  this.getTransactions = function() {
+    return transactions;
+  };
+
+  // this.pushTransaction = function(tx) {
+  //   transactions.push(tx);
+  // };
 
 };

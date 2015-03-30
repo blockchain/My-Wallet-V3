@@ -49,7 +49,6 @@ var MyWallet = new function() {
   var n_tx_filtered = 0; //Number of transactions after filtering
   var latest_block; //Chain head block
   var address_book = {}; //Holds the address book addr = label
-  var transactions = []; //List of all transactions (initially populated from /multiaddr updated through websockets)
   var double_encryption = false; //If wallet has a second password
   var tx_page = 0; //Multi-address page
   var tx_filter = 0; //Transaction filter (e.g. Sent Received etc)
@@ -370,13 +369,6 @@ var MyWallet = new function() {
 
   this.getNTransactions = function() {
     return n_tx;
-  };
-
-  /**
-   * @return {Array} get all transactions
-   */
-  this.getTransactions = function() {
-    return transactions;
   };
 
   /**
@@ -1268,6 +1260,7 @@ var MyWallet = new function() {
 
       try {
         var obj = $.parseJSON(message.data);
+        transactions = WalletStore.getTransactions();
 
         if (obj.op == 'on_change') {
           var old_checksum = generatePayloadChecksum();
@@ -1307,7 +1300,7 @@ var MyWallet = new function() {
 
           tx.setConfirmations(0);
 
-          transactions.push(tx);
+          WalletStore.pushTransaction(tx);
 
           playSound('beep');
 
@@ -1527,7 +1520,7 @@ var MyWallet = new function() {
   this.getAllTransactions = function() {
     var filteredTransactions = [];
 
-    var rawTxs = transactions;
+    var rawTxs = WalletStore.getTransactions();
 
     for (var i in rawTxs) {
       var tx = rawTxs[i];
@@ -1734,7 +1727,7 @@ var MyWallet = new function() {
   this.getLegacyTransactions = function() {
     var filteredTransactions = [];
 
-    var rawTxs = transactions;
+    var rawTxs = WalletStore.getTransactions();
 
     for (var i in rawTxs) {
       var tx = rawTxs[i];
@@ -1820,7 +1813,7 @@ var MyWallet = new function() {
    * @return {array} array of transaction objects
    */
   this.getTransactionsForAccount = function(accountIdx) {
-    return MyWallet.getHDWallet().filterTransactionsForAccount(accountIdx, MyWallet.getTransactions(), paidTo, tx_notes);
+    return MyWallet.getHDWallet().filterTransactionsForAccount(accountIdx, WalletStore.getTransactions(), paidTo, tx_notes);
   };
 
   this.getAndSetUnspentOutputsForAccount = function(accountIdx, successCallback, errorCallback) {
@@ -3187,6 +3180,8 @@ var MyWallet = new function() {
     if (block != null) {
       latest_block = block;
 
+      transactions = WalletStore.getTransactions();
+
       for (var key in transactions) {
         var tx = transactions[key];
         tx.setConfirmations(MyWallet.getConfirmationsForTx(latest_block, tx));
@@ -3315,6 +3310,7 @@ var MyWallet = new function() {
   }
 
   function parseMultiAddressJSON(obj, cached, checkCompleted) {
+    transactions = WalletStore.getTransactions();
     if (!cached) {
       if (obj.mixer_fee) {
         mixer_fee = obj.mixer_fee;
