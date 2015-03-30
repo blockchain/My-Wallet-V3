@@ -63,7 +63,7 @@ module.exports = (grunt) ->
       production:
         options:
           debug: false
-        src: '<%= browserify.dev.src %>'
+        src: '<%= browserify.build.src %>'
         dest: 'build/browserify.js'
 
     karma:
@@ -108,7 +108,7 @@ module.exports = (grunt) ->
            
       bower_install_dependencies:
         command: () ->
-           'cd build && bower install'
+           'cd build && ../node_modules/bower/bin/bower install'
 
     shrinkwrap: {}
     
