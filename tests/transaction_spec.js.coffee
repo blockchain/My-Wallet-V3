@@ -401,6 +401,167 @@ describe "Transaction", ->
         expect(MyWallet.processTransaction(tx)).toEqual(transaction)
 
       ##########################################################################
+      
+      describe "with multiple inputs", ->
+        tx = undefined
+        transaction = undefined
+        beforeEach ->
+          tx = {
+            "hash": "fb405e49418ba1541e7c9419fbb74e97de7115c5af1e6e2b44d9db5faea90604",
+            "size": 669,
+            "txIndex": 82134531,
+            "time": 1427744469,
+            "inputs": [
+                {
+                    "sequence": 4294967295,
+                    "prev_out": {
+                        "spent": true,
+                        "tx_index": 82135992,
+                        "type": 0,
+                        "addr": "1AVpdo6XPgo47HqoysaWZPZRFxPLitdqYm",
+                        "value": 43972,
+                        "xpub": {
+                            "path": "M/0/3",
+                            "m": "xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5"
+                        },
+                        "n": 0,
+                        "script": "76a914682c8acbcc643dc46b410c88a57f83a2c8ee69df88ac"
+                    },
+                    "script": "483045022100e9625fa8c67ae843457c94d8dabac245ca28c651dde8ea84e9aa7cb49feb00180220719b87bc1ad15484daa63df13c1d3a311e2f80c5d590e1cf470ede03b2d7c591012103de2d7ab9895d579bda75a4d180f762e79e662c8efa8567ae39342901bddb9883"
+                },
+                {
+                    "sequence": 4294967295,
+                    "prev_out": {
+                        "spent": true,
+                        "tx_index": 82132444,
+                        "type": 0,
+                        "addr": "1EivtqKxd93vG4izqrUWsPWHDZjJ5THL3P",
+                        "value": 43972,
+                        "xpub": {
+                            "path": "M/0/2",
+                            "m": "xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5"
+                        },
+                        "n": 0,
+                        "script": "76a9149687ad84283944beeee005b20360fcc6f401a21e88ac"
+                    },
+                    "script": "483045022100e778ccd1f45e451aebee4117dbcff739a135b0fc879de7c8951423487230408102202bf23f547a20171552f61ec8580ba5b453eacbf067a59813da649bfb3d6742a501210256f083baf20b888299a2079f172f3d61eb72bce35e4d995b168c7d443f9e0642"
+                },
+                {
+                    "sequence": 4294967295,
+                    "prev_out": {
+                        "spent": true,
+                        "tx_index": 82130805,
+                        "type": 0,
+                        "addr": "13z5a8VBeBLHdwNJcxaffa5ZddvgTxG1An",
+                        "value": 43972,
+                        "xpub": {
+                            "path": "M/0/1",
+                            "m": "xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5"
+                        },
+                        "n": 0,
+                        "script": "76a91420bbc6f86141fd083a32b0d8a9761cb317b4b0f688ac"
+                    },
+                    "script": "483045022100e45b59b72ee3d7533522c1a5945042403e018277a326a94b164dd0a6ec33d4da02200bd97268f9a89832936b14600d77cb35057d6d2966518027bda7e9cf3f459674012102ea09fd86dcb6f3f460bd4bbac4a9ed5c3a41ed1f17d1d18da3180f864fe2c539"
+                },
+                {
+                    "sequence": 4294967295,
+                    "prev_out": {
+                        "spent": true,
+                        "tx_index": 76818246,
+                        "type": 0,
+                        "addr": "1N97jhtFZ8uvMUiM6TmqwjDtoWhaJ5j2pK",
+                        "value": 6516,
+                        "xpub": {
+                            "path": "M/1/5",
+                            "m": "xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5"
+                        },
+                        "n": 1,
+                        "script": "76a914e7e397a2b366208767806aecb23298809fe696ba88ac"
+                    },
+                    "script": "47304402203ad71547254fdfc6f9169737c510df076f25eb631b5675569a329337d087e977022022b7160851209038c30dfd9000c9d483845e7d0c2a14aa03cca69faf652b0b16012103e1e645bc07a1ccb399d4a2a715c7c03cdd9346151b939e6f9dfdbe5b6e30eb87"
+                }
+            ],
+            "out": [
+                {
+                    "spent": false,
+                    "tx_index": 82134531,
+                    "type": 0,
+                    "addr": "1PZ5GCtYQesYMKEQMtkRQcutLXpkMCWCTM",
+                    "value": 123120,
+                    "n": 0,
+                    "script": "76a914f763a2c98e3792c7136d79fb78ed57050f01139188ac"
+                },
+                {
+                    "spent": false,
+                    "tx_index": 82134531,
+                    "type": 0,
+                    "addr": "17SZkkgB9Vgk39wwv2UcKL8wpcRcie583Z",
+                    "value": 5312,
+                    "xpub": {
+                        "path": "M/1/6",
+                        "m": "xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5"
+                    },
+                    "n": 1,
+                    "script": "76a91446a67ee6ffecbabea854e73c5b4e715d13a8e4a488ac"
+                }
+            ],
+            "result": -133120,
+            "balance": 724507,
+            "account_indexes": [
+                4,
+                4,
+                4,
+                4,
+                4
+            ],
+            "confirmations": 0
+          }
+          transaction = {
+            "from": {
+                "account": {
+                    "index": 0,
+                    "amount": 38660
+                },
+                "legacyAddresses": null,
+                "externalAddresses": {
+                    "addressWithLargestOutput": "1EivtqKxd93vG4izqrUWsPWHDZjJ5THL3P",
+                    "amount": 43972
+                }
+            },
+            "to": {
+                "account": null,
+                "legacyAddresses": null,
+                "externalAddresses": {
+                    "addressWithLargestOutput": "1PZ5GCtYQesYMKEQMtkRQcutLXpkMCWCTM",
+                    "amount": 123120
+                },
+                "email": null,
+                "mobile": null
+            },
+            "fee": 10000,
+            "intraWallet": false,
+            "hash": "fb405e49418ba1541e7c9419fbb74e97de7115c5af1e6e2b44d9db5faea90604",
+            "confirmations": 0,
+            "txTime": 1427744469,
+            "note": null,
+            "tags": [],
+            "size": 669,
+            "tx_index": 82134531,
+            "result": -133120
+          }
+
+        it "should recognize from account", ->
+          expect(MyWallet.processTransaction(tx).from.account).toBeDefined()
+    
+        it "should recognize to address", ->
+          expect(MyWallet.processTransaction(tx).to).toEqual(transaction.to)
+    
+        it "should have the correct amount", ->
+          expect(MyWallet.processTransaction(tx).result).toEqual(transaction.result)
+    
+        it "should not be intra wallet", ->
+         result = MyWallet.processTransaction(tx)
+         expect(result.intraWallet).toBe(false)
         
     describe "from external address to account", ->
       tx = undefined
@@ -499,94 +660,97 @@ describe "Transaction", ->
     
     
     describe "between accounts", ->
-      tx =
-        'hash': 'eb70c6df08de770782b351c84fb2a96ea100d37ff8edcad579c32c52213c26f7'
-        'size': 225
-        'txIndex': 72943968
-        'time': 1419596460
-        'inputs': [ {
-          'sequence': 4294967295
-          'prev_out':
-            'spent': true
-            'tx_index': 71279770
-            'type': 0
-            'addr': '1446x39AsPNKeGMKJfLFfboy7TynPNXMwe'
-            'value': 250000
-            'xpub':
-              'path': 'M/0/6'
-              'm': 'xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpN\
-                    sQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5'
-            'n': 0
-            'script': '76a914217e9754dba345774e0cdf1ebd66a97badf159f788ac'
-          'script': '473044022073cdd867c68c5edc805a1bb1cb7682529de8e9eadde28e\
-                     9160e6a6e1c759b49402203b28d93525aba094722867192f112d64f7\
-                     aaac6070d9a2dfe1afdb6726f99ac2012103dbe5601359b5096eb149\
-                     9ac03d801ddc64d5357de486e5765ea1eb8aedcd93a6'
-        } ]
-        'out': [
-          {
-            'spent': false
-            'tx_index': 72943968
-            'type': 0
-            'addr': '1MAd443Q6iLPHbyRmiTsqSdRgohiqCg6GL'
-            'value': 100000
-            'xpub':
-              'path': 'M/0/5'
-              'm': 'xpub6DWoQTdpQcaSm4q9pj9A5EZdCs3NcmM5x8aRoi3VAGXJUCkJhmREW\
-                    MCaAahs9nhMq7RnseKBV4uwkqCP8g43sEnMXRfFes2BxGagJqZfS5A'
-            'n': 0
-            'script': '76a914dd345ac3cbd65e9e108daac72c7ad629fccaff2b88ac'
-          }
-          {
-            'spent': true
-            'tx_index': 72943968
-            'type': 0
-            'addr': '1MaCbDwkC74tiEDSnchASxiAARHh94CVSG'
-            'value': 140000
-            'xpub':
-              'path': 'M/1/2'
-              'm': 'xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpN\
-                    sQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5'
-            'n': 1
-            'script': '76a914e1a9ead4802fa084d8c8de33c0acd0238fced51888ac'
-          }
-        ]
-        'result': -10000
-        'blockHeight': 335980
-        'balance': 1853945
-        'account_indexes': [
-          0
-          1
-          0
-        ]
-        'confirmations': 27
+      tx = undefined
+      transaction = undefined
+      beforeEach ->
+        tx =
+          'hash': 'eb70c6df08de770782b351c84fb2a96ea100d37ff8edcad579c32c52213c26f7'
+          'size': 225
+          'txIndex': 72943968
+          'time': 1419596460
+          'inputs': [ {
+            'sequence': 4294967295
+            'prev_out':
+              'spent': true
+              'tx_index': 71279770
+              'type': 0
+              'addr': '1446x39AsPNKeGMKJfLFfboy7TynPNXMwe'
+              'value': 250000
+              'xpub':
+                'path': 'M/0/6'
+                'm': 'xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpN\
+                      sQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5'
+              'n': 0
+              'script': '76a914217e9754dba345774e0cdf1ebd66a97badf159f788ac'
+            'script': '473044022073cdd867c68c5edc805a1bb1cb7682529de8e9eadde28e\
+                       9160e6a6e1c759b49402203b28d93525aba094722867192f112d64f7\
+                       aaac6070d9a2dfe1afdb6726f99ac2012103dbe5601359b5096eb149\
+                       9ac03d801ddc64d5357de486e5765ea1eb8aedcd93a6'
+          } ]
+          'out': [
+            {
+              'spent': false
+              'tx_index': 72943968
+              'type': 0
+              'addr': '1MAd443Q6iLPHbyRmiTsqSdRgohiqCg6GL'
+              'value': 100000
+              'xpub':
+                'path': 'M/0/5'
+                'm': 'xpub6DWoQTdpQcaSm4q9pj9A5EZdCs3NcmM5x8aRoi3VAGXJUCkJhmREW\
+                      MCaAahs9nhMq7RnseKBV4uwkqCP8g43sEnMXRfFes2BxGagJqZfS5A'
+              'n': 0
+              'script': '76a914dd345ac3cbd65e9e108daac72c7ad629fccaff2b88ac'
+            }
+            {
+              'spent': true
+              'tx_index': 72943968
+              'type': 0
+              'addr': '1MaCbDwkC74tiEDSnchASxiAARHh94CVSG'
+              'value': 140000
+              'xpub':
+                'path': 'M/1/2'
+                'm': 'xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpN\
+                      sQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5'
+              'n': 1
+              'script': '76a914e1a9ead4802fa084d8c8de33c0acd0238fced51888ac'
+            }
+          ]
+          'result': -10000
+          'blockHeight': 335980
+          'balance': 1853945
+          'account_indexes': [
+            0
+            1
+            0
+          ]
+          'confirmations': 27
 
-      transaction =
-        'from':
-          'account':
-            'index': 0
-            'amount': 110000
-          'legacyAddresses': null
-          'externalAddresses': null
-        'to':
-          'account':
-            'index': 1
-            'amount': 100000
-          'legacyAddresses': null
-          'externalAddresses': null
-          'email': null 
-          'mobile': null
-        'fee': 10000
-        'intraWallet': true
-        'hash': 'eb70c6df08de770782b351c84fb2a96ea100d37ff8edcad579c32c52213c26f7'
-        'confirmations': 27
-        'txTime': 1419596460
-        'note': null
-        'tags': []
-        'size': 225
-        'tx_index': 72943968
-        'block_height': 335980
-        'result': 100000
+        transaction =
+          'from':
+            'account':
+              'index': 0
+              'amount': 110000
+            'legacyAddresses': null
+            'externalAddresses': null
+          'to':
+            'account':
+              'index': 1
+              'amount': 100000
+            'legacyAddresses': null
+            'externalAddresses': null
+            'email': null 
+            'mobile': null
+          'fee': 10000
+          'intraWallet': true
+          'hash': 'eb70c6df08de770782b351c84fb2a96ea100d37ff8edcad579c32c52213c26f7'
+          'confirmations': 27
+          'txTime': 1419596460
+          'note': null
+          'tags': []
+          'size': 225
+          'tx_index': 72943968
+          'block_height': 335980
+          'result': 100000
         
       ##########################################################################
       it "should recognize from account", ->

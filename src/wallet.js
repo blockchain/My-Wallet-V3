@@ -1542,13 +1542,23 @@ var MyWallet = new function() {
       fee: 0,
       intraWallet: null,
     };
-    var isOrigin = false;
+    
 
+    var legacyAddressWithLargestOutput = undefined;
+    var externalAddressWithLargestOutput = undefined;
+    var amountFromLegacyAddresses = 0;
+    var amountFromExternalAddresses = 0;
+    var legacyAddressWithLargestOutputAmount = 0;
+    var externalAddressWithLargestOutputAmount = 0;
+    var fromAccountIndex = undefined;
+    var amountFromAccount = 0;
+    
     for (var i = 0; i < tx.inputs.length; ++i) {
+      var isOrigin = false;
       var output = tx.inputs[i].prev_out;
       if (!output || !output.addr)
         continue;
-
+      
       if (MyWallet.isActiveLegacyAddress(output.addr)) {
         isOrigin = true;
         if (transaction.from.legacyAddresses == null)
@@ -1559,15 +1569,19 @@ var MyWallet = new function() {
         for (var j in MyWallet.getAccounts()) {
           var account = MyWallet.getHDWallet().getAccount(j);
           if (!account.isArchived() && output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
+            amountFromAccount += output.value; 
+            
             if (! isOrigin) {
               isOrigin = true;
-              transaction.from.account = {index: parseInt(j), amount: output.value};
+              fromAccountIndex = parseInt(j)
+              
               transaction.fee += output.value;
             } else {
-              if (transaction.from.externalAddresses == null ||
-                  output.value > transaction.from.externalAddresses.amount) {
-                transaction.from.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
+              if ( output.value > legacyAddressWithLargestOutputAmount ) {
+                  legacyAddressWithLargestOutput = output.addr;
+                  legacyAddressWithLargestOutputAmount = output.value;
               }
+              amountFromLegacyAddresses += output.value;
               transaction.fee += output.value;
             }
             break;
@@ -1575,10 +1589,11 @@ var MyWallet = new function() {
         }
 
         if (! isOrigin) {
-          if (transaction.from.externalAddresses == null ||
-              output.value > transaction.from.externalAddresses.amount) {
-            transaction.from.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
+          if ( output.value > externalAddressWithLargestOutputAmount ) {
+              externalAddressWithLargestOutput = output.addr;
+              externalAddressWithLargestOutputAmount = output.value;
           }
+          amountFromExternalAddresses += output.value;
           transaction.fee += output.value;
           transaction.intraWallet = false;
         }
@@ -1587,6 +1602,19 @@ var MyWallet = new function() {
       if(transaction.intraWallet == null) {
         transaction.intraWallet = true;
       }
+    }
+    
+    if(amountFromExternalAddresses > 0) {
+      transaction.from.externalAddresses = {addressWithLargestOutput: externalAddressWithLargestOutput, amount: amountFromExternalAddresses};      
+    }
+    
+    if(amountFromLegacyAddresses > 0) {
+      transaction.from.legacyAddresses = {addressWithLargestOutput: legacyAddressWithLargestOutput, amount: amountFromLegacyAddresses};      
+    }
+    
+    if(amountFromAccount > 0) {
+      transaction.from.account = {index: fromAccountIndex, amount: amountFromAccount};
+      
     }
 
     for (var i = 0; i < tx.out.length; ++i) {
@@ -1697,7 +1725,7 @@ var MyWallet = new function() {
       var result = 0;
       
       if(toOrFrom.account) {
-        result = result + toOrFrom.account.amount;
+        result = toOrFrom.account.amount;
       } else if (toOrFrom.legacyAddresses && toOrFrom.legacyAddresses.length > 0) {
         for(var i in toOrFrom.legacyAddresses) {
           var legacyAddress = toOrFrom.legacyAddresses[i];
@@ -1711,13 +1739,12 @@ var MyWallet = new function() {
     var result = 0;
     
     if (transaction.intraWallet) {
-      result = result + totalOurs(transaction.to);
+      result = totalOurs(transaction.to),totalOurs(transaction.from);
     } else {
-      result = result + totalOurs(transaction.to) - totalOurs(transaction.from);
+      result = totalOurs(transaction.to) - totalOurs(transaction.from);
     }
     
     return result;
-    
  
   }
 
