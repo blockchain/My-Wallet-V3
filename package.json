@@ -24,7 +24,7 @@
     "url": "https://github.com/blockchain/My-Wallet-HD.git"
   },
   "scripts": {
-    "postinstall": "mkdir -p build && node_modules/bower/bin/bower install && cp node_modules/xregexp/xregexp-all.js build && cd node_modules/sjcl && ./configure --with-sha1 && make && cd - && cp node_modules/sjcl/sjcl.js build"
+    "postinstall": "mkdir -p build && node_modules/bower/bin/bower install && cd node_modules/sjcl && ./configure --with-sha1 && make && cd - && cp node_modules/sjcl/sjcl.js build"
   },
   "dependencies": {
     "assert": "1.3.*",

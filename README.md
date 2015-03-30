@@ -110,9 +110,8 @@ Include the following files instead of `my-wallet.js` for easier debugging:
 * `src/hd-wallet.js`
 * `src/hd-account.js`
 * `build/browserify.js`
-* `build/bip39.js`
 * `build/sjcl.js`
-* `build/xregexp-all.js`
+* `node_modules/xregexp/xregexp-all.js`
 * `bower_components/jquery/dist/jquery.js`
 * `bower_components/cryptojslib/rollups/sha256.js`
 * `bower_components/cryptojslib/rollups/aes.js`

@@ -32,7 +32,7 @@ module.exports = (grunt) ->
           'build/hd-account.processed.js'
           'build/hd-wallet.processed.js'
           'build/bip39.js'
-          'build/xregexp-all.js'
+          'node_modules/xregexp/xregexp-all.js'
           'build/bower_components/cryptojslib/rollups/sha256.js'
           'build/bower_components/cryptojslib/rollups/aes.js'
           'build/bower_components/cryptojslib/rollups/pbkdf2.js'

@@ -46,7 +46,7 @@ module.exports = function(config) {
       'bower_components/browserdetection/src/browser-detection.js',
       'build/browserify.js',
       'build/sjcl.js',
-      'build/xregexp-all.js',
+      'node_modules/xregexp/xregexp-all.js',
       'src/hd-wallet.js',
       'src/hd-account.js',
       'src/wallet-signup.js',
