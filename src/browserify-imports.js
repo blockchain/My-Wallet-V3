@@ -6,5 +6,6 @@ module.exports = {
   Base58: require('bs58'),
   JSONB: require('json-buffer'),
   SHA256: require('sha256'),
+  BIP39: require('bip39'),
   ImportExport: require('./import-export.js')
 };

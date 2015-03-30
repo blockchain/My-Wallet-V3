@@ -29,6 +29,7 @@ var ECKey = Bitcoin.ECKey;
 var assert = Browserify.assert;
 var JSONB = Browserify.JSONB;
 var SHA256 = Browserify.SHA256;
+var BIP39 = Browserify.BIP39;
 var ImportExport = Browserify.ImportExport;
 
 var MyWallet = new function() {

@@ -45,7 +45,6 @@ module.exports = function(config) {
       'bower_components/cryptojslib/components/pad-nopadding.js',
       'bower_components/browserdetection/src/browser-detection.js',
       'build/browserify.js',
-      'build/bip39.js',
       'build/sjcl.js',
       'build/xregexp-all.js',
       'src/hd-wallet.js',

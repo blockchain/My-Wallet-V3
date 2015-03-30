@@ -110,7 +110,7 @@ module.exports = (grunt) ->
       bower_install_dependencies:
         command: () ->
            'cd build && bower install'
-           
+
     shrinkwrap: {}
     
     env: 
