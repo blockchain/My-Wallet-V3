@@ -53,22 +53,32 @@ module.exports = (grunt) ->
         dest: "dist/my-wallet.min.js"
 
     browserify:
+      options:
+        debug: true
+        browserifyOptions: { standalone: "Browserify" }
+
+      build:
+        src: ['src/browserify-imports.js']
+        dest: 'build/browserify.js'
+
+      production:
         options:
-            debug: true
-            browserifyOptions: { standalone: "Browserify" }
+          debug: false
+        src: '<%= browserify.dev.src %>'
+        dest: 'build/browserify.js'
 
-        build:
-            src: ['src/browserify-imports.js']
-            dest: 'build/browserify.js'
+    karma:
+      unit:
+        configFile: 'karma.conf.js'
+        background: true
+        singleRun: false
 
-        production:
-            options:
-                debug: false
-            src: '<%= browserify.dev.src %>'
-            dest: 'build/browserify.js'
+      test:
+        configFile: 'karma.conf.js'
 
-    watch: {
-      scripts: {
+
+    watch:
+      scripts:
         files: [
           'src/ie.js'
           'src/shared.js'
@@ -81,10 +91,12 @@ module.exports = (grunt) ->
           'src/hd-account.js'
           'src/import-export.js'
           'src/wallet-store.js'
-        ],
-        tasks: ['build'],
-      },
-    }
+        ]
+        tasks: ['build']
+
+      karma:
+        files: ['<%= watch.scripts.files %>', 'tests/**/*.js.coffee', 'tests/**/*.js']
+        tasks: ['karma:unit:run']
         
     shell: 
       check_dependencies: 
@@ -122,18 +134,19 @@ module.exports = (grunt) ->
 
   
   # Load the plugin that provides the "uglify" task.
-  grunt.loadNpmTasks "grunt-contrib-uglify"
-  grunt.loadNpmTasks('grunt-contrib-concat')
-  grunt.loadNpmTasks('grunt-browserify')
-  # grunt.loadNpmTasks('grunt-contrib-copy')
-  grunt.loadNpmTasks('grunt-contrib-clean')
-  grunt.loadNpmTasks('grunt-contrib-watch')
-  grunt.loadNpmTasks('grunt-shell')
-  grunt.loadNpmTasks('grunt-shrinkwrap')
-  grunt.loadNpmTasks('grunt-preprocess')
-  grunt.loadNpmTasks('grunt-env');
-        
+  grunt.loadNpmTasks 'grunt-browserify'
+  grunt.loadNpmTasks 'grunt-contrib-clean'
+  grunt.loadNpmTasks 'grunt-contrib-concat'
+  grunt.loadNpmTasks 'grunt-contrib-uglify'
+  grunt.loadNpmTasks 'grunt-contrib-watch'
+  grunt.loadNpmTasks 'grunt-env'
+  grunt.loadNpmTasks 'grunt-karma'
+  grunt.loadNpmTasks 'grunt-preprocess'
+  grunt.loadNpmTasks 'grunt-shell'
+  grunt.loadNpmTasks 'grunt-shrinkwrap'
+
   grunt.registerTask "default", [
+    "karma:unit:start"
     "watch"
   ]
   

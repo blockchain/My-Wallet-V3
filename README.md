@@ -12,7 +12,15 @@ grunt build
 ## Tests
 
 ```sh
-npm test
+grunt karma:test
+```
+
+## Dev
+
+Watch files, build and run tests on change
+
+```sh
+grunt
 ```
 
 ## Clean
