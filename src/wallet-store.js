@@ -52,20 +52,40 @@ var WalletStore = new function() {
     "RUB" : "Russian Ruble"
   };
 
+  var mnemonicVerified = false;
+  var xpubs = [];
 
-  /**
-   * @return {Object} dictionary of available languages
-   */
   this.getLanguages = function() {
     return languageCodeToLanguage;
   };
 
-  /**
-   * @return {Object} dictionary of available currencies
-   */
   this.getCurrencies = function() {
     return currencyCodeToCurrency;
   };
+
+  this.didVerifyMnemonic = function() {
+    mnemonicVerified = true;
+    MyWallet.backupWalletDelayed();
+  };
+
+  this.setMnemonicVerified = function(bool) {
+    mnemonicVerified = bool;
+  };
+
+  this.isMnemonicVerified = function() {
+    return mnemonicVerified;
+  };
+
+  this.setEmptyXpubs = function() {
+    xpubs = [];
+  };
+
+  this.pushXpub = function(xpub) {
+    xpubs.push(xpub);
+  };
   
+  this.getXpubs = function() {
+    return xpubs;
+  };
 
 };

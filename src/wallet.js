@@ -84,7 +84,6 @@ var MyWallet = new function() {
   var tx_tags = {};
   var tag_names = [];
   var paidTo = {};
-  var mnemonicVerified = false;
   var defaultAccountIdx = 0;
   var didSetGuid = false;
   var amountToRecommendedFee = {};
@@ -93,7 +92,6 @@ var MyWallet = new function() {
   var counter = 0;
   var isPolling = false;
   var didUpgradeToHd = null;
-  var xpubs = [];
 
   var wallet_options = {
     pbkdf2_iterations : default_pbkdf2_iterations, //Number of pbkdf2 iterations to default to for main password, second password and dpasswordhash
@@ -150,21 +148,6 @@ var MyWallet = new function() {
     // } catch (e) {
     //     console.log(e);
     // }
-  };
-
-  /**
-   * set mnemonic to be verified and backups wallet
-   */
-  this.didVerifyMnemonic = function() {
-    mnemonicVerified = true;
-    MyWallet.backupWalletDelayed();
-  };
-
-  /**
-   * @return {boolean} whether mnemonic is verified
-   */
-  this.isMnemonicVerified = function() {
-    return mnemonicVerified;
   };
 
   /**
@@ -3018,7 +3001,7 @@ var MyWallet = new function() {
 
       out += '    {\n';
       out += '      "seed_hex" : "'+ MyWallet.getHDWallet().getSeedHexString() +'",\n';
-      out += '      "mnemonic_verified" : '+ mnemonicVerified +',\n';
+      out += '      "mnemonic_verified" : '+ WalletStore.isMnemonicVerified() +',\n';
       out += '      "default_account_idx" : '+ defaultAccountIdx +',\n';
       if (paidTo != null) {
         out += '      "paidTo" : ' + JSON.stringify(paidTo) +',\n';
@@ -3440,7 +3423,7 @@ var MyWallet = new function() {
       });
     };
 
-    var addresses = xpubs.concat(MyWallet.getLegacyActiveAddresses());
+    var addresses = WalletStore.getXpubs().concat(MyWallet.getLegacyActiveAddresses());
     BlockchainAPI.async_get_history_with_addresses(addresses, function(data) {
       parseMultiAddressJSON(data, false, false);
       success && success();
@@ -3552,12 +3535,12 @@ var MyWallet = new function() {
           didUpgradeToHd = true;
           var defaultHDWallet = obj.hd_wallets[0];
           if (haveBuildHDWallet == false) {
-            xpubs = [];
+            WalletStore.setEmptyXpubs();
             for (var i in defaultHDWallet.accounts) {
               var account  = defaultHDWallet.accounts[i];
 
               if(!account.archived) {
-                xpubs.push(account.xpub);
+                WalletStore.pushXpub(account.xpub);
               }
             }
 
@@ -3566,9 +3549,9 @@ var MyWallet = new function() {
             haveBuildHDWallet = true;
           }
           if (defaultHDWallet.mnemonic_verified) {
-            mnemonicVerified = defaultHDWallet.mnemonic_verified;
+            WalletStore.setMnemonicVerified(defaultHDWallet.mnemonic_verified);
           } else {
-            mnemonicVerified = false;
+            WalletStore.setMnemonicVerified(false);
           }
           if (defaultHDWallet.default_account_idx) {
             defaultAccountIdx = defaultHDWallet.default_account_idx;
