@@ -49,7 +49,6 @@ var MyWallet = new function() {
   var n_tx_filtered = 0; //Number of transactions after filtering
   var latest_block; //Chain head block
   var address_book = {}; //Holds the address book addr = label
-  var transactions = []; //List of all transactions (initially populated from /multiaddr updated through websockets)
   var double_encryption = false; //If wallet has a second password
   var tx_page = 0; //Multi-address page
   var tx_filter = 0; //Transaction filter (e.g. Sent Received etc)
@@ -84,7 +83,6 @@ var MyWallet = new function() {
   var tx_tags = {};
   var tag_names = [];
   var paidTo = {};
-  var mnemonicVerified = false;
   var defaultAccountIdx = 0;
   var didSetGuid = false;
   var amountToRecommendedFee = {};
@@ -93,7 +91,6 @@ var MyWallet = new function() {
   var counter = 0;
   var isPolling = false;
   var didUpgradeToHd = null;
-  var xpubs = [];
 
   var wallet_options = {
     pbkdf2_iterations : default_pbkdf2_iterations, //Number of pbkdf2 iterations to default to for main password, second password and dpasswordhash
@@ -150,21 +147,6 @@ var MyWallet = new function() {
     // } catch (e) {
     //     console.log(e);
     // }
-  };
-
-  /**
-   * set mnemonic to be verified and backups wallet
-   */
-  this.didVerifyMnemonic = function() {
-    mnemonicVerified = true;
-    MyWallet.backupWalletDelayed();
-  };
-
-  /**
-   * @return {boolean} whether mnemonic is verified
-   */
-  this.isMnemonicVerified = function() {
-    return mnemonicVerified;
   };
 
   /**
@@ -387,13 +369,6 @@ var MyWallet = new function() {
 
   this.getNTransactions = function() {
     return n_tx;
-  };
-
-  /**
-   * @return {Array} get all transactions
-   */
-  this.getTransactions = function() {
-    return transactions;
   };
 
   /**
@@ -1285,6 +1260,7 @@ var MyWallet = new function() {
 
       try {
         var obj = $.parseJSON(message.data);
+        transactions = WalletStore.getTransactions();
 
         if (obj.op == 'on_change') {
           var old_checksum = generatePayloadChecksum();
@@ -1324,7 +1300,7 @@ var MyWallet = new function() {
 
           tx.setConfirmations(0);
 
-          transactions.push(tx);
+          WalletStore.pushTransaction(tx);
 
           playSound('beep');
 
@@ -1544,7 +1520,7 @@ var MyWallet = new function() {
   this.getAllTransactions = function() {
     var filteredTransactions = [];
 
-    var rawTxs = transactions;
+    var rawTxs = WalletStore.getTransactions();
 
     for (var i in rawTxs) {
       var tx = rawTxs[i];
@@ -1751,7 +1727,7 @@ var MyWallet = new function() {
   this.getLegacyTransactions = function() {
     var filteredTransactions = [];
 
-    var rawTxs = transactions;
+    var rawTxs = WalletStore.getTransactions();
 
     for (var i in rawTxs) {
       var tx = rawTxs[i];
@@ -1837,7 +1813,7 @@ var MyWallet = new function() {
    * @return {array} array of transaction objects
    */
   this.getTransactionsForAccount = function(accountIdx) {
-    return MyWallet.getHDWallet().filterTransactionsForAccount(accountIdx, MyWallet.getTransactions(), paidTo, tx_notes);
+    return MyWallet.getHDWallet().filterTransactionsForAccount(accountIdx, WalletStore.getTransactions(), paidTo, tx_notes);
   };
 
   this.getAndSetUnspentOutputsForAccount = function(accountIdx, successCallback, errorCallback) {
@@ -3018,7 +2994,7 @@ var MyWallet = new function() {
 
       out += '    {\n';
       out += '      "seed_hex" : "'+ MyWallet.getHDWallet().getSeedHexString() +'",\n';
-      out += '      "mnemonic_verified" : '+ mnemonicVerified +',\n';
+      out += '      "mnemonic_verified" : '+ WalletStore.isMnemonicVerified() +',\n';
       out += '      "default_account_idx" : '+ defaultAccountIdx +',\n';
       if (paidTo != null) {
         out += '      "paidTo" : ' + JSON.stringify(paidTo) +',\n';
@@ -3204,6 +3180,8 @@ var MyWallet = new function() {
     if (block != null) {
       latest_block = block;
 
+      transactions = WalletStore.getTransactions();
+
       for (var key in transactions) {
         var tx = transactions[key];
         tx.setConfirmations(MyWallet.getConfirmationsForTx(latest_block, tx));
@@ -3332,6 +3310,7 @@ var MyWallet = new function() {
   }
 
   function parseMultiAddressJSON(obj, cached, checkCompleted) {
+    transactions = WalletStore.getTransactions();
     if (!cached) {
       if (obj.mixer_fee) {
         mixer_fee = obj.mixer_fee;
@@ -3440,7 +3419,7 @@ var MyWallet = new function() {
       });
     };
 
-    var addresses = xpubs.concat(MyWallet.getLegacyActiveAddresses());
+    var addresses = WalletStore.getXpubs().concat(MyWallet.getLegacyActiveAddresses());
     BlockchainAPI.async_get_history_with_addresses(addresses, function(data) {
       parseMultiAddressJSON(data, false, false);
       success && success();
@@ -3552,12 +3531,12 @@ var MyWallet = new function() {
           didUpgradeToHd = true;
           var defaultHDWallet = obj.hd_wallets[0];
           if (haveBuildHDWallet == false) {
-            xpubs = [];
+            WalletStore.setEmptyXpubs();
             for (var i in defaultHDWallet.accounts) {
               var account  = defaultHDWallet.accounts[i];
 
               if(!account.archived) {
-                xpubs.push(account.xpub);
+                WalletStore.pushXpub(account.xpub);
               }
             }
 
@@ -3566,9 +3545,9 @@ var MyWallet = new function() {
             haveBuildHDWallet = true;
           }
           if (defaultHDWallet.mnemonic_verified) {
-            mnemonicVerified = defaultHDWallet.mnemonic_verified;
+            WalletStore.setMnemonicVerified(defaultHDWallet.mnemonic_verified);
           } else {
-            mnemonicVerified = false;
+            WalletStore.setMnemonicVerified(false);
           }
           if (defaultHDWallet.default_account_idx) {
             defaultAccountIdx = defaultHDWallet.default_account_idx;
