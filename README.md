@@ -102,22 +102,28 @@ MyWallet.get_history(_successFun, _errorFun);
 
 Include the following files instead of `my-wallet.js` for easier debugging:
 
-* `src/shared.js`
 * `src/blockchain-api.js`
 * `src/blockchain-settings-api.js`
 * `src/crypto-util-legacy.js`
-* `src/wallet.js`
-* `src/hd-wallet.js`
 * `src/hd-account.js`
+* `src/hd-wallet.js`
+* `src/shared.js`
+* `src/signer.js`
+* `src/wallet-signup.js`
+* `src/wallet-store.js`
+* `src/wallet.js`
 * `build/browserify.js`
-* `build/sjcl.js`
+* `node_modules/sjcl/sjcl.js`
 * `node_modules/xregexp/xregexp-all.js`
+* `bower_components/browserdetection/src/browser-detection.js`
 * `bower_components/jquery/dist/jquery.js`
 * `bower_components/cryptojslib/rollups/sha256.js`
 * `bower_components/cryptojslib/rollups/aes.js`
 * `bower_components/cryptojslib/rollups/pbkdf2.js`
 * `bower_components/cryptojslib/components/cipher-core.js`
 * `bower_components/cryptojslib/components/pad-iso10126.js`
+* `bower_components/cryptojslib/components/mode-ecb.js`
+* `bower_components/cryptojslib/components/pad-nopadding.js`
 
 ## Distribution
 
@@ -125,12 +131,11 @@ Run `GITHUB_USER=... GITHUB_PASSWORD=... grunt dist` to check all dependencies a
 
 ## Adding a browserified dependency
 
-1. npm install newpackage --save
+1. `npm install newpackage --save`
 2. Add the require in browserify-imports.js
-3. npm install
+3. `npm install`
 
 ### Whitelist dependencies
 
 1. Add the tagged version and the commit hash to dependency-whitelist.json.
-2. Run grunt dist
-
+2. Run `grunt dist`
