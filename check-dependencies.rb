@@ -191,7 +191,7 @@ output.delete("license")
 output.delete("repository")
 output["scripts"].delete("test")
 if package["name"] == "My-Wallet-HD"
-  output["scripts"]["postinstall"] = "browserify -s Browserify ../src/browserify-imports.js > browserify.js && cd node_modules/bip39 && npm run compile && mv bip39.js ../.. && cd ../.. && cp node_modules/xregexp/xregexp-all.js . && cd node_modules/sjcl && ./configure --with-sha1 && make && cd - && cp node_modules/sjcl/sjcl.js ."
+  output["scripts"]["postinstall"] = "../node_modules/bower/bin/bower install && cd node_modules/sjcl && ./configure --with-sha1 && make && cd -"
 elsif package["name"] == "angular-blockchain-wallet"
   output["scripts"].delete("postinstall")
 else
