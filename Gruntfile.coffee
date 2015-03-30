@@ -2,6 +2,7 @@ module.exports = (grunt) ->
   
   grunt.initConfig
     pkg: grunt.file.readJSON("package.json")
+
     clean: 
       build: ["build"]
       dist: ["dist"]
@@ -50,7 +51,22 @@ module.exports = (grunt) ->
       mywallet:
         src:  "dist/my-wallet.js"
         dest: "dist/my-wallet.min.js"
-        
+
+    browserify:
+        options:
+            debug: true
+            browserifyOptions: { standalone: "Browserify" }
+
+        build:
+            src: ['src/browserify-imports.js']
+            dest: 'build/browserify.js'
+
+        production:
+            options:
+                debug: false
+            src: '<%= browserify.dev.src %>'
+            dest: 'build/browserify.js'
+
     watch: {
       scripts: {
         files: [
@@ -108,6 +124,7 @@ module.exports = (grunt) ->
   # Load the plugin that provides the "uglify" task.
   grunt.loadNpmTasks "grunt-contrib-uglify"
   grunt.loadNpmTasks('grunt-contrib-concat')
+  grunt.loadNpmTasks('grunt-browserify')
   # grunt.loadNpmTasks('grunt-contrib-copy')
   grunt.loadNpmTasks('grunt-contrib-clean')
   grunt.loadNpmTasks('grunt-contrib-watch')
@@ -125,6 +142,7 @@ module.exports = (grunt) ->
     "env:build"
     # "clean" # Too aggresive
     "preprocess"
+    "browserify:build"
     "concat:mywallet"
   ]
     
@@ -139,6 +157,7 @@ module.exports = (grunt) ->
     "shell:npm_install_dependencies"
     "shell:bower_install_dependencies"
     "preprocess"
+    "browserify:production"
     "concat:mywallet"
     "uglify:mywallet"
   ]
