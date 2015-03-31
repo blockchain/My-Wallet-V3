@@ -60,7 +60,7 @@ describe "Spend", ->
 
     # activeLegacyAddresses = [
     #   "1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h"
-    #   "14msrp3yc4JRZEu49u7zYeAkKer4ETH6ag"
+    #   "14msrp3yc4jrzeu49u7zyeakker4eth6ag"
     #   "1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX"
     #   "1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF"
     # ]
@@ -89,9 +89,100 @@ describe "Spend", ->
       getAccounts: () -> hdAccounts
       getAccount: (idx) ->  hdAccounts[idx]
     })
-      
+
   ##############################################################################
-  ## LEGACY ADDRESS TESTS
+  ## LEGACY ADDRESS UNIT TESTS
+
+  describe "Legacy Address Unit", ->
+
+    beforeEach ->
+      spyOn(Signer, "pushTx").and.callFake(() -> )
+
+      data.from = '17k7jQsewpru3uxMkaUMxahyvACVc7fjjb'
+      data.amount = 50000
+
+      getUnspentMock = 'unspent_outputs': [  
+          {  
+            "tx_hash": "594c66729d5068b7d816760fc304accd760629ee75a371529049a94cffa50861"
+            "tx_hash_big_endian": "6108a5ff4ca949905271a375ee290676cdac04c30f7616d8b768509d72664c59"
+            "tx_index": 82222265
+            "tx_output_n": 0
+            "script": "76a91449f842901a0c81fb9c0c0f8c61027d2b085a2a9088ac"
+            "value": 61746
+            "value_hex": "00f132"
+            "confirmations": 0
+          }
+      ]
+
+      window.formatBTC = (str) -> str
+
+      window.BlockchainAPI =
+        get_unspent: () -> return
+
+      spyOn(BlockchainAPI, "get_unspent")
+        .and.callFake((xpubList,success,error,conf,nocache) -> 
+          success(getUnspentMock))
+
+    ############################################################################
+    ############# LEGACY ADDR TO ACC
+    describe "sendFromLegacyAddressToAccount()", ->
+      it "should get to send without errors", ->
+                
+        data.to = 0 #iDX
+        data.fee = null
+        MyWallet.setDoubleEncryption(false)
+
+        # Copy of sendFromLegacyAddressToAccount to be able to reach into the Signer object
+
+        account = MyWallet.getHDWallet().getAccount(data.to)
+        obj = Signer.init()
+
+        obj.addExtraPrivateKey('17k7jQsewpru3uxMkaUMxahyvACVc7fjjb', 'AWrnMsqe2AJYmrzKsN8qRosHRiCSKag3fcmvUA9wdJDj')
+
+        to_address = account.getReceivingAddress()
+        obj.addToAddress({ address: Bitcoin.Address.fromBase58Check(to_address), value : BigInteger.valueOf(data.amount) })
+
+        obj.addFromAddress(data.from)
+
+        obj.ready_to_send_header = 'Bitcoins Ready to Send.'
+
+        observer.listener.on_success = observer.success
+        observer.listener.on_error = observer.error
+        obj.addListener(observer.listener)
+
+        obj.start()
+        
+        # MyWallet.sendFromLegacyAddressToAccount  data.from
+        #                                        , data.to
+        #                                        , data.amount
+        #                                        , data.fee
+        #                                        , data.note
+        #                                        , observer.success
+        #                                        , observer.error
+        #                                        , observer.listener
+        #                                        , observer.getPassword
+
+        expect(Signer.pushTx).toHaveBeenCalled
+
+    ############################################################################
+    ############# LEGACY ADDR TO LEGACY ADDR
+    describe "sendFromLegacyAddressToAddress()", ->
+      it "should get to send without errors", ->
+        data.fee = null
+        MyWallet.setDoubleEncryption(false)
+        MyWallet.sendFromLegacyAddressToAddress  data.from
+                                               , data.to
+                                               , data.amount
+                                               , data.fee
+                                               , data.note
+                                               , observer.success
+                                               , observer.error
+                                               , observer.listener
+                                               , observer.getPassword
+
+        expect(Signer.pushTx).toHaveBeenCAlled
+
+
   describe "Legacy Address", ->
     beforeEach ->
       spyOn(Signer, "init").and.callFake(()-> return mockedObj)
@@ -183,7 +274,7 @@ describe "Spend", ->
     ############# LEGACY ADDR TO LEGACY ADDR
     describe "sendFromLegacyAddressToAddress()", ->
 
-      it "should contruct the expected transaction object", ->
+      it "should construct the expected transaction object", ->
 
         data.fee = 15000
         MyWallet.setDoubleEncryption(false)

@@ -47,6 +47,7 @@ module.exports = function(config) {
       'node_modules/sjcl/sjcl.js',
       'node_modules/xregexp/xregexp-all.js',
       'build/browserify.js',
+      'src/blockchain-api.js',
       'src/hd-wallet.js',
       'src/hd-account.js',
       'src/wallet-signup.js',

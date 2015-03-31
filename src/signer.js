@@ -174,6 +174,7 @@ var Signer = new function() {
 
         //Loop once without watch only, then again with watch only
         var includeWatchOnly = false;
+
         while(true) {
           for (var i = 0; i < unspent_copy.length; ++i) {
             var out = unspent_copy[i];
