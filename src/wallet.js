@@ -2255,7 +2255,6 @@ var MyWallet = new function() {
    * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
    */
   this.sendFromLegacyAddressToAddress = function(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback, listener, getPassword)  {
-    console.log("To:", toAddress)
     if (double_encryption) {
       getPassword(function(pw, correct_password, wrong_password) {
         if (MyWallet.validateSecondPassword(pw)) {
@@ -2277,12 +2276,11 @@ var MyWallet = new function() {
 
     obj.addToAddress({ address: Bitcoin.Address.fromBase58Check(toAddress), value : BigInteger.valueOf(amount) });
 
-    var fromAddresses  = fromAddress ? [fromAddress] : MyWallet.getLegacyActiveAddresses()
+    var fromAddresses  = fromAddress ? [fromAddress] : MyWallet.getLegacyActiveAddresses();
 
-    for(i in fromAddresses) {
+    for(var i in fromAddresses) {
       obj.addFromAddress(fromAddresses[i]);
     }
-
 
     obj.ready_to_send_header = 'Bitcoins Ready to Send.';
 
@@ -2332,12 +2330,11 @@ var MyWallet = new function() {
     var to_address = account.getReceivingAddress();
     obj.addToAddress({ address: Bitcoin.Address.fromBase58Check(to_address), value : BigInteger.valueOf(amount) });
 
-    var fromAddresses  = fromAddress ? [fromAddress] : MyWallet.getLegacyActiveAddresses()
+    var fromAddresses  = fromAddress ? [fromAddress] : MyWallet.getLegacyActiveAddresses();
 
-    for(i in fromAddresses) {
+    for(var i in fromAddresses) {
       obj.addFromAddress(fromAddresses[i]);
     }
-
 
     obj.ready_to_send_header = 'Bitcoins Ready to Send.';
 

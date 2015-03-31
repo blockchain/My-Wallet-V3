@@ -31,33 +31,23 @@ var Signer = new function() {
   var sendTxInAmounts = [];
   var sendTxOutAmounts = [];
   var unspent = [];
+  var fee;
+  var base_fee;
 
   // Use web worker based on browser - ignore browserDetection on iOS (browserDetection undefined)
   if(typeof(browserDetection) === "undefined" ||
      !(browserDetection().browser == "ie" && browserDetection().version < 11)) {
     initWebWorker();
   }
-  
-  this.getFee = function() {
-    return fee;
-  }
-  
-  this.getBaseFee = function() {
-    return base_fee;
-  }
-  
-  this.setFee = function(newFee) {
-    fee = newFee;
-  }
 
   this.init = function() {
     base_fee = BigInteger.valueOf(10000);
-    
+
     fee = base_fee; //  BigInteger.ZERO;
     min_free_output_size = BigInteger.valueOf(1000000);
     min_non_standard_output_size = BigInteger.valueOf(5460);
     min_input_size = BigInteger.ZERO;
-      
+
     generated_addresses = [];
     to_addresses = [];
     from_addresses = [];
@@ -86,18 +76,30 @@ var Signer = new function() {
 
     return this;
   };
-  
+
+  this.getFee = function() {
+    return fee;
+  };
+
+  this.setFee = function(newFee) {
+    fee = newFee;
+  };
+
+  this.getBaseFee = function() {
+    return base_fee;
+  };
+
   this.addToAddress = function(address) {
-    to_addresses.push(address)
-  }
-  
+    to_addresses.push(address);
+  };
+
   this.addFromAddress = function(address) {
-    from_addresses.push(address)
-  }
-  
+    from_addresses.push(address);
+  };
+
   this.addExtraPrivateKey = function(address, key) {
     extra_private_keys[address] = key;
-  }
+  };
 
   this.addListener = function(listener) {
     listeners.push(listener);
@@ -119,33 +121,31 @@ var Signer = new function() {
     var scope_to_addresses = to_addresses;
     var scope_unspent = unspent;
     var scope_fee = fee;
-    
-    var self = this;
-    
-    makeTransaction = function(second_password) {
 
-    
+    var self = this;
+
+    var makeTransaction = function(second_password) {
 
       try {
         if (is_cancelled) {
           throw 'Transaction Cancelled';
         }
-      
+
         self.selected_outputs = [];
 
         var txValue = BigInteger.ZERO;
-      
+
         for (var i = 0; i < scope_to_addresses.length; ++i) {
           txValue = txValue.add(scope_to_addresses[i].value);
         }
-      
+
         var availableValue = BigInteger.ZERO;
 
         //Add the miners fees
         if (scope_fee != null) {
           txValue = txValue.add(scope_fee);
         }
-      
+
         var priority = 0;
         var addresses_used = [];
         var forceFee = false;
@@ -288,7 +288,7 @@ var Signer = new function() {
           sendTx.addInput(transactionInputDict.outpoint.hash, transactionInputDict.outpoint.index);
           sendTxInAmounts.push(transactionInputDict.outpoint.value);
         }
-        
+
         sendTxOutAmounts = [];
         for (var i =0; i < scope_to_addresses.length; ++i) {
           var addrObj = scope_to_addresses[i];
@@ -305,7 +305,7 @@ var Signer = new function() {
             forceFee = true;
           }
         }
-        
+
         //Now deal with the change
         var	changeValue = availableValue.subtract(txValue);
 
@@ -326,7 +326,7 @@ var Signer = new function() {
             forceFee = true;
           }
         }
-        
+
         //Now Add the public note
         /*
 
@@ -370,16 +370,16 @@ var Signer = new function() {
         priority /= estimatedSize;
 
         var kilobytes = Math.max(1, Math.ceil(parseFloat(estimatedSize / 1000)));
-        
+
         var fee_is_zero = (!scope_fee || scope_fee.compareTo(base_fee) < 0);
 
         var set_fee_auto = function() {
           //Forced Fee
           scope_fee = base_fee.multiply(BigInteger.valueOf(kilobytes));
-          
+
           makeTransaction(second_password);
         };
-        
+
         //Priority under 57 million requires a 0.0005 BTC transaction fee (see https://en.bitcoin.it/wiki/Transaction_fees)
         if (fee_is_zero && (forceFee || kilobytes > 1)) {
           if (scope_fee && did_specify_fee_manually) {
@@ -387,11 +387,11 @@ var Signer = new function() {
               set_fee_auto();
             }, function() {
               self.tx = sendTx;
-              
+
               self.determinePrivateKeys(function() {
-                
+
                 self.signInputs();
-                
+
               }, second_password);
             }, scope_fee, base_fee.multiply(BigInteger.valueOf(kilobytes)));
           } else {
@@ -410,19 +410,19 @@ var Signer = new function() {
           });
         } else {
           self.tx = sendTx;
-          
+
           self.determinePrivateKeys(function() {
             self.signInputs();
-            
+
           }, second_password);
         }
       } catch (e) {
         default_error(e);
       }
-    }
-    
+    };
+
     //Select Outputs and Construct transaction
-    
+
     if(second_password == undefined) {
       second_password = null;
     }
@@ -431,13 +431,13 @@ var Signer = new function() {
     try {
       invoke('on_start');
 
-      
+
       BlockchainAPI.get_unspent(from_addresses, function (obj) {
         try {
           if (is_cancelled) {
             throw 'Transaction Cancelled';
           }
-          
+
           if (obj.unspent_outputs == null || obj.unspent_outputs.length == 0) {
             throw 'No Free Outputs To Spend';
           }
@@ -464,7 +464,7 @@ var Signer = new function() {
 
             unspent.push(out);
           }
-          
+
           makeTransaction(second_password);
         } catch (e) {
           default_error(e);
@@ -787,7 +787,7 @@ var Signer = new function() {
     this.send(); //By Default Just Send
   };
 
-  default_error = function(error) {
+  function default_error(error) {
     if (is_cancelled) //Only call once
       return;
 
@@ -804,11 +804,11 @@ var Signer = new function() {
     }
 
     invoke('on_error', error);
-  };
+  }
 
-  default_success = function() {
+  function default_success() {
     invoke('on_success');
-  };
+  }
 
   function exceptionToString(err) {
     var vDebug = "";

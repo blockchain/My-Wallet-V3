@@ -18,6 +18,7 @@ describe "Spend", ->
   beforeEach ->
     mockedObj =
       to_addresses: []
+      from_addresses: []
       fee: BigInteger.ZERO
       base_fee: BigInteger.valueOf(10000)
       ready_to_send_header: 'Transaction Ready to Send.'
@@ -25,6 +26,11 @@ describe "Spend", ->
       addListener: (listener) ->
         this.listeners.push(listener);
       start: (pass) -> this.listeners[0].on_success()
+      getFee: () -> this.fee
+      setFee: (fee) -> this.fee = fee
+      getBaseFee: () -> this.base_fee
+      addToAddress: (addr) -> this.to_addresses.push(addr)
+      addFromAddress: (addr) -> this.from_addresses.push(addr)
 
     data =
       from: "1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF"
@@ -92,22 +98,6 @@ describe "Spend", ->
     ############################################################################
     ############# LEGACY ADDR TO ACC
     describe "sendFromLegacyAddressToAccount()", ->
-      it "should use default fee=10000", ->
-
-        data.to = 0 #iDX
-        data.fee = null
-        MyWallet.setDoubleEncryption(false)
-        MyWallet.sendFromLegacyAddressToAccount  data.from
-                                               , data.to
-                                               , data.amount
-                                               , data.fee
-                                               , data.note
-                                               , observer.success
-                                               , observer.error
-                                               , observer.listener
-                                               , observer.getPassword
-
-        expect(BigInteger.valueOf(10000).equals(mockedObj.fee)).toBe(true)
 
       it "should contruct the expected transaction object", ->
 
@@ -192,22 +182,6 @@ describe "Spend", ->
     ############################################################################
     ############# LEGACY ADDR TO LEGACY ADDR
     describe "sendFromLegacyAddressToAddress()", ->
-
-      it "should use default fee=10000", ->
-
-        data.fee = null
-        MyWallet.setDoubleEncryption(false)
-        MyWallet.sendFromLegacyAddressToAddress  data.from
-                                               , data.to
-                                               , data.amount
-                                               , data.fee
-                                               , data.note
-                                               , observer.success
-                                               , observer.error
-                                               , observer.listener
-                                               , observer.getPassword
-
-        expect(BigInteger.valueOf(10000).equals(mockedObj.fee)).toBe(true)
 
       it "should contruct the expected transaction object", ->
 
