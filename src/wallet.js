@@ -1866,11 +1866,7 @@ var MyWallet = new function() {
   this.recommendedTransactionFeeForAddress = function(address, balance) {
     // TODO: calculate the correct fee:
     var obj = Signer.init();
-    if(obj.base_fee) {
-      return parseInt(obj.base_fee);
-    } else {
-      return null;
-    }
+    return parseInt(obj.getBaseFee());
   };
 
   /**
@@ -2066,15 +2062,15 @@ var MyWallet = new function() {
 
       BlockchainAPI.get_balance([from_address_compressed, from_address_uncompressed], function(value) {
         var obj = Signer.init();
-        obj.fee = obj.base_fee; //Always include a fee
 
-        var amount = BigInteger.valueOf(value).subtract(obj.fee);
+        var amount = BigInteger.valueOf(value).subtract(obj.getFee());
 
         var to_address = account.getReceivingAddress();
-        obj.to_addresses.push({address: Bitcoin.Address.fromBase58Check(to_address), value : amount});
-        obj.from_addresses = [from_address_compressed, from_address_uncompressed];
-        obj.extra_private_keys[from_address_compressed] = privatekey;
-        obj.extra_private_keys[from_address_uncompressed] = privatekey;
+        obj.addToAddress({address: Bitcoin.Address.fromBase58Check(to_address), value : amount});
+        obj.addFromAddress(from_address_compressed)
+        obj.addFromAddress(from_address_uncompressed);
+        obj.addExtraPrivateKey(from_address_compressed, privatekey);
+        obj.addExtraPrivateKey(from_address_uncompressed, privatekey);
 
         obj.ready_to_send_header = 'Bitcoins Ready to Claim.';
 
@@ -2259,6 +2255,7 @@ var MyWallet = new function() {
    * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
    */
   this.sendFromLegacyAddressToAddress = function(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback, listener, getPassword)  {
+    console.log("To:", toAddress)
     if (double_encryption) {
       getPassword(function(pw, correct_password, wrong_password) {
         if (MyWallet.validateSecondPassword(pw)) {
@@ -2276,13 +2273,16 @@ var MyWallet = new function() {
   function sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback, listener, second_password)  {
     var obj = Signer.init();
     if (feeAmount != null)
-      obj.fee = BigInteger.valueOf(feeAmount);
-    else
-      obj.fee = obj.base_fee;
+      obj.setFee(BigInteger.valueOf(feeAmount));
 
-    obj.to_addresses.push({ address: Bitcoin.Address.fromBase58Check(toAddress), value : BigInteger.valueOf(amount) });
+    obj.addToAddress({ address: Bitcoin.Address.fromBase58Check(toAddress), value : BigInteger.valueOf(amount) });
 
-    obj.from_addresses = fromAddress ? [fromAddress] : MyWallet.getLegacyActiveAddresses();
+    var fromAddresses  = fromAddress ? [fromAddress] : MyWallet.getLegacyActiveAddresses()
+
+    for(i in fromAddresses) {
+      obj.addFromAddress(fromAddresses[i]);
+    }
+
 
     obj.ready_to_send_header = 'Bitcoins Ready to Send.';
 
@@ -2327,14 +2327,17 @@ var MyWallet = new function() {
     var obj = Signer.init();
 
     if (feeAmount != null)
-      obj.fee = BigInteger.valueOf(feeAmount);
-    else
-      obj.fee = obj.base_fee;
+      obj.setFee(BigInteger.valueOf(feeAmount));
 
     var to_address = account.getReceivingAddress();
-    obj.to_addresses.push({ address: Bitcoin.Address.fromBase58Check(to_address), value : BigInteger.valueOf(amount) });
+    obj.addToAddress({ address: Bitcoin.Address.fromBase58Check(to_address), value : BigInteger.valueOf(amount) });
 
-    obj.from_addresses = fromAddress ? [fromAddress] : MyWallet.getLegacyActiveAddresses();
+    var fromAddresses  = fromAddress ? [fromAddress] : MyWallet.getLegacyActiveAddresses()
+
+    for(i in fromAddresses) {
+      obj.addFromAddress(fromAddresses[i]);
+    }
+
 
     obj.ready_to_send_header = 'Bitcoins Ready to Send.';
 
@@ -2357,7 +2360,7 @@ var MyWallet = new function() {
    */
   this.sweepLegacyAddressToAccount = function(fromAddress, toIdx, successCallback, errorCallback, listener, getPassword)  {
     var obj = Signer.init();
-    var feeAmount = parseInt(obj.base_fee.toString());
+    var feeAmount = parseInt(obj.getBaseFee().toString());
     var amount = MyWallet.getLegacyAddressBalance(fromAddress) - feeAmount;
     MyWallet.sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, null, successCallback, errorCallback, listener, getPassword);
   };

@@ -15,9 +15,9 @@
 var Signer = new function() {
 
   var generated_addresses = [];
-  this.to_addresses = [];
-  this.from_addresses = [];
-  this.extra_private_keys = {};
+  var to_addresses = [];
+  var from_addresses = [];
+  var extra_private_keys = {};
   var listeners = [];
   var is_cancelled = false;
   var min_free_output_size;
@@ -30,24 +30,38 @@ var Signer = new function() {
   var did_specify_fee_manually = false;
   var sendTxInAmounts = [];
   var sendTxOutAmounts = [];
+  var unspent = [];
 
   // Use web worker based on browser - ignore browserDetection on iOS (browserDetection undefined)
   if(typeof(browserDetection) === "undefined" ||
      !(browserDetection().browser == "ie" && browserDetection().version < 11)) {
     initWebWorker();
   }
+  
+  this.getFee = function() {
+    return fee;
+  }
+  
+  this.getBaseFee = function() {
+    return base_fee;
+  }
+  
+  this.setFee = function(newFee) {
+    fee = newFee;
+  }
 
   this.init = function() {
-    this.fee = BigInteger.ZERO;
-    this.base_fee = BigInteger.valueOf(10000);
+    base_fee = BigInteger.valueOf(10000);
+    
+    fee = base_fee; //  BigInteger.ZERO;
     min_free_output_size = BigInteger.valueOf(1000000);
     min_non_standard_output_size = BigInteger.valueOf(5460);
     min_input_size = BigInteger.ZERO;
       
     generated_addresses = [];
-    this.to_addresses = [];
-    this.from_addresses = [];
-    this.extra_private_keys = {};
+    to_addresses = [];
+    from_addresses = [];
+    extra_private_keys = {};
     listeners = [];
     is_cancelled = false;
     allow_adjust = true;
@@ -72,6 +86,18 @@ var Signer = new function() {
 
     return this;
   };
+  
+  this.addToAddress = function(address) {
+    to_addresses.push(address)
+  }
+  
+  this.addFromAddress = function(address) {
+    from_addresses.push(address)
+  }
+  
+  this.addExtraPrivateKey = function(address, key) {
+    extra_private_keys[address] = key;
+  }
 
   this.addListener = function(listener) {
     listeners.push(listener);
@@ -89,6 +115,314 @@ var Signer = new function() {
   }
 
   this.start = function(second_password) {
+    var scope_from_addresses = from_addresses;
+    var scope_to_addresses = to_addresses;
+    var scope_unspent = unspent;
+    var scope_fee = fee;
+    
+    var self = this;
+    
+    makeTransaction = function(second_password) {
+
+    
+
+      try {
+        if (is_cancelled) {
+          throw 'Transaction Cancelled';
+        }
+      
+        self.selected_outputs = [];
+
+        var txValue = BigInteger.ZERO;
+      
+        for (var i = 0; i < scope_to_addresses.length; ++i) {
+          txValue = txValue.add(scope_to_addresses[i].value);
+        }
+      
+        var availableValue = BigInteger.ZERO;
+
+        //Add the miners fees
+        if (scope_fee != null) {
+          txValue = txValue.add(scope_fee);
+        }
+      
+        var priority = 0;
+        var addresses_used = [];
+        var forceFee = false;
+
+        //First try without including watch only
+        //If we don't have enough funds ask for the watch only private key
+        var unspent_copy = scope_unspent.slice(0);
+        function parseOut(out) {
+          var addr = Bitcoin.Address.fromOutputScript(out.script).toString();
+
+          if (addr == null) {
+            throw 'Unable to decode output address from transaction hash ' + out.tx_hash;
+          }
+
+          if (out.script == null) {
+            throw 'Output script is null (' + out.tx_hash + ':' + out.tx_output_n + ')';
+          }
+
+          var outTxHash = new Buffer(out.tx_hash, "hex");
+          Array.prototype.reverse.call(outTxHash);
+
+          var transactionInputDict = {outpoint: {hash: outTxHash.toString("hex"), index: out.tx_output_n, value:out.value}, script: out.script, sequence: 4294967295};
+
+          return { addr : addr , transactionInputDict : transactionInputDict };
+        };
+
+        //Loop once without watch only, then again with watch only
+        var includeWatchOnly = false;
+        while(true) {
+          for (var i = 0; i < unspent_copy.length; ++i) {
+            var out = unspent_copy[i];
+
+            if (!out) continue;
+
+            try {
+              var addr_input_obj = parseOut(out);
+
+              if (!includeWatchOnly && MyWallet.isWatchOnlyLegacyAddress(addr_input_obj.addr)) {
+                continue;
+              }
+
+              if (scope_from_addresses != null && $.inArray(addr_input_obj.addr, scope_from_addresses) == -1) {
+                continue;
+              }
+
+              //Ignore inputs less than min_input_size
+              if (out.value.compareTo(min_input_size) < 0) {
+                continue;
+              }
+
+              //If the output happens to be greater than tx value then we can make this transaction with one input only
+              //So discard the previous selected outs
+              //out.value.compareTo(min_free_output_size) >= 0 because we want to prefer a change output of greater than 0.01 BTC
+              //Unless we have the extact tx value
+              if (out.value.compareTo(txValue) == 0 || isSelectedValueSufficient(txValue, out.value)) {
+                self.selected_outputs = [addr_input_obj.transactionInputDict];
+
+                unspent_copy[i] = null; //Mark it null so we know it is used
+
+                addresses_used = [addr_input_obj.addr];
+
+                priority = out.value.intValue() * out.confirmations;
+
+                availableValue = out.value;
+
+                break;
+              } else {
+                //Otherwise we add the value of the selected output and continue looping if we don't have sufficient funds yet
+                self.selected_outputs.push(addr_input_obj.transactionInputDict);
+
+                unspent_copy[i] = null; //Mark it null so we know it is used
+
+                addresses_used.push(addr_input_obj.addr);
+
+                priority += out.value.intValue() * out.confirmations;
+
+                availableValue = availableValue.add(out.value);
+
+                if (isSelectedValueSufficient(txValue, availableValue))
+                  break;
+              }
+            } catch (e) {
+              //An error, but probably recoverable
+              MyWallet.sendEvent("msg", {type: "error", message: e});
+            }
+          }
+
+          if (isSelectedValueSufficient(txValue, availableValue)) {
+            break;
+          }        
+
+          if (includeWatchOnly) {
+            break;
+          }
+
+          includeWatchOnly = true;
+        }
+
+        function insufficientError() {
+          default_error('Insufficient funds. Value Needed ' +  formatBTC(txValue.toString()) + '. Available amount ' + formatBTC(availableValue.toString()));
+        }
+
+        var difference = availableValue.subtract(txValue);
+
+        if (difference.compareTo(BigInteger.ZERO) < 0) {
+          //Can only adjust when there is one recipient
+          if (scope_to_addresses.length == 1 && availableValue.compareTo(BigInteger.ZERO) > 0 && allow_adjust) {
+            insufficient_funds(txValue, availableValue, function() {
+
+              //Subtract the difference from the to address
+              var adjusted = scope_to_addresses[0].value.add(difference);
+              if (adjusted.compareTo(BigInteger.ZERO) > 0 && adjusted.compareTo(txValue) <= 0) {
+                scope_to_addresses[0].value = adjusted;
+                makeTransaction(second_password);
+
+                return;
+              } else {
+                insufficientError();
+              }
+            }, function() {
+              insufficientError();
+            });
+          } else {
+            insufficientError();
+          }
+
+          return;
+        }
+
+        if (self.selected_outputs.length == 0) {
+          default_error('No Available Outputs To Spend.');
+          return;
+        }
+
+        var sendTx = new Bitcoin.Transaction();
+
+        sendTxInAmounts = [];
+        for (var i = 0; i < self.selected_outputs.length; i++) {
+          var transactionInputDict = self.selected_outputs[i];
+          sendTx.addInput(transactionInputDict.outpoint.hash, transactionInputDict.outpoint.index);
+          sendTxInAmounts.push(transactionInputDict.outpoint.value);
+        }
+        
+        sendTxOutAmounts = [];
+        for (var i =0; i < scope_to_addresses.length; ++i) {
+          var addrObj = scope_to_addresses[i];
+          if (addrObj.m != null) {
+            sendTx.addOutputScript(Bitcoin.scripts.multisigOutput(addrObj.m, addrObj.pubkeys), parseInt(addrObj.value));
+            sendTxOutAmounts.push(addrObj.value);
+          } else {
+            sendTx.addOutput(addrObj.address, parseInt(addrObj.value));
+            sendTxOutAmounts.push(addrObj.value);
+          }
+
+          //If less than 0.01 BTC force fee
+          if (addrObj.value.compareTo(min_free_output_size) < 0) {
+            forceFee = true;
+          }
+        }
+        
+        //Now deal with the change
+        var	changeValue = availableValue.subtract(txValue);
+
+        //Consume the change if it would create a very small none standard output
+        //Perhaps this behaviour should be user specified
+        if (changeValue.compareTo(min_non_standard_output_size) > 0) {
+          if (self.change_address != null) //If change address speicified return to that
+            sendTx.addOutput(self.change_address, parseInt(changeValue));
+          else if (addresses_used.length > 0) { //Else return to a random from address if specified
+            sendTx.addOutput(Bitcoin.Address.fromBase58Check(addresses_used[Math.floor(Math.random() * addresses_used.length)]), parseInt(changeValue));
+          } else { //Otherwise return to random unarchived
+            sendTx.addOutput(Bitcoin.Address.fromBase58Check(MyWallet.getPreferredLegacyAddress()), parseInt(changeValue));
+          }
+          sendTxOutAmounts.push(changeValue);
+
+          //If less than 0.01 BTC force fee
+          if (changeValue.compareTo(min_free_output_size) < 0) {
+            forceFee = true;
+          }
+        }
+        
+        //Now Add the public note
+        /*
+
+         function makeArrayOf(value, length) {
+         var arr = [], i = length;
+         while (i--) {
+         arr[i] = value;
+         }
+         return arr;
+         }
+
+         if (self.note)  {
+         var bytes = stringToBytes('Message: ' + self.note);
+
+         var ibyte = 0;
+         while (true) {
+         var tbytes = bytes.splice(ibyte, ibyte+120);
+
+         if (tbytes.length == 0)
+         break;
+
+         //Must pad to at least 33 bytes
+         //Decode function should strip appending zeros
+         if (tbytes.length < 33) {
+         tbytes = tbytes.concat(makeArrayOf(0, 33-tbytes.length));
+         }
+
+         sendTx.addOutputScript(Bitcoin.Script.createPubKeyScript(tbytes), 0);
+         sendTxOutAmounts.push(0);
+
+         ibyte += 120;
+         }
+         }  */
+
+        //Estimate scripot sig (Cannot use serialized tx size yet becuase we haven't signed the inputs)
+        //18 bytes standard header
+        //standard scriptPubKey 24 bytes
+        //Stanard scriptSig 64 bytes
+        var estimatedSize = sendTx.toHex().length/2 + (138 * sendTx.ins.length);
+
+        priority /= estimatedSize;
+
+        var kilobytes = Math.max(1, Math.ceil(parseFloat(estimatedSize / 1000)));
+        
+        var fee_is_zero = (!scope_fee || scope_fee.compareTo(base_fee) < 0);
+
+        var set_fee_auto = function() {
+          //Forced Fee
+          scope_fee = base_fee.multiply(BigInteger.valueOf(kilobytes));
+          
+          makeTransaction(second_password);
+        };
+        
+        //Priority under 57 million requires a 0.0005 BTC transaction fee (see https://en.bitcoin.it/wiki/Transaction_fees)
+        if (fee_is_zero && (forceFee || kilobytes > 1)) {
+          if (scope_fee && did_specify_fee_manually) {
+            ask_to_increase_fee(function() {
+              set_fee_auto();
+            }, function() {
+              self.tx = sendTx;
+              
+              self.determinePrivateKeys(function() {
+                
+                self.signInputs();
+                
+              }, second_password);
+            }, scope_fee, base_fee.multiply(BigInteger.valueOf(kilobytes)));
+          } else {
+            //Forced Fee
+            set_fee_auto();
+          }
+        } else if (fee_is_zero && (MyWallet.getRecommendIncludeFee() || priority < 77600000)) {
+          ask_for_fee(function() {
+            set_fee_auto();
+          }, function() {
+            self.tx = sendTx;
+
+            self.determinePrivateKeys(function() {
+              self.signInputs();
+            }, second_password);
+          });
+        } else {
+          self.tx = sendTx;
+          
+          self.determinePrivateKeys(function() {
+            self.signInputs();
+            
+          }, second_password);
+        }
+      } catch (e) {
+        default_error(e);
+      }
+    }
+    
+    //Select Outputs and Construct transaction
+    
     if(second_password == undefined) {
       second_password = null;
     }
@@ -96,17 +430,17 @@ var Signer = new function() {
 
     try {
       invoke('on_start');
-      BlockchainAPI.get_unspent(self.from_addresses, function (obj) {
+
+      
+      BlockchainAPI.get_unspent(from_addresses, function (obj) {
         try {
           if (is_cancelled) {
             throw 'Transaction Cancelled';
           }
-
+          
           if (obj.unspent_outputs == null || obj.unspent_outputs.length == 0) {
             throw 'No Free Outputs To Spend';
           }
-
-          self.unspent = [];
 
           for (var i = 0; i < obj.unspent_outputs.length; ++i) {
             var script;
@@ -128,10 +462,10 @@ var Signer = new function() {
                        confirmations : obj.unspent_outputs[i].confirmations
                       };
 
-            self.unspent.push(out);
+            unspent.push(out);
           }
-
-          self.makeTransaction(second_password);
+          
+          makeTransaction(second_password);
         } catch (e) {
           default_error(e);
         }
@@ -144,301 +478,8 @@ var Signer = new function() {
   };
 
   function isSelectedValueSufficient(txValue, availableValue) {
-    return availableValue.compareTo(txValue) == 0 || availableValue.compareTo(txValue.add(min_free_output_size)) >= 0;
-  }
-
-  //Select Outputs and Construct transaction
-  this.makeTransaction = function(second_password) {
-    var self = this;
-
-    try {
-      if (is_cancelled) {
-        throw 'Transaction Cancelled';
-      }
-
-      self.selected_outputs = [];
-
-      var txValue = BigInteger.ZERO;
-      for (var i = 0; i < self.to_addresses.length; ++i) {
-        txValue = txValue.add(self.to_addresses[i].value);
-      }
-
-      var availableValue = BigInteger.ZERO;
-
-      //Add the miners fees
-      if (self.fee != null) {
-        txValue = txValue.add(self.fee);
-      }
-
-      var priority = 0;
-      var addresses_used = [];
-      var forceFee = false;
-
-      //First try without including watch only
-      //If we don't have enough funds ask for the watch only private key
-      var unspent_copy = self.unspent.slice(0);
-      function parseOut(out) {
-        var addr = Bitcoin.Address.fromOutputScript(out.script).toString();
-
-        if (addr == null) {
-          throw 'Unable to decode output address from transaction hash ' + out.tx_hash;
-        }
-
-        if (out.script == null) {
-          throw 'Output script is null (' + out.tx_hash + ':' + out.tx_output_n + ')';
-        }
-
-        var outTxHash = new Buffer(out.tx_hash, "hex");
-        Array.prototype.reverse.call(outTxHash);
-
-        var transactionInputDict = {outpoint: {hash: outTxHash.toString("hex"), index: out.tx_output_n, value:out.value}, script: out.script, sequence: 4294967295};
-
-        return { addr : addr , transactionInputDict : transactionInputDict };
-      };
-
-      //Loop once without watch only, then again with watch only
-      var includeWatchOnly = false;
-      while(true) {
-        for (var i = 0; i < unspent_copy.length; ++i) {
-          var out = unspent_copy[i];
-
-          if (!out) continue;
-
-          try {
-            var addr_input_obj = parseOut(out);
-
-            if (!includeWatchOnly && MyWallet.isWatchOnlyLegacyAddress(addr_input_obj.addr)) {
-              continue;
-            }
-
-            if (self.from_addresses != null && $.inArray(addr_input_obj.addr, self.from_addresses) == -1) {
-              continue;
-            }
-
-            //Ignore inputs less than min_input_size
-            if (out.value.compareTo(min_input_size) < 0) {
-              continue;
-            }
-
-            //If the output happens to be greater than tx value then we can make this transaction with one input only
-            //So discard the previous selected outs
-            //out.value.compareTo(min_free_output_size) >= 0 because we want to prefer a change output of greater than 0.01 BTC
-            //Unless we have the extact tx value
-            if (out.value.compareTo(txValue) == 0 || isSelectedValueSufficient(txValue, out.value)) {
-              self.selected_outputs = [addr_input_obj.transactionInputDict];
-
-              unspent_copy[i] = null; //Mark it null so we know it is used
-
-              addresses_used = [addr_input_obj.addr];
-
-              priority = out.value.intValue() * out.confirmations;
-
-              availableValue = out.value;
-
-              break;
-            } else {
-              //Otherwise we add the value of the selected output and continue looping if we don't have sufficient funds yet
-              self.selected_outputs.push(addr_input_obj.transactionInputDict);
-
-              unspent_copy[i] = null; //Mark it null so we know it is used
-
-              addresses_used.push(addr_input_obj.addr);
-
-              priority += out.value.intValue() * out.confirmations;
-
-              availableValue = availableValue.add(out.value);
-
-              if (isSelectedValueSufficient(txValue, availableValue))
-                break;
-            }
-          } catch (e) {
-            //An error, but probably recoverable
-            MyWallet.sendEvent("msg", {type: "error", message: e});
-          }
-        }
-
-        if (isSelectedValueSufficient(txValue, availableValue)) {
-          break;
-        }
-
-        if (includeWatchOnly) {
-          break;
-        }
-
-        includeWatchOnly = true;
-      }
-
-      function insufficientError() {
-        default_error('Insufficient funds. Value Needed ' +  formatBTC(txValue.toString()) + '. Available amount ' + formatBTC(availableValue.toString()));
-      }
-
-      var difference = availableValue.subtract(txValue);
-
-      if (difference.compareTo(BigInteger.ZERO) < 0) {
-        //Can only adjust when there is one recipient
-        if (self.to_addresses.length == 1 && availableValue.compareTo(BigInteger.ZERO) > 0 && allow_adjust) {
-          insufficient_funds(txValue, availableValue, function() {
-
-            //Subtract the difference from the to address
-            var adjusted = self.to_addresses[0].value.add(difference);
-            if (adjusted.compareTo(BigInteger.ZERO) > 0 && adjusted.compareTo(txValue) <= 0) {
-              self.to_addresses[0].value = adjusted;
-              self.makeTransaction(second_password);
-
-              return;
-            } else {
-              insufficientError();
-            }
-          }, function() {
-            insufficientError();
-          });
-        } else {
-          insufficientError();
-        }
-
-        return;
-      }
-
-      if (self.selected_outputs.length == 0) {
-        default_error('No Available Outputs To Spend.');
-        return;
-      }
-
-      var sendTx = new Bitcoin.Transaction();
-
-      sendTxInAmounts = [];
-      for (var i = 0; i < self.selected_outputs.length; i++) {
-        var transactionInputDict = self.selected_outputs[i];
-        sendTx.addInput(transactionInputDict.outpoint.hash, transactionInputDict.outpoint.index);
-        sendTxInAmounts.push(transactionInputDict.outpoint.value);
-      }
-
-      sendTxOutAmounts = [];
-      for (var i =0; i < self.to_addresses.length; ++i) {
-        var addrObj = self.to_addresses[i];
-        if (addrObj.m != null) {
-          sendTx.addOutputScript(Bitcoin.scripts.multisigOutput(addrObj.m, addrObj.pubkeys), parseInt(addrObj.value));
-          sendTxOutAmounts.push(addrObj.value);
-        } else {
-          sendTx.addOutput(addrObj.address, parseInt(addrObj.value));
-          sendTxOutAmounts.push(addrObj.value);
-        }
-
-        //If less than 0.01 BTC force fee
-        if (addrObj.value.compareTo(min_free_output_size) < 0) {
-          forceFee = true;
-        }
-      }
-
-      //Now deal with the change
-      var	changeValue = availableValue.subtract(txValue);
-
-      //Consume the change if it would create a very small none standard output
-      //Perhaps this behaviour should be user specified
-      if (changeValue.compareTo(min_non_standard_output_size) > 0) {
-        if (self.change_address != null) //If change address speicified return to that
-          sendTx.addOutput(self.change_address, parseInt(changeValue));
-        else if (addresses_used.length > 0) { //Else return to a random from address if specified
-          sendTx.addOutput(Bitcoin.Address.fromBase58Check(addresses_used[Math.floor(Math.random() * addresses_used.length)]), parseInt(changeValue));
-        } else { //Otherwise return to random unarchived
-          sendTx.addOutput(Bitcoin.Address.fromBase58Check(MyWallet.getPreferredLegacyAddress()), parseInt(changeValue));
-        }
-        sendTxOutAmounts.push(changeValue);
-
-        //If less than 0.01 BTC force fee
-        if (changeValue.compareTo(min_free_output_size) < 0) {
-          forceFee = true;
-        }
-      }
-
-      //Now Add the public note
-      /*
-
-       function makeArrayOf(value, length) {
-       var arr = [], i = length;
-       while (i--) {
-       arr[i] = value;
-       }
-       return arr;
-       }
-
-       if (self.note)  {
-       var bytes = stringToBytes('Message: ' + self.note);
-
-       var ibyte = 0;
-       while (true) {
-       var tbytes = bytes.splice(ibyte, ibyte+120);
-
-       if (tbytes.length == 0)
-       break;
-
-       //Must pad to at least 33 bytes
-       //Decode function should strip appending zeros
-       if (tbytes.length < 33) {
-       tbytes = tbytes.concat(makeArrayOf(0, 33-tbytes.length));
-       }
-
-       sendTx.addOutputScript(Bitcoin.Script.createPubKeyScript(tbytes), 0);
-       sendTxOutAmounts.push(0);
-
-       ibyte += 120;
-       }
-       }  */
-
-      //Estimate scripot sig (Cannot use serialized tx size yet becuase we haven't signed the inputs)
-      //18 bytes standard header
-      //standard scriptPubKey 24 bytes
-      //Stanard scriptSig 64 bytes
-      var estimatedSize = sendTx.toHex().length/2 + (138 * sendTx.ins.length);
-
-      priority /= estimatedSize;
-
-      var kilobytes = Math.max(1, Math.ceil(parseFloat(estimatedSize / 1000)));
-
-      var fee_is_zero = (!self.fee || self.fee.compareTo(self.base_fee) < 0);
-
-      var set_fee_auto = function() {
-        //Forced Fee
-        self.fee = self.base_fee.multiply(BigInteger.valueOf(kilobytes));
-
-        self.makeTransaction(second_password);
-      };
-
-      //Priority under 57 million requires a 0.0005 BTC transaction fee (see https://en.bitcoin.it/wiki/Transaction_fees)
-      if (fee_is_zero && (forceFee || kilobytes > 1)) {
-        if (self.fee && did_specify_fee_manually) {
-          ask_to_increase_fee(function() {
-            set_fee_auto();
-          }, function() {
-            self.tx = sendTx;
-            self.determinePrivateKeys(function() {
-              self.signInputs();
-            }, second_password);
-          }, self.fee, self.base_fee.multiply(BigInteger.valueOf(kilobytes)));
-        } else {
-          //Forced Fee
-          set_fee_auto();
-        }
-      } else if (fee_is_zero && (MyWallet.getRecommendIncludeFee() || priority < 77600000)) {
-        ask_for_fee(function() {
-          set_fee_auto();
-        }, function() {
-          self.tx = sendTx;
-
-          self.determinePrivateKeys(function() {
-            self.signInputs();
-          }, second_password);
-        });
-      } else {
-        self.tx = sendTx;
-
-        self.determinePrivateKeys(function() {
-          self.signInputs();
-        }, second_password);
-      }
-    } catch (e) {
-      default_error(e);
-    }
+    // return availableValue.compareTo(txValue) == 0 || availableValue.compareTo(txValue.add(min_free_output_size)) >= 0;
+    return availableValue.compareTo(txValue) == 0 || availableValue.compareTo(txValue) >= 0;
   }
 
   function ask_for_fee(yes, no) {
@@ -480,8 +521,8 @@ var Signer = new function() {
           //Find the matching private key
           if (tmp_cache[inputAddress]) {
             connected_script.priv_to_use = tmp_cache[inputAddress];
-          } else if (self.extra_private_keys && self.extra_private_keys[inputAddress]) {
-            connected_script.priv_to_use = self.extra_private_keys[inputAddress];
+          } else if (extra_private_keys && extra_private_keys[inputAddress]) {
+            connected_script.priv_to_use = extra_private_keys[inputAddress];
           } else if (MyWallet.legacyAddressExists(inputAddress) && !MyWallet.isWatchOnlyLegacyAddress(inputAddress)) {
             try {
               connected_script.priv_to_use = second_password == null ? MyWallet.getPrivateKey(inputAddress) : MyWallet.decryptSecretWithSecondPassword(MyWallet.getPrivateKey(inputAddress), second_password, MyWallet.getSharedKey());
@@ -496,7 +537,7 @@ var Signer = new function() {
             //
             //     try {
             //         if (inputAddress == MyWallet.getUnCompressedAddressString(key) || inputAddress == MyWallet.getCompressedAddressString(key)) {
-            //             self.extra_private_keys[inputAddress] = Bitcoin.Base58.encode(key.priv);
+            //             extra_private_keys[inputAddress] = Bitcoin.Base58.encode(key.priv);
             //
             //             self.determinePrivateKeys(success); //Try Again
             //         } else {
@@ -508,12 +549,12 @@ var Signer = new function() {
             // }, function(e) {
             //     //User did not provide it, try and re-construct without it
             //     //Remove the address from the from list
-            //     self.from_addresses = $.grep(self.from_addresses, function(v) {
+            //     from_addresses = $.grep(from_addresses, function(v) {
             //         return v != inputAddress;
             //     });
             //
             //     //Remake the transaction without the address
-            //     self.makeTransaction();
+            //     makeTransaction();
             //
             // }, inputAddress);
 
