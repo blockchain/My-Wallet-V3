@@ -347,7 +347,7 @@ var BlockchainAPI = new function() {
 
       MyWallet.sendEvent("msg", {type: "info", message: 'Pushing Transaction'});
 
-      var transactions = MyWallet.getTransactions();
+      var transactions = WalletStore.getTransactions();
 
       //Record the first transactions we know if it doesn't change then our new transactions wasn't push out propoerly
       if (transactions.length > 0)

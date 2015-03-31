@@ -155,11 +155,9 @@ module.exports = (grunt) ->
     "watch"
   ]
   
-  # The build task could do some things that are currently in npm postinstall
   grunt.registerTask "build", [
     "coffee:compile"
     "env:build"
-    # "clean" # Too aggresive
     "preprocess"
     "browserify:build"
     "concat:mywallet"
