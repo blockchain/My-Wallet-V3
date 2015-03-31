@@ -48,7 +48,6 @@ var MyWallet = new function() {
   var n_tx = 0; //Number of transactions
   var n_tx_filtered = 0; //Number of transactions after filtering
   var latest_block; //Chain head block
-  var address_book = {}; //Holds the address book addr = label
   var double_encryption = false; //If wallet has a second password
   var tx_page = 0; //Multi-address page
   var tx_filter = 0; //Transaction filter (e.g. Sent Received etc)
@@ -385,10 +384,6 @@ var MyWallet = new function() {
     addresses[address].tag = tag;
   };
 
-  this.getAddressBook = function() {
-    return address_book;
-  };
-
   /**
    * @return {Array} get legacy address label
    */
@@ -405,14 +400,6 @@ var MyWallet = new function() {
    */
   this.setLegacyAddressBalance = function(address, balance) {
     addresses[address].balance = balance;
-  };
-
-  /**
-   * @param {string} address bitcoin address
-   * @return {boolean} label
-   */
-  this.getAddressBookLabel = function(address) {
-    return address_book[address];
   };
 
   /**
@@ -468,18 +455,6 @@ var MyWallet = new function() {
     MyWallet.backupWalletDelayed();
   };
 
-  /**
-   * @param {string} addr bitcoin address
-   * @param {string} label label
-   * @return {boolean} success or not
-   */
-  this.addAddressBookEntry = function(addr, label) {
-    if (! isAlphaNumericSpace(label) || ! MyWallet.isValidAddress(addr))
-      return false;
-    address_book[addr] = label;
-    return true;
-  };
-
   //TODO Depreciate this. Need to restructure signer.js
   this.getPrivateKey = function(address) {
     return addresses[address].priv;
@@ -493,7 +468,7 @@ var MyWallet = new function() {
    * @param {function()=} error Error callback function.
    */
   this.setLegacyAddressLabel = function(address, label, success, error) {
-    if (label.length > 0 && !isAlphaNumericSpace(label)) {
+    if (label.length > 0 && !MyWallet.isAlphaNumericSpace(label)) {
       error && error();
     } else {
       addresses[address].label = label;
@@ -1414,7 +1389,7 @@ var MyWallet = new function() {
    * @return {boolean} success or not
    */
   this.validateAccountLabel = function(label) {
-    if (! isAlphaNumericSpace(label))
+    if (! MyWallet.isAlphaNumericSpace(label))
       return false;
     
     if (!label || label == "" || label.length > 17)
@@ -1493,7 +1468,7 @@ var MyWallet = new function() {
    * @return {string} success or not
    */
   this.setLabelForAccountAddress = function(accountIdx, addressIdx, label, success, error) {
-    if (label != "" && ! isAlphaNumericSpace(label)) {
+    if (label != "" && ! MyWallet.isAlphaNumericSpace(label)) {
       error();
     } else {
       MyWallet.getHDWallet().getAccount(accountIdx).setLabelForAddress(addressIdx, label);
@@ -2964,12 +2939,13 @@ var MyWallet = new function() {
 
     out += "\n  ]";
 
-    if (nKeys(address_book) > 0) {
+    
+    if (nKeys(WalletStore.getAddressBook()) > 0) {
       out += ',\n  "address_book" : [\n';
 
-      for (var key in address_book) {
+      for (var key in WalletStore.getAddressBook()) {
         out += '    {"addr" : "'+ key +'",\n';
-        out += '     "label" : "'+ address_book[key] + '"},\n';
+        out += '     "label" : "'+ WalletStore.getAddressBookLabel(key) + '"},\n';
       }
 
       //Remove the extra comma
@@ -3077,15 +3053,6 @@ var MyWallet = new function() {
     }, tx_filter, tx_page*MyWallet.getNTransactionsPerPage(), MyWallet.getNTransactionsPerPage());
   };
 
-  /**
-   * Delete address from addressBook and backup wallet.
-   * @param {string} addr Bitcoin address
-   */
-  this.deleteAddressBook = function(addr) {
-    delete address_book[addr];
-
-    MyWallet.backupWalletDelayed();
-  };
 
   /**
    * @return {Array} get all legacy addresses
@@ -3217,7 +3184,7 @@ var MyWallet = new function() {
    * @return {boolean} success or not
    */
   this.setNote = function(tx_hash, text) {
-    if (! isAlphaNumericSpace(text))
+    if (! MyWallet.isAlphaNumericSpace(text))
       return false;
     tx_notes[tx_hash] = text;
     MyWallet.backupWalletDelayed();
@@ -3269,7 +3236,7 @@ var MyWallet = new function() {
    * @return {boolean} success or not
    */
   this.addTag = function(name) {
-    if (! isAlphaNumericSpace(name))
+    if (! MyWallet.isAlphaNumericSpace(name))
       return false;
     tag_names.push(name);
     MyWallet.backupWalletDelayed();
@@ -3282,7 +3249,7 @@ var MyWallet = new function() {
    * @return {boolean} success or not
    */
   this.renameTag = function(idx, name) {
-    if (! isAlphaNumericSpace(name))
+    if (! MyWallet.isAlphaNumericSpace(name))
       return false;
     tag_names[idx] = name;
     MyWallet.backupWalletDelayed();
@@ -3307,7 +3274,7 @@ var MyWallet = new function() {
 
   // Must allow the following characters:
   // + : needed for sent to phone number labels
-  function isAlphaNumericSpace(input) {
+  this.isAlphaNumericSpace = function (input) {
     return XRegExp("^\\p{L}[\\p{L}@ \\-,._']*$").test(input) || /^[\w\-+,._  ]+$/.test(input);
   }
 
@@ -3502,32 +3469,23 @@ var MyWallet = new function() {
         addresses = {};
         for (var i = 0; i < obj.keys.length; ++i) {
           var key = obj.keys[i];
-          if (!key.addr || !isAlphaNumericSpace(key.addr)) {
+          if (!key.addr || !MyWallet.isAlphaNumericSpace(key.addr)) {
             MyWallet.sendEvent("msg", {type: "error", message: 'Your wallet contains an invalid address. This is a sign of possible corruption, please double check all your BTC is accounted for. Backup your wallet to remove this error.'});
             continue;
           }
 
-          if (key.tag == 1 || !isAlphaNumericSpace(key.tag)) {
+          if (key.tag == 1 || !MyWallet.isAlphaNumericSpace(key.tag)) {
             key.tag = null;
           }
 
-          if (key.label && !isAlphaNumericSpace(key.label)) {
+          if (key.label && !MyWallet.isAlphaNumericSpace(key.label)) {
             key.label = null;
           }
 
           addresses[key.addr] = key;
         }
 
-        address_book = {};
-        if (obj.address_book) {
-          for (var i = 0; i < obj.address_book.length; ++i) {
-            var entry = obj.address_book[i];
-
-            if (entry.label && isAlphaNumericSpace(entry.label) && isAlphaNumericSpace(entry.addr)) {
-              MyWallet.addAddressBookEntry(entry.addr, entry.label);
-            }
-          }
-        }
+        WalletStore.newAddressBookFromJSON(obj.address_book)
 
         if (obj.hd_wallets && obj.hd_wallets.length > 0) {
           WalletStore.setDidUpgradeToHd(true);
@@ -3571,7 +3529,7 @@ var MyWallet = new function() {
           for (var tx_hash in obj.tx_notes) {
             var note = obj.tx_notes[tx_hash];
 
-            if (note && isAlphaNumericSpace(note)) {
+            if (note && MyWallet.isAlphaNumericSpace(note)) {
               tx_notes[tx_hash] = note;
             }
           }
@@ -3581,7 +3539,7 @@ var MyWallet = new function() {
           for (var tx_hash in obj.tx_tags) {
             var tags = obj.tx_tags[tx_hash];
 
-            if (tags && isAlphaNumericSpace(tags)) {
+            if (tags && MyWallet.isAlphaNumericSpace(tags)) {
               tx_tags[tx_hash] = tags;
             }
           }
