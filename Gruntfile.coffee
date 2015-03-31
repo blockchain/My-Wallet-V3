@@ -80,6 +80,27 @@ module.exports = (grunt) ->
       test:
         configFile: 'karma.conf.js'
 
+    # TODO should auto-run and work on all files
+    jshint:
+      files: [
+        #'src/blockchain-api.js'
+        'src/blockchain-settings-api.js'
+        'src/browserify-imports.js'
+        #'src/crypto-util-legacy.js'
+        'src/hd-account.js'
+        'src/hd-wallet.js'
+        'src/ie.js'
+        'src/import-export.js'
+        #'src/shared.js'
+        #'src/sharedcoin.js'
+        #'src/signer.js'
+        'src/wallet-signup.js'
+        'src/wallet-store.js'
+        #'src/wallet.js'
+      ]
+      options:
+        globals: 
+          jQuery: true
 
     watch:
       scripts:
@@ -149,6 +170,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-preprocess'
   grunt.loadNpmTasks 'grunt-shell'
   grunt.loadNpmTasks 'grunt-shrinkwrap'
+  grunt.loadNpmTasks 'grunt-contrib-jshint'
 
   grunt.registerTask "default", [
     "karma:unit:start"
