@@ -41,7 +41,12 @@ module.exports = (grunt) ->
           'build/bower_components/cryptojslib/components/pad-nopadding.js'
         ]
         dest: "dist/my-wallet.js"
-        
+ 
+    coffee:
+     compile:
+       files:
+         'src/wallet-store.js': 'src/coffee/wallet-store.coffee'
+
     uglify:
       options:
         banner: "/*! <%= pkg.name %> <%= grunt.template.today(\"yyyy-mm-dd\") %> */\n"
@@ -89,7 +94,7 @@ module.exports = (grunt) ->
           'src/hd-wallet.js'
           'src/hd-account.js'
           'src/import-export.js'
-          'src/wallet-store.js'
+          'src/coffee/wallet-store.coffee'
         ]
         tasks: ['build']
 
@@ -138,6 +143,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-contrib-concat'
   grunt.loadNpmTasks 'grunt-contrib-uglify'
   grunt.loadNpmTasks 'grunt-contrib-watch'
+  grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks 'grunt-env'
   grunt.loadNpmTasks 'grunt-karma'
   grunt.loadNpmTasks 'grunt-preprocess'
@@ -151,6 +157,7 @@ module.exports = (grunt) ->
   
   # The build task could do some things that are currently in npm postinstall
   grunt.registerTask "build", [
+    "coffee:compile"
     "env:build"
     # "clean" # Too aggresive
     "preprocess"
