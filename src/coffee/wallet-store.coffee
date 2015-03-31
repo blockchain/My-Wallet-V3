@@ -54,13 +54,12 @@
   xpubs = []
   transactions = [] #List of all transactions (initially populated from /multiaddr updated through websockets)
   didUpgradeToHd = null
+  address_book = {} #Holds the address book addr = label
   #////////////////////////////////////////////////////////////////////////////
 
-  getLanguages: () ->
-    languageCodeToLanguage
+  getLanguages: () -> languageCodeToLanguage
 
-  getCurrencies: () ->
-    currencyCodeToCurrency
+  getCurrencies: () -> currencyCodeToCurrency
 
   didVerifyMnemonic: () ->
     mnemonicVerified = true
@@ -71,10 +70,9 @@
     mnemonicVerified = bool
     return
 
-  isMnemonicVerified: ->
-    mnemonicVerified
+  isMnemonicVerified: () -> mnemonicVerified
 
-  setEmptyXpubs: ->
+  setEmptyXpubs: () ->
     xpubs = []
     return
 
@@ -82,27 +80,34 @@
     xpubs.push xpub
     return
 
-  getXpubs: ->
-    xpubs
+  getXpubs: () -> xpubs
 
-  getTransactions: ->
-    transactions
+  getTransactions: () -> transactions
 
-  getAllTransactions: ->
-    filteredTransactions = []
-    rawTxs = WalletStore.getTransactions()
-    for i of rawTxs
-      transaction = MyWallet.processTransaction(rawTxs[i])
-      filteredTransactions.push transaction
-    filteredTransactions
+  getAllTransactions: () ->
+    (MyWallet.processTransaction tx for tx in WalletStore.getTransactions())
 
-  # this.pushTransaction = function(tx) {
-  #   transactions.push(tx);
-  # };
-
-  didUpgradeToHd: ->
-    didUpgradeToHd
+  didUpgradeToHd: () -> didUpgradeToHd
 
   setDidUpgradeToHd: (bool) ->
     didUpgradeToHd = bool
+    return
+
+  getAddressBook: () -> address_book
+
+  getAddressBookLabel: (address) -> address_book[address]
+
+  deleteAddressBook: (addr) ->
+    delete address_book[addr]
+    MyWallet.backupWalletDelayed()
+    return
+
+  addAddressBookEntry: (addr, label) ->
+    isValidLabel = MyWallet.isAlphaNumericSpace(label) and MyWallet.isValidAddress(addr)
+    address_book[addr] = label if isValidLabel
+    return isValidLabel
+
+  newAddressBookFromJSON: (addressBook) ->
+    address_book = {}
+    @addAddressBookEntry(entry.addr, entry.label) for entry in addressBook if addressBook? 
     return

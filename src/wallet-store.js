@@ -1,6 +1,6 @@
 (function() {
   this.WalletStore = (function() {
-    var currencyCodeToCurrency, didUpgradeToHd, languageCodeToLanguage, mnemonicVerified, transactions, xpubs;
+    var address_book, currencyCodeToCurrency, didUpgradeToHd, languageCodeToLanguage, mnemonicVerified, transactions, xpubs;
     languageCodeToLanguage = {
       'de': 'German',
       'hi': 'Hindi',
@@ -55,6 +55,7 @@
     xpubs = [];
     transactions = [];
     didUpgradeToHd = null;
+    address_book = {};
     return {
       getLanguages: function() {
         return languageCodeToLanguage;
@@ -85,20 +86,48 @@
         return transactions;
       },
       getAllTransactions: function() {
-        var filteredTransactions, i, rawTxs, transaction;
-        filteredTransactions = [];
-        rawTxs = WalletStore.getTransactions();
-        for (i in rawTxs) {
-          transaction = MyWallet.processTransaction(rawTxs[i]);
-          filteredTransactions.push(transaction);
+        var i, len, ref, results, tx;
+        ref = WalletStore.getTransactions();
+        results = [];
+        for (i = 0, len = ref.length; i < len; i++) {
+          tx = ref[i];
+          results.push(MyWallet.processTransaction(tx));
         }
-        return filteredTransactions;
+        return results;
       },
       didUpgradeToHd: function() {
         return didUpgradeToHd;
       },
       setDidUpgradeToHd: function(bool) {
         didUpgradeToHd = bool;
+      },
+      getAddressBook: function() {
+        return address_book;
+      },
+      getAddressBookLabel: function(address) {
+        return address_book[address];
+      },
+      deleteAddressBook: function(addr) {
+        delete address_book[addr];
+        MyWallet.backupWalletDelayed();
+      },
+      addAddressBookEntry: function(addr, label) {
+        var isValidLabel;
+        isValidLabel = MyWallet.isAlphaNumericSpace(label) && MyWallet.isValidAddress(addr);
+        if (isValidLabel) {
+          address_book[addr] = label;
+        }
+        return isValidLabel;
+      },
+      newAddressBookFromJSON: function(addressBook) {
+        var entry, i, len;
+        address_book = {};
+        if (addressBook != null) {
+          for (i = 0, len = addressBook.length; i < len; i++) {
+            entry = addressBook[i];
+            this.addAddressBookEntry(entry.addr, entry.label);
+          }
+        }
       }
     };
   })();
