@@ -3093,7 +3093,6 @@ var MyWallet = new function() {
 
         //TODO: we should create another method in WalletStore to create a new set of addresses for this
         var addresses = WalletStore.getAddresses()
-        addresses = {};
         for (var i = 0; i < obj.keys.length; ++i) {
           var key = obj.keys[i];
           if (!key.addr || !MyWallet.isAlphaNumericSpace(key.addr)) {

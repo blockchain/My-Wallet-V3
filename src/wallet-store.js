@@ -179,14 +179,15 @@
         }
       },
       getTotalBalanceForActiveLegacyAddresses: function() {
-        var a;
+        var k, o;
         return ((function() {
           var results;
           results = [];
-          for (a in addresses) {
-            if (!hasProp.call(addresses, a)) continue;
-            if (a.tag !== 2) {
-              results.push(a.balance);
+          for (k in addresses) {
+            if (!hasProp.call(addresses, k)) continue;
+            o = addresses[k];
+            if (o.tag !== 2) {
+              results.push(o.balance);
             }
           }
           return results;
@@ -245,71 +246,53 @@
         }
       },
       getAllLegacyAddresses: function() {
-        var array, key;
-        array = [];
-        for (key in addresses) {
-          array.push(key);
+        var k, results;
+        results = [];
+        for (k in addresses) {
+          if (!hasProp.call(addresses, k)) continue;
+          results.push(k);
         }
-        return array;
+        return results;
       },
-
-      /**
-       * Find the preferred address to use for change
-       * Order deposit / request coins
-       * return {string} preferred address
-       */
       getPreferredLegacyAddress: function() {
-        var addr, key, preferred;
-        preferred = null;
-        for (key in addresses) {
-          addr = addresses[key];
-          if (preferred === null) {
-            preferred = addr;
-          }
-          if (addr.priv !== null) {
-            if (preferred === null) {
-              preferred = addr;
-            }
-            if (addr.tag === null || addr.tag === 0) {
-              preferred = addr;
-              break;
+        var k, o;
+        return ((function() {
+          var results;
+          results = [];
+          for (k in addresses) {
+            if (!hasProp.call(addresses, k)) continue;
+            o = addresses[k];
+            if ((o.priv != null) && this.isActiveLegacyAddress(k)) {
+              results.push(k);
             }
           }
-        }
-        return preferred.addr;
+          return results;
+        }).call(this))[0];
       },
       hasLegacyAddresses: function() {
         return Object.keys(addresses).length !== 0;
       },
-
-      /**
-       * return {Array} legacy active addresses
-       */
       getLegacyActiveAddresses: function() {
-        var addr, array, key;
-        array = [];
-        for (key in addresses) {
-          addr = addresses[key];
-          if (addr.tag !== 2) {
-            array.push(addr.addr);
+        var k, results;
+        results = [];
+        for (k in addresses) {
+          if (!hasProp.call(addresses, k)) continue;
+          if (this.isActiveLegacyAddress(k)) {
+            results.push(k);
           }
         }
-        return array;
+        return results;
       },
-
-      /**
-       * return {Array} archived addresses
-       */
       getLegacyArchivedAddresses: function() {
-        var addr, array, key;
-        array = [];
-        for (key in addresses) {
-          addr = addresses[key];
-          if (addr.tag === 2) {
-            array.push(addr.addr);
+        var k, results;
+        results = [];
+        for (k in addresses) {
+          if (!hasProp.call(addresses, k)) continue;
+          if (!this.isActiveLegacyAddress(k)) {
+            results.push(k);
           }
         }
-        return array;
+        return results;
       }
     };
   })();
