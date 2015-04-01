@@ -278,24 +278,6 @@ var BlockchainAPI = new function() {
     });
   };
 
-  this.resolve_firstbits = function(addr, success, error) {
-    $.ajax({
-      type: "GET",
-      url: this.getRootURL() + 'q/resolvefirstbits/'+addr,
-      data : {format : 'plain', api_code : MyWallet.getAPICode()},
-      timeout: AjaxTimeout,
-      success: function(data) {
-        if (data == null || data.length == 0)
-          error();
-        else
-          success(data);
-      },
-      error : function(e) {
-        error(e.responseText);
-      }
-    });
-  };
-
   this.get_rejection_reason = function(hexhash, got_reason, not_rejected, error) {
     $.ajax({
       type: "GET",

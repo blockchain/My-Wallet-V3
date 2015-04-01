@@ -121,157 +121,6 @@ var HDAccount = function(seed, network, label, idx) {
     return this.changeAddresses[this.changeAddresses.length - 1];
   };
 
-  this.getUnspentOutputs = function() {
-    var utxo = [];
-
-    for(var key in this.outputs){
-      var output = this.outputs[key];
-      if(!output.to) utxo.push(outputToUnspentOutput(output));
-    }
-
-    return utxo;
-  };
-
-  this.setUnspentOutputs = function(utxo) {
-    console.warn("setUnspentOutputs is deprecated, please use the constructor option instead");
-
-    var a = processUnspentOutputs(utxo);
-    this.outputs = processUnspentOutputs(utxo);
-  };
-
-  function processUnspentOutputs(utxos) {
-    var outputs = {};
-    utxos.forEach(function(utxo) {
-      var hash = new Buffer(utxo.hash, "hex");
-      var index = utxo.index;
-      var address = utxo.address;
-      var value = utxo.value;
-      if (index === undefined) index = utxo.outputIndex;
-
-      assert.equal(hash.length, 32, "Expected hash length of 32, got " + hash.length);
-      assert.equal(typeof index, "number", "Expected number index, got " + index);
-      assert.doesNotThrow(function() {
-        Bitcoin.Address.fromBase58Check(address);
-      }, "Expected Base58 Address, got " + address);
-      assert.equal(typeof value, "number", "Expected number value, got " + value);
-      var key = utxo.hash + ":" + utxo.index;
-      outputs[key] = {
-        from: key,
-        address: address,
-        value: value,
-        pending: utxo.pending
-      };
-    });
-    return outputs;
-  }
-
-  function outputToUnspentOutput(output){
-    var hashAndIndex = output.from.split(":");
-
-    return {
-      hash: hashAndIndex[0],
-      outputIndex: parseInt(hashAndIndex[1]),
-      address: output.address,
-      value: output.value,
-      pending: output.pending
-    };
-  }
-
-  function unspentOutputToOutput(o) {
-    var hash = o.hash;
-    var key = hash + ":" + o.outputIndex;
-    return {
-      from: key,
-      address: o.address,
-      value: o.value,
-      pending: o.pending
-    };
-  }
-
-  function validateUnspentOutput(uo) {
-    var missingField;
-
-    if (isNullOrUndefined(uo.hash)) {
-      missingField = "hash";
-    }
-
-    var requiredKeys = ['outputIndex', 'address', 'value'];
-    requiredKeys.forEach(function (key) {
-      if (isNullOrUndefined(uo[key])){
-        missingField = key;
-      }
-    });
-
-    if (missingField) {
-      var message = [
-        'Invalid unspent output: key', missingField, 'is missing.',
-        'A valid unspent output must contain'
-      ];
-      message.push(requiredKeys.join(', '));
-      message.push("and hash");
-      throw new Error(message.join(' '));
-    }
-  }
-
-  function isNullOrUndefined(value) {
-    return value == undefined;
-  }
-
-  this.processPendingTx = function(tx){
-    processTx(tx, true);
-  };
-
-  this.processConfirmedTx = function(tx){
-    processTx(tx, false);
-  };
-
-  function processTx(tx, isPending) {
-    var txid = tx.getId();
-
-    tx.outs.forEach(function(txOut, i) {
-      var address;
-
-      try {
-        address = Bitcoin.Address.fromOutputScript(txOut.script, network).toString();
-      } catch(e) {
-        if (!(e.message.match(/has no matching Address/))) {
-          throw e;
-        }
-      }
-
-      if (isMyAddress(address)) {
-        var output = txid + ':' + i;
-
-        self.outputs[output] = {
-          from: output,
-          value: txOut.value,
-          address: address,
-          pending: isPending
-        };
-      }
-    });
-
-    tx.ins.forEach(function(txIn, i) {
-      // copy and convert to big-endian hex
-      var txinId = new Buffer(txIn.hash);
-      Array.prototype.reverse.call(txinId);
-      txinId = txinId.toString('hex');
-
-      var output = txinId + ':' + txIn.index;
-
-      if (!(output in self.outputs)) {
-        return;
-      }
-
-      if (isPending) {
-        self.outputs[output].to = txid + ':' + i;
-        self.outputs[output].pending = true;
-      } else {
-        delete self.outputs[output];
-      }
-    });
-  }
-
   function getCandidateOutputs(unspentOutputs, value) {
     var unspent = [];
 
@@ -367,14 +216,6 @@ var HDAccount = function(seed, network, label, idx) {
     return masterkey;
   };
 
-  this.getinternalAccount = function() {
-    return this.internalAccount;
-  };
-
-  this.getExternalAccount = function() {
-    return this.externalAccountl;
-  };
-
   this.getPrivateKey = function(index) {
     if (keyCache[index]) {
       return keyCache[index].privKey;
@@ -389,17 +230,6 @@ var HDAccount = function(seed, network, label, idx) {
     }
 
     return this.internalAccount.derive(index).privKey;
-  };
-
-  this.getPrivateKeyForAddress = function(address) {
-    var index;
-    if((index = this.addresses.indexOf(address)) > -1) {
-      return this.getPrivateKey(index);
-    } else if((index = this.changeAddresses.indexOf(address)) > -1) {
-      return this.getInternalPrivateKey(index);
-    } else {
-      throw new Error('Unknown address. Make sure the address is from the keychain and has been generated.');
-    }
   };
 
   function isReceiveAddress(address){
@@ -547,30 +377,12 @@ var HDAccount = function(seed, network, label, idx) {
     return this.changeAddresses.pop();
   };
 
-  this.incBalance = function(amount) {
-    if(this.balance == null) {
-      this.balance = 0;
-    }
-    this.balance += amount;
-  };
-
-  this.decBalance = function(amount) {
-    if(this.balance == null) {
-      this.balance = 0;
-    }
-    this.balance -= amount;
-  };
-
   this.getBalance = function() {
     return this.balance;
   };
 
   this.setBalance = function(balance) {
     return this.balance = balance;
-  };
-
-  this.resetBalance = function() {
-    return this.balance = null;
   };
 
   this.createTxReal = function(to, value, fixedFee, unspentOutputs, changeAddress, listener) {

@@ -218,28 +218,6 @@ var MyWallet = new function() {
     language = _language;
   };
 
-  /**
-   * Get currency code stored in memory or in local storage.
-   * @return {string} fiat currency code (e.g. USD)
-   */
-  this.getLocalSymbolCode = function() {
-    if (localSymbolCode) {
-      return localSymbolCode;
-    } else {
-      return MyStore.get('localSymbolCode');
-    }
-  };
-
-  /**
-   * Store currency code in memory and in local storage.
-   * @param {string} code fiat currency code (e.g. USD)
-   */
-  this.setLocalSymbolCode = function(code) {
-    MyStore.put('localSymbolCode', code);
-    symbol_local.code = code;
-    localSymbolCode = code;
-  };
-
   this.addEventListener = function(func) {
     event_listeners.push(func);
   };
@@ -859,15 +837,6 @@ var MyWallet = new function() {
   this.getUnCompressedAddressString = function(key) {
     return new ECKey(key.d, false).pub.getAddress().toString();
   };
-  this.getCompressedPubKey = function(key) {
-    return new ECKey(key.d, true).pub;
-  };
-  this.getUncompressedPubKey = function(key) {
-    return new ECKey(key.d, false).pub;
-  };
-  this.getCompressedKey = function(key) {
-    return new ECKey(key.d, true);
-  };
   this.getUnCompressedAddressString = function(key) {
     return new ECKey(key.d, false).pub.getAddress().toString();
   };
@@ -891,17 +860,6 @@ var MyWallet = new function() {
       return script.chunks[0] - Bitcoin.opcodes.OP_1 + 1;
     default:
       throw 'Encountered non-standard scriptPubKey';
-    }
-  };
-
-  this.simpleInPubKeyHash = function(script) {
-    switch (Bitcoin.scripts.classifyInput(script)) {
-    case 'pubkeyhash':
-      return Bitcoin.crypto.hash160(script.chunks[1]);
-    case 'pubkey':
-      throw new Error("Script does not contain pubkey.");
-    default:
-      throw new Error("Encountered non-standard scriptSig");
     }
   };
 
@@ -1367,14 +1325,6 @@ var MyWallet = new function() {
     return MyWallet.pkBytesToSipa(MyWallet.decodePK(x), addr);
   };
 
-  this.getExtPrivKeyForAccount = function(accountIdx) {
-    return MyWallet.getHDWallet().getAccount(accountIdx).getAccountExtendedKey(true);
-  };
-
-  this.getExtPubKeyForAccount = function(accountIdx) {
-    return MyWallet.getHDWallet().getAccount(accountIdx).getAccountExtendedKey(false);
-  };
-
   /**
    * @param {number} accountIdx index of HD wallet account
    * @return {string} account label
@@ -1482,12 +1432,12 @@ var MyWallet = new function() {
   };
 
   this.processTransaction = function(tx) {
-    // console.log(JSON.stringify(tx))
+
     var transaction = {
       from: {account: null, legacyAddresses: null, externalAddresses: null},
       to: {account: null, legacyAddresses: null, externalAddresses: null, email: null, mobile: null},
       fee: 0,
-      intraWallet: null,
+      intraWallet: null
     };
     
 
@@ -1660,15 +1610,14 @@ var MyWallet = new function() {
     transaction.tx_index = tx.txIndex;
     transaction.block_height = tx.blockHeight;
     
-    transaction.result = this.calculateTransactionResult(transaction)
+    transaction.result = this.calculateTransactionResult(transaction);
     
-    // console.log(JSON.stringify(transaction))
     return transaction;
   };
   
   this.calculateTransactionResult = function(transaction) {
     
-    totalOurs = function(toOrFrom) {
+    var totalOurs = function(toOrFrom) {
       var result = 0;
       
       if(toOrFrom.account) {
@@ -1681,113 +1630,17 @@ var MyWallet = new function() {
       }
       
       return result;
-    }
+    };
     
     var result = 0;
     
     if (transaction.intraWallet) {
-      result = totalOurs(transaction.to),totalOurs(transaction.from);
+      result = totalOurs(transaction.to);
     } else {
       result = totalOurs(transaction.to) - totalOurs(transaction.from);
     }
     
     return result;
- 
-  }
-
-  /**
-   * @return {Array} Legacy Transactions
-   */
-  this.getLegacyTransactions = function() {
-    var filteredTransactions = [];
-
-    var rawTxs = WalletStore.getTransactions();
-
-    for (var i in rawTxs) {
-      var tx = rawTxs[i];
-      var transaction = {};
-
-      // Default values:
-      transaction.to_account= null;
-      transaction.from_account = null;
-      transaction.from_addresses = [];
-      transaction.to_addresses = [];
-      transaction.amount = 0;
-
-      var isOrigin = false;
-      var isLegacyAddressTx = false;
-      for (var i = 0; i < tx.inputs.length; ++i) {
-        var output = tx.inputs[i].prev_out;
-        if (!output || !output.addr)
-          continue;
-
-        if (MyWallet.isActiveLegacyAddress(output.addr)) {
-          isLegacyAddressTx = true;
-          isOrigin = true;
-          transaction.amount -= output.value;
-          transaction.from_addresses.push(output.addr);
-        } else {
-          transaction.from_addresses.push(output.addr);
-          for (var j in MyWallet.getAccounts()) {
-            var account = MyWallet.getHDWallet().getAccount(j);
-            if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
-              transaction.from_account = parseInt(j);
-              break;
-            }
-          }
-        }
-      }
-
-      transaction.intraWallet = false;
-      for (var i = 0; i < tx.out.length; ++i) {
-        var output = tx.out[i];
-        if (!output || !output.addr)
-          continue;
-
-        if (MyWallet.isActiveLegacyAddress(output.addr)) {
-          isLegacyAddressTx = true;
-          transaction.amount += output.value;
-          transaction.to_addresses.push(output.addr);
-          if (isOrigin)
-            transaction.intraWallet = true;
-        } else {
-          transaction.to_addresses.push(output.addr);
-          for (var j in MyWallet.getAccounts()) {
-            var account = MyWallet.getHDWallet().getAccount(j);
-            if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
-              transaction.to_account = parseInt(j);
-              if (isOrigin)
-                transaction.intraWallet = true;
-              break;
-            }
-          }
-        }
-      }
-
-      if (! isLegacyAddressTx)
-        continue;
-
-      transaction.hash = tx.hash;
-      transaction.confirmations = MyWallet.getConfirmationsForTx(MyWallet.getLatestBlock(), tx);
-
-      // transaction.note = tx.note ? tx.note : tx_notes[tx.hash];
-
-      if (tx.time > 0) {
-        transaction.txTime = new Date(tx.time * 1000);
-      }
-
-      filteredTransactions.push(transaction);
-    }
-
-    return filteredTransactions;
-  };
-
-  /**
-   * @param {number} accountIdx index of HD wallet account
-   * @return {array} array of transaction objects
-   */
-  this.getTransactionsForAccount = function(accountIdx) {
-    return MyWallet.getHDWallet().filterTransactionsForAccount(accountIdx, WalletStore.getTransactions(), paidTo, tx_notes);
   };
 
   this.getAndSetUnspentOutputsForAccount = function(accountIdx, successCallback, errorCallback) {
@@ -1803,8 +1656,6 @@ var MyWallet = new function() {
         var script = Bitcoin.Script.fromHex(utxo.script);
         utxo.address = Bitcoin.Address.fromOutputScript(script).toString();
       });
-
-      account.setUnspentOutputs(obj.unspent_outputs);
 
       MyWallet.sendEvent('hd_wallet_balance_updated');
       if (successCallback) {
@@ -2731,7 +2582,7 @@ var MyWallet = new function() {
     return passphraseToPassphraseHexString(passPhrase);
   };
 
-  this.deleteHDWallet = function(successCallback, errorCallback) {
+    this.deleteHDWallet = function(successCallback, errorCallback) {
     if(MyWallet.getHDWallet == undefined || MyWallet.getHDWallet() == null) {
       if (successCallback)
         successCallback();
@@ -3631,7 +3482,6 @@ var MyWallet = new function() {
         war_checksum = obj.war_checksum;
 
         setLocalSymbol(obj.symbol_local);
-        MyWallet.setLocalSymbolCode(obj.symbol_local.code);
 
         setBTCSymbol(obj.symbol_btc);
 
@@ -4557,8 +4407,6 @@ var MyWallet = new function() {
       MyStore.clear();
       if (languageCode)
         MyWallet.setLanguage(languageCode);
-      if (currencyCode)
-        MyWallet.setLocalSymbolCode(currencyCode);
 
       sharedKey = createdSharedKey;
 

@@ -91,7 +91,6 @@ describe "Wallet", ->
         success("Successfully created new wallet")
         
       spyOn(MyWallet, "setLanguage").and.returnValue null
-      spyOn(MyWallet, "setLocalSymbolCode").and.returnValue null
       
       spyOn(MyWallet, "makeCustomWalletJSON").and.callThrough()
       

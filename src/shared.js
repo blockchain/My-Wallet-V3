@@ -183,16 +183,6 @@ function formatSymbol(x, symbol, html) {
   return str;
 }
 
-function formatMoney(x, span) {
-  var str = formatSymbol(x, symbol);
-
-  if (span) {
-    str = '<span data-c="'+x+'">'+str+'</span>';
-  }
-
-  return str;
-}
-
 var _sounds = {};
 function playSound(id) {
   try {
