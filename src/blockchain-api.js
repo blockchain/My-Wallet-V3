@@ -14,7 +14,7 @@ var BlockchainAPI = new function() {
     offset = offset || 0;
     n = n || 0;
 
-    var allAddresses = MyWallet.getLegacyActiveAddresses();
+    var allAddresses = WalletStore.getLegacyActiveAddresses();
     var myHDWallet = MyWallet.getHDWallet();
     if (myHDWallet != null) {
       for (var i in myHDWallet.getAccounts()) {
@@ -184,8 +184,8 @@ var BlockchainAPI = new function() {
       success: function(obj) {
         for (var key in obj) {
 
-          if (MyWallet.legacyAddressExists(key))
-            MyWallet.setLegacyAddressBalance(key, obj[key].final_balance);
+          if (WalletStore.legacyAddressExists(key))
+            WalletStore.setLegacyAddressBalance(key, obj[key].final_balance);
         }
 
         success(obj);

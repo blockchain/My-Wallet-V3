@@ -52,7 +52,6 @@ var MyWallet = new function() {
   var tx_page = 0; //Multi-address page
   var tx_filter = 0; //Transaction filter (e.g. Sent Received etc)
   var maxAddr = 1000; //Maximum number of addresses
-  var addresses = {}; //{addr : address, priv : private key, tag : tag (mark as archived), label : label, balance : balance}
   var payload_checksum; //SHA256 hash of the current wallet.aes.json
   var archTimer; //Delayed Backup wallet timer
   var mixer_fee = 0.5; //Default mixer fee 1.5%
@@ -340,82 +339,8 @@ var MyWallet = new function() {
     return n_tx;
   };
 
-  /**
-   * @return {boolean} legacy Address Exists
-   */
-  this.legacyAddressExists = function(address) {
-    return addresses[address] != null;
-  };
 
-  /**
-   * @return {string} Legacy Address Tag
-   */
-  this.getLegacyAddressTag = function(address) {
-    return addresses[address].tag;
-  };
 
-  /**
-   * @param {string} address Bitcoin address.
-   * @param {string} tag The tag to set for the given address.
-   */
-  this.setLegacyAddressTag = function(address, tag) {
-    addresses[address].tag = tag;
-  };
-
-  /**
-   * @return {Array} get legacy address label
-   */
-  this.getLegacyAddressLabel = function(address) {
-    if (addresses[address])
-      return addresses[address].label;
-    else
-      return null;
-  };
-
-  /**
-   * @param {string} address bitcoin address
-   * @param {string} balance
-   */
-  this.setLegacyAddressBalance = function(address, balance) {
-    addresses[address].balance = balance;
-  };
-
-  /**
-   * @param {string} addr bitcoin address
-   * @return {boolean} whether address is active
-   */
-  this.isActiveLegacyAddress = function(addr) {
-    return addresses[addr] != null && addresses[addr].tag != 2;
-  };
-
-  /**
-   * @param {string} address bitcoin address
-   * @return {boolean} whether address is watch only
-   */
-  this.isWatchOnlyLegacyAddress = function(address) {
-    return !addresses[address] || addresses[address].priv == null;
-  };
-
-  /**
-   * @param {string} address bitcoin address
-   * @return {number} balance
-   */
-  this.getLegacyAddressBalance = function(address) {
-    return addresses[address].balance;
-  };
-
-  /**
-   * @return {number} total Balance For Active Legacy Addresses
-   */
-  this.getTotalBalanceForActiveLegacyAddresses = function() {
-    var totalBalance = 0;
-    for (var key in addresses) {
-      var addr = addresses[key];
-      if (addr.tag != 2)
-        totalBalance += addr.balance;
-    }
-    return totalBalance;
-  };
 
   this.getMixerFee = function() {
     return mixer_fee;
@@ -425,35 +350,10 @@ var MyWallet = new function() {
     return recommend_include_fee;
   };
 
-  /**
-   * @param {string} addr bitcoin address
-   */
-  this.deleteLegacyAddress = function(addr) {
-    delete addresses[addr];
-    MyWallet.backupWalletDelayed();
-  };
 
-  //TODO Depreciate this. Need to restructure signer.js
-  this.getPrivateKey = function(address) {
-    return addresses[address].priv;
-  };
 
-  /**
-   * Set the label of a legacy address.
-   * @param {string} address The address to set the label for.
-   * @param {string} label The new label - must be alpha numeric with spaces, otherwise error() will be called.
-   * @param {function()=} success Success callback function.
-   * @param {function()=} error Error callback function.
-   */
-  this.setLegacyAddressLabel = function(address, label, success, error) {
-    if (label.length > 0 && !MyWallet.isAlphaNumericSpace(label)) {
-      error && error();
-    } else {
-      addresses[address].label = label;
-      MyWallet.backupWalletDelayed();
-      success && success();
-    }
-  };
+
+
 
   this.securePost = function(url, data, success, error) {
     var clone = jQuery.extend({}, data);
@@ -571,7 +471,10 @@ var MyWallet = new function() {
           if (MyWallet.validateSecondPassword(pw)) {
             correct_password();
 
+
             // Re-encrypt all legacy keys
+            // TODO: this encryption should be a method in WalletStore
+            var addresses = WalletStore.getAddresses()
             for (var key in addresses) {
               var addr = addresses[key];
 
@@ -658,6 +561,8 @@ var MyWallet = new function() {
         if (MyWallet.validateSecondPassword(pw)) {
           correct_password();
 
+          // TODO: this deencryption should be a method in WalletStore
+          var addresses = WalletStore.getAddresses()
           for (var key in addresses) {
 
             var addr = addresses[key];
@@ -718,6 +623,8 @@ var MyWallet = new function() {
     try {
       MyWallet.setDoubleEncryption(true);
 
+      // this encryption should be a method in WalletStore
+      var addresses = WalletStore.getAddresses()
       for (var key in addresses) {
         var addr = addresses[key];
 
@@ -762,42 +669,8 @@ var MyWallet = new function() {
     }
   };
 
-  /**
-   * Un-archive address, backup wallet and refreshes balances.
-   * @param {string} addr bitcoin address
-   */
-  this.unArchiveLegacyAddr = function(addr) {
-    var addr = addresses[addr];
-    if (addr.tag == 2) {
-      addr.tag = null;
 
 
-      MyWallet.backupWalletDelayed('update', function() {
-        MyWallet.get_history();
-      });
-    } else {
-      MyWallet.sendEvent("msg", {type: "error", message: 'Cannot Unarchive This Address'});
-    }
-  };
-
-  /**
-   * Archive address, backup wallet and refreshes balances.
-   * @param {string} addr bitcoin address
-   */
-  this.archiveLegacyAddr = function(addr) {
-    var addr = addresses[addr];
-    if (addr.tag == null || addr.tag == 0) {
-      addr.tag = 2;
-
-
-      MyWallet.backupWalletDelayed('update', function() {
-        MyWallet.get_history();
-      });
-
-    } else {
-      MyWallet.sendEvent("msg", {type: "error", message: 'Cannot Archive This Address'});
-    }
-  };
 
   /**
    * Add watch only address, backup wallet and refreshes balances.
@@ -875,8 +748,8 @@ var MyWallet = new function() {
   this.importPrivateKey = function(privateKeyString, getPassword, getBIP38Password, success, alreadyImportedCallback, error) {
     function reallyInsertKey(key, compressed, pw) {
       try {
-        if (MyWallet.legacyAddressExists(key.pub.getAddress().toString()) &&
-            !MyWallet.isWatchOnlyLegacyAddress(key.pub.getAddress().toString())) {
+        if (WalletStore.legacyAddressExists(key.pub.getAddress().toString()) &&
+            !WalletStore.isWatchOnlyLegacyAddress(key.pub.getAddress().toString())) {
           alreadyImportedCallback();
           return;
         }
@@ -1002,6 +875,8 @@ var MyWallet = new function() {
       throw 'Decoded Key address does not match generated address';
     }
 
+    //TODO: this should be an addAddress function on WalletStore
+    var addresses = WalletStore.getAddresses();
     if (internalAddKey(addr, encoded)) {
       addresses[addr].tag = 1; //Mark as unsynced
       addresses[addr].created_time = opts.created_time ? opts.created_time : 0; //Stamp With Creation time
@@ -1070,7 +945,9 @@ var MyWallet = new function() {
         continue;
 
       //If it is our address then subtract the value
-      var addr = addresses[output.addr];
+      // TODO: This probably needs to be a function in WalletStore too
+      // var addr = addresses[output.addr];
+      var addr = WalletStore.getAddress(output.addr);
       if (addr) {
         var value = parseInt(output.value);
 
@@ -1082,7 +959,7 @@ var MyWallet = new function() {
         }
       }
 
-      if (hasCountedlegacyAddressesNTxs == false && MyWallet.isActiveLegacyAddress(output.addr)) {
+      if (hasCountedlegacyAddressesNTxs == false && WalletStore.isActiveLegacyAddress(output.addr)) {
         hasCountedlegacyAddressesNTxs = true;
         if (! incrementAccountTxCount) {
           legacyAddressesNumTxFetched += 1;
@@ -1123,7 +1000,9 @@ var MyWallet = new function() {
       if (!output || !output.addr)
         continue;
 
-      var addr = addresses[output.addr];
+      // TODO: I think this is the same function as the previous todo (WalletStore)
+      // var addr = addresses[output.addr];
+      var addr = WalletStore.getAddress(output.addr);
       if (addr) {
         var value = parseInt(output.value);
 
@@ -1135,7 +1014,7 @@ var MyWallet = new function() {
         }
       }
 
-      if (hasCountedlegacyAddressesNTxs == false && MyWallet.isActiveLegacyAddress(output.addr)) {
+      if (hasCountedlegacyAddressesNTxs == false && WalletStore.isActiveLegacyAddress(output.addr)) {
         hasCountedlegacyAddressesNTxs = true;
         if (! incrementAccountTxCount) {
           legacyAddressesNumTxFetched += 1;
@@ -1268,7 +1147,7 @@ var MyWallet = new function() {
         msg += '{"op":"wallet_sub","guid":"'+guid+'"}';
 
       try {
-        var addrs = MyWallet.getLegacyActiveAddresses();
+        var addrs = WalletStore.getLegacyActiveAddresses();
         for (var key in addrs) {
           msg += '{"op":"addr_sub", "addr":"'+ addrs[key] +'"}'; //Subscribe to transactions updates through websockets
         }
@@ -1456,7 +1335,7 @@ var MyWallet = new function() {
       if (!output || !output.addr)
         continue;
       
-      if (MyWallet.isActiveLegacyAddress(output.addr)) {
+      if (WalletStore.isActiveLegacyAddress(output.addr)) {
         isOrigin = true;
         if (transaction.from.legacyAddresses == null)
           transaction.from.legacyAddresses = [];
@@ -1519,7 +1398,7 @@ var MyWallet = new function() {
       if (!output || !output.addr)
         continue;
       
-      if (MyWallet.isActiveLegacyAddress(output.addr)) {
+      if (WalletStore.isActiveLegacyAddress(output.addr)) {
         if (transaction.to.legacyAddresses == null)
           transaction.to.legacyAddresses = [];
 
@@ -1955,10 +1834,10 @@ var MyWallet = new function() {
       var address = key.pub.getAddress().toString();
       var privateKey = key.toWIF();
 
-      MyWallet.setLegacyAddressTag(address, 2);
+      WalletStore.setLegacyAddressTag(address, 2);
 
 
-      MyWallet.setLegacyAddressLabel(
+      WalletStore.setLegacyAddressLabel(
         address, 
         email + ' Sent Via Email', 
         function() {
@@ -2034,7 +1913,7 @@ var MyWallet = new function() {
    */
   this.fetchMoreTransactionsForLegacyAddresses = function(success, error, didFetchOldestTransaction) {
     function getRawTransactionsForLegacyAddresses(txOffset, numTx, success, error) {
-      var allAddresses = MyWallet.getLegacyActiveAddresses();
+      var allAddresses = WalletStore.getLegacyActiveAddresses();
 
       BlockchainAPI.async_get_history_with_addresses(allAddresses, function(data) {
         if (success) success(data.txs);
@@ -2102,7 +1981,7 @@ var MyWallet = new function() {
 
     obj.addToAddress({ address: Bitcoin.Address.fromBase58Check(toAddress), value : BigInteger.valueOf(amount) });
 
-    var fromAddresses  = fromAddress ? [fromAddress] : MyWallet.getLegacyActiveAddresses();
+    var fromAddresses  = fromAddress ? [fromAddress] : WalletStore.getLegacyActiveAddresses();
 
     for(var i in fromAddresses) {
       obj.addFromAddress(fromAddresses[i]);
@@ -2156,7 +2035,7 @@ var MyWallet = new function() {
     var to_address = account.getReceivingAddress();
     obj.addToAddress({ address: Bitcoin.Address.fromBase58Check(to_address), value : BigInteger.valueOf(amount) });
 
-    var fromAddresses  = fromAddress ? [fromAddress] : MyWallet.getLegacyActiveAddresses();
+    var fromAddresses  = fromAddress ? [fromAddress] : WalletStore.getLegacyActiveAddresses();
 
     for(var i in fromAddresses) {
       obj.addFromAddress(fromAddresses[i]);
@@ -2184,7 +2063,7 @@ var MyWallet = new function() {
   this.sweepLegacyAddressToAccount = function(fromAddress, toIdx, successCallback, errorCallback, listener, getPassword)  {
     var obj = Signer.init();
     var feeAmount = parseInt(obj.getBaseFee().toString());
-    var amount = MyWallet.getLegacyAddressBalance(fromAddress) - feeAmount;
+    var amount = WalletStore.getLegacyAddressBalance(fromAddress) - feeAmount;
     MyWallet.sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, null, successCallback, errorCallback, listener, getPassword);
   };
 
@@ -2237,8 +2116,8 @@ var MyWallet = new function() {
       var miniKeyAddrobj = MyWallet.generateNewMiniPrivateKey();
       var address = MyWallet.getCompressedAddressString(miniKeyAddrobj.key);
 
-      MyWallet.setLegacyAddressTag(address, 2);
-      MyWallet.setLegacyAddressLabel(
+      WalletStore.setLegacyAddressTag(address, 2);
+      WalletStore.setLegacyAddressLabel(
         address, 
         mobile + ' Sent Via SMS',
         function() {
@@ -2755,6 +2634,9 @@ var MyWallet = new function() {
 
     var atLeastOne = false;
 
+    //TODO: this probably needs to be a small addressesToJSON
+    // This functions should be divided in small converters and then composed
+    var addresses = WalletStore.getAddresses();
     for (var key in addresses) {
       var addr = $.extend({}, addresses[key]);
 
@@ -2870,80 +2752,6 @@ var MyWallet = new function() {
     }, tx_filter, tx_page*MyWallet.getNTransactionsPerPage(), MyWallet.getNTransactionsPerPage());
   };
 
-
-  /**
-   * @return {Array} get all legacy addresses
-   */
-  this.getAllLegacyAddresses = function() {
-    var array = [];
-    for (var key in addresses) {
-      array.push(key);
-    }
-    return array;
-  };
-
-  /**
-   * Find the preferred address to use for change
-   * Order deposit / request coins
-   * @return {string} preferred address
-   */
-  this.getPreferredLegacyAddress = function() {
-    var preferred = null;
-    for (var key in addresses) {
-      var addr = addresses[key];
-
-      if (preferred == null)
-        preferred = addr;
-
-      if (addr.priv != null) {
-        if (preferred == null)
-          preferred = addr;
-
-        if (addr.tag == null || addr.tag == 0) {
-          preferred = addr;
-          break;
-        }
-      }
-    }
-
-    return preferred.addr;
-  };
-
-  /**
-   * @return {boolean} has legacy addresses
-   */
-  this.hasLegacyAddresses = function() {
-    return (Object.keys(addresses).length != 0);
-  };
-
-  /**
-   * @return {Array} legacy active addresses
-   */
-  this.getLegacyActiveAddresses = function() {
-    var array = [];
-    for (var key in addresses) {
-      var addr = addresses[key];
-      //Don't include archived addresses
-      if (addr.tag != 2)
-        array.push(addr.addr);
-    }
-    return array;
-  };
-
-
-  /**
-   * @return {Array} archived addresses
-   */
-  this.getLegacyArchivedAddresses = function() {
-    var array = [];
-    for (var key in addresses) {
-      var addr = addresses[key];
-      //Don't include archived addresses
-      if (addr.tag == 2)
-        array.push(addr.addr);
-    }
-    return array;
-  };
 
   /**
    * @return {Object} Latest block object
@@ -3140,8 +2948,8 @@ var MyWallet = new function() {
     n_tx_filtered = obj.wallet.n_tx_filtered;
 
     for (var i = 0; i < obj.addresses.length; ++i) {
-      if (addresses[obj.addresses[i].address]) {
-        MyWallet.setLegacyAddressBalance(obj.addresses[i].address, obj.addresses[i].final_balance);
+      if (WalletStore.legacyAddressExists(obj.addresses[i].address)) {
+        WalletStore.setLegacyAddressBalance(obj.addresses[i].address, obj.addresses[i].final_balance);
         // addresses[obj.addresses[i].address].balance = obj.addresses[i].final_balance;
       }
 
@@ -3205,7 +3013,7 @@ var MyWallet = new function() {
       });
     };
 
-    var addresses = WalletStore.getXpubs().concat(MyWallet.getLegacyActiveAddresses());
+    var addresses = WalletStore.getXpubs().concat(WalletStore.getLegacyActiveAddresses());
     BlockchainAPI.async_get_history_with_addresses(addresses, function(data) {
       parseMultiAddressJSON(data, false, false);
       success && success();
@@ -3283,6 +3091,8 @@ var MyWallet = new function() {
           $.extend(wallet_options, obj.options);
         }
 
+        //TODO: we should create another method in WalletStore to create a new set of addresses for this
+        var addresses = WalletStore.getAddresses()
         addresses = {};
         for (var i = 0; i < obj.keys.length; ++i) {
           var key = obj.keys[i];
@@ -3799,11 +3609,13 @@ var MyWallet = new function() {
           };
 
           if (sync_pubkeys) {
-            data.active = MyWallet.getLegacyActiveAddresses().join('|');
+            data.active = WalletStore.getLegacyActiveAddresses().join('|');
           }
 
           MyWallet.securePost("wallet", data, function(data) {
             checkWalletChecksum(new_checksum, function() {
+              //TODO: another method for addresses in WalletStore should be done
+              var addresses = WalletStore.getAddresses();
               for (var key in addresses) {
                 var addr = addresses[key];
                 if (addr.tag == 1) {
@@ -4184,7 +3996,7 @@ var MyWallet = new function() {
    * @return {string} message signature in base64
    */
   this.signmessage = function(address, message) {
-    var addr = addresses[address];
+    var addr = WalletStore.getAddress(address);
 
     if (!addr.priv)
       throw 'Cannot sign a watch only address';
@@ -4268,6 +4080,8 @@ var MyWallet = new function() {
     var to_check = [];
     var key_map = {};
 
+    // TODO: this probably can be abstracted too in WalletStore
+    var addresses = WalletStore.getAddresses();
     for (var key in addresses) {
       var addr = addresses[key];
 
@@ -4328,6 +4142,9 @@ var MyWallet = new function() {
    * @param {string?} second_password Second password to decrypt private keys if set
    */
   this.checkAllKeys = function(second_password) {
+
+    // TODO: this probably can be abstracted too in WalletStore
+    var addresses = WalletStore.getAddresses();
     for (var key in addresses) {
       var addr = addresses[key];
 
@@ -4424,8 +4241,9 @@ var MyWallet = new function() {
     return size;
   };
 
+  // Todo: This should be moved to wallet store once maxAddr is there too
   function walletIsFull() {
-    if (nKeys(addresses) >= maxAddr) {
+    if (nKeys(WalletStore.getAddresses()) >= maxAddr) {
       MyWallet.sendEvent("msg", {type: "error", message: 'We currently support a maximum of '+maxAddr+' private keys, please remove some unused ones.'});
       return true;
     }
@@ -4439,6 +4257,8 @@ var MyWallet = new function() {
    * @return {boolean} compressed
    */
   function internalAddKey(addr, priv) {
+    // TODO: move to walletstore too
+    var addresses = WalletStore.getAddresses();
     var existing = addresses[addr];
     if (!existing || existing.length == 0) {
       addresses[addr] = {addr : addr, priv : priv, balance : null};

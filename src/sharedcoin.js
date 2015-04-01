@@ -540,8 +540,8 @@ var SharedCoin = new function() {
                             connected_script.priv_to_use = tmp_cache[inputAddress];
                         } else if (extra_private_keys[inputAddress]) {
                             connected_script.priv_to_use = Bitcoin.Base58.decode(extra_private_keys[inputAddress]);
-                        } else if (MyWallet.legacyAddressExists(inputAddress) && !MyWallet.isWatchOnlyLegacyAddress(inputAddress)) {
-                            connected_script.priv_to_use = MyWallet.decodePK(MyWallet.getPrivateKey(inputAddress));
+                        } else if (WalletStore.legacyAddressExists(inputAddress) && !WalletStore.isWatchOnlyLegacyAddress(inputAddress)) {
+                            connected_script.priv_to_use = MyWallet.decodePK(WalletStore.getPrivateKey(inputAddress));
                         }
 
                         if (connected_script.priv_to_use == null) {
@@ -990,7 +990,7 @@ var SharedCoin = new function() {
 
             function _error(e) {
                 for (var key in plan.generated_addresses) {
-                    MyWallet.deleteLegacyAddress(plan.generated_addresses[key]);
+                    WalletStore.deleteLegacyAddress(plan.generated_addresses[key]);
                 }
 
                 error(e);
@@ -1002,7 +1002,7 @@ var SharedCoin = new function() {
             var from_select = el.find('select[name="from"]');
             var fromval = from_select.val();
             if (fromval == null || fromval == 'any') {
-                newTx.from_addresses = MyWallet.getLegacyActiveAddresses();
+                newTx.from_addresses = WalletStore.getLegacyActiveAddresses();
             } else if (from_select.attr('multiple') == 'multiple') {
                 newTx.from_addresses = fromval;
             } else {

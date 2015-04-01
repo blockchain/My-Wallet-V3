@@ -184,7 +184,7 @@ var Signer = new function() {
             try {
               var addr_input_obj = parseOut(out);
 
-              if (!includeWatchOnly && MyWallet.isWatchOnlyLegacyAddress(addr_input_obj.addr)) {
+              if (!includeWatchOnly && WalletStore.isWatchOnlyLegacyAddress(addr_input_obj.addr)) {
                 continue;
               }
 
@@ -318,7 +318,7 @@ var Signer = new function() {
           else if (addresses_used.length > 0) { //Else return to a random from address if specified
             sendTx.addOutput(Bitcoin.Address.fromBase58Check(addresses_used[Math.floor(Math.random() * addresses_used.length)]), parseInt(changeValue));
           } else { //Otherwise return to random unarchived
-            sendTx.addOutput(Bitcoin.Address.fromBase58Check(MyWallet.getPreferredLegacyAddress()), parseInt(changeValue));
+            sendTx.addOutput(Bitcoin.Address.fromBase58Check(WalletStore.getPreferredLegacyAddress()), parseInt(changeValue));
           }
           sendTxOutAmounts.push(changeValue);
 
@@ -524,9 +524,9 @@ var Signer = new function() {
             connected_script.priv_to_use = tmp_cache[inputAddress];
           } else if (extra_private_keys && extra_private_keys[inputAddress]) {
             connected_script.priv_to_use = extra_private_keys[inputAddress];
-          } else if (MyWallet.legacyAddressExists(inputAddress) && !MyWallet.isWatchOnlyLegacyAddress(inputAddress)) {
+          } else if (WalletStore.legacyAddressExists(inputAddress) && !WalletStore.isWatchOnlyLegacyAddress(inputAddress)) {
             try {
-              connected_script.priv_to_use = second_password == null ? MyWallet.getPrivateKey(inputAddress) : MyWallet.decryptSecretWithSecondPassword(MyWallet.getPrivateKey(inputAddress), second_password, MyWallet.getSharedKey());
+              connected_script.priv_to_use = second_password == null ? WalletStore.getPrivateKey(inputAddress) : MyWallet.decryptSecretWithSecondPassword(WalletStore.getPrivateKey(inputAddress), second_password, MyWallet.getSharedKey());
             } catch (e) {
               console.log(e);
             }
@@ -797,7 +797,7 @@ var Signer = new function() {
     if (!this.has_pushed && generated_addresses.length > 0) {
       //When an error occurs during send (or user cancelled) we need to remove the addresses we generated
       for (var i = 0; i < generated_addresses.length; ++i) {
-        MyWallet.deleteLegacyAddress(generated_addresses[i]);
+        WalletStore.deleteLegacyAddress(generated_addresses[i]);
       }
 
       if (this.has_saved_addresses)
