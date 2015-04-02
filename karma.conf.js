@@ -16,6 +16,7 @@ module.exports = function(config) {
       'src/blockchain-api.js' : ['coverage'],
       'src/blockchain-settings-api.js' : ['coverage'],
       'src/import-export.js' : ['coverage'],
+      'src/transaction.js' : ['coverage'],
       'src/signer.js' : ['coverage'],
       'src/wallet-signup.js' : ['coverage']
     },
