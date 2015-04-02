@@ -31,6 +31,7 @@ var JSONB = Browserify.JSONB;
 var SHA256 = Browserify.SHA256;
 var BIP39 = Browserify.BIP39;
 var ImportExport = Browserify.ImportExport;
+var Transaction = Browserify.Transaction;
 
 var MyWallet = new function() {
 
