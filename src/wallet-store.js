@@ -132,6 +132,31 @@
           }
         }
       },
+      addLegacyAddress: function(key) {
+        if ((key.addr == null) || !MyWallet.isAlphaNumericSpace(key.addr)) {
+          return MyWallet.sendEvent("msg", {
+            type: "error",
+            message: 'Your wallet contains an invalid address. This is a sign of possible corruption, please double check all your BTC is accounted for. Backup your wallet to remove this error.'
+          });
+        } else {
+          if (key.tag === 1 || !MyWallet.isAlphaNumericSpace(key.tag)) {
+            key.tag = null;
+          }
+          if ((key.label != null) && !MyWallet.isAlphaNumericSpace(key.tag)) {
+            key.label = null;
+          }
+          return addresses[key.addr] = key;
+        }
+      },
+      newLegacyAddressesFromJSON: function(keysArray) {
+        var i, key, len, results;
+        results = [];
+        for (i = 0, len = keysArray.length; i < len; i++) {
+          key = keysArray[i];
+          results.push(this.addLegacyAddress(key));
+        }
+        return results;
+      },
       getAddresses: function() {
         return addresses;
       },

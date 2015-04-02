@@ -113,6 +113,21 @@
     @addAddressBookEntry(entry.addr, entry.label) for entry in addressBook if addressBook? 
     return
 
+  addLegacyAddress: (key) ->
+    if not key.addr? or not MyWallet.isAlphaNumericSpace(key.addr)
+      MyWallet.sendEvent("msg", 
+        {type: "error", message: 'Your wallet contains an invalid address. \
+                                  This is a sign of possible corruption, please \
+                                  double check all your BTC is accounted for. \
+                                  Backup your wallet to remove this error.'});
+    else
+      key.tag   = null if key.tag is 1 or not MyWallet.isAlphaNumericSpace(key.tag)
+      key.label = null if key.label? and not MyWallet.isAlphaNumericSpace(key.tag) 
+      addresses[key.addr] = key
+    
+  newLegacyAddressesFromJSON: (keysArray) ->
+    @addLegacyAddress(key) for key in keysArray
+
   # this getter should disapear once we fix the interaction with addresses in mywallet.js
   getAddresses: () -> 
     return addresses

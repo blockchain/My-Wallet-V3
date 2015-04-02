@@ -3087,26 +3087,8 @@ var MyWallet = new function() {
           $.extend(wallet_options, obj.options);
         }
 
-        //TODO: we should create another method in WalletStore to create a new set of addresses for this
-        var addresses = WalletStore.getAddresses()
-        for (var i = 0; i < obj.keys.length; ++i) {
-          var key = obj.keys[i];
-          if (!key.addr || !MyWallet.isAlphaNumericSpace(key.addr)) {
-            MyWallet.sendEvent("msg", {type: "error", message: 'Your wallet contains an invalid address. This is a sign of possible corruption, please double check all your BTC is accounted for. Backup your wallet to remove this error.'});
-            continue;
-          }
-
-          if (key.tag == 1 || !MyWallet.isAlphaNumericSpace(key.tag)) {
-            key.tag = null;
-          }
-
-          if (key.label && !MyWallet.isAlphaNumericSpace(key.label)) {
-            key.label = null;
-          }
-
-          addresses[key.addr] = key;
-        }
-
+        WalletStore.newLegacyAddressesFromJSON(obj.keys);
+        
         WalletStore.newAddressBookFromJSON(obj.address_book)
 
         if (obj.hd_wallets && obj.hd_wallets.length > 0) {
