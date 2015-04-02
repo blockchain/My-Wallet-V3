@@ -95,7 +95,7 @@ describe "Transaction", ->
       }
     ]
     
-    spyOn(MyWallet, "isActiveLegacyAddress").and.callFake((address)->
+    spyOn(WalletStore, "isActiveLegacyAddress").and.callFake((address)->
       activeLegacyAddresses.indexOf(address) > -1
     )
 
