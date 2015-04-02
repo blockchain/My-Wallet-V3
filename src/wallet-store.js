@@ -167,6 +167,18 @@
           return null;
         }
       },
+      getValueOfLegacyAddress: function(address) {
+        if (address in addresses) {
+          return parseInt(addresses[address].value);
+        } else {
+          return 0;
+        }
+      },
+      addToBalanceOfLegacyAddress: function(address, amount) {
+        if (address in addresses) {
+          addresses[address].balance += amount;
+        }
+      },
       legacyAddressExists: function(address) {
         return address in addresses;
       },
@@ -339,7 +351,7 @@
           }
         }
       },
-      addLegacyKey: function(address, privKey) {
+      addLegacyAddress: function(address, privKey) {
         var existing;
         console.log("festa aqui ara");
         existing = addresses[address];

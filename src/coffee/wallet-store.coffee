@@ -144,6 +144,13 @@
   getAddress: (address) -> 
     if (address of addresses) then addresses[address] else null
 
+  getValueOfLegacyAddress: (address) -> 
+    if (address of addresses) then parseInt(addresses[address].value) else 0
+
+  addToBalanceOfLegacyAddress: (address, amount) ->
+    addresses[address].balance += amount if (address of addresses)
+    return
+
   legacyAddressExists: (address) -> address of addresses
 
   # not used

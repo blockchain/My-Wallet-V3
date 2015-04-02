@@ -821,6 +821,7 @@ var MyWallet = new function() {
   };
 
   //opts = {compressed, app_name, app_version, created_time}
+  // TODO: this can be moved to walletstore
   this.addPrivateKey = function(key, opts, second_password) {
     if (walletIsFull()) {
       throw 'Wallet is full.';
@@ -855,7 +856,7 @@ var MyWallet = new function() {
       throw 'Decoded Key address does not match generated address';
     }
 
-    //TODO: this should be an addAddress function on WalletStore: TODO IMPORTANT JAUME (THIS IS SHIT)
+    //TODO: Move this once opts and probably all addPrivateKey func to walletstore
     var addresses = WalletStore.getAddresses();
     if (WalletStore.addLegacyAddress(addr, encoded)) {
       addresses[addr].tag = 1; //Mark as unsynced
@@ -925,19 +926,13 @@ var MyWallet = new function() {
         continue;
 
       //If it is our address then subtract the value
-      // TODO: This probably needs to be a function in WalletStore too
-      // var addr = addresses[output.addr];
-      var addr = WalletStore.getAddress(output.addr);
-      if (addr) {
-        var value = parseInt(output.value);
-
-        result -= value;
-
-        if (is_new) {
-          total_sent += value;
-          addr.balance -= value;
-        }
+      var value = WalletStore.getValueOfLegacyAddress(output.addr);
+      result -= value;
+      if (is_new) {
+        total_sent += value;
+        WalletStore.addToBalanceOfLegacyAddress(addr,-value)
       }
+
 
       if (hasCountedlegacyAddressesNTxs == false && WalletStore.isActiveLegacyAddress(output.addr)) {
         hasCountedlegacyAddressesNTxs = true;
