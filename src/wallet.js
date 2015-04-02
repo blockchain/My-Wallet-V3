@@ -2199,26 +2199,21 @@ var MyWallet = new function() {
 
           var changeAddress = sendAccount.getChangeAddressAtIndex(account.changeAddressCount);
 
-          var tx = new Transaction(unspent_outputs, to, value, fixedFee, listener);
+          var tx = new Transaction(unspent_outputs, to, value, fixedFee, changeAddress, listener);
 
-          var keys = [];
-          var neededPrivateKeysPaths = tx.pathsOfNeededPrivateKeys;
-          for (var neededPrivateKeyPath in neededPrivateKeysPaths) {
-            var key = sendAccount.generateKeyFromPath(neededPrivateKeyPath);
-            keys.push(key);
-          }
+          var keys = tx.pathsOfNeededPrivateKeys.map(function (neededPrivateKeyPath) {
+            return sendAccount.generateKeyFromPath(neededPrivateKeyPath).privKey;
+          });
 
           tx.addPrivateKeys(keys);
 
-          tx.sign();
-            
-          // var tx = account.createTx(to, value, fixedFee, unspent_outputs, extendedPrivateKey, listener);
+          var signedTransaction = tx.sign();
 
           var balance = account.getBalance();
           BlockchainAPI.push_tx(
-            tx,
+            signedTransaction,
             note,
-            function() { successCallback && successCallback(tx.getId()); },
+            function() { successCallback && successCallback(); },
             function(e) { errorCallback && errorCallback(e);}
           );
         },

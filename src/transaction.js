@@ -26,7 +26,9 @@ var Transaction = function (unspentOutputs, toAddress, amount, fee, changeAddres
   var accum = 0;
   var subTotal = 0;
 
-  for (var output in unspent) {
+  for (var i = 0; i < unspent.length; i++) {
+    var output = unspent[i];
+
     transaction.addInput(output.hash, output.index);
 
     // Add to list of needed private keys
@@ -87,13 +89,13 @@ Transaction.prototype.sign = function() {
 
   var transaction = this.transaction;
 
-  transaction.ins.forEach(function(input, i) {
+  for (var i = 0; i < transaction.ins.length; i++) {
     typeof(listener.on_sign_progress) === 'function' && listener.on_sign_progress(i+1);
 
     var key = this.privateKeys[i];
 
     transaction.sign(i, key);
-  });
+  }
 
   typeof(listener.on_finish_signing) === 'function' && listener.on_finish_signing();
 
