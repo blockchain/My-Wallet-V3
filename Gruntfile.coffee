@@ -14,6 +14,30 @@ module.exports = (grunt) ->
       options:
         separator: ";"
         
+      bower_dev:
+        src: [
+          'bower_components/cryptojslib/rollups/sha256.js'
+          'bower_components/cryptojslib/rollups/aes.js'
+          'bower_components/cryptojslib/rollups/pbkdf2.js'
+          'bower_components/cryptojslib/components/cipher-core.js'
+          'bower_components/cryptojslib/components/pad-iso10126.js'
+          'bower_components/cryptojslib/components/mode-ecb.js'
+          'bower_components/cryptojslib/components/pad-nopadding.js'
+        ]
+        dest: "build/bower_components.js"
+        
+      bower_dist:
+        src: [
+          'build/bower_components/cryptojslib/rollups/sha256.js'
+          'build/bower_components/cryptojslib/rollups/aes.js'
+          'build/bower_components/cryptojslib/rollups/pbkdf2.js'
+          'build/bower_components/cryptojslib/components/cipher-core.js'
+          'build/bower_components/cryptojslib/components/pad-iso10126.js'
+          'build/bower_components/cryptojslib/components/mode-ecb.js'
+          'build/bower_components/cryptojslib/components/pad-nopadding.js'
+        ]
+        dest: "build/bower_components.js"
+        
       mywallet:
         src: [
           'bower_components/jquery/dist/jquery.js'
@@ -32,13 +56,7 @@ module.exports = (grunt) ->
           'build/hd-wallet.processed.js'
           'node_modules/sjcl/sjcl.js'
           'node_modules/xregexp/xregexp-all.js'
-          'build/bower_components/cryptojslib/rollups/sha256.js'
-          'build/bower_components/cryptojslib/rollups/aes.js'
-          'build/bower_components/cryptojslib/rollups/pbkdf2.js'
-          'build/bower_components/cryptojslib/components/cipher-core.js'
-          'build/bower_components/cryptojslib/components/pad-iso10126.js'
-          'build/bower_components/cryptojslib/components/mode-ecb.js'
-          'build/bower_components/cryptojslib/components/pad-nopadding.js'
+          'build/bower_components.js'
         ]
         dest: "dist/my-wallet.js"
  
@@ -182,6 +200,7 @@ module.exports = (grunt) ->
     "env:build"
     "preprocess"
     "browserify:build"
+    "concat:bower_dev"
     "concat:mywallet"
   ]
     
@@ -197,6 +216,7 @@ module.exports = (grunt) ->
     "shell:bower_install_dependencies"
     "preprocess"
     "browserify:production"
+    "concat:bower_dist"
     "concat:mywallet"
     "uglify:mywallet"
   ]
