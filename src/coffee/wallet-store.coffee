@@ -218,3 +218,6 @@
     o.priv = f(o.priv) for own k,o of addresses when o.priv?
     return
 
+  tagLegacyAddressesAsSaved: () ->
+    (delete o.tag) for own k,o of addresses when o.tag is 1
+    return

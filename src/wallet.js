@@ -3088,7 +3088,7 @@ var MyWallet = new function() {
         }
 
         WalletStore.newLegacyAddressesFromJSON(obj.keys);
-        
+
         WalletStore.newAddressBookFromJSON(obj.address_book)
 
         if (obj.hd_wallets && obj.hd_wallets.length > 0) {
@@ -3590,26 +3590,21 @@ var MyWallet = new function() {
           }
 
           MyWallet.securePost("wallet", data, function(data) {
-            checkWalletChecksum(new_checksum, function() {
-              //TODO: another method for addresses in WalletStore should be done
-              var addresses = WalletStore.getAddresses();
-              for (var key in addresses) {
-                var addr = addresses[key];
-                if (addr.tag == 1) {
-                  delete addr.tag; //Make any unsaved addresses as saved
-                }
-              }
+            checkWalletChecksum(new_checksum, 
+              function() {
+                WalletStore.tagLegacyAddressesAsSaved();
 
-              if (successcallback != null)
-                successcallback();
+                if (successcallback != null)
+                  successcallback();
 
-              isSynchronizedWithServer = true;
-              MyWallet.disableLogout(false);
-              logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
-              MyWallet.sendEvent('on_backup_wallet_success');
-            }, function() {
-              _errorcallback('Checksum Did Not Match Expected Value');
-              MyWallet.disableLogout(false);
+                isSynchronizedWithServer = true;
+                MyWallet.disableLogout(false);
+                logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
+                MyWallet.sendEvent('on_backup_wallet_success');
+            },
+              function() {
+                _errorcallback('Checksum Did Not Match Expected Value');
+                MyWallet.disableLogout(false);
             });
           }, function(e) {
             _errorcallback(e.responseText);

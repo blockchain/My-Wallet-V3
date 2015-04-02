@@ -328,6 +328,16 @@
             o.priv = f(o.priv);
           }
         }
+      },
+      tagLegacyAddressesAsSaved: function() {
+        var k, o;
+        for (k in addresses) {
+          if (!hasProp.call(addresses, k)) continue;
+          o = addresses[k];
+          if (o.tag === 1) {
+            delete o.tag;
+          }
+        }
       }
     };
   })();
