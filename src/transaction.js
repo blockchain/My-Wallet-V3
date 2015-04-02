@@ -5,8 +5,7 @@ var Base58 = require('bs58');
 
 var Transaction = function (unspentOutputs, toAddress, amount, fee, changeAddress, listener) {
   var network = Bitcoin.networks.bitcoin;
-  // var defaultFee = Bitcoin.networks.bitcoin.feePerKb;
-  var defaultFee = 0;
+  var defaultFee = Bitcoin.networks.bitcoin.feePerKb;
 
   this.listener = listener;
   this.amount = amount;
