@@ -2,7 +2,7 @@
   var hasProp = {}.hasOwnProperty;
 
   this.WalletStore = (function() {
-    var address_book, addresses, currencyCodeToCurrency, didUpgradeToHd, languageCodeToLanguage, mnemonicVerified, transactions, xpubs;
+    var address_book, addresses, currencyCodeToCurrency, didUpgradeToHd, languageCodeToLanguage, mnemonicVerified, transactions, unsafeAddLegacyAddress, xpubs;
     languageCodeToLanguage = {
       'de': 'German',
       'hi': 'Hindi',
@@ -59,6 +59,22 @@
     addresses = {};
     didUpgradeToHd = null;
     address_book = {};
+    unsafeAddLegacyAddress = function(key) {
+      if ((key.addr == null) || !MyWallet.isAlphaNumericSpace(key.addr)) {
+        return MyWallet.sendEvent("msg", {
+          type: "error",
+          message: 'Your wallet contains an invalid address. This is a sign of possible corruption, please double check all your BTC is accounted for. Backup your wallet to remove this error.'
+        });
+      } else {
+        if (key.tag === 1 || !MyWallet.isAlphaNumericSpace(key.tag)) {
+          key.tag = null;
+        }
+        if ((key.label != null) && !MyWallet.isAlphaNumericSpace(key.tag)) {
+          key.label = null;
+        }
+        return addresses[key.addr] = key;
+      }
+    };
     return {
       getLanguages: function() {
         return languageCodeToLanguage;
@@ -132,28 +148,12 @@
           }
         }
       },
-      addLegacyAddress: function(key) {
-        if ((key.addr == null) || !MyWallet.isAlphaNumericSpace(key.addr)) {
-          return MyWallet.sendEvent("msg", {
-            type: "error",
-            message: 'Your wallet contains an invalid address. This is a sign of possible corruption, please double check all your BTC is accounted for. Backup your wallet to remove this error.'
-          });
-        } else {
-          if (key.tag === 1 || !MyWallet.isAlphaNumericSpace(key.tag)) {
-            key.tag = null;
-          }
-          if ((key.label != null) && !MyWallet.isAlphaNumericSpace(key.tag)) {
-            key.label = null;
-          }
-          return addresses[key.addr] = key;
-        }
-      },
       newLegacyAddressesFromJSON: function(keysArray) {
         var i, key, len, results;
         results = [];
         for (i = 0, len = keysArray.length; i < len; i++) {
           key = keysArray[i];
-          results.push(this.addLegacyAddress(key));
+          results.push(unsafeAddLegacyAddress(key));
         }
         return results;
       },
@@ -336,6 +336,26 @@
           o = addresses[k];
           if (o.tag === 1) {
             delete o.tag;
+          }
+        }
+      },
+      addLegacyKey: function(address, privKey) {
+        var existing;
+        console.log("festa aqui ara");
+        existing = addresses[address];
+        if ((existing == null) || existing.length === 0) {
+          addresses[address] = {
+            addr: address,
+            priv: privKey,
+            balance: null
+          };
+          return true;
+        } else {
+          if ((existing.priv == null) && (privKey != null)) {
+            existing.priv = privKey;
+            return true;
+          } else {
+            return false;
           }
         }
       }

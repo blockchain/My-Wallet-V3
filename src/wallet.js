@@ -664,7 +664,7 @@ var MyWallet = new function() {
     }
 
     try {
-      if (internalAddKey(addressString)) {
+      if (WalletStore.addLegacyAddress(addressString)) {
         MyWallet.sendEvent("msg", {type: "success", message: 'Successfully Added Address ' + address});
 
         try {
@@ -855,9 +855,9 @@ var MyWallet = new function() {
       throw 'Decoded Key address does not match generated address';
     }
 
-    //TODO: this should be an addAddress function on WalletStore
+    //TODO: this should be an addAddress function on WalletStore: TODO IMPORTANT JAUME (THIS IS SHIT)
     var addresses = WalletStore.getAddresses();
-    if (internalAddKey(addr, encoded)) {
+    if (WalletStore.addLegacyAddress(addr, encoded)) {
       addresses[addr].tag = 1; //Mark as unsynced
       addresses[addr].created_time = opts.created_time ? opts.created_time : 0; //Stamp With Creation time
       addresses[addr].created_device_name = opts.app_name ? opts.app_name : APP_NAME; //Created Device
@@ -4220,25 +4220,6 @@ var MyWallet = new function() {
       return true;
     }
 
-    return false;
-  }
-
-  /**
-   * @param {string} addr Address
-   * @param {string} priv base58 private key
-   * @return {boolean} compressed
-   */
-  function internalAddKey(addr, priv) {
-    // TODO: move to walletstore too
-    var addresses = WalletStore.getAddresses();
-    var existing = addresses[addr];
-    if (!existing || existing.length == 0) {
-      addresses[addr] = {addr : addr, priv : priv, balance : null};
-      return true;
-    } else if (!existing.priv && priv) {
-      existing.priv = priv;
-      return true;
-    }
     return false;
   }
 

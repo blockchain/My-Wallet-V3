@@ -1,5 +1,8 @@
 @WalletStore = do ->
 
+  #////////////////////////////////////////////////////////////////////////////
+  # Private variables
+
   languageCodeToLanguage = 
     'de': 'German'
     'hi': 'Hindi'
@@ -56,7 +59,25 @@
   addresses = {}    # {addr : address, priv : private key, tag : tag (mark as archived), label : label, balance : balance}
   didUpgradeToHd = null
   address_book = {} #Holds the address book addr = label
+
   #////////////////////////////////////////////////////////////////////////////
+  # Private functions
+
+  unsafeAddLegacyAddress = (key) ->
+    if not key.addr? or not MyWallet.isAlphaNumericSpace(key.addr)
+      MyWallet.sendEvent("msg", 
+        {type: "error", message: 'Your wallet contains an invalid address. \
+                                  This is a sign of possible corruption, please \
+                                  double check all your BTC is accounted for. \
+                                  Backup your wallet to remove this error.'});
+    else
+      key.tag   = null if key.tag is 1 or not MyWallet.isAlphaNumericSpace(key.tag)
+      key.label = null if key.label? and not MyWallet.isAlphaNumericSpace(key.tag) 
+      addresses[key.addr] = key
+
+
+  #////////////////////////////////////////////////////////////////////////////
+  # public methods
 
   getLanguages: () -> languageCodeToLanguage
 
@@ -112,21 +133,9 @@
     address_book = {}
     @addAddressBookEntry(entry.addr, entry.label) for entry in addressBook if addressBook? 
     return
-
-  addLegacyAddress: (key) ->
-    if not key.addr? or not MyWallet.isAlphaNumericSpace(key.addr)
-      MyWallet.sendEvent("msg", 
-        {type: "error", message: 'Your wallet contains an invalid address. \
-                                  This is a sign of possible corruption, please \
-                                  double check all your BTC is accounted for. \
-                                  Backup your wallet to remove this error.'});
-    else
-      key.tag   = null if key.tag is 1 or not MyWallet.isAlphaNumericSpace(key.tag)
-      key.label = null if key.label? and not MyWallet.isAlphaNumericSpace(key.tag) 
-      addresses[key.addr] = key
     
   newLegacyAddressesFromJSON: (keysArray) ->
-    @addLegacyAddress(key) for key in keysArray
+    unsafeAddLegacyAddress(key) for key in keysArray
 
   # this getter should disapear once we fix the interaction with addresses in mywallet.js
   getAddresses: () -> 
@@ -221,3 +230,16 @@
   tagLegacyAddressesAsSaved: () ->
     (delete o.tag) for own k,o of addresses when o.tag is 1
     return
+
+  addLegacyAddress: (address, privKey) ->
+    console.log "festa aqui ara"
+    existing = addresses[address]
+    if not existing? or existing.length is 0
+      addresses[address] = {addr : address, priv : privKey, balance : null};
+      return true
+    else
+      if not existing.priv? and privKey?
+        existing.priv = privKey
+        return true
+      else
+        return false
