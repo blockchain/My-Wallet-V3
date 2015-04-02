@@ -294,13 +294,13 @@
         }
         return results;
       },
-      encryptLegacyAddresses: function(encrypt) {
+      mapToLegacyAddressesPrivateKeys: function(f) {
         var k, o;
         for (k in addresses) {
           if (!hasProp.call(addresses, k)) continue;
           o = addresses[k];
           if (o.priv != null) {
-            o.priv = encrypt(o.priv);
+            o.priv = f(o.priv);
           }
         }
       }
