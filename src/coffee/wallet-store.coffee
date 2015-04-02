@@ -198,3 +198,8 @@
   # not used
   getLegacyArchivedAddresses: () ->
     (k for own k of addresses when not @isActiveLegacyAddress(k))
+
+  encryptLegacyAddresses: (encrypt) ->
+    o.priv = encrypt(o.priv) for own k,o of addresses when o.priv?
+    return
+

@@ -450,15 +450,16 @@ var MyWallet = new function() {
      * @param {!string} data The data to encrypt.
      * @param {!string} pw The password used for encryption.
      */
-    var reencrypt = function(data, pw) {
-      return MyWallet.encrypt(MyWallet.decryptSecretWithSecondPassword(data, pw, sharedKey), sharedKey + pw, pbkdf2_iterations);
+    var reencrypt = function(pw) {
+      var enc = function(data) {
+        return MyWallet.encrypt(MyWallet.decryptSecretWithSecondPassword(data, pw, sharedKey), sharedKey + pw, pbkdf2_iterations);
+      } 
+      return enc;
     };
 
     var setPbkdf2IterationsAndBackupWallet = function() {
       wallet_options.pbkdf2_iterations = pbkdf2_iterations;
-
       success();
-
       MyWallet.backupWalletDelayed('update', function() {
       }, function(e) {
         panic(e);
@@ -468,47 +469,35 @@ var MyWallet = new function() {
     try {
       // If double encryption is enabled we need to re-encrypt all private keys
       if(double_encryption) {
-        getPassword(function(pw, correct_password, wrong_password) {
-          if (MyWallet.validateSecondPassword(pw)) {
-            correct_password();
+        getPassword(
+          function(pw, correct_password, wrong_password) {
+            if (MyWallet.validateSecondPassword(pw)) {
+              correct_password();
+              WalletStore.mapToLegacyAddressesPrivateKeys(reencrypt(pw));
 
+              // Re-encrypt all HD account keys
+              for (var i in MyWallet.getAccounts()) {
+                var account = MyWallet.getHDWallet().getAccount(i);
+                account.extendedPrivateKey = reencrypt(pw)(account.extendedPrivateKey);
 
-            // Re-encrypt all legacy keys
-            // TODO: this encryption should be a method in WalletStore
-            var addresses = WalletStore.getAddresses()
-            for (var key in addresses) {
-              var addr = addresses[key];
-
-              if (addr.priv) {
-                addr.priv = reencrypt(addr.priv, pw);
-
-                if (!addr.priv) throw 'Error re-encrypting private key';
+                if (!account.extendedPrivateKey) throw 'Error re-encrypting account private key';
               }
+
+              // Re-encrypt the HD seed
+              if (WalletStore.didUpgradeToHd()) {
+                MyWallet.getHDWallet().seedHex = reencrypt(pw)(MyWallet.getHDWallet().seedHex);
+
+                if (!MyWallet.getHDWallet().seedHex) throw 'Error re-encrypting wallet seed';
+              }
+
+              // Generate a new password hash
+              dpasswordhash = hashPassword(sharedKey + pw, pbkdf2_iterations);
+
+              setPbkdf2IterationsAndBackupWallet();
             }
-
-            // Re-encrypt all HD account keys
-            for (var i in MyWallet.getAccounts()) {
-              var account = MyWallet.getHDWallet().getAccount(i);
-              account.extendedPrivateKey = reencrypt(account.extendedPrivateKey, pw);
-
-              if (!account.extendedPrivateKey) throw 'Error re-encrypting account private key';
+            else {
+              wrong_password();
             }
-
-            // Re-encrypt the HD seed
-            if (WalletStore.didUpgradeToHd()) {
-              MyWallet.getHDWallet().seedHex = reencrypt(MyWallet.getHDWallet().seedHex, pw);
-
-              if (!MyWallet.getHDWallet().seedHex) throw 'Error re-encrypting wallet seed';
-            }
-
-            // Generate a new password hash
-            dpasswordhash = hashPassword(sharedKey + pw, pbkdf2_iterations);
-
-            setPbkdf2IterationsAndBackupWallet();
-          }
-          else {
-            wrong_password();
-          }
         });
       }
       else {
@@ -556,24 +545,19 @@ var MyWallet = new function() {
       //But for now panic!
       window.location.reload();
     };
+    var decrypt = function(pw) {
+      var dec = function(data) {
+        return MyWallet.decryptSecretWithSecondPassword(data, pw, MyWallet.getSharedKey());
+      } 
+      return dec;
+    };
 
     try {
       getPassword(function(pw, correct_password, wrong_password) {
         if (MyWallet.validateSecondPassword(pw)) {
           correct_password();
 
-          // TODO: this deencryption should be a method in WalletStore
-          var addresses = WalletStore.getAddresses()
-          for (var key in addresses) {
-
-            var addr = addresses[key];
-
-            if (addr.priv) {
-              addr.priv = MyWallet.decryptSecretWithSecondPassword(addr.priv, pw, sharedKey);
-
-              if (!addr.priv) throw 'addr.priv is null';
-            }
-          }
+          WalletStore.mapToLegacyAddressesPrivateKeys(decrypt(pw));
 
           for (var i in MyWallet.getAccounts()) {
             var account = MyWallet.getHDWallet().getAccount(i);
@@ -621,20 +605,16 @@ var MyWallet = new function() {
       // window.location.reload();
     };
 
+    var encrypt = function(pw) {
+      var enc = function(data) {
+        return MyWallet.encryptSecretWithSecondPassword(data, pw, MyWallet.getSharedKey());
+      } 
+      return enc;
+    };
+
     try {
       MyWallet.setDoubleEncryption(true);
-
-      // this encryption should be a method in WalletStore
-      var addresses = WalletStore.getAddresses()
-      for (var key in addresses) {
-        var addr = addresses[key];
-
-        if (addr.priv) {
-          addr.priv = MyWallet.encryptSecretWithSecondPassword(addr.priv, password, MyWallet.getSharedKey());
-
-          if (!addr.priv) throw 'addr.priv is null';
-        }
-      }
+      WalletStore.mapToLegacyAddressesPrivateKeys(encrypt(password));
 
       for (var i in MyWallet.getAccounts()) {
         var account = MyWallet.getHDWallet().getAccount(i);
@@ -644,9 +624,7 @@ var MyWallet = new function() {
       if (WalletStore.didUpgradeToHd()) {
         MyWallet.getHDWallet().seedHex = MyWallet.encryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, password, MyWallet.getSharedKey());
       }
-
-      dpasswordhash = hashPassword(sharedKey + password, MyWallet.getPbkdf2Iterations());
-
+      dpasswordhash = hashPassword(MyWallet.getSharedKey() + password, MyWallet.getPbkdf2Iterations());
       if (!MyWallet.validateSecondPassword(password)) {
         throw "Invalid Second Password";
       }
@@ -664,6 +642,7 @@ var MyWallet = new function() {
         panic(e);
         error(e);
       }
+
     } catch(e) {
       panic(e);
       error(e);
