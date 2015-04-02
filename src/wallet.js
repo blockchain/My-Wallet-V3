@@ -3207,7 +3207,7 @@ var MyWallet = new function() {
    * @param {function()} success Success callback function.
    * @param {function()} error Error callback function.
    */
-  this.resendTwoFactorSMS = function(user_guid, success, error) {
+  this.resendTwoFactorSms = function(user_guid, success, error) {
     MyWallet.fetchWalletJson(user_guid, null, true, null, null, success, function() {}, null, null, error);
   };
 
