@@ -2191,13 +2191,34 @@ var MyWallet = new function() {
         function (unspent_outputs) {
           var account = MyWallet.getHDWallet().getAccount(accountIdx);
           var extendedPrivateKey = second_password == null ? account.extendedPrivateKey : MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password, sharedKey);
-          var tx = account.createTx(to, value, fixedFee, unspent_outputs, extendedPrivateKey, listener);
+
+          // Create the send account (same account as current account, but created with xpriv and thus able to generate private keys)
+          var sendAccount = new HDAccount();
+          sendAccount.newNodeFromExtKey(extendedPrivateKey);
+
+          var changeAddress = sendAccount.getChangeAddressAtIndex(account.changeAddressCount);
+
+          var tx = new Transaction(unspent_outputs, to, value, fixedFee, listener);
+
+          var keys = [];
+          var neededPrivateKeysPaths = tx.pathsOfNeededPrivateKeys;
+          for (var neededPrivateKeyPath in neededPrivateKeysPaths) {
+            var key = sendAccount.generateKeyFromPath(neededPrivateKeyPath);
+            keys.push(key);
+          }
+
+          tx.addPrivateKeys(keys);
+
+          tx.sign();
+            
+          // var tx = account.createTx(to, value, fixedFee, unspent_outputs, extendedPrivateKey, listener);
+
           var balance = account.getBalance();
           BlockchainAPI.push_tx(
             tx,
             note,
-            function(response) { successCallback && successCallback(tx.getId()); },
-            function(response) { errorCallback && errorCallback(e);}
+            function() { successCallback && successCallback(tx.getId()); },
+            function(e) { errorCallback && errorCallback(e);}
           );
         },
         function(e) { errorCallback && errorCallback(e);}
