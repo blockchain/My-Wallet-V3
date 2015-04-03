@@ -3180,7 +3180,7 @@ var MyWallet = new function() {
         resend_code : 1, 
         ct : (new Date()).getTime(),
         api_code : MyWallet.getAPICode(),
-        shared_key: shared_key
+        shared_key: MyWallet.getSharedKey()
       },
       timeout: 60000,
       success: function(obj) { 
