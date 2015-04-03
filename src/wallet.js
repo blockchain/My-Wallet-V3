@@ -1482,7 +1482,7 @@ var MyWallet = new function() {
     return result;
   };
 
-  this.getAndSetUnspentOutputsForAccount = function(accountIdx, successCallback, errorCallback) {
+  this.getUnspentOutputsForAccount = function(accountIdx, successCallback, errorCallback) {
     var account = MyWallet.getHDWallet().getAccount(accountIdx);
 
     BlockchainAPI.get_unspent([account.extendedPublicKey], function (obj) {
@@ -1492,11 +1492,8 @@ var MyWallet = new function() {
         Array.prototype.reverse.call(txBuffer);
         utxo.hash = txBuffer.toString("hex");
         utxo.index = utxo.tx_output_n;
-        var script = Bitcoin.Script.fromHex(utxo.script);
-        utxo.address = Bitcoin.Address.fromOutputScript(script).toString();
       });
 
-      MyWallet.sendEvent('hd_wallet_balance_updated');
       if (successCallback) {
         successCallback(obj.unspent_outputs);
       }
@@ -1803,7 +1800,7 @@ var MyWallet = new function() {
         function() {
           MyWallet.backupWallet('update', function() {
             MyWallet.sendEvent("msg", {type: "info", message: 'Generated new Bitcoin Address ' + address});
-            MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function (unspent_outputs) {
+            MyWallet.getUnspentOutputsForAccount(accountIdx, function (unspent_outputs) {
               var account = MyWallet.getHDWallet().getAccount(accountIdx);
               var extendedPrivateKey = null;
               if (secondPassword != null) {
@@ -1819,7 +1816,7 @@ var MyWallet = new function() {
 
                   MyWallet.backupWallet('update', function() {
 
-                    MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function () {
+                    MyWallet.getUnspentOutputsForAccount(accountIdx, function () {
                       if (successCallback)
                         successCallback(response);
                     }, function(e) {
@@ -2084,7 +2081,7 @@ var MyWallet = new function() {
           MyWallet.backupWallet('update', function() {
             MyWallet.sendEvent("msg", {type: "info", message: 'Generated new Bitcoin Address ' + address + address});
 
-            MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function (unspent_outputs) {
+            MyWallet.getUnspentOutputsForAccount(accountIdx, function (unspent_outputs) {
               var account = MyWallet.getHDWallet().getAccount(accountIdx);
               var extendedPrivateKey = null;
               if (secondPassword != null) {
@@ -2101,7 +2098,7 @@ var MyWallet = new function() {
 
                   MyWallet.backupWallet('update', function() {
 
-                    MyWallet.getAndSetUnspentOutputsForAccount(accountIdx, function () {
+                    MyWallet.getUnspentOutputsForAccount(accountIdx, function () {
                       if (successCallback)
                         successCallback(response);
                     }, function(e) {
@@ -2146,7 +2143,7 @@ var MyWallet = new function() {
   this.sendBitcoinsForAccount = function(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, listener, getPassword) {
     // second_password must be null if not needed.
     function sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, listener, second_password) {
-      MyWallet.getAndSetUnspentOutputsForAccount(
+      MyWallet.getUnspentOutputsForAccount(
         accountIdx,
         function (unspent_outputs) {
           var account = MyWallet.getHDWallet().getAccount(accountIdx);

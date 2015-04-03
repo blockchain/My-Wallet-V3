@@ -17,6 +17,8 @@ var Transaction = function (unspentOutputs, toAddress, amount, fee, changeAddres
 
   assert(amount > network.dustThreshold, amount + ' must be above dust threshold (' + network.dustThreshold + ' Satoshis)');
 
+  assert(unspentOutputs && unspentOutputs.length > 0, 'No Free Outputs To Spend');
+
   var transaction = new Bitcoin.Transaction();
   transaction.addOutput(toAddress, amount);
 
@@ -36,9 +38,9 @@ var Transaction = function (unspentOutputs, toAddress, amount, fee, changeAddres
     }
     else {
       var address = Bitcoin.Address.fromOutputScript(output.script).toString();
-      assert.notEqual(address, null, 'Unable to decode output address from transaction hash ' + output.tx_hash);
+      assert(address, 'Unable to decode output address from transaction hash ' + output.tx_hash);
 
-      this.pathsOfNeededPrivateKeys.push(address);
+      this.addressesOfNeededPrivateKeys.push(address);
     }
 
     var estimatedFee = network.estimateFee(transaction);
@@ -51,7 +53,7 @@ var Transaction = function (unspentOutputs, toAddress, amount, fee, changeAddres
 
       // Consume the change if it would create a very small none standard output
       if (change > network.dustThreshold) {
-        // TODO if changeAddress is not specified, return to one of the unspents
+        assert(changeAddress, 'No change address specified');
         transaction.addOutput(changeAddress, change);
       }
 
@@ -59,7 +61,7 @@ var Transaction = function (unspentOutputs, toAddress, amount, fee, changeAddres
     }
   }
 
-  assert(accum >= subTotal, 'Insufficient funds. Value Needed ' +  subTotal + '. Available amount ' + accum);
+  assert(accum >= subTotal, 'Insufficient funds. Value Needed ' +  formatBTC(subTotal) + '. Available amount ' + formatBTC(accum));
 
   this.transaction = transaction;
 };
@@ -80,7 +82,9 @@ Transaction.prototype.addPrivateKeys = function(privateKeys) {
  * @return {Object} Signed transaction
  */
 Transaction.prototype.sign = function() {
-  assert.notEqual(this.privateKeys, null, 'Need private keys to sign transaction');
+  assert(this.privateKeys, 'Need private keys to sign transaction');
+
+  assert(this.privateKeys.length === this.transaction.ins.length, 'Number of private keys needs to match inputs');
 
   var listener = this.listener;
 
@@ -93,7 +97,12 @@ Transaction.prototype.sign = function() {
 
     var key = this.privateKeys[i];
 
+    // TODO check that input and key belong together
+    // assert(key.pub.getAddress());
+
     transaction.sign(i, key);
+
+    // assert(isCanonicalSignature(signature), 'Signature not canoniacal');
   }
 
   typeof(listener.on_finish_signing) === 'function' && listener.on_finish_signing();

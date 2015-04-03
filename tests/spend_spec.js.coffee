@@ -576,7 +576,7 @@ describe "Spend", ->
           .and.callFake((adr,lab,success,error) -> success())
         spyOn(MyWallet, 'backupWallet')
           .and.callFake((method,success,error) -> success())
-        spyOn(MyWallet, 'getAndSetUnspentOutputsForAccount')
+        spyOn(MyWallet, 'getUnspentOutputsForAccount')
           .and.callThrough()
         spyOn(hdAccounts[data.from], 'createTx').and.callThrough()
 
@@ -603,7 +603,7 @@ describe "Spend", ->
                                 ,jasmine.any(Function)
                                 ,jasmine.any(Function)
         )
-        expect(MyWallet.getAndSetUnspentOutputsForAccount).toHaveBeenCalled() 
+        expect(MyWallet.getUnspentOutputsForAccount).toHaveBeenCalled() 
         expect(hdAccounts[data.from].createTx)
           .toHaveBeenCalledWith(
              address
@@ -692,7 +692,7 @@ describe "Spend", ->
           .and.callFake((adr,lab,success,error) -> success())
         spyOn(MyWallet, 'backupWallet')
           .and.callFake((method,success,error) -> success())
-        spyOn(MyWallet, 'getAndSetUnspentOutputsForAccount')
+        spyOn(MyWallet, 'getUnspentOutputsForAccount')
           .and.callThrough()
         spyOn(hdAccounts[data.from], 'createTx').and.callThrough()
         spyOn(Bitcoin.ECKey, 'makeRandom')
@@ -722,7 +722,7 @@ describe "Spend", ->
                                 ,jasmine.any(Function)
                                 ,jasmine.any(Function)
         )
-        expect(MyWallet.getAndSetUnspentOutputsForAccount).toHaveBeenCalled() 
+        expect(MyWallet.getUnspentOutputsForAccount).toHaveBeenCalled() 
         expect(hdAccounts[data.from].createTx)
           .toHaveBeenCalledWith(
              address
@@ -779,7 +779,7 @@ describe "Spend", ->
           .and.callFake((adr,lab,success,error) -> success())
         spyOn(MyWallet, 'backupWallet')
           .and.callFake((method,success,error) -> success())
-        spyOn(MyWallet, 'getAndSetUnspentOutputsForAccount')
+        spyOn(MyWallet, 'getUnspentOutputsForAccount')
           .and.callThrough()
         spyOn(hdAccounts[data.from], 'createTx').and.callThrough()
         spyOn(Bitcoin.ECKey, 'makeRandom')
