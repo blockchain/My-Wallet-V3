@@ -3179,22 +3179,24 @@ var MyWallet = new function() {
       data : {
         format : 'json', 
         resend_code : 1, 
-        ct : (new Date()).getTime()
-        api_code : MyWallet.getAPICode()
+        ct : (new Date()).getTime(),
+        api_code : MyWallet.getAPICode(),
         shared_key: shared_key
       },
       timeout: 60000,
       success: function(obj) { 
-        success()
-      }
+        success();
+      },
       error : function(e) {
         if(e.responseJSON && e.responseJSON.initial_error) {
           error(e.responseJSON.initial_error);
         } else {
-          error()
+          error();
         }
-      }
-  }
+      }    
+    })
+  };
+  
 
   /**
    * Fetch wallet from server, decrypt and build wallet model.
