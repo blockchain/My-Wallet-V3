@@ -2,12 +2,8 @@ var MyWalletSignup = new function() {
 
   //Save the javascript wallet to the remote server
   function insertWallet(guid, sharedKey, password, extra, successcallback, errorcallback) {
-    var _errorcallback = function(e) {
-      if (errorcallback != null)
-        errorcallback(e);
-
-      else throw e;
-    };
+    assert(successcallback, "Success callback missing");
+    assert(errorcallback, "Success callback missing");
 
     try {
       var data = MyWallet.makeCustomWalletJSON(null, guid, sharedKey);
@@ -20,8 +16,11 @@ var MyWalletSignup = new function() {
       }
       
       //Now Decrypt the it again to double check for any possible corruption
-      MyWallet.decryptWallet(crypted, password, function() {
-        try {
+      MyWallet.decryptWallet(
+        crypted, 
+        password, 
+        function() { // success callback for decryptWallet
+        
           //SHA256 new_checksum verified by server in case of curruption during transit
           var new_checksum = CryptoJS.SHA256(crypted, {asBytes: true}).toString();
 
@@ -38,22 +37,26 @@ var MyWalletSignup = new function() {
             sharedKey : sharedKey,
             guid : guid
           };
-          
+        
           $.extend(post_data, extra);
-          
-          MyWallet.securePost('wallet', post_data,
-                              function(data) {
-                                if (successcallback != null)
-                                  successcallback(data);
-                              }, function(e) {
-                                _errorcallback(e.responseText);
-                              });
-        } catch (e) {
-          _errorcallback(e);
-        };
-      });
+          MyWallet.securePost(
+            'wallet', 
+            post_data,
+            function(data) {
+              successcallback(data);
+            }, 
+            function(e) {
+              errorcallback(e.responseText);
+            }
+          );
+
+        },
+        function() { // error callback for decryptWallet
+          throw("Decrypting wallet failed");
+        }
+      );
     } catch (e) {
-      _errorcallback(e);
+      errorcallback(e);
     }
   }
 
@@ -96,7 +99,7 @@ var MyWalletSignup = new function() {
         if (guid.length != 36 || sharedKey.length != 36) {
           throw 'Error generating wallet identifier';
         }
-        
+                
         // Upgrade to HD immediately:
         MyWallet.initializeHDWallet(
           null, 

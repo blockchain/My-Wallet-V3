@@ -83,10 +83,11 @@ describe "Wallet", ->
       callbacks = 
         success: () ->
     
-        error: () ->
+        error: (e) ->
+          console.log(e)
       
       spyOn(callbacks, "success")
-      spyOn(callbacks, "error")
+      spyOn(callbacks, "error") #.and.callThrough()
       
       spyOn(MyWalletSignup, "generateUUIDs").and.callFake (n, success, error) ->
         success(["68019bee-7a27-490b-ab8a-446c2749bf1f","78019bee-7a27-490b-ab8a-446c2749bf1f"]) # Fake UID and shared key
@@ -100,7 +101,7 @@ describe "Wallet", ->
       
     it "should create a wallet", ->
       MyWallet.createNewWallet("a@b.com", "1234567890", "en", "EUR", callbacks.success, callbacks.error)
-
+      
       expect(callbacks.success).toHaveBeenCalled()
       
     it "should create an HD wallet", ->

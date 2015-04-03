@@ -4031,7 +4031,7 @@ var MyWallet = new function() {
         WalletStore.setLanguage(languageCode);
 
       sharedKey = createdSharedKey;
-
+      
       success(createdGuid, createdSharedKey, createdPassword);
     }, function (e) {
       error(e);
