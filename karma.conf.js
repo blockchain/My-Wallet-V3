@@ -9,7 +9,8 @@ module.exports = function(config) {
     
     preprocessors: {
       '**/*.coffee': ['coffee'],
-      'src/wallet-store.js' : ['coverage'],
+      'build/wallet-store.js' : ['coverage'],
+      'build/wallet-crypto.js' : ['coverage'],
       'src/wallet.js' : ['coverage'],
       'src/hd-wallet.js' : ['coverage'],
       'src/hd-account.js' : ['coverage'],
@@ -53,7 +54,8 @@ module.exports = function(config) {
       'src/hd-account.js',
       'src/wallet-signup.js',
       'src/crypto-util-legacy.js',
-      'src/wallet-store.js',
+      'build/wallet-store.js',
+      'build/wallet-crypto.js',
       'src/wallet.js',
       'src/signer.js',
       'tests/**/*.js',

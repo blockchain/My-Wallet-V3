@@ -511,7 +511,7 @@ describe "Spend", ->
       it "with double encryption enabled and correct password", ->
 
         data.from = 0 #iDX
-        spyOn(MyWallet, "decryptSecretWithSecondPassword")
+        spyOn(WalletCrypto, "decryptSecretWithSecondPassword")
           .and.returnValue(hdAccounts[data.from].getAccountExtendedKey(true))
         spyOn(MyWallet, "validateSecondPassword").and.callFake((pw)-> true)
         MyWallet.setDoubleEncryption(true)
@@ -534,7 +534,7 @@ describe "Spend", ->
         expect(MyWallet.validateSecondPassword).toHaveBeenCalled()
         expect(observer.wrong_password).not.toHaveBeenCalled()
         expect(observer.correct_password).toHaveBeenCalled()
-        expect(MyWallet.decryptSecretWithSecondPassword).toHaveBeenCalled()
+        expect(WalletCrypto.decryptSecretWithSecondPassword).toHaveBeenCalled()
         expect(observer.success).toHaveBeenCalled()
 
     describe "sendToAccount()", ->
@@ -650,7 +650,7 @@ describe "Spend", ->
 
         data.from = 0
         spyOn(MyWallet, "validateSecondPassword").and.callFake((pw)-> true)
-        spyOn(MyWallet, "decryptSecretWithSecondPassword")
+        spyOn(WalletCrypto, "decryptSecretWithSecondPassword")
           .and.returnValue(hdAccounts[data.from].getAccountExtendedKey(true))
         MyWallet.setDoubleEncryption(true)
         spyOn(MyWallet, 'addPrivateKey').and.returnValue(true)
@@ -678,7 +678,7 @@ describe "Spend", ->
         expect(MyWallet.validateSecondPassword).toHaveBeenCalled()
         expect(observer.wrong_password).not.toHaveBeenCalled()
         expect(observer.correct_password).toHaveBeenCalled()
-        expect(MyWallet.decryptSecretWithSecondPassword).toHaveBeenCalled()
+        expect(WalletCrypto.decryptSecretWithSecondPassword).toHaveBeenCalled()
         expect(observer.success).toHaveBeenCalled()
 
     describe "sendToMobile()", ->
@@ -770,7 +770,7 @@ describe "Spend", ->
 
         data.from = 0
         spyOn(MyWallet, "validateSecondPassword").and.callFake((pw)-> true)
-        spyOn(MyWallet, "decryptSecretWithSecondPassword")
+        spyOn(WalletCrypto, "decryptSecretWithSecondPassword")
           .and.returnValue(hdAccounts[data.from].getAccountExtendedKey(true))
         MyWallet.setDoubleEncryption(true)
         spyOn(MyWallet, 'addPrivateKey').and.returnValue(true)
@@ -804,7 +804,7 @@ describe "Spend", ->
         expect(MyWallet.validateSecondPassword).toHaveBeenCalled()
         expect(observer.wrong_password).not.toHaveBeenCalled()
         expect(observer.correct_password).toHaveBeenCalled()
-        expect(MyWallet.decryptSecretWithSecondPassword).toHaveBeenCalled()
+        expect(WalletCrypto.decryptSecretWithSecondPassword).toHaveBeenCalled()
         expect(observer.success).toHaveBeenCalled()
 
     describe "redeemFromEmailOrMobile()", ->

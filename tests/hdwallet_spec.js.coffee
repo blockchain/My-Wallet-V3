@@ -186,7 +186,7 @@ describe "HD Wallet", ->
         # Key encryption is non deterministic, so we check if the decrypted result is correct
         extendedPrivateKey = account.getAccountExtendedKey(true)
         
-        descryptedExtendedPrivateKey = MyWallet.decryptSecretWithSecondPassword(extendedPrivateKey, second_password, sharedKey)
+        descryptedExtendedPrivateKey = WalletCrypto.decryptSecretWithSecondPassword(extendedPrivateKey, second_password, sharedKey)
         expect(descryptedExtendedPrivateKey).toBe("xprv9yd5CkFRNfUXE4o5Z7aad5ApLAsKbje6tMJBjEPwGQE5fXw3PRk6FwBmhbLDduzdQGmFP3CfhxmLKaYHxHApmrrtkHswj4oL6g37McodpQd")
         
   describe "getHDWalletPassphraseString()", ->
@@ -211,7 +211,7 @@ describe "HD Wallet", ->
     it "should ask for 2nd password and then provide the passphrase", ->
       MyWallet.setDoubleEncryption(true)
 
-      spyOn(MyWallet, "decryptSecretWithSecondPassword").and.callFake((secret, password, shared_key) ->
+      spyOn(WalletCrypto, "decryptSecretWithSecondPassword").and.callFake((secret, password, shared_key) ->
         return seed if secret == seed_encrypted and password == second_password and (shared_key == undefined || shared_key == sharedKey)
         return null
       )
