@@ -3672,26 +3672,9 @@ var MyWallet = new function() {
       } catch (e) {
         error('Error Decrypting Wallet. Please check your password is correct.');
       }
-      // if (obj.pbkdf2_iterations > 0) {
-      //   MyWallet.decryptWebWorker(obj.payload, password, obj.pbkdf2_iterations, function(decrypted) {
-      //
-      //     try {
-      //       var root = $.parseJSON(decrypted);
-      //
-      //       _success(root, obj);
-      //     } catch (e) {
-      //       decryptNormal();
-      //     }
-      //   }, function(e) {
-      //     decryptNormal();
-      //   });
-      // } else {
-      //   decryptNormal();
-      // }
-    }
-    // TODO legacy format - what should we support here
-    // Legacy format: just encrypted data, pbkdf2 iterations can be 10 or maybe 1
-    else {
+    } else {
+      // TODO legacy format - what should we support here
+      // Legacy format: just encrypted data, pbkdf2 iterations can be 10 or maybe 1      
       var decrypted;
       try {
         decrypted = WalletCrypto.decrypt(data, password, 10)
@@ -3710,46 +3693,6 @@ var MyWallet = new function() {
 
   this.getWebWorkerLoadPrefix = function() {
     return BlockchainAPI.getRootURL() + resource + 'wallet/';
-  };
-
-  this.decryptWebWorker = function(data, password, pbkdf2_iterations, success, _error) {
-    var didError = false;
-    var error = function(e) {
-      if (!didError) { _error(e); didError = true; }
-    };
-
-    try {
-      var worker = new Worker(MyWallet.getWebWorkerLoadPrefix() + 'signer' + (min ? '.min.js' : '.js'));
-
-      worker.addEventListener('message', function(e) {
-        var data = e.data;
-
-        try {
-          switch (data.cmd) {
-          case 'on_decrypt':
-            success(data.data);
-            worker.terminate();
-            break;
-          case 'on_error': {
-            throw data.e;
-          }
-          };
-        } catch (e) {
-          worker.terminate();
-          error(e);
-        }
-      }, false);
-
-      worker.addEventListener('error', function(e) {
-        error(e);
-      });
-
-      worker.postMessage({cmd : 'load_resource' , path : MyWallet.getWebWorkerLoadPrefix() + 'bitcoinjs' + (min ? '.min.js' : '.js')});
-
-      worker.postMessage({cmd : 'decrypt', data : data, password : password, pbkdf2_iterations : pbkdf2_iterations});
-    } catch (e) {
-      error(e);
-    }
   };
 
   this.decryptPasswordWithProcessedPin = function(data, password, pbkdf2_iterations) {
