@@ -14,7 +14,6 @@
     @encrypt base58, sharedKey + password, MyWallet.getPbkdf2Iterations()
 
   decrypt: (data, password, pbkdf2_iterations) ->
-    `var decoded`
     #iso10126 with pbkdf2_iterations iterations
     try
 
@@ -36,7 +35,10 @@
       if decoded != null and decoded.length > 0
         return decoded
     catch e
-      console.log e
+      console.log("Decrypt threw an expection")
+      console.log(e)
+      # Try another method below if this fails
+      
     # Disabled 2015-03-06 by Sjors pending refactoring (salt is undefined here)
     # //iso10126 with 10 iterations  (old default)
     # if (pbkdf2_iterations != 10) {
@@ -83,16 +85,19 @@
     #     console.log(e);
     # }
     #iso10126 padding with one iteration (old default)
-    try
-      decoded = CryptoJS.AES.decrypt(data, password,
-        mode: CryptoJS.mode.CBC
-        padding: CryptoJS.pad.Iso10126
-        iterations: 1)
-      if decoded != null and decoded.length > 0
-        return decoded
-    catch e
-      console.log e
-    null
+    
+    # Last attempt, throws an exception if it fails.
+    decoded = CryptoJS.AES.decrypt(data, password,
+      mode: CryptoJS.mode.CBC
+      padding: CryptoJS.pad.Iso10126
+      iterations: 1)
+      
+    if decoded == null
+      throw("Decoding failed")  
+    if decoded.length == 0
+      throw("Decoding failed")  
+      
+    decoded
     
   encrypt: (data, password, pbkdf2_iterations) ->
     salt = CryptoJS.lib.WordArray.random(16)
@@ -110,6 +115,7 @@
     # Return as Base64:
     CryptoJS.enc.Hex.parse(res).toString CryptoJS.enc.Base64
     
+  # password : will be stetched with pbkdf2_iterations iterations.
   decryptAesWithStretchedPassword: (data, password, pbkdf2_iterations) ->
     # Convert base64 string data to hex string
     data_hex_string = CryptoJS.enc.Base64.parse(data).toString()
