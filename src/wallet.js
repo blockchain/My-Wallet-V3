@@ -3638,78 +3638,73 @@ var MyWallet = new function() {
   };
 
   this.decryptWallet = function(data, password, success, error) {
-    try {
-      var _success = function (root, obj) {
-        success && success(root, obj);
-      };
+    assert(success, "Success callback required");
+    assert(error, "Error callback required");
 
-      var _error = function (e) {
-        error && error(e);
-      };
-
-      //Test if the payload is valid json
-      //If it is json then check the payload and pbkdf2_iterations keys are available
+    // Determine the wallet version. Version 1 wallets do not have a JSON wrapper.
+    var walletVersion = null;
+    
+    if(data[0] != "{") {
+      walletVersion = 1;
+    } else {
       var obj = null;
       try {
         var obj = $.parseJSON(data);
-      } catch (e) {}
-
-      var decryptNormal = function() {
-        try {
-          var decrypted = WalletCrypto.decryptAesWithStretchedPassword(obj.payload, password, obj.pbkdf2_iterations);
-
-          var root = $.parseJSON(decrypted);
-
-          _success(root, obj);
-        } catch (e) {
-          _error('Error Decrypting Wallet. Please check your password is correct.');
-        }
-      };
-
-      // Wallet v2+ format: wrapper with pbkdf2 iterations and payload with encrypted data
-      if (obj && obj.payload && obj.pbkdf2_iterations) {
-        if (obj.version > supported_encryption_version)
-          throw 'Wallet version ' + obj.version + ' not supported. Please upgrade to the newest Blockchain Wallet.';
-
-        if (obj.pbkdf2_iterations > 0) {
-          MyWallet.decryptWebWorker(obj.payload, password, obj.pbkdf2_iterations, function(decrypted) {
-
-            try {
-              var root = $.parseJSON(decrypted);
-
-              _success(root, obj);
-            } catch (e) {
-              decryptNormal();
-            }
-          }, function(e) {
-            decryptNormal();
-          });
-        } else {
-          decryptNormal();
-        }
+      } catch (e) {
+        error("Failed to parse JSON");
       }
-      // TODO legacy format - what should we support here
-      // Legacy format: just encrypted data, pbkdf2 iterations can be 10 or maybe 1
-      else {
-        WalletCrypto.decrypt(data, password, 10, function(decrypted) {
-          try {
-            var root = $.parseJSON(decrypted);
+      
+      if (obj && obj.payload && obj.pbkdf2_iterations)
+        walletVersion = obj.version        
+    }
+        
+    if (walletVersion > supported_encryption_version)
+      error('Wallet version ' + obj.version + ' not supported. Please upgrade to the newest Blockchain Wallet.');
 
-            try {
-              _success(root);
-            }  catch (e) {
-              console.log(e);
-            }
-            return true;
-          } catch (e) {
-            return false;
-          }
-        }, function() {
-          _error('Error Decrypting Wallet. Please check your password is correct.');
-        });
+    // Wallet v2+ format: wrapper with pbkdf2 iterations and payload with encrypted data
+    if(walletVersion >= 2) {
+      try {
+        var decrypted = WalletCrypto.decryptAesWithStretchedPassword(obj.payload, password, obj.pbkdf2_iterations);
+
+        var root = $.parseJSON(decrypted);
+
+        success(root, obj);
+      } catch (e) {
+        error('Error Decrypting Wallet. Please check your password is correct.');
       }
-    } catch (e) {
-      _error(e);
+      // if (obj.pbkdf2_iterations > 0) {
+      //   MyWallet.decryptWebWorker(obj.payload, password, obj.pbkdf2_iterations, function(decrypted) {
+      //
+      //     try {
+      //       var root = $.parseJSON(decrypted);
+      //
+      //       _success(root, obj);
+      //     } catch (e) {
+      //       decryptNormal();
+      //     }
+      //   }, function(e) {
+      //     decryptNormal();
+      //   });
+      // } else {
+      //   decryptNormal();
+      // }
+    }
+    // TODO legacy format - what should we support here
+    // Legacy format: just encrypted data, pbkdf2 iterations can be 10 or maybe 1
+    else {
+      var decrypted;
+      try {
+        decrypted = WalletCrypto.decrypt(data, password, 10)
+      } catch (e) {
+        error('Error Decrypting Wallet. Please check your password is correct.');
+        return;
+      }
+      try {
+        var root = $.parseJSON(decrypted);
+        success(root);
+      } catch (e) {
+        error("Could not parse JSON.");
+      }
     }
   };
 
