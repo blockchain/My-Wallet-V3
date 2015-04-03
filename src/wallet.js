@@ -3166,9 +3166,35 @@ var MyWallet = new function() {
    * @param {function()} success Success callback function.
    * @param {function()} error Error callback function.
    */
+
   this.resendTwoFactorSms = function(user_guid, success, error) {
-    MyWallet.fetchWalletJson(user_guid, null, true, null, null, success, function() {}, null, null, error);
-  };
+    $.ajax({
+      type: "GET",
+      dataType: 'json',
+      url: BlockchainAPI.getRootURL() + 'wallet/'+user_guid,
+      xhrFields: {
+        withCredentials: true
+      },
+      crossDomain: true,
+      data : {
+        format : 'json', 
+        resend_code : 1, 
+        ct : (new Date()).getTime()
+        api_code : MyWallet.getAPICode()
+        shared_key: shared_key
+      },
+      timeout: 60000,
+      success: function(obj) { 
+        success()
+      }
+      error : function(e) {
+        if(e.responseJSON && e.responseJSON.initial_error) {
+          error(e.responseJSON.initial_error);
+        } else {
+          error()
+        }
+      }
+  }
 
   /**
    * Fetch wallet from server, decrypt and build wallet model.
