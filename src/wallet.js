@@ -52,7 +52,6 @@ var MyWallet = new function() {
   var double_encryption = false; //If wallet has a second password
   var tx_page = 0; //Multi-address page
   var tx_filter = 0; //Transaction filter (e.g. Sent Received etc)
-  var maxAddr = 1000; //Maximum number of addresses
   var payload_checksum; //SHA256 hash of the current wallet.aes.json
   var archTimer; //Delayed Backup wallet timer
   var mixer_fee = 0.5; //Default mixer fee 1.5%
@@ -809,7 +808,7 @@ var MyWallet = new function() {
   //opts = {compressed, app_name, app_version, created_time}
   // TODO: this can be moved to walletstore
   this.addPrivateKey = function(key, opts, second_password) {
-    if (walletIsFull()) {
+    if (WalletStore.walletIsFull()) {
       throw 'Wallet is full.';
     }
 
@@ -4221,16 +4220,6 @@ var MyWallet = new function() {
     }
     return size;
   };
-
-  // Todo: This should be moved to wallet store once maxAddr is there too
-  function walletIsFull() {
-    if (nKeys(WalletStore.getAddresses()) >= maxAddr) {
-      MyWallet.sendEvent("msg", {type: "error", message: 'We currently support a maximum of '+maxAddr+' private keys, please remove some unused ones.'});
-      return true;
-    }
-
-    return false;
-  }
 
   this.logout = function() {
     if (disable_logout)

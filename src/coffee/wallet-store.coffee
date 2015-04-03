@@ -58,6 +58,7 @@
   xpubs = []
   transactions = [] # List of all transactions (initially populated from /multiaddr updated through websockets)
   addresses = {}    # {addr : address, priv : private key, tag : tag (mark as archived), label : label, balance : balance}
+  maxAddr = 1000;   # Maximum number of addresses
   didUpgradeToHd = null
   address_book = {} #Holds the address book addr = label
   
@@ -79,6 +80,7 @@
 
   #////////////////////////////////////////////////////////////////////////////
   # public methods
+
   getLanguage: () ->
     if language? then language else MyStore.get('language')
 
@@ -86,7 +88,15 @@
     MyStore.put('language', lan);
     language = lan;
     return
-  ##############################################################################
+
+  walletIsFull: () ->
+    if (k for own k of addresses).length >= maxAddr
+      MyWallet.sendEvent("msg", {type: "error", message: 'We currently support \
+        a maximum of '+maxAddr+' private keys, please remove some unused ones.'});
+      return true;
+    else
+      return false;
+
   getLanguages: () -> languageCodeToLanguage
 
   getCurrencies: () -> currencyCodeToCurrency
