@@ -3,9 +3,13 @@ var BigInteger = require('bigi');
 var assert = require('assert');
 var Base58 = require('bs58');
 
+var addressesOfInputs = null;
+
 var Transaction = function (unspentOutputs, toAddress, amount, fee, changeAddress, listener) {
   var network = Bitcoin.networks.bitcoin;
   var defaultFee = Bitcoin.networks.bitcoin.feePerKb;
+
+  addressesOfInputs = [];
 
   this.listener = listener;
   this.amount = amount;
@@ -32,14 +36,18 @@ var Transaction = function (unspentOutputs, toAddress, amount, fee, changeAddres
 
     transaction.addInput(output.hash, output.index);
 
+    // Generate address from output script and add to private list so we can check if the private keys match the inputs later
+
+    var script = Bitcoin.Script.fromHex(output.script);
+    var address = Bitcoin.Address.fromOutputScript(script).toString();
+    assert(address, 'Unable to decode output address from transaction hash ' + output.tx_hash);
+    addressesOfInputs.push(address);
+
     // Add to list of needed private keys
     if (output.xpub) {
       this.pathsOfNeededPrivateKeys.push(output.xpub.path);
     }
     else {
-      var address = Bitcoin.Address.fromOutputScript(output.script).toString();
-      assert(address, 'Unable to decode output address from transaction hash ' + output.tx_hash);
-
       this.addressesOfNeededPrivateKeys.push(address);
     }
 
@@ -75,6 +83,12 @@ Transaction.prototype.pathsOfNeededPrivateKeys = function() {
 };
 
 Transaction.prototype.addPrivateKeys = function(privateKeys) {
+  assert.equal(privateKeys.length, addressesOfInputs.length, 'Number of private keys needs to match inputs');
+
+  for (var i = 0; i < privateKeys.length; i++) {
+    assert.equal(addressesOfInputs[i], privateKeys[i].pub.getAddress().toBase58Check(), 'Private key does not match bitcoin address ' + addressesOfInputs[i] + '!=' + privateKeys[i].pub.getAddress().toBase58Check());
+  }
+
   this.privateKeys = privateKeys;
 };
 
@@ -84,7 +98,11 @@ Transaction.prototype.addPrivateKeys = function(privateKeys) {
 Transaction.prototype.sign = function() {
   assert(this.privateKeys, 'Need private keys to sign transaction');
 
-  assert(this.privateKeys.length === this.transaction.ins.length, 'Number of private keys needs to match inputs');
+  assert.equal(this.privateKeys.length, this.transaction.ins.length, 'Number of private keys needs to match inputs');
+
+  for (var i = 0; i < this.privateKeys.length; i++) {
+    assert.equal(addressesOfInputs[i], this.privateKeys[i].pub.getAddress().toBase58Check(), 'Private key does not match bitcoin address ' + addressesOfInputs[i] + '!=' + this.privateKeys[i].pub.getAddress().toBase58Check());
+  }
 
   var listener = this.listener;
 
@@ -97,12 +115,9 @@ Transaction.prototype.sign = function() {
 
     var key = this.privateKeys[i];
 
-    // TODO check that input and key belong together
-    // assert(key.pub.getAddress());
-
     transaction.sign(i, key);
 
-    // assert(isCanonicalSignature(signature), 'Signature not canoniacal');
+    assert(transaction.ins[i].script, 'Error creating input script');
   }
 
   typeof(listener.on_finish_signing) === 'function' && listener.on_finish_signing();
