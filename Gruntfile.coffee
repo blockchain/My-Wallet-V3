@@ -63,7 +63,7 @@ module.exports = (grunt) ->
     coffee:
      compile:
        files:
-         'src/wallet-store.js': 'src/coffee/wallet-store.coffee'
+         'build/wallet-store.js': 'src/coffee/wallet-store.coffee'
 
     uglify:
       options:
@@ -114,7 +114,6 @@ module.exports = (grunt) ->
         #'src/signer.js'
         'src/transaction.js'
         'src/wallet-signup.js'
-        'src/wallet-store.js'
         #'src/wallet.js'
       ]
       options:
@@ -135,7 +134,7 @@ module.exports = (grunt) ->
           'src/hd-wallet.js'
           'src/hd-account.js'
           'src/import-export.js'
-          'src/coffee/wallet-store.coffee'
+          'src/coffee/*.coffee'
         ]
         tasks: ['build']
 
@@ -171,7 +170,7 @@ module.exports = (grunt) ->
           'build/blockchain-api.processed.js'  : 'src/blockchain-api.js'
           'build/blockchain-settings-api.processed.js'  : 'src/blockchain-settings-api.js'
           'build/signer.processed.js'         : 'src/signer.js'
-          'build/wallet-store.processed.js'   : 'src/wallet-store.js'
+          'build/wallet-store.processed.js'   : 'build/wallet-store.js'
           'build/wallet.processed.js'         : 'src/wallet.js'
           'build/wallet-signup.processed.js'  : 'src/wallet-signup.js'
           'build/hd-wallet.processed.js'      : 'src/hd-wallet.js'
