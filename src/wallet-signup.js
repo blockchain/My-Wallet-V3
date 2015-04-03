@@ -9,14 +9,14 @@ var MyWalletSignup = new function() {
       var data = MyWallet.makeCustomWalletJSON(null, guid, sharedKey);
       
       //Everything looks ok, Encrypt the JSON output
-      var crypted = MyWallet.encryptWallet(data, password);
+      var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.getPbkdf2Iterations(),  WalletStore.didUpgradeToHd() ?  3.0 : 2.0);
       
       if (crypted.length == 0) {
         throw 'Error encrypting the JSON output';
       }
       
       //Now Decrypt the it again to double check for any possible corruption
-      MyWallet.decryptWallet(
+      WalletCrypto.decryptWallet(
         crypted, 
         password, 
         function() { // success callback for decryptWallet

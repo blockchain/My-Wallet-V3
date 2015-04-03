@@ -16,7 +16,7 @@ function passphraseToPassphraseHexString(passphrase) {
 
 var HDWallet = function(seedHex, bip39Password, second_password) {
 
-  this.seedHex = second_password == null ? seedHex : WalletCrypto.encryptSecretWithSecondPassword(seedHex, second_password, MyWallet.getSharedKey());
+  this.seedHex = seedHex == null || seedHex == undefined || seedHex == "" || second_password == null ? seedHex : WalletCrypto.encryptSecretWithSecondPassword(seedHex, second_password, MyWallet.getSharedKey(), MyWallet.getPbkdf2Iterations());
   this.bip39Password = bip39Password;
   this.numTxFetched = 0;
   this.accountArray = [];
@@ -30,10 +30,10 @@ var HDWallet = function(seedHex, bip39Password, second_password) {
   };
 
   this.getSeedHexString = function(second_password) {
-    if(second_password == null) {
+    if(this.seedHex == null || second_password == null) {
       return this.seedHex;
     } else {
-      return WalletCrypto.decryptSecretWithSecondPassword(this.seedHex, second_password, MyWallet.getSharedKey());
+      return WalletCrypto.decryptSecretWithSecondPassword(this.seedHex, second_password, MyWallet.getSharedKey(), MyWallet.getPbkdf2Iterations());
     }
   };
 
@@ -180,9 +180,9 @@ var HDWallet = function(seedHex, bip39Password, second_password) {
     account.internalAccount = accountZero.derive(1);
 
     var extendedPrivateKey = accountZero.toBase58();
-    var extendedPublicKey =  accountZero.neutered().toBase58();
+    var extendedPublicKey =  accountZero.neutered().toBase58();    
 
-    account.extendedPrivateKey = second_password == null ? extendedPrivateKey : WalletCrypto.encryptSecretWithSecondPassword(extendedPrivateKey, second_password, MyWallet.getSharedKey());
+    account.extendedPrivateKey = extendedPrivateKey == null || second_password == null ? extendedPrivateKey : WalletCrypto.encryptSecretWithSecondPassword(extendedPrivateKey, second_password, MyWallet.getSharedKey(), MyWallet.getPbkdf2Iterations());
     account.extendedPublicKey = extendedPublicKey;
 
     account.generateCache();
@@ -267,8 +267,6 @@ function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallbac
 
             MyWallet.get_history_with_addresses(addresses, function(obj) {
                 for (var i = 0; i < obj.addresses.length; ++i) {
-                    console.log("i: " + i);
-                    console.log("Idx: ", addressToIdxDict[obj.addresses[i].address], "address: ", obj.addresses[i].address, " n_tx: ", obj.addresses[i].n_tx);
                     if (obj.addresses[i].n_tx > 0 && addressToIdxDict[obj.addresses[i].address] > accountAddressIdx) {
                         accountAddressIdx = addressToIdxDict[obj.addresses[i].address];
                     }
@@ -306,14 +304,11 @@ function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallbac
 
             MyWallet.get_history_with_addresses(addresses, function(obj) {
                 for (var i = 0; i < obj.addresses.length; ++i) {
-                    console.log("Idx: ", addressToIdxDict[obj.addresses[i].address], "change address: ", obj.addresses[i].address, " n_tx: ", obj.addresses[i].n_tx);
                     if (obj.addresses[i].n_tx > 0 && addressToIdxDict[obj.addresses[i].address] > accountChangeAddressIdx) {
                         accountChangeAddressIdx = addressToIdxDict[obj.addresses[i].address];
                     }
                 }
 
-                console.log("accountChangeAddressIdx : " + accountChangeAddressIdx);
-                console.log("lookAheadOffset : " + lookAheadOffset);
                 if (accountChangeAddressIdx < lookAheadOffset) {
                     continueLookingAheadChangeAddress = false;
                 }

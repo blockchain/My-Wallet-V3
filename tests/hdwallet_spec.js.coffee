@@ -109,6 +109,9 @@ describe "HD Wallet", ->
             success: (hdWallet) ->
               hdwallet = hdWallet
               hdwallet.setSeedHexString(seed_encrypted)
+              
+          spyOn(MyWallet, "getPbkdf2Iterations").and.returnValue 1        
+          
 
           spyOn(observer, "success").and.callThrough()
 
@@ -164,6 +167,8 @@ describe "HD Wallet", ->
       account = undefined
       
       beforeEach ->
+        spyOn(MyWallet, "getPbkdf2Iterations").and.returnValue 1        
+        
         fake_seed = "00000000000000000000000000000000"
         
         observer =  
@@ -183,12 +188,15 @@ describe "HD Wallet", ->
         expect(extendedPubKey).toBe("xpub6CcRcFnKD32pSYsYf97azD7YtChp1CMxFaDnXcoYpjm4YLGBvy4LojWFYsgJxRCyzRysWxSiZ9yiZLdtncB8vhCouoihMW2BZu4T6uyW6ue")
         
       it "should only know the encrypted xpriv", ->
+        
         # Key encryption is non deterministic, so we check if the decrypted result is correct
         extendedPrivateKey = account.getAccountExtendedKey(true)
         
-        descryptedExtendedPrivateKey = WalletCrypto.decryptSecretWithSecondPassword(extendedPrivateKey, second_password, sharedKey)
-        expect(descryptedExtendedPrivateKey).toBe("xprv9yd5CkFRNfUXE4o5Z7aad5ApLAsKbje6tMJBjEPwGQE5fXw3PRk6FwBmhbLDduzdQGmFP3CfhxmLKaYHxHApmrrtkHswj4oL6g37McodpQd")
+        # console.log(WalletCrypto.encryptSecretWithSecondPassword("xprv9yd5CkFRNfUXE4o5Z7aad5ApLAsKbje6tMJBjEPwGQE5fXw3PRk6FwBmhbLDduzdQGmFP3CfhxmLKaYHxHApmrrtkHswj4oL6g37McodpQd", second_password, sharedKey, 1))
         
+        decryptedExtendedPrivateKey = WalletCrypto.decryptSecretWithSecondPassword(extendedPrivateKey, second_password, sharedKey, 1)
+        expect(decryptedExtendedPrivateKey).toBe("xprv9yd5CkFRNfUXE4o5Z7aad5ApLAsKbje6tMJBjEPwGQE5fXw3PRk6FwBmhbLDduzdQGmFP3CfhxmLKaYHxHApmrrtkHswj4oL6g37McodpQd")
+
   describe "getHDWalletPassphraseString()", ->
     beforeEach ->
       observer = {}
@@ -211,7 +219,7 @@ describe "HD Wallet", ->
     it "should ask for 2nd password and then provide the passphrase", ->
       MyWallet.setDoubleEncryption(true)
 
-      spyOn(WalletCrypto, "decryptSecretWithSecondPassword").and.callFake((secret, password, shared_key) ->
+      spyOn(WalletCrypto, "decryptSecretWithSecondPassword").and.callFake((secret, password, shared_key, iterations) ->
         return seed if secret == seed_encrypted and password == second_password and (shared_key == undefined || shared_key == sharedKey)
         return null
       )

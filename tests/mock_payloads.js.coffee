@@ -4,8 +4,8 @@ passphrase = "add imitate business carbon city orbit spray boss ribbon deposit b
 bip39Password = null
 
 second_password = "1234"
-# Generated with: MyWallet.encryptSecretWithSecondPassword("032e2c7c11329737f4b8d1b9076044ed", "1234", "87654321-4321-4321-4321-ba0987654321")
-seed_encrypted = "Mm5MwNcQrATWv/jvuzzrD/Xde6EOsLnwf4fgv4bnvmrSX4MF4HQm23Q/KiBwhBLj0pEj+vxaqC+TsuRIzceKAw=="
+# Generated with: WalletCrypto.encryptSecretWithSecondPassword("032e2c7c11329737f4b8d1b9076044ed", "1234", "87654321-4321-4321-4321-ba0987654321", 1)
+seed_encrypted = "no6CHilGTEALs4+mBEV2GdKGar1q+3ul4paMYr4kGmRPHmqrjPCU2fx+KYJ4FgBO0gZyu9+IhXBR4jmNlqQ2CQ=="
 
 xpubAccountZero  = "xpub6CcRcFnKD32pPkjV8sVNG4WejGQwQTCaAs31e3NoaFSSnYWfBuEWNo3nKWVZotgtN1dpoYGwSxUVyVfNrrgE7YwpSrUWsqgK2LdmuGDCBMp"
 xprivAccountZero = "xprv9yd5CkFRNfUXBGf22qxMtvZvBEaSzzUioe7QqeyC1uuTukBWeMvFpzjJUEDswuWby8JmGR84wQHy75djYEAsAktvJa5B2QueQkzuNQiqS1C"
@@ -89,7 +89,7 @@ decryptedWalletWithSecondPasswordPayload = {
           "label":"Checking",
           "archived":false,
           "change_addresses":3,
-          "xpriv":"x8gPPK0qKJgbAi7wVoBXVjgOyk46+gE0sFZArOga8+7UiP1ElEYOxw8tK+m+XspIC2pDuQZ5DBaWoSSny0TDYzt7QE5xC2xqpcJJ+LydQOBsdkP2RWHXN9FL8UeUWVcYUSBCgP3N+HFXJDpQqfIXoHbhmC9qUmqvD0dY/1U7ZCo=",
+          "xpriv":"EFnCSJKivjVSG0FV0fEHKZoPUwpov/vq7OW0wSS3ku9xY10awjMTT49cso2S4k5GwpuQs5HzCNkjs5yCqRTaUMvBrLMfwVbqHirMExmMFErJ8mxoHOmaDknhr6hyd2+CKy8g0Th+PhL7ZjzmHspAgdU7O8VWnBjv8i02Fo/2pT8=",
           "xpub":"xpub6F1cPTmvp4FrWUjDvtdZHJF1MVxdrx3LeSho3NFk6dKRT3x88BqcFbmitM1BuLR9b62yiNbsPHMxCVwZGFBKMzaAKVWbvVYxmXS14pCoxbJ"
         }
         {

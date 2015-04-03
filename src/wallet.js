@@ -64,7 +64,6 @@ var MyWallet = new function() {
   var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
   var isInitialized = false;
   var localSymbolCode = null; //Current local symbol
-  var supported_encryption_version = 3.0;  //The maxmimum supported encryption version
   var serverTimeOffset = 0; //Difference between server and client time
   var haveSetServerTime = false; //Whether or not we have synced with server time
   var sharedcoin_endpoint; //The URL to the sharedcoin node
@@ -428,19 +427,6 @@ var MyWallet = new function() {
       // But for now panic!
       window.location.reload();
     };
-    /**
-     * Reencrypt data with password.
-     * The decrypt call uses the currently set number of iterations, the encrypt call uses the new number of iterations we're just setting
-     *
-     * @param {!string} data The data to encrypt.
-     * @param {!string} pw The password used for encryption.
-     */
-    var reencrypt = function(pw) {
-      var enc = function(data) {
-        return WalletCrypto.encrypt(WalletCrypto.decryptSecretWithSecondPassword(data, pw, sharedKey), sharedKey + pw, pbkdf2_iterations);
-      } 
-      return enc;
-    };
 
     var setPbkdf2IterationsAndBackupWallet = function() {
       wallet_options.pbkdf2_iterations = pbkdf2_iterations;
@@ -458,19 +444,19 @@ var MyWallet = new function() {
           function(pw, correct_password, wrong_password) {
             if (MyWallet.validateSecondPassword(pw)) {
               correct_password();
-              WalletStore.mapToLegacyAddressesPrivateKeys(reencrypt(pw));
+              WalletStore.mapToLegacyAddressesPrivateKeys(WalletCrypto.reencrypt(pw, MyWallet.getSharedKey(), MyWallet.getPbkdf2Iterations));
 
               // Re-encrypt all HD account keys
               for (var i in MyWallet.getAccounts()) {
                 var account = MyWallet.getHDWallet().getAccount(i);
-                account.extendedPrivateKey = reencrypt(pw)(account.extendedPrivateKey);
+                account.extendedPrivateKey = WalletCrypto.reencrypt(pw, MyWallet.getSharedKey(), MyWallet.getPbkdf2Iterations)(account.extendedPrivateKey);
 
                 if (!account.extendedPrivateKey) throw 'Error re-encrypting account private key';
               }
 
               // Re-encrypt the HD seed
               if (WalletStore.didUpgradeToHd()) {
-                MyWallet.getHDWallet().seedHex = reencrypt(pw)(MyWallet.getHDWallet().seedHex);
+                MyWallet.getHDWallet().seedHex = WalletCrypto.reencrypt(pw, MyWallet.getSharedKey(), MyWallet.getPbkdf2Iterations)(MyWallet.getHDWallet().seedHex);
 
                 if (!MyWallet.getHDWallet().seedHex) throw 'Error re-encrypting wallet seed';
               }
@@ -522,6 +508,9 @@ var MyWallet = new function() {
    * @param {function()} error callback function
    */
   this.unsetSecondPassword = function(success, error, getPassword) {
+    var sharedKey = MyWallet.getSharedKey();
+    var pbkdf2_iterations = MyWallet.getPbkdf2Iterations();
+    
     var panic = function(e) {
       console.log('Panic ' + e);
 
@@ -532,7 +521,7 @@ var MyWallet = new function() {
     };
     var decrypt = function(pw) {
       var dec = function(data) {
-        return WalletCrypto.decryptSecretWithSecondPassword(data, pw, MyWallet.getSharedKey());
+        return WalletCrypto.decryptSecretWithSecondPassword(data, pw, sharedKey, pbkdf2_iterations);
       } 
       return dec;
     };
@@ -546,11 +535,11 @@ var MyWallet = new function() {
 
           for (var i in MyWallet.getAccounts()) {
             var account = MyWallet.getHDWallet().getAccount(i);
-            account.extendedPrivateKey = WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, pw, sharedKey);
+            account.extendedPrivateKey = WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, pw, sharedKey, pbkdf2_iterations);
           }
 
           if (WalletStore.didUpgradeToHd()) {
-            MyWallet.getHDWallet().seedHex = WalletCrypto.decryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, pw, sharedKey);
+            MyWallet.getHDWallet().seedHex = WalletCrypto.decryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, pw, sharedKey, pbkdf2_iterations);
           }
 
           MyWallet.setDoubleEncryption(false);
@@ -590,26 +579,29 @@ var MyWallet = new function() {
       // window.location.reload();
     };
 
+    var sharedKey = MyWallet.getSharedKey();
+    var pbkdf2_iterations = MyWallet.getPbkdf2Iterations();
+
     var encrypt = function(pw) {
       var enc = function(data) {
-        return WalletCrypto.encryptSecretWithSecondPassword(data, pw, MyWallet.getSharedKey());
+        return WalletCrypto.encryptSecretWithSecondPassword(data, pw, sharedKey, pbkdf2_iterations);
       } 
       return enc;
     };
 
     try {
       MyWallet.setDoubleEncryption(true);
-      WalletStore.mapToLegacyAddressesPrivateKeys(encrypt(password));
+      WalletStore.mapToLegacyAddressesPrivateKeys(encrypt(password, MyWallet.getSharedKey(), MyWallet.getPbkdf2Iterations));
 
       for (var i in MyWallet.getAccounts()) {
         var account = MyWallet.getHDWallet().getAccount(i);
-        account.extendedPrivateKey = WalletCrypto.encryptSecretWithSecondPassword(account.extendedPrivateKey, password, MyWallet.getSharedKey());
+        account.extendedPrivateKey = WalletCrypto.encryptSecretWithSecondPassword(account.extendedPrivateKey, password, sharedKey, pbkdf2_iterations);
       }
 
       if (WalletStore.didUpgradeToHd()) {
-        MyWallet.getHDWallet().seedHex = WalletCrypto.encryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, password, MyWallet.getSharedKey());
+        MyWallet.getHDWallet().seedHex = WalletCrypto.encryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, password, sharedKey, pbkdf2_iterations);
       }
-      dpasswordhash = hashPassword(MyWallet.getSharedKey() + password, MyWallet.getPbkdf2Iterations());
+      dpasswordhash = hashPassword(sharedKey + password, pbkdf2_iterations);
       if (!MyWallet.validateSecondPassword(password)) {
         throw "Invalid Second Password";
       }
@@ -808,6 +800,9 @@ var MyWallet = new function() {
   //opts = {compressed, app_name, app_version, created_time}
   // TODO: this can be moved to walletstore
   this.addPrivateKey = function(key, opts, second_password) {
+    var sharedKey = MyWallet.getSharedKey();
+    var pbkdf2_iterations = MyWallet.getPbkdf2Iterations();
+    
     if (WalletStore.walletIsFull()) {
       throw 'Wallet is full.';
     }
@@ -823,13 +818,13 @@ var MyWallet = new function() {
 
     var base58 = Browserify.Base58.encode(key.d.toBuffer(32));
 
-    var encoded = second_password == null ? base58 : WalletCrypto.encryptSecretWithSecondPassword(base58, second_password, MyWallet.getSharedKey());
+    var encoded = base58 == null || second_password == null ? base58 : WalletCrypto.encryptSecretWithSecondPassword(base58, second_password, sharedKey, pbkdf2_iterations);
 
     if (encoded == null) {
       throw 'Error Encoding key';
     }
 
-    var decoded_base_58 = second_password == null ? base58 : WalletCrypto.decryptSecretWithSecondPassword(encoded, second_password, sharedKey);
+    var decoded_base_58 = second_password == null ? base58 : WalletCrypto.decryptSecretWithSecondPassword(encoded, second_password, sharedKey, pbkdf2_iterations);
 
     var decoded_key = new ECKey(new BigInteger.fromBuffer(decoded_base_58), opts.compressed);
 
@@ -1786,6 +1781,9 @@ var MyWallet = new function() {
     }
 
     function sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback, listener, secondPassword)  {
+      var sharedKey = MyWallet.getSharedKey();
+      var pbkdf2_iterations = MyWallet.getPbkdf2Iterations();
+      
       var account = MyWallet.getHDWallet().getAccount(accountIdx);
       var key = MyWallet.generateNewKey();
       var address = key.pub.getAddress().toString();
@@ -1804,7 +1802,7 @@ var MyWallet = new function() {
               var account = MyWallet.getHDWallet().getAccount(accountIdx);
               var extendedPrivateKey = null;
               if (secondPassword != null) {
-                extendedPrivateKey = WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, secondPassword, sharedKey);
+                extendedPrivateKey = WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, secondPassword, sharedKey, pbkdf2_iterations);
               } else {
                 extendedPrivateKey = account.extendedPrivateKey;
               }
@@ -2050,6 +2048,8 @@ var MyWallet = new function() {
    * @param {function()} errorCallback error callback function
    */
   this.sendToMobile = function(accountIdx, value, fixedFee, mobile, successCallback, errorCallback, listener, getPassword)  {
+    var sharedKey = MyWallet.getSharedKey();
+    var pbkdf2_iterations = MyWallet.getPbkdf2Iterations();
     if (double_encryption) {
       getPassword(function(pw, correct_password, wrong_password) {
         if (MyWallet.validateSecondPassword(pw)) {
@@ -2085,7 +2085,7 @@ var MyWallet = new function() {
               var account = MyWallet.getHDWallet().getAccount(accountIdx);
               var extendedPrivateKey = null;
               if (secondPassword != null) {
-                extendedPrivateKey = WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, secondPassword, sharedKey);
+                extendedPrivateKey = WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, secondPassword, sharedKey, pbkdf2_iterations);
               } else {
                 extendedPrivateKey = account.extendedPrivateKey;
               }
@@ -2143,11 +2143,16 @@ var MyWallet = new function() {
   this.sendBitcoinsForAccount = function(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, listener, getPassword) {
     // second_password must be null if not needed.
     function sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, listener, second_password) {
+      var sharedKey = MyWallet.getSharedKey();
+      var pbkdf2_iterations = MyWallet.getPbkdf2Iterations();
+      
       MyWallet.getUnspentOutputsForAccount(
+       
+      MyWallet.getAndSetUnspentOutputsForAccount(
         accountIdx,
         function (unspent_outputs) {
           var account = MyWallet.getHDWallet().getAccount(accountIdx);
-          var extendedPrivateKey = second_password == null ? account.extendedPrivateKey : WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password, sharedKey);
+          var extendedPrivateKey = account.extendedPrivateKey == null || second_password == null ? account.extendedPrivateKey : WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password, sharedKey, pbkdf2_iterations);
 
           // Create the send account (same account as current account, but created with xpriv and thus able to generate private keys)
           var sendAccount = new HDAccount();
@@ -2535,7 +2540,7 @@ var MyWallet = new function() {
       getPassword(function(pw, correct_password, incorrect_password) {
         if (MyWallet.validateSecondPassword(pw)) {
           correct_password();
-          var seed = WalletCrypto.decryptSecretWithSecondPassword(MyWallet.getHDWallet().getSeedHexString(), pw, sharedKey);
+          var seed = WalletCrypto.decryptSecretWithSecondPassword(MyWallet.getHDWallet().getSeedHexString(), pw, sharedKey, MyWallet.getPbkdf2Iterations()); 
           successCallback(MyWallet.getHDWallet().getPassphraseString(seed));
         } else {
           incorrect_password();
@@ -3041,7 +3046,7 @@ var MyWallet = new function() {
       return;
     }
 
-    MyWallet.decryptWallet(encrypted_wallet_data, password, function(obj, rootContainer) {
+    WalletCrypto.decryptWallet(encrypted_wallet_data, password, function(obj, rootContainer) {
       decrypt_success && decrypt_success();
 
       try {
@@ -3564,14 +3569,14 @@ var MyWallet = new function() {
       localWalletJsonString = data;
 
       //Everything looks ok, Encrypt the JSON output
-      var crypted = MyWallet.encryptWallet(data, password);
+      var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.getPbkdf2Iterations(), WalletStore.didUpgradeToHd() ?  3.0 : 2.0 );
 
       if (crypted.length == 0) {
         throw 'Error encrypting the JSON output';
       }
 
       //Now Decrypt the it again to double check for any possible corruption
-      MyWallet.decryptWallet(crypted, password, function(obj) {
+      WalletCrypto.decryptWallet(crypted, password, function(obj) {
         try {
           var old_checksum = payload_checksum;
           MyWallet.sendEvent('on_backup_wallet_start');
@@ -3619,95 +3624,15 @@ var MyWallet = new function() {
           _errorcallback(e);
           MyWallet.disableLogout(false);
         };
+      },
+      function(e) {
+        console.log(e);
+        throw("Decryption failed");
       });
     } catch (e) {
       _errorcallback(e);
       MyWallet.disableLogout(false);
     }
-  };
-
-  this.encryptWallet = function(data, password) {
-    return JSON.stringify({
-      pbkdf2_iterations : MyWallet.getPbkdf2Iterations(),
-      version : WalletStore.didUpgradeToHd() ? 3.0 : 2.0,
-      payload : WalletCrypto.encrypt(data, password, MyWallet.getPbkdf2Iterations())
-    });
-  };
-
-  this.decryptWallet = function(data, password, success, error) {
-    assert(success, "Success callback required");
-    assert(error, "Error callback required");
-
-    // Determine the wallet version. Version 1 wallets do not have a JSON wrapper.
-    var walletVersion = null;
-    
-    if(data[0] != "{") {
-      walletVersion = 1;
-    } else {
-      var obj = null;
-      try {
-        var obj = $.parseJSON(data);
-      } catch (e) {
-        error("Failed to parse JSON");
-      }
-      
-      if (obj && obj.payload && obj.pbkdf2_iterations)
-        walletVersion = obj.version        
-    }
-        
-    if (walletVersion > supported_encryption_version)
-      error('Wallet version ' + obj.version + ' not supported. Please upgrade to the newest Blockchain Wallet.');
-
-    // Wallet v2+ format: wrapper with pbkdf2 iterations and payload with encrypted data
-    if(walletVersion >= 2) {
-      try {
-        var decrypted = WalletCrypto.decryptAesWithStretchedPassword(obj.payload, password, obj.pbkdf2_iterations);
-
-        var root = $.parseJSON(decrypted);
-
-        success(root, obj);
-      } catch (e) {
-        error('Error Decrypting Wallet. Please check your password is correct.');
-      }
-    } else {
-      // TODO legacy format - what should we support here
-      // Legacy format: just encrypted data, pbkdf2 iterations can be 10 or maybe 1      
-      var decrypted;
-      try {
-        decrypted = WalletCrypto.decrypt(data, password, 10)
-      } catch (e) {
-        error('Error Decrypting Wallet. Please check your password is correct.');
-        return;
-      }
-      try {
-        var root = $.parseJSON(decrypted);
-        success(root);
-      } catch (e) {
-        error("Could not parse JSON.");
-      }
-    }
-  };
-
-  this.decryptPasswordWithProcessedPin = function(data, password, pbkdf2_iterations) {
-    return WalletCrypto.decryptAesWithStretchedPassword(data, password, pbkdf2_iterations);
-  };
-
-  this.stretchPassword = function(password, salt, pbkdf2_iterations) {
-    // Stretch the password using PBKDF2
-    // This uses sjcl for speed reasons (order of magnitude faster than CryptoJS using sjcl 1.0.1 vs CryptoJS 3.1.2)
-    // sjcl defaults to sha256, but we need sha1 according to rfc 2898
-    var hmacSHA1 = function (key) {
-      var hasher = new sjcl.misc.hmac(key, sjcl.hash.sha1);
-      this.encrypt = function () {
-        return hasher.encrypt.apply(hasher, arguments);
-      };
-    };
-
-    // need to convert CryptoJS word objects to sjcl word objects
-    salt = sjcl.codec.hex.toBits(salt.toString(CryptoJS.enc.Hex));
-    var streched_password = sjcl.misc.pbkdf2(password, salt, pbkdf2_iterations, 256, hmacSHA1);
-    // convert back
-    return CryptoJS.enc.Hex.parse(sjcl.codec.hex.fromBits(streched_password));
   };
 
   this.handleNTPResponse = function(obj, clientTime) {
@@ -3883,6 +3808,9 @@ var MyWallet = new function() {
    * @param {string?} second_password Second password to decrypt private keys if set
    */
   this.checkAllKeys = function(second_password) {
+    
+    var sharedKey = MyWallet.getSharedKey();
+    var pbkdf2_iterations = MyWallet.getPbkdf2Iterations();
 
     // TODO: this probably can be abstracted too in WalletStore
     var addresses = WalletStore.getAddresses();
@@ -3890,19 +3818,21 @@ var MyWallet = new function() {
       var addr = addresses[key];
 
       if (addr.addr == null)
+        console.log('Null Address Found in wallet ' + key);
         throw 'Null Address Found in wallet ' + key;
 
       //Will throw an exception if the checksum does not validate
       if (addr.addr.toString() == null)
+        console.log('Error decoding wallet address ' + addr.addr);
         throw 'Error decoding wallet address ' + addr.addr;
 
       if (addr.priv != null) {
         var decryptedpk;
 
-        if(second_password == null) {
+        if(addr.priv == null || second_password == null) {
           decryptedpk = addr.priv;
         } else {
-          decryptedpk = WalletCrypto.decryptSecretWithSecondPassword(addr.priv, second_password, sharedKey);
+          decryptedpk = WalletCrypto.decryptSecretWithSecondPassword(addr.priv, second_password, sharedKey, pbkdf2_iterations);
         }
 
         var decodedpk = MyWallet.B58LegacyDecode(decryptedpk);
@@ -3911,11 +3841,12 @@ var MyWallet = new function() {
 
         var actual_addr = MyWallet.getUnCompressedAddressString(privatekey);
         if (actual_addr != addr.addr && MyWallet.getCompressedAddressString(privatekey) != addr.addr) {
+          console.log('Private key does not match bitcoin address ' + addr.addr + " != " + actual_addr);
           throw 'Private key does not match bitcoin address ' + addr.addr + " != " + actual_addr;
         }
 
         if (second_password != null) {
-          addr.priv = WalletCrypto.encryptSecretWithSecondPassword(decryptedpk, second_password, MyWallet.getSharedKey());
+          addr.priv = WalletCrypto.encryptSecretWithSecondPassword(decryptedpk, second_password, sharedKey, pbkdf2_iterations);
         }
       }
     }
@@ -3924,16 +3855,17 @@ var MyWallet = new function() {
       var account = MyWallet.getHDWallet().getAccount(i);
 
       var decryptedpk;
-      if(second_password == null) {
+      if(account.extendedPrivateKey == null || second_password == null) {
         decryptedpk = account.extendedPrivateKey;
       } else {
-        decryptedpk = WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password, sharedKey);
+        decryptedpk = WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password, sharedKey, pbkdf2_iterations);
       }
 
       try {
         var hdWalletAccount = new HDAccount();
         hdWalletAccount.newNodeFromExtKey(decryptedpk);
       } catch (e) {
+        console.log('Invalid extended private key');
         throw 'Invalid extended private key';
       }
     }
