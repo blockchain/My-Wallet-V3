@@ -64,7 +64,6 @@ var MyWallet = new function() {
   var logout_timeout; //setTimeout return value for the automatic logout
   var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
   var isInitialized = false;
-  var language = 'en'; //Current language
   var localSymbolCode = null; //Current local symbol
   var supported_encryption_version = 3.0;  //The maxmimum supported encryption version
   var serverTimeOffset = 0; //Difference between server and client time
@@ -203,19 +202,6 @@ var MyWallet = new function() {
 
   this.getAdditionalSeeds = function(val) {
     return wallet_options.additional_seeds;
-  };
-
-  this.getLanguage = function() {
-    if (language) {
-      return language;
-    } else {
-      return MyStore.get('language');
-    }
-  };
-
-  this.setLanguage = function(_language) {
-    MyStore.put('language', _language);
-    language = _language;
   };
 
   this.addEventListener = function(func) {
@@ -3288,8 +3274,8 @@ var MyWallet = new function() {
           }
         });
 
-        if (obj.language && language != obj.language) {
-          MyWallet.setLanguage(obj.language);
+        if (obj.language && WalletStore.getLanguage() != obj.language) {
+          WalletStore.setLanguage(obj.language);
         }
 
         didSetGuid = true;
@@ -3577,7 +3563,7 @@ var MyWallet = new function() {
             old_checksum : old_checksum,
             method : method,
             format : 'plain',
-            language : language
+            language : WalletStore.getLanguage()
           };
 
           if (sync_pubkeys) {
@@ -4190,7 +4176,7 @@ var MyWallet = new function() {
     MyWalletSignup.generateNewWallet(inputedPassword, inputedEmail, function(createdGuid, createdSharedKey, createdPassword) {
       MyStore.clear();
       if (languageCode)
-        MyWallet.setLanguage(languageCode);
+        WalletStore.setLanguage(languageCode);
 
       sharedKey = createdSharedKey;
 

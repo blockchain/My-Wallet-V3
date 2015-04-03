@@ -90,7 +90,7 @@ describe "Wallet", ->
       spyOn(MyWallet, "securePost").and.callFake (name, post_data, success, error) ->
         success("Successfully created new wallet")
         
-      spyOn(MyWallet, "setLanguage").and.returnValue null
+      spyOn(WalletStore, "setLanguage").and.returnValue null
       
       spyOn(MyWallet, "makeCustomWalletJSON").and.callThrough()
       

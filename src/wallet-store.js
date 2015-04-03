@@ -2,7 +2,7 @@
   var hasProp = {}.hasOwnProperty;
 
   this.WalletStore = (function() {
-    var address_book, addresses, currencyCodeToCurrency, didUpgradeToHd, languageCodeToLanguage, mnemonicVerified, transactions, unsafeAddLegacyAddress, xpubs;
+    var address_book, addresses, currencyCodeToCurrency, didUpgradeToHd, language, languageCodeToLanguage, mnemonicVerified, transactions, unsafeAddLegacyAddress, xpubs;
     languageCodeToLanguage = {
       'de': 'German',
       'hi': 'Hindi',
@@ -53,6 +53,7 @@
       'BRL': 'Brazil Real',
       'RUB': 'Russian Ruble'
     };
+    language = 'en';
     mnemonicVerified = false;
     xpubs = [];
     transactions = [];
@@ -76,6 +77,17 @@
       }
     };
     return {
+      getLanguage: function() {
+        if (language != null) {
+          return language;
+        } else {
+          return MyStore.get('language');
+        }
+      },
+      setLanguage: function(lan) {
+        MyStore.put('language', lan);
+        language = lan;
+      },
       getLanguages: function() {
         return languageCodeToLanguage;
       },

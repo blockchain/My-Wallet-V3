@@ -53,13 +53,14 @@
     'BRL': 'Brazil Real'
     'RUB': 'Russian Ruble'
 
+  language = 'en'; #Current language
   mnemonicVerified = false
   xpubs = []
   transactions = [] # List of all transactions (initially populated from /multiaddr updated through websockets)
   addresses = {}    # {addr : address, priv : private key, tag : tag (mark as archived), label : label, balance : balance}
   didUpgradeToHd = null
   address_book = {} #Holds the address book addr = label
-
+  
   #////////////////////////////////////////////////////////////////////////////
   # Private functions
 
@@ -78,7 +79,14 @@
 
   #////////////////////////////////////////////////////////////////////////////
   # public methods
+  getLanguage: () ->
+    if language? then language else MyStore.get('language')
 
+  setLanguage: (lan) ->
+    MyStore.put('language', lan);
+    language = lan;
+    return
+  ##############################################################################
   getLanguages: () -> languageCodeToLanguage
 
   getCurrencies: () -> currencyCodeToCurrency

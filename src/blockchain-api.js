@@ -38,7 +38,7 @@ var BlockchainAPI = new function() {
       no_compact : true,
       ct : clientTime,
       n : n,
-      language : MyWallet.getLanguage(),
+      language : WalletStore.getLanguage(),
       api_code : MyWallet.getAPICode(),
       no_buttons: true
     };
@@ -90,7 +90,7 @@ var BlockchainAPI = new function() {
       no_compact : true,
       ct : clientTime,
       n : n,
-      language : MyWallet.getLanguage(),
+      language : WalletStore.getLanguage(),
       api_code : MyWallet.getAPICode(),
       symbol_btc : symbol_btc.code,
       symbol_local : symbol_local.code
@@ -139,7 +139,7 @@ var BlockchainAPI = new function() {
       no_compact : true,
       ct : clientTime,
       n : n,
-      language : MyWallet.getLanguage(),
+      language : WalletStore.getLanguage(),
       api_code : MyWallet.getAPICode(),
       symbol_btc : symbol_btc.code,
       symbol_local : symbol_local.code
