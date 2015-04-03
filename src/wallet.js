@@ -2146,9 +2146,7 @@ var MyWallet = new function() {
       var sharedKey = MyWallet.getSharedKey();
       var pbkdf2_iterations = MyWallet.getPbkdf2Iterations();
       
-      MyWallet.getUnspentOutputsForAccount(
-       
-      MyWallet.getAndSetUnspentOutputsForAccount(
+      MyWallet.getUnspentOutputsForAccount(       
         accountIdx,
         function (unspent_outputs) {
           var account = MyWallet.getHDWallet().getAccount(accountIdx);
