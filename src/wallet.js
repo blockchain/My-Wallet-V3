@@ -437,7 +437,7 @@ var MyWallet = new function() {
      */
     var reencrypt = function(pw) {
       var enc = function(data) {
-        return MyWallet.encrypt(MyWallet.decryptSecretWithSecondPassword(data, pw, sharedKey), sharedKey + pw, pbkdf2_iterations);
+        return WalletCrypto.encrypt(WalletCrypto.decryptSecretWithSecondPassword(data, pw, sharedKey), sharedKey + pw, pbkdf2_iterations);
       } 
       return enc;
     };
@@ -532,7 +532,7 @@ var MyWallet = new function() {
     };
     var decrypt = function(pw) {
       var dec = function(data) {
-        return MyWallet.decryptSecretWithSecondPassword(data, pw, MyWallet.getSharedKey());
+        return WalletCrypto.decryptSecretWithSecondPassword(data, pw, MyWallet.getSharedKey());
       } 
       return dec;
     };
@@ -546,11 +546,11 @@ var MyWallet = new function() {
 
           for (var i in MyWallet.getAccounts()) {
             var account = MyWallet.getHDWallet().getAccount(i);
-            account.extendedPrivateKey = MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, pw, sharedKey);
+            account.extendedPrivateKey = WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, pw, sharedKey);
           }
 
           if (WalletStore.didUpgradeToHd()) {
-            MyWallet.getHDWallet().seedHex = MyWallet.decryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, pw, sharedKey);
+            MyWallet.getHDWallet().seedHex = WalletCrypto.decryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, pw, sharedKey);
           }
 
           MyWallet.setDoubleEncryption(false);
@@ -592,7 +592,7 @@ var MyWallet = new function() {
 
     var encrypt = function(pw) {
       var enc = function(data) {
-        return MyWallet.encryptSecretWithSecondPassword(data, pw, MyWallet.getSharedKey());
+        return WalletCrypto.encryptSecretWithSecondPassword(data, pw, MyWallet.getSharedKey());
       } 
       return enc;
     };
@@ -603,11 +603,11 @@ var MyWallet = new function() {
 
       for (var i in MyWallet.getAccounts()) {
         var account = MyWallet.getHDWallet().getAccount(i);
-        account.extendedPrivateKey = MyWallet.encryptSecretWithSecondPassword(account.extendedPrivateKey, password, MyWallet.getSharedKey());
+        account.extendedPrivateKey = WalletCrypto.encryptSecretWithSecondPassword(account.extendedPrivateKey, password, MyWallet.getSharedKey());
       }
 
       if (WalletStore.didUpgradeToHd()) {
-        MyWallet.getHDWallet().seedHex = MyWallet.encryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, password, MyWallet.getSharedKey());
+        MyWallet.getHDWallet().seedHex = WalletCrypto.encryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, password, MyWallet.getSharedKey());
       }
       dpasswordhash = hashPassword(MyWallet.getSharedKey() + password, MyWallet.getPbkdf2Iterations());
       if (!MyWallet.validateSecondPassword(password)) {
@@ -823,13 +823,13 @@ var MyWallet = new function() {
 
     var base58 = Browserify.Base58.encode(key.d.toBuffer(32));
 
-    var encoded = second_password == null ? base58 : MyWallet.encryptSecretWithSecondPassword(base58, second_password, MyWallet.getSharedKey());
+    var encoded = second_password == null ? base58 : WalletCrypto.encryptSecretWithSecondPassword(base58, second_password, MyWallet.getSharedKey());
 
     if (encoded == null) {
       throw 'Error Encoding key';
     }
 
-    var decoded_base_58 = second_password == null ? base58 : MyWallet.decryptSecretWithSecondPassword(encoded, second_password, sharedKey);
+    var decoded_base_58 = second_password == null ? base58 : WalletCrypto.decryptSecretWithSecondPassword(encoded, second_password, sharedKey);
 
     var decoded_key = new ECKey(new BigInteger.fromBuffer(decoded_base_58), opts.compressed);
 
@@ -1157,7 +1157,7 @@ var MyWallet = new function() {
   };
 
   function noConvert(x) { return x; }
-  function base58ToBase58(x) { return MyWallet.decryptSecretWithSecondPasswordIfNeeded(x); }
+  function base58ToBase58(x) { return WalletCrypto.decryptSecretWithSecondPasswordIfNeeded(x); }
   function base58ToBase64(x) { var bytes = MyWallet.decodePK(x); return Crypto.util.bytesToBase64(bytes); }
   function base58ToHex(x) { var bytes = MyWallet.decodePK(x); return Crypto.util.bytesToHex(bytes); }
   this.base58ToSipa = function(x, addr) {
@@ -1807,7 +1807,7 @@ var MyWallet = new function() {
               var account = MyWallet.getHDWallet().getAccount(accountIdx);
               var extendedPrivateKey = null;
               if (secondPassword != null) {
-                extendedPrivateKey = MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, secondPassword, sharedKey);
+                extendedPrivateKey = WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, secondPassword, sharedKey);
               } else {
                 extendedPrivateKey = account.extendedPrivateKey;
               }
@@ -2088,7 +2088,7 @@ var MyWallet = new function() {
               var account = MyWallet.getHDWallet().getAccount(accountIdx);
               var extendedPrivateKey = null;
               if (secondPassword != null) {
-                extendedPrivateKey = MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, secondPassword, sharedKey);
+                extendedPrivateKey = WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, secondPassword, sharedKey);
               } else {
                 extendedPrivateKey = account.extendedPrivateKey;
               }
@@ -2150,7 +2150,7 @@ var MyWallet = new function() {
         accountIdx,
         function (unspent_outputs) {
           var account = MyWallet.getHDWallet().getAccount(accountIdx);
-          var extendedPrivateKey = second_password == null ? account.extendedPrivateKey : MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password, sharedKey);
+          var extendedPrivateKey = second_password == null ? account.extendedPrivateKey : WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password, sharedKey);
 
           // Create the send account (same account as current account, but created with xpriv and thus able to generate private keys)
           var sendAccount = new HDAccount();
@@ -2538,7 +2538,7 @@ var MyWallet = new function() {
       getPassword(function(pw, correct_password, incorrect_password) {
         if (MyWallet.validateSecondPassword(pw)) {
           correct_password();
-          var seed = MyWallet.decryptSecretWithSecondPassword(MyWallet.getHDWallet().getSeedHexString(), pw, sharedKey);
+          var seed = WalletCrypto.decryptSecretWithSecondPassword(MyWallet.getHDWallet().getSeedHexString(), pw, sharedKey);
           successCallback(MyWallet.getHDWallet().getPassphraseString(seed));
         } else {
           incorrect_password();
@@ -3150,7 +3150,7 @@ var MyWallet = new function() {
   this.makePairingCode = function(success, error) {
     try {
       MyWallet.securePost('wallet', { method : 'pairing-encryption-password' }, function(encryption_phrase) {
-        success('1|' + guid + '|' + MyWallet.encrypt(sharedKey + '|' + CryptoJS.enc.Utf8.parse(password).toString(), encryption_phrase, 10));
+        success('1|' + guid + '|' + WalletCrypto.encrypt(sharedKey + '|' + CryptoJS.enc.Utf8.parse(password).toString(), encryption_phrase, 10));
       }, function(e) {
         error(e);
       });
@@ -3629,39 +3629,11 @@ var MyWallet = new function() {
     }
   };
 
-  this.isBase58 = function(str, base) {
-    for (var i = 0; i < str.length; ++i) {
-      if (str[i] < 0 || str[i] > 58) {
-        return false;
-      }
-    }
-    return true;
-  };
-
-  this.encrypt = function(data, password, pbkdf2_iterations) {
-    var salt = CryptoJS.lib.WordArray.random(16);
-
-    var streched_password = MyWallet.stretchPassword(password, salt, pbkdf2_iterations);
-
-    var iv = salt; // Use the same value for IV and salt.
-
-    var payload = CryptoJS.enc.Utf8.parse(data);
-
-    // AES.encrypt takes an optional salt argument, which we don't use.
-    var encrypted = CryptoJS.AES.encrypt(payload, streched_password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iv: iv});
-
-    // Add IV to beginning of payload (using hex strings):
-    var res = iv.toString() + encrypted.ciphertext.toString();
-
-    // Return as Base64:
-    return CryptoJS.enc.Hex.parse(res).toString(CryptoJS.enc.Base64);
-  };
-
   this.encryptWallet = function(data, password) {
     return JSON.stringify({
       pbkdf2_iterations : MyWallet.getPbkdf2Iterations(),
       version : WalletStore.didUpgradeToHd() ? 3.0 : 2.0,
-      payload : MyWallet.encrypt(data, password, MyWallet.getPbkdf2Iterations())
+      payload : WalletCrypto.encrypt(data, password, MyWallet.getPbkdf2Iterations())
     });
   };
 
@@ -3684,7 +3656,7 @@ var MyWallet = new function() {
 
       var decryptNormal = function() {
         try {
-          var decrypted = decryptAesWithStretchedPassword(obj.payload, password, obj.pbkdf2_iterations);
+          var decrypted = WalletCrypto.decryptAesWithStretchedPassword(obj.payload, password, obj.pbkdf2_iterations);
 
           var root = $.parseJSON(decrypted);
 
@@ -3719,7 +3691,7 @@ var MyWallet = new function() {
       // TODO legacy format - what should we support here
       // Legacy format: just encrypted data, pbkdf2 iterations can be 10 or maybe 1
       else {
-        MyWallet.decrypt(data, password, 10, function(decrypted) {
+        WalletCrypto.decrypt(data, password, 10, function(decrypted) {
           try {
             var root = $.parseJSON(decrypted);
 
@@ -3785,110 +3757,8 @@ var MyWallet = new function() {
     }
   };
 
-  //When the ecryption format changes it can produce data which appears to decrypt fine but actually didn't
-  //So we call success(data) and if it returns true the data was formatted correctly
-  this.decrypt = function(data, password, pbkdf2_iterations, success, error) {
-    //iso10126 with pbkdf2_iterations iterations
-
-    try {
-      /* This is currently (2014-11-28) the default wallet format. 
-       There are two steps to decrypting the wallet. The first step is to
-       stretch the users password using PBKDF2. This essentially generates
-       an AES key which we need for the second step, which is to decrypt
-       the payload using AES.
-
-       Strechting the password requires a salt. AES requires an IV. We use
-       the same for both. It's the first 32 hexadecimals characters (i.e.
-       16 bytes).
-
-       The conversions between different encodings can probably be achieved
-       with fewer methods.
-       */
-
-      var decoded = decryptAesWithStretchedPassword(data, password, pbkdf2_iterations);
-
-      if (decoded != null && decoded.length > 0) {
-        if (success(decoded)) {
-          return decoded;
-        };
-      };
-    } catch (e) {
-      console.log(e);
-    }
-
-    // Disabled 2015-03-06 by Sjors pending refactoring (salt is undefined here)
-
-    // //iso10126 with 10 iterations  (old default)
-    // if (pbkdf2_iterations != 10) {
-    //     try {
-    //         var streched_password = MyWallet.stretchPassword(password, salt, 10);
-    //
-    //         var decrypted = CryptoJS.AES.decrypt({ciphertext: payload, salt: ""}, streched_password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iv: iv});
-    //
-    //         var decoded = decrypted.toString(CryptoJS.enc.Utf8);
-    //
-    //         if (decoded != null && decoded.length > 0) {
-    //             if (success(decoded)) {
-    //                 return decoded;
-    //             };
-    //         };
-    //     } catch (e) {
-    //         console.log(e);
-    //     }
-    // }
-
-    //Otherwise try the old default settings
-
-    // Disabled by Sjors on 2014-11-26, for lack of test wallet.
-
-    // try {
-    //     var decoded = CryptoJS.AES.decrypt(data, password);
-    //
-    //     if (decoded != null && decoded.length > 0) {
-    //         if (success(decoded)) {
-    //             return decoded;
-    //         };
-    //     };
-    // } catch (e) {
-    //     console.log(e);
-    // }
-
-    //OFB iso7816 padding with one iteration (old default)
-
-    // Disabled by Sjors on 2014-11-26, because the current CryptoJS doesn't support iso7816. 
-
-    // try {
-    //     var decoded = CryptoJS.AES.decrypt(data, password, {mode: new CryptoJS.mode.OFB(CryptoJS.pad.Iso7816), iterations : 1});
-    //
-    //     if (decoded != null && decoded.length > 0) {
-    //         if (success(decoded)) {
-    //             return decoded;
-    //         };
-    //     };
-    // } catch (e) {
-    //     console.log(e);
-    // }
-
-    //iso10126 padding with one iteration (old default)
-    try {
-      var decoded = CryptoJS.AES.decrypt(data, password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iterations : 1 });
-
-      if (decoded != null && decoded.length > 0) {
-        if (success(decoded)) {
-          return decoded;
-        };
-      };
-    } catch (e) {
-      console.log(e);
-    }
-
-    if (error) error();
-
-    return null;
-  };
-
   this.decryptPasswordWithProcessedPin = function(data, password, pbkdf2_iterations) {
-    return decryptAesWithStretchedPassword(data, password, pbkdf2_iterations);
+    return WalletCrypto.decryptAesWithStretchedPassword(data, password, pbkdf2_iterations);
   };
 
   this.stretchPassword = function(password, salt, pbkdf2_iterations) {
@@ -3908,34 +3778,6 @@ var MyWallet = new function() {
     // convert back
     return CryptoJS.enc.Hex.parse(sjcl.codec.hex.fromBits(streched_password));
   };
-
-  function decryptAesWithStretchedPassword(data, password, pbkdf2_iterations) {
-    // Convert base64 string data to hex string
-    var data_hex_string = CryptoJS.enc.Base64.parse(data).toString();
-    // Pull out the Initialization vector from data (@see http://en.wikipedia.org/wiki/Initialization_vector )
-    var iv = CryptoJS.enc.Hex.parse(data_hex_string.slice(0,32));
-
-    // We use same value for the PBKDF2 salt and the AES IV. But we do not use a salt in the AES encryption
-    var salt = iv;
-
-    var streched_password = MyWallet.stretchPassword(password, salt, pbkdf2_iterations);
-
-    // Remove the first 16 bytes (IV) from the payload:
-    var payload_hex_string = data_hex_string.slice(32);
-
-    // Paylod is cipthertext without IV as bytes
-    var payload = CryptoJS.enc.Hex.parse(payload_hex_string);
-
-    // AES decryption expects a base 64 encoded payload:
-    var payload_base_64 = payload.toString(CryptoJS.enc.Base64);
-
-    // AES.decrypt takes an optional salt argument, which we don't use.
-    var decrypted = CryptoJS.AES.decrypt({ciphertext: payload, salt: ""}, streched_password, { mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Iso10126, iv: iv});
-    // Decrypted is returned as bytes, we convert it to a UTF8 String
-    var decoded = decrypted.toString(CryptoJS.enc.Utf8);
-
-    return decoded;
-  }
 
   this.handleNTPResponse = function(obj, clientTime) {
     //Calculate serverTimeOffset using NTP alog
@@ -3957,19 +3799,7 @@ var MyWallet = new function() {
       console.log('Server Time offset ' + serverTimeOffset + 'ms - This offset ' + thisOffset);
     }
   };
-
-  // Expects a secret (e.g. a private key, xpriv of seed hex) and the second
-  // password. Returns the encrypted secret:
-  this.encryptSecretWithSecondPassword = function(base58, password, sharedKey) {
-    return MyWallet.encrypt(base58, sharedKey + password, MyWallet.getPbkdf2Iterations());
-  };
-
-  // Expects an ecrypted secret (e.g. a private key, xpriv or seed hex) and
-  // the second password. Returns the secret:
-  this.decryptSecretWithSecondPassword = function(secret, password, sharedKey) {
-    return MyWallet.decrypt(secret, sharedKey + password, MyWallet.getPbkdf2Iterations(), MyWallet.isBase58);
-  };
-
+  
   /**
    * @param {string} address bitcoin address
    * @param {string} message message
@@ -4141,7 +3971,7 @@ var MyWallet = new function() {
         if(second_password == null) {
           decryptedpk = addr.priv;
         } else {
-          decryptedpk = MyWallet.decryptSecretWithSecondPassword(addr.priv, second_password, sharedKey);
+          decryptedpk = WalletCrypto.decryptSecretWithSecondPassword(addr.priv, second_password, sharedKey);
         }
 
         var decodedpk = MyWallet.B58LegacyDecode(decryptedpk);
@@ -4154,7 +3984,7 @@ var MyWallet = new function() {
         }
 
         if (second_password != null) {
-          addr.priv = MyWallet.encryptSecretWithSecondPassword(decryptedpk, second_password, MyWallet.getSharedKey());
+          addr.priv = WalletCrypto.encryptSecretWithSecondPassword(decryptedpk, second_password, MyWallet.getSharedKey());
         }
       }
     }
@@ -4166,7 +3996,7 @@ var MyWallet = new function() {
       if(second_password == null) {
         decryptedpk = account.extendedPrivateKey;
       } else {
-        decryptedpk = MyWallet.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password, sharedKey);
+        decryptedpk = WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password, sharedKey);
       }
 
       try {
