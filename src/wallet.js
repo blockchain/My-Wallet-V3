@@ -3691,10 +3691,6 @@ var MyWallet = new function() {
     }
   };
 
-  this.getWebWorkerLoadPrefix = function() {
-    return BlockchainAPI.getRootURL() + resource + 'wallet/';
-  };
-
   this.decryptPasswordWithProcessedPin = function(data, password, pbkdf2_iterations) {
     return WalletCrypto.decryptAesWithStretchedPassword(data, password, pbkdf2_iterations);
   };
