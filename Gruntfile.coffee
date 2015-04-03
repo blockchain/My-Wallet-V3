@@ -64,7 +64,7 @@ module.exports = (grunt) ->
     coffee:
      compile:
        files:
-         'build/wallet-store.js': 'src/coffee/wallet-store.coffee'
+         'build/wallet-store.js' : 'src/coffee/wallet-store.coffee'
          'build/wallet-crypto.js': 'src/coffee/wallet-crypto.coffee'
 
     uglify:
@@ -173,7 +173,7 @@ module.exports = (grunt) ->
           'build/blockchain-settings-api.processed.js'  : 'src/blockchain-settings-api.js'
           'build/signer.processed.js'         : 'src/signer.js'
           'build/wallet-store.processed.js'   : 'build/wallet-store.js'
-          'build/wallet-crypto.processed.js'   : 'build/wallet-crypto.js'
+          'build/wallet-crypto.processed.js'  : 'build/wallet-crypto.js'
           'build/wallet.processed.js'         : 'src/wallet.js'
           'build/wallet-signup.processed.js'  : 'src/wallet-signup.js'
           'build/hd-wallet.processed.js'      : 'src/hd-wallet.js'
@@ -213,6 +213,7 @@ module.exports = (grunt) ->
     "env:production"
     "clean:build"
     "clean:dist"
+    "coffee:compile"
     "shrinkwrap"
     "shell:check_dependencies"
     "clean:shrinkwrap"
