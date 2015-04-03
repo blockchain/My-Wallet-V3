@@ -89,13 +89,7 @@
     language = lan;
     return
 
-  walletIsFull: () ->
-    if (k for own k of addresses).length >= maxAddr
-      MyWallet.sendEvent("msg", {type: "error", message: 'We currently support \
-        a maximum of '+maxAddr+' private keys, please remove some unused ones.'});
-      return true;
-    else
-      return false;
+  walletIsFull: () -> (k for own k of addresses).length >= maxAddr
 
   getLanguages: () -> languageCodeToLanguage
 
