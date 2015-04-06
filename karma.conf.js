@@ -5,7 +5,7 @@ module.exports = function(config) {
     
     frameworks: ['jasmine'],
     
-    browsers : ['Chrome'],
+    browsers : ['PhantomJS'],
     
     preprocessors: {
       '**/*.coffee': ['coffee'],
@@ -37,6 +37,8 @@ module.exports = function(config) {
     autoWatch: true,
     
     files: [
+      'bower_components/es5-shim/es5-shim.min.js',
+      'bower_components/es6-shim/es6-shim.min.js',
       'bower_components/jquery/dist/jquery.js',
       'bower_components/cryptojslib/rollups/sha256.js',
       'bower_components/cryptojslib/rollups/aes.js',
@@ -63,7 +65,7 @@ module.exports = function(config) {
     ],
     
     plugins : [
-      'karma-chrome-launcher',
+      'karma-phantomjs-launcher',
       'karma-jasmine',
       'karma-coffee-preprocessor',
       'karma-coverage'
