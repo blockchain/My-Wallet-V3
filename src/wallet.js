@@ -49,7 +49,6 @@ var MyWallet = new function() {
   var tx_filter = 0; //Transaction filter (e.g. Sent Received etc)
   var payload_checksum; //SHA256 hash of the current wallet.aes.json
   var archTimer; //Delayed Backup wallet timer
-  var mixer_fee = 0.5; //Default mixer fee 1.5%
   var recommend_include_fee = true; //Number of unconfirmed transactions in blockchain.info's memory pool
   var default_pbkdf2_iterations = 5000;
   var auth_type; //The two factor authentication type used. 0 for none.
@@ -268,10 +267,6 @@ var MyWallet = new function() {
 
   this.setHTML5Notifications = function(val) {
     wallet_options.html5_notifications = val;
-  };
-
-  this.getMixerFee = function() {
-    return mixer_fee;
   };
 
   this.getRecommendIncludeFee = function() {
@@ -2796,10 +2791,8 @@ var MyWallet = new function() {
   function parseMultiAddressJSON(obj, cached, checkCompleted) {
     transactions = WalletStore.getTransactions();
     if (!cached) {
-      if (obj.mixer_fee) {
-        mixer_fee = obj.mixer_fee;
-      }
 
+      WalletStore.setMixerFee(obj.mixer_fee);
       recommend_include_fee = obj.recommend_include_fee;
 
       if (obj.info) {

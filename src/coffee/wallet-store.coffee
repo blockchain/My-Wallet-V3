@@ -68,7 +68,9 @@
   total_received = 0 # Total Satoshi received
   tx_notes = {}      # A map of transaction notes, hash -> note
   defaultAccountIdx = 0
-  disable_logout = false;
+  disable_logout = false
+  mixer_fee = 0.5 #Default mixer fee 1.5%
+
   #////////////////////////////////////////////////////////////////////////////
   # Private functions
 
@@ -351,3 +353,9 @@
     return
 
   isLogoutDisabled: () -> disable_logout
+
+  getMixerFee: () -> mixer_fee
+
+  setMixerFee: (fee) ->
+    mixer_fee = fee if fee?
+    return
