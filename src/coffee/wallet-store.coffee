@@ -64,7 +64,8 @@
   address_book = {} #Holds the address book addr = label
   pbkdf2_iterations = null
   final_balance = 0 # Final Satoshi wallet balance
-
+  total_sent = 0    # Total Satoshi sent
+  total_received = 0 # Total Satoshi received
   #////////////////////////////////////////////////////////////////////////////
   # Private functions
 
@@ -292,4 +293,24 @@
 
   addToFinalBalance: (amount) ->
     final_balance += amount
+    return
+
+  getTotalSent: () -> total_sent
+
+  setTotalSent: (amount) ->
+    total_sent = amount
+    return
+
+  addToTotalSent: (amount) ->
+    total_sent += amount
+    return
+
+  getTotalReceived: () -> total_received
+
+  setTotalReceived: (amount) ->
+    total_received = amount
+    return
+
+  addToTotalReceived: (amount) ->
+    total_received += amount
     return

@@ -43,8 +43,6 @@ var MyWallet = new function() {
   var password; //Password
   var dpasswordhash; //double encryption Password
   var sharedKey; //Shared key used to prove that the wallet has succesfully been decrypted, meaning you can't overwrite a wallet backup even if you have the guid
-  var total_sent = 0; //Total Satoshi sent
-  var total_received = 0; //Total Satoshi received
   var latest_block; //Chain head block
   var double_encryption = false; //If wallet has a second password
   var tx_page = 0; //Multi-address page
@@ -230,14 +228,6 @@ var MyWallet = new function() {
 
   this.isLogoutDisabled = function() {
     return disable_logout;
-  };
-
-  this.getTotalSent = function() {
-    return total_sent;
-  };
-
-  this.getTotalReceived = function() {
-    return total_received;
   };
 
   this.setLogoutTime = function(logout_time) {
@@ -892,8 +882,8 @@ var MyWallet = new function() {
       var value = WalletStore.getValueOfLegacyAddress(output.addr);
       result -= value;
       if (is_new) {
-        total_sent += value;
-        WalletStore.addToBalanceOfLegacyAddress(addr,-value)
+        WalletStore.addToTotalSent(value);
+        WalletStore.addToBalanceOfLegacyAddress(addr,-value);
       }
 
 
@@ -947,7 +937,7 @@ var MyWallet = new function() {
         result += value;
 
         if (is_new) {
-          total_received += value;
+          WalletStore.addToTotalReceived(value);
           addr.balance += value;
         }
       }
@@ -2892,15 +2882,15 @@ var MyWallet = new function() {
     transactions.length = 0;
 
     if (obj.wallet == null) {
-      total_received = 0;
-      total_sent = 0;
+      WalletStore.setTotalReceived(0);
+      WalletStore.setTotalSent(0);
       WalletStore.setFinalBalance(0);
       WalletStore.setNTransactions(0);
       return;
     }
 
-    total_received = obj.wallet.total_received;
-    total_sent = obj.wallet.total_sent;
+    WalletStore.setTotalReceived(obj.wallet.total_received);
+    WalletStore.setTotalSent(obj.wallet.total_sent);
     WalletStore.setFinalBalance(obj.wallet.final_balance);
     WalletStore.setNTransactions(obj.wallet.n_tx);
 
