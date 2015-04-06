@@ -46,7 +46,6 @@ var MyWallet = new function() {
   var final_balance = 0; //Final Satoshi wallet balance
   var total_sent = 0; //Total Satoshi sent
   var total_received = 0; //Total Satoshi received
-  var n_tx = 0; //Number of transactions
   var n_tx_filtered = 0; //Number of transactions after filtering
   var latest_block; //Chain head block
   var double_encryption = false; //If wallet has a second password
@@ -315,13 +314,6 @@ var MyWallet = new function() {
     wallet_options.html5_notifications = val;
   };
 
-  this.getNTransactions = function() {
-    return n_tx;
-  };
-
-
-
-
   this.getMixerFee = function() {
     return mixer_fee;
   };
@@ -329,11 +321,6 @@ var MyWallet = new function() {
   this.getRecommendIncludeFee = function() {
     return recommend_include_fee;
   };
-
-
-
-
-
 
   this.securePost = function(url, data, success, error) {
     var clone = jQuery.extend({}, data);
@@ -1057,7 +1044,7 @@ var MyWallet = new function() {
 
           if (tx_account) MyWallet.getAccount(tx_account.index).setBalance(final_balance);
 
-          n_tx++;
+          WalletStore.incNTransactions();
 
           tx.setConfirmations(0);
 
@@ -2914,7 +2901,7 @@ var MyWallet = new function() {
       total_received = 0;
       total_sent = 0;
       final_balance = 0;
-      n_tx = 0;
+      WalletStore.setNTransactions(0);
       n_tx_filtered = 0;
       return;
     }
@@ -2922,7 +2909,7 @@ var MyWallet = new function() {
     total_received = obj.wallet.total_received;
     total_sent = obj.wallet.total_sent;
     final_balance = obj.wallet.final_balance;
-    n_tx = obj.wallet.n_tx;
+    WalletStore.setNTransactions(obj.wallet.n_tx);
     n_tx_filtered = obj.wallet.n_tx_filtered;
 
     for (var i = 0; i < obj.addresses.length; ++i) {

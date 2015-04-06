@@ -57,6 +57,7 @@
   mnemonicVerified = false
   xpubs = []
   transactions = [] # List of all transactions (initially populated from /multiaddr updated through websockets)
+  n_tx = 0;         # Number of transactions
   addresses = {}    # {addr : address, priv : private key, tag : tag (mark as archived), label : label, balance : balance}
   maxAddr = 1000;   # Maximum number of addresses
   didUpgradeToHd = null
@@ -257,7 +258,6 @@
     return
 
   addLegacyAddress: (address, privKey) ->
-    console.log "festa aqui ara"
     existing = addresses[address]
     if not existing? or existing.length is 0
       addresses[address] = {addr : address, priv : privKey, balance : null};
@@ -268,3 +268,13 @@
         return true
       else
         return false
+
+  getNTransactions: () -> n_tx
+
+  setNTransactions: (n) -> 
+    n_tx = n
+    return
+
+  incNTransactions: () -> 
+    n_tx++
+    return
