@@ -203,6 +203,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-contrib-jshint'
 
   grunt.registerTask "default", [
+    "build"
     "karma:continuous"
     "watch"
   ]
