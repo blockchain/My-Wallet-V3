@@ -227,16 +227,20 @@
     if (addr.tag is 2)
       addr.tag = null
       MyWallet.backupWalletDelayed('update', () -> MyWallet.get_history())
+      return
     else
       MyWallet.sendEvent("msg", {type: "error", message: 'Cannot Unarchive This Address'})
+      return
     
   archiveLegacyAddr: (address) -> 
     addr = addresses[address];
-    if (addr.tag is null || addr.tag is 0)
+    if (!addr.tag? || addr.tag is 0)
       addr.tag = 2
       MyWallet.backupWalletDelayed('update', () -> MyWallet.get_history())
+      return
     else
       MyWallet.sendEvent("msg", {type: "error", message: 'Cannot Archive This Address'})
+      return
 
   getAllLegacyAddresses: () -> (k for own k of addresses)
 
