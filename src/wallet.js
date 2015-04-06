@@ -1908,6 +1908,7 @@ var MyWallet = new function() {
 
         var keys = tx.addressesOfNeededPrivateKeys.map(function(neededPrivateKeyAddress) {
           var privateKeyBase58 = second_password === null ? WalletStore.getPrivateKey(neededPrivateKeyAddress) : WalletCrypto.decryptSecretWithSecondPassword(WalletStore.getPrivateKey(neededPrivateKeyAddress), second_password, MyWallet.getSharedKey(), WalletStore.getPbkdf2Iterations());
+          // TODO If getPrivateKey returns null, it's a watch only address - ask for private key or show error or try again without watch only addresses
           var format = MyWallet.detectPrivateKeyFormat(privateKeyBase58);
           var key = MyWallet.privateKeyStringToKey(privateKeyBase58, format);
 
@@ -1957,30 +1958,40 @@ var MyWallet = new function() {
   };
 
   function sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback, listener, second_password)  {
-    var account = MyWallet.getHDWallet().getAccount(toIdx);
-    var obj = Signer.init();
-
-    if (feeAmount != null)
-      obj.setFee(BigInteger.valueOf(feeAmount));
-
-    var to_address = account.getReceivingAddress();
-    obj.addToAddress({ address: Bitcoin.Address.fromBase58Check(to_address), value : BigInteger.valueOf(amount) });
-
     var fromAddresses  = fromAddress ? [fromAddress] : WalletStore.getLegacyActiveAddresses();
 
-    for(var i in fromAddresses) {
-      obj.addFromAddress(fromAddresses[i]);
-    }
+    MyWallet.getUnspentOutputsForAddresses(
+      fromAddresses,
+      function (unspent_outputs) {
+        var account = MyWallet.getHDWallet().getAccount(toIdx);
+        var toAddress = account.getReceivingAddress();
 
-    obj.ready_to_send_header = 'Bitcoins Ready to Send.';
+        var changeAddress = fromAddress || WalletStore.getPreferredLegacyAddress();
 
-    listener.on_success = successCallback;
-    listener.on_error = errorCallback;
-    obj.addListener(listener);
+        var tx = new Transaction(unspent_outputs, toAddress, amount, feeAmount, changeAddress, listener);
 
-    obj.note = note;
+        var keys = tx.addressesOfNeededPrivateKeys.map(function(neededPrivateKeyAddress) {
+          var privateKeyBase58 = second_password === null ? WalletStore.getPrivateKey(neededPrivateKeyAddress) : WalletCrypto.decryptSecretWithSecondPassword(WalletStore.getPrivateKey(neededPrivateKeyAddress), second_password, MyWallet.getSharedKey(), WalletStore.getPbkdf2Iterations());
+          // TODO If getPrivateKey returns null, it's a watch only address - ask for private key or show error or try again without watch only addresses
+          var format = MyWallet.detectPrivateKeyFormat(privateKeyBase58);
+          var key = MyWallet.privateKeyStringToKey(privateKeyBase58, format);
 
-    obj.start(second_password);
+          // If the address we looked for is not the public key address of the private key we found, try the compressed address
+          if (MyWallet.getCompressedAddressString(key) === neededPrivateKeyAddress) {
+            key = new Bitcoin.ECKey(key.d, true);
+          }
+
+          return key;
+        });
+
+        tx.addPrivateKeys(keys);
+
+        var signedTransaction = tx.sign();
+
+        BlockchainAPI.push_tx(signedTransaction, note, successCallback, errorCallback);
+      },
+      function(e) { errorCallback && errorCallback(e);}
+    );
   }
 
   /**

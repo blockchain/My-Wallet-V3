@@ -9,29 +9,12 @@
 ################################################################################
 describe "Spend", ->
 
-  mockedObj             = undefined
   observer              = undefined
   data                  = undefined
   hdAccounts            = undefined
   activeLegacyAddresses = undefined
 
   beforeEach ->
-    mockedObj =
-      to_addresses: []
-      from_addresses: []
-      fee: BigInteger.ZERO
-      base_fee: BigInteger.valueOf(10000)
-      ready_to_send_header: 'Transaction Ready to Send.'
-      listeners : []
-      addListener: (listener) ->
-        this.listeners.push(listener);
-      start: (pass) -> this.listeners[0].on_success()
-      getFee: () -> this.fee
-      setFee: (fee) -> this.fee = fee
-      getBaseFee: () -> this.base_fee
-      addToAddress: (addr) -> this.to_addresses.push(addr)
-      addFromAddress: (addr) -> this.from_addresses.push(addr)
-
     data =
       from: "1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF"
       to: "1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h"
@@ -55,8 +38,6 @@ describe "Spend", ->
     spyOn(observer, 'error')
     spyOn(observer, 'listener')
     spyOn(observer, 'getPassword').and.callThrough()
-    spyOn(mockedObj, 'addListener').and.callThrough()
-    spyOn(mockedObj, 'start').and.callThrough()
 
     # activeLegacyAddresses = [
     #   "1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h"
@@ -96,8 +77,6 @@ describe "Spend", ->
   describe "Legacy Address Unit", ->
 
     beforeEach ->
-      spyOn(Signer, "pushTx").and.callFake(() -> )
-
       data.from = '17k7jQsewpru3uxMkaUMxahyvACVc7fjjb'
       data.amount = 50000
 
@@ -121,6 +100,8 @@ describe "Spend", ->
         push_tx: () ->
 
       spyOn(BlockchainAPI, "push_tx")
+        .and.callFake((tx, note, success, error) ->
+          success())
 
       spyOn(BlockchainAPI, "get_unspent")
         .and.callFake((xpubList,success,error,conf,nocache) -> 
@@ -133,41 +114,21 @@ describe "Spend", ->
     describe "sendFromLegacyAddressToAccount()", ->
       it "should get to send without errors", ->
                 
-        data.to = 0 #iDX
+        data.to = 0 # Account Index
         data.fee = null
         MyWallet.setDoubleEncryption(false)
 
-        # Copy of sendFromLegacyAddressToAccount to be able to reach into the Signer object
+        MyWallet.sendFromLegacyAddressToAccount  data.from
+                                               , data.to
+                                               , data.amount
+                                               , data.fee
+                                               , data.note
+                                               , observer.success
+                                               , observer.error
+                                               , observer.listener
+                                               , observer.getPassword
 
-        account = MyWallet.getHDWallet().getAccount(data.to)
-        obj = Signer.init()
-
-        obj.addExtraPrivateKey('17k7jQsewpru3uxMkaUMxahyvACVc7fjjb', 'AWrnMsqe2AJYmrzKsN8qRosHRiCSKag3fcmvUA9wdJDj')
-
-        to_address = account.getReceivingAddress()
-        obj.addToAddress({ address: Bitcoin.Address.fromBase58Check(to_address), value : BigInteger.valueOf(data.amount) })
-
-        obj.addFromAddress(data.from)
-
-        obj.ready_to_send_header = 'Bitcoins Ready to Send.'
-
-        observer.listener.on_success = observer.success
-        observer.listener.on_error = observer.error
-        obj.addListener(observer.listener)
-
-        obj.start()
-        
-        # MyWallet.sendFromLegacyAddressToAccount  data.from
-        #                                        , data.to
-        #                                        , data.amount
-        #                                        , data.fee
-        #                                        , data.note
-        #                                        , observer.success
-        #                                        , observer.error
-        #                                        , observer.listener
-        #                                        , observer.getPassword
-
-        expect(Signer.pushTx).toHaveBeenCalled
+        expect(BlockchainAPI.push_tx).toHaveBeenCalled
 
     ############################################################################
     ############# LEGACY ADDR TO LEGACY ADDR
@@ -185,43 +146,14 @@ describe "Spend", ->
                                                , observer.listener
                                                , observer.getPassword
 
-        expect(BlockchainAPI.push_tx).toHaveBeenCAlled
+        expect(BlockchainAPI.push_tx).toHaveBeenCalled
 
 
   describe "Legacy Address", ->
-    beforeEach ->
-      spyOn(Signer, "init").and.callFake(()-> return mockedObj)
+
     ############################################################################
     ############# LEGACY ADDR TO ACC
     describe "sendFromLegacyAddressToAccount()", ->
-
-      it "should contruct the expected transaction object", ->
-
-        data.to = 0 #iDX
-        data.fee = 15000
-        MyWallet.setDoubleEncryption(false)
-        expected_to_addr = "1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX"
-        MyWallet.sendFromLegacyAddressToAccount  data.from
-                                               , data.to
-                                               , data.amount
-                                               , data.fee
-                                               , data.note
-                                               , observer.success
-                                               , observer.error
-                                               , observer.listener
-                                               , observer.getPassword
-
-        expect(Signer.init).toHaveBeenCalled()
-        expect(BigInteger.valueOf(data.fee).equals(mockedObj.fee)).toBe(true)
-        expect(mockedObj.from_addresses).toEqual([data.from])
-        expect(BigInteger.valueOf(data.amount)
-          .equals(mockedObj.to_addresses[0].value)).toBe(true)
-        expect(mockedObj.to_addresses[0].address.toString())
-          .toBe(expected_to_addr)
-        expect(mockedObj.note).toBe(data.note)
-        expect(mockedObj.ready_to_send_header).toBe('Bitcoins Ready to Send.')
-        expect(mockedObj.start).toHaveBeenCalledWith(null)
-        expect(observer.success).toHaveBeenCalled()
 
       it "should call wrong_password when second_password active", ->
 
@@ -272,8 +204,6 @@ describe "Spend", ->
         expect(MyWallet.validateSecondPassword).toHaveBeenCalled()
         expect(observer.wrong_password).not.toHaveBeenCalled()
         expect(observer.correct_password).toHaveBeenCalled()
-        expect(mockedObj.start).toHaveBeenCalledWith("ThisIsACorrectPass")
-        expect(observer.success).toHaveBeenCalled()
 
     ############################################################################
     ############# LEGACY ADDR TO LEGACY ADDR

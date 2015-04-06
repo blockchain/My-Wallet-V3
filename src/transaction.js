@@ -39,6 +39,7 @@ var Transaction = function (unspentOutputs, toAddress, amount, fee, changeAddres
     // Generate address from output script and add to private list so we can check if the private keys match the inputs later
 
     var script = Bitcoin.Script.fromHex(output.script);
+    assert.notEqual(Bitcoin.scripts.classifyOutput(script), 'nonstandard', 'Strange Script');
     var address = Bitcoin.Address.fromOutputScript(script).toString();
     assert(address, 'Unable to decode output address from transaction hash ' + output.tx_hash);
     addressesOfInputs.push(address);
