@@ -16,7 +16,7 @@ function passphraseToPassphraseHexString(passphrase) {
 
 var HDWallet = function(seedHex, bip39Password, second_password) {
 
-  this.seedHex = seedHex == null || seedHex == undefined || seedHex == "" || second_password == null ? seedHex : WalletCrypto.encryptSecretWithSecondPassword(seedHex, second_password, MyWallet.getSharedKey(), MyWallet.getPbkdf2Iterations());
+  this.seedHex = seedHex == null || seedHex == undefined || seedHex == "" || second_password == null ? seedHex : WalletCrypto.encryptSecretWithSecondPassword(seedHex, second_password, MyWallet.getSharedKey(), WalletStore.getPbkdf2Iterations());
   this.bip39Password = bip39Password;
   this.numTxFetched = 0;
   this.accountArray = [];
@@ -33,7 +33,7 @@ var HDWallet = function(seedHex, bip39Password, second_password) {
     if(this.seedHex == null || second_password == null) {
       return this.seedHex;
     } else {
-      return WalletCrypto.decryptSecretWithSecondPassword(this.seedHex, second_password, MyWallet.getSharedKey(), MyWallet.getPbkdf2Iterations());
+      return WalletCrypto.decryptSecretWithSecondPassword(this.seedHex, second_password, MyWallet.getSharedKey(), WalletStore.getPbkdf2Iterations());
     }
   };
 
@@ -182,7 +182,7 @@ var HDWallet = function(seedHex, bip39Password, second_password) {
     var extendedPrivateKey = accountZero.toBase58();
     var extendedPublicKey =  accountZero.neutered().toBase58();    
 
-    account.extendedPrivateKey = extendedPrivateKey == null || second_password == null ? extendedPrivateKey : WalletCrypto.encryptSecretWithSecondPassword(extendedPrivateKey, second_password, MyWallet.getSharedKey(), MyWallet.getPbkdf2Iterations());
+    account.extendedPrivateKey = extendedPrivateKey == null || second_password == null ? extendedPrivateKey : WalletCrypto.encryptSecretWithSecondPassword(extendedPrivateKey, second_password, MyWallet.getSharedKey(), WalletStore.getPbkdf2Iterations());
     account.extendedPublicKey = extendedPublicKey;
 
     account.generateCache();

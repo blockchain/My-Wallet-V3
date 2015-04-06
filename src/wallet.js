@@ -88,7 +88,6 @@ var MyWallet = new function() {
   var isPolling = false;
 
   var wallet_options = {
-    pbkdf2_iterations : default_pbkdf2_iterations, //Number of pbkdf2 iterations to default to for main password, second password and dpasswordhash
     fee_policy : 0,  //Default Fee policy (-1 Tight, 0 Normal, 1 High)
     html5_notifications : false, //HTML 5 Desktop notifications
     logout_time : 600000, //Default 10 minutes
@@ -218,10 +217,6 @@ var MyWallet = new function() {
 
   this.getDefaultPbkdf2Iterations = function() {
     return default_pbkdf2_iterations;
-  };
-
-  this.getPbkdf2Iterations = function() {
-    return wallet_options.pbkdf2_iterations;
   };
 
   this.getSharedKey = function() {
@@ -417,6 +412,13 @@ var MyWallet = new function() {
    * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
    */
   this.setPbkdf2Iterations = function(pbkdf2_iterations, success, error, getPassword) {
+    previous_pbkdf2_iterations = WalletStore.setPbkdf2Iterations(pbkdf2_iterations);
+    
+    if(pbkdf2_iterations == previous_pbkdf2_iterations) {
+      success();
+      return;
+    }
+    
     var panic = function(e) {
       console.log('Panic ' + e);
 
@@ -429,7 +431,7 @@ var MyWallet = new function() {
     };
 
     var setPbkdf2IterationsAndBackupWallet = function() {
-      wallet_options.pbkdf2_iterations = pbkdf2_iterations;
+      WalletStore.setPbkdf2Iterations(pbkdf2_iterations);
       success();
       MyWallet.backupWalletDelayed('update', function() {
       }, function(e) {
@@ -444,19 +446,19 @@ var MyWallet = new function() {
           function(pw, correct_password, wrong_password) {
             if (MyWallet.validateSecondPassword(pw)) {
               correct_password();
-              WalletStore.mapToLegacyAddressesPrivateKeys(WalletCrypto.reencrypt(pw, MyWallet.getSharedKey(), MyWallet.getPbkdf2Iterations));
+              WalletStore.mapToLegacyAddressesPrivateKeys(WalletCrypto.reencrypt(pw, MyWallet.getSharedKey(), previous_pbkdf2_iterations, pbkdf2_iterations));
 
               // Re-encrypt all HD account keys
               for (var i in MyWallet.getAccounts()) {
                 var account = MyWallet.getHDWallet().getAccount(i);
-                account.extendedPrivateKey = WalletCrypto.reencrypt(pw, MyWallet.getSharedKey(), MyWallet.getPbkdf2Iterations)(account.extendedPrivateKey);
+                account.extendedPrivateKey = WalletCrypto.reencrypt(pw, MyWallet.getSharedKey(), previous_pbkdf2_iterations, pbkdf2_iterations)(account.extendedPrivateKey);
 
                 if (!account.extendedPrivateKey) throw 'Error re-encrypting account private key';
               }
 
               // Re-encrypt the HD seed
               if (WalletStore.didUpgradeToHd()) {
-                MyWallet.getHDWallet().seedHex = WalletCrypto.reencrypt(pw, MyWallet.getSharedKey(), MyWallet.getPbkdf2Iterations)(MyWallet.getHDWallet().seedHex);
+                MyWallet.getHDWallet().seedHex = WalletCrypto.reencrypt(pw, MyWallet.getSharedKey(), previous_pbkdf2_iterations, pbkdf2_iterations)(MyWallet.getHDWallet().seedHex);
 
                 if (!MyWallet.getHDWallet().seedHex) throw 'Error re-encrypting wallet seed';
               }
@@ -509,7 +511,7 @@ var MyWallet = new function() {
    */
   this.unsetSecondPassword = function(success, error, getPassword) {
     var sharedKey = MyWallet.getSharedKey();
-    var pbkdf2_iterations = MyWallet.getPbkdf2Iterations();
+    var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
     
     var panic = function(e) {
       console.log('Panic ' + e);
@@ -580,7 +582,7 @@ var MyWallet = new function() {
     };
 
     var sharedKey = MyWallet.getSharedKey();
-    var pbkdf2_iterations = MyWallet.getPbkdf2Iterations();
+    var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
 
     var encrypt = function(pw) {
       var enc = function(data) {
@@ -591,7 +593,7 @@ var MyWallet = new function() {
 
     try {
       MyWallet.setDoubleEncryption(true);
-      WalletStore.mapToLegacyAddressesPrivateKeys(encrypt(password, MyWallet.getSharedKey(), MyWallet.getPbkdf2Iterations));
+      WalletStore.mapToLegacyAddressesPrivateKeys(encrypt(password, MyWallet.getSharedKey(), pbkdf2_iterations));
 
       for (var i in MyWallet.getAccounts()) {
         var account = MyWallet.getHDWallet().getAccount(i);
@@ -801,7 +803,7 @@ var MyWallet = new function() {
   // TODO: this can be moved to walletstore
   this.addPrivateKey = function(key, opts, second_password) {
     var sharedKey = MyWallet.getSharedKey();
-    var pbkdf2_iterations = MyWallet.getPbkdf2Iterations();
+    var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
     
     if (WalletStore.walletIsFull()) {
       throw 'Wallet is full.';
@@ -1782,7 +1784,7 @@ var MyWallet = new function() {
 
     function sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback, listener, secondPassword)  {
       var sharedKey = MyWallet.getSharedKey();
-      var pbkdf2_iterations = MyWallet.getPbkdf2Iterations();
+      var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
       
       var account = MyWallet.getHDWallet().getAccount(accountIdx);
       var key = MyWallet.generateNewKey();
@@ -2049,7 +2051,7 @@ var MyWallet = new function() {
    */
   this.sendToMobile = function(accountIdx, value, fixedFee, mobile, successCallback, errorCallback, listener, getPassword)  {
     var sharedKey = MyWallet.getSharedKey();
-    var pbkdf2_iterations = MyWallet.getPbkdf2Iterations();
+    var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
     if (double_encryption) {
       getPassword(function(pw, correct_password, wrong_password) {
         if (MyWallet.validateSecondPassword(pw)) {
@@ -2144,7 +2146,7 @@ var MyWallet = new function() {
     // second_password must be null if not needed.
     function sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, listener, second_password) {
       var sharedKey = MyWallet.getSharedKey();
-      var pbkdf2_iterations = MyWallet.getPbkdf2Iterations();
+      var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
       
       MyWallet.getUnspentOutputsForAccount(       
         accountIdx,
@@ -2538,7 +2540,7 @@ var MyWallet = new function() {
       getPassword(function(pw, correct_password, incorrect_password) {
         if (MyWallet.validateSecondPassword(pw)) {
           correct_password();
-          var seed = WalletCrypto.decryptSecretWithSecondPassword(MyWallet.getHDWallet().getSeedHexString(), pw, sharedKey, MyWallet.getPbkdf2Iterations()); 
+          var seed = WalletCrypto.decryptSecretWithSecondPassword(MyWallet.getHDWallet().getSeedHexString(), pw, sharedKey, WalletStore.getPbkdf2Iterations()); 
           successCallback(MyWallet.getHDWallet().getPassphraseString(seed));
         } else {
           incorrect_password();
@@ -3054,8 +3056,10 @@ var MyWallet = new function() {
           throw 'Shared Key is invalid';
         }
 
+        console.log("Root container?")
         if (rootContainer) {
-          wallet_options.pbkdf2_iterations = rootContainer.pbkdf2_iterations;
+          WalletStore.setPbkdf2Iterations(rootContainer.pbkdf2_iterations);
+          console.log("Iterations during decrypt wallet:", rootContainer.pbkdf2_iterations);
         }
 
         if (obj.double_encryption && obj.dpasswordhash) {
@@ -3066,7 +3070,7 @@ var MyWallet = new function() {
         if (obj.options) {
           $.extend(wallet_options, obj.options);
         }
-
+        
         WalletStore.newLegacyAddressesFromJSON(obj.keys);
 
         WalletStore.newAddressBookFromJSON(obj.address_book)
@@ -3567,7 +3571,8 @@ var MyWallet = new function() {
       localWalletJsonString = data;
 
       //Everything looks ok, Encrypt the JSON output
-      var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.getPbkdf2Iterations(), WalletStore.didUpgradeToHd() ?  3.0 : 2.0 );
+      console.log("Iterations at backup time:", WalletStore.getPbkdf2Iterations())
+      var crypted = WalletCrypto.encryptWallet(data, password, WalletStore.getPbkdf2Iterations(), WalletStore.didUpgradeToHd() ?  3.0 : 2.0 );
 
       if (crypted.length == 0) {
         throw 'Error encrypting the JSON output';
@@ -3687,7 +3692,7 @@ var MyWallet = new function() {
 
     var thash = CryptoJS.SHA256(sharedKey + input);
 
-    var password_hash = hashPassword(thash, MyWallet.getPbkdf2Iterations()-1);  //-1 because we have hashed once in the previous line
+    var password_hash = hashPassword(thash, WalletStore.getPbkdf2Iterations()-1);  //-1 because we have hashed once in the previous line
 
     if (password_hash == dpasswordhash) {
       return true;
@@ -3703,14 +3708,14 @@ var MyWallet = new function() {
   this.validateSecondPassword = function(input) {
     var thash = CryptoJS.SHA256(sharedKey + input);
 
-    var password_hash = hashPassword(thash, MyWallet.getPbkdf2Iterations()-1);  //-1 because we have hashed once in the previous line
+    var password_hash = hashPassword(thash, WalletStore.getPbkdf2Iterations()-1);  //-1 because we have hashed once in the previous line
 
     if (password_hash == dpasswordhash) {
       return true;
     }
 
     //Try 10 rounds
-    if (MyWallet.getPbkdf2Iterations() != 10) {
+    if (WalletStore.getPbkdf2Iterations() != 10) {
       var iter_10_hash = hashPassword(thash, 10-1);  //-1 because we have hashed once in the previous line
 
       if (iter_10_hash == dpasswordhash) {
@@ -3808,21 +3813,25 @@ var MyWallet = new function() {
   this.checkAllKeys = function(second_password) {
     
     var sharedKey = MyWallet.getSharedKey();
-    var pbkdf2_iterations = MyWallet.getPbkdf2Iterations();
+    var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
 
     // TODO: this probably can be abstracted too in WalletStore
     var addresses = WalletStore.getAddresses();
+    console.log(WalletStore.getAddresses());
     for (var key in addresses) {
       var addr = addresses[key];
+      console.log(addr);
 
-      if (addr.addr == null)
+      if (addr.addr == null) {
         console.log('Null Address Found in wallet ' + key);
         throw 'Null Address Found in wallet ' + key;
+      }
 
       //Will throw an exception if the checksum does not validate
-      if (addr.addr.toString() == null)
+      if (addr.addr.toString() == null) {
         console.log('Error decoding wallet address ' + addr.addr);
         throw 'Error decoding wallet address ' + addr.addr;
+      }
 
       if (addr.priv != null) {
         var decryptedpk;

@@ -25,6 +25,7 @@ describe "HD Wallet", ->
       spyOn(observer, "success").and.callThrough()
       spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
       spyOn(MyWallet, "generateHDWalletSeedHex").and.returnValue(seed)
+      spyOn(WalletStore, "getPbkdf2Iterations").and.returnValue(10)
       
     describe "without 2nd password", ->
       beforeEach ->
@@ -110,7 +111,7 @@ describe "HD Wallet", ->
               hdwallet = hdWallet
               hdwallet.setSeedHexString(seed_encrypted)
               
-          spyOn(MyWallet, "getPbkdf2Iterations").and.returnValue 1        
+          spyOn(WalletStore, "getPbkdf2Iterations").and.returnValue 1        
           
 
           spyOn(observer, "success").and.callThrough()
@@ -167,7 +168,7 @@ describe "HD Wallet", ->
       account = undefined
       
       beforeEach ->
-        spyOn(MyWallet, "getPbkdf2Iterations").and.returnValue 1        
+        spyOn(WalletStore, "getPbkdf2Iterations").and.returnValue 1        
         
         fake_seed = "00000000000000000000000000000000"
         

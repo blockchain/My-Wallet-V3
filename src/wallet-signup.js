@@ -9,7 +9,7 @@ var MyWalletSignup = new function() {
       var data = MyWallet.makeCustomWalletJSON(null, guid, sharedKey);
       
       //Everything looks ok, Encrypt the JSON output
-      var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.getPbkdf2Iterations(),  WalletStore.didUpgradeToHd() ?  3.0 : 2.0);
+      var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.getDefaultPbkdf2Iterations(),  WalletStore.didUpgradeToHd() ?  3.0 : 2.0);
       
       if (crypted.length == 0) {
         throw 'Error encrypting the JSON output';

@@ -227,13 +227,13 @@
   # @param {!string} pw The password used for encryption.
   ###
 
-  reencrypt: (pw, sharedKey, pbkdf2_iterations) ->
+  reencrypt: (pw, sharedKey, previous_pbkdf2_iterations, new_pbkdf2_iterations) ->
     assert(pw, "password missing")
     assert(sharedKey, "password missing")
     assert(pbkdf2_iterations, "pbkdf2_iterations missing")
 
     enc = (data) ->
-      WalletCrypto.encrypt WalletCrypto.decryptSecretWithSecondPassword(data, pw, sharedKey, pbkdf2_iterations), sharedKey + pw, pbkdf2_iterations
+      WalletCrypto.encrypt WalletCrypto.decryptSecretWithSecondPassword(data, pw, sharedKey, previous_pbkdf2_iterations), sharedKey + pw, new_pbkdf2_iterations
 
     enc
     

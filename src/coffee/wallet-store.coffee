@@ -61,6 +61,7 @@
   maxAddr = 1000;   # Maximum number of addresses
   didUpgradeToHd = null
   address_book = {} #Holds the address book addr = label
+  pbkdf2_iterations = null
   
   #////////////////////////////////////////////////////////////////////////////
   # Private functions
@@ -80,6 +81,11 @@
 
   #////////////////////////////////////////////////////////////////////////////
   # public methods
+  setPbkdf2Iterations: (iterations) ->
+    pbkdf2_iterations = iterations
+  
+  getPbkdf2Iterations: () ->
+    pbkdf2_iterations
 
   getLanguage: () ->
     if language? then language else MyStore.get('language')

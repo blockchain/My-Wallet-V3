@@ -87,7 +87,7 @@ describe "Wallet", ->
           console.log(e)
       
       spyOn(callbacks, "success")
-      spyOn(callbacks, "error") #.and.callThrough()
+      spyOn(callbacks, "error").and.callFake((e) -> console.log(e)) #.and.callThrough()
       
       spyOn(MyWalletSignup, "generateUUIDs").and.callFake (n, success, error) ->
         success(["68019bee-7a27-490b-ab8a-446c2749bf1f","78019bee-7a27-490b-ab8a-446c2749bf1f"]) # Fake UID and shared key
@@ -103,6 +103,8 @@ describe "Wallet", ->
       MyWallet.createNewWallet("a@b.com", "1234567890", "en", "EUR", callbacks.success, callbacks.error)
       
       expect(callbacks.success).toHaveBeenCalled()
+      expect(callbacks.error).not.toHaveBeenCalled()
+      
       
     it "should create an HD wallet", ->
       
@@ -125,12 +127,15 @@ describe "Wallet", ->
         callback("")
 
       spyOn(obj, "success")
+      
+      spyOn(WalletStore, "setPbkdf2Iterations").and.callFake((n) -> 
+      )
 
       MyWallet.setPbkdf2Iterations(pbkdf2_iterations, obj.success, obj.error, getPassword)
 
       expect(obj.success).toHaveBeenCalled()
 
-      expect(MyWallet.getPbkdf2Iterations()).toBe(pbkdf2_iterations)
+      expect(WalletStore.setPbkdf2Iterations).toHaveBeenCalledWith(pbkdf2_iterations)
 
     it "should set the PBKDF2 iterations when 2nd password is enabled", ->
       MyWallet.setDoubleEncryption(true)
@@ -159,4 +164,4 @@ describe "Wallet", ->
 
       expect(observer.success).toHaveBeenCalled()
 
-      expect(MyWallet.getPbkdf2Iterations()).toBe(pbkdf2_iterations)
+      expect(WalletStore.getPbkdf2Iterations()).toBe(pbkdf2_iterations)

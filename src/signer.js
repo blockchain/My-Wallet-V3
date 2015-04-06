@@ -526,7 +526,7 @@ var Signer = new function() {
             connected_script.priv_to_use = extra_private_keys[inputAddress];
           } else if (WalletStore.legacyAddressExists(inputAddress) && !WalletStore.isWatchOnlyLegacyAddress(inputAddress)) {
             try {
-              connected_script.priv_to_use = second_password == null ? WalletStore.getPrivateKey(inputAddress) : WalletCrypto.decryptSecretWithSecondPassword(WalletStore.getPrivateKey(inputAddress), second_password, MyWallet.getSharedKey(), MyWallet.getPbkdf2Iterations());
+              connected_script.priv_to_use = second_password == null ? WalletStore.getPrivateKey(inputAddress) : WalletCrypto.decryptSecretWithSecondPassword(WalletStore.getPrivateKey(inputAddress), second_password, MyWallet.getSharedKey(), WalletStore.getPbkdf2Iterations());
             } catch (e) {
               console.log(e);
             }
