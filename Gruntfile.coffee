@@ -94,11 +94,15 @@ module.exports = (grunt) ->
     karma:
       unit:
         configFile: 'karma.conf.js'
-        background: true
         singleRun: false
+        
+      continuous: # continuous integration mode: run tests once (what's in a name...)
+        configFile: 'karma.conf.js'
+        singleRun: true
 
       test:
         configFile: 'karma.conf.js'
+        singleRun: false
 
     # TODO should auto-run and work on all files
     jshint:
@@ -138,11 +142,11 @@ module.exports = (grunt) ->
           'src/import-export.js'
           'src/coffee/*.coffee'
         ]
-        tasks: ['build']
+        tasks: ['build','karma:continuous']
 
       karma:
-        files: ['<%= watch.scripts.files %>', 'tests/**/*.js.coffee', 'tests/**/*.js']
-        tasks: ['karma:unit:run']
+        files: ['tests/**/*.js.coffee', 'tests/**/*.js']
+        tasks: ['karma:continuous']
         
     shell: 
       check_dependencies: 
@@ -195,7 +199,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-contrib-jshint'
 
   grunt.registerTask "default", [
-    "karma:unit:start"
+    "karma:continuous"
     "watch"
   ]
   
