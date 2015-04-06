@@ -68,6 +68,7 @@
   total_received = 0 # Total Satoshi received
   tx_notes = {}      # A map of transaction notes, hash -> note
   defaultAccountIdx = 0
+  disable_logout = false;
   #////////////////////////////////////////////////////////////////////////////
   # Private functions
 
@@ -344,3 +345,9 @@
     return
 
   getDefaultAccountIndex: () -> defaultAccountIdx
+
+  disableLogout: (value) ->
+    disable_logout = true;
+    return
+
+  isLogoutDisabled: () -> disable_logout

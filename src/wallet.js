@@ -57,11 +57,9 @@ var MyWallet = new function() {
   var logout_timeout; //setTimeout return value for the automatic logout
   var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
   var isInitialized = false;
-  var localSymbolCode = null; //Current local symbol
   var serverTimeOffset = 0; //Difference between server and client time
   var haveSetServerTime = false; //Whether or not we have synced with server time
   var sharedcoin_endpoint; //The URL to the sharedcoin node
-  var disable_logout = false;
   var isRestoringWallet = false;
   var sync_pubkeys = false;
   var legacyAddressesNumTxFetched = 0;
@@ -202,14 +200,6 @@ var MyWallet = new function() {
 
   this.getSharedcoinEndpoint = function() {
     return sharedcoin_endpoint;
-  };
-
-  this.disableLogout = function(value) {
-    disable_logout = value;
-  };
-
-  this.isLogoutDisabled = function() {
-    return disable_logout;
   };
 
   this.setLogoutTime = function(logout_time) {
@@ -693,12 +683,12 @@ var MyWallet = new function() {
 
     if (format == 'bip38') {
       getBIP38Password(function(_password, correct_password, wrong_password) {
-        MyWallet.disableLogout(true);
+        WalletStore.disableLogout(true);
         ImportExport.parseBIP38toECKey(
           privateKeyString, 
           _password, 
           function(key, isCompPoint) {
-            MyWallet.disableLogout(false);
+            WalletStore.disableLogout(false);
             correct_password();
             if(double_encryption) {
               getPassword(function(pw, correct_password, wrong_password) {
@@ -715,11 +705,11 @@ var MyWallet = new function() {
             }
           }, 
           function() {
-            MyWallet.disableLogout(false);
+            WalletStore.disableLogout(false);
             wrong_password();
           },
           function(e) {
-            MyWallet.disableLogout(false);
+            WalletStore.disableLogout(false);
             error(e);
           }
         );
@@ -3438,7 +3428,7 @@ var MyWallet = new function() {
       throw 'Cannot backup wallet now. Shared key is not set';
     }
 
-    MyWallet.disableLogout(true);
+    WalletStore.disableLogout(true);
     isSynchronizedWithServer = false;
     if (archTimer) {
       clearInterval(archTimer);
@@ -3456,7 +3446,7 @@ var MyWallet = new function() {
       throw 'Cannot backup wallet now. Shared key is not set';
     }
 
-    MyWallet.disableLogout(true);
+    WalletStore.disableLogout(true);
     if (archTimer) {
       clearInterval(archTimer);
       archTimer = null;
@@ -3521,21 +3511,21 @@ var MyWallet = new function() {
                   successcallback();
 
                 isSynchronizedWithServer = true;
-                MyWallet.disableLogout(false);
+                WalletStore.disableLogout(false);
                 logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
                 MyWallet.sendEvent('on_backup_wallet_success');
             },
               function() {
                 _errorcallback('Checksum Did Not Match Expected Value');
-                MyWallet.disableLogout(false);
+                WalletStore.disableLogout(false);
             });
           }, function(e) {
             _errorcallback(e.responseText);
-            MyWallet.disableLogout(false);
+            WalletStore.disableLogout(false);
           });
         } catch (e) {
           _errorcallback(e);
-          MyWallet.disableLogout(false);
+          WalletStore.disableLogout(false);
         };
       },
       function(e) {
@@ -3544,7 +3534,7 @@ var MyWallet = new function() {
       });
     } catch (e) {
       _errorcallback(e);
-      MyWallet.disableLogout(false);
+      WalletStore.disableLogout(false);
     }
   };
 
@@ -3832,7 +3822,7 @@ var MyWallet = new function() {
   };
 
   this.logout = function() {
-    if (disable_logout)
+    if (WalletStore.isLogoutDisabled())
       return;
 
     MyWallet.sendEvent('logging_out');
