@@ -117,11 +117,16 @@ describe "Spend", ->
       window.formatBTC = (str) -> str
 
       window.BlockchainAPI =
-        get_unspent: () -> return
+        get_unspent: () ->
+        push_tx: () ->
+
+      spyOn(BlockchainAPI, "push_tx")
 
       spyOn(BlockchainAPI, "get_unspent")
         .and.callFake((xpubList,success,error,conf,nocache) -> 
           success(getUnspentMock))
+
+      spyOn(WalletStore, "getPrivateKey").and.callFake((address) -> 'AWrnMsqe2AJYmrzKsN8qRosHRiCSKag3fcmvUA9wdJDj')
 
     ############################################################################
     ############# LEGACY ADDR TO ACC
@@ -180,7 +185,7 @@ describe "Spend", ->
                                                , observer.listener
                                                , observer.getPassword
 
-        expect(Signer.pushTx).toHaveBeenCAlled
+        expect(BlockchainAPI.push_tx).toHaveBeenCAlled
 
 
   describe "Legacy Address", ->
@@ -274,32 +279,6 @@ describe "Spend", ->
     ############# LEGACY ADDR TO LEGACY ADDR
     describe "sendFromLegacyAddressToAddress()", ->
 
-      it "should construct the expected transaction object", ->
-
-        data.fee = 15000
-        MyWallet.setDoubleEncryption(false)
-        MyWallet.sendFromLegacyAddressToAddress  data.from
-                                               , data.to
-                                               , data.amount
-                                               , data.fee
-                                               , data.note
-                                               , observer.success
-                                               , observer.error
-                                               , observer.listener
-                                               , observer.getPassword
-
-        expect(Signer.init).toHaveBeenCalled()
-        expect(BigInteger.valueOf(data.fee).equals(mockedObj.fee)).toBe(true)
-        expect(mockedObj.from_addresses).toEqual([data.from])
-        expect(BigInteger.valueOf(data.amount)
-          .equals(mockedObj.to_addresses[0].value)).toBe(true)
-        expect(mockedObj.to_addresses[0].address.toString()).toBe(data.to)
-        expect(mockedObj.note).toBe(data.note)
-        expect(mockedObj.ready_to_send_header).toBe('Bitcoins Ready to Send.')
-        # expect(mockedObj.addListener).toHaveBeenCalled()
-        expect(mockedObj.start).toHaveBeenCalledWith(null)
-        expect(observer.success).toHaveBeenCalled()
-
       it "should call wrong_password when second_password active", ->
 
         spyOn(MyWallet, "validateSecondPassword").and.callFake((pw)-> false)
@@ -347,8 +326,6 @@ describe "Spend", ->
         expect(MyWallet.validateSecondPassword).toHaveBeenCalled()
         expect(observer.wrong_password).not.toHaveBeenCalled()
         expect(observer.correct_password).toHaveBeenCalled()
-        expect(mockedObj.start).toHaveBeenCalledWith("ThisIsACorrectPass")
-        expect(observer.success).toHaveBeenCalled()
 
     ############################################################################
     ############# SWEEP LEGACY ADDR

@@ -1432,6 +1432,22 @@ var MyWallet = new function() {
     return result;
   };
 
+  this.getUnspentOutputsForAddresses = function(addresses, successCallback, errorCallback) {
+    BlockchainAPI.get_unspent([addresses], function (obj) {
+
+      obj.unspent_outputs.forEach(function(utxo) {
+        var txBuffer = new Buffer(utxo.tx_hash, "hex");
+        Array.prototype.reverse.call(txBuffer);
+        utxo.hash = txBuffer.toString("hex");
+        utxo.index = utxo.tx_output_n;
+      });
+
+      successCallback && successCallback(obj.unspent_outputs);
+    }, function(e) {
+      errorCallback && errorCallback(e.message || e.responseText);
+    }, 0, true);
+  };
+
   this.getUnspentOutputsForAccount = function(accountIdx, successCallback, errorCallback) {
     var account = MyWallet.getHDWallet().getAccount(accountIdx);
 
@@ -1444,13 +1460,9 @@ var MyWallet = new function() {
         utxo.index = utxo.tx_output_n;
       });
 
-      if (successCallback) {
-        successCallback(obj.unspent_outputs);
-      }
+      successCallback && successCallback(obj.unspent_outputs);
     }, function(e) {
-      if (errorCallback) {
-        errorCallback(e.message || e.responseText);
-      }
+      errorCallback && errorCallback(e.message || e.responseText);
     }, 0, true);
   };
 
@@ -1885,27 +1897,36 @@ var MyWallet = new function() {
   };
 
   function sendFromLegacyAddressToAddress(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback, listener, second_password)  {
-    var obj = Signer.init();
-    if (feeAmount != null)
-      obj.setFee(BigInteger.valueOf(feeAmount));
-
-    obj.addToAddress({ address: Bitcoin.Address.fromBase58Check(toAddress), value : BigInteger.valueOf(amount) });
-
     var fromAddresses  = fromAddress ? [fromAddress] : WalletStore.getLegacyActiveAddresses();
 
-    for(var i in fromAddresses) {
-      obj.addFromAddress(fromAddresses[i]);
-    }
+    MyWallet.getUnspentOutputsForAddresses(
+      fromAddresses,
+      function (unspent_outputs) {
+        var changeAddress = fromAddress || WalletStore.getPreferredLegacyAddress();
 
-    obj.ready_to_send_header = 'Bitcoins Ready to Send.';
+        var tx = new Transaction(unspent_outputs, toAddress, amount, feeAmount, changeAddress, listener);
 
-    listener.on_success = successCallback;
-    listener.on_error = errorCallback;
-    obj.addListener(listener);
+        var keys = tx.addressesOfNeededPrivateKeys.map(function(neededPrivateKeyAddress) {
+          var privateKeyBase58 = second_password === null ? WalletStore.getPrivateKey(neededPrivateKeyAddress) : WalletCrypto.decryptSecretWithSecondPassword(WalletStore.getPrivateKey(neededPrivateKeyAddress), second_password, MyWallet.getSharedKey(), WalletStore.getPbkdf2Iterations());
+          var format = MyWallet.detectPrivateKeyFormat(privateKeyBase58);
+          var key = MyWallet.privateKeyStringToKey(privateKeyBase58, format);
 
-    obj.note = note;
+          // If the address we looked for is not the public key address of the private key we found, try the compressed address
+          if (MyWallet.getCompressedAddressString(key) === neededPrivateKeyAddress) {
+            key = new Bitcoin.ECKey(key.d, true);
+          }
 
-    obj.start(second_password);
+          return key;
+        });
+
+        tx.addPrivateKeys(keys);
+
+        var signedTransaction = tx.sign();
+
+        BlockchainAPI.push_tx(signedTransaction, note, successCallback, errorCallback);
+      },
+      function(e) { errorCallback && errorCallback(e);}
+    );
   }
 
   /**
@@ -2101,7 +2122,7 @@ var MyWallet = new function() {
       var sharedKey = MyWallet.getSharedKey();
       var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
       
-      MyWallet.getUnspentOutputsForAccount(       
+      MyWallet.getUnspentOutputsForAccount(
         accountIdx,
         function (unspent_outputs) {
           var account = MyWallet.getHDWallet().getAccount(accountIdx);
