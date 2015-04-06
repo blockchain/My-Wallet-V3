@@ -152,6 +152,10 @@ module.exports = (grunt) ->
       check_dependencies: 
         command: () -> 
            'mkdir -p build && ruby check-dependencies.rb'
+           
+      skip_check_dependencies:
+        command: () ->
+          'cp -r node_modules build && cp -r bower_components build'
         
       npm_install_dependencies:
         command: () ->
@@ -223,6 +227,20 @@ module.exports = (grunt) ->
     "clean:shrinkwrap"
     "shell:npm_install_dependencies"
     "shell:bower_install_dependencies"
+    "preprocess"
+    "browserify:production"
+    "concat:bower_dist"
+    "concat:mywallet"
+    "uglify:mywallet"
+  ]
+  
+  # Skip dependency check, e.g. for staging:
+  grunt.registerTask "dist_unsafe", [
+    "env:production"
+    "clean:build"
+    "clean:dist"
+    "coffee:compile"
+    "shell:skip_check_dependencies"
     "preprocess"
     "browserify:production"
     "concat:bower_dist"
