@@ -56,16 +56,17 @@
   language = 'en'; #Current language
   mnemonicVerified = false
   xpubs = []
-  transactions = [] # List of all transactions (initially populated from /multiaddr updated through websockets)
-  n_tx = 0          # Number of transactions
-  addresses = {}    # {addr : address, priv : private key, tag : tag (mark as archived), label : label, balance : balance}
-  maxAddr = 1000;   # Maximum number of addresses
+  transactions = []  # List of all transactions (initially populated from /multiaddr updated through websockets)
+  n_tx = 0           # Number of transactions
+  addresses = {}     # {addr : address, priv : private key, tag : tag (mark as archived), label : label, balance : balance}
+  maxAddr = 1000;    # Maximum number of addresses
   didUpgradeToHd = null
-  address_book = {} #Holds the address book addr = label
+  address_book = {}  #Holds the address book addr = label
   pbkdf2_iterations = null
-  final_balance = 0 # Final Satoshi wallet balance
-  total_sent = 0    # Total Satoshi sent
+  final_balance = 0  # Final Satoshi wallet balance
+  total_sent = 0     # Total Satoshi sent
   total_received = 0 # Total Satoshi received
+  tx_notes = {}      # A map of transaction notes, hash -> note
   #////////////////////////////////////////////////////////////////////////////
   # Private functions
 
@@ -318,3 +319,21 @@
   addToTotalReceived: (amount) ->
     total_received += amount
     return
+
+  getNote: (txHash) ->
+    if (txHash of tx_notes) then tx_notes[txHash] else null
+
+  deleteNote: (txHash) ->
+    delete tx_notes[txHash]
+    MyWallet.backupWalletDelayed()
+    return
+
+  setNote: (txHash, text) ->
+    isValidNote = MyWallet.isAlphaNumericSpace(text) and text?
+    if isValidNote
+      tx_notes[txHash] = text
+      MyWallet.backupWalletDelayed()
+    return isValidNote
+
+  getNotes: () -> tx_notes
+

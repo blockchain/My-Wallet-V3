@@ -52,7 +52,6 @@ var MyWallet = new function() {
   var mixer_fee = 0.5; //Default mixer fee 1.5%
   var recommend_include_fee = true; //Number of unconfirmed transactions in blockchain.info's memory pool
   var default_pbkdf2_iterations = 5000;
-  var tx_notes = {}; //A map of transaction notes, hash -> note
   var auth_type; //The two factor authentication type used. 0 for none.
   var real_auth_type = 0; //The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
   var logout_timeout; //setTimeout return value for the automatic logout
@@ -1411,7 +1410,7 @@ var MyWallet = new function() {
     transaction.confirmations = MyWallet.getConfirmationsForTx(MyWallet.getLatestBlock(), tx);
 
     transaction.txTime = tx.time;
-    transaction.note = tx_notes[tx.hash] ? tx_notes[tx.hash] : null;
+    transaction.note = WalletStore.getNote(tx.hash);
     transaction.tags = MyWallet.getTags(tx.hash);
     transaction.size = tx.size;
     transaction.tx_index = tx.txIndex;
@@ -2633,8 +2632,8 @@ var MyWallet = new function() {
       out += "\n  ]";
     }
 
-    if (nKeys(tx_notes) > 0) {
-      out += ',\n  "tx_notes" : ' + JSON.stringify(tx_notes);
+    if (nKeys(WalletStore.getNotes()) > 0) {
+      out += ',\n  "tx_notes" : ' + JSON.stringify(WalletStore.getNotes());
     }
 
     if (nKeys(tx_tags) > 0) {
@@ -2733,37 +2732,6 @@ var MyWallet = new function() {
       MyWallet.sendEvent('did_set_latest_block');
     }
   }
-
-  /**
-   * @param {string} tx_hash Transaction hash.
-   * @return {string} note
-   */
-  this.getNote = function(tx_hash) {
-    return tx_notes[tx_hash];
-  };
-
-  /**
-   * Delete transaction note and backup wallet.
-   * @param {string} tx_hash Transaction hash.
-   */
-  this.deleteNote = function(tx_hash) {
-    delete tx_notes[tx_hash];
-
-    MyWallet.backupWalletDelayed();
-  };
-
-  /**
-   * @param {string} tx_hash Transaction hash.
-   * @param {string} text note
-   * @return {boolean} success or not
-   */
-  this.setNote = function(tx_hash, text) {
-    if (! MyWallet.isAlphaNumericSpace(text))
-      return false;
-    tx_notes[tx_hash] = text;
-    MyWallet.backupWalletDelayed();
-    return true;
-  };
 
   /**
    * @param {string} tx_hash Transaction hash.
@@ -3083,10 +3051,7 @@ var MyWallet = new function() {
         if (obj.tx_notes) {
           for (var tx_hash in obj.tx_notes) {
             var note = obj.tx_notes[tx_hash];
-
-            if (note && MyWallet.isAlphaNumericSpace(note)) {
-              tx_notes[tx_hash] = note;
-            }
+            WalletStore.setNote(tx_hash, note);
           }
         }
 
