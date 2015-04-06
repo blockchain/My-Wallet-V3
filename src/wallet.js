@@ -73,7 +73,6 @@ var MyWallet = new function() {
   var tx_tags = {};
   var tag_names = [];
   var paidTo = {};
-  var defaultAccountIdx = 0;
   var didSetGuid = false;
   var amountToRecommendedFee = {};
   var isAccountRecommendedFeesValid = true;
@@ -128,22 +127,6 @@ var MyWallet = new function() {
     // } catch (e) {
     //     console.log(e);
     // }
-  };
-
-  /**
-   * Set default Account Index and backup wallet.
-   * @param {number} accountIdx default Account Index
-   */
-  this.setDefaultAccountIndex = function(accountIdx) {
-    defaultAccountIdx = accountIdx;
-    MyWallet.backupWalletDelayed();
-  };
-
-  /**
-   * @return {number} default Account Index
-   */
-  this.getDefaultAccountIndex = function() {
-    return defaultAccountIdx;
   };
 
   /**
@@ -2651,7 +2634,7 @@ var MyWallet = new function() {
       out += '    {\n';
       out += '      "seed_hex" : "'+ MyWallet.getHDWallet().getSeedHexString() +'",\n';
       out += '      "mnemonic_verified" : '+ WalletStore.isMnemonicVerified() +',\n';
-      out += '      "default_account_idx" : '+ defaultAccountIdx +',\n';
+      out += '      "default_account_idx" : '+ WalletStore.getDefaultAccountIndex() +',\n';
       if (paidTo != null) {
         out += '      "paidTo" : ' + JSON.stringify(paidTo) +',\n';
       }
@@ -3032,11 +3015,7 @@ var MyWallet = new function() {
           } else {
             WalletStore.setMnemonicVerified(false);
           }
-          if (defaultHDWallet.default_account_idx) {
-            defaultAccountIdx = defaultHDWallet.default_account_idx;
-          } else {
-            defaultAccountIdx = 0;
-          }
+          WalletStore.setDefaultAccountIndex(defaultHDWallet.default_account_idx)
 
           if (defaultHDWallet.paidTo != null) {
             paidTo = defaultHDWallet.paidTo;

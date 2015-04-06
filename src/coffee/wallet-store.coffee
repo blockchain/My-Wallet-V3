@@ -67,6 +67,7 @@
   total_sent = 0     # Total Satoshi sent
   total_received = 0 # Total Satoshi received
   tx_notes = {}      # A map of transaction notes, hash -> note
+  defaultAccountIdx = 0
   #////////////////////////////////////////////////////////////////////////////
   # Private functions
 
@@ -337,3 +338,9 @@
 
   getNotes: () -> tx_notes
 
+  setDefaultAccountIndex: (accountIdx) ->
+    if accountIdx? then defaultAccountIdx = accountIdx else defaultAccountIdx = 0 
+    MyWallet.backupWalletDelayed();
+    return
+
+  getDefaultAccountIndex: () -> defaultAccountIdx
