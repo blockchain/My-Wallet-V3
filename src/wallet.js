@@ -3056,10 +3056,8 @@ var MyWallet = new function() {
           throw 'Shared Key is invalid';
         }
 
-        console.log("Root container?")
         if (rootContainer) {
           WalletStore.setPbkdf2Iterations(rootContainer.pbkdf2_iterations);
-          console.log("Iterations during decrypt wallet:", rootContainer.pbkdf2_iterations);
         }
 
         if (obj.double_encryption && obj.dpasswordhash) {
@@ -3571,7 +3569,6 @@ var MyWallet = new function() {
       localWalletJsonString = data;
 
       //Everything looks ok, Encrypt the JSON output
-      console.log("Iterations at backup time:", WalletStore.getPbkdf2Iterations())
       var crypted = WalletCrypto.encryptWallet(data, password, WalletStore.getPbkdf2Iterations(), WalletStore.didUpgradeToHd() ?  3.0 : 2.0 );
 
       if (crypted.length == 0) {
