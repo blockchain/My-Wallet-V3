@@ -43,10 +43,8 @@ var MyWallet = new function() {
   var password; //Password
   var dpasswordhash; //double encryption Password
   var sharedKey; //Shared key used to prove that the wallet has succesfully been decrypted, meaning you can't overwrite a wallet backup even if you have the guid
-  var final_balance = 0; //Final Satoshi wallet balance
   var total_sent = 0; //Total Satoshi sent
   var total_received = 0; //Total Satoshi received
-  var n_tx_filtered = 0; //Number of transactions after filtering
   var latest_block; //Chain head block
   var double_encryption = false; //If wallet has a second password
   var tx_page = 0; //Multi-address page
@@ -232,10 +230,6 @@ var MyWallet = new function() {
 
   this.isLogoutDisabled = function() {
     return disable_logout;
-  };
-
-  this.getFinalBalance = function() {
-    return final_balance;
   };
 
   this.getTotalSent = function() {
@@ -1040,9 +1034,9 @@ var MyWallet = new function() {
 
           tx.result = result;
 
-          final_balance += result;
+          WalletStore.addToFinalBalance(result);
 
-          if (tx_account) MyWallet.getAccount(tx_account.index).setBalance(final_balance);
+          if (tx_account) MyWallet.getAccount(tx_account.index).setBalance(WalletStore.getFinalBalance());
 
           WalletStore.incNTransactions();
 
@@ -2900,17 +2894,15 @@ var MyWallet = new function() {
     if (obj.wallet == null) {
       total_received = 0;
       total_sent = 0;
-      final_balance = 0;
+      WalletStore.setFinalBalance(0);
       WalletStore.setNTransactions(0);
-      n_tx_filtered = 0;
       return;
     }
 
     total_received = obj.wallet.total_received;
     total_sent = obj.wallet.total_sent;
-    final_balance = obj.wallet.final_balance;
+    WalletStore.setFinalBalance(obj.wallet.final_balance);
     WalletStore.setNTransactions(obj.wallet.n_tx);
-    n_tx_filtered = obj.wallet.n_tx_filtered;
 
     for (var i = 0; i < obj.addresses.length; ++i) {
       if (WalletStore.legacyAddressExists(obj.addresses[i].address)) {

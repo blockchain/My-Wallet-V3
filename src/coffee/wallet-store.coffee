@@ -63,7 +63,8 @@
   didUpgradeToHd = null
   address_book = {} #Holds the address book addr = label
   pbkdf2_iterations = null
-  
+  final_balance = 0 # Final Satoshi wallet balance
+
   #////////////////////////////////////////////////////////////////////////////
   # Private functions
 
@@ -124,6 +125,10 @@
   getXpubs: () -> xpubs
 
   getTransactions: () -> transactions
+
+  pushTransaction: (tx) ->
+    transactions.push tx
+    return
 
   getAllTransactions: () ->
     (MyWallet.processTransaction tx for tx in WalletStore.getTransactions())
@@ -277,4 +282,14 @@
 
   incNTransactions: () -> 
     n_tx++
+    return
+
+  getFinalBalance: () -> final_balance
+
+  setFinalBalance: (amount) -> 
+    final_balance = amount
+    return
+
+  addToFinalBalance: (amount) ->
+    final_balance += amount
     return
