@@ -7,9 +7,9 @@ module.exports = function(config) {
     
     frameworks: ['jasmine'],
     
-    browsers : ['PhantomJS'],
+    browsers : ['Chrome'], //'PhantomJS'],
     
-    reportSlowerThan: 50,
+    // reportSlowerThan: 50,
     
     client: {
       captureConsole: true,
@@ -84,6 +84,7 @@ module.exports = function(config) {
     
     plugins : [
       'karma-phantomjs-launcher',
+      'karma-chrome-launcher',
       'karma-jasmine',
       'karma-coffee-preprocessor',
       'karma-coverage'

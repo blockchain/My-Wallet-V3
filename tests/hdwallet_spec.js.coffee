@@ -114,7 +114,6 @@ describe "HD Wallet", ->
         hex = [priv_key_hex, pub_key_hex, node.chainCode.toString('hex')].join(" ")
         
         localStorage.setItem(cacheKey, hex)
-        console.log(hex)
       
       node
     )
