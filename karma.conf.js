@@ -26,7 +26,6 @@ module.exports = function(config) {
       'src/blockchain-settings-api.js' : ['coverage'],
       'src/import-export.js' : ['coverage'],
       'src/transaction.js' : ['coverage'],
-      'src/signer.js' : ['coverage'],
       'src/wallet-signup.js' : ['coverage']
     },
 
@@ -66,7 +65,6 @@ module.exports = function(config) {
       'build/wallet-store.js',
       'build/wallet-crypto.js',
       'src/wallet.js',
-      'src/signer.js',
       'tests/**/*.js',
       'tests/**/*.js.coffee',
       // Or specify individual test files:
