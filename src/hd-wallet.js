@@ -111,7 +111,7 @@ var HDWallet = function(seedHex, bip39Password, second_password) {
       }
 
       transaction.hash = tx.hash;
-      transaction.confirmations = MyWallet.getConfirmationsForTx(MyWallet.getLatestBlock(), tx);
+      transaction.confirmations = MyWallet.getConfirmationsForTx(WalletStore.getLatestBlock(), tx);
 
       if(isOrigin) {
         transaction.from_account = idx;

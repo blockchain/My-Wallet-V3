@@ -69,10 +69,10 @@
   tx_notes = {}      # A map of transaction notes, hash -> note
   defaultAccountIdx = 0
   disable_logout = false
-  mixer_fee = 0.5 #Default mixer fee 1.5%
+  mixer_fee = 0.5    # Default mixer fee 1.5%
   isAccountRecommendedFeesValid = true
   amountToRecommendedFee = {}
-
+  latest_block = null      # Chain head block
 
   #////////////////////////////////////////////////////////////////////////////
   # Private functions
@@ -375,3 +375,13 @@
   setAmountToRecommendedFee: (amount, recFee) ->
     amountToRecommendedFee[amount] = recFee
     return
+
+  getLatestBlock: () -> latest_block
+
+  setLatestBlock: (block) ->
+    if block?
+      latest_block = block
+      (tx.setConfirmations MyWallet.getConfirmationsForTx(latest_block, tx) for tx in WalletStore.getTransactions())
+      MyWallet.sendEvent('did_set_latest_block');
+    return
+

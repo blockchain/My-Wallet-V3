@@ -43,7 +43,6 @@ var MyWallet = new function() {
   var password; //Password
   var dpasswordhash; //double encryption Password
   var sharedKey; //Shared key used to prove that the wallet has succesfully been decrypted, meaning you can't overwrite a wallet backup even if you have the guid
-  var latest_block; //Chain head block
   var double_encryption = false; //If wallet has a second password
   var tx_page = 0; //Multi-address page
   var tx_filter = 0; //Transaction filter (e.g. Sent Received etc)
@@ -1016,7 +1015,7 @@ var MyWallet = new function() {
             }
           }
 
-          setLatestBlock(BlockFromJSON(obj.x));
+          WalletStore.setLatestBlock(BlockFromJSON(obj.x));
 
           MyWallet.sendEvent('on_block');
         }
@@ -1373,7 +1372,7 @@ var MyWallet = new function() {
      reuse tx.confirmations. However processTransaction() can also be 
      called at a later time, e.g. if the user keeps their wallet open
      while waiting for a confirmation. */
-    transaction.confirmations = MyWallet.getConfirmationsForTx(MyWallet.getLatestBlock(), tx);
+    transaction.confirmations = MyWallet.getConfirmationsForTx(WalletStore.getLatestBlock(), tx);
 
     transaction.txTime = tx.time;
     transaction.note = WalletStore.getNote(tx.hash);
@@ -2664,14 +2663,6 @@ var MyWallet = new function() {
     }, tx_filter, tx_page*MyWallet.getNTransactionsPerPage(), MyWallet.getNTransactionsPerPage());
   };
 
-
-  /**
-   * @return {Object} Latest block object
-   */
-  this.getLatestBlock = function() {
-    return latest_block;
-  };
-
   this.getConfirmationsForTx = function(latest_block, tx) {
     if (latest_block && tx.blockHeight != null && tx.blockHeight > 0) {
       return latest_block.height - tx.blockHeight + 1;
@@ -2680,22 +2671,6 @@ var MyWallet = new function() {
       return 0;
     }
   };
-
-  function setLatestBlock(block) {
-
-    if (block != null) {
-      latest_block = block;
-
-      transactions = WalletStore.getTransactions();
-
-      for (var key in transactions) {
-        var tx = transactions[key];
-        tx.setConfirmations(MyWallet.getConfirmationsForTx(latest_block, tx));
-      }
-
-      MyWallet.sendEvent('did_set_latest_block');
-    }
-  }
 
   /**
    * @param {string} tx_hash Transaction hash.
@@ -2855,7 +2830,7 @@ var MyWallet = new function() {
 
     if (!cached) {
       if (obj.info.latest_block)
-        setLatestBlock(obj.info.latest_block);
+        WalletStore.setLatestBlock(obj.info.latest_block);
     }
 
     MyWallet.sendEvent('did_multiaddr');
