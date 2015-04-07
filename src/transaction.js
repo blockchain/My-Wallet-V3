@@ -7,7 +7,7 @@ var addressesOfInputs = null;
 
 var Transaction = function (unspentOutputs, toAddress, amount, fee, changeAddress, listener) {
   var network = Bitcoin.networks.bitcoin;
-  var defaultFee = Bitcoin.networks.bitcoin.feePerKb;
+  var defaultFee = network.feePerKb;
 
   addressesOfInputs = [];
 

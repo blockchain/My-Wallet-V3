@@ -1465,10 +1465,14 @@ var MyWallet = new function() {
     return paidTo;
   };
 
+  this.getBaseFee = function() {
+    var network = Bitcoin.networks.bitcoin;
+    return network.feePerKb;
+  };
+
   this.recommendedTransactionFeeForAddress = function(address, balance) {
     // TODO: calculate the correct fee:
-    var obj = Signer.init();
-    return parseInt(obj.getBaseFee());
+    return MyWallet.getBaseFee();
   };
 
   /**
@@ -1655,45 +1659,46 @@ var MyWallet = new function() {
    */
   this.redeemFromEmailOrMobile = function(accountIdx, privatekey, successCallback, errorCallback)  {
     var account = this.getAccount(accountIdx);
-    try {
 
+    try {
       var format = MyWallet.detectPrivateKeyFormat(privatekey);
       var privateKeyToSweep = MyWallet.privateKeyStringToKey(privatekey, format);
       var from_address_compressed = MyWallet.getCompressedAddressString(privateKeyToSweep);
       var from_address_uncompressed = MyWallet.getUnCompressedAddressString(privateKeyToSweep);
 
-      BlockchainAPI.get_balance([from_address_compressed, from_address_uncompressed], function(value) {
-        var obj = Signer.init();
+      MyWallet.getUnspentOutputsForAddresses(
+        [from_address_compressed, from_address_uncompressed],
+        function (unspent_outputs) {
+          var values = unspent_outputs.map(function(unspent) {
+            return unspent.value;
+          });
+          var amount = values.reduce(function(a, b) {
+            return a + b;
+          });
 
-        var amount = BigInteger.valueOf(value).subtract(obj.getFee());
+          var fee = MyWallet.getBaseFee();
+          amount = amount - fee;
 
-        var to_address = account.getReceivingAddress();
-        obj.addToAddress({address: Bitcoin.Address.fromBase58Check(to_address), value : amount});
-        obj.addFromAddress(from_address_compressed)
-        obj.addFromAddress(from_address_uncompressed);
-        obj.addExtraPrivateKey(from_address_compressed, privatekey);
-        obj.addExtraPrivateKey(from_address_uncompressed, privatekey);
+          var toAddress = account.getReceivingAddress();
 
-        obj.ready_to_send_header = 'Bitcoins Ready to Claim.';
+          // No change address needed - amount will be consumed in full
+          var changeAddress = null;
 
-        obj.addListener({
-          on_success : function(e) {
-            if (successCallback)
-              successCallback();
-          },
-          on_start : function(e) {
-          },
-          on_error : function(e) {
-            if (errorCallback)
-              errorCallback(e);
+          var listener = null;
+
+          var tx = new Transaction(unspent_outputs, toAddress, amount, fee, changeAddress, listener);
+
+          var keys = [privatekey];
+          if (tx.addressesOfNeededPrivateKeys.length === 2) {
+            keys.push(privatekey);
           }
-        });
 
-        // No second password needed for redeeming.
-        obj.start();
-      }, function() {
-        MyWallet.sendEvent("msg", {type: "error", message: 'Error Getting Address Balance'});
-      });
+          tx.addPrivateKeys(keys);
+
+          var signedTransaction = tx.sign();
+
+          BlockchainAPI.push_tx(signedTransaction, null, successCallback, errorCallback);
+        });
     } catch (e) {
       console.log(e);
       MyWallet.sendEvent("msg", {type: "error", message: 'Error Decoding Private Key. Could not claim coins.'});
@@ -1981,8 +1986,7 @@ var MyWallet = new function() {
    * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
    */
   this.sweepLegacyAddressToAccount = function(fromAddress, toIdx, successCallback, errorCallback, listener, getPassword)  {
-    var obj = Signer.init();
-    var feeAmount = parseInt(obj.getBaseFee().toString());
+    var feeAmount = MyWallet.getBaseFee();
     var amount = WalletStore.getLegacyAddressBalance(fromAddress) - feeAmount;
     MyWallet.sendFromLegacyAddressToAccount(fromAddress, toIdx, amount, feeAmount, null, successCallback, errorCallback, listener, getPassword);
   };

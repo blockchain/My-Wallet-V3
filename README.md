@@ -108,7 +108,6 @@ Include the following files instead of `my-wallet.js` for easier debugging:
 * `src/hd-account.js`
 * `src/hd-wallet.js`
 * `src/shared.js`
-* `src/signer.js`
 * `src/wallet-signup.js`
 * `src/wallet-store.js`
 * `src/wallet.js`
