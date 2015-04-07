@@ -7,6 +7,12 @@ module.exports = function(config) {
     
     browsers : ['PhantomJS'],
     
+    reportSlowerThan: 50,
+    
+    client: {
+      captureConsole: true,
+    },
+    
     preprocessors: {
       '**/*.coffee': ['coffee'],
       'build/wallet-store.js' : ['coverage'],
@@ -60,7 +66,18 @@ module.exports = function(config) {
       'src/wallet.js',
       'src/signer.js',
       'tests/**/*.js',
-      'tests/**/*.js.coffee'
+      'tests/**/*.js.coffee',
+      // Or specify individual test files:
+      // 'tests/mocks/*.js.coffee',
+      // 'tests/bip38_spec.js.coffee',
+      // 'tests/claim_redeem_spec.js.coffee',
+      // 'tests/hdwallet_spec.js.coffee',
+      // 'tests/legacy_addresses_spec.js.coffee',
+      // 'tests/my_wallet_spec.js.coffee',
+      // 'tests/spend_spec.js.coffee',
+      // 'tests/tags_spec.js.coffee',
+      // 'tests/transaction_spec.js.coffee',
+      // 'tests/wallet_spec.js.coffee'
     ],
     
     plugins : [
