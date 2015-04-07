@@ -47,7 +47,6 @@ module.exports = function(config) {
       'bower_components/cryptojslib/components/pad-iso10126.js',
       'bower_components/cryptojslib/components/mode-ecb.js',
       'bower_components/cryptojslib/components/pad-nopadding.js',
-      'bower_components/browserdetection/src/browser-detection.js',
       'node_modules/sjcl/sjcl.js',
       'node_modules/xregexp/xregexp-all.js',
       'build/browserify.js',

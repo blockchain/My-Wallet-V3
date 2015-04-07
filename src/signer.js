@@ -37,7 +37,9 @@ var Signer = new function() {
   // Use web worker based on browser - ignore browserDetection on iOS (browserDetection undefined)
   if(typeof(browserDetection) === "undefined" ||
      !(browserDetection().browser == "ie" && browserDetection().version < 11)) {
-    initWebWorker();
+     if(!/PhantomJS/.test(window.navigator.userAgent)) {
+       initWebWorker();
+     }
   }
 
   this.init = function() {
