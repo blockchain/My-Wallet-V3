@@ -2,8 +2,7 @@
   var hasProp = {}.hasOwnProperty;
 
   this.WalletStore = (function() {
-    var address_book, addresses, amountToRecommendedFee, currencyCodeToCurrency, defaultAccountIdx, didUpgradeToHd, disable_logout, final_balance, isAccountRecommendedFeesValid, language, languageCodeToLanguage, latest_block, maxAddr, mixer_fee, mnemonicVerified, n_tx, pbkdf2_iterations, tag_names, total_received, total_sent, transactions, tx_notes, tx_tags, unsafeAddLegacyAddress, xpubs;
-    languageCodeToLanguage = {
+    var languageCodeToLanguage = {
       'de': 'German',
       'hi': 'Hindi',
       'no': 'Norwegian',
@@ -30,7 +29,7 @@
       'nl': 'Dutch',
       'tr': 'Turkish'
     };
-    currencyCodeToCurrency = {
+    var currencyCodeToCurrency = {
       'ISK': 'lcelandic Króna',
       'HKD': 'Hong Kong Dollar',
       'TWD': 'New Taiwan Dollar',
@@ -53,29 +52,33 @@
       'BRL': 'Brazil Real',
       'RUB': 'Russian Ruble'
     };
-    language = 'en';
-    mnemonicVerified = false;
-    xpubs = [];
-    transactions = [];
-    n_tx = 0;
-    addresses = {};
-    maxAddr = 1000;
-    didUpgradeToHd = null;
-    address_book = {};
-    pbkdf2_iterations = null;
-    final_balance = 0;
-    total_sent = 0;
-    total_received = 0;
-    tx_notes = {};
-    defaultAccountIdx = 0;
-    disable_logout = false;
-    mixer_fee = 0.5;
-    isAccountRecommendedFeesValid = true;
-    amountToRecommendedFee = {};
-    latest_block = null;
-    tx_tags = {};
-    tag_names = [];
-    unsafeAddLegacyAddress = function(key) {
+    var language = 'en';
+    var mnemonicVerified = false;
+    var xpubs = [];
+    var transactions = [];
+    var n_tx = 0;
+    var addresses = {};
+    var maxAddr = 1000;
+    var didUpgradeToHd = null;
+    var address_book = {};
+    var pbkdf2_iterations = null;
+    var final_balance = 0;
+    var total_sent = 0;
+    var total_received = 0;
+    var tx_notes = {};
+    var defaultAccountIdx = 0;
+    var disable_logout = false;
+    var mixer_fee = 0.5;
+    var isAccountRecommendedFeesValid = true;
+    var amountToRecommendedFee = {};
+    var latest_block = null;
+    var tx_tags = {};
+    var tag_names = [];
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Private functions
+    ////////////////////////////////////////////////////////////////////////////
+    var unsafeAddLegacyAddress = function(key) {
       if ((key.addr == null) || !MyWallet.isAlphaNumericSpace(key.addr)) {
         return MyWallet.sendEvent("msg", {
           type: "error",
@@ -91,7 +94,11 @@
         return addresses[key.addr] = key;
       }
     };
+    ////////////////////////////////////////////////////////////////////////////
     return {
+    ////////////////////////////////////////////////////////////////////////////
+    // Public functions
+    ////////////////////////////////////////////////////////////////////////////
       setPbkdf2Iterations: function(iterations) {
         return pbkdf2_iterations = iterations;
       },
@@ -110,16 +117,7 @@
         language = lan;
       },
       walletIsFull: function() {
-        var k;
-        return ((function() {
-          var results;
-          results = [];
-          for (k in addresses) {
-            if (!hasProp.call(addresses, k)) continue;
-            results.push(k);
-          }
-          return results;
-        })()).length >= maxAddr;
+        return Object.keys(addresses).length >= maxAddr;
       },
       getLanguages: function() {
         return languageCodeToLanguage;
@@ -153,14 +151,7 @@
         transactions.push(tx);
       },
       getAllTransactions: function() {
-        var i, len, ref, results, tx;
-        ref = WalletStore.getTransactions();
-        results = [];
-        for (i = 0, len = ref.length; i < len; i++) {
-          tx = ref[i];
-          results.push(MyWallet.processTransaction(tx));
-        }
-        return results;
+        return transactions.map(MyWallet.processTransaction);
       },
       didUpgradeToHd: function() {
         return didUpgradeToHd;
@@ -179,29 +170,23 @@
         MyWallet.backupWalletDelayed();
       },
       addAddressBookEntry: function(addr, label) {
-        var isValidLabel;
-        isValidLabel = MyWallet.isAlphaNumericSpace(label) && MyWallet.isValidAddress(addr);
+        var isValidLabel = MyWallet.isAlphaNumericSpace(label) && MyWallet.isValidAddress(addr);
         if (isValidLabel) {
           address_book[addr] = label;
         }
         return isValidLabel;
       },
       newAddressBookFromJSON: function(addressBook) {
-        var entry, i, len;
         address_book = {};
-        if (addressBook != null) {
-          for (i = 0, len = addressBook.length; i < len; i++) {
-            entry = addressBook[i];
-            this.addAddressBookEntry(entry.addr, entry.label);
-          }
+        var addEntry = function(e) {this.addAddressBookEntry(e.addr, e.label);};
+        if (addressBook !== null && addressBook !== undefined) { 
+          addressBook.forEach(addEntry); 
         }
       },
       newLegacyAddressesFromJSON: function(keysArray) {
-        var i, key, len, results;
-        results = [];
-        for (i = 0, len = keysArray.length; i < len; i++) {
-          key = keysArray[i];
-          results.push(unsafeAddLegacyAddress(key));
+        var results = [];
+        if (keysArray !== null && keysArray !== undefined) {
+          result = keysArray.map(unsafeAddLegacyAddress); 
         }
         return results;
       },
@@ -264,6 +249,10 @@
         }
       },
       getTotalBalanceForActiveLegacyAddresses: function() {
+        // var suma = function(x, y) {return x + y;};
+        // var tagIsnt2 = function (o) {return o.tag !== 2};
+        // addresses.filter(tagIsnt2)
+        
         var k, o;
         return ((function() {
           var results;

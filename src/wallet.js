@@ -1389,7 +1389,7 @@ var MyWallet = new function() {
     transaction.tx_index = tx.txIndex;
     transaction.block_height = tx.blockHeight;
     
-    transaction.result = this.calculateTransactionResult(transaction);
+    transaction.result = MyWallet.calculateTransactionResult(transaction);
     
     return transaction;
   };
