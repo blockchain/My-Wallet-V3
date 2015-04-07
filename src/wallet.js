@@ -88,6 +88,7 @@ var MyWallet = new function() {
   }
 
   this.setMultiAccountSetting = function(flag) {
+    MyWallet.backupWalletDelayed();
     wallet_options.multi_account = flag;
   }
 
