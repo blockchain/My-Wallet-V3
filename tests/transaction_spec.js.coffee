@@ -108,7 +108,7 @@ describe "Transaction", ->
     
     spyOn(MyWallet, "getPaidToDictionary").and.returnValue(paidTo)
     
-    spyOn(MyWallet, "getLatestBlock").and.returnValue(true)
+    spyOn(WalletStore, "getLatestBlock").and.returnValue(true)
         
     # Terminology:
     # account: an HD wallet account (which has external and change addresses)
