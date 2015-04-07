@@ -79,8 +79,17 @@ var MyWallet = new function() {
     tx_display : 0, //Compact or detailed transactions
     always_keep_local_backup : false, //Whether to always keep a backup in localStorage regardless of two factor authentication
     transactions_per_page : 30, //Number of transactions per page
-    additional_seeds : []
+    additional_seeds : [],
+    multi_account : false //Allow multiple accounts in the wallet
   };
+
+  this.getMultiAccountSetting = function() {
+    return wallet_options.multi_account;
+  }
+
+  this.setMultiAccountSetting = function(flag) {
+    wallet_options.multi_account = flag;
+  }
 
   /**
    * @param {string} val api code
