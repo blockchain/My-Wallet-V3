@@ -49,7 +49,6 @@ var MyWallet = new function() {
   var tx_filter = 0; //Transaction filter (e.g. Sent Received etc)
   var payload_checksum; //SHA256 hash of the current wallet.aes.json
   var archTimer; //Delayed Backup wallet timer
-  var mixer_fee = 0.5; //Default mixer fee 1.5%
   var recommend_include_fee = true; //Number of unconfirmed transactions in blockchain.info's memory pool
   var default_pbkdf2_iterations = 5000;
   var auth_type; //The two factor authentication type used. 0 for none.
@@ -57,11 +56,9 @@ var MyWallet = new function() {
   var logout_timeout; //setTimeout return value for the automatic logout
   var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
   var isInitialized = false;
-  var localSymbolCode = null; //Current local symbol
   var serverTimeOffset = 0; //Difference between server and client time
   var haveSetServerTime = false; //Whether or not we have synced with server time
   var sharedcoin_endpoint; //The URL to the sharedcoin node
-  var disable_logout = false;
   var isRestoringWallet = false;
   var sync_pubkeys = false;
   var legacyAddressesNumTxFetched = 0;
@@ -74,8 +71,6 @@ var MyWallet = new function() {
   var tag_names = [];
   var paidTo = {};
   var didSetGuid = false;
-  var amountToRecommendedFee = {};
-  var isAccountRecommendedFeesValid = true;
   var api_code = "0";
   var counter = 0;
   var isPolling = false;
@@ -204,14 +199,6 @@ var MyWallet = new function() {
     return sharedcoin_endpoint;
   };
 
-  this.disableLogout = function(value) {
-    disable_logout = value;
-  };
-
-  this.isLogoutDisabled = function() {
-    return disable_logout;
-  };
-
   this.setLogoutTime = function(logout_time) {
     wallet_options.logout_time = logout_time;
 
@@ -278,10 +265,6 @@ var MyWallet = new function() {
 
   this.setHTML5Notifications = function(val) {
     wallet_options.html5_notifications = val;
-  };
-
-  this.getMixerFee = function() {
-    return mixer_fee;
   };
 
   this.getRecommendIncludeFee = function() {
@@ -693,12 +676,12 @@ var MyWallet = new function() {
 
     if (format == 'bip38') {
       getBIP38Password(function(_password, correct_password, wrong_password) {
-        MyWallet.disableLogout(true);
+        WalletStore.disableLogout(true);
         ImportExport.parseBIP38toECKey(
           privateKeyString, 
           _password, 
           function(key, isCompPoint) {
-            MyWallet.disableLogout(false);
+            WalletStore.disableLogout(false);
             correct_password();
             if(double_encryption) {
               getPassword(function(pw, correct_password, wrong_password) {
@@ -715,11 +698,11 @@ var MyWallet = new function() {
             }
           }, 
           function() {
-            MyWallet.disableLogout(false);
+            WalletStore.disableLogout(false);
             wrong_password();
           },
           function(e) {
-            MyWallet.disableLogout(false);
+            WalletStore.disableLogout(false);
             error(e);
           }
         );
@@ -989,7 +972,7 @@ var MyWallet = new function() {
           }
 
         } else if (obj.op == 'utx') {
-          isAccountRecommendedFeesValid = false;
+          WalletStore.setIsAccountRecommendedFeesValid(false);
 
           var tx = TransactionFromJSON(obj.x);
 
@@ -1467,20 +1450,18 @@ var MyWallet = new function() {
   };
 
   this.recommendedTransactionFeeForAccount = function(accountIdx, amount) {
-    if (! isAccountRecommendedFeesValid) {
-      amountToRecommendedFee = {};
-      isAccountRecommendedFeesValid = true;
+    
+    if (!WalletStore.isAccountRecommendedFeesValid()) {
+      WalletStore.setAmountToRecommendedFee({});
+      WalletStore.setIsAccountRecommendedFeesValid(true);
     }
 
-    if (amountToRecommendedFee[amount] != null) {
-      return amountToRecommendedFee[amount];
-    } else {
-      var recommendedFee = MyWallet.getHDWallet().getAccount(accountIdx).recommendedTransactionFee(amount);
-
-      amountToRecommendedFee[amount] = recommendedFee;
-
-      return recommendedFee;
+    var recFee = WalletStore.getAmountToRecommendedFee();
+    if (recFee === null) {  
+      recFee = MyWallet.getHDWallet().getAccount(accountIdx).recommendedTransactionFee(amount);
+      WalletStore.setAmountToRecommendedFee(amount, recFee);
     }
+    return recFee;
   };
 
   this.getPaidToDictionary = function()  {
@@ -2838,10 +2819,8 @@ var MyWallet = new function() {
   function parseMultiAddressJSON(obj, cached, checkCompleted) {
     transactions = WalletStore.getTransactions();
     if (!cached) {
-      if (obj.mixer_fee) {
-        mixer_fee = obj.mixer_fee;
-      }
 
+      WalletStore.setMixerFee(obj.mixer_fee);
       recommend_include_fee = obj.recommend_include_fee;
 
       if (obj.info) {
@@ -2897,7 +2876,7 @@ var MyWallet = new function() {
       }
     }
 
-    isAccountRecommendedFeesValid = false;
+    WalletStore.setIsAccountRecommendedFeesValid(false);
     for (var i = 0; i < obj.txs.length; ++i) {
       var tx = TransactionFromJSON(obj.txs[i]);
       //Don't use the result given by the api because it doesn't include archived addresses
@@ -3470,7 +3449,7 @@ var MyWallet = new function() {
       throw 'Cannot backup wallet now. Shared key is not set';
     }
 
-    MyWallet.disableLogout(true);
+    WalletStore.disableLogout(true);
     isSynchronizedWithServer = false;
     if (archTimer) {
       clearInterval(archTimer);
@@ -3488,7 +3467,7 @@ var MyWallet = new function() {
       throw 'Cannot backup wallet now. Shared key is not set';
     }
 
-    MyWallet.disableLogout(true);
+    WalletStore.disableLogout(true);
     if (archTimer) {
       clearInterval(archTimer);
       archTimer = null;
@@ -3553,21 +3532,21 @@ var MyWallet = new function() {
                   successcallback();
 
                 isSynchronizedWithServer = true;
-                MyWallet.disableLogout(false);
+                WalletStore.disableLogout(false);
                 logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
                 MyWallet.sendEvent('on_backup_wallet_success');
             },
               function() {
                 _errorcallback('Checksum Did Not Match Expected Value');
-                MyWallet.disableLogout(false);
+                WalletStore.disableLogout(false);
             });
           }, function(e) {
             _errorcallback(e.responseText);
-            MyWallet.disableLogout(false);
+            WalletStore.disableLogout(false);
           });
         } catch (e) {
           _errorcallback(e);
-          MyWallet.disableLogout(false);
+          WalletStore.disableLogout(false);
         };
       },
       function(e) {
@@ -3576,7 +3555,7 @@ var MyWallet = new function() {
       });
     } catch (e) {
       _errorcallback(e);
-      MyWallet.disableLogout(false);
+      WalletStore.disableLogout(false);
     }
   };
 
@@ -3864,7 +3843,7 @@ var MyWallet = new function() {
   };
 
   this.logout = function() {
-    if (disable_logout)
+    if (WalletStore.isLogoutDisabled())
       return;
 
     MyWallet.sendEvent('logging_out');

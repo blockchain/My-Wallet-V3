@@ -1331,14 +1331,14 @@ var SharedCoin = new function() {
                     send_button.prop('disabled', false);
 
                     send_button.unbind().click(function() {
-                        MyWallet.disableLogout(true);
+                        WalletStore.disableLogout(true);
 
                         var error = function(e, plan) {
                             el.find('input,select,button').prop('disabled', false);
 
                             enableSendButton();
 
-                            MyWallet.disableLogout(false);
+                            WalletStore.disableLogout(false);
 
                             MyWallet.sendEvent("msg", {type: "error", message: e});
 
@@ -1361,7 +1361,7 @@ var SharedCoin = new function() {
 
                             MyWallet.sendEvent("msg", {type: "success", message: 'Sharedcoin Transaction Successfully Completed'});
 
-                            MyWallet.disableLogout(false);
+                            WalletStore.disableLogout(false);
 
                             progressModal.hide();
 
