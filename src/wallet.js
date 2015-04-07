@@ -71,8 +71,6 @@ var MyWallet = new function() {
   var tag_names = [];
   var paidTo = {};
   var didSetGuid = false;
-  var amountToRecommendedFee = {};
-  var isAccountRecommendedFeesValid = true;
   var api_code = "0";
   var counter = 0;
   var isPolling = false;
@@ -974,7 +972,7 @@ var MyWallet = new function() {
           }
 
         } else if (obj.op == 'utx') {
-          isAccountRecommendedFeesValid = false;
+          WalletStore.setIsAccountRecommendedFeesValid(false);
 
           var tx = TransactionFromJSON(obj.x);
 
@@ -1440,20 +1438,18 @@ var MyWallet = new function() {
   };
 
   this.recommendedTransactionFeeForAccount = function(accountIdx, amount) {
-    if (! isAccountRecommendedFeesValid) {
-      amountToRecommendedFee = {};
-      isAccountRecommendedFeesValid = true;
+    
+    if (!WalletStore.isAccountRecommendedFeesValid()) {
+      WalletStore.setAmountToRecommendedFee({});
+      WalletStore.setIsAccountRecommendedFeesValid(true);
     }
 
-    if (amountToRecommendedFee[amount] != null) {
-      return amountToRecommendedFee[amount];
-    } else {
-      var recommendedFee = MyWallet.getHDWallet().getAccount(accountIdx).recommendedTransactionFee(amount);
-
-      amountToRecommendedFee[amount] = recommendedFee;
-
-      return recommendedFee;
+    var recFee = WalletStore.getAmountToRecommendedFee();
+    if (recFee === null) {  
+      recFee = MyWallet.getHDWallet().getAccount(accountIdx).recommendedTransactionFee(amount);
+      WalletStore.setAmountToRecommendedFee(amount, recFee);
     }
+    return recFee;
   };
 
   this.getPaidToDictionary = function()  {
@@ -2848,7 +2844,7 @@ var MyWallet = new function() {
       }
     }
 
-    isAccountRecommendedFeesValid = false;
+    WalletStore.setIsAccountRecommendedFeesValid(false);
     for (var i = 0; i < obj.txs.length; ++i) {
       var tx = TransactionFromJSON(obj.txs[i]);
       //Don't use the result given by the api because it doesn't include archived addresses

@@ -70,6 +70,9 @@
   defaultAccountIdx = 0
   disable_logout = false
   mixer_fee = 0.5 #Default mixer fee 1.5%
+  isAccountRecommendedFeesValid = true
+  amountToRecommendedFee = {}
+
 
   #////////////////////////////////////////////////////////////////////////////
   # Private functions
@@ -358,4 +361,17 @@
 
   setMixerFee: (fee) ->
     mixer_fee = fee if fee?
+    return
+
+  isAccountRecommendedFeesValid: () -> isAccountRecommendedFeesValid
+
+  setIsAccountRecommendedFeesValid: (bool) ->
+    isAccountRecommendedFeesValid = bool
+    return
+
+  getAmountToRecommendedFee: (amount) ->
+    if (amount of amountToRecommendedFee) then amountToRecommendedFee[amount] else null
+
+  setAmountToRecommendedFee: (amount, recFee) ->
+    amountToRecommendedFee[amount] = recFee
     return
