@@ -73,6 +73,8 @@
   isAccountRecommendedFeesValid = true
   amountToRecommendedFee = {}
   latest_block = null      # Chain head block
+  tx_tags = {};
+  tag_names = [];
 
   #////////////////////////////////////////////////////////////////////////////
   # Private functions
@@ -385,3 +387,60 @@
       MyWallet.sendEvent('did_set_latest_block');
     return
 
+  getAllTags: () -> tx_tags
+
+  getTags: (tx_hash) -> 
+    if (tx_hash of tx_tags) then tx_tags[tx_hash] else []
+
+  setTags: (allTags) ->
+    if allTags?
+      for tx_hash of allTags
+        tags = allTags[tx_hash]
+        if tags? and MyWallet.isAlphaNumericSpace(tags)
+          tx_tags[tx_hash] = tags
+    return
+
+  setTag: (tx_hash, idx) ->
+    if not tx_tags[tx_hash]?
+      tx_tags[tx_hash] = []
+    tx_tags[tx_hash].push(idx)
+    MyWallet.backupWalletDelayed()
+    return
+
+  unsetTag: (tx_hash, idx) ->
+    tags = tx_tags[tx_hash]
+    index = tx_tags.indexOf(idx)
+    if (index > -1)
+      tx_tags.splice(index, 1)
+    MyWallet.backupWalletDelayed()
+    return
+
+  deleteTag: (idx) ->
+    tag_names.splice(idx,1)
+    for tx_hash of tx_tags
+      tags = tx_tags[tx_hash]
+      index = tx_tags.indexOf(idx)
+      if index > -1
+        tx_tags.splice index, 1
+    # MyWallet.backupWalletDelayed()
+    return
+
+  getTagNames: () -> tag_names
+  
+  addTag: (name) ->
+    isValidTag = MyWallet.isAlphaNumericSpace(name)
+    if isValidTag
+      tag_names.push(name)
+      MyWallet.backupWalletDelayed()
+    return isValidTag
+
+  renameTag: (idx, name) ->
+    isValidTag = MyWallet.isAlphaNumericSpace(name)
+    if isValidTag
+      tag_names[idx] = name
+      MyWallet.backupWalletDelayed()
+    return isValidTag
+
+  setTagNames: (names) ->
+    tag_names = names if names?
+    return

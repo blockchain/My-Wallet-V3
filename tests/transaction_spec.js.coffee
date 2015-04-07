@@ -119,7 +119,7 @@ describe "Transaction", ->
     
   describe "processTransaction()", ->
     beforeEach ->
-      spyOn(MyWallet, "getTags").and.returnValue([])
+      spyOn(WalletStore, "getTags").and.returnValue([])
 
       spyOn(MyWallet, "getConfirmationsForTx").and.callFake(
         (block, tx)-> tx.confirmations

@@ -66,8 +66,6 @@ var MyWallet = new function() {
   var isSynchronizedWithServer = true;
   var localWalletJsonString = null;
   var haveBuildHDWallet = false;
-  var tx_tags = {};
-  var tag_names = [];
   var paidTo = {};
   var didSetGuid = false;
   var api_code = "0";
@@ -1376,7 +1374,7 @@ var MyWallet = new function() {
 
     transaction.txTime = tx.time;
     transaction.note = WalletStore.getNote(tx.hash);
-    transaction.tags = MyWallet.getTags(tx.hash);
+    transaction.tags = WalletStore.getTags(tx.hash);
     transaction.size = tx.size;
     transaction.tx_index = tx.txIndex;
     transaction.block_height = tx.blockHeight;
@@ -2631,12 +2629,12 @@ var MyWallet = new function() {
       out += ',\n  "tx_notes" : ' + JSON.stringify(WalletStore.getNotes());
     }
 
-    if (nKeys(tx_tags) > 0) {
-      out += ',\n  "tx_tags" : ' + JSON.stringify(tx_tags);
+    if (nKeys(WalletStore.getAllTags()) > 0) {
+      out += ',\n  "tx_tags" : ' + JSON.stringify(WalletStore.getAllTags());
     }
 
-    if (tag_names != null) {
-      out += ',\n  "tag_names" : ' + JSON.stringify(tag_names);
+    if (WalletStore.getTagNames() != null) {
+      out += ',\n  "tag_names" : ' + JSON.stringify(WalletStore.getTagNames());
     }
 
     if (MyWallet.getHDWallet() != null) {
@@ -2702,87 +2700,6 @@ var MyWallet = new function() {
       tx.setConfirmations(0);
       return 0;
     }
-  };
-
-  /**
-   * @param {string} tx_hash Transaction hash.
-   * @return {Array} tags
-   */
-  this.getTags = function(tx_hash) {
-    return tx_tags[tx_hash] || [];
-  };
-
-  /**
-   * @param {string} tx_hash Transaction hash.
-   * @param {number} idx index
-   */
-  this.setTag = function(tx_hash, idx) {
-    if (tx_tags[tx_hash] == null) {
-      tx_tags[tx_hash] = [];
-    }
-    tx_tags[tx_hash].push(idx);
-    MyWallet.backupWalletDelayed();
-  };
-
-  /**
-   * @param {string} tx_hash Transaction hash.
-   * @param {number} idx index
-   */
-  this.unsetTag = function(tx_hash, idx) {
-    var tags = tx_tags[tx_hash];
-    var index = tx_tags.indexOf(idx);
-    if (index > -1) {
-      tx_tags.splice(index, 1);
-    }
-    MyWallet.backupWalletDelayed();
-  };
-
-  /**
-   * @return {Array} Tag Names
-   */
-  this.getTagNames = function() {
-    return tag_names;
-  };
-
-  /**
-   * @param {string} name tag name
-   * @return {boolean} success or not
-   */
-  this.addTag = function(name) {
-    if (! MyWallet.isAlphaNumericSpace(name))
-      return false;
-    tag_names.push(name);
-    MyWallet.backupWalletDelayed();
-    return true;
-  };
-
-  /**
-   * @param {number} idx index
-   * @param {string} name tag name
-   * @return {boolean} success or not
-   */
-  this.renameTag = function(idx, name) {
-    if (! MyWallet.isAlphaNumericSpace(name))
-      return false;
-    tag_names[idx] = name;
-    MyWallet.backupWalletDelayed();
-    return true;
-  };
-
-  /**
-   * @param {number} idx index
-   */
-  this.deleteTag = function(idx) {
-    tag_names.splice(idx,1);
-
-    for (var tx_hash in tx_tags) {
-      var tags = tx_tags[tx_hash];
-      var index = tx_tags.indexOf(idx);
-      if (index > -1) {
-        tx_tags.splice(index, 1);
-      }
-    }
-    //MyWallet.backupWalletDelayed();
   };
 
   // Must allow the following characters:
@@ -3020,20 +2937,9 @@ var MyWallet = new function() {
           }
         }
 
-        if (obj.tx_tags) {
-          for (var tx_hash in obj.tx_tags) {
-            var tags = obj.tx_tags[tx_hash];
-
-            if (tags && MyWallet.isAlphaNumericSpace(tags)) {
-              tx_tags[tx_hash] = tags;
-            }
-          }
-        }
-        if (obj.tag_names) {
-          tag_names = obj.tag_names;
-        }
-
-
+        WalletStore.setTags(obj.tx_tags);
+        WalletStore.setTagNames(obj.tag_names);
+        
         //If we don't have a checksum then the wallet is probably brand new - so we can generate our own
         if (payload_checksum == null || payload_checksum.length == 0) {
           payload_checksum = generatePayloadChecksum();
