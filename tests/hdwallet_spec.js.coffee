@@ -1,3 +1,5 @@
+# localStorage.clear()
+
 describe "HD Wallet", ->
   accountsPayload = undefined
   accountsPayloadSecondPassword = undefined
@@ -14,6 +16,108 @@ describe "HD Wallet", ->
     accountsPayload = decryptedWalletPayload["hd_wallets"][0]["accounts"]
     accountsPayloadSecondPassword = decryptedWalletWithSecondPasswordPayload["hd_wallets"][0]["accounts"]
     MyWallet.setDoubleEncryption(false)
+    
+    # Caching derive() on HDNode protoype doesn't do much good, because fromBase58()
+    # for a new object is just as slow as derive() on an existing one.
+    
+    # The slowness is caused by calls to "new ECKey" and "new ECPubKey", but these
+    # can't be mocked because they are internal to the module.
+    
+    # The solution is to mock HDNode.fromBase58() as well.
+
+    Bitcoin.HDNode.prototype.originalDerive = Bitcoin.HDNode.prototype.derive
+    spyOn(Bitcoin.HDNode.prototype, "derive").and.callFake((index) ->
+      node = undefined
+      cacheKey = "Bitcoin.HDNode.prototype.derive " + this.toBase58() + " " + index
+      if base58 = localStorage.getItem(cacheKey)
+        start = new Date().getTime();
+        
+        # Too slow by itself:
+        node = Bitcoin.HDNode.fromBase58(base58)
+      else
+        # start = new Date().getTime();
+        node = this.originalDerive(index)
+        localStorage.setItem(cacheKey, node.toBase58())
+        # console.log('Store time: ' + ((new Date().getTime()) - start));
+
+      node
+    )
+    
+    Bitcoin.HDNode.originalFromBase58 = Bitcoin.HDNode.fromBase58
+    
+    spyOn(Bitcoin.HDNode, "fromBase58").and.callFake((base58)->
+      node = undefined
+      
+      cacheKey = "Bitcoin.HDNode.fromBase58 " + base58
+      
+      if hex = localStorage.getItem(cacheKey)
+        priv_key_hex = hex.split(" ")[0]
+        pub_key_hex = hex.split(" ")[1]
+
+        node = Bitcoin.HDNode.prototype
+
+        node = {
+          chainCode: new Buffer(hex.split(" ")[2], "hex")
+          privKey: if priv_key_hex is "-" then undefined else {
+            d:  BigInteger.fromBuffer(new Buffer(priv_key_hex, "hex"))
+          }
+          pubKey: if pub_key_hex is "-" then undefined else Bitcoin.ECPubKey.fromHex(pub_key_hex)
+          derive: Bitcoin.HDNode.prototype.originalDerive
+          toBase58: () -> base58
+          depth: 0
+          index: 0
+          parentFingerprint: 0x00000000
+          network:  Bitcoin.networks.bitcoin
+          getFingerprint: Bitcoin.HDNode.prototype.getFingerprint
+          getIdentifier: Bitcoin.HDNode.prototype.getIdentifier
+          deriveHardened: Bitcoin.HDNode.prototype.deriveHardened
+          MASTER_SECRET: new Buffer('Bitcoin seed')
+          HIGHEST_BIT: 0x80000000
+          LENGTH: 78
+          
+          neutered: Bitcoin.HDNode.prototype.neutered # Slow!
+        }
+        
+        buffer = Browserify.bs58check.decode(base58)
+        
+        assert.strictEqual(buffer.length, node.LENGTH, 'Invalid buffer length')
+        
+        # 1 byte: depth: 0x00 for master nodes, 0x01 for level-1 descendants, ...
+        depth = buffer.readUInt8(4)
+
+        # 4 bytes: the fingerprint of the parent's key (0x00000000 if master key)
+        parentFingerprint = buffer.readUInt32BE(5)
+        if depth is 0 
+          assert.strictEqual(parentFingerprint, 0x00000000, 'Invalid parent fingerprint')
+        
+
+        # 4 bytes: child number. This is the number i in xi = xpar/i, with xi the key being serialized.
+        # This is encoded in MSB order. (0x00000000 if master key)
+        theIndex = buffer.readUInt32BE(9)
+        assert(depth > 0 || theIndex is 0, 'Invalid index')
+
+        # 32 bytes: the chain code
+        chainCode = buffer.slice(13, 45)
+
+        node.depth = depth
+        node.index = theIndex
+        node.parentFingerprint = parentFingerprint
+        
+        
+      else        
+        node = Bitcoin.HDNode.originalFromBase58(base58)
+
+        priv_key_hex = if node.privKey? then node.privKey.d.toBuffer().toString('hex') else "-"
+        
+        pub_key_hex = if node.pubKey? then node.pubKey.toHex() else "-"
+
+        hex = [priv_key_hex, pub_key_hex, node.chainCode.toString('hex')].join(" ")
+        
+        localStorage.setItem(cacheKey, hex)
+        console.log(hex)
+      
+      node
+    )
   
   describe "initializeHDWallet()", ->
     beforeEach ->
