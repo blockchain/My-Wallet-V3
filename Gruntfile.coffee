@@ -60,11 +60,11 @@ module.exports = (grunt) ->
         ]
         dest: "dist/my-wallet.js"
  
-    coffee:
-     compile:
-       files:
-         'build/wallet-store.js' : 'src/coffee/wallet-store.coffee'
-         'build/wallet-crypto.js': 'src/coffee/wallet-crypto.coffee'
+    # coffee:
+    #  compile:
+    #    files:
+    #      'build/wallet-store.js' : 'src/coffee/wallet-store.coffee'
+    #      'build/wallet-crypto.js': 'src/coffee/wallet-crypto.coffee'
 
     uglify:
       options:
@@ -137,7 +137,9 @@ module.exports = (grunt) ->
           'src/hd-wallet.js'
           'src/hd-account.js'
           'src/import-export.js'
-          'src/coffee/*.coffee'
+          'src/wallet-store.js'
+          'src/wallet-crypto.js'
+          # 'src/coffee/*.coffee'
         ]
         tasks: ['build','karma:continuous']
 
@@ -176,8 +178,8 @@ module.exports = (grunt) ->
         files: 
           'build/blockchain-api.processed.js'  : 'src/blockchain-api.js'
           'build/blockchain-settings-api.processed.js'  : 'src/blockchain-settings-api.js'
-          'build/wallet-store.processed.js'   : 'build/wallet-store.js'
-          'build/wallet-crypto.processed.js'  : 'build/wallet-crypto.js'
+          'build/wallet-store.processed.js'   : 'src/wallet-store.js'
+          'build/wallet-crypto.processed.js'  : 'src/wallet-crypto.js'
           'build/wallet.processed.js'         : 'src/wallet.js'
           'build/wallet-signup.processed.js'  : 'src/wallet-signup.js'
           'build/hd-wallet.processed.js'      : 'src/hd-wallet.js'
@@ -190,7 +192,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-contrib-concat'
   grunt.loadNpmTasks 'grunt-contrib-uglify'
   grunt.loadNpmTasks 'grunt-contrib-watch'
-  grunt.loadNpmTasks('grunt-contrib-coffee');
+  # grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks 'grunt-env'
   grunt.loadNpmTasks 'grunt-karma'
   grunt.loadNpmTasks 'grunt-preprocess'
@@ -205,7 +207,7 @@ module.exports = (grunt) ->
   ]
   
   grunt.registerTask "build", [
-    "coffee:compile"
+    # "coffee:compile"
     "env:build"
     "preprocess"
     "browserify:build"
@@ -218,7 +220,7 @@ module.exports = (grunt) ->
     "env:production"
     "clean:build"
     "clean:dist"
-    "coffee:compile"
+    # "coffee:compile"
     "shrinkwrap"
     "shell:check_dependencies"
     "clean:shrinkwrap"
@@ -236,7 +238,7 @@ module.exports = (grunt) ->
     "env:production"
     "clean:build"
     "clean:dist"
-    "coffee:compile"
+    # "coffee:compile"
     "shell:skip_check_dependencies"
     "preprocess"
     "browserify:production"
