@@ -80,16 +80,16 @@ var MyWallet = new function() {
     always_keep_local_backup : false, //Whether to always keep a backup in localStorage regardless of two factor authentication
     transactions_per_page : 30, //Number of transactions per page
     additional_seeds : [],
-    multi_account : false //Allow multiple accounts in the wallet
+    enable_multiple_accounts : true //Allow multiple accounts in the wallet
   };
 
   this.getMultiAccountSetting = function() {
-    return wallet_options.multi_account;
+    return wallet_options.enable_multiple_accounts;
   }
 
   this.setMultiAccountSetting = function(flag) {
     MyWallet.backupWalletDelayed();
-    wallet_options.multi_account = flag;
+    wallet_options.enable_multiple_accounts = flag;
   }
 
   /**
