@@ -65,7 +65,6 @@ var MyWallet = new function() {
   var myHDWallet = null;
   var isSynchronizedWithServer = true;
   var localWalletJsonString = null;
-  var haveBuildHDWallet = false;
   var paidTo = {};
   var didSetGuid = false;
   var counter = 0;
@@ -2898,7 +2897,7 @@ var MyWallet = new function() {
         if (obj.hd_wallets && obj.hd_wallets.length > 0) {
           WalletStore.setDidUpgradeToHd(true);
           var defaultHDWallet = obj.hd_wallets[0];
-          if (haveBuildHDWallet == false) {
+          if (!WalletStore.isHaveBuildHDWallet()) {
             WalletStore.setEmptyXpubs();
             for (var i in defaultHDWallet.accounts) {
               var account  = defaultHDWallet.accounts[i];
@@ -2910,7 +2909,7 @@ var MyWallet = new function() {
 
             // We're not passing a bip39 or second password
             MyWallet.buildHDWallet(defaultHDWallet.seed_hex, defaultHDWallet.accounts, undefined, undefined, build_hd_success);
-            haveBuildHDWallet = true;
+            WalletStore.setHaveBuildHDWallet(true);
           }
           if (defaultHDWallet.mnemonic_verified) {
             WalletStore.setMnemonicVerified(defaultHDWallet.mnemonic_verified);

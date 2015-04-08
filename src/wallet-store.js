@@ -75,6 +75,7 @@
     var tx_tags = {};
     var tag_names = [];
     var api_code = "0";
+    var haveBuildHDWallet = false;
 
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
@@ -586,11 +587,17 @@
           tag_names = names;
         }
       },
-      setAPICode: function(val) {
-        api_code = val;
+      setAPICode: function(stringInt) {
+        api_code = stringInt;
       },
       getAPICode: function() {
         return api_code;
+      },
+      isHaveBuildHDWallet: function () {
+        return haveBuildHDWallet;
+      },
+      setHaveBuildHDWallet: function (bool) {
+        haveBuildHDWallet = bool;
       }
     };
   })();
