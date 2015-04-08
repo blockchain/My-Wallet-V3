@@ -54,7 +54,6 @@ var MyWallet = new function() {
   var isSynchronizedWithServer = true;
   var localWalletJsonString = null;
   var paidTo = {};
-  var didSetGuid = false;
   var counter = 0;
   var isPolling = false;
 
@@ -2906,7 +2905,7 @@ var MyWallet = new function() {
    * @param {function()=} build_hd_success Called when the HD part of the wallet was initialized successfully.
    */
   this.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_required, other_error, fetch_success, decrypt_success, build_hd_success) {
-    if (!resend_code && didSetGuid) {
+    if (!resend_code && WalletStore.isDidSetGuid) {
       MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error, decrypt_success, build_hd_success);
       return;
     }
@@ -2963,7 +2962,7 @@ var MyWallet = new function() {
         if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
           WalletStore.setEncryptedWalletData(obj.payload);
         } else {
-          didSetGuid = true;
+          WalletStore.setDidSetGuid();
           needs_two_factor_code(WalletStore.get2FAType());
           return;
         }
@@ -2999,7 +2998,7 @@ var MyWallet = new function() {
           WalletStore.setLanguage(obj.language);
         }
 
-        didSetGuid = true;
+        WalletStore.setDidSetGuid();
         MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error, decrypt_success, build_hd_success);
       },
       error : function(e) {
