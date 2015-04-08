@@ -53,6 +53,7 @@
       'RUB': 'Russian Ruble'
     };
     var demo_guid = 'abcaa314-6f67-6705-b384-5d47fbe9d7cc';
+    var guid; //Wallet identifier
     var language = 'en';
     var mnemonicVerified = false;
     var xpubs = [];
@@ -634,6 +635,15 @@
       },
       getDemoGuid: function() {
         return demo_guid;
+      },
+      getGuid: function() {
+        return guid;
+      },
+      setGuid: function(stringValue) {
+        guid = stringValue;
+      },
+      isDemoWallet: function() {
+        return guid === demo_guid;
       }
     };
   })();

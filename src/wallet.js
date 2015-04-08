@@ -37,7 +37,6 @@ var MyWallet = new function() {
 
   var MyWallet = this;
   var encrypted_wallet_data; //Encrypted wallet data (Base64, AES 256)
-  var guid; //Wallet identifier
   var password; //Password
   var dpasswordhash; //double encryption Password
   var sharedKey; //Shared key used to prove that the wallet has succesfully been decrypted, meaning you can't overwrite a wallet backup even if you have the guid
@@ -199,10 +198,6 @@ var MyWallet = new function() {
     return wallet_options.transactions_per_page;
   };
 
-  this.getGuid = function() {
-    return guid;
-  };
-
   this.getHTML5Notifications = function() {
     return wallet_options.html5_notifications;
   };
@@ -244,7 +239,7 @@ var MyWallet = new function() {
     }
 
     if (!data.guid)
-      clone.guid = guid;
+      clone.guid = WalletStore.getGuid();
 
     clone.format =  data.format ? data.format : 'plain';
     clone.api_code = WalletStore.getAPICode();
@@ -980,8 +975,8 @@ var MyWallet = new function() {
 
       var msg = '{"op":"blocks_sub"}';
 
-      if (guid != null)
-        msg += '{"op":"wallet_sub","guid":"'+guid+'"}';
+      if (WalletStore.getGuid() != null)
+        msg += '{"op":"wallet_sub","guid":"'+WalletStore.getGuid()+'"}';
 
       try {
         var addrs = WalletStore.getLegacyActiveAddresses();
@@ -2496,7 +2491,7 @@ var MyWallet = new function() {
   };
 
   this.makeWalletJSON = function(format) {
-    return MyWallet.makeCustomWalletJSON(format, guid, sharedKey);
+    return MyWallet.makeCustomWalletJSON(format, WalletStore.getGuid(), sharedKey);
   };
 
   this.makeCustomWalletJSON = function(format, guid, sharedKey) {
@@ -2908,7 +2903,7 @@ var MyWallet = new function() {
   this.makePairingCode = function(success, error) {
     try {
       MyWallet.securePost('wallet', { method : 'pairing-encryption-password' }, function(encryption_phrase) {
-        success('1|' + guid + '|' + WalletCrypto.encrypt(sharedKey + '|' + CryptoJS.enc.Utf8.parse(password).toString(), encryption_phrase, 10));
+        success('1|' + WalletStore.getGuid() + '|' + WalletCrypto.encrypt(sharedKey + '|' + CryptoJS.enc.Utf8.parse(password).toString(), encryption_phrase, 10));
       }, function(e) {
         error(e);
       });
@@ -2981,7 +2976,7 @@ var MyWallet = new function() {
       return;
     }
 
-    guid = user_guid;
+    WalletStore.setGuid(user_guid);
     sharedKey = shared_key;
 
     var clientTime=(new Date()).getTime();
@@ -3019,7 +3014,7 @@ var MyWallet = new function() {
           return;
         }
 
-        guid = obj.guid;
+        WalletStore.setGuid(obj.guid);
         WalletStore.setAuthType(obj.auth_type);
         WalletStore.setRealAuthType(obj.real_auth_type);
         sync_pubkeys = obj.sync_pubkeys;
@@ -3047,14 +3042,14 @@ var MyWallet = new function() {
         }
 
         MyStore.get('guid', function(local_guid) {
-          if (local_guid != guid) {
+          if (local_guid != WalletStore.getGuid()) {
             MyStore.remove('guid');
             MyStore.remove('multiaddr');
             MyStore.remove('payload');
 
             //Demo Account Guid
-            if (guid != WalletStore.getDemoGuid()) {
-              MyStore.put('guid', guid);
+            if (!WalletStore.isDemoWallet()) {
+              MyStore.put('guid', WalletStore.getGuid());
             }
           }
         });
@@ -3203,7 +3198,7 @@ var MyWallet = new function() {
           },
           crossDomain: true,
           url: BlockchainAPI.getRootURL() + "wallet",
-          data :  { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : WalletStore.getAPICode()},
+          data :  { guid: WalletStore.getGuid(), payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : WalletStore.getAPICode()},
           success: function(data) {
             try {
               if (data == null || data.length == 0) {
@@ -3680,7 +3675,7 @@ var MyWallet = new function() {
 
     MyWallet.sendEvent('logging_out');
 
-    if (guid == WalletStore.getDemoGuid()) {
+    if (WalletStore.isDemoWallet()) {
       window.location = BlockchainAPI.getRootURL() + 'wallet/logout';
     } else {
       $.ajax({
