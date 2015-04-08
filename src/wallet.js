@@ -2905,7 +2905,7 @@ var MyWallet = new function() {
    * @param {function()=} build_hd_success Called when the HD part of the wallet was initialized successfully.
    */
   this.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_required, other_error, fetch_success, decrypt_success, build_hd_success) {
-    if (!resend_code && WalletStore.isDidSetGuid) {
+    if (!resend_code && WalletStore.isDidSetGuid()) {
       MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error, decrypt_success, build_hd_success);
       return;
     }
