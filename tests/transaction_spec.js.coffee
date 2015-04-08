@@ -101,7 +101,7 @@ describe "Transaction", ->
 
     spyOn(MyWallet, "getAccounts").and.returnValue(hdAccounts)
 
-    spyOn(MyWallet, "getHDWallet").and.returnValue({
+    spyOn(WalletStore, "getHDWallet").and.returnValue({
       getAccounts: () -> hdAccounts
       getAccount: (idx) ->  hdAccounts[idx]
     })

@@ -84,6 +84,7 @@
     var real_auth_type = 0; //The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
     var encrypted_wallet_data; //Encrypted wallet data (Base64, AES 256)
     var payload_checksum; //SHA256 hash of the current wallet.aes.json
+    var myHDWallet = null;
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
     ////////////////////////////////////////////////////////////////////////////
@@ -674,6 +675,18 @@
       },
       setPayloadChecksum: function(value) {
         payload_checksum = value;
+      },
+      getHDWallet: function() {
+        if (typeof myHDWallet === 'undefined') {
+          return null;
+        }
+        return myHDWallet;
+      },
+      setHDWallet: function(newValue) {
+        myHDWallet = newValue;
+        if (newValue) {
+          MyWallet.sendEvent('hd_wallet_set');
+        }
       }
     };
   })();

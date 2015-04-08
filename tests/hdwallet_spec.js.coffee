@@ -311,7 +311,7 @@ describe "HD Wallet", ->
 
       spyOn(observer, "success").and.callThrough()
       spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
-      spyOn(MyWallet, "getHDWallet").and.returnValue({
+      spyOn(WalletStore, "getHDWallet").and.returnValue({
         getSeedHexString: (()-> if WalletStore.getDoubleEncryption() then seed_encrypted else seed)
         getPassphraseString: ((hex) -> if hex is seed then passphrase else "wrong")
       })

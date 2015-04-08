@@ -66,7 +66,7 @@ describe "Spend", ->
     ]
 
     spyOn(MyWallet, "getAccounts").and.returnValue(hdAccounts)
-    spyOn(MyWallet, "getHDWallet").and.returnValue({
+    spyOn(WalletStore, "getHDWallet").and.returnValue({
       getAccounts: () -> hdAccounts
       getAccount: (idx) ->  hdAccounts[idx]
     })
@@ -365,7 +365,7 @@ describe "Spend", ->
     describe "sendBitcoinsForAccount()", ->
       it "the transaction has been pushed to the network", ->
 
-        spyOn(MyWallet.getHDWallet(),"getAccount").and.callThrough()
+        spyOn(WalletStore.getHDWallet(),"getAccount").and.callThrough()
         spyOn(hdAccounts[data.from], 'createTx').and.callThrough()
         spyOn(hdAccounts[data.from], 'getBalance').and.callThrough()
 
@@ -380,7 +380,7 @@ describe "Spend", ->
                                        , observer.listener
                                        , null  # this must be null if double encrypt is false
 
-        expect(MyWallet.getHDWallet().getAccount).toHaveBeenCalledWith(data.from)
+        expect(WalletStore.getHDWallet().getAccount).toHaveBeenCalledWith(data.from)
         expect(BlockchainAPI.get_unspent).toHaveBeenCalled()
         xpub = BlockchainAPI.get_unspent.calls.argsFor(0)[0][0]
         expect(xpub).toBe(hdAccounts[0].extendedPublicKey)

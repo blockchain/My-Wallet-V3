@@ -8,7 +8,7 @@ describe "MyWallet", ->
     hdWallet = new HDWallet(seed, null, null)
     
 
-    spyOn(MyWallet, "getHDWallet").and.returnValue(hdWallet)
+    spyOn(WalletStore, "getHDWallet").and.returnValue(hdWallet)
   
     spyOn(MyWallet, 'backupWallet').and.callFake(() -> )
     spyOn(MyWallet, 'backupWalletDelayed').and.callFake(() -> )
