@@ -88,6 +88,7 @@
     var sharedcoin_endpoint; //The URL to the sharedcoin node
     var sharedKey; //Shared key used to prove that the wallet has succesfully been decrypted, meaning you can't overwrite a wallet backup even if you have the guid
     var didSetGuid = false;
+    var isPolling = false;
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
     ////////////////////////////////////////////////////////////////////////////
@@ -708,6 +709,12 @@
       },
       setDidSetGuid: function () {
         didSetGuid = true;
+      },
+      isPolling: function () {
+        return isPolling;
+      },
+      setIsPolling: function (bool) {
+        isPolling = bool;
       }
     };
   })();

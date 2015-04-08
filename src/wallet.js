@@ -55,7 +55,6 @@ var MyWallet = new function() {
   var localWalletJsonString = null;
   var paidTo = {};
   var counter = 0;
-  var isPolling = false;
 
   var wallet_options = {
     fee_policy : 0,  //Default Fee policy (-1 Tight, 0 Normal, 1 High)
@@ -3056,9 +3055,9 @@ var MyWallet = new function() {
   };
 
   this.pollForSessionGUID = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_received, other_error) {
-    if (isPolling) return;
+    if (WalletStore.isPolling()) return;
 
-    isPolling = true;
+    WalletStore.setIsPolling(true);
 
     $.ajax({
       dataType: 'json',
@@ -3074,7 +3073,7 @@ var MyWallet = new function() {
         var self = this;
         if (obj.guid) {
 
-          isPolling = false;
+          WalletStore.setIsPolling(false);
 
           authorization_received();
 
@@ -3088,12 +3087,12 @@ var MyWallet = new function() {
               $.ajax(self);
             }, 2000);
           } else {
-            isPolling = false;
+            WalletStore.setIsPolling(false);
           }
         }
       },
       error : function() {
-        isPolling = false;
+        WalletStore.setIsPolling(false);
       }
     });
   };
