@@ -77,6 +77,8 @@
     var api_code = "0";
     var haveBuildHDWallet = false;
     var double_encryption = false; //If wallet has a second password
+    var auth_type; //The two factor authentication type used. 0 for none.
+    var real_auth_type = 0; //The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
 
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
@@ -605,6 +607,25 @@
       },
       setDoubleEncryption: function(bool) {
         double_encryption = bool;
+      },
+      setRealAuthType: function(number) {
+        real_auth_type = number;
+      },
+      get2FAType: function() {
+        return real_auth_type;
+      },
+      get2FATypeString: function() {
+        var stringType = "";
+        switch(real_auth_type){
+          case 0: stringType = null; break;
+          case 1: stringType = "Yubikey"; break;
+          case 2: stringType = "Email"; break;
+          case 3: stringType = "Yubikey MtGox"; break;
+          case 4: stringType = "Google Auth"; break;
+          case 5: stringType = "SMS"; break;
+          default: stringType = null; break;
+        }
+        return stringType;
       }
     };
   })();

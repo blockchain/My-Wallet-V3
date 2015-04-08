@@ -87,7 +87,7 @@ var BlockchainSettingsAPI = new function() {
 
   function updateAuthType(val, success, error) {
     updateKV('Updating Two Factor Authentication', 'update-auth-type', val, function() {
-      MyWallet.setRealAuthType(val);
+      WalletStore.setRealAuthType(val);
       typeof(success) === "function" && success();
     }, error);
   }
@@ -119,7 +119,7 @@ var BlockchainSettingsAPI = new function() {
 
   this.confirmTwoFactorGoogleAuthenticator = function(code, success, error) {
     updateKV('Updating Two Factor Authentication', 'update-auth-type', 4, function() {
-      MyWallet.setRealAuthType(4);
+      WalletStore.setRealAuthType(4);
       typeof(success) === "function" && success();
     }, error, '?code='+code);
   };

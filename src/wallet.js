@@ -49,8 +49,6 @@ var MyWallet = new function() {
   var archTimer; //Delayed Backup wallet timer
   var recommend_include_fee = true; //Number of unconfirmed transactions in blockchain.info's memory pool
   var default_pbkdf2_iterations = 5000;
-  var auth_type; //The two factor authentication type used. 0 for none.
-  var real_auth_type = 0; //The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
   var logout_timeout; //setTimeout return value for the automatic logout
   var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
   var isInitialized = false;
@@ -119,40 +117,6 @@ var MyWallet = new function() {
    */
   this.isSynchronizedWithServer = function() {
     return isSynchronizedWithServer;
-  };
-
-  /**
-   * @param {number} val auth type
-   */
-  this.setRealAuthType = function(val) {
-    real_auth_type = val;
-  };
-
-  /**
-   * @return {number} 2FA type
-   */
-  this.get2FAType = function() {
-    return real_auth_type;
-  };
-
-  /**
-   * @return {string} 2FA type string
-   */
-  this.get2FATypeString = function() {
-    if (real_auth_type == 0) {
-      return null;
-    } else if (real_auth_type == 1) {
-      return 'Yubikey';
-    } else if (real_auth_type == 2) {
-      return 'Email';
-    } else if (real_auth_type == 3) {
-      return 'Yubikey MtGox';
-
-    } else if (real_auth_type == 4) {
-      return 'Google Auth';
-    } else if (real_auth_type == 5) {
-      return 'SMS';
-    }
   };
 
   this.addAdditionalSeeds = function(val) {
@@ -3059,14 +3023,14 @@ var MyWallet = new function() {
 
         guid = obj.guid;
         auth_type = obj.auth_type;
-        real_auth_type = obj.real_auth_type;
+        WalletStore.setRealAuthType(obj.real_auth_type);
         sync_pubkeys = obj.sync_pubkeys;
 
         if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
           MyWallet.setEncryptedWalletData(obj.payload);
         } else {
           didSetGuid = true;
-          needs_two_factor_code(MyWallet.get2FAType());
+          needs_two_factor_code(WalletStore.get2FAType());
           return;
         }
 
