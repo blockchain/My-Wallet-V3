@@ -74,6 +74,7 @@
     var latest_block = null;
     var tx_tags = {};
     var tag_names = [];
+    var api_code = "0";
 
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
@@ -249,25 +250,14 @@
         }
       },
       getTotalBalanceForActiveLegacyAddresses: function() {
-        // var suma = function(x, y) {return x + y;};
-        // var tagIsnt2 = function (o) {return o.tag !== 2};
-        // addresses.filter(tagIsnt2)
-        
-        var k, o;
-        return ((function() {
-          var results;
-          results = [];
-          for (k in addresses) {
-            if (!hasProp.call(addresses, k)) continue;
-            o = addresses[k];
-            if (o.tag !== 2) {
-              results.push(o.balance);
-            }
-          }
-          return results;
-        })()).reduce((function(x, y) {
-          return x + y;
-        }), 0);
+        var add = function(x, y) {return x + y;};
+        var balances = [];
+        for (k in addresses) {
+          if (!hasProp.call(addresses, k)) continue;
+          o = addresses[k];
+          if (o.tag !== 2) balances.push(o.balance);
+        }        
+        return balances.reduce(add, 0);
       },
       deleteLegacyAddress: function(address) {
         delete addresses[address];
@@ -307,7 +297,7 @@
       archiveLegacyAddr: function(address) {
         var addr;
         addr = addresses[address];
-        if ((addr.tag == null) || addr.tag === 0) {
+        if ((addr.tag === null) || addr.tag === 0) {
           addr.tag = 2;
           MyWallet.backupWalletDelayed('update', function() {
             return MyWallet.get_history();
@@ -595,6 +585,12 @@
         if (names != null) {
           tag_names = names;
         }
+      },
+      setAPICode: function(val) {
+        api_code = val;
+      },
+      getAPICode: function() {
+        return api_code;
       }
     };
   })();

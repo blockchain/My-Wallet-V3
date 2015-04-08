@@ -68,7 +68,6 @@ var MyWallet = new function() {
   var haveBuildHDWallet = false;
   var paidTo = {};
   var didSetGuid = false;
-  var api_code = "0";
   var counter = 0;
   var isPolling = false;
 
@@ -91,20 +90,6 @@ var MyWallet = new function() {
     MyWallet.backupWalletDelayed();
     wallet_options.enable_multiple_accounts = flag;
   }
-
-  /**
-   * @param {string} val api code
-   */
-  this.setAPICode = function(val) {
-    api_code = val;
-  };
-
-  /**
-   * @return {string} api code
-   */
-  this.getAPICode = function() {
-    return api_code;
-  };
 
   this.setEncryptedWalletData = function(data) {
     if (!data || data.length == 0) {
@@ -310,7 +295,7 @@ var MyWallet = new function() {
       clone.guid = guid;
 
     clone.format =  data.format ? data.format : 'plain';
-    clone.api_code = MyWallet.getAPICode();
+    clone.api_code = WalletStore.getAPICode();
 
     var dataType = 'text';
     if (data.format == 'json')
@@ -3000,7 +2985,7 @@ var MyWallet = new function() {
         format : 'json', 
         resend_code : 1, 
         ct : (new Date()).getTime(),
-        api_code : MyWallet.getAPICode(),
+        api_code : WalletStore.getAPICode(),
         shared_key: MyWallet.getSharedKey()
       },
       timeout: 60000,
@@ -3058,7 +3043,7 @@ var MyWallet = new function() {
       data.sharedKey = sharedKey;
     }
 
-    data.api_code = MyWallet.getAPICode();
+    data.api_code = WalletStore.getAPICode();
 
     $.ajax({
       type: "GET",
@@ -3266,7 +3251,7 @@ var MyWallet = new function() {
           },
           crossDomain: true,
           url: BlockchainAPI.getRootURL() + "wallet",
-          data :  { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : MyWallet.getAPICode()},
+          data :  { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : WalletStore.getAPICode()},
           success: function(data) {
             try {
               if (data == null || data.length == 0) {
@@ -3750,7 +3735,7 @@ var MyWallet = new function() {
         type: "GET",
         timeout: 60000,
         url: BlockchainAPI.getRootURL() + 'wallet/logout',
-        data : {format : 'plain', api_code : MyWallet.getAPICode()},
+        data : {format : 'plain', api_code : WalletStore.getAPICode()},
         success: function(data) {
           window.location.reload();
         },

@@ -39,7 +39,7 @@ var BlockchainAPI = new function() {
       ct : clientTime,
       n : n,
       language : WalletStore.getLanguage(),
-      api_code : MyWallet.getAPICode(),
+      api_code : WalletStore.getAPICode(),
       no_buttons: true
     };
 
@@ -91,7 +91,7 @@ var BlockchainAPI = new function() {
       ct : clientTime,
       n : n,
       language : WalletStore.getLanguage(),
-      api_code : MyWallet.getAPICode(),
+      api_code : WalletStore.getAPICode(),
       symbol_btc : symbol_btc.code,
       symbol_local : symbol_local.code
     };
@@ -140,7 +140,7 @@ var BlockchainAPI = new function() {
       ct : clientTime,
       n : n,
       language : WalletStore.getLanguage(),
-      api_code : MyWallet.getAPICode(),
+      api_code : WalletStore.getAPICode(),
       symbol_btc : symbol_btc.code,
       symbol_local : symbol_local.code
     };
@@ -180,7 +180,7 @@ var BlockchainAPI = new function() {
       url: this.getRootURL() + 'multiaddr',
       dataType: 'json',
       timeout: AjaxTimeout,
-      data : {active : addresses.join('|'), simple : true, api_code : MyWallet.getAPICode(), format : 'json'},
+      data : {active : addresses.join('|'), simple : true, api_code : WalletStore.getAPICode(), format : 'json'},
       success: function(obj) {
         for (var key in obj) {
 
@@ -247,7 +247,7 @@ var BlockchainAPI = new function() {
       type: "GET",
       dataType: 'json',
       url: this.getRootURL() +'frombtc',
-      data: {value : value, currency: currencyCode, time: time, textual: false, nosavecurrency: true, api_code : MyWallet.getAPICode()},
+      data: {value : value, currency: currencyCode, time: time, textual: false, nosavecurrency: true, api_code : WalletStore.getAPICode()},
       timeout: AjaxTimeout,
       success: function(data) {
         successCallback(data);
@@ -265,7 +265,7 @@ var BlockchainAPI = new function() {
       type: "GET",
       dataType: 'json',
       url: this.getRootURL() +'ticker',
-      data: {format : 'json', api_code : MyWallet.getAPICode()},
+      data: {format : 'json', api_code : WalletStore.getAPICode()},
       timeout: AjaxTimeout,
       success: function(data) {
         MyWallet.sendEvent('ticker_updated');
@@ -282,7 +282,7 @@ var BlockchainAPI = new function() {
     $.ajax({
       type: "GET",
       url: this.getRootURL() + 'q/rejected/'+hexhash,
-      data : {format : 'plain', api_code : MyWallet.getAPICode()},
+      data : {format : 'plain', api_code : WalletStore.getAPICode()},
       timeout: AjaxTimeout,
       success: function(data) {
         if (data == null || data.length == 0)
@@ -397,7 +397,7 @@ var BlockchainAPI = new function() {
         var post_data = {
           format : "plain",
           tx: txHex,
-          api_code : MyWallet.getAPICode(),
+          api_code : WalletStore.getAPICode(),
           hash : tx_hash
         };
 
@@ -443,7 +443,7 @@ var BlockchainAPI = new function() {
 
         fd.append('format', 'plain');
         fd.append('hash', tx_hash);
-        fd.append('api_code', MyWallet.getAPICode());
+        fd.append('api_code', WalletStore.getAPICode());
 
         $.ajax({
           url: this.getRootURL() + 'pushtx',
@@ -482,7 +482,7 @@ var BlockchainAPI = new function() {
       dataType: 'json',
       url: this.getRootURL() +'unspent',
       timeout: AjaxTimeout,
-      data: {active : fromAddresses.join('|'), format : 'json', api_code : MyWallet.getAPICode(), confirmations : confirmations ? confirmations : 0},
+      data: {active : fromAddresses.join('|'), format : 'json', api_code : WalletStore.getAPICode(), confirmations : confirmations ? confirmations : 0},
       success: function(obj) {
         if (obj.error != null) {
           error(obj.error);
