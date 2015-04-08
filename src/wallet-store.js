@@ -76,6 +76,7 @@
     var tag_names = [];
     var api_code = "0";
     var haveBuildHDWallet = false;
+    var double_encryption = false; //If wallet has a second password
 
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
@@ -598,6 +599,12 @@
       },
       setHaveBuildHDWallet: function (bool) {
         haveBuildHDWallet = bool;
+      },
+      getDoubleEncryption: function() {
+        return double_encryption;
+      },
+      setDoubleEncryption: function(bool) {
+        double_encryption = bool;
       }
     };
   })();

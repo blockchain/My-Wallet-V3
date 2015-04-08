@@ -3,7 +3,7 @@ describe "Wallet", ->
   callbacks = undefined
 
   beforeEach ->
-    MyWallet.setDoubleEncryption(false)
+    WalletStore.setDoubleEncryption(false)
     spyOn(MyWallet, "backupWallet").and.callFake (method, success, error) ->
       success()
     spyOn(MyWallet, "backupWalletDelayed").and.callFake (method, success, error) ->
@@ -138,7 +138,7 @@ describe "Wallet", ->
       expect(WalletStore.setPbkdf2Iterations).toHaveBeenCalledWith(pbkdf2_iterations)
 
     it "should set the PBKDF2 iterations when 2nd password is enabled", ->
-      MyWallet.setDoubleEncryption(true)
+      WalletStore.setDoubleEncryption(true)
 
       observer = {}
 

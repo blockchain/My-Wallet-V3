@@ -15,7 +15,7 @@ describe "HD Wallet", ->
       
     accountsPayload = decryptedWalletPayload["hd_wallets"][0]["accounts"]
     accountsPayloadSecondPassword = decryptedWalletWithSecondPasswordPayload["hd_wallets"][0]["accounts"]
-    MyWallet.setDoubleEncryption(false)
+    WalletStore.setDoubleEncryption(false)
     
     # Caching derive() on HDNode protoype doesn't do much good, because fromBase58()
     # for a new object is just as slow as derive() on an existing one.
@@ -140,7 +140,7 @@ describe "HD Wallet", ->
     describe "with a second password", ->
       beforeEach ->
 
-        MyWallet.setDoubleEncryption(true)
+        WalletStore.setDoubleEncryption(true)
         observer.getPassword = (callback) ->
           callback(second_password, (()->), (()->))
         spyOn(observer, "getPassword").and.callThrough()
@@ -312,7 +312,7 @@ describe "HD Wallet", ->
       spyOn(observer, "success").and.callThrough()
       spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
       spyOn(MyWallet, "getHDWallet").and.returnValue({
-        getSeedHexString: (()-> if MyWallet.getDoubleEncryption() then seed_encrypted else seed)
+        getSeedHexString: (()-> if WalletStore.getDoubleEncryption() then seed_encrypted else seed)
         getPassphraseString: ((hex) -> if hex is seed then passphrase else "wrong")
       })
 
@@ -321,7 +321,7 @@ describe "HD Wallet", ->
       expect(observer.success).toHaveBeenCalledWith(passphrase)
 
     it "should ask for 2nd password and then provide the passphrase", ->
-      MyWallet.setDoubleEncryption(true)
+      WalletStore.setDoubleEncryption(true)
 
       spyOn(WalletCrypto, "decryptSecretWithSecondPassword").and.callFake((secret, password, shared_key, iterations) ->
         return seed if secret == seed_encrypted and password == second_password and (shared_key == undefined || shared_key == sharedKey)

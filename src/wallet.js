@@ -43,7 +43,6 @@ var MyWallet = new function() {
   var password; //Password
   var dpasswordhash; //double encryption Password
   var sharedKey; //Shared key used to prove that the wallet has succesfully been decrypted, meaning you can't overwrite a wallet backup even if you have the guid
-  var double_encryption = false; //If wallet has a second password
   var tx_page = 0; //Multi-address page
   var tx_filter = 0; //Transaction filter (e.g. Sent Received etc)
   var payload_checksum; //SHA256 hash of the current wallet.aes.json
@@ -196,14 +195,6 @@ var MyWallet = new function() {
     clearInterval(logout_timeout);
 
     logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
-  };
-
-  this.getDoubleEncryption = function() {
-    return double_encryption;
-  };
-
-  this.setDoubleEncryption = function(newValue) {
-    double_encryption = newValue;
   };
 
   this.getEncryptedWalletData = function() {
@@ -368,7 +359,7 @@ var MyWallet = new function() {
 
     try {
       // If double encryption is enabled we need to re-encrypt all private keys
-      if(double_encryption) {
+      if(WalletStore.getDoubleEncryption()) {
         getPassword(
           function(pw, correct_password, wrong_password) {
             if (MyWallet.validateSecondPassword(pw)) {
@@ -471,7 +462,7 @@ var MyWallet = new function() {
             MyWallet.getHDWallet().seedHex = WalletCrypto.decryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, pw, sharedKey, pbkdf2_iterations);
           }
 
-          MyWallet.setDoubleEncryption(false);
+          WalletStore.setDoubleEncryption(false);
 
           MyWallet.checkAllKeys(null);
 
@@ -519,7 +510,7 @@ var MyWallet = new function() {
     };
 
     try {
-      MyWallet.setDoubleEncryption(true);
+      WalletStore.setDoubleEncryption(true);
       WalletStore.mapToLegacyAddressesPrivateKeys(encrypt(password, MyWallet.getSharedKey(), pbkdf2_iterations));
 
       for (var i in MyWallet.getAccounts()) {
@@ -674,7 +665,7 @@ var MyWallet = new function() {
           function(key, isCompPoint) {
             WalletStore.disableLogout(false);
             correct_password();
-            if(double_encryption) {
+            if(WalletStore.getDoubleEncryption()) {
               getPassword(function(pw, correct_password, wrong_password) {
                 if (MyWallet.validateSecondPassword(pw)) {
                   correct_password();
@@ -711,7 +702,7 @@ var MyWallet = new function() {
       return;
     }
 
-    if(double_encryption) {
+    if(WalletStore.getDoubleEncryption()) {
       getPassword(function(pw, correct_password, wrong_password) {
         if (MyWallet.validateSecondPassword(pw)) {
           correct_password();
@@ -1710,7 +1701,7 @@ var MyWallet = new function() {
    * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
    */
   this.sendToEmail = function(accountIdx, value, fixedFee, email, successCallback, errorCallback, listener, getPassword)  {
-    if (double_encryption) {
+    if (WalletStore.getDoubleEncryption()) {
       getPassword(function(pw, correct_password, wrong_password) {
         if (MyWallet.validateSecondPassword(pw)) {
           correct_password();
@@ -1859,7 +1850,7 @@ var MyWallet = new function() {
    * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
    */
   this.sendFromLegacyAddressToAddress = function(fromAddress, toAddress, amount, feeAmount, note, successCallback, errorCallback, listener, getPassword)  {
-    if (double_encryption) {
+    if (WalletStore.getDoubleEncryption()) {
       getPassword(function(pw, correct_password, wrong_password) {
         if (MyWallet.validateSecondPassword(pw)) {
           correct_password();
@@ -1919,7 +1910,7 @@ var MyWallet = new function() {
    * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
    */
   this.sendFromLegacyAddressToAccount = function(fromAddress, toIdx, amount, feeAmount, note, successCallback, errorCallback, listener, getPassword)  {
-    if (double_encryption) {
+    if (WalletStore.getDoubleEncryption()) {
       getPassword(function(pw, correct_password, wrong_password) {
         if (MyWallet.validateSecondPassword(pw)) {
           correct_password();
@@ -2013,7 +2004,7 @@ var MyWallet = new function() {
   this.sendToMobile = function(accountIdx, value, fixedFee, mobile, successCallback, errorCallback, listener, getPassword)  {
     var sharedKey = MyWallet.getSharedKey();
     var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
-    if (double_encryption) {
+    if (WalletStore.getDoubleEncryption()) {
       getPassword(function(pw, correct_password, wrong_password) {
         if (MyWallet.validateSecondPassword(pw)) {
           correct_password();
@@ -2144,7 +2135,7 @@ var MyWallet = new function() {
     }
 
 
-    if (double_encryption) {
+    if (WalletStore.getDoubleEncryption()) {
       getPassword(function(pw, correct_password, wrong_password) {
         if (MyWallet.validateSecondPassword(pw)) {
           correct_password();
@@ -2238,7 +2229,7 @@ var MyWallet = new function() {
       return;
     }
       
-    if (double_encryption) {
+    if (WalletStore.getDoubleEncryption()) {
       getPassword(function(pw, correct_password, incorrect_password) {
         if (MyWallet.validateSecondPassword(pw)) {
           correct_password();
@@ -2310,7 +2301,7 @@ var MyWallet = new function() {
       });
     }
 
-    if (this.getDoubleEncryption()) {
+    if (WalletStore.getDoubleEncryption()) {
       getPassword(function(pw, correct_password, wrong_password) {
         if (MyWallet.validateSecondPassword(pw)) {
           correct_password();
@@ -2350,7 +2341,7 @@ var MyWallet = new function() {
       });
     }
 
-    if (this.getDoubleEncryption()) {
+    if (WalletStore.getDoubleEncryption()) {
       getPassword(function(pw, correct_password, wrong_password) {
         if (MyWallet.validateSecondPassword(pw)) {
           correct_password();
@@ -2475,7 +2466,7 @@ var MyWallet = new function() {
       MyWallet.buildHDWallet(seedHexString, [], bip39Password, second_password, _success, error);
     }
 
-    if (this.getDoubleEncryption()) {
+    if (WalletStore.getDoubleEncryption()) {
       getPassword(function(pw, correct_password, wrong_password) {
         if (MyWallet.validateSecondPassword(pw)) {
           correct_password();
@@ -2497,7 +2488,7 @@ var MyWallet = new function() {
    * @param {function(string)} error Callback with reason for failure
    */
   MyWallet.getHDWalletPassphraseString = function(getPassword, successCallback, errorCallback) {
-    if (this.getDoubleEncryption()) {
+    if (WalletStore.getDoubleEncryption()) {
       getPassword(function(pw, correct_password, incorrect_password) {
         if (MyWallet.validateSecondPassword(pw)) {
           correct_password();
@@ -2561,8 +2552,8 @@ var MyWallet = new function() {
 
     var out = '{\n  "guid" : "'+guid+'",\n  "sharedKey" : "'+sharedKey+'",\n';
 
-    if (double_encryption && dpasswordhash != null && encode_func == noConvert) {
-      out += '  "double_encryption" : '+double_encryption+',\n  "dpasswordhash" : "'+dpasswordhash+'",\n';
+    if (WalletStore.getDoubleEncryption() && dpasswordhash != null && encode_func == noConvert) {
+      out += '  "double_encryption" : '+WalletStore.getDoubleEncryption()+',\n  "dpasswordhash" : "'+dpasswordhash+'",\n';
     }
 
     if (wallet_options) {
@@ -2882,7 +2873,7 @@ var MyWallet = new function() {
         }
 
         if (obj.double_encryption && obj.dpasswordhash) {
-          MyWallet.setDoubleEncryption(obj.double_encryption);
+          WalletStore.setDoubleEncryption(obj.double_encryption);
           dpasswordhash = obj.dpasswordhash;
         }
 
@@ -3486,7 +3477,7 @@ var MyWallet = new function() {
    * @return {boolean} whether input matches set second password
    */
   this.isCorrectSecondPassword = function(input) {
-    if (! double_encryption) {
+    if (! WalletStore.getDoubleEncryption()) {
       throw 'No second password set';
     }
 

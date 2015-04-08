@@ -116,7 +116,7 @@ describe "Spend", ->
                 
         data.to = 0 # Account Index
         data.fee = null
-        MyWallet.setDoubleEncryption(false)
+        WalletStore.setDoubleEncryption(false)
 
         MyWallet.sendFromLegacyAddressToAccount  data.from
                                                , data.to
@@ -135,7 +135,7 @@ describe "Spend", ->
     describe "sendFromLegacyAddressToAddress()", ->
       it "should get to send without errors", ->
         data.fee = null
-        MyWallet.setDoubleEncryption(false)
+        WalletStore.setDoubleEncryption(false)
         MyWallet.sendFromLegacyAddressToAddress  data.from
                                                , data.to
                                                , data.amount
@@ -159,7 +159,7 @@ describe "Spend", ->
 
         data.to = 0
         spyOn(MyWallet, "validateSecondPassword").and.callFake((pw)-> false)
-        MyWallet.setDoubleEncryption(true)
+        WalletStore.setDoubleEncryption(true)
         MyWallet.sendFromLegacyAddressToAccount  data.from
                                                , data.to
                                                , data.amount
@@ -184,7 +184,7 @@ describe "Spend", ->
 
         data.to = 0
         spyOn(MyWallet, "validateSecondPassword").and.callFake((pw)-> true)
-        MyWallet.setDoubleEncryption(true)
+        WalletStore.setDoubleEncryption(true)
         MyWallet.sendFromLegacyAddressToAccount  data.from
                                                , data.to
                                                , data.amount
@@ -212,7 +212,7 @@ describe "Spend", ->
       it "should call wrong_password when second_password active", ->
 
         spyOn(MyWallet, "validateSecondPassword").and.callFake((pw)-> false)
-        MyWallet.setDoubleEncryption(true)
+        WalletStore.setDoubleEncryption(true)
         MyWallet.sendFromLegacyAddressToAddress  data.from
                                                , data.to
                                                , data.amount
@@ -236,7 +236,7 @@ describe "Spend", ->
       it "should call correct_password when second_password active", ->
 
         spyOn(MyWallet, "validateSecondPassword").and.callFake((pw)-> true)
-        MyWallet.setDoubleEncryption(true)
+        WalletStore.setDoubleEncryption(true)
         MyWallet.sendFromLegacyAddressToAddress  data.from
                                                , data.to
                                                , data.amount
@@ -268,7 +268,7 @@ describe "Spend", ->
           .and.callFake((fromAddr)-> 1000000)
         spyOn(MyWallet, "sendFromLegacyAddressToAccount")
         expectedAmount = 1000000 - 10000
-        MyWallet.setDoubleEncryption(false)
+        WalletStore.setDoubleEncryption(false)
 
         MyWallet.sweepLegacyAddressToAccount  data.from
                                             , data.to
@@ -369,7 +369,7 @@ describe "Spend", ->
         spyOn(hdAccounts[data.from], 'createTx').and.callThrough()
         spyOn(hdAccounts[data.from], 'getBalance').and.callThrough()
 
-        MyWallet.setDoubleEncryption(false)
+        WalletStore.setDoubleEncryption(false)
         MyWallet.sendBitcoinsForAccount  data.from
                                        , data.to
                                        , data.amount
@@ -395,7 +395,7 @@ describe "Spend", ->
 
         data.from = 0 #iDX
         spyOn(MyWallet, "validateSecondPassword").and.callFake((pw)-> false)
-        MyWallet.setDoubleEncryption(true)
+        WalletStore.setDoubleEncryption(true)
         MyWallet.sendBitcoinsForAccount  data.from
                                        , data.to
                                        , data.amount
@@ -421,7 +421,7 @@ describe "Spend", ->
         spyOn(WalletCrypto, "decryptSecretWithSecondPassword")
           .and.returnValue(hdAccounts[data.from].getAccountExtendedKey(true))
         spyOn(MyWallet, "validateSecondPassword").and.callFake((pw)-> true)
-        MyWallet.setDoubleEncryption(true)
+        WalletStore.setDoubleEncryption(true)
         MyWallet.sendBitcoinsForAccount  data.from
                                        , data.to
                                        , data.amount
@@ -476,7 +476,7 @@ describe "Spend", ->
       it "should create a new address, create a tx to this address and push it", ->
 
         data.from = 0
-        MyWallet.setDoubleEncryption(false)
+        WalletStore.setDoubleEncryption(false)
         spyOn(MyWallet, 'addPrivateKey').and.returnValue(true)
         spyOn(WalletStore, 'setLegacyAddressTag')
         spyOn(WalletStore, 'setLegacyAddressLabel')
@@ -533,7 +533,7 @@ describe "Spend", ->
 
         data.from = 0
         spyOn(MyWallet, "validateSecondPassword").and.callFake((pw)-> false)
-        MyWallet.setDoubleEncryption(true)
+        WalletStore.setDoubleEncryption(true)
 
         MyWallet.sendToEmail data.from
                            , data.amount
@@ -559,7 +559,7 @@ describe "Spend", ->
         spyOn(MyWallet, "validateSecondPassword").and.callFake((pw)-> true)
         spyOn(WalletCrypto, "decryptSecretWithSecondPassword")
           .and.returnValue(hdAccounts[data.from].getAccountExtendedKey(true))
-        MyWallet.setDoubleEncryption(true)
+        WalletStore.setDoubleEncryption(true)
         spyOn(MyWallet, 'addPrivateKey').and.returnValue(true)
         spyOn(WalletStore, 'setLegacyAddressTag')
         spyOn(WalletStore, 'setLegacyAddressLabel')
@@ -592,7 +592,7 @@ describe "Spend", ->
       it "should create a new address, create a tx to this address and push it", ->
         
         data.from = 0
-        MyWallet.setDoubleEncryption(false)
+        WalletStore.setDoubleEncryption(false)
         spyOn(MyWallet, 'addPrivateKey').and.returnValue(true)
         spyOn(WalletStore, 'setLegacyAddressTag')
         spyOn(WalletStore, 'setLegacyAddressLabel')
@@ -652,7 +652,7 @@ describe "Spend", ->
 
         data.from = 0
         spyOn(MyWallet, "validateSecondPassword").and.callFake((pw)-> false)
-        MyWallet.setDoubleEncryption(true)
+        WalletStore.setDoubleEncryption(true)
 
         MyWallet.sendToMobile data.from
                             , data.amount
@@ -679,7 +679,7 @@ describe "Spend", ->
         spyOn(MyWallet, "validateSecondPassword").and.callFake((pw)-> true)
         spyOn(WalletCrypto, "decryptSecretWithSecondPassword")
           .and.returnValue(hdAccounts[data.from].getAccountExtendedKey(true))
-        MyWallet.setDoubleEncryption(true)
+        WalletStore.setDoubleEncryption(true)
         spyOn(MyWallet, 'addPrivateKey').and.returnValue(true)
         spyOn(WalletStore, 'setLegacyAddressTag')
         spyOn(WalletStore, 'setLegacyAddressLabel')

@@ -3,7 +3,7 @@ describe "MyWallet", ->
   
   beforeEach ->    
     MyWallet.deleteHDWallet()
-    MyWallet.setDoubleEncryption(false)
+    WalletStore.setDoubleEncryption(false)
 
     hdWallet = new HDWallet(seed, null, null)
     
