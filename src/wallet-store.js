@@ -86,6 +86,8 @@
     var payload_checksum; //SHA256 hash of the current wallet.aes.json
     var myHDWallet = null;
     var sharedcoin_endpoint; //The URL to the sharedcoin node
+    var sharedKey; //Shared key used to prove that the wallet has succesfully been decrypted, meaning you can't overwrite a wallet backup even if you have the guid
+
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
     ////////////////////////////////////////////////////////////////////////////
@@ -694,6 +696,12 @@
       },
       setSharedcoinEndpoint: function(value) {
         sharedcoin_endpoint = value;
+      },
+      getSharedKey: function() {
+        return sharedKey;
+      },
+      setSharedKey: function(value) {
+        sharedKey = value;
       }
     };
   })();

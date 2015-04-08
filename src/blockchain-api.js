@@ -15,7 +15,7 @@ var BlockchainAPI = new function() {
     n = n || 0;
 
     var allAddresses = WalletStore.getLegacyActiveAddresses();
-    var myHDWallet = MyWallet.getHDWallet();
+    var myHDWallet = WalletStore.getHDWallet();
     if (myHDWallet != null) {
       for (var i in myHDWallet.getAccounts()) {
         var account = myHDWallet.getAccount(i);

@@ -7,7 +7,7 @@ describe "HD Wallet", ->
   sharedKey = "87654321-4321-4321-4321-ba0987654321"
   
   beforeEach ->    
-    spyOn(MyWallet, "getSharedKey").and.returnValue sharedKey
+    spyOn(WalletStore, "getSharedKey").and.returnValue sharedKey
     
     spyOn(MyWallet, "backupWallet").and.callFake () ->
     spyOn(MyWallet, "backupWalletDelayed").and.callFake () ->
