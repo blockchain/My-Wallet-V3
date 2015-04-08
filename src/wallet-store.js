@@ -54,6 +54,8 @@
     };
     var demo_guid = 'abcaa314-6f67-6705-b384-5d47fbe9d7cc';
     var guid; //Wallet identifier
+    var double_encryption = false; //If wallet has a second password
+    var dpasswordhash; //double encryption Password
     var language = 'en';
     var mnemonicVerified = false;
     var xpubs = [];
@@ -78,7 +80,6 @@
     var tag_names = [];
     var api_code = "0";
     var haveBuildHDWallet = false;
-    var double_encryption = false; //If wallet has a second password
     var auth_type; //The two factor authentication type used. 0 for none.
     var real_auth_type = 0; //The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
 
@@ -644,6 +645,12 @@
       },
       isDemoWallet: function() {
         return guid === demo_guid;
+      },
+      getDPasswordHash: function() {
+        return dpasswordhash;
+      },
+      setDPasswordHash: function(stringValue) {
+        dpasswordhash = stringValue;
       }
     };
   })();

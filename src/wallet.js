@@ -38,7 +38,6 @@ var MyWallet = new function() {
   var MyWallet = this;
   var encrypted_wallet_data; //Encrypted wallet data (Base64, AES 256)
   var password; //Password
-  var dpasswordhash; //double encryption Password
   var sharedKey; //Shared key used to prove that the wallet has succesfully been decrypted, meaning you can't overwrite a wallet backup even if you have the guid
   var tx_page = 0; //Multi-address page
   var tx_filter = 0; //Transaction filter (e.g. Sent Received etc)
@@ -339,8 +338,7 @@ var MyWallet = new function() {
               }
 
               // Generate a new password hash
-              dpasswordhash = hashPassword(sharedKey + pw, pbkdf2_iterations);
-
+              WalletStore.setDPasswordHash(hashPassword(sharedKey + pw, pbkdf2_iterations));
               setPbkdf2IterationsAndBackupWallet();
             }
             else {
@@ -478,7 +476,8 @@ var MyWallet = new function() {
       if (WalletStore.didUpgradeToHd()) {
         MyWallet.getHDWallet().seedHex = WalletCrypto.encryptSecretWithSecondPassword(MyWallet.getHDWallet().seedHex, password, sharedKey, pbkdf2_iterations);
       }
-      dpasswordhash = hashPassword(sharedKey + password, pbkdf2_iterations);
+
+      WalletStore.setDPasswordHash(hashPassword(sharedKey + password, pbkdf2_iterations));
       if (!MyWallet.validateSecondPassword(password)) {
         throw "Invalid Second Password";
       }
@@ -2509,8 +2508,8 @@ var MyWallet = new function() {
 
     var out = '{\n  "guid" : "'+guid+'",\n  "sharedKey" : "'+sharedKey+'",\n';
 
-    if (WalletStore.getDoubleEncryption() && dpasswordhash != null && encode_func == noConvert) {
-      out += '  "double_encryption" : '+WalletStore.getDoubleEncryption()+',\n  "dpasswordhash" : "'+dpasswordhash+'",\n';
+    if (WalletStore.getDoubleEncryption() && WalletStore.getDPasswordHash() != null && encode_func == noConvert) {
+      out += '  "double_encryption" : '+WalletStore.getDoubleEncryption()+',\n  "dpasswordhash" : "'+WalletStore.getDPasswordHash()+'",\n';
     }
 
     if (wallet_options) {
@@ -2831,7 +2830,7 @@ var MyWallet = new function() {
 
         if (obj.double_encryption && obj.dpasswordhash) {
           WalletStore.setDoubleEncryption(obj.double_encryption);
-          dpasswordhash = obj.dpasswordhash;
+          WalletStore.setDPasswordHash(obj.dpasswordhash)
         }
 
         if (obj.options) {
@@ -3442,7 +3441,7 @@ var MyWallet = new function() {
 
     var password_hash = hashPassword(thash, WalletStore.getPbkdf2Iterations()-1);  //-1 because we have hashed once in the previous line
 
-    if (password_hash == dpasswordhash) {
+    if (password_hash == WalletStore.getDPasswordHash()) {
       return true;
     }
 
@@ -3458,7 +3457,7 @@ var MyWallet = new function() {
 
     var password_hash = hashPassword(thash, WalletStore.getPbkdf2Iterations()-1);  //-1 because we have hashed once in the previous line
 
-    if (password_hash == dpasswordhash) {
+    if (password_hash == WalletStore.getDPasswordHash()) {
       return true;
     }
 
@@ -3466,9 +3465,9 @@ var MyWallet = new function() {
     if (WalletStore.getPbkdf2Iterations() != 10) {
       var iter_10_hash = hashPassword(thash, 10-1);  //-1 because we have hashed once in the previous line
 
-      if (iter_10_hash == dpasswordhash) {
+      if (iter_10_hash == WalletStore.getDPasswordHash()) {
         // dpassword = input;
-        dpasswordhash = password_hash;
+        WalletStore.setDPasswordHash(password_hash);
         return true;
       }
     }
@@ -3777,5 +3776,4 @@ var MyWallet = new function() {
 
     return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format == 'compsipa'));
   };
-
 };
