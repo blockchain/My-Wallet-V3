@@ -3022,7 +3022,7 @@ var MyWallet = new function() {
         }
 
         guid = obj.guid;
-        auth_type = obj.auth_type;
+        WalletStore.setAuthType(obj.auth_type);
         WalletStore.setRealAuthType(obj.real_auth_type);
         sync_pubkeys = obj.sync_pubkeys;
 

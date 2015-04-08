@@ -626,6 +626,10 @@
           default: stringType = null; break;
         }
         return stringType;
+      },
+      // probably not used
+      setAuthType: function(number) {
+        auth_type = number;
       }
     };
   })();
