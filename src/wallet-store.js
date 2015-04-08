@@ -52,6 +52,7 @@
       'BRL': 'Brazil Real',
       'RUB': 'Russian Ruble'
     };
+    var demo_guid = 'abcaa314-6f67-6705-b384-5d47fbe9d7cc';
     var language = 'en';
     var mnemonicVerified = false;
     var xpubs = [];
@@ -630,6 +631,9 @@
       // probably not used
       setAuthType: function(number) {
         auth_type = number;
+      },
+      getDemoGuid: function() {
+        return demo_guid;
       }
     };
   })();

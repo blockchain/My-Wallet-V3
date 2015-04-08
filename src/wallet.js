@@ -36,8 +36,6 @@ var Transaction = Browserify.Transaction;
 var MyWallet = new function() {
 
   var MyWallet = this;
-
-  var demo_guid = 'abcaa314-6f67-6705-b384-5d47fbe9d7cc';
   var encrypted_wallet_data; //Encrypted wallet data (Base64, AES 256)
   var guid; //Wallet identifier
   var password; //Password
@@ -3055,7 +3053,7 @@ var MyWallet = new function() {
             MyStore.remove('payload');
 
             //Demo Account Guid
-            if (guid != demo_guid) {
+            if (guid != WalletStore.getDemoGuid()) {
               MyStore.put('guid', guid);
             }
           }
@@ -3682,7 +3680,7 @@ var MyWallet = new function() {
 
     MyWallet.sendEvent('logging_out');
 
-    if (guid == demo_guid) {
+    if (guid == WalletStore.getDemoGuid()) {
       window.location = BlockchainAPI.getRootURL() + 'wallet/logout';
     } else {
       $.ajax({
