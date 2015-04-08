@@ -89,6 +89,7 @@
     var sharedKey; //Shared key used to prove that the wallet has succesfully been decrypted, meaning you can't overwrite a wallet backup even if you have the guid
     var didSetGuid = false;
     var isPolling = false;
+    var localWalletJsonString = null;
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
     ////////////////////////////////////////////////////////////////////////////
@@ -715,6 +716,20 @@
       },
       setIsPolling: function (bool) {
         isPolling = bool;
+      },
+      // not used
+      getLocalWalletJson: function() {
+        var obj = null;
+        try {
+          var obj = $.parseJSON(localWalletJsonString);
+          return obj;
+        } catch (e) {
+          return null;
+        }
+      },
+      // this probably can be deleted too
+      setLocalWalletJson: function(data){
+        localWalletJsonString = data;
       }
     };
   })();

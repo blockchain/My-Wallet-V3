@@ -52,7 +52,6 @@ var MyWallet = new function() {
   var legacyAddressesNumTxFetched = 0;
   var numOldTxsToFetchAtATime = 10; 
   var isSynchronizedWithServer = true;
-  var localWalletJsonString = null;
   var paidTo = {};
   var counter = 0;
 
@@ -3199,16 +3198,6 @@ var MyWallet = new function() {
     });
   }
 
-  this.getLocalWalletJson = function() {
-    var obj = null;
-    try {
-      var obj = $.parseJSON(localWalletJsonString);
-      return obj;
-    } catch (e) {
-      return null;
-    }
-  };
-
   //Can call multiple times in a row and it will backup only once after a certain delay of activity
   this.backupWalletDelayed = function(method, success, error, extra) {
     var sharedKey = WalletStore.getSharedKey();
@@ -3258,7 +3247,7 @@ var MyWallet = new function() {
       }
 
       var data = MyWallet.makeWalletJSON();
-      localWalletJsonString = data;
+      WalletStore.setLocalWalletJson(data); // I think this is not necessary
 
       //Everything looks ok, Encrypt the JSON output
       var crypted = WalletCrypto.encryptWallet(data, password, WalletStore.getPbkdf2Iterations(), WalletStore.didUpgradeToHd() ?  3.0 : 2.0 );
