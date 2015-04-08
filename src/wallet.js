@@ -36,12 +36,10 @@ var Transaction = Browserify.Transaction;
 var MyWallet = new function() {
 
   var MyWallet = this;
-  var encrypted_wallet_data; //Encrypted wallet data (Base64, AES 256)
   var password; //Password
   var sharedKey; //Shared key used to prove that the wallet has succesfully been decrypted, meaning you can't overwrite a wallet backup even if you have the guid
   var tx_page = 0; //Multi-address page
   var tx_filter = 0; //Transaction filter (e.g. Sent Received etc)
-  var payload_checksum; //SHA256 hash of the current wallet.aes.json
   var archTimer; //Delayed Backup wallet timer
   var recommend_include_fee = true; //Number of unconfirmed transactions in blockchain.info's memory pool
   var default_pbkdf2_iterations = 5000;
@@ -82,31 +80,6 @@ var MyWallet = new function() {
     MyWallet.backupWalletDelayed();
     wallet_options.enable_multiple_accounts = flag;
   }
-
-  this.setEncryptedWalletData = function(data) {
-    if (!data || data.length == 0) {
-      encrypted_wallet_data = null;
-      payload_checksum = null;
-      return;
-    }
-
-    encrypted_wallet_data = data;
-
-    //Generate a new Checksum
-    payload_checksum = generatePayloadChecksum();
-
-
-    // Disable local wallet cache
-    // try {
-    //     //Save Payload when two factor authentication is disabled
-    //     if (real_auth_type == 0 || wallet_options.always_keep_local_backup)
-    //         MyStore.put('payload', encrypted_wallet_data);
-    //     else
-    //         MyStore.remove('payload');
-    // } catch (e) {
-    //     console.log(e);
-    // }
-  };
 
   /**
    * @return {boolean} is wallet payload synchronized with server
@@ -155,10 +128,6 @@ var MyWallet = new function() {
     clearInterval(logout_timeout);
 
     logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
-  };
-
-  this.getEncryptedWalletData = function() {
-    return encrypted_wallet_data;
   };
 
   this.getFeePolicy = function() {
@@ -884,10 +853,6 @@ var MyWallet = new function() {
     return result;
   }
 
-  function generatePayloadChecksum() {
-    return CryptoJS.SHA256(encrypted_wallet_data).toString();
-  }
-
   function wsSuccess(ws) {
     var last_on_change = null;
 
@@ -898,7 +863,7 @@ var MyWallet = new function() {
         transactions = WalletStore.getTransactions();
 
         if (obj.op == 'on_change') {
-          var old_checksum = generatePayloadChecksum();
+          var old_checksum = WalletStore.generatePayloadChecksum();
           var new_checksum = obj.checksum;
 
           console.log('On change old ' + old_checksum + ' ==  new '+ new_checksum);
@@ -2785,8 +2750,8 @@ var MyWallet = new function() {
   this.getWallet = function(success, error) {
     var data = {method : 'wallet.aes.json', format : 'json'};
 
-    if (payload_checksum && payload_checksum.length > 0)
-      data.checksum = payload_checksum;
+    if (WalletStore.getPayloadChecksum() && WalletStore.getPayloadChecksum().length > 0)
+      data.checksum = WalletStore.getPayloadChecksum();
 
     MyWallet.securePost("wallet", data, function(obj) {
       if (!obj.payload || obj.payload == 'Not modified') {
@@ -2794,7 +2759,7 @@ var MyWallet = new function() {
         return;
       }
 
-      MyWallet.setEncryptedWalletData(obj.payload);
+      WalletStore.setEncryptedWalletData(obj.payload);
 
       internalRestoreWallet(function() {
         MyWallet.get_history();
@@ -2809,12 +2774,12 @@ var MyWallet = new function() {
   };
 
   function internalRestoreWallet(success, error, decrypt_success, build_hd_success) {
-    if (encrypted_wallet_data == null || encrypted_wallet_data.length == 0) {
+    if (WalletStore.getEncryptedWalletData() == null || WalletStore.getEncryptedWalletData().length == 0) {
       error('No Wallet Data To Decrypt');
       return;
     }
 
-    WalletCrypto.decryptWallet(encrypted_wallet_data, password, function(obj, rootContainer) {
+    WalletCrypto.decryptWallet(WalletStore.getEncryptedWalletData(), password, function(obj, rootContainer) {
       decrypt_success && decrypt_success();
 
       try {
@@ -2886,8 +2851,8 @@ var MyWallet = new function() {
         WalletStore.setTagNames(obj.tag_names);
         
         //If we don't have a checksum then the wallet is probably brand new - so we can generate our own
-        if (payload_checksum == null || payload_checksum.length == 0) {
-          payload_checksum = generatePayloadChecksum();
+        if (WalletStore.getPayloadChecksum() == null || WalletStore.getPayloadChecksum().length == 0) {
+          WalletStore.setPayloadChecksum(WalletStore.generatePayloadChecksum());
         }
 
         setIsInitialized();
@@ -2981,8 +2946,8 @@ var MyWallet = new function() {
     var clientTime=(new Date()).getTime();
     var data = {format : 'json', resend_code : resend_code, ct : clientTime};
 
-    if (payload_checksum) {
-      data.checksum = payload_checksum;
+    if (WalletStore.getPayloadChecksum()) {
+      data.checksum = WalletStore.getPayloadChecksum();
     }
 
     if (sharedKey) {
@@ -3019,7 +2984,7 @@ var MyWallet = new function() {
         sync_pubkeys = obj.sync_pubkeys;
 
         if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
-          MyWallet.setEncryptedWalletData(obj.payload);
+          WalletStore.setEncryptedWalletData(obj.payload);
         } else {
           didSetGuid = true;
           needs_two_factor_code(WalletStore.get2FAType());
@@ -3075,7 +3040,7 @@ var MyWallet = new function() {
         //
         //         if (local_guid == user_guid && local_payload) {
         //             fetch_success && fetch_success();
-        //             MyWallet.setEncryptedWalletData(local_payload);
+        //             WalletStore.setEncryptedWalletData(local_payload);
         //
         //             //Generate a new Checksum
         //             guid = local_guid;
@@ -3177,7 +3142,7 @@ var MyWallet = new function() {
       password = pw;
 
       //If we don't have any wallet data then we must have two factor authentication enabled
-      if (encrypted_wallet_data == null || encrypted_wallet_data.length == 0) {
+      if (WalletStore.getEncryptedWalletData() == null || WalletStore.getEncryptedWalletData().length == 0) {
         if (two_factor_auth_key == null) {
           other_error('Two Factor Authentication code this null');
           return;
@@ -3206,7 +3171,7 @@ var MyWallet = new function() {
               }
 
               if (data != 'Not modified') {
-                MyWallet.setEncryptedWalletData(data);
+                WalletStore.setEncryptedWalletData(data);
               }
 
               internalRestoreWallet(function() {
@@ -3328,12 +3293,12 @@ var MyWallet = new function() {
       //Now Decrypt the it again to double check for any possible corruption
       WalletCrypto.decryptWallet(crypted, password, function(obj) {
         try {
-          var old_checksum = payload_checksum;
+          var old_checksum = WalletStore.getPayloadChecksum();
           MyWallet.sendEvent('on_backup_wallet_start');
 
-          MyWallet.setEncryptedWalletData(crypted);
+          WalletStore.setEncryptedWalletData(crypted);
 
-          var new_checksum = payload_checksum;
+          var new_checksum = WalletStore.getPayloadChecksum();
 
           var data =  {
             length: crypted.length,

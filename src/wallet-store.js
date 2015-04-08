@@ -82,7 +82,8 @@
     var haveBuildHDWallet = false;
     var auth_type; //The two factor authentication type used. 0 for none.
     var real_auth_type = 0; //The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
-
+    var encrypted_wallet_data; //Encrypted wallet data (Base64, AES 256)
+    var payload_checksum; //SHA256 hash of the current wallet.aes.json
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
     ////////////////////////////////////////////////////////////////////////////
@@ -651,6 +652,28 @@
       },
       setDPasswordHash: function(stringValue) {
         dpasswordhash = stringValue;
+      },
+      generatePayloadChecksum: function() {
+        return CryptoJS.SHA256(encrypted_wallet_data).toString();
+      },
+      setEncryptedWalletData: function(data) {
+        if (!data || data.length == 0) {
+          encrypted_wallet_data = null;
+          payload_checksum = null;
+        }
+        else {
+          encrypted_wallet_data = data;
+          payload_checksum = WalletStore.generatePayloadChecksum();
+        }
+      },
+      getEncryptedWalletData: function() {
+        return encrypted_wallet_data;
+      },
+      getPayloadChecksum: function() {
+        return payload_checksum;
+      },
+      setPayloadChecksum: function(value) {
+        payload_checksum = value;
       }
     };
   })();
