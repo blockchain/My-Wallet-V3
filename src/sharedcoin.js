@@ -7,7 +7,7 @@ var SharedCoin = new function() {
     var MinTimeBetweenSubmits = 120000;
     var options = {};
     var version = 3;
-    var URL = MyWallet.getSharedcoinEndpoint() + '?version=' + version;
+    var URL = WalletStore.getSharedcoinEndpoint() + '?version=' + version;
     var extra_private_keys = {};
     var seed_prefix = 'sharedcoin-seed:';
 

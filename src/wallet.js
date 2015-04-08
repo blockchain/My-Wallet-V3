@@ -48,7 +48,6 @@ var MyWallet = new function() {
   var isInitialized = false;
   var serverTimeOffset = 0; //Difference between server and client time
   var haveSetServerTime = false; //Whether or not we have synced with server time
-  var sharedcoin_endpoint; //The URL to the sharedcoin node
   var isRestoringWallet = false;
   var sync_pubkeys = false;
   var legacyAddressesNumTxFetched = 0;
@@ -115,10 +114,6 @@ var MyWallet = new function() {
 
   this.getSharedKey = function() {
     return sharedKey;
-  };
-
-  this.getSharedcoinEndpoint = function() {
-    return sharedcoin_endpoint;
   };
 
   this.setLogoutTime = function(logout_time) {
@@ -2625,7 +2620,7 @@ var MyWallet = new function() {
       //$('#shared-addresses,#send-shared').hide();
     }
 
-    sharedcoin_endpoint = obj.sharedcoin_endpoint;
+    WalletStore.setSharedcoinEndpoint(obj.sharedcoin_endpoint);
 
     transactions.length = 0;
 

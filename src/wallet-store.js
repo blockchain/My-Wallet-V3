@@ -85,6 +85,7 @@
     var encrypted_wallet_data; //Encrypted wallet data (Base64, AES 256)
     var payload_checksum; //SHA256 hash of the current wallet.aes.json
     var myHDWallet = null;
+    var sharedcoin_endpoint; //The URL to the sharedcoin node
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
     ////////////////////////////////////////////////////////////////////////////
@@ -687,6 +688,12 @@
         if (newValue) {
           MyWallet.sendEvent('hd_wallet_set');
         }
+      },
+      getSharedcoinEndpoint: function() {
+        return sharedcoin_endpoint;
+      },
+      setSharedcoinEndpoint: function(value) {
+        sharedcoin_endpoint = value;
       }
     };
   })();
