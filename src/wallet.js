@@ -45,7 +45,6 @@ var MyWallet = new function() {
   var serverTimeOffset = 0; //Difference between server and client time
   var haveSetServerTime = false; //Whether or not we have synced with server time
   var numOldTxsToFetchAtATime = 10; 
-  var isSynchronizedWithServer = true;
   var paidTo = {};
 
   var wallet_options = {
@@ -67,13 +66,6 @@ var MyWallet = new function() {
     MyWallet.backupWalletDelayed();
     wallet_options.enable_multiple_accounts = flag;
   }
-
-  /**
-   * @return {boolean} is wallet payload synchronized with server
-   */
-  this.isSynchronizedWithServer = function() {
-    return isSynchronizedWithServer;
-  };
 
   this.addAdditionalSeeds = function(val) {
     wallet_options.additional_seeds.push(val);
@@ -3193,7 +3185,7 @@ var MyWallet = new function() {
     }
 
     WalletStore.disableLogout(true);
-    isSynchronizedWithServer = false;
+    WalletStore.setIsSynchronizedWithServer(false);
     if (archTimer) {
       clearInterval(archTimer);
       archTimer = null;
@@ -3275,7 +3267,7 @@ var MyWallet = new function() {
                 if (successcallback != null)
                   successcallback();
 
-                isSynchronizedWithServer = true;
+                WalletStore.setIsSynchronizedWithServer(true);
                 WalletStore.disableLogout(false);
                 var log_time_out = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
                 WalletStore.setLogoutTimeout(log_time_out);

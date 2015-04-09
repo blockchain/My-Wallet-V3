@@ -97,6 +97,7 @@
     var counter = 0;
     var logout_timeout; //setTimeout return value for the automatic logout
     var sync_pubkeys = false;
+    var isSynchronizedWithServer = true;
 
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
@@ -780,6 +781,12 @@
       },
       isSyncPubKeys: function (){
         return sync_pubkeys;
+      },
+      isSynchronizedWithServer: function (){
+        return isSynchronizedWithServer;
+      },
+      setIsSynchronizedWithServer: function (bool){
+        isSynchronizedWithServer = bool;
       }
     };
   })();
