@@ -9,5 +9,6 @@ module.exports = {
   SHA256: require('sha256'),
   BIP39: require('bip39'),
   ImportExport: require('./import-export.js'),
-  Transaction: require('./transaction.js')
+  Transaction: require('./transaction.js'),
+  HDAccount: require('./hd-account.js')
 };

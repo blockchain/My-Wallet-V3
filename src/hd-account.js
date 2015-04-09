@@ -1,6 +1,8 @@
-var HDAccount = function(seed, network, label, idx) {
+var Bitcoin = require('bitcoinjs-lib');
+var crypto = require('crypto');
+var JSONB = require('json-buffer');
 
-  var Bitcoin = Browserify.Bitcoin;
+var HDAccount = function(seed, network, label, idx) {
 
   network = network || Bitcoin.networks.bitcoin;
 
@@ -346,3 +348,5 @@ var HDAccount = function(seed, network, label, idx) {
   };
 
 };
+
+module.exports = HDAccount;
