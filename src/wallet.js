@@ -40,7 +40,6 @@ var MyWallet = new function() {
   var tx_page = 0; //Multi-address page
   var tx_filter = 0; //Transaction filter (e.g. Sent Received etc)
   var archTimer; //Delayed Backup wallet timer
-  var logout_timeout; //setTimeout return value for the automatic logout
   var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
   var isInitialized = false;
   var serverTimeOffset = 0; //Difference between server and client time
@@ -102,9 +101,10 @@ var MyWallet = new function() {
   this.setLogoutTime = function(logout_time) {
     wallet_options.logout_time = logout_time;
 
-    clearInterval(logout_timeout);
+    clearInterval(WalletStore.getLogoutTimeout());
 
-    logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
+    var log_time_out = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
+    WalletStore.setLogoutTimeout(log_time_out);
   };
 
   this.getFeePolicy = function() {
@@ -2659,8 +2659,9 @@ var MyWallet = new function() {
     //We need to check if the wallet has changed
     MyWallet.getWallet();
 
-    logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
-
+    var log_time_out = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
+    WalletStore.setLogoutTimeout(log_time_out);
+  
     success();
   }
 
@@ -3277,7 +3278,8 @@ var MyWallet = new function() {
 
                 isSynchronizedWithServer = true;
                 WalletStore.disableLogout(false);
-                logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
+                var log_time_out = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
+                WalletStore.setLogoutTimeout(log_time_out);
                 MyWallet.sendEvent('on_backup_wallet_success');
             },
               function() {
