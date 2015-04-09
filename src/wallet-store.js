@@ -98,6 +98,9 @@
     var logout_timeout; //setTimeout return value for the automatic logout
     var sync_pubkeys = false;
     var isSynchronizedWithServer = true;
+    var haveSetServerTime = false; //Whether or not we have synced with server time
+    var serverTimeOffset = 0; //Difference between server and client time
+
 
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
@@ -787,6 +790,18 @@
       },
       setIsSynchronizedWithServer: function (bool){
         isSynchronizedWithServer = bool;
+      },
+      isHaveSetServerTime: function (){
+        return haveSetServerTime;
+      },
+      setHaveSetServerTime: function (){
+        haveSetServerTime = true;
+      },
+      getServerTimeOffset: function (){
+        return serverTimeOffset;
+      },
+      setServerTimeOffset: function (offset){
+        serverTimeOffset = offset;
       }
     };
   })();

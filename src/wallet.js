@@ -42,8 +42,6 @@ var MyWallet = new function() {
   var archTimer; //Delayed Backup wallet timer
   var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
   var isInitialized = false;
-  var serverTimeOffset = 0; //Difference between server and client time
-  var haveSetServerTime = false; //Whether or not we have synced with server time
   var numOldTxsToFetchAtATime = 10; 
   var paidTo = {};
 
@@ -154,7 +152,7 @@ var MyWallet = new function() {
       //Rather than sending the shared key plain text
       //send a hash using a totp scheme
       var now = new Date().getTime();
-      var timestamp = parseInt((now - serverTimeOffset) / 10000);
+      var timestamp = parseInt((now - WalletStore.getServerTimeOffset()) / 10000);
 
       var SKHashHex = CryptoJS.SHA256(sharedKey.toLowerCase() + timestamp).toString();
 
@@ -166,7 +164,7 @@ var MyWallet = new function() {
 
       // Needed for debugging and as a fallback if totp scheme doesn't work on server
       clone.sKDebugHexHash = SKHashHex;
-      clone.sKDebugTimeOffset = serverTimeOffset;
+      clone.sKDebugTimeOffset = WalletStore.getServerTimeOffset();
       clone.sKDebugOriginalClientTime = now;
       clone.sKDebugOriginalSharedKey = sharedKey;
     }
@@ -3305,15 +3303,16 @@ var MyWallet = new function() {
 
       var thisOffset = (serverClientResponseDiffTime - responseTime) / 2;
 
-      if (haveSetServerTime) {
-        serverTimeOffset = (serverTimeOffset + thisOffset) / 2;
+      if (WalletStore.isHaveSetServerTime()) {
+        var sto = (WalletStore.getServerTimeOffset() + thisOffset) / 2;
+        WalletStore.setServerTimeOffset(sto);
       } else {
-        serverTimeOffset = thisOffset;
-        haveSetServerTime = true;
-        MyStore.put('server_time_offset', ''+serverTimeOffset);
+        WalletStore.setServerTimeOffset(thisOffset);
+        WalletStore.setHaveSetServerTime();
+        MyStore.put('server_time_offset', ''+WalletStore.getServerTimeOffset());
       }
 
-      console.log('Server Time offset ' + serverTimeOffset + 'ms - This offset ' + thisOffset);
+      console.log('Server Time offset ' + WalletStore.getServerTimeOffset() + 'ms - This offset ' + thisOffset);
     }
   };
   
