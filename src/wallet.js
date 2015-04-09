@@ -40,7 +40,6 @@ var MyWallet = new function() {
   var tx_page = 0; //Multi-address page
   var tx_filter = 0; //Transaction filter (e.g. Sent Received etc)
   var archTimer; //Delayed Backup wallet timer
-  var recommend_include_fee = true; //Number of unconfirmed transactions in blockchain.info's memory pool
   var default_pbkdf2_iterations = 5000;
   var logout_timeout; //setTimeout return value for the automatic logout
   var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
@@ -157,10 +156,6 @@ var MyWallet = new function() {
 
   this.setHTML5Notifications = function(val) {
     wallet_options.html5_notifications = val;
-  };
-
-  this.getRecommendIncludeFee = function() {
-    return recommend_include_fee;
   };
 
   this.securePost = function(url, data, success, error) {
@@ -2598,7 +2593,7 @@ var MyWallet = new function() {
     if (!cached) {
 
       WalletStore.setMixerFee(obj.mixer_fee);
-      recommend_include_fee = obj.recommend_include_fee;
+      WalletStore.setRecommendIncludeFee(obj.recommend_include_fee);
 
       if (obj.info) {
         if (obj.info.symbol_local)

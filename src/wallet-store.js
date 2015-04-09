@@ -91,6 +91,8 @@
     var isPolling = false;
     var localWalletJsonString = null;
     var legacyAddressesNumTxFetched = 0;
+    var recommend_include_fee = true; //Number of unconfirmed transactions in blockchain.info's memory pool
+
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
     ////////////////////////////////////////////////////////////////////////////
@@ -737,6 +739,13 @@
       },
       addLegacyAddressesNumTxFetched: function (number){
         legacyAddressesNumTxFetched += number;
+      },
+      // probably useless too: it is set but never called the getter
+      getRecommendIncludeFee: function() {
+        return recommend_include_fee;
+      },
+      setRecommendIncludeFee: function(value) {
+        recommend_include_fee = value;
       }
     };
   })();
