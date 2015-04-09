@@ -96,6 +96,7 @@
     var isRestoringWallet = false;
     var counter = 0;
     var logout_timeout; //setTimeout return value for the automatic logout
+    var sync_pubkeys = false;
 
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
@@ -773,6 +774,12 @@
       },
       setLogoutTimeout: function (value) {
         logout_timeout = value;
+      },
+      setSyncPubKeys: function (bool){
+        sync_pubkeys = bool;
+      },
+      isSyncPubKeys: function (){
+        return sync_pubkeys;
       }
     };
   })();

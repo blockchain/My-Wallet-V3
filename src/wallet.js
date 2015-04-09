@@ -44,7 +44,6 @@ var MyWallet = new function() {
   var isInitialized = false;
   var serverTimeOffset = 0; //Difference between server and client time
   var haveSetServerTime = false; //Whether or not we have synced with server time
-  var sync_pubkeys = false;
   var numOldTxsToFetchAtATime = 10; 
   var isSynchronizedWithServer = true;
   var paidTo = {};
@@ -2943,7 +2942,7 @@ var MyWallet = new function() {
         WalletStore.setGuid(obj.guid);
         WalletStore.setAuthType(obj.auth_type);
         WalletStore.setRealAuthType(obj.real_auth_type);
-        sync_pubkeys = obj.sync_pubkeys;
+        WalletStore.setSyncPubKeys(obj.sync_pubkeys);
 
         if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
           WalletStore.setEncryptedWalletData(obj.payload);
@@ -3264,7 +3263,7 @@ var MyWallet = new function() {
             language : WalletStore.getLanguage()
           };
 
-          if (sync_pubkeys) {
+          if (WalletStore.isSyncPubKeys()) {
             data.active = WalletStore.getLegacyActiveAddresses().join('|');
           }
 
