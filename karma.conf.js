@@ -32,7 +32,7 @@ module.exports = function(config) {
 
     browserify: {
       debug: true,
-      transform: [ 'coffeeify' ]
+      transform: [ 'coffeeify', 'browserify-istanbul' ]
     },
 
     coffeePreprocessor: {
@@ -72,11 +72,9 @@ module.exports = function(config) {
       'src/wallet-store.js',
       'src/wallet-crypto.js',
       'src/wallet.js',
-      'src/import-export.js',
-      'src/transaction.js',      
-      // 'tests/**/*.js',
-      // 'tests/**/*.js.coffee',
-      'tests/transaction_spend_spec.js.coffee',
+      'tests/**/*.js',
+      'tests/**/*.js.coffee',
+      // 'tests/transaction_spend_spec.js.coffee',
       // Or specify individual test files:
       // 'tests/blockchain_api_spec.js.coffee',
       // 'tests/mocks/*.js.coffee',
