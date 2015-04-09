@@ -100,7 +100,7 @@
     var isSynchronizedWithServer = true;
     var haveSetServerTime = false; //Whether or not we have synced with server time
     var serverTimeOffset = 0; //Difference between server and client time
-
+    var numOldTxsToFetchAtATime = 10;
 
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
@@ -802,6 +802,9 @@
       },
       setServerTimeOffset: function (offset){
         serverTimeOffset = offset;
+      },
+      getNumOldTxsToFetchAtATime: function (){
+        return numOldTxsToFetchAtATime;
       }
     };
   })();

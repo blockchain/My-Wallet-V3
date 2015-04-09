@@ -43,7 +43,6 @@ var MyWallet = new function() {
   var archTimer; //Delayed Backup wallet timer
   var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
   var isInitialized = false;
-  var numOldTxsToFetchAtATime = 10; 
   var paidTo = {};
 
   var wallet_options = {
@@ -1369,7 +1368,7 @@ var MyWallet = new function() {
       }, tx_filter, txOffset, numTx);
     }
 
-    getRawTransactionsForAccounts(WalletStore.getHDWallet().numTxFetched, numOldTxsToFetchAtATime, function(data) {
+    getRawTransactionsForAccounts(WalletStore.getHDWallet().numTxFetched, WalletStore.getNumOldTxsToFetchAtATime(), function(data) {
       var processedTransactions = [];
 
       for (var i in data) {
@@ -1383,7 +1382,7 @@ var MyWallet = new function() {
 
       WalletStore.getHDWallet().numTxFetched += processedTransactions.length;
 
-      if (processedTransactions.length < numOldTxsToFetchAtATime) {
+      if (processedTransactions.length < WalletStore.getNumOldTxsToFetchAtATime()) {
         didFetchOldestTransaction();
       }
 
@@ -1413,7 +1412,7 @@ var MyWallet = new function() {
     }
 
     var account = WalletStore.getHDWallet().getAccount(accountIdx);
-    getRawTransactionsForAccount(accountIdx, account.numTxFetched, numOldTxsToFetchAtATime, function(data) {
+    getRawTransactionsForAccount(accountIdx, account.numTxFetched, WalletStore.getNumOldTxsToFetchAtATime(), function(data) {
       var processedTransactions = [];
 
       for (var i in data.txs) {
@@ -1429,7 +1428,7 @@ var MyWallet = new function() {
 
       account.numTxFetched += processedTransactions.length;
 
-      if (processedTransactions.length < numOldTxsToFetchAtATime) {
+      if (processedTransactions.length < WalletStore.getNumOldTxsToFetchAtATime()) {
         didFetchOldestTransaction();
       }
 
@@ -1698,7 +1697,7 @@ var MyWallet = new function() {
       }, tx_filter, txOffset, numTx);
     }
 
-    getRawTransactionsForLegacyAddresses(WalletStore.getLegacyAddressesNumTxFetched(), numOldTxsToFetchAtATime, function(data) {
+    getRawTransactionsForLegacyAddresses(WalletStore.getLegacyAddressesNumTxFetched(), WalletStore.getNumOldTxsToFetchAtATime(), function(data) {
       var processedTransactions = [];
 
       for (var i in data) {
@@ -1712,7 +1711,7 @@ var MyWallet = new function() {
 
       WalletStore.addLegacyAddressesNumTxFetched(processedTransactions.length);
 
-      if (processedTransactions.length < numOldTxsToFetchAtATime) {
+      if (processedTransactions.length < WalletStore.getNumOldTxsToFetchAtATime()) {
         didFetchOldestTransaction();
       }
 
