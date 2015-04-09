@@ -2005,9 +2005,12 @@ var MyWallet = new function() {
   this.sendBitcoinsForAccount = function(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, listener, getPassword) {
     // second_password must be null if not needed.
     function sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, listener, second_password) {
+      assert(successCallback, "success callback required")
+      assert(errorCallback, "error callback required")
+      
       var sharedKey = WalletStore.getSharedKey();
       var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
-      
+            
       MyWallet.getUnspentOutputsForAccount(
         accountIdx,
         function (unspent_outputs) {
@@ -2031,14 +2034,15 @@ var MyWallet = new function() {
           var signedTransaction = tx.sign();
 
           var balance = account.getBalance();
+                    
           BlockchainAPI.push_tx(
             signedTransaction,
             note,
-            function() { successCallback && successCallback(); },
-            function(e) { errorCallback && errorCallback(e);}
+            function(tx_hash) { successCallback(tx_hash); },
+            function(e) { errorCallback(e);}
           );
         },
-        function(e) { errorCallback && errorCallback(e);}
+        function(e) { errorCallback(e);}
       );
     }
 
