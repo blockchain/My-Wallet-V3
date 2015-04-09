@@ -95,6 +95,8 @@
     var default_pbkdf2_iterations = 5000;
     var isRestoringWallet = false;
     var counter = 0;
+    var logout_timeout; //setTimeout return value for the automatic logout
+
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
     ////////////////////////////////////////////////////////////////////////////
@@ -763,6 +765,14 @@
       },
       getCounter: function () {
         return counter;
+      },
+      // looks like there are two different timeouts. One inside wallet options. 
+      // maybe one is a redundant old thing.
+      getLogoutTimeout: function () {
+        return logout_timeout;
+      },
+      setLogoutTimeout: function (value) {
+        logout_timeout = value;
       }
     };
   })();
