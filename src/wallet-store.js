@@ -92,7 +92,7 @@
     var localWalletJsonString = null;
     var legacyAddressesNumTxFetched = 0;
     var recommend_include_fee = true; //Number of unconfirmed transactions in blockchain.info's memory pool
-
+    var default_pbkdf2_iterations = 5000;
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
     ////////////////////////////////////////////////////////////////////////////
@@ -746,6 +746,10 @@
       },
       setRecommendIncludeFee: function(value) {
         recommend_include_fee = value;
+      },
+      // probably useless: getter never called.
+      getDefaultPbkdf2Iterations: function() {
+        return default_pbkdf2_iterations;
       }
     };
   })();

@@ -40,7 +40,6 @@ var MyWallet = new function() {
   var tx_page = 0; //Multi-address page
   var tx_filter = 0; //Transaction filter (e.g. Sent Received etc)
   var archTimer; //Delayed Backup wallet timer
-  var default_pbkdf2_iterations = 5000;
   var logout_timeout; //setTimeout return value for the automatic logout
   var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
   var isInitialized = false;
@@ -100,10 +99,6 @@ var MyWallet = new function() {
 
   this.getLogoutTime = function() {
     return wallet_options.logout_time;
-  };
-
-  this.getDefaultPbkdf2Iterations = function() {
-    return default_pbkdf2_iterations;
   };
 
   this.setLogoutTime = function(logout_time) {
