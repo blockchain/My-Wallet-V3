@@ -90,6 +90,18 @@
     var didSetGuid = false;
     var isPolling = false;
     var localWalletJsonString = null;
+    var legacyAddressesNumTxFetched = 0;
+    var recommend_include_fee = true; //Number of unconfirmed transactions in blockchain.info's memory pool
+    var default_pbkdf2_iterations = 5000;
+    var isRestoringWallet = false;
+    var counter = 0;
+    var logout_timeout; //setTimeout return value for the automatic logout
+    var sync_pubkeys = false;
+    var isSynchronizedWithServer = true;
+    var haveSetServerTime = false; //Whether or not we have synced with server time
+    var serverTimeOffset = 0; //Difference between server and client time
+
+
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
     ////////////////////////////////////////////////////////////////////////////
@@ -309,8 +321,9 @@
         }
       },
       archiveLegacyAddr: function(address) {
-        var addr = addresses[address];
-        if (addr.tag === null || addr.tag === undefined || addr.tag === 0) {
+        var addr;
+        addr = addresses[address];
+        if ((addr.tag === null) || addr.tag === 0) {
           addr.tag = 2;
           MyWallet.backupWalletDelayed('update', function() {
             return MyWallet.get_history();
@@ -729,6 +742,66 @@
       // this probably can be deleted too
       setLocalWalletJson: function(data){
         localWalletJsonString = data;
+      },
+      getLegacyAddressesNumTxFetched: function(){
+        return legacyAddressesNumTxFetched;
+      },
+      addLegacyAddressesNumTxFetched: function (number){
+        legacyAddressesNumTxFetched += number;
+      },
+      // probably useless too: it is set but never called the getter
+      getRecommendIncludeFee: function() {
+        return recommend_include_fee;
+      },
+      setRecommendIncludeFee: function(value) {
+        recommend_include_fee = value;
+      },
+      getDefaultPbkdf2Iterations: function() {
+        return default_pbkdf2_iterations;
+      },
+      isRestoringWallet: function() {
+        return isRestoringWallet;
+      },
+      setRestoringWallet: function (bool) {
+        isRestoringWallet = bool;
+      },
+      incrementCounter: function () {
+        counter = counter + 1;
+      },
+      getCounter: function () {
+        return counter;
+      },
+      // looks like there are two different timeouts. One inside wallet options. 
+      // maybe one is a redundant old thing.
+      getLogoutTimeout: function () {
+        return logout_timeout;
+      },
+      setLogoutTimeout: function (value) {
+        logout_timeout = value;
+      },
+      setSyncPubKeys: function (bool){
+        sync_pubkeys = bool;
+      },
+      isSyncPubKeys: function (){
+        return sync_pubkeys;
+      },
+      isSynchronizedWithServer: function (){
+        return isSynchronizedWithServer;
+      },
+      setIsSynchronizedWithServer: function (bool){
+        isSynchronizedWithServer = bool;
+      },
+      isHaveSetServerTime: function (){
+        return haveSetServerTime;
+      },
+      setHaveSetServerTime: function (){
+        haveSetServerTime = true;
+      },
+      getServerTimeOffset: function (){
+        return serverTimeOffset;
+      },
+      setServerTimeOffset: function (offset){
+        serverTimeOffset = offset;
       }
     };
   })();

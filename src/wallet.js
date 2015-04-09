@@ -40,20 +40,10 @@ var MyWallet = new function() {
   var tx_page = 0; //Multi-address page
   var tx_filter = 0; //Transaction filter (e.g. Sent Received etc)
   var archTimer; //Delayed Backup wallet timer
-  var recommend_include_fee = true; //Number of unconfirmed transactions in blockchain.info's memory pool
-  var default_pbkdf2_iterations = 5000;
-  var logout_timeout; //setTimeout return value for the automatic logout
   var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
   var isInitialized = false;
-  var serverTimeOffset = 0; //Difference between server and client time
-  var haveSetServerTime = false; //Whether or not we have synced with server time
-  var isRestoringWallet = false;
-  var sync_pubkeys = false;
-  var legacyAddressesNumTxFetched = 0;
   var numOldTxsToFetchAtATime = 10; 
-  var isSynchronizedWithServer = true;
   var paidTo = {};
-  var counter = 0;
 
   var wallet_options = {
     fee_policy : 0,  //Default Fee policy (-1 Tight, 0 Normal, 1 High)
@@ -74,13 +64,6 @@ var MyWallet = new function() {
     MyWallet.backupWalletDelayed();
     wallet_options.enable_multiple_accounts = flag;
   }
-
-  /**
-   * @return {boolean} is wallet payload synchronized with server
-   */
-  this.isSynchronizedWithServer = function() {
-    return isSynchronizedWithServer;
-  };
 
   this.addAdditionalSeeds = function(val) {
     wallet_options.additional_seeds.push(val);
@@ -104,16 +87,13 @@ var MyWallet = new function() {
     return wallet_options.logout_time;
   };
 
-  this.getDefaultPbkdf2Iterations = function() {
-    return default_pbkdf2_iterations;
-  };
-
   this.setLogoutTime = function(logout_time) {
     wallet_options.logout_time = logout_time;
 
-    clearInterval(logout_timeout);
+    clearInterval(WalletStore.getLogoutTimeout());
 
-    logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
+    var log_time_out = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
+    WalletStore.setLogoutTimeout(log_time_out);
   };
 
   this.getFeePolicy = function() {
@@ -160,10 +140,6 @@ var MyWallet = new function() {
     wallet_options.html5_notifications = val;
   };
 
-  this.getRecommendIncludeFee = function() {
-    return recommend_include_fee;
-  };
-
   this.securePost = function(url, data, success, error) {
     var clone = jQuery.extend({}, data);
     var sharedKey = WalletStore.getSharedKey();
@@ -176,7 +152,7 @@ var MyWallet = new function() {
       //Rather than sending the shared key plain text
       //send a hash using a totp scheme
       var now = new Date().getTime();
-      var timestamp = parseInt((now - serverTimeOffset) / 10000);
+      var timestamp = parseInt((now - WalletStore.getServerTimeOffset()) / 10000);
 
       var SKHashHex = CryptoJS.SHA256(sharedKey.toLowerCase() + timestamp).toString();
 
@@ -188,7 +164,7 @@ var MyWallet = new function() {
 
       // Needed for debugging and as a fallback if totp scheme doesn't work on server
       clone.sKDebugHexHash = SKHashHex;
-      clone.sKDebugTimeOffset = serverTimeOffset;
+      clone.sKDebugTimeOffset = WalletStore.getServerTimeOffset();
       clone.sKDebugOriginalClientTime = now;
       clone.sKDebugOriginalSharedKey = sharedKey;
     }
@@ -749,7 +725,7 @@ var MyWallet = new function() {
       if (hasCountedlegacyAddressesNTxs == false && WalletStore.isActiveLegacyAddress(output.addr)) {
         hasCountedlegacyAddressesNTxs = true;
         if (! incrementAccountTxCount) {
-          legacyAddressesNumTxFetched += 1;
+          WalletStore.addLegacyAddressesNumTxFetched(1);
         }
       }
 
@@ -804,7 +780,7 @@ var MyWallet = new function() {
       if (hasCountedlegacyAddressesNTxs == false && WalletStore.isActiveLegacyAddress(output.addr)) {
         hasCountedlegacyAddressesNTxs = true;
         if (! incrementAccountTxCount) {
-          legacyAddressesNumTxFetched += 1;
+          WalletStore.addLegacyAddressesNumTxFetched(1);
         } 
       }
 
@@ -1721,7 +1697,7 @@ var MyWallet = new function() {
       }, tx_filter, txOffset, numTx);
     }
 
-    getRawTransactionsForLegacyAddresses(legacyAddressesNumTxFetched, numOldTxsToFetchAtATime, function(data) {
+    getRawTransactionsForLegacyAddresses(WalletStore.getLegacyAddressesNumTxFetched(), numOldTxsToFetchAtATime, function(data) {
       var processedTransactions = [];
 
       for (var i in data) {
@@ -1733,7 +1709,7 @@ var MyWallet = new function() {
         processedTransactions.push(transaction);
       }
 
-      legacyAddressesNumTxFetched += processedTransactions.length;
+      WalletStore.addLegacyAddressesNumTxFetched(processedTransactions.length);
 
       if (processedTransactions.length < numOldTxsToFetchAtATime) {
         didFetchOldestTransaction();
@@ -2595,7 +2571,7 @@ var MyWallet = new function() {
     if (!cached) {
 
       WalletStore.setMixerFee(obj.mixer_fee);
-      recommend_include_fee = obj.recommend_include_fee;
+      WalletStore.setRecommendIncludeFee(obj.recommend_include_fee);
 
       if (obj.info) {
         if (obj.info.symbol_local)
@@ -2672,8 +2648,9 @@ var MyWallet = new function() {
     //We need to check if the wallet has changed
     MyWallet.getWallet();
 
-    logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
-
+    var log_time_out = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
+    WalletStore.setLogoutTimeout(log_time_out);
+  
     success();
   }
 
@@ -2955,7 +2932,7 @@ var MyWallet = new function() {
         WalletStore.setGuid(obj.guid);
         WalletStore.setAuthType(obj.auth_type);
         WalletStore.setRealAuthType(obj.real_auth_type);
-        sync_pubkeys = obj.sync_pubkeys;
+        WalletStore.setSyncPubKeys(obj.sync_pubkeys);
 
         if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
           WalletStore.setEncryptedWalletData(obj.payload);
@@ -3080,8 +3057,8 @@ var MyWallet = new function() {
 
           MyWallet.fetchWalletJson(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, null, other_error);
         } else {
-          if (counter < 600) {
-            ++counter;
+          if (WalletStore.getCounter() < 600) {
+            WalletStore.incrementCounter();
             setTimeout(function() {
               $.ajax(self);
             }, 2000);
@@ -3098,12 +3075,12 @@ var MyWallet = new function() {
 
   this.restoreWallet = function(pw, two_factor_auth_key, success, wrong_two_factor_code, other_error, decrypt_success, build_hd_success) {
 
-    if (isInitialized || isRestoringWallet) {
+    if (isInitialized || WalletStore.isRestoringWallet()) {
       return;
     }
 
     function _error(e) {
-      isRestoringWallet = false;
+      WalletStore.setRestoringWallet(false);
       MyWallet.sendEvent("msg", {type: "error", message: e});
 
       MyWallet.sendEvent('error_restoring_wallet');
@@ -3111,7 +3088,7 @@ var MyWallet = new function() {
     }
 
     try {
-      isRestoringWallet = true;
+      WalletStore.setRestoringWallet(true);
 
       password = pw;
 
@@ -3149,7 +3126,7 @@ var MyWallet = new function() {
               }
 
               internalRestoreWallet(function() {
-                isRestoringWallet = false;
+                WalletStore.setRestoringWallet(false);
 
                 didDecryptWallet(success);
               }, _error, decrypt_success, build_hd_success);
@@ -3164,7 +3141,7 @@ var MyWallet = new function() {
         });
       } else {
         internalRestoreWallet(function() {
-          isRestoringWallet = false;
+          WalletStore.setRestoringWallet(false);
 
           didDecryptWallet(success);
         }, _error, decrypt_success, build_hd_success);
@@ -3206,7 +3183,7 @@ var MyWallet = new function() {
     }
 
     WalletStore.disableLogout(true);
-    isSynchronizedWithServer = false;
+    WalletStore.setIsSynchronizedWithServer(false);
     if (archTimer) {
       clearInterval(archTimer);
       archTimer = null;
@@ -3276,7 +3253,7 @@ var MyWallet = new function() {
             language : WalletStore.getLanguage()
           };
 
-          if (sync_pubkeys) {
+          if (WalletStore.isSyncPubKeys()) {
             data.active = WalletStore.getLegacyActiveAddresses().join('|');
           }
 
@@ -3288,9 +3265,10 @@ var MyWallet = new function() {
                 if (successcallback != null)
                   successcallback();
 
-                isSynchronizedWithServer = true;
+                WalletStore.setIsSynchronizedWithServer(true);
                 WalletStore.disableLogout(false);
-                logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
+                var log_time_out = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
+                WalletStore.setLogoutTimeout(log_time_out);
                 MyWallet.sendEvent('on_backup_wallet_success');
             },
               function() {
@@ -3325,15 +3303,16 @@ var MyWallet = new function() {
 
       var thisOffset = (serverClientResponseDiffTime - responseTime) / 2;
 
-      if (haveSetServerTime) {
-        serverTimeOffset = (serverTimeOffset + thisOffset) / 2;
+      if (WalletStore.isHaveSetServerTime()) {
+        var sto = (WalletStore.getServerTimeOffset() + thisOffset) / 2;
+        WalletStore.setServerTimeOffset(sto);
       } else {
-        serverTimeOffset = thisOffset;
-        haveSetServerTime = true;
-        MyStore.put('server_time_offset', ''+serverTimeOffset);
+        WalletStore.setServerTimeOffset(thisOffset);
+        WalletStore.setHaveSetServerTime();
+        MyStore.put('server_time_offset', ''+WalletStore.getServerTimeOffset());
       }
 
-      console.log('Server Time offset ' + serverTimeOffset + 'ms - This offset ' + thisOffset);
+      console.log('Server Time offset ' + WalletStore.getServerTimeOffset() + 'ms - This offset ' + thisOffset);
     }
   };
   

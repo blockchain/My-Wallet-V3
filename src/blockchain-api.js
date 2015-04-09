@@ -298,181 +298,180 @@ var BlockchainAPI = new function() {
     });
   };
 
+  // If successful, calls success() and passes the transaction hash.
   this.push_tx = function(tx, note, success, error) {
-    try {
+    assert(success, "success callback required")
+    assert(error, "error callback required")
+    assert(tx, "transaction required")
+    
+    var _success = function(tx_hash) {
+      //Clear the Check Interval
+      if (checkTxExistsInterval) {
+        clearInterval(checkTxExistsInterval);
+        checkTxExistsInterval = null;
+      }
 
-      var _success = function() {
-        //Clear the Check Interval
-        if (checkTxExistsInterval) {
-          clearInterval(checkTxExistsInterval);
-          checkTxExistsInterval = null;
-        }
+      success(tx_hash); //Call success to enable send button again
+      success = null;
+    };
 
-        if (success) {
-          success(); //Call success to enable send button again
-          success = null;
-        }
-      };
+    var _error = function(e) {
+      //Clear the Check Interval
+      if (checkTxExistsInterval) {
+        clearInterval(checkTxExistsInterval);
+        checkTxExistsInterval = null;
+      }
+      
+      if (error) {
+        error(e);
+        error = null;
+      }
+    };
+    
+    MyWallet.sendEvent("msg", {type: "info", message: 'Pushing Transaction'});
 
-      var _error = function(e) {
-        //Clear the Check Interval
-        if (checkTxExistsInterval) {
-          clearInterval(checkTxExistsInterval);
-          checkTxExistsInterval = null;
-        }
-        
-        if (error) {
-          error(e);
-          error = null;
-        }
-      };
+    var transactions = WalletStore.getTransactions();    
 
-      MyWallet.sendEvent("msg", {type: "info", message: 'Pushing Transaction'});
+    //Record the first transactions we know if it doesn't change then our new transactions wasn't push out propoerly
+    if (transactions.length > 0)
+      var first_tx_index = transactions[0].txIndex;
 
-      var transactions = WalletStore.getTransactions();
+    var txHex = tx.toHex();    
 
-      //Record the first transactions we know if it doesn't change then our new transactions wasn't push out propoerly
-      if (transactions.length > 0)
-        var first_tx_index = transactions[0].txIndex;
+    var tx_hash = tx.getId();
+    
+    var did_push = function() {
+      _success(tx_hash);
 
-      var txHex = tx.toHex();
-
-      var tx_hash = tx.getId();
-
-      var did_push = function() {
-        _success();
-
-        function call_history() {
-          MyWallet.get_history(function() {
-            if (transactions.length == 0 || transactions[0].txIndex == first_tx_index) {
-              BlockchainAPI.get_rejection_reason(tx_hash, function(reason) {
-                MyWallet.sendEvent("msg", {type: "error", message: reason});
-              }, function() {
-                if (transactions.length == 0 || transactions[0].txIndex == first_tx_index) {
-                  MyWallet.get_history();
-                }
-              }, function() {
-                if (transactions.length == 0 || transactions[0].txIndex == first_tx_index) {
-                  MyWallet.sendEvent("msg", {type: "error", message: 'Unknown Error Pushing Transaction'});
-                }
-              });
-            } else {
-              playSound('beep');
-            }
-          }, function() {
-            MyWallet.sendEvent("msg", {type: "error", message: 'Unable to determine if transaction was submitted. Please re-login.'});
-          });
-        }
-
-        //Otherwise we set an interval to set for a transaction
-        setTimeout(function() {
+      function call_history() {        
+        MyWallet.get_history(function() {
           if (transactions.length == 0 || transactions[0].txIndex == first_tx_index) {
-            call_history();
+            BlockchainAPI.get_rejection_reason(tx_hash, function(reason) {
+              MyWallet.sendEvent("msg", {type: "error", message: reason});
+            }, function() {
+              if (transactions.length == 0 || transactions[0].txIndex == first_tx_index) {
+                MyWallet.get_history();
+              }
+            }, function() {
+              if (transactions.length == 0 || transactions[0].txIndex == first_tx_index) {
+                MyWallet.sendEvent("msg", {type: "error", message: 'Unknown Error Pushing Transaction'});
+              }
+            });
+          } else {
+            playSound('beep');
           }
-        }, 3000);
-      };
-
-
-      //Add Polling checker to check if the transaction exists on Blockchain
-      //Appear that there are conditions where the ajax call to pushtx may not respond in a timely fashion
-      var checkTxExistsInterval = setInterval(function() {
-        
-        BlockchainAPI.get_rejection_reason(tx_hash, function(e) {
-          console.log(e);
         }, function() {
+          MyWallet.sendEvent("msg", {type: "error", message: 'Unable to determine if transaction was submitted. Please re-login.'});
+        });
+      }
+
+      //Otherwise we set an interval to set for a transaction
+      setTimeout(function() {
+        if (transactions.length == 0 || transactions[0].txIndex == first_tx_index) {
+          call_history();
+        }
+      }, 3000);
+    };
+
+    //Add Polling checker to check if the transaction exists on Blockchain
+    //Appear that there are conditions where the ajax call to pushtx may not respond in a timely fashion
+    var checkTxExistsInterval = setInterval(function() {
+      BlockchainAPI.get_rejection_reason(
+        tx_hash, 
+        function(e) {
+          console.log(e);
+        }, 
+        function() {
           if (did_push) {
             did_push();
             did_push = null;
           }
-          
+        
           clearInterval(checkTxExistsInterval);
           checkTxExistsInterval = null;
-        }, function(e) {
+        }, 
+        function(e) {
           console.log(e);
-        });
-      }, 5000);
-
-      if (!(typeof(window) === "undefined" || typeof(browserDetection) === "undefined") &&
-          browserDetection().browser == "ie" && browserDetection().version < 11) {
-        var post_data = {
-          format : "plain",
-          tx: txHex,
-          api_code : WalletStore.getAPICode(),
-          hash : tx_hash
-        };
-
-        if (note) {
-          post_data.note = note;
         }
+      );
+    }, 5000);
+    
+    if (window.karma || !(typeof(window) === "undefined" || typeof(browserDetection) === "undefined") &&
+        browserDetection().browser == "ie" && browserDetection().version < 11) {
+      var post_data = {
+        format : "plain",
+        tx: txHex,
+        api_code : WalletStore.getAPICode(),
+        hash : tx_hash
+      };
 
-        $.ajax({
-          type: "POST",
-          url: BlockchainAPI.getRootURL() + 'pushtx',
-          timeout: AjaxTimeout,
-          data : post_data,
-          success: function() {
-            if (did_push) {
-              did_push();
-              did_push = null;
-            }
-          },
-          error : function(e) {
+      if (note) {
+        post_data.note = note;
+      }
+      
+      $.ajax({
+        type: "POST",
+        url: BlockchainAPI.getRootURL() + 'pushtx',
+        timeout: AjaxTimeout,
+        data : post_data,
+        success: function() {
+          if (did_push) {
+            did_push();
+            did_push = null;
+          }
+        },
+        error : function(e) {
+          _error(e ? e.responseText : null);
+        }
+      });
+
+    } else {
+      var buffer = tx.toBuffer();
+
+      var int8_array = new Int8Array(buffer);
+
+      int8_array.set(buffer);
+
+      var blob = new Blob([buffer], {type : 'application/octet-stream'});                
+
+      if (blob.size != txHex.length/2)
+        throw 'Inconsistent Data Sizes (blob : ' + blob.size + ' s : ' + txHex.length/2 + ' buffer : ' + buffer.byteLength + ')';
+
+      var fd = new FormData();
+
+      fd.append('txbytes', blob);
+
+      if (note) {
+        fd.append('note', note);
+      }
+
+      fd.append('format', 'plain');
+      fd.append('hash', tx_hash);
+      fd.append('api_code', WalletStore.getAPICode());      
+
+      $.ajax({
+        url: this.getRootURL() + 'pushtx',
+        data: fd,
+        processData: false,
+        contentType: false,
+        timeout: AjaxTimeout,
+        type: 'POST',
+        success: function(){
+          if (did_push) {
+            did_push();
+            did_push = null;
+          }
+        },
+        error : function(e) {
+          if (!e.responseText || e.responseText.indexOf('Parse:') == 0) {
+            setTimeout(function() {
+              push_normal();
+            }, 2000);
+          } else {
             _error(e ? e.responseText : null);
           }
-        });
-
-      } else {
-        var buffer = tx.toBuffer();
-
-        var int8_array = new Int8Array(buffer);
-
-        int8_array.set(buffer);
-
-        var blob = new Blob([buffer], {type : 'application/octet-stream'});                
-
-        if (blob.size != txHex.length/2)
-          throw 'Inconsistent Data Sizes (blob : ' + blob.size + ' s : ' + txHex.length/2 + ' buffer : ' + buffer.byteLength + ')';
-
-        var fd = new FormData();
-
-        fd.append('txbytes', blob);
-
-        if (note) {
-          fd.append('note', note);
         }
-
-        fd.append('format', 'plain');
-        fd.append('hash', tx_hash);
-        fd.append('api_code', WalletStore.getAPICode());
-
-        $.ajax({
-          url: this.getRootURL() + 'pushtx',
-          data: fd,
-          processData: false,
-          contentType: false,
-          timeout: AjaxTimeout,
-          type: 'POST',
-          success: function(){
-            if (did_push) {
-              did_push();
-              did_push = null;
-            }
-          },
-          error : function(e) {
-            if (!e.responseText || e.responseText.indexOf('Parse:') == 0) {
-              setTimeout(function() {
-                push_normal();
-              }, 2000);
-            } else {
-              _error(e ? e.responseText : null);
-            }
-          }
-        });
-      }
-    } catch (e) {
-      console.log(e);
-
-      _error(e);
+      });
     }
   };
 
