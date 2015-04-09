@@ -5,18 +5,18 @@ module.exports = function(config) {
     
     browserNoActivityTimeout: 60000,
     
-    frameworks: ['jasmine'],
+    frameworks: ['jasmine', 'browserify'],
     
     browsers : ['Chrome'], //'PhantomJS'],
     
     // reportSlowerThan: 50,
     
     client: {
-      captureConsole: true,
+      captureConsole: true
     },
     
     preprocessors: {
-      '**/*.coffee': ['coffee'],
+      '**/!(transaction_spend_spec.js).coffee': ['coffee'],
       'src/wallet-store.js' : ['coverage'],
       'src/wallet-crypto.js' : ['coverage'],
       'src/wallet.js' : ['coverage'],
@@ -24,9 +24,15 @@ module.exports = function(config) {
       'src/hd-account.js' : ['coverage'],
       'src/blockchain-api.js' : ['coverage'],
       'src/blockchain-settings-api.js' : ['coverage'],
-      'src/import-export.js' : ['coverage'],
-      'src/transaction.js' : ['coverage'],
-      'src/wallet-signup.js' : ['coverage']
+      'src/import-export.js' : ['browserify', 'coverage'],
+      'src/wallet-signup.js' : ['coverage'],
+      'src/transaction.js' : ['browserify', 'coverage'],
+      'tests/transaction_spend_spec.js.coffee' : ['browserify']
+    },
+
+    browserify: {
+      debug: true,
+      transform: [ 'coffeeify' ]
     },
 
     coffeePreprocessor: {
@@ -58,6 +64,7 @@ module.exports = function(config) {
       'node_modules/xregexp/xregexp-all.js',
       'build/browserify.js',
       'src/blockchain-api.js',
+      'src/blockchain-settings-api.js',
       'src/hd-wallet.js',
       'src/hd-account.js',
       'src/wallet-signup.js',
@@ -65,8 +72,11 @@ module.exports = function(config) {
       'src/wallet-store.js',
       'src/wallet-crypto.js',
       'src/wallet.js',
-      'tests/**/*.js',
-      'tests/**/*.js.coffee',
+      'src/import-export.js',
+      'src/transaction.js',      
+      // 'tests/**/*.js',
+      // 'tests/**/*.js.coffee',
+      'tests/transaction_spend_spec.js.coffee',
       // Or specify individual test files:
       // 'tests/mocks/*.js.coffee',
       // 'tests/bip38_spec.js.coffee',
@@ -78,14 +88,6 @@ module.exports = function(config) {
       // 'tests/tags_spec.js.coffee',
       // 'tests/transaction_spec.js.coffee',
       // 'tests/wallet_spec.js.coffee'
-    ],
-    
-    plugins : [
-      'karma-phantomjs-launcher',
-      'karma-chrome-launcher',
-      'karma-jasmine',
-      'karma-coffee-preprocessor',
-      'karma-coverage'
     ],
     
     coverageReporter: {
