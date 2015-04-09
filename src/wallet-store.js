@@ -747,7 +747,6 @@
       setRecommendIncludeFee: function(value) {
         recommend_include_fee = value;
       },
-      // probably useless: getter never called.
       getDefaultPbkdf2Iterations: function() {
         return default_pbkdf2_iterations;
       }
