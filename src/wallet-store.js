@@ -94,6 +94,7 @@
     var recommend_include_fee = true; //Number of unconfirmed transactions in blockchain.info's memory pool
     var default_pbkdf2_iterations = 5000;
     var isRestoringWallet = false;
+    var counter = 0;
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
     ////////////////////////////////////////////////////////////////////////////
@@ -756,6 +757,12 @@
       },
       setRestoringWallet: function (bool) {
         isRestoringWallet = bool;
+      },
+      incrementCounter: function () {
+        counter = counter + 1;
+      },
+      getCounter: function () {
+        return counter;
       }
     };
   })();

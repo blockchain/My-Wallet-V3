@@ -49,7 +49,6 @@ var MyWallet = new function() {
   var numOldTxsToFetchAtATime = 10; 
   var isSynchronizedWithServer = true;
   var paidTo = {};
-  var counter = 0;
 
   var wallet_options = {
     fee_policy : 0,  //Default Fee policy (-1 Tight, 0 Normal, 1 High)
@@ -3068,8 +3067,8 @@ var MyWallet = new function() {
 
           MyWallet.fetchWalletJson(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, null, other_error);
         } else {
-          if (counter < 600) {
-            ++counter;
+          if (WalletStore.getCounter() < 600) {
+            WalletStore.incrementCounter();
             setTimeout(function() {
               $.ajax(self);
             }, 2000);
