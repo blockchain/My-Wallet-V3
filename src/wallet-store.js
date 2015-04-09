@@ -507,8 +507,11 @@
       getDefaultAccountIndex: function() {
         return defaultAccountIdx;
       },
-      disableLogout: function(value) {
+      disableLogout: function() {
         disable_logout = true;
+      },
+      enableLogout: function() {
+        disable_logout = false;
       },
       isLogoutDisabled: function() {
         return disable_logout;

@@ -434,12 +434,12 @@ var MyWallet = new function() {
 
     if (format == 'bip38') {
       getBIP38Password(function(_password, correct_password, wrong_password) {
-        WalletStore.disableLogout(true);
+        WalletStore.disableLogout();
         ImportExport.parseBIP38toECKey(
           privateKeyString,
           _password,
           function(key, isCompPoint) {
-            WalletStore.disableLogout(false);
+            WalletStore.enableLogout();
             correct_password();
             if(WalletStore.getDoubleEncryption()) {
               getPassword(function(pw, correct_password, wrong_password) {
@@ -456,11 +456,11 @@ var MyWallet = new function() {
             }
           },
           function() {
-            WalletStore.disableLogout(false);
+            WalletStore.disableLogout();
             wrong_password();
           },
           function(e) {
-            WalletStore.disableLogout(false);
+            WalletStore.enableLogout();
             error(e);
           }
         );
@@ -2657,7 +2657,7 @@ var MyWallet = new function() {
       throw 'Cannot backup wallet now. Shared key is not set';
     }
 
-    WalletStore.disableLogout(true);
+    WalletStore.disableLogout();
     WalletStore.setIsSynchronizedWithServer(false);
     WalletStore.clearArchTimer();
 
@@ -2676,7 +2676,7 @@ var MyWallet = new function() {
       throw 'Cannot backup wallet now. Shared key is not set';
     }
 
-    WalletStore.disableLogout(true);
+    WalletStore.disableLogout();
     WalletStore.clearArchTimer();
 
     var _errorcallback = function(e) {
@@ -2741,22 +2741,22 @@ var MyWallet = new function() {
                   successcallback();
 
                 WalletStore.setIsSynchronizedWithServer(true);
-                WalletStore.disableLogout(false);
+                WalletStore.enableLogout();
                 var log_time_out = setTimeout(MyWallet.logout, WalletStore.getLogoutTime());
                 WalletStore.setLogoutTimeout(log_time_out);
                 WalletStore.sendEvent('on_backup_wallet_success');
             },
               function() {
                 _errorcallback('Checksum Did Not Match Expected Value');
-                WalletStore.disableLogout(false);
+                WalletStore.enableLogout();
             });
           }, function(e) {
             _errorcallback(e.responseText);
-            WalletStore.disableLogout(false);
+            WalletStore.enableLogout();
           });
         } catch (e) {
           _errorcallback(e);
-          WalletStore.disableLogout(false);
+          WalletStore.enableLogout();
         };
       },
       function(e) {
@@ -2765,7 +2765,7 @@ var MyWallet = new function() {
       });
     } catch (e) {
       _errorcallback(e);
-      WalletStore.disableLogout(false);
+      WalletStore.enableLogout();
     }
   };
 
@@ -3042,8 +3042,8 @@ var MyWallet = new function() {
     return size;
   };
 
-  this.logout = function() {
-    if (WalletStore.isLogoutDisabled())
+  this.logout = function(force) {
+    if (!force && WalletStore.isLogoutDisabled())
       return;
 
     WalletStore.sendEvent('logging_out');
