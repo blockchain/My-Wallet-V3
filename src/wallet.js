@@ -45,7 +45,6 @@ var MyWallet = new function() {
   var isInitialized = false;
   var serverTimeOffset = 0; //Difference between server and client time
   var haveSetServerTime = false; //Whether or not we have synced with server time
-  var isRestoringWallet = false;
   var sync_pubkeys = false;
   var numOldTxsToFetchAtATime = 10; 
   var isSynchronizedWithServer = true;
@@ -1994,12 +1993,9 @@ var MyWallet = new function() {
   this.sendBitcoinsForAccount = function(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, listener, getPassword) {
     // second_password must be null if not needed.
     function sendBitcoinsForAccount(accountIdx, to, value, fixedFee, note, successCallback, errorCallback, listener, second_password) {
-      assert(successCallback, "success callback required")
-      assert(errorCallback, "error callback required")
-      
       var sharedKey = WalletStore.getSharedKey();
       var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
-            
+      
       MyWallet.getUnspentOutputsForAccount(
         accountIdx,
         function (unspent_outputs) {
@@ -2023,15 +2019,14 @@ var MyWallet = new function() {
           var signedTransaction = tx.sign();
 
           var balance = account.getBalance();
-                    
           BlockchainAPI.push_tx(
             signedTransaction,
             note,
-            function(tx_hash) { successCallback(tx_hash); },
-            function(e) { errorCallback(e);}
+            function() { successCallback && successCallback(); },
+            function(e) { errorCallback && errorCallback(e);}
           );
         },
-        function(e) { errorCallback(e);}
+        function(e) { errorCallback && errorCallback(e);}
       );
     }
 
@@ -3091,12 +3086,12 @@ var MyWallet = new function() {
 
   this.restoreWallet = function(pw, two_factor_auth_key, success, wrong_two_factor_code, other_error, decrypt_success, build_hd_success) {
 
-    if (isInitialized || isRestoringWallet) {
+    if (isInitialized || WalletStore.isRestoringWallet()) {
       return;
     }
 
     function _error(e) {
-      isRestoringWallet = false;
+      WalletStore.setRestoringWallet(false);
       MyWallet.sendEvent("msg", {type: "error", message: e});
 
       MyWallet.sendEvent('error_restoring_wallet');
@@ -3104,7 +3099,7 @@ var MyWallet = new function() {
     }
 
     try {
-      isRestoringWallet = true;
+      WalletStore.setRestoringWallet(true);
 
       password = pw;
 
@@ -3142,7 +3137,7 @@ var MyWallet = new function() {
               }
 
               internalRestoreWallet(function() {
-                isRestoringWallet = false;
+                WalletStore.setRestoringWallet(false);
 
                 didDecryptWallet(success);
               }, _error, decrypt_success, build_hd_success);
@@ -3157,7 +3152,7 @@ var MyWallet = new function() {
         });
       } else {
         internalRestoreWallet(function() {
-          isRestoringWallet = false;
+          WalletStore.setRestoringWallet(false);
 
           didDecryptWallet(success);
         }, _error, decrypt_success, build_hd_success);
