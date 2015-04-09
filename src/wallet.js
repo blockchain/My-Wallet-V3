@@ -49,7 +49,6 @@ var MyWallet = new function() {
   var haveSetServerTime = false; //Whether or not we have synced with server time
   var isRestoringWallet = false;
   var sync_pubkeys = false;
-  var legacyAddressesNumTxFetched = 0;
   var numOldTxsToFetchAtATime = 10; 
   var isSynchronizedWithServer = true;
   var paidTo = {};
@@ -570,12 +569,12 @@ var MyWallet = new function() {
 
     if (format == 'bip38') {
       getBIP38Password(function(_password, correct_password, wrong_password) {
-        WalletStore.disableLogout();
+        WalletStore.disableLogout(true);
         ImportExport.parseBIP38toECKey(
           privateKeyString, 
           _password, 
           function(key, isCompPoint) {
-            WalletStore.enableLogout();
+            WalletStore.disableLogout(false);
             correct_password();
             if(WalletStore.getDoubleEncryption()) {
               getPassword(function(pw, correct_password, wrong_password) {
@@ -592,11 +591,11 @@ var MyWallet = new function() {
             }
           }, 
           function() {
-            WalletStore.disableLogout();
+            WalletStore.disableLogout(false);
             wrong_password();
           },
           function(e) {
-            WalletStore.enableLogout();
+            WalletStore.disableLogout(false);
             error(e);
           }
         );
@@ -749,7 +748,7 @@ var MyWallet = new function() {
       if (hasCountedlegacyAddressesNTxs == false && WalletStore.isActiveLegacyAddress(output.addr)) {
         hasCountedlegacyAddressesNTxs = true;
         if (! incrementAccountTxCount) {
-          legacyAddressesNumTxFetched += 1;
+          WalletStore.addLegacyAddressesNumTxFetched(1);
         }
       }
 
@@ -804,7 +803,7 @@ var MyWallet = new function() {
       if (hasCountedlegacyAddressesNTxs == false && WalletStore.isActiveLegacyAddress(output.addr)) {
         hasCountedlegacyAddressesNTxs = true;
         if (! incrementAccountTxCount) {
-          legacyAddressesNumTxFetched += 1;
+          WalletStore.addLegacyAddressesNumTxFetched(1);
         } 
       }
 
@@ -1721,7 +1720,7 @@ var MyWallet = new function() {
       }, tx_filter, txOffset, numTx);
     }
 
-    getRawTransactionsForLegacyAddresses(legacyAddressesNumTxFetched, numOldTxsToFetchAtATime, function(data) {
+    getRawTransactionsForLegacyAddresses(WalletStore.getLegacyAddressesNumTxFetched(), numOldTxsToFetchAtATime, function(data) {
       var processedTransactions = [];
 
       for (var i in data) {
@@ -1733,7 +1732,7 @@ var MyWallet = new function() {
         processedTransactions.push(transaction);
       }
 
-      legacyAddressesNumTxFetched += processedTransactions.length;
+      WalletStore.addLegacyAddressesNumTxFetched(processedTransactions.length);
 
       if (processedTransactions.length < numOldTxsToFetchAtATime) {
         didFetchOldestTransaction();
@@ -3209,7 +3208,7 @@ var MyWallet = new function() {
       throw 'Cannot backup wallet now. Shared key is not set';
     }
 
-    WalletStore.disableLogout();
+    WalletStore.disableLogout(true);
     isSynchronizedWithServer = false;
     if (archTimer) {
       clearInterval(archTimer);
@@ -3228,7 +3227,7 @@ var MyWallet = new function() {
       throw 'Cannot backup wallet now. Shared key is not set';
     }
 
-    WalletStore.disableLogout();
+    WalletStore.disableLogout(true);
     if (archTimer) {
       clearInterval(archTimer);
       archTimer = null;
@@ -3293,21 +3292,21 @@ var MyWallet = new function() {
                   successcallback();
 
                 isSynchronizedWithServer = true;
-                WalletStore.enableLogout();
+                WalletStore.disableLogout(false);
                 logout_timeout = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
                 MyWallet.sendEvent('on_backup_wallet_success');
             },
               function() {
                 _errorcallback('Checksum Did Not Match Expected Value');
-                WalletStore.enableLogout();
+                WalletStore.disableLogout(false);
             });
           }, function(e) {
             _errorcallback(e.responseText);
-            WalletStore.enableLogout();
+            WalletStore.disableLogout(false);
           });
         } catch (e) {
           _errorcallback(e);
-          WalletStore.enableLogout();
+          WalletStore.disableLogout(false);
         };
       },
       function(e) {
@@ -3316,7 +3315,7 @@ var MyWallet = new function() {
       });
     } catch (e) {
       _errorcallback(e);
-      WalletStore.enableLogout();
+      WalletStore.disableLogout(false);
     }
   };
 
@@ -3603,10 +3602,10 @@ var MyWallet = new function() {
     return size;
   };
 
-  this.logout = function(force) {
-    if (!force && WalletStore.isLogoutDisabled())
+  this.logout = function() {
+    if (WalletStore.isLogoutDisabled())
       return;
-    
+
     MyWallet.sendEvent('logging_out');
 
     if (WalletStore.isDemoWallet()) {

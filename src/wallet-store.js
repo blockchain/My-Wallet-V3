@@ -90,6 +90,7 @@
     var didSetGuid = false;
     var isPolling = false;
     var localWalletJsonString = null;
+    var legacyAddressesNumTxFetched = 0;
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
     ////////////////////////////////////////////////////////////////////////////
@@ -309,8 +310,9 @@
         }
       },
       archiveLegacyAddr: function(address) {
-        var addr = addresses[address];
-        if (addr.tag === null || addr.tag === undefined || addr.tag === 0) {
+        var addr;
+        addr = addresses[address];
+        if ((addr.tag === null) || addr.tag === 0) {
           addr.tag = 2;
           MyWallet.backupWalletDelayed('update', function() {
             return MyWallet.get_history();
@@ -480,11 +482,8 @@
       getDefaultAccountIndex: function() {
         return defaultAccountIdx;
       },
-      disableLogout: function() {
+      disableLogout: function(value) {
         disable_logout = true;
-      },
-      enableLogout: function() {
-        disable_logout = false;
       },
       isLogoutDisabled: function() {
         return disable_logout;
@@ -732,6 +731,12 @@
       // this probably can be deleted too
       setLocalWalletJson: function(data){
         localWalletJsonString = data;
+      },
+      getLegacyAddressesNumTxFetched: function(){
+        return legacyAddressesNumTxFetched;
+      },
+      addLegacyAddressesNumTxFetched: function (number){
+        legacyAddressesNumTxFetched += number;
       }
     };
   })();
