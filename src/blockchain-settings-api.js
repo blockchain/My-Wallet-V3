@@ -6,9 +6,9 @@ var BlockchainSettingsAPI = new function() {
 
     }, function(data) {
       if (data.responseText)
-        MyWallet.sendEvent("msg", {type: "error", message: data.responseText});
+        WalletStore.sendEvent("msg", {type: "error", message: data.responseText});
       else
-        MyWallet.sendEvent("msg", {type: "error", message: 'Error Downloading Account Settings'});
+        WalletStore.sendEvent("msg", {type: "error", message: 'Error Downloading Account Settings'});
 
       typeof(error) === "function" &&  error();
     });
@@ -22,11 +22,11 @@ var BlockchainSettingsAPI = new function() {
     extra = extra || '';
 
     MyWallet.securePost("wallet"+extra, { length : (value+'').length, payload : value+'', method : method }, function(data) {
-      MyWallet.sendEvent("msg", {type: "success", message: method + '-success' + data});
+      WalletStore.sendEvent("msg", {type: "success", message: method + '-success' + data});
 
       typeof(success) === "function" && success();
     }, function(data) {
-      MyWallet.sendEvent("msg", {type: "error", message: method + '-error' + data.responseText});
+      WalletStore.sendEvent("msg", {type: "error", message: method + '-error' + data.responseText});
 
       typeof(error) === "function" &&  error();
     });
@@ -112,7 +112,7 @@ var BlockchainSettingsAPI = new function() {
     MyWallet.securePost("wallet", { method : 'generate-google-secret' }, function(google_secret_url) {
       typeof(success) === "function" && success(google_secret_url);
     }, function(data) {
-      MyWallet.sendEvent("msg", {type: "error", message: data.responseText});
+      WalletStore.sendEvent("msg", {type: "error", message: data.responseText});
       typeof(error) === "function" &&  error(data.responseText);
     });
   };
@@ -142,10 +142,10 @@ var BlockchainSettingsAPI = new function() {
    */
   this.verifyEmail = function(code, success, error) {
     MyWallet.securePost("wallet", { payload:code, length : code.length, method : 'verify-email' }, function(data) {
-      MyWallet.sendEvent("msg", {type: "success", message: data});
+      WalletStore.sendEvent("msg", {type: "success", message: data});
       typeof(success) === "function" && success(data);
     }, function(data) {
-      MyWallet.sendEvent("msg", {type: "error", message: data.responseText});
+      WalletStore.sendEvent("msg", {type: "error", message: data.responseText});
       typeof(error) === "function" &&  error();
     });
   };
@@ -158,10 +158,10 @@ var BlockchainSettingsAPI = new function() {
    */
   this.verifyMobile = function(code, success, error) {
     MyWallet.securePost("wallet", { payload:code, length : code.length, method : 'verify-sms' }, function(data) {
-      MyWallet.sendEvent("msg", {type: "success", message: data});
+      WalletStore.sendEvent("msg", {type: "success", message: data});
       typeof(success) === "function" && success(data);
     }, function(data) {
-      MyWallet.sendEvent("msg", {type: "error", message: data.responseText});
+      WalletStore.sendEvent("msg", {type: "error", message: data.responseText});
       typeof(error) === "function" &&  error();
     });
   };

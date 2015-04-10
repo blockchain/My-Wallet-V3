@@ -2,7 +2,7 @@
 
 MyWallet.logout = function() {};
 
-MyWallet.sendEvent = function() {};
+WalletStore.sendEvent = function() {};
 
 var playSound;
 

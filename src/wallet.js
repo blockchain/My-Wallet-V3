@@ -41,7 +41,6 @@ var MyWallet = new function() {
   var tx_page = 0; //Multi-address page
   var tx_filter = 0; //Transaction filter (e.g. Sent Received etc)
   var archTimer; //Delayed Backup wallet timer
-  var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
   var isInitialized = false;
   var paidTo = {};
 
@@ -71,16 +70,6 @@ var MyWallet = new function() {
 
   this.getAdditionalSeeds = function(val) {
     return wallet_options.additional_seeds;
-  };
-
-  this.addEventListener = function(func) {
-    event_listeners.push(func);
-  };
-
-  this.sendEvent = function(event_name, obj) {
-    for (var listener in event_listeners) {
-      event_listeners[listener](event_name, obj);
-    }
   };
 
   this.getLogoutTime = function() {
@@ -450,7 +439,7 @@ var MyWallet = new function() {
 
     try {
       if (WalletStore.addLegacyAddress(addressString)) {
-        MyWallet.sendEvent("msg", {type: "success", message: 'Successfully Added Address ' + address});
+        WalletStore.sendEvent("msg", {type: "success", message: 'Successfully Added Address ' + address});
 
         try {
           ws.send('{"op":"addr_sub", "addr":"'+addressString+'"}');
@@ -464,7 +453,7 @@ var MyWallet = new function() {
         throw 'Wallet Full Or Addresses Exists';
       }
     } catch (e) {
-      MyWallet.sendEvent("msg", {type: "error", message: e});
+      WalletStore.sendEvent("msg", {type: "error", message: e});
     }
   };
 
@@ -867,7 +856,7 @@ var MyWallet = new function() {
 
           playSound('beep');
 
-          MyWallet.sendEvent('on_tx');
+          WalletStore.sendEvent('on_tx');
 
         }  else if (obj.op == 'block') {
           //Check any transactions included in this block, if the match one our ours then set the block index
@@ -884,7 +873,7 @@ var MyWallet = new function() {
 
           WalletStore.setLatestBlock(BlockFromJSON(obj.x));
 
-          MyWallet.sendEvent('on_block');
+          WalletStore.sendEvent('on_block');
         }
 
       } catch(e) {
@@ -898,7 +887,7 @@ var MyWallet = new function() {
     };
 
     ws.onopen = function() {
-      MyWallet.sendEvent('ws_on_open');
+      WalletStore.sendEvent('ws_on_open');
 
       var msg = '{"op":"blocks_sub"}';
 
@@ -915,14 +904,14 @@ var MyWallet = new function() {
           MyWallet.listenToHDWalletAccounts();
 
       } catch (e) {
-        MyWallet.sendEvent("msg", {type: "error", message: 'error with websocket'});
+        WalletStore.sendEvent("msg", {type: "error", message: 'error with websocket'});
       }
 
       ws.send(msg);
     };
 
     ws.onclose = function() {
-      MyWallet.sendEvent('ws_on_close');
+      WalletStore.sendEvent('ws_on_close');
 
     };
   }
@@ -1513,7 +1502,7 @@ var MyWallet = new function() {
       if (successCallback)
         successCallback(value);
     }, function() {
-      MyWallet.sendEvent("msg", {type: "error", message: 'Error Getting Address Balance'});
+      WalletStore.sendEvent("msg", {type: "error", message: 'Error Getting Address Balance'});
       if (errorCallback)
         errorCallback();
     });
@@ -1570,7 +1559,7 @@ var MyWallet = new function() {
         });
     } catch (e) {
       console.log(e);
-      MyWallet.sendEvent("msg", {type: "error", message: 'Error Decoding Private Key. Could not claim coins.'});
+      WalletStore.sendEvent("msg", {type: "error", message: 'Error Decoding Private Key. Could not claim coins.'});
     }
   };
 
@@ -1592,7 +1581,7 @@ var MyWallet = new function() {
           sendToEmail(accountIdx, value, fixedFee, email, successCallback, errorCallback, listener, pw);
         } else {
           wrong_password();
-          MyWallet.sendEvent("msg", {type: "error", message: 'Password incorrect.'});
+          WalletStore.sendEvent("msg", {type: "error", message: 'Password incorrect.'});
         }
       });
     } else {
@@ -1616,7 +1605,7 @@ var MyWallet = new function() {
         email + ' Sent Via Email', 
         function() {
           MyWallet.backupWallet('update', function() {
-            MyWallet.sendEvent("msg", {type: "info", message: 'Generated new Bitcoin Address ' + address});
+            WalletStore.sendEvent("msg", {type: "info", message: 'Generated new Bitcoin Address ' + address});
             MyWallet.getUnspentOutputsForAccount(accountIdx, function (unspent_outputs) {
               var account = WalletStore.getHDWallet().getAccount(accountIdx);
               var extendedPrivateKey = null;
@@ -1917,7 +1906,7 @@ var MyWallet = new function() {
         mobile + ' Sent Via SMS',
         function() {
           MyWallet.backupWallet('update', function() {
-            MyWallet.sendEvent("msg", {type: "info", message: 'Generated new Bitcoin Address ' + address + address});
+            WalletStore.sendEvent("msg", {type: "info", message: 'Generated new Bitcoin Address ' + address + address});
 
             MyWallet.getUnspentOutputsForAccount(accountIdx, function (unspent_outputs) {
               var account = WalletStore.getHDWallet().getAccount(accountIdx);
@@ -2581,7 +2570,7 @@ var MyWallet = new function() {
           setBTCSymbol(obj.info.symbol_btc);
 
         if (obj.info.notice)
-          MyWallet.sendEvent("msg", {type: "error", message: obj.info.notice});
+          WalletStore.sendEvent("msg", {type: "error", message: obj.info.notice});
       }
     }
 
@@ -2640,7 +2629,7 @@ var MyWallet = new function() {
         WalletStore.setLatestBlock(obj.info.latest_block);
     }
 
-    MyWallet.sendEvent('did_multiaddr');
+    WalletStore.sendEvent('did_multiaddr');
   }
 
   function didDecryptWallet(success) {
@@ -2787,7 +2776,7 @@ var MyWallet = new function() {
 
         } else {
           WalletStore.setDidUpgradeToHd(false);
-          MyWallet.sendEvent('hd_wallets_does_not_exist');
+          WalletStore.sendEvent('hd_wallets_does_not_exist');
         }
 
         if (obj.tx_notes) {
@@ -2924,7 +2913,7 @@ var MyWallet = new function() {
         MyWallet.handleNTPResponse(obj, clientTime);
 
         if (!obj.guid) {
-          MyWallet.sendEvent("msg", {type: "error", message: 'Server returned null guid.'});
+          WalletStore.sendEvent("msg", {type: "error", message: 'Server returned null guid.'});
           other_error('Server returned null guid.');
           return;
         }
@@ -2949,11 +2938,11 @@ var MyWallet = new function() {
         setBTCSymbol(obj.symbol_btc);
 
         if (obj.initial_error) {
-          MyWallet.sendEvent("msg", {type: "error", message: obj.initial_error});
+          WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
         }
 
         if (obj.initial_success) {
-          MyWallet.sendEvent("msg", {type: "success", message: obj.initial_success});
+          WalletStore.sendEvent("msg", {type: "success", message: obj.initial_success});
         }
 
         MyStore.get('guid', function(local_guid) {
@@ -3001,7 +2990,7 @@ var MyWallet = new function() {
         //             didSetGuid = true;
         //             MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error, decrypt_success, build_hd_success);
         //         }  else {
-        MyWallet.sendEvent('did_fail_set_guid');
+        WalletStore.sendEvent('did_fail_set_guid');
 
         try {
           var obj = $.parseJSON(e.responseText);
@@ -3013,16 +3002,16 @@ var MyWallet = new function() {
           }
 
           if (obj.initial_error) {
-            MyWallet.sendEvent("msg", {type: "error", message: obj.initial_error});
+            WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
           }
 
           return;
         } catch (ex) {}
 
         if (e.responseText)
-          MyWallet.sendEvent("msg", {type: "error", message: e.responseText});
+          WalletStore.sendEvent("msg", {type: "error", message: e.responseText});
         else
-          MyWallet.sendEvent("msg", {type: "error", message: 'Error changing wallet identifier'});
+          WalletStore.sendEvent("msg", {type: "error", message: 'Error changing wallet identifier'});
         //         }
         //     });
         // });
@@ -3053,7 +3042,7 @@ var MyWallet = new function() {
 
           authorization_received();
 
-          MyWallet.sendEvent("msg", {type: "success", message: 'Authorization Successful'});
+          WalletStore.sendEvent("msg", {type: "success", message: 'Authorization Successful'});
 
           MyWallet.fetchWalletJson(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, null, other_error);
         } else {
@@ -3081,9 +3070,9 @@ var MyWallet = new function() {
 
     function _error(e) {
       WalletStore.setRestoringWallet(false);
-      MyWallet.sendEvent("msg", {type: "error", message: e});
+      WalletStore.sendEvent("msg", {type: "error", message: e});
 
-      MyWallet.sendEvent('error_restoring_wallet');
+      WalletStore.sendEvent('error_restoring_wallet');
       other_error(e);
     }
 
@@ -3169,9 +3158,9 @@ var MyWallet = new function() {
 
   function emailBackup() {
     MyWallet.securePost("wallet", { method : 'email-backup' }, function(data) {
-      MyWallet.sendEvent("msg", {type: "success", message: 'backup-success' + data});
+      WalletStore.sendEvent("msg", {type: "success", message: 'backup-success' + data});
     }, function(e) {
-      MyWallet.sendEvent("msg", {type: "error", message: e.responseText});
+      WalletStore.sendEvent("msg", {type: "error", message: e.responseText});
     });
   }
 
@@ -3208,9 +3197,9 @@ var MyWallet = new function() {
     }
 
     var _errorcallback = function(e) {
-      MyWallet.sendEvent('on_backup_wallet_error');
+      WalletStore.sendEvent('on_backup_wallet_error');
 
-      MyWallet.sendEvent("msg", {type: "error", message: 'Error Saving Wallet: ' + e});
+      WalletStore.sendEvent("msg", {type: "error", message: 'Error Saving Wallet: ' + e});
 
       // Re-fetch the wallet from server
       MyWallet.getWallet();
@@ -3237,7 +3226,7 @@ var MyWallet = new function() {
       WalletCrypto.decryptWallet(crypted, password, function(obj) {
         try {
           var old_checksum = WalletStore.getPayloadChecksum();
-          MyWallet.sendEvent('on_backup_wallet_start');
+          WalletStore.sendEvent('on_backup_wallet_start');
 
           WalletStore.setEncryptedWalletData(crypted);
 
@@ -3269,7 +3258,7 @@ var MyWallet = new function() {
                 WalletStore.disableLogout(false);
                 var log_time_out = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
                 WalletStore.setLogoutTimeout(log_time_out);
-                MyWallet.sendEvent('on_backup_wallet_success');
+                WalletStore.sendEvent('on_backup_wallet_success');
             },
               function() {
                 _errorcallback('Checksum Did Not Match Expected Value');
@@ -3534,7 +3523,7 @@ var MyWallet = new function() {
       }
     }
 
-    MyWallet.sendEvent("msg", {type: "success", message: 'wallet-success ' + 'Wallet verified.'});
+    WalletStore.sendEvent("msg", {type: "success", message: 'wallet-success ' + 'Wallet verified.'});
   };
 
   this.changePassword = function(new_password, success, error) {
@@ -3582,7 +3571,7 @@ var MyWallet = new function() {
     if (WalletStore.isLogoutDisabled())
       return;
 
-    MyWallet.sendEvent('logging_out');
+    WalletStore.sendEvent('logging_out');
 
     if (WalletStore.isDemoWallet()) {
       window.location = BlockchainAPI.getRootURL() + 'wallet/logout';

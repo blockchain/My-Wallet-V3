@@ -101,13 +101,14 @@
     var haveSetServerTime = false; //Whether or not we have synced with server time
     var serverTimeOffset = 0; //Difference between server and client time
     var numOldTxsToFetchAtATime = 10;
+    var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
 
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
     ////////////////////////////////////////////////////////////////////////////
     var unsafeAddLegacyAddress = function(key) {
       if ((key.addr == null) || !MyWallet.isAlphaNumericSpace(key.addr)) {
-        return MyWallet.sendEvent("msg", {
+        return WalletStore.sendEvent("msg", {
           type: "error",
           message: 'Your wallet contains an invalid address. This is a sign of possible corruption, please double check all your BTC is accounted for. Backup your wallet to remove this error.'
         });
@@ -314,7 +315,7 @@
             return MyWallet.get_history();
           });
         } else {
-          MyWallet.sendEvent("msg", {
+          WalletStore.sendEvent("msg", {
             type: "error",
             message: 'Cannot Unarchive This Address'
           });
@@ -329,7 +330,7 @@
             return MyWallet.get_history();
           });
         } else {
-          MyWallet.sendEvent("msg", {
+          WalletStore.sendEvent("msg", {
             type: "error",
             message: 'Cannot Archive This Address'
           });
@@ -535,7 +536,7 @@
             tx = ref[i];
             tx.setConfirmations(MyWallet.getConfirmationsForTx(latest_block, tx));
           }
-          MyWallet.sendEvent('did_set_latest_block');
+          WalletStore.sendEvent('did_set_latest_block');
         }
       },
       getAllTags: function() {
@@ -702,7 +703,7 @@
       setHDWallet: function(newValue) {
         myHDWallet = newValue;
         if (newValue) {
-          MyWallet.sendEvent('hd_wallet_set');
+          WalletStore.sendEvent('hd_wallet_set');
         }
       },
       getSharedcoinEndpoint: function() {
@@ -805,6 +806,14 @@
       },
       getNumOldTxsToFetchAtATime: function (){
         return numOldTxsToFetchAtATime;
+      },
+      addEventListener: function(func) {
+        event_listeners.push(func);
+      },
+      sendEvent: function(event_name, obj) {
+        for (var listener in event_listeners) {
+          event_listeners[listener](event_name, obj);
+        }
       }
     };
   })();

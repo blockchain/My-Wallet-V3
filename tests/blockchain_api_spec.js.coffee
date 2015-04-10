@@ -2,7 +2,7 @@ describe "BlockchainAPI", ->
   beforeEach ->
     window.karma = true
     
-    spyOn(MyWallet, "sendEvent").and.callFake(
+    spyOn(WalletStore, "sendEvent").and.callFake(
       ()->
     )
     

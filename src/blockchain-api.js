@@ -51,7 +51,7 @@ var BlockchainAPI = new function() {
       timeout: AjaxTimeout,
       success: function(obj) {
         if (obj.error != null) {
-          MyWallet.sendEvent("msg", {type: "error", message: obj.error});
+          WalletStore.sendEvent("msg", {type: "error", message: obj.error});
         }
 
         MyWallet.handleNTPResponse(obj, clientTime);
@@ -66,9 +66,9 @@ var BlockchainAPI = new function() {
       error : function(data) {
 
         if (data.responseText)
-          MyWallet.sendEvent("msg", {type: "error", message: data.responseText});
+          WalletStore.sendEvent("msg", {type: "error", message: data.responseText});
         else
-          MyWallet.sendEvent("msg", {type: "error", message: 'Error Downloading Wallet Balance'});
+          WalletStore.sendEvent("msg", {type: "error", message: 'Error Downloading Wallet Balance'});
 
         error();
       }
@@ -105,7 +105,7 @@ var BlockchainAPI = new function() {
       timeout: AjaxTimeout,
       success: function(obj) {
         if (obj.error != null) {
-          MyWallet.sendEvent("msg", {type: "error", message: obj.error});
+          WalletStore.sendEvent("msg", {type: "error", message: obj.error});
         }
 
         MyWallet.handleNTPResponse(obj, clientTime);
@@ -115,9 +115,9 @@ var BlockchainAPI = new function() {
       error : function(data) {
 
         if (data.responseText)
-          MyWallet.sendEvent("msg", {type: "error", message: data.responseText});
+          WalletStore.sendEvent("msg", {type: "error", message: data.responseText});
         else
-          MyWallet.sendEvent("msg", {type: "error", message: 'Error Restoring Wallet'});
+          WalletStore.sendEvent("msg", {type: "error", message: 'Error Restoring Wallet'});
 
         error();
       }
@@ -154,7 +154,7 @@ var BlockchainAPI = new function() {
       timeout: AjaxTimeout,
       success: function(obj) {
         if (obj.error != null) {
-          MyWallet.sendEvent("msg", {type: "error", message: obj.error});
+          WalletStore.sendEvent("msg", {type: "error", message: obj.error});
         }
 
         MyWallet.handleNTPResponse(obj, clientTime);
@@ -164,9 +164,9 @@ var BlockchainAPI = new function() {
       error : function(data) {
 
         if (data.responseText)
-          MyWallet.sendEvent("msg", {type: "error", message: data.responseText});
+          WalletStore.sendEvent("msg", {type: "error", message: data.responseText});
         else
-          MyWallet.sendEvent("msg", {type: "error", message: 'Error Restoring Wallet'});
+          WalletStore.sendEvent("msg", {type: "error", message: 'Error Restoring Wallet'});
 
         error();
       }
@@ -259,7 +259,7 @@ var BlockchainAPI = new function() {
   };
 
   this.get_ticker = function(successCallback, errorCallback) {
-    MyWallet.sendEvent("msg", {type: "info", message: 'Getting Ticker Data'});
+    WalletStore.sendEvent("msg", {type: "info", message: 'Getting Ticker Data'});
 
     $.ajax({
       type: "GET",
@@ -268,7 +268,7 @@ var BlockchainAPI = new function() {
       data: {format : 'json', api_code : WalletStore.getAPICode()},
       timeout: AjaxTimeout,
       success: function(data) {
-        MyWallet.sendEvent('ticker_updated');
+        WalletStore.sendEvent('ticker_updated');
         successCallback(data);
       },
       error : function(e) {
@@ -328,7 +328,7 @@ var BlockchainAPI = new function() {
       }
     };
     
-    MyWallet.sendEvent("msg", {type: "info", message: 'Pushing Transaction'});
+    WalletStore.sendEvent("msg", {type: "info", message: 'Pushing Transaction'});
 
     var transactions = WalletStore.getTransactions();    
 
@@ -347,21 +347,21 @@ var BlockchainAPI = new function() {
         MyWallet.get_history(function() {
           if (transactions.length == 0 || transactions[0].txIndex == first_tx_index) {
             BlockchainAPI.get_rejection_reason(tx_hash, function(reason) {
-              MyWallet.sendEvent("msg", {type: "error", message: reason});
+              WalletStore.sendEvent("msg", {type: "error", message: reason});
             }, function() {
               if (transactions.length == 0 || transactions[0].txIndex == first_tx_index) {
                 MyWallet.get_history();
               }
             }, function() {
               if (transactions.length == 0 || transactions[0].txIndex == first_tx_index) {
-                MyWallet.sendEvent("msg", {type: "error", message: 'Unknown Error Pushing Transaction'});
+                WalletStore.sendEvent("msg", {type: "error", message: 'Unknown Error Pushing Transaction'});
               }
             });
           } else {
             playSound('beep');
           }
         }, function() {
-          MyWallet.sendEvent("msg", {type: "error", message: 'Unable to determine if transaction was submitted. Please re-login.'});
+          WalletStore.sendEvent("msg", {type: "error", message: 'Unable to determine if transaction was submitted. Please re-login.'});
         });
       }
 
@@ -489,7 +489,7 @@ var BlockchainAPI = new function() {
         }
 
         if (obj.notice != null) {
-          MyWallet.sendEvent("msg", {type: "success", message: obj.notice});
+          WalletStore.sendEvent("msg", {type: "success", message: obj.notice});
         }
 
         //Save the unspent cache

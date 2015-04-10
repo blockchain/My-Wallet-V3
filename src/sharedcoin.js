@@ -1238,7 +1238,7 @@ var SharedCoin = new function() {
                                     total_balance += balance;
                                 }
 
-                                MyWallet.sendEvent("msg", {type: "success", message: formatBTC(total_balance) + ' recovered from intermediate addresses'});
+                                WalletStore.sendEvent("msg", {type: "success", message: formatBTC(total_balance) + ' recovered from intermediate addresses'});
 
                                 if (total_balance > 0) {
                                     MyWallet.backupWalletDelayed('update', function() {
@@ -1288,7 +1288,7 @@ var SharedCoin = new function() {
                 }, function(e) {
                     self.prop('disabled', false);
                     self.text(original_text);
-                    MyWallet.sendEvent("msg", {type: "error", message: e});
+                    WalletStore.sendEvent("msg", {type: "error", message: e});
                 });
             });
         });
@@ -1340,7 +1340,7 @@ var SharedCoin = new function() {
 
                             WalletStore.disableLogout(false);
 
-                            MyWallet.sendEvent("msg", {type: "error", message: e});
+                            WalletStore.sendEvent("msg", {type: "error", message: e});
 
                             setTimeout(function() {
                                 if (plan && plan.c_stage >= 0) {
@@ -1359,7 +1359,7 @@ var SharedCoin = new function() {
                         var success = function(){
                             el.find('input,select,button').prop('disabled', false);
 
-                            MyWallet.sendEvent("msg", {type: "success", message: 'Sharedcoin Transaction Successfully Completed'});
+                            WalletStore.sendEvent("msg", {type: "success", message: 'Sharedcoin Transaction Successfully Completed'});
 
                             WalletStore.disableLogout(false);
 
@@ -1369,10 +1369,10 @@ var SharedCoin = new function() {
                         }
 
                         if (input_value.compareTo(BigInteger.valueOf(SharedCoin.getMinimumOutputValue())) < 0) {
-                            MyWallet.sendEvent("msg", {type: "error", message: 'The Minimum Send Value is ' +  formatPrecision(SharedCoin.getMinimumOutputValue())});
+                            WalletStore.sendEvent("msg", {type: "error", message: 'The Minimum Send Value is ' +  formatPrecision(SharedCoin.getMinimumOutputValue())});
                             return;
                         } else if (input_value.compareTo(BigInteger.valueOf(SharedCoin.getMaximumOutputValue())) > 0) {
-                            MyWallet.sendEvent("msg", {type: "error", message: 'The Maximum Send Value is ' +  formatPrecision(SharedCoin.getMaximumOutputValue())});
+                            WalletStore.sendEvent("msg", {type: "error", message: 'The Maximum Send Value is ' +  formatPrecision(SharedCoin.getMaximumOutputValue())});
                             return;
                         }
 
@@ -1449,14 +1449,14 @@ var SharedCoin = new function() {
 
                     repetitionsSelect.val(obj.recommended_iterations);
                 } catch (e) {
-                    MyWallet.sendEvent("msg", {type: "error", message: e});
+                    WalletStore.sendEvent("msg", {type: "error", message: e});
                 }
 
                 enableSendButton();
             },
             error : function(e) {
                 send_button.prop('disabled', true);
-                MyWallet.sendEvent("msg", {type: "error", message: e.responseText});
+                WalletStore.sendEvent("msg", {type: "error", message: e.responseText});
             }
         });
 
