@@ -103,7 +103,8 @@
     var serverTimeOffset = 0; //Difference between server and client time
     var numOldTxsToFetchAtATime = 10;
     var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
-
+    var archTimer; //Delayed Backup wallet timer
+    
     var wallet_options = {
       fee_policy : 0,  //Default Fee policy (-1 Tight, 0 Normal, 1 High)
       html5_notifications : false, //HTML 5 Desktop notifications
@@ -905,6 +906,15 @@
       },
       getWalletOptions: function (){
         return wallet_options;
+      },
+      clearArchTimer: function (){
+        if (archTimer) {
+          clearInterval(archTimer);
+          archTimer = null;
+        }
+      },
+      setArchTimer: function (val){
+        archTimer = val;
       }
     };
   })();

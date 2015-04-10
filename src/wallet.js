@@ -37,7 +37,6 @@ var HDAccount = Browserify.HDAccount;
 var MyWallet = new function() {
 
   var MyWallet = this;
-  var archTimer; //Delayed Backup wallet timer
   var isInitialized = false;
   var paidTo = {};
 
@@ -3076,14 +3075,14 @@ var MyWallet = new function() {
 
     WalletStore.disableLogout(true);
     WalletStore.setIsSynchronizedWithServer(false);
-    if (archTimer) {
-      clearInterval(archTimer);
-      archTimer = null;
-    }
+    WalletStore.clearArchTimer();
 
-    archTimer = setTimeout(function (){
-      MyWallet.backupWallet(method, success, error, extra);
-    }, 3000);
+    var at = setTimeout(
+                function (){
+                  MyWallet.backupWallet(method, success, error, extra);
+                }
+                , 3000);
+    WalletStore.setArchTimer(at);
   };
 
   //Save the javascript wallet to the remote server
@@ -3094,10 +3093,7 @@ var MyWallet = new function() {
     }
 
     WalletStore.disableLogout(true);
-    if (archTimer) {
-      clearInterval(archTimer);
-      archTimer = null;
-    }
+    WalletStore.clearArchTimer();
 
     var _errorcallback = function(e) {
       WalletStore.sendEvent('on_backup_wallet_error');
