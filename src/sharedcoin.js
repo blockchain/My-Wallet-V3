@@ -604,7 +604,7 @@ var SharedCoin = new function() {
 
                     this.address_seed = Crypto.util.bytesToHex(array);
 
-                    MyWallet.addAdditionalSeeds(seed_prefix + this.address_seed);
+                    WalletStore.addAdditionalSeeds(seed_prefix + this.address_seed);
                 }
 
                 var address = SharedCoin.generateAddressFromCustomSeed(seed_prefix + this.address_seed,  this.address_seen_n);
@@ -698,7 +698,7 @@ var SharedCoin = new function() {
                 MyWallet.backupWallet('update', function() {
                     console.log('Saved Wallet');
 
-                    var additional_seeds = MyWallet.getAdditionalSeeds();
+                    var additional_seeds = WalletStore.getAdditionalSeeds();
 
                     var found = false;
 
@@ -1271,7 +1271,7 @@ var SharedCoin = new function() {
 
                 self.text('Working. Please Wait...');
 
-                var additional_seeds = MyWallet.getAdditionalSeeds();
+                var additional_seeds = WalletStore.getAdditionalSeeds();
 
                 var shared_coin_seeds = [];
                 for (var key in additional_seeds) {

@@ -41,91 +41,6 @@ var MyWallet = new function() {
   var isInitialized = false;
   var paidTo = {};
 
-  var wallet_options = {
-    fee_policy : 0,  //Default Fee policy (-1 Tight, 0 Normal, 1 High)
-    html5_notifications : false, //HTML 5 Desktop notifications
-    logout_time : 600000, //Default 10 minutes
-    tx_display : 0, //Compact or detailed transactions
-    always_keep_local_backup : false, //Whether to always keep a backup in localStorage regardless of two factor authentication
-    transactions_per_page : 30, //Number of transactions per page
-    additional_seeds : [],
-    enable_multiple_accounts : true //Allow multiple accounts in the wallet
-  };
-
-  this.getMultiAccountSetting = function() {
-    return wallet_options.enable_multiple_accounts;
-  }
-
-  this.setMultiAccountSetting = function(flag) {
-    MyWallet.backupWalletDelayed();
-    wallet_options.enable_multiple_accounts = flag;
-  }
-
-  this.addAdditionalSeeds = function(val) {
-    wallet_options.additional_seeds.push(val);
-  };
-
-  this.getAdditionalSeeds = function(val) {
-    return wallet_options.additional_seeds;
-  };
-
-  this.getLogoutTime = function() {
-    return wallet_options.logout_time;
-  };
-
-  this.setLogoutTime = function(logout_time) {
-    wallet_options.logout_time = logout_time;
-
-    clearInterval(WalletStore.getLogoutTimeout());
-
-    var log_time_out = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
-    WalletStore.setLogoutTimeout(log_time_out);
-  };
-
-  this.getFeePolicy = function() {
-    return wallet_options.fee_policy;
-  };
-
-  this.setFeePolicy = function(policy) {
-    if (policy != -1 && policy != 0 && policy != 1)
-      throw 'Invalid fee policy';
-
-    wallet_options.fee_policy = parseInt(policy);
-
-    //Fee Policy is stored in wallet so must save it
-    MyWallet.backupWallet('update', function() {
-      if (successCallback)
-        successCallback(response);
-    }, function() {
-      if (errorCallback)
-        errorCallback();
-    });
-  };
-
-  this.setAlwaysKeepLocalBackup = function(val) {
-    wallet_options.always_keep_local_backup = val;
-  };
-
-  this.getAlwaysKeepLocalBackup = function() {
-    return wallet_options.always_keep_local_backup;
-  };
-
-  this.setNTransactionsPerPage = function(val) {
-    wallet_options.transactions_per_page = val;
-  };
-
-  this.getNTransactionsPerPage = function() {
-    return wallet_options.transactions_per_page;
-  };
-
-  this.getHTML5Notifications = function() {
-    return wallet_options.html5_notifications;
-  };
-
-  this.setHTML5Notifications = function(val) {
-    wallet_options.html5_notifications = val;
-  };
-
   this.securePost = function(url, data, success, error) {
     var clone = jQuery.extend({}, data);
     var sharedKey = WalletStore.getSharedKey();
@@ -2401,8 +2316,8 @@ var MyWallet = new function() {
       out += '  "double_encryption" : '+WalletStore.getDoubleEncryption()+',\n  "dpasswordhash" : "'+WalletStore.getDPasswordHash()+'",\n';
     }
 
-    if (wallet_options) {
-      out += '  "options" : ' + JSON.stringify(wallet_options)+',\n';
+    if (WalletStore.getWalletOptions()) {
+      out += '  "options" : ' + JSON.stringify(WalletStore.getWalletOptions())+',\n';
     }
 
     out += '  "keys" : [\n';
@@ -2511,7 +2426,7 @@ var MyWallet = new function() {
     }, function() {
       if (error) error();
 
-    }, 0, 0, MyWallet.getNTransactionsPerPage());
+    }, 0, 0, WalletStore.getNTransactionsPerPage());
   };
 
   this.get_history = function(success, error) {
@@ -2524,7 +2439,7 @@ var MyWallet = new function() {
     }, function() {
       error && error();
 
-    }, 0, 0, MyWallet.getNTransactionsPerPage());
+    }, 0, 0, WalletStore.getNTransactionsPerPage());
   };
 
   this.getConfirmationsForTx = function(latest_block, tx) {
@@ -2624,7 +2539,7 @@ var MyWallet = new function() {
     //We need to check if the wallet has changed
     MyWallet.getWallet();
 
-    var log_time_out = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
+    var log_time_out = setTimeout(MyWallet.logout, WalletStore.getLogoutTime());
     WalletStore.setLogoutTimeout(log_time_out);
   
     success();
@@ -2655,7 +2570,7 @@ var MyWallet = new function() {
       success && success();
     }, function() {
       error && error();
-    }, 0, 0, MyWallet.getNTransactionsPerPage());
+    }, 0, 0, WalletStore.getNTransactionsPerPage());
   };
 
   function checkWalletChecksum(payload_checksum, success, error) {
@@ -2727,7 +2642,7 @@ var MyWallet = new function() {
         }
 
         if (obj.options) {
-          $.extend(wallet_options, obj.options);
+          $.extend(WalletStore.getWalletOptions(), obj.options);
         }
         
         WalletStore.newLegacyAddressesFromJSON(obj.keys);
@@ -3247,7 +3162,7 @@ var MyWallet = new function() {
 
                 WalletStore.setIsSynchronizedWithServer(true);
                 WalletStore.disableLogout(false);
-                var log_time_out = setTimeout(MyWallet.logout, MyWallet.getLogoutTime());
+                var log_time_out = setTimeout(MyWallet.logout, WalletStore.getLogoutTime());
                 WalletStore.setLogoutTimeout(log_time_out);
                 WalletStore.sendEvent('on_backup_wallet_success');
             },

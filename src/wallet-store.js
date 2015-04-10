@@ -104,6 +104,16 @@
     var numOldTxsToFetchAtATime = 10;
     var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
 
+    var wallet_options = {
+      fee_policy : 0,  //Default Fee policy (-1 Tight, 0 Normal, 1 High)
+      html5_notifications : false, //HTML 5 Desktop notifications
+      logout_time : 600000, //Default 10 minutes
+      tx_display : 0, //Compact or detailed transactions
+      always_keep_local_backup : false, //Whether to always keep a backup in localStorage regardless of two factor authentication
+      transactions_per_page : 30, //Number of transactions per page
+      additional_seeds : [],
+      enable_multiple_accounts : true //Allow multiple accounts in the wallet
+    };
     ////////////////////////////////////////////////////////////////////////////
     // Private functions
     ////////////////////////////////////////////////////////////////////////////
@@ -834,7 +844,68 @@
       },
       getPassword: function(){
         return password;
-      } 
+      },
+      //////////////////////////////////////////////////////////////////////////
+      getMultiAccountSetting: function() {
+        return wallet_options.enable_multiple_accounts;
+      },
+      setMultiAccountSetting: function(flag) {
+        MyWallet.backupWalletDelayed();
+        wallet_options.enable_multiple_accounts = flag;
+      },
+      addAdditionalSeeds: function(val) {
+        wallet_options.additional_seeds.push(val);
+      },
+      getAdditionalSeeds: function(val) {
+        return wallet_options.additional_seeds;
+      },
+      getLogoutTime: function() {
+        return wallet_options.logout_time;
+      },
+      setLogoutTime: function(logout_time) {
+        wallet_options.logout_time = logout_time;
+        clearInterval(this.getLogoutTimeout());
+        var log_time_out = setTimeout(MyWallet.logout, this.getLogoutTime());
+        this.setLogoutTimeout(log_time_out);
+      },
+      getFeePolicy: function() {
+        return wallet_options.fee_policy;
+      },
+      setFeePolicy: function(policy) {
+        if (policy != -1 && policy != 0 && policy != 1)
+          throw 'Invalid fee policy';
+
+        wallet_options.fee_policy = parseInt(policy);
+        //Fee Policy is stored in wallet so must save it
+        MyWallet.backupWallet('update', function() {
+          if (successCallback)
+            successCallback(response);
+        }, function() {
+          if (errorCallback)
+            errorCallback();
+        });
+      },
+      setAlwaysKeepLocalBackup: function(val) {
+        wallet_options.always_keep_local_backup = val;
+      },
+      getAlwaysKeepLocalBackup: function() {
+        return wallet_options.always_keep_local_backup;
+      },
+      setNTransactionsPerPage: function(val) {
+        wallet_options.transactions_per_page = val;
+      },
+      getNTransactionsPerPage: function() {
+        return wallet_options.transactions_per_page;
+      },
+      getHTML5Notifications: function() {
+        return wallet_options.html5_notifications;
+      },
+      setHTML5Notifications: function(val) {
+        wallet_options.html5_notifications = val;
+      },
+      getWalletOptions: function (){
+        return wallet_options;
+      }
     };
   })();
 
