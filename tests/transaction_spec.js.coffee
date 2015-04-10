@@ -106,7 +106,7 @@ describe "Transaction", ->
       getAccount: (idx) ->  hdAccounts[idx]
     })
     
-    spyOn(MyWallet, "getPaidToDictionary").and.returnValue(paidTo)
+    spyOn(WalletStore, "getPaidToDictionary").and.returnValue(paidTo)
     
     spyOn(WalletStore, "getLatestBlock").and.returnValue(true)
         

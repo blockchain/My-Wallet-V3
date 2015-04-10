@@ -7,8 +7,8 @@ describe "checkForRecentlyRedeemed", ->
       redeemedAt: null
           
   beforeEach ->
-    spyOn(MyWallet, "getPaidToDictionary").and.returnValue(paidTo)
-    spyOn(MyWallet, "markPaidToEntryRedeemed")
+    spyOn(WalletStore, "getPaidToDictionary").and.returnValue(paidTo)
+    spyOn(WalletStore, "markPaidToEntryRedeemed")
     spyOn(MyWallet, "backupWalletDelayed").and.callFake () -> 
     
   it "should fetch related transactions", ->
@@ -35,8 +35,8 @@ describe "checkForRecentlyRedeemed", ->
 
     it "should find nothing by default", ->
       MyWallet.checkForRecentlyRedeemed()
-      expect(MyWallet.getPaidToDictionary).toHaveBeenCalled()
-      expect(MyWallet.markPaidToEntryRedeemed).not.toHaveBeenCalled()
+      expect(WalletStore.getPaidToDictionary).toHaveBeenCalled()
+      expect(WalletStore.markPaidToEntryRedeemed).not.toHaveBeenCalled()
     
   describe "when tx moves funds out of temp address", ->
     beforeEach ->
@@ -95,4 +95,4 @@ describe "checkForRecentlyRedeemed", ->
       
     it "should mark as redeemed if tx moves funds out of temp address", ->
       MyWallet.checkForRecentlyRedeemed()
-      expect(MyWallet.markPaidToEntryRedeemed).toHaveBeenCalledWith("d14659f29c8d7380cc9998e1d696494e1a1cd27e030b1824499b5ce3afec5ca", 1426770957)
+      expect(WalletStore.markPaidToEntryRedeemed).toHaveBeenCalledWith("d14659f29c8d7380cc9998e1d696494e1a1cd27e030b1824499b5ce3afec5ca", 1426770957)

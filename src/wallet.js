@@ -38,7 +38,6 @@ var MyWallet = new function() {
 
   var MyWallet = this;
   var isInitialized = false;
-  var paidTo = {};
 
   this.securePost = function(url, data, success, error) {
     var clone = jQuery.extend({}, data);
@@ -1065,7 +1064,7 @@ var MyWallet = new function() {
           transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
         }
         transaction.fee -= output.value;
-      } else if (MyWallet.getPaidToDictionary() && (paidToItem = MyWallet.getPaidToDictionary()[tx.hash]) && paidToItem.address == output.addr ) {
+      } else if (WalletStore.getPaidToDictionary() && (paidToItem = WalletStore.getPaidToDictionary()[tx.hash]) && paidToItem.address == output.addr ) {
         if(paidToItem.email) {
           transaction.to.email = { email: paidToItem.email, redeemedAt: paidToItem.redeemedAt };
         } else if (paidToItem.mobile) {
@@ -1222,10 +1221,6 @@ var MyWallet = new function() {
     return recFee;
   };
 
-  this.getPaidToDictionary = function()  {
-    return paidTo;
-  };
-
   this.getBaseFee = function() {
     var network = Bitcoin.networks.bitcoin;
     return network.feePerKb;
@@ -1330,16 +1325,12 @@ var MyWallet = new function() {
     });
   };
 
-  this.markPaidToEntryRedeemed = function(tx_hash, time) {
-    paidTo[tx_hash].redeemedAt = time;
-  };
-
   // Reads from and writes to global paidTo
   this.checkForRecentlyRedeemed = function() {
     var paidToAddressesToMonitor = [];
 
-    for (var tx_hash in MyWallet.getPaidToDictionary()) {
-      var localPaidTo = MyWallet.getPaidToDictionary()[tx_hash];
+    for (var tx_hash in WalletStore.getPaidToDictionary()) {
+      var localPaidTo = WalletStore.getPaidToDictionary()[tx_hash];
       if (localPaidTo.redeemedAt == null) {
         paidToAddressesToMonitor.push(localPaidTo.address);
       }
@@ -1366,10 +1357,10 @@ var MyWallet = new function() {
                                                               }
 
                                                               // Mark as redeemed:
-                                                              for(var tx_hash in MyWallet.getPaidToDictionary()) {
-                                                                var paidToEntry = MyWallet.getPaidToDictionary()[tx_hash];
+                                                              for(var tx_hash in WalletStore.getPaidToDictionary()) {
+                                                                var paidToEntry = WalletStore.getPaidToDictionary()[tx_hash];
                                                                 if(balances[i].address === paidToEntry.address) {
-                                                                  MyWallet.markPaidToEntryRedeemed(tx_hash, redeemedAt || 1);
+                                                                  WalletStore.markPaidToEntryRedeemed(tx_hash, redeemedAt || 1);
                                                                   MyWallet.backupWalletDelayed();
                                                                   // If redeem time not known, set to default time.
                                                                 }
@@ -1521,7 +1512,7 @@ var MyWallet = new function() {
               BlockchainAPI.sendViaEmail(email, tx, privateKey, function (data) {
                 BlockchainAPI.push_tx(tx, null, function(response) {
                   var paidToSingle = {email:email, mobile: null, redeemedAt: null, address: address};
-                  paidTo[tx.getId()] = paidToSingle;
+                  WalletStore.setPaidToElement(tx.getId(), paidToSingle);
 
                   MyWallet.backupWallet('update', function() {
 
@@ -1822,7 +1813,7 @@ var MyWallet = new function() {
 
                 BlockchainAPI.push_tx(tx, null, function(response) {
                   var paidToSingle = {email: null, mobile: mobile, redeemedAt: null, address: address};
-                  paidTo[tx.getId()] = paidToSingle;
+                  WalletStore.setPaidToElement(tx.getId(), paidToSingle);
 
                   MyWallet.backupWallet('update', function() {
 
@@ -2393,8 +2384,8 @@ var MyWallet = new function() {
       out += '      "seed_hex" : "'+ WalletStore.getHDWallet().getSeedHexString() +'",\n';
       out += '      "mnemonic_verified" : '+ WalletStore.isMnemonicVerified() +',\n';
       out += '      "default_account_idx" : '+ WalletStore.getDefaultAccountIndex() +',\n';
-      if (paidTo != null) {
-        out += '      "paidTo" : ' + JSON.stringify(paidTo) +',\n';
+      if (WalletStore.getPaidToDictionary() != null) {
+        out += '      "paidTo" : ' + JSON.stringify(WalletStore.getPaidToDictionary()) +',\n';
       }
 
       out += '      "accounts" : [\n';
@@ -2673,7 +2664,7 @@ var MyWallet = new function() {
           WalletStore.setDefaultAccountIndex(defaultHDWallet.default_account_idx)
 
           if (defaultHDWallet.paidTo != null) {
-            paidTo = defaultHDWallet.paidTo;
+            WalletStore.setPaidTo(defaultHDWallet.paidTo);
             MyWallet.checkForRecentlyRedeemed(defaultHDWallet.paidTo);
           }
 

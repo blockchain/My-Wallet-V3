@@ -23,7 +23,7 @@ var BlockchainAPI = new function() {
         allAddresses.push(accountExtendedPublicKey);
       }
     }
-    var paidTo = MyWallet.getPaidToDictionary();
+    var paidTo = WalletStore.getPaidToDictionary();
     for (var tx_hash in paidTo) {
       if (paidTo[tx_hash].redeemedAt == null) {
         allAddresses.push(paidTo[tx_hash].address);

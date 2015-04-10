@@ -104,7 +104,8 @@
     var numOldTxsToFetchAtATime = 10;
     var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
     var archTimer; //Delayed Backup wallet timer
-    
+    var paidTo = {};
+
     var wallet_options = {
       fee_policy : 0,  //Default Fee policy (-1 Tight, 0 Normal, 1 High)
       html5_notifications : false, //HTML 5 Desktop notifications
@@ -846,7 +847,6 @@
       getPassword: function(){
         return password;
       },
-      //////////////////////////////////////////////////////////////////////////
       getMultiAccountSetting: function() {
         return wallet_options.enable_multiple_accounts;
       },
@@ -915,6 +915,18 @@
       },
       setArchTimer: function (val){
         archTimer = val;
+      },
+      getPaidToDictionary: function()  {
+        return paidTo;
+      },
+      markPaidToEntryRedeemed: function(tx_hash, time) {
+        paidTo[tx_hash].redeemedAt = time;
+      },
+      setPaidToElement: function (tx, value) {
+        paidTo[tx] = value;
+      },
+      setPaidTo: function (dict){
+        paidTo = dict;
       }
     };
   })();
