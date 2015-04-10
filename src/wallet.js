@@ -37,7 +37,6 @@ var HDAccount = Browserify.HDAccount;
 var MyWallet = new function() {
 
   var MyWallet = this;
-  var password; //Password
   var archTimer; //Delayed Backup wallet timer
   var isInitialized = false;
   var paidTo = {};
@@ -178,14 +177,6 @@ var MyWallet = new function() {
       success: success,
       error : error
     });
-  };
-
-  /**
-   * @param {string} _password main password
-   * @return {boolean} is main password correct
-   */
-  this.isCorrectMainPassword = function(_password) {
-    return password == _password;
   };
 
   function hashPassword(password, iterations) {
@@ -2713,7 +2704,9 @@ var MyWallet = new function() {
       return;
     }
 
-    WalletCrypto.decryptWallet(WalletStore.getEncryptedWalletData(), password, function(obj, rootContainer) {
+    WalletCrypto.decryptWallet( WalletStore.getEncryptedWalletData()
+                              , WalletStore.getPassword()
+                              , function(obj, rootContainer) {
       decrypt_success && decrypt_success();
 
       try {
@@ -2802,7 +2795,7 @@ var MyWallet = new function() {
   this.makePairingCode = function(success, error) {
     try {
       MyWallet.securePost('wallet', { method : 'pairing-encryption-password' }, function(encryption_phrase) {
-        success('1|' + WalletStore.getGuid() + '|' + WalletCrypto.encrypt(WalletStore.getSharedKey() + '|' + CryptoJS.enc.Utf8.parse(password).toString(), encryption_phrase, 10));
+        success('1|' + WalletStore.getGuid() + '|' + WalletCrypto.encrypt(WalletStore.getSharedKey() + '|' + CryptoJS.enc.Utf8.parse(WalletStore.getPassword()).toString(), encryption_phrase, 10));
       }, function(e) {
         error(e);
       });
@@ -3074,8 +3067,7 @@ var MyWallet = new function() {
 
     try {
       WalletStore.setRestoringWallet(true);
-
-      password = pw;
+      WalletStore.unsafeSetPassword(pw);
 
       //If we don't have any wallet data then we must have two factor authentication enabled
       if (WalletStore.getEncryptedWalletData() == null || WalletStore.getEncryptedWalletData().length == 0) {
@@ -3212,14 +3204,17 @@ var MyWallet = new function() {
       WalletStore.setLocalWalletJson(data); // I think this is not necessary
 
       //Everything looks ok, Encrypt the JSON output
-      var crypted = WalletCrypto.encryptWallet(data, password, WalletStore.getPbkdf2Iterations(), WalletStore.didUpgradeToHd() ?  3.0 : 2.0 );
+      var crypted = WalletCrypto.encryptWallet( data
+                                              , WalletStore.getPassword()
+                                              , WalletStore.getPbkdf2Iterations()
+                                              , WalletStore.didUpgradeToHd() ?  3.0 : 2.0 );
 
       if (crypted.length == 0) {
         throw 'Error encrypting the JSON output';
       }
 
       //Now Decrypt the it again to double check for any possible corruption
-      WalletCrypto.decryptWallet(crypted, password, function(obj) {
+      WalletCrypto.decryptWallet(crypted, WalletStore.getPassword(), function(obj) {
         try {
           var old_checksum = WalletStore.getPayloadChecksum();
           WalletStore.sendEvent('on_backup_wallet_start');
@@ -3520,17 +3515,6 @@ var MyWallet = new function() {
     }
 
     WalletStore.sendEvent("msg", {type: "success", message: 'wallet-success ' + 'Wallet verified.'});
-  };
-
-  this.changePassword = function(new_password, success, error) {
-    password = new_password;
-    MyWallet.backupWallet('update', function() {
-      if (success)
-        success();
-    }, function() {
-      if (error)
-        error();
-    });
   };
 
   /**

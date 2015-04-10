@@ -53,6 +53,7 @@
       'RUB': 'Russian Ruble'
     };
     var demo_guid = 'abcaa314-6f67-6705-b384-5d47fbe9d7cc';
+    var password; //Password
     var guid; //Wallet identifier
     var double_encryption = false; //If wallet has a second password
     var dpasswordhash; //double encryption Password
@@ -108,7 +109,7 @@
     ////////////////////////////////////////////////////////////////////////////
     var unsafeAddLegacyAddress = function(key) {
       if ((key.addr == null) || !MyWallet.isAlphaNumericSpace(key.addr)) {
-        return WalletStore.sendEvent("msg", {
+        return this.sendEvent("msg", {
           type: "error",
           message: 'Your wallet contains an invalid address. This is a sign of possible corruption, please double check all your BTC is accounted for. Backup your wallet to remove this error.'
         });
@@ -315,7 +316,7 @@
             return MyWallet.get_history();
           });
         } else {
-          WalletStore.sendEvent("msg", {
+          this.sendEvent("msg", {
             type: "error",
             message: 'Cannot Unarchive This Address'
           });
@@ -330,7 +331,7 @@
             return MyWallet.get_history();
           });
         } else {
-          WalletStore.sendEvent("msg", {
+          this.sendEvent("msg", {
             type: "error",
             message: 'Cannot Archive This Address'
           });
@@ -531,12 +532,12 @@
         var i, len, ref, tx;
         if (block != null) {
           latest_block = block;
-          ref = WalletStore.getTransactions();
+          ref = this.getTransactions();
           for (i = 0, len = ref.length; i < len; i++) {
             tx = ref[i];
             tx.setConfirmations(MyWallet.getConfirmationsForTx(latest_block, tx));
           }
-          WalletStore.sendEvent('did_set_latest_block');
+          this.sendEvent('did_set_latest_block');
         }
       },
       getAllTags: function() {
@@ -682,7 +683,7 @@
         }
         else {
           encrypted_wallet_data = data;
-          payload_checksum = WalletStore.generatePayloadChecksum();
+          payload_checksum = this.generatePayloadChecksum();
         }
       },
       getEncryptedWalletData: function() {
@@ -703,7 +704,7 @@
       setHDWallet: function(newValue) {
         myHDWallet = newValue;
         if (newValue) {
-          WalletStore.sendEvent('hd_wallet_set');
+          this.sendEvent('hd_wallet_set');
         }
       },
       getSharedcoinEndpoint: function() {
@@ -807,14 +808,33 @@
       getNumOldTxsToFetchAtATime: function (){
         return numOldTxsToFetchAtATime;
       },
-      addEventListener: function(func) {
+      addEventListener: function(func){
         event_listeners.push(func);
       },
-      sendEvent: function(event_name, obj) {
+      sendEvent: function(event_name, obj){
         for (var listener in event_listeners) {
           event_listeners[listener](event_name, obj);
         }
-      }
+      },
+      isCorrectMainPassword: function(candidate){
+        return password === candidate;
+      },
+      changePassword: function(new_password, success, error){
+        password = new_password;
+        MyWallet.backupWallet('update', function(){
+          if (success)
+            success();
+        }, function() {
+          if (error)
+            error();
+        });
+      },
+      unsafeSetPassword: function(newPassword){
+        password = newPassword;
+      },
+      getPassword: function(){
+        return password;
+      } 
     };
   })();
 
