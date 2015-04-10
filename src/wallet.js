@@ -38,8 +38,6 @@ var MyWallet = new function() {
 
   var MyWallet = this;
   var password; //Password
-  var tx_page = 0; //Multi-address page
-  var tx_filter = 0; //Transaction filter (e.g. Sent Received etc)
   var archTimer; //Delayed Backup wallet timer
   var isInitialized = false;
   var paidTo = {};
@@ -1354,7 +1352,7 @@ var MyWallet = new function() {
       }, function() {
         if (error) error();
 
-      }, tx_filter, txOffset, numTx);
+      }, 0, txOffset, numTx);
     }
 
     getRawTransactionsForAccounts(WalletStore.getHDWallet().numTxFetched, WalletStore.getNumOldTxsToFetchAtATime(), function(data) {
@@ -1397,7 +1395,7 @@ var MyWallet = new function() {
       }, function() {
         if (error) error();
 
-      }, tx_filter, txOffset, numTx);
+      }, 0, txOffset, numTx);
     }
 
     var account = WalletStore.getHDWallet().getAccount(accountIdx);
@@ -1664,9 +1662,7 @@ var MyWallet = new function() {
     }, function() {
       if (error) error();
 
-    }, tx_filter, 0);
-
-
+    }, 0, 0);
   };
 
   /**
@@ -1683,7 +1679,7 @@ var MyWallet = new function() {
       }, function() {
         if (error) error();
 
-      }, tx_filter, txOffset, numTx);
+      }, 0, txOffset, numTx);
     }
 
     getRawTransactionsForLegacyAddresses(WalletStore.getLegacyAddressesNumTxFetched(), WalletStore.getNumOldTxsToFetchAtATime(), function(data) {
@@ -2524,7 +2520,7 @@ var MyWallet = new function() {
     }, function() {
       if (error) error();
 
-    }, tx_filter, tx_page*MyWallet.getNTransactionsPerPage(), MyWallet.getNTransactionsPerPage());
+    }, 0, 0, MyWallet.getNTransactionsPerPage());
   };
 
   this.get_history = function(success, error) {
@@ -2537,7 +2533,7 @@ var MyWallet = new function() {
     }, function() {
       error && error();
 
-    }, tx_filter, tx_page*MyWallet.getNTransactionsPerPage(), MyWallet.getNTransactionsPerPage());
+    }, 0, 0, MyWallet.getNTransactionsPerPage());
   };
 
   this.getConfirmationsForTx = function(latest_block, tx) {
@@ -2668,7 +2664,7 @@ var MyWallet = new function() {
       success && success();
     }, function() {
       error && error();
-    }, tx_filter, tx_page*MyWallet.getNTransactionsPerPage(), MyWallet.getNTransactionsPerPage());
+    }, 0, 0, MyWallet.getNTransactionsPerPage());
   };
 
   function checkWalletChecksum(payload_checksum, success, error) {
