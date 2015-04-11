@@ -50,6 +50,7 @@ module.exports = (grunt) ->
           'build/blockchain-settings-api.processed.js'
           'build/wallet-store.processed.js'
           'build/wallet-crypto.processed.js'
+          'build/wallet-spender.processed.js'
           'build/wallet.processed.js'
           'build/wallet-signup.processed.js'
           'build/hd-wallet.processed.js'
@@ -117,6 +118,7 @@ module.exports = (grunt) ->
         #'src/sharedcoin.js'
         'src/transaction.js'
         'src/wallet-signup.js'
+        'src/wallet-spender.js'
         #'src/wallet.js'
       ]
       options:
@@ -137,10 +139,11 @@ module.exports = (grunt) ->
           'src/hd-account.js'
           'src/import-export.js'
           'src/wallet-store.js'
+          'src/wallet-spender.js'
           'src/wallet-crypto.js'
           # 'src/coffee/*.coffee'
         ]
-        tasks: ['build','karma:continuous']
+        tasks: ['build', 'karma:continuous']
 
       karma:
         files: ['tests/**/*.js.coffee', 'tests/**/*.js']
@@ -181,6 +184,7 @@ module.exports = (grunt) ->
           'build/wallet-crypto.processed.js'  : 'src/wallet-crypto.js'
           'build/wallet.processed.js'         : 'src/wallet.js'
           'build/wallet-signup.processed.js'  : 'src/wallet-signup.js'
+          'build/wallet-spender.processed.js'  : 'src/wallet-spender.js'
           'build/hd-wallet.processed.js'      : 'src/hd-wallet.js'
 
   
