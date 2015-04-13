@@ -110,12 +110,12 @@ var MyWallet = new function() {
    */
   this.setPbkdf2Iterations = function(pbkdf2_iterations, success, error, getPassword) {
     previous_pbkdf2_iterations = WalletStore.setPbkdf2Iterations(pbkdf2_iterations);
-    
+
     if(pbkdf2_iterations == previous_pbkdf2_iterations) {
       success();
       return;
     }
-    
+
     var panic = function(e) {
       console.log('Panic ' + e);
 
@@ -208,7 +208,7 @@ var MyWallet = new function() {
   this.unsetSecondPassword = function(success, error, getPassword) {
     var sharedKey = WalletStore.getSharedKey();
     var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
-    
+
     var panic = function(e) {
       console.log('Panic ' + e);
 
@@ -220,7 +220,7 @@ var MyWallet = new function() {
     var decrypt = function(pw) {
       var dec = function(data) {
         return WalletCrypto.decryptSecretWithSecondPassword(data, pw, sharedKey, pbkdf2_iterations);
-      } 
+      }
       return dec;
     };
 
@@ -283,7 +283,7 @@ var MyWallet = new function() {
     var encrypt = function(pw) {
       var enc = function(data) {
         return WalletCrypto.encryptSecretWithSecondPassword(data, pw, sharedKey, pbkdf2_iterations);
-      } 
+      }
       return enc;
     };
 
@@ -366,9 +366,6 @@ var MyWallet = new function() {
   this.getUnCompressedAddressString = function(key) {
     return new ECKey(key.d, false).pub.getAddress().toString();
   };
-  this.getUnCompressedAddressString = function(key) {
-    return new ECKey(key.d, false).pub.getAddress().toString();
-  };
 
   this.extractAddresses = function(script, addresses) {
     switch (Bitcoin.scripts.classifyOutput(script)) {
@@ -439,8 +436,8 @@ var MyWallet = new function() {
       getBIP38Password(function(_password, correct_password, wrong_password) {
         WalletStore.disableLogout(true);
         ImportExport.parseBIP38toECKey(
-          privateKeyString, 
-          _password, 
+          privateKeyString,
+          _password,
           function(key, isCompPoint) {
             WalletStore.disableLogout(false);
             correct_password();
@@ -457,7 +454,7 @@ var MyWallet = new function() {
             } else {
               reallyInsertKey(key, isCompPoint, null);
             }
-          }, 
+          },
           function() {
             WalletStore.disableLogout(false);
             wrong_password();
@@ -501,7 +498,7 @@ var MyWallet = new function() {
   this.addPrivateKey = function(key, opts, second_password) {
     var sharedKey = WalletStore.getSharedKey();
     var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
-    
+
     if (WalletStore.walletIsFull()) {
       throw 'Wallet is full.';
     }
@@ -654,7 +651,6 @@ var MyWallet = new function() {
       if (!output || !output.addr)
         continue;
 
-      // TODO: I think this is the same function as the previous todo (WalletStore)
       // var addr = addresses[output.addr];
       var addr = WalletStore.getAddress(output.addr);
       if (addr) {
@@ -672,7 +668,7 @@ var MyWallet = new function() {
         hasCountedlegacyAddressesNTxs = true;
         if (! incrementAccountTxCount) {
           WalletStore.addLegacyAddressesNumTxFetched(1);
-        } 
+        }
       }
 
       for (var j = 0; j < MyWallet.getAccountsCount(); j++) {
@@ -818,8 +814,6 @@ var MyWallet = new function() {
     };
   }
 
-  var logout_status = 'ok';
-
   this.pkBytesToSipa = function(bytes, addr) {
     var bytesBigInt = new BigInteger.fromBuffer(bytes);
     var eckey = new ECKey(bytesBigInt, false);
@@ -861,7 +855,7 @@ var MyWallet = new function() {
   this.getLabelForAccount = function(accountIdx) {
     return WalletStore.getHDWallet().getAccount(accountIdx).getLabel();
   };
-  
+
   /**
    * Validates proposed label for account
    * @param {string} label account label
@@ -870,10 +864,10 @@ var MyWallet = new function() {
   this.validateAccountLabel = function(label) {
     if (! MyWallet.isAlphaNumericSpace(label))
       return false;
-    
+
     if (!label || label == "" || label.length > 17)
       return false;
-    
+
     return true;
   };
 
@@ -886,7 +880,7 @@ var MyWallet = new function() {
   this.setLabelForAccount = function(accountIdx, label) {
     if (!this.validateAccountLabel(label))
       return false;
-      
+
     WalletStore.getHDWallet().getAccount(accountIdx).setLabel(label);
     MyWallet.backupWalletDelayed();
     return true;
@@ -968,7 +962,7 @@ var MyWallet = new function() {
       fee: 0,
       intraWallet: null
     };
-    
+
 
     var legacyAddressWithLargestOutput = undefined;
     var externalAddressWithLargestOutput = undefined;
@@ -978,13 +972,13 @@ var MyWallet = new function() {
     var externalAddressWithLargestOutputAmount = 0;
     var fromAccountIndex = undefined;
     var amountFromAccount = 0;
-    
+
     for (var i = 0; i < tx.inputs.length; ++i) {
       var isOrigin = false;
       var output = tx.inputs[i].prev_out;
       if (!output || !output.addr)
         continue;
-      
+
       if (WalletStore.isActiveLegacyAddress(output.addr)) {
         isOrigin = true;
         if (transaction.from.legacyAddresses == null)
@@ -995,12 +989,12 @@ var MyWallet = new function() {
         for (var j in MyWallet.getAccounts()) {
           var account = WalletStore.getHDWallet().getAccount(j);
           if (!account.isArchived() && output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
-            amountFromAccount += output.value; 
-            
+            amountFromAccount += output.value;
+
             if (! isOrigin) {
               isOrigin = true;
               fromAccountIndex = parseInt(j)
-              
+
               transaction.fee += output.value;
             } else {
               if ( output.value > legacyAddressWithLargestOutputAmount ) {
@@ -1029,25 +1023,25 @@ var MyWallet = new function() {
         transaction.intraWallet = true;
       }
     }
-    
+
     if(amountFromExternalAddresses > 0) {
-      transaction.from.externalAddresses = {addressWithLargestOutput: externalAddressWithLargestOutput, amount: amountFromExternalAddresses};      
+      transaction.from.externalAddresses = {addressWithLargestOutput: externalAddressWithLargestOutput, amount: amountFromExternalAddresses};
     }
-    
+
     if(amountFromLegacyAddresses > 0) {
-      transaction.from.legacyAddresses = {addressWithLargestOutput: legacyAddressWithLargestOutput, amount: amountFromLegacyAddresses};      
+      transaction.from.legacyAddresses = {addressWithLargestOutput: legacyAddressWithLargestOutput, amount: amountFromLegacyAddresses};
     }
-    
+
     if(amountFromAccount > 0) {
       transaction.from.account = {index: fromAccountIndex, amount: amountFromAccount};
-      
+
     }
 
     for (var i = 0; i < tx.out.length; ++i) {
       var output = tx.out[i];
       if (!output || !output.addr)
         continue;
-      
+
       if (WalletStore.isActiveLegacyAddress(output.addr)) {
         if (transaction.to.legacyAddresses == null)
           transaction.to.legacyAddresses = [];
@@ -1126,8 +1120,8 @@ var MyWallet = new function() {
     transaction.hash = tx.hash;
 
     /* Typically processTransaction() is called directly after transactions
-     have been downloaded from the server. In that case you could simply 
-     reuse tx.confirmations. However processTransaction() can also be 
+     have been downloaded from the server. In that case you could simply
+     reuse tx.confirmations. However processTransaction() can also be
      called at a later time, e.g. if the user keeps their wallet open
      while waiting for a confirmation. */
     transaction.confirmations = MyWallet.getConfirmationsForTx(WalletStore.getLatestBlock(), tx);
@@ -1138,17 +1132,17 @@ var MyWallet = new function() {
     transaction.size = tx.size;
     transaction.tx_index = tx.txIndex;
     transaction.block_height = tx.blockHeight;
-    
+
     transaction.result = MyWallet.calculateTransactionResult(transaction);
-    
+
     return transaction;
   };
-  
+
   this.calculateTransactionResult = function(transaction) {
-    
+
     var totalOurs = function(toOrFrom) {
       var result = 0;
-      
+
       if(toOrFrom.account) {
         result = toOrFrom.account.amount;
       } else if (toOrFrom.legacyAddresses && toOrFrom.legacyAddresses.length > 0) {
@@ -1157,18 +1151,18 @@ var MyWallet = new function() {
           result += legacyAddress.amount;
         }
       }
-      
+
       return result;
     };
-    
+
     var result = 0;
-    
+
     if (transaction.intraWallet) {
       result = totalOurs(transaction.to);
     } else {
       result = totalOurs(transaction.to) - totalOurs(transaction.from);
     }
-    
+
     return result;
   };
 
@@ -1207,14 +1201,14 @@ var MyWallet = new function() {
   };
 
   this.recommendedTransactionFeeForAccount = function(accountIdx, amount) {
-    
+
     if (!WalletStore.isAccountRecommendedFeesValid()) {
       WalletStore.setAmountToRecommendedFee({});
       WalletStore.setIsAccountRecommendedFeesValid(true);
     }
 
     var recFee = WalletStore.getAmountToRecommendedFee();
-    if (recFee === null) {  
+    if (recFee === null) {
       recFee = WalletStore.getHDWallet().getAccount(accountIdx).recommendedTransactionFee(amount);
       WalletStore.setAmountToRecommendedFee(amount, recFee);
     }
@@ -1512,7 +1506,7 @@ var MyWallet = new function() {
       console.log('error ' + e);
     });
   };
-  
+
   this.archiveAccount = function(idx) {
     var account = WalletStore.getHDWallet().getAccount(idx);
     account.setIsArchived(true);
@@ -1592,7 +1586,7 @@ var MyWallet = new function() {
       error("Invalid label");
       return;
     }
-      
+
     if (WalletStore.getDoubleEncryption()) {
       getPassword(function(pw, correct_password, incorrect_password) {
         if (MyWallet.validateSecondPassword(pw)) {
@@ -1791,7 +1785,7 @@ var MyWallet = new function() {
    */
   this.initializeHDWallet = function(passphrase, bip39Password, getPassword, success, error)  {
     function initializeHDWallet(passphrase, bip39Password, second_password, success, error) {
-      
+
       WalletStore.setDidUpgradeToHd(true)
       var seedHexString;
 
@@ -1841,7 +1835,7 @@ var MyWallet = new function() {
       getPassword(function(pw, correct_password, incorrect_password) {
         if (MyWallet.validateSecondPassword(pw)) {
           correct_password();
-          var seed = WalletCrypto.decryptSecretWithSecondPassword(WalletStore.getHDWallet().getSeedHexString(), pw, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations()); 
+          var seed = WalletCrypto.decryptSecretWithSecondPassword(WalletStore.getHDWallet().getSeedHexString(), pw, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());
           successCallback(WalletStore.getHDWallet().getPassphraseString(seed));
         } else {
           incorrect_password();
@@ -1948,7 +1942,7 @@ var MyWallet = new function() {
 
     out += "\n  ]";
 
-    
+
     if (nKeys(WalletStore.getAddressBook()) > 0) {
       out += ',\n  "address_book" : [\n';
 
@@ -2130,7 +2124,7 @@ var MyWallet = new function() {
 
     var log_time_out = setTimeout(MyWallet.logout, WalletStore.getLogoutTime());
     WalletStore.setLogoutTimeout(log_time_out);
-  
+
     success();
   }
 
@@ -2233,7 +2227,7 @@ var MyWallet = new function() {
         if (obj.options) {
           $.extend(WalletStore.getWalletOptions(), obj.options);
         }
-        
+
         WalletStore.newLegacyAddressesFromJSON(obj.keys);
 
         WalletStore.newAddressBookFromJSON(obj.address_book)
@@ -2281,7 +2275,7 @@ var MyWallet = new function() {
 
         WalletStore.setTags(obj.tx_tags);
         WalletStore.setTagNames(obj.tag_names);
-        
+
         //If we don't have a checksum then the wallet is probably brand new - so we can generate our own
         if (WalletStore.getPayloadChecksum() == null || WalletStore.getPayloadChecksum().length == 0) {
           WalletStore.setPayloadChecksum(WalletStore.generatePayloadChecksum());
@@ -2325,14 +2319,14 @@ var MyWallet = new function() {
       },
       crossDomain: true,
       data : {
-        format : 'json', 
-        resend_code : 1, 
+        format : 'json',
+        resend_code : 1,
         ct : (new Date()).getTime(),
         api_code : WalletStore.getAPICode(),
         shared_key: WalletStore.getSharedKey()
       },
       timeout: 60000,
-      success: function(obj) { 
+      success: function(obj) {
         success();
       },
       error : function(e) {
@@ -2341,10 +2335,10 @@ var MyWallet = new function() {
         } else {
           error();
         }
-      }    
+      }
     })
   };
-  
+
 
   /**
    * Fetch wallet from server, decrypt and build wallet model.
@@ -2739,7 +2733,7 @@ var MyWallet = new function() {
           }
 
           MyWallet.securePost("wallet", data, function(data) {
-            checkWalletChecksum(new_checksum, 
+            checkWalletChecksum(new_checksum,
               function() {
                 WalletStore.tagLegacyAddressesAsSaved();
 
@@ -2796,7 +2790,7 @@ var MyWallet = new function() {
       console.log('Server Time offset ' + WalletStore.getServerTimeOffset() + 'ms - This offset ' + thisOffset);
     }
   };
-  
+
   /**
    * @param {string} address bitcoin address
    * @param {string} message message
@@ -2949,7 +2943,7 @@ var MyWallet = new function() {
    * @param {string?} second_password Second password to decrypt private keys if set
    */
   this.checkAllKeys = function(second_password) {
-    
+
     var sharedKey = WalletStore.getSharedKey();
     var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
 
@@ -3033,7 +3027,7 @@ var MyWallet = new function() {
         WalletStore.setLanguage(languageCode);
 
       WalletStore.setSharedKey(createdSharedKey);
-      
+
       success(createdGuid, createdSharedKey, createdPassword);
     }, function (e) {
       error(e);
