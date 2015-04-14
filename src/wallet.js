@@ -716,8 +716,6 @@ var MyWallet = new function() {
           var old_checksum = WalletStore.generatePayloadChecksum();
           var new_checksum = obj.checksum;
 
-          console.log('On change old ' + old_checksum + ' ==  new '+ new_checksum);
-
           if (last_on_change != new_checksum && old_checksum != new_checksum) {
             last_on_change = new_checksum;
 
@@ -2230,7 +2228,7 @@ var MyWallet = new function() {
 
         WalletStore.newLegacyAddressesFromJSON(obj.keys);
 
-        WalletStore.newAddressBookFromJSON(obj.address_book)
+        WalletStore.newAddressBookFromJSON(obj.address_book);
 
         if (obj.hd_wallets && obj.hd_wallets.length > 0) {
           WalletStore.setDidUpgradeToHd(true);
@@ -2949,10 +2947,9 @@ var MyWallet = new function() {
 
     // TODO: this probably can be abstracted too in WalletStore
     var addresses = WalletStore.getAddresses();
-    console.log(WalletStore.getAddresses());
+
     for (var key in addresses) {
       var addr = addresses[key];
-      console.log(addr);
 
       if (addr.addr == null) {
         console.log('Null Address Found in wallet ' + key);
