@@ -114,7 +114,6 @@ Include the following files instead of `my-wallet.js` for easier debugging:
 * `build/browserify.js`
 * `node_modules/sjcl/sjcl.js`
 * `node_modules/xregexp/xregexp-all.js`
-* `bower_components/browserdetection/src/browser-detection.js`
 * `bower_components/jquery/dist/jquery.js`
 * `bower_components/cryptojslib/rollups/sha256.js`
 * `bower_components/cryptojslib/rollups/aes.js`

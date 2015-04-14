@@ -50,11 +50,6 @@
     "commits" : ["1c6bda1e3de6269d0b219cc0b525766640ca22ac"],
     "repo" : "sytelus/CryptoJS"
   },
-  "browserdetection" : {
-    "version": "0.3.3",
-    "commits" : ["97f9718f8811e0a058c5296d69a879de7754ad91"],
-    "repo" : "sub2home/browser-detection"
-  },
   "util" : {
     "version" : "0.10.3",
     "commits" : ["b5d10a26402c3b60ce496e675a13c58bbed47801"],

@@ -24,8 +24,7 @@
   ],
   "dependencies": {
     "cryptojslib": "3.1.2",
-    "jquery": "1.11.1",
-    "browserdetection": "0.3.3"
+    "jquery": "1.11.1"
   },
   "devDependencies": {
     "es6-shim": "~0.27.1",
