@@ -1,9 +1,10 @@
+var assert = require('assert');
 var Bitcoin = require('bitcoinjs-lib');
 var BigInteger = require('bigi');
-var assert = require('assert');
 var Base58 = require('bs58');
 var Unorm = require('unorm');
 var SHA256 = require('sha256');
+
 
 var ImportExport = new function() {
 

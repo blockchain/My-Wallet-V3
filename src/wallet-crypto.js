@@ -1,3 +1,5 @@
+var assert = require('assert');
+
 (function() {
   this.WalletCrypto = (function() {
     var supported_encryption_version;
@@ -205,3 +207,5 @@
   })();
 
 }).call(this);
+
+module.exports = WalletCrypto;

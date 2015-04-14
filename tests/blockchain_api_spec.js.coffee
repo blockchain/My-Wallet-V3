@@ -1,3 +1,5 @@
+BlockchainAPI = require('../src/blockchain-api')
+
 describe "BlockchainAPI", ->
   beforeEach ->
     window.karma = true

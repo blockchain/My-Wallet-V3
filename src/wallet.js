@@ -1,3 +1,21 @@
+var Bitcoin = require('bitcoinjs-lib');
+var ECKey = Bitcoin.ECKey;
+var BigInteger = require('bigi');
+var Buffer = require('buffer');
+var Base58 = require('bs58');
+var SHA256 = require('sha256');
+var BIP39 = require('bip39');
+
+var WalletStore = require('./wallet-store');
+var WalletCrypto = require('./wallet-crypto');
+var WalletSignup = require('./wallet-signup');
+var ImportExport = require('./import-export');
+var HDWallet = require('./hd-wallet');
+var HDAccount = require('./hd-account');
+var Transaction = require('./transaction');
+var BlockchainAPI = require('./blockchain-api');
+
+
 //------
 //Should find somewhere else for these
 
@@ -22,17 +40,6 @@ function precisionToSatoshiBN(x) {
 
 //-----
 
-var BigInteger = Browserify.BigInteger;
-var Buffer = Browserify.Buffer.Buffer;
-var Bitcoin = Browserify.Bitcoin;
-var ECKey = Bitcoin.ECKey;
-var assert = Browserify.assert;
-var JSONB = Browserify.JSONB;
-var SHA256 = Browserify.SHA256;
-var BIP39 = Browserify.BIP39;
-var ImportExport = Browserify.ImportExport;
-var Transaction = Browserify.Transaction;
-var HDAccount = Browserify.HDAccount;
 
 var MyWallet = new function() {
 
@@ -109,7 +116,7 @@ var MyWallet = new function() {
    * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
    */
   this.setPbkdf2Iterations = function(pbkdf2_iterations, success, error, getPassword) {
-    previous_pbkdf2_iterations = WalletStore.setPbkdf2Iterations(pbkdf2_iterations);
+    var previous_pbkdf2_iterations = WalletStore.setPbkdf2Iterations(pbkdf2_iterations);
 
     if(pbkdf2_iterations == previous_pbkdf2_iterations) {
       success();
@@ -220,7 +227,7 @@ var MyWallet = new function() {
     var decrypt = function(pw) {
       var dec = function(data) {
         return WalletCrypto.decryptSecretWithSecondPassword(data, pw, sharedKey, pbkdf2_iterations);
-      }
+      };
       return dec;
     };
 
@@ -283,7 +290,7 @@ var MyWallet = new function() {
     var encrypt = function(pw) {
       var enc = function(data) {
         return WalletCrypto.encryptSecretWithSecondPassword(data, pw, sharedKey, pbkdf2_iterations);
-      }
+      };
       return enc;
     };
 
@@ -324,7 +331,6 @@ var MyWallet = new function() {
       error(e);
     }
   };
-
 
 
 
@@ -410,7 +416,7 @@ var MyWallet = new function() {
         var address = MyWallet.addPrivateKey(key, {compressed : compressed, app_name : APP_NAME, app_version : APP_VERSION}, pw);
 
         if (!address) {
-          throw 'Unable to add private key for bitcoin address ' + addr;
+          throw 'Unable to add private key for bitcoin address ' + address;
         }
 
         MyWallet.backupWallet('update', function() {
@@ -512,7 +518,7 @@ var MyWallet = new function() {
 
     var addr = opts.compressed ? MyWallet.getCompressedAddressString(key) : MyWallet.getUnCompressedAddressString(key);
 
-    var base58 = Browserify.Base58.encode(key.d.toBuffer(32));
+    var base58 = Base58.encode(key.d.toBuffer(32));
 
     var encoded = base58 == null || second_password == null ? base58 : WalletCrypto.encryptSecretWithSecondPassword(base58, second_password, sharedKey, pbkdf2_iterations);
 
@@ -570,7 +576,7 @@ var MyWallet = new function() {
       var key = Bitcoin.ECKey.makeRandom(false);
 
       //Make Candidate Mini Key
-      var minikey = 'S' + Browserify.Base58.encode(key.d.toBuffer(32)).substr(0, 21);
+      var minikey = 'S' + Base58.encode(key.d.toBuffer(32)).substr(0, 21);
 
       //Append ? & hash it again
       var bytes_appended = SHA256(minikey + '?', {asBytes: true});
@@ -710,7 +716,7 @@ var MyWallet = new function() {
 
       try {
         var obj = $.parseJSON(message.data);
-        transactions = WalletStore.getTransactions();
+        var transactions = WalletStore.getTransactions();
 
         if (obj.op == 'on_change') {
           var old_checksum = WalletStore.generatePayloadChecksum();
@@ -835,7 +841,7 @@ var MyWallet = new function() {
 
     bytes = bytes.concat(checksum.slice(0, 4));
 
-    var privWif = Browserify.Base58.encode(new Buffer(bytes));
+    var privWif = Base58.encode(new Buffer(bytes));
 
     return privWif;
   };
@@ -993,7 +999,7 @@ var MyWallet = new function() {
 
             if (! isOrigin) {
               isOrigin = true;
-              fromAccountIndex = parseInt(j)
+              fromAccountIndex = parseInt(j);
 
               transaction.fee += output.value;
             } else {
@@ -1333,40 +1339,37 @@ var MyWallet = new function() {
     if(paidToAddressesToMonitor.length == 0)
       return;
 
-    MyWallet.fetchRawTransactionsAndBalanceForAddresses(paidToAddressesToMonitor,
-                                                        function(transactions, balances){
-                                                          for(var i in balances) {
-                                                            if(balances[i].final_balance == 0 && balances[i].n_tx > 0) {
+    MyWallet.fetchRawTransactionsAndBalanceForAddresses(paidToAddressesToMonitor, function(transactions, balances) {
+      for(var i in balances) {
+        if(balances[i].final_balance == 0 && balances[i].n_tx > 0) {
 
-                                                              redeemedAt = null;
+          var redeemedAt = null;
 
-                                                              // Find corresponding transaction:
-                                                              for(var j in transactions) {
-                                                                for(var k in transactions[j].inputs) {
-                                                                  if(balances[i].address === transactions[j].inputs[k].prev_out.addr) {
-                                                                    // Set redeem time
-                                                                    redeemedAt = transactions[j].time;
-                                                                  }
-                                                                }
-                                                              }
+          // Find corresponding transaction:
+          for(var j in transactions) {
+            for(var k in transactions[j].inputs) {
+              if(balances[i].address === transactions[j].inputs[k].prev_out.addr) {
+                // Set redeem time
+                redeemedAt = transactions[j].time;
+              }
+            }
+          }
 
-                                                              // Mark as redeemed:
-                                                              for(var tx_hash in WalletStore.getPaidToDictionary()) {
-                                                                var paidToEntry = WalletStore.getPaidToDictionary()[tx_hash];
-                                                                if(balances[i].address === paidToEntry.address) {
-                                                                  WalletStore.markPaidToEntryRedeemed(tx_hash, redeemedAt || 1);
-                                                                  MyWallet.backupWalletDelayed();
-                                                                  // If redeem time not known, set to default time.
-                                                                }
-                                                              }
+          // Mark as redeemed:
+          for(var tx_hash in WalletStore.getPaidToDictionary()) {
+            var paidToEntry = WalletStore.getPaidToDictionary()[tx_hash];
+            if(balances[i].address === paidToEntry.address) {
+              WalletStore.markPaidToEntryRedeemed(tx_hash, redeemedAt || 1);
+              MyWallet.backupWalletDelayed();
+              // If redeem time not known, set to default time.
+            }
+          }
 
-
-                                                            }
-                                                          }
-                                                        },
-                                                        function() {
-                                                          console.log("Could not check if email/sms btc have been redeemed.");
-                                                        });
+        }
+      }
+    }, function() {
+      console.log("Could not check if email/sms btc have been redeemed.");
+    });
   };
 
 
@@ -1611,12 +1614,13 @@ var MyWallet = new function() {
     success();
     MyWallet.backupWalletDelayed();
   }
+
   /**
    * @param {string} mnemonic mnemonic
    * @return {boolean} is valid mnemonic
    */
   this.isValidateBIP39Mnemonic = function(mnemonic) {
-    return isValidateMnemonic(mnemonic);
+    return BIP39.validateMnemonic(mnemonic);
   };
 
   /**
@@ -1627,9 +1631,10 @@ var MyWallet = new function() {
    * @param {function()} successCallback success callback function
    * @param {function()} errorCallback error callback function
    */
+  // TODO looks broken - where does passphrase come from?
   this.recoverMyWalletHDWalletFromSeedHex = function(seedHex, bip39Password, getPassword, successCallback, errorCallback) {
     function recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, secondPassword, successCallback, errorCallback) {
-      recoverHDWalletFromSeedHex(seedHex, bip39Password, secondPassword, function(hdWallet) {
+      HDWallet.recoverHDWalletFromSeedHex(seedHex, bip39Password, secondPassword, function(hdWallet) {
         WalletStore.setHDWallet(hdWallet);
 
         if (successCallback)
@@ -1669,7 +1674,7 @@ var MyWallet = new function() {
    */
   this.recoverMyWalletHDWalletFromMnemonic = function(passphrase, bip39Password, getPassword, successCallback, errorCallback) {
     function recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, secondPassword, successCallback, errorCallback) {
-      recoverHDWalletFromMnemonic(passphrase, bip39Password, secondPassword, function(hdWallet) {
+      HDWallet.recoverHDWalletFromMnemonic(passphrase, bip39Password, secondPassword, function(hdWallet) {
         WalletStore.setHDWallet(hdWallet);
 
         if (successCallback)
@@ -1722,7 +1727,7 @@ var MyWallet = new function() {
       successCallback && successCallback();
     };
 
-    buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secondPassword, _success, errorCallback);
+    HDWallet.buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secondPassword, _success, errorCallback);
   };
 
   this.generateHDWalletPassphrase = function() {
@@ -1731,7 +1736,7 @@ var MyWallet = new function() {
 
   this.generateHDWalletSeedHex = function() {
     var passPhrase = MyWallet.generateHDWalletPassphrase();
-    return passphraseToPassphraseHexString(passPhrase);
+    return BIP39.mnemonicToEntropy(passPhrase);
   };
 
     this.deleteHDWallet = function(successCallback, errorCallback) {
@@ -1785,19 +1790,18 @@ var MyWallet = new function() {
    */
   this.initializeHDWallet = function(passphrase, bip39Password, getPassword, success, error)  {
     function initializeHDWallet(passphrase, bip39Password, second_password, success, error) {
-
-      WalletStore.setDidUpgradeToHd(true)
+      WalletStore.setDidUpgradeToHd(true);
       var seedHexString;
 
       if (passphrase) {
-        seedHexString = passphraseToPassphraseHexString(passphrase);
+        seedHexString = BIP39.mnemonicToEntropy(passphrase);
       }
       else {
         seedHexString = MyWallet.generateHDWalletSeedHex();
       }
 
       var _success = function () {
-        account = WalletStore.getHDWallet().createAccount("Spending", second_password);
+        var account = WalletStore.getHDWallet().createAccount("Spending", second_password);
 
         account.setBalance(0);
 
@@ -2038,10 +2042,10 @@ var MyWallet = new function() {
   // + : needed for sent to phone number labels
   this.isAlphaNumericSpace = function (input) {
     return XRegExp("^\\p{L}[\\p{L}@ \\-,._']*$").test(input) || /^[\w\-+,._  ]+$/.test(input);
-  }
+  };
 
   function parseMultiAddressJSON(obj, cached, checkCompleted) {
-    transactions = WalletStore.getTransactions();
+    var transactions = WalletStore.getTransactions();
     if (!cached) {
 
       WalletStore.setMixerFee(obj.mixer_fee);
@@ -2209,7 +2213,7 @@ var MyWallet = new function() {
 
       try {
         WalletStore.setSharedKey(obj.sharedKey);
-        sharedKey = WalletStore.getSharedKey();
+        var sharedKey = WalletStore.getSharedKey();
 
         if (!sharedKey || sharedKey.length == 0 || sharedKey.length != 36) {
           throw 'Shared Key is invalid';
@@ -2221,7 +2225,7 @@ var MyWallet = new function() {
 
         if (obj.double_encryption && obj.dpasswordhash) {
           WalletStore.setDoubleEncryption(obj.double_encryption);
-          WalletStore.setDPasswordHash(obj.dpasswordhash)
+          WalletStore.setDPasswordHash(obj.dpasswordhash);
         }
 
         if (obj.options) {
@@ -2230,7 +2234,7 @@ var MyWallet = new function() {
 
         WalletStore.newLegacyAddressesFromJSON(obj.keys);
 
-        WalletStore.newAddressBookFromJSON(obj.address_book)
+        WalletStore.newAddressBookFromJSON(obj.address_book);
 
         if (obj.hd_wallets && obj.hd_wallets.length > 0) {
           WalletStore.setDidUpgradeToHd(true);
@@ -2254,7 +2258,7 @@ var MyWallet = new function() {
           } else {
             WalletStore.setMnemonicVerified(false);
           }
-          WalletStore.setDefaultAccountIndex(defaultHDWallet.default_account_idx)
+          WalletStore.setDefaultAccountIndex(defaultHDWallet.default_account_idx);
 
           if (defaultHDWallet.paidTo != null) {
             WalletStore.setPaidTo(defaultHDWallet.paidTo);
@@ -2368,7 +2372,7 @@ var MyWallet = new function() {
 
     WalletStore.setGuid(user_guid);
     WalletStore.setSharedKey(shared_key);
-    sharedKey = WalletStore.getSharedKey();
+    var sharedKey = WalletStore.getSharedKey();
 
     var clientTime=(new Date()).getTime();
     var data = {format : 'json', resend_code : resend_code, ct : clientTime};
@@ -3021,7 +3025,7 @@ var MyWallet = new function() {
    * @param {function(string)} error callback function with error message
    */
   this.createNewWallet = function(inputedEmail, inputedPassword, languageCode, currencyCode, success, error) {
-    MyWalletSignup.generateNewWallet(inputedPassword, inputedEmail, function(createdGuid, createdSharedKey, createdPassword) {
+    WalletSignup.generateNewWallet(inputedPassword, inputedEmail, function(createdGuid, createdSharedKey, createdPassword) {
       MyStore.clear();
       if (languageCode)
         WalletStore.setLanguage(languageCode);
@@ -3122,7 +3126,7 @@ var MyWallet = new function() {
     var key_bytes = null;
 
     if (format == 'base58') {
-      key_bytes = buffertoByteArray(Browserify.Base58.decode(value));
+      key_bytes = buffertoByteArray(Base58.decode(value));
     } else if (format == 'base64') {
       key_bytes = buffertoByteArray(new Buffer(value, 'base64'));
     } else if (format == 'hex') {
@@ -3130,13 +3134,13 @@ var MyWallet = new function() {
     } else if (format == 'mini') {
       key_bytes = buffertoByteArray(parseMiniKey(value));
     } else if (format == 'sipa') {
-      var tbytes = buffertoByteArray(Browserify.Base58.decode(value));
+      var tbytes = buffertoByteArray(Base58.decode(value));
       tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
       tbytes.shift();
       key_bytes = tbytes.slice(0, tbytes.length - 4);
 
     } else if (format == 'compsipa') {
-      var tbytes = buffertoByteArray(Browserify.Base58.decode(value));
+      var tbytes = buffertoByteArray(Base58.decode(value));
       tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
       tbytes.shift();
       tbytes.pop();

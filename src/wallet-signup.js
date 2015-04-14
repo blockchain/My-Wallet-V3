@@ -1,4 +1,11 @@
-var MyWalletSignup = new function() {
+var assert = require('assert');
+
+var MyWallet = require('./wallet');
+var WalletStore = require('./wallet-store');
+var WalletCrypto = require('./wallet-crypto');
+
+
+var WalletSignup = new function() {
 
   //Save the javascript wallet to the remote server
   function insertWallet(guid, sharedKey, password, extra, successcallback, errorcallback) {
@@ -123,3 +130,5 @@ var MyWalletSignup = new function() {
   };
 
 };
+
+module.exports = WalletSignup;

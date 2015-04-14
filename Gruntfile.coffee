@@ -14,8 +14,9 @@ module.exports = (grunt) ->
       options:
         separator: ";"
 
-      bower_dev:
+      bower:
         src: [
+          'bower_components/jquery/dist/jquery.js'
           'bower_components/cryptojslib/rollups/sha256.js'
           'bower_components/cryptojslib/rollups/aes.js'
           'bower_components/cryptojslib/rollups/pbkdf2.js'
@@ -26,37 +27,15 @@ module.exports = (grunt) ->
         ]
         dest: "build/bower_components.js"
 
-      bower_dist:
-        src: [
-          'build/bower_components/cryptojslib/rollups/sha256.js'
-          'build/bower_components/cryptojslib/rollups/aes.js'
-          'build/bower_components/cryptojslib/rollups/pbkdf2.js'
-          'build/bower_components/cryptojslib/components/cipher-core.js'
-          'build/bower_components/cryptojslib/components/pad-iso10126.js'
-          'build/bower_components/cryptojslib/components/mode-ecb.js'
-          'build/bower_components/cryptojslib/components/pad-nopadding.js'
-        ]
-        dest: "build/bower_components.js"
-
       mywallet:
         src: [
-          'bower_components/jquery/dist/jquery.js'
-          'bower_components/browserdetection/src/browser-detection.js'
+          'build/bower_components.js'
           'build/shared.processed.js'
           'build/ie.processed.js'
           'build/crypto-util-legacy.processed.js'
           'build/browserify.js'
-          'build/blockchain-api.processed.js'
-          'build/blockchain-settings-api.processed.js'
-          'build/wallet-store.processed.js'
-          'build/wallet-crypto.processed.js'
-          'build/wallet-spender.processed.js'
-          'build/wallet.processed.js'
-          'build/wallet-signup.processed.js'
-          'build/hd-wallet.processed.js'
           'node_modules/sjcl/sjcl.js'
           'node_modules/xregexp/xregexp-all.js'
-          'build/bower_components.js'
         ]
         dest: "dist/my-wallet.js"
 
@@ -81,7 +60,7 @@ module.exports = (grunt) ->
         browserifyOptions: { standalone: "Browserify" }
 
       build:
-        src: ['src/browserify-imports.js']
+        src: ['src/wallet.js']
         dest: 'build/browserify.js'
 
       production:
@@ -98,10 +77,6 @@ module.exports = (grunt) ->
       continuous: # continuous integration mode: run tests once (what's in a name...)
         configFile: 'karma.conf.js'
         singleRun: true
-
-      test:
-        configFile: 'karma.conf.js'
-        singleRun: false
 
     # TODO should auto-run and work on all files
     jshint:
@@ -197,7 +172,7 @@ module.exports = (grunt) ->
     "env:build"
     "preprocess"
     "browserify:build"
-    "concat:bower_dev"
+    "concat:bower"
     "concat:mywallet"
   ]
 
@@ -214,7 +189,7 @@ module.exports = (grunt) ->
     "shell:bower_install_dependencies"
     "preprocess"
     "browserify:production"
-    "concat:bower_dist"
+    "concat:bower"
     "concat:mywallet"
     "uglify:mywallet"
   ]
@@ -228,7 +203,7 @@ module.exports = (grunt) ->
     "shell:skip_check_dependencies"
     "preprocess"
     "browserify:production"
-    "concat:bower_dist"
+    "concat:bower"
     "concat:mywallet"
     "uglify:mywallet"
   ]

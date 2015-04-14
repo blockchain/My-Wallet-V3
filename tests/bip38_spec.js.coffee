@@ -1,3 +1,9 @@
+Bitcoin = require('bitcoinjs-lib')
+ECKey = Bitcoin.ECKey
+BigInteger = require('bigi')
+
+ImportExport = require('../src/import-export')
+
 # localStorage.clear()
 
 describe "Crypto_scrypt", ->

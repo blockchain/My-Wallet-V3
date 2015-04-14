@@ -1,3 +1,14 @@
+var assert = require('assert');
+var Bitcoin = require('bitcoinjs-lib');
+
+var MyWallet = require('./wallet');
+var WalletStore = require('./wallet-store');
+var WalletCrypto = require('./wallet-crypto');
+var HDAccount = require('./hd-account');
+var Transaction = require('./transaction');
+var BlockchainAPI = require('./blockchain-api');
+
+
 // Example usage. Try it with and without a second password ("1234") configured:
 
 // Spender(null, function(){console.log("success")}, function(){console.log("fail")},null,function(){ console.log("Second password magic") }).prepareFromAccount(0, 20000, 10000, function(fromAccount) { fromAccount.toAddress("1FeerpCgswvGRLVKme759C96DUBtf7SvA2") })
@@ -20,7 +31,7 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
   assert(errorCallback, "error callback required");
   
   if(typeof(listener) == "undefined" || listener == null) {
-    listener = {}
+    listener = {};
   }
   
   assert(getSecondPassword, "second password callback required");
@@ -28,7 +39,7 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
   var sharedKey = WalletStore.getSharedKey();
   var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
   
-  var secondPassword = null
+  var secondPassword = null;
     
   var obtainAccessToPrivateKeys = function(proceed) {
     if (!WalletStore.getDoubleEncryption()) {
@@ -44,7 +55,7 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
         }
       });
     }
-  }
+  };
   
   // if postSendCallback is present, this must call successCallback() itself
   var performTransaction = function(tx, keys, postSendCallback) {
@@ -66,7 +77,7 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
       },
       function(e) { errorCallback(e);}
     );
-  }
+  };
   
   var spendTo = function(spendFrom) {    
     var spendOptions = {
@@ -76,15 +87,15 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
        */
       toAddress: function(toAddress, postSendCallback) {
         assert(toAddress, "to address required");
-        spendFrom(toAddress, postSendCallback)
+        spendFrom(toAddress, postSendCallback);
       },
       /**  
        * @param {number} toIndex index of account
        */
       toAccount: function(toIndex) {
         assert(typeof(toIndex) != "undefined", "to account index required");
-        toAccount = WalletStore.getHDWallet().getAccount(toIndex);
-        spendFrom(toAccount.getReceivingAddress())
+        var toAccount = WalletStore.getHDWallet().getAccount(toIndex);
+        spendFrom(toAccount.getReceivingAddress());
       },
       /**  
        * @param {string} email address
@@ -163,7 +174,7 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
     };
     
     return spendOptions;
-  }
+  };
 
   var prepareFrom = {
     /**
@@ -268,4 +279,6 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
   };
   
   return prepareFrom;
-}
+};
+
+module.exports = Spender;

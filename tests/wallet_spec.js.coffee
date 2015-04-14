@@ -89,7 +89,7 @@ describe "Wallet", ->
       spyOn(callbacks, "success")
       spyOn(callbacks, "error").and.callFake((e) -> console.log(e)) #.and.callThrough()
       
-      spyOn(MyWalletSignup, "generateUUIDs").and.callFake (n, success, error) ->
+      spyOn(WalletSignup, "generateUUIDs").and.callFake (n, success, error) ->
         success(["68019bee-7a27-490b-ab8a-446c2749bf1f","78019bee-7a27-490b-ab8a-446c2749bf1f"]) # Fake UID and shared key
       
       spyOn(MyWallet, "securePost").and.callFake (name, post_data, success, error) ->

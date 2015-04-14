@@ -1,4 +1,4 @@
-Transaction = require('../src/transaction.js')
+Transaction = require('../src/transaction')
 
 describe "Transaction", ->
 
@@ -57,9 +57,7 @@ describe "Transaction", ->
       .and.callFake((xpubList,success,error,conf,nocache) -> 
         success(getUnspentMock))
 
-    spyOn(WalletStore, "getPrivateKey").and.callFake((address) -> 'AWrnMsqe2AJYmrzKsN8qRosHRiCSKag3fcmvUA9wdJDj')
-
-    spyOn(window, "Transaction")
+    # spyOn(WalletStore, "getPrivateKey").and.callFake((address) -> 'AWrnMsqe2AJYmrzKsN8qRosHRiCSKag3fcmvUA9wdJDj')
 
   describe "create new Transaction", ->
     it "should fail without unspent outputs", ->

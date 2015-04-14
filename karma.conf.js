@@ -16,18 +16,23 @@ module.exports = function(config) {
     },
     
     preprocessors: {
-      '**/!(transaction_spend_spec.js).coffee': ['coffee'],
-      'src/wallet-store.js' : ['coverage'],
-      'src/wallet-crypto.js' : ['coverage'],
-      'src/wallet.js' : ['coverage'],
-      'src/hd-wallet.js' : ['coverage'],
-      'src/hd-account.js' : ['browserify', 'coverage'],
-      'src/blockchain-api.js' : ['coverage'],
-      'src/blockchain-settings-api.js' : ['coverage'],
-      'src/import-export.js' : ['browserify', 'coverage'],
-      'src/wallet-signup.js' : ['coverage'],
+      // '**/!(transaction_spend_spec.js).coffee': ['coffee'],
+      // 'src/blockchain-api.js' : ['browserify', 'coverage'],
+      // 'src/blockchain-settings-api.js' : ['browserify', 'coverage'],
+      // 'src/hd-wallet.js' : ['browserify', 'coverage'],
+      // 'src/hd-account.js' : ['browserify', 'coverage'],
+      // 'src/import-export.js' : ['browserify', 'coverage'],
+      // 'src/wallet.js' : ['browserify', 'coverage'],
+      // 'src/wallet-store.js' : ['browserify', 'coverage'],
+      // 'src/wallet-crypto.js' : ['browserify', 'coverage'],
+      // 'src/wallet-signup.js' : ['browserify', 'coverage'],
+      
       'src/transaction.js' : ['browserify', 'coverage'],
-      'tests/transaction_spend_spec.js.coffee' : ['browserify']
+      'tests/transaction_spend_spec.js.coffee' : ['browserify'],
+      'src/import-export.js' : ['browserify', 'coverage'],
+      'tests/bip38_spec.js.coffee' : ['browserify']
+      // 'src/blockchain-api.js' : ['browserify', 'coverage'],
+      // 'tests/blockchain_api_spec.js.coffee' : ['browserify']
     },
 
     browserify: {
@@ -50,30 +55,18 @@ module.exports = function(config) {
     autoWatch: true,
     
     files: [
+      'build/bower_components.js',
       'bower_components/es5-shim/es5-shim.min.js',
       'bower_components/es6-shim/es6-shim.min.js',
-      'bower_components/jquery/dist/jquery.js',
-      'bower_components/cryptojslib/rollups/sha256.js',
-      'bower_components/cryptojslib/rollups/aes.js',
-      'bower_components/cryptojslib/rollups/pbkdf2.js',
-      'bower_components/cryptojslib/components/cipher-core.js',
-      'bower_components/cryptojslib/components/pad-iso10126.js',
-      'bower_components/cryptojslib/components/mode-ecb.js',
-      'bower_components/cryptojslib/components/pad-nopadding.js',
       'node_modules/sjcl/sjcl.js',
       'node_modules/xregexp/xregexp-all.js',
-      'build/browserify.js',
-      'src/blockchain-api.js',
-      'src/blockchain-settings-api.js',
-      'src/hd-wallet.js',
-      'src/wallet-signup.js',
       'src/crypto-util-legacy.js',
-      'src/wallet-store.js',
-      'src/wallet-crypto.js',
-      'src/wallet.js',
-      'tests/**/*.js',
-      'tests/**/*.js.coffee',
-      // 'tests/transaction_spend_spec.js.coffee',
+      'src/shared.js',
+      //'tests/**/*.js.coffee',
+      'tests/transaction_spend_spec.js.coffee',
+      'tests/bip38_spec.js.coffee',
+      // 'tests/blockchain_api_spec.js.coffee'
+      
       // Or specify individual test files:
       // 'tests/blockchain_api_spec.js.coffee',
       // 'tests/mocks/*.js.coffee',

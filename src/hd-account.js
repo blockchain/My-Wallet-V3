@@ -1,5 +1,5 @@
-var Bitcoin = require('bitcoinjs-lib');
 var crypto = require('crypto');
+var Bitcoin = require('bitcoinjs-lib');
 var JSONB = require('json-buffer');
 
 var HDAccount = function(seed, network, label, idx) {

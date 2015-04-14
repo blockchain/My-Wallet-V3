@@ -1,3 +1,6 @@
+var MyWallet = require('./wallet');
+
+
 (function() {
   var hasProp = {}.hasOwnProperty;
 
@@ -292,6 +295,7 @@
       getTotalBalanceForActiveLegacyAddresses: function() {
         var add = function(x, y) {return x + y;};
         var balances = [];
+        var k, o;
         for (k in addresses) {
           if (!hasProp.call(addresses, k)) continue;
           o = addresses[k];
@@ -748,7 +752,6 @@
       },
       // not used
       getLocalWalletJson: function() {
-        var obj = null;
         try {
           var obj = $.parseJSON(localWalletJsonString);
           return obj;
@@ -935,3 +938,5 @@
   })();
 
 }).call(this);
+
+module.exports = WalletStore;

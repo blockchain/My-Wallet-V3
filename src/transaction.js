@@ -1,5 +1,6 @@
-var Bitcoin = require('bitcoinjs-lib');
 var assert = require('assert');
+var Bitcoin = require('bitcoinjs-lib');
+
 
 var addressesOfInputs = null;
 

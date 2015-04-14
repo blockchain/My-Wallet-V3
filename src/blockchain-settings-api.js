@@ -1,3 +1,8 @@
+// TODO remove dependencies on wallet
+var WalletStore = require('./wallet-store.js');
+var MyWallet = require('./wallet.js');
+
+
 var BlockchainSettingsAPI = new function() {
 
   this.get_account_info = function(success, error) {
@@ -167,3 +172,5 @@ var BlockchainSettingsAPI = new function() {
   };
 
 };
+
+module.exports = BlockchainSettingsAPI;

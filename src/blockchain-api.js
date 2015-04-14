@@ -1,3 +1,10 @@
+var assert = require('assert');
+
+// TODO remove dependencies on wallet
+var WalletStore = require('./wallet-store');
+var MyWallet = require('./wallet');
+
+
 var BlockchainAPI = new function() {
 
   var BlockchainAPI = this;
@@ -395,84 +402,53 @@ var BlockchainAPI = new function() {
         }
       );
     }, 5000);
-    
-    if (window.karma || !(typeof(window) === "undefined" || typeof(browserDetection) === "undefined") &&
-        browserDetection().browser == "ie" && browserDetection().version < 11) {
-      var post_data = {
-        format : "plain",
-        tx: txHex,
-        api_code : WalletStore.getAPICode(),
-        hash : tx_hash
-      };
 
-      if (note) {
-        post_data.note = note;
-      }
-      
-      $.ajax({
-        type: "POST",
-        url: BlockchainAPI.getRootURL() + 'pushtx',
-        timeout: AjaxTimeout,
-        data : post_data,
-        success: function() {
-          if (did_push) {
-            did_push();
-            did_push = null;
-          }
-        },
-        error : function(e) {
+    var buffer = tx.toBuffer();
+
+    var int8_array = new Int8Array(buffer);
+
+    int8_array.set(buffer);
+
+    var blob = new Blob([buffer], {type : 'application/octet-stream'});
+
+    if (blob.size != txHex.length/2)
+      throw 'Inconsistent Data Sizes (blob : ' + blob.size + ' s : ' + txHex.length/2 + ' buffer : ' + buffer.byteLength + ')';
+
+    var fd = new FormData();
+
+    fd.append('txbytes', blob);
+
+    if (note) {
+      fd.append('note', note);
+    }
+
+    fd.append('format', 'plain');
+    fd.append('hash', tx_hash);
+    fd.append('api_code', WalletStore.getAPICode());
+
+    $.ajax({
+      url: this.getRootURL() + 'pushtx',
+      data: fd,
+      processData: false,
+      contentType: false,
+      timeout: AjaxTimeout,
+      type: 'POST',
+      success: function(){
+        if (did_push) {
+          did_push();
+          did_push = null;
+        }
+      },
+      error : function(e) {
+        if (!e.responseText || e.responseText.indexOf('Parse:') == 0) {
+          setTimeout(function() {
+            push_normal();
+          }, 2000);
+        } else {
           _error(e ? e.responseText : null);
         }
-      });
-
-    } else {
-      var buffer = tx.toBuffer();
-
-      var int8_array = new Int8Array(buffer);
-
-      int8_array.set(buffer);
-
-      var blob = new Blob([buffer], {type : 'application/octet-stream'});                
-
-      if (blob.size != txHex.length/2)
-        throw 'Inconsistent Data Sizes (blob : ' + blob.size + ' s : ' + txHex.length/2 + ' buffer : ' + buffer.byteLength + ')';
-
-      var fd = new FormData();
-
-      fd.append('txbytes', blob);
-
-      if (note) {
-        fd.append('note', note);
       }
-
-      fd.append('format', 'plain');
-      fd.append('hash', tx_hash);
-      fd.append('api_code', WalletStore.getAPICode());      
-
-      $.ajax({
-        url: this.getRootURL() + 'pushtx',
-        data: fd,
-        processData: false,
-        contentType: false,
-        timeout: AjaxTimeout,
-        type: 'POST',
-        success: function(){
-          if (did_push) {
-            did_push();
-            did_push = null;
-          }
-        },
-        error : function(e) {
-          if (!e.responseText || e.responseText.indexOf('Parse:') == 0) {
-            setTimeout(function() {
-              push_normal();
-            }, 2000);
-          } else {
-            _error(e ? e.responseText : null);
-          }
-        }
-      });
-    }
+    });
   };
 
   this.get_unspent = function(fromAddresses, success, error, confirmations, do_not_use_unspent_cache) {
@@ -524,3 +500,5 @@ var BlockchainAPI = new function() {
   };
 
 };
+
+module.exports = BlockchainAPI;
