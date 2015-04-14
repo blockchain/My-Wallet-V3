@@ -1,19 +1,19 @@
 module.exports = (grunt) ->
-  
+
   grunt.initConfig
     pkg: grunt.file.readJSON("package.json")
 
-    clean: 
+    clean:
       build: ["build"]
       dist: ["dist"]
       test: ["coverage"]
-      shrinkwrap: 
+      shrinkwrap:
         src: ["npm-shrinkwrap.json"]
 
     concat:
       options:
         separator: ";"
-        
+
       bower_dev:
         src: [
           'bower_components/cryptojslib/rollups/sha256.js'
@@ -25,7 +25,7 @@ module.exports = (grunt) ->
           'bower_components/cryptojslib/components/pad-nopadding.js'
         ]
         dest: "build/bower_components.js"
-        
+
       bower_dist:
         src: [
           'build/bower_components/cryptojslib/rollups/sha256.js'
@@ -37,14 +37,14 @@ module.exports = (grunt) ->
           'build/bower_components/cryptojslib/components/pad-nopadding.js'
         ]
         dest: "build/bower_components.js"
-        
+
       mywallet:
         src: [
           'bower_components/jquery/dist/jquery.js'
           'bower_components/browserdetection/src/browser-detection.js'
-          'src/shared.js'
-          'src/ie.js'
-          'src/crypto-util-legacy.js'
+          'build/shared.processed.js'
+          'build/ie.processed.js'
+          'build/crypto-util-legacy.processed.js'
           'build/browserify.js'
           'build/blockchain-api.processed.js'
           'build/blockchain-settings-api.processed.js'
@@ -59,7 +59,7 @@ module.exports = (grunt) ->
           'build/bower_components.js'
         ]
         dest: "dist/my-wallet.js"
- 
+
     # coffee:
     #  compile:
     #    files:
@@ -70,7 +70,7 @@ module.exports = (grunt) ->
       options:
         banner: "/*! <%= pkg.name %> <%= grunt.template.today(\"yyyy-mm-dd\") %> */\n"
         mangle: false
-        
+
       mywallet:
         src:  "dist/my-wallet.js"
         dest: "dist/my-wallet.min.js"
@@ -94,7 +94,7 @@ module.exports = (grunt) ->
       unit:
         configFile: 'karma.conf.js'
         singleRun: false
-        
+
       continuous: # continuous integration mode: run tests once (what's in a name...)
         configFile: 'karma.conf.js'
         singleRun: true
@@ -122,72 +122,56 @@ module.exports = (grunt) ->
         #'src/wallet.js'
       ]
       options:
-        globals: 
+        globals:
           jQuery: true
 
     watch:
       scripts:
         files: [
-          'src/ie.js'
-          'src/shared.js'
-          'src/blockchain-api.js'
-          'src/blockchain-settings-api.js'
-          'src/transaction.js'
-          'src/wallet.js'
-          'src/wallet-signup.js'
-          'src/hd-wallet.js'
-          'src/hd-account.js'
-          'src/import-export.js'
-          'src/wallet-store.js'
-          'src/wallet-spender.js'
-          'src/wallet-crypto.js'
-          # 'src/coffee/*.coffee'
+          'src/**/*.js'
         ]
         tasks: ['build', 'karma:continuous']
 
       karma:
         files: ['tests/**/*.js.coffee', 'tests/**/*.js']
         tasks: ['karma:continuous']
-        
-    shell: 
-      check_dependencies: 
-        command: () -> 
+
+    shell:
+      check_dependencies:
+        command: () ->
            'mkdir -p build && ruby check-dependencies.rb'
-           
+
       skip_check_dependencies:
         command: () ->
           'cp -r node_modules build && cp -r bower_components build'
-        
+
       npm_install_dependencies:
         command: () ->
            'cd build && npm install'
-           
+
       bower_install_dependencies:
         command: () ->
            'cd build && ../node_modules/bower/bin/bower install'
 
     shrinkwrap: {}
-    
-    env: 
-      build: 
+
+    env:
+      build:
         DEBUG: "1"
-        
+
       production:
         PRODUCTION: "1"
 
-    preprocess:     
-      multifile:
-        files: 
-          'build/blockchain-api.processed.js'  : 'src/blockchain-api.js'
-          'build/blockchain-settings-api.processed.js'  : 'src/blockchain-settings-api.js'
-          'build/wallet-store.processed.js'   : 'src/wallet-store.js'
-          'build/wallet-crypto.processed.js'  : 'src/wallet-crypto.js'
-          'build/wallet.processed.js'         : 'src/wallet.js'
-          'build/wallet-signup.processed.js'  : 'src/wallet-signup.js'
-          'build/wallet-spender.processed.js'  : 'src/wallet-spender.js'
-          'build/hd-wallet.processed.js'      : 'src/hd-wallet.js'
+    preprocess:
+      js:
+        expand: true
+        cwd: 'src/'
+        src: '**/*.js'
+        dest: 'build'
+        ext: '.processed.js'
 
-  
+
+
   # Load the plugin that provides the "uglify" task.
   grunt.loadNpmTasks 'grunt-browserify'
   grunt.loadNpmTasks 'grunt-contrib-clean'
@@ -207,7 +191,7 @@ module.exports = (grunt) ->
     "karma:continuous"
     "watch"
   ]
-  
+
   grunt.registerTask "build", [
     # "coffee:compile"
     "env:build"
@@ -216,7 +200,7 @@ module.exports = (grunt) ->
     "concat:bower_dev"
     "concat:mywallet"
   ]
-    
+
   # GITHUB_USER=... GITHUB_PASSWORD=... grunt dist
   grunt.registerTask "dist", [
     "env:production"
@@ -234,7 +218,7 @@ module.exports = (grunt) ->
     "concat:mywallet"
     "uglify:mywallet"
   ]
-  
+
   # Skip dependency check, e.g. for staging:
   grunt.registerTask "dist_unsafe", [
     "env:production"
@@ -248,5 +232,5 @@ module.exports = (grunt) ->
     "concat:mywallet"
     "uglify:mywallet"
   ]
-  
+
   return
