@@ -138,11 +138,13 @@
           try {
             decrypted = this.decryptAesWithStretchedPassword(obj.payload, password, obj.pbkdf2_iterations);
             root = $.parseJSON(decrypted);
-            success(root, obj);
           } catch (_error) {
             e = _error;
             error('Error Decrypting Wallet. Please check your password is correct.');
           }
+          
+          success(root, obj);
+
         } else {
           decrypted = void 0;
           try {

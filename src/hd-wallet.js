@@ -197,49 +197,50 @@ var HDWallet = function(seedHex, bip39Password, second_password) {
 
 
 function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secondPassword, success, error) {
-    var hdwallet = new HDWallet(seedHexString, bip39Password, secondPassword);
+  var hdwallet = new HDWallet(seedHexString, bip39Password, secondPassword);
 
-    for (var i = 0; i < accountsArrayPayload.length; i++) {
-        var accountPayload = accountsArrayPayload[i];
-        var hdaccount;
+  for (var i = 0; i < accountsArrayPayload.length; i++) {
+    var accountPayload = accountsArrayPayload[i];
+    var hdaccount;
 
-        if (accountPayload.archived == true) {
-            hdaccount = hdwallet.createArchivedAccount(accountPayload.label, accountPayload.xpriv, accountPayload.xpub)
-            hdaccount.setIsArchived(true);
-            hdwallet.accountArray.push(hdaccount);
-        } else {
-            // This is called when a wallet is loaded, not when it's initially created. 
-            // If second password is enabled then accountPayload.xpriv has already been 
-            // encrypted. We're keeping it in an encrypted state.
+    if (accountPayload.archived == true) {
+      hdaccount = hdwallet.createArchivedAccount(accountPayload.label, accountPayload.xpriv, accountPayload.xpub)
+      hdaccount.setIsArchived(true);
+      hdwallet.accountArray.push(hdaccount);
+    } else {
+      // This is called when a wallet is loaded, not when it's initially created. 
+      // If second password is enabled then accountPayload.xpriv has already been 
+      // encrypted. We're keeping it in an encrypted state.
 
-            if(accountPayload.cache == undefined || accountPayload.cache.externalAccountPubKey == undefined) {
-                hdaccount = hdwallet.createAccountFromExtKey(accountPayload.label, accountPayload.xpriv, accountPayload.xpub);
-                hdaccount.generateCache();
-                hdwallet.accountArray.push(hdaccount);
-                MyWallet.backupWalletDelayed();
-            } else {
-                var cache = {
-                    externalAccountPubKey: Bitcoin.ECPubKey.fromBuffer(JSONB.parse(accountPayload.cache.externalAccountPubKey)),
-                    externalAccountChainCode: JSONB.parse(accountPayload.cache.externalAccountChainCode),
-                    internalAccountPubKey: Bitcoin.ECPubKey.fromBuffer(JSONB.parse(accountPayload.cache.internalAccountPubKey)),
-                    internalAccountChainCode: JSONB.parse(accountPayload.cache.internalAccountChainCode)
-                };
+      // :base64: is used in some older dev. versions of the HD wallet and does not occur "in the wild"
+      if(accountPayload.cache == undefined || accountPayload.cache.externalAccountPubKey == undefined || accountPayload.cache.externalAccountPubKey == "" || accountPayload.cache.externalAccountPubKey.slice(2,8) == "base64") {
+        hdaccount = hdwallet.createAccountFromExtKey(accountPayload.label, accountPayload.xpriv, accountPayload.xpub);
+        hdaccount.generateCache();
+        hdwallet.accountArray.push(hdaccount);
+        MyWallet.backupWalletDelayed();
+      } else {
+        var cache = {
+          externalAccountPubKey: Bitcoin.ECPubKey.fromBuffer(Buffer(accountPayload.cache.externalAccountPubKey, "base64")),
+          externalAccountChainCode: Buffer(accountPayload.cache.externalAccountChainCode, "base64"),
+          internalAccountPubKey: Bitcoin.ECPubKey.fromBuffer(Buffer(accountPayload.cache.internalAccountPubKey, "base64")),
+          internalAccountChainCode: Buffer(accountPayload.cache.internalAccountChainCode, "base64")
+        };
+        
+        hdaccount = hdwallet.createAccountFromExtKey(accountPayload.label, accountPayload.xpriv, accountPayload.xpub, cache);
+        hdaccount.cache = accountPayload.cache;
+        hdwallet.accountArray.push(hdaccount);
 
-                hdaccount = hdwallet.createAccountFromExtKey(accountPayload.label, accountPayload.xpriv, accountPayload.xpub, cache);
-                hdaccount.cache = accountPayload.cache;
-                hdwallet.accountArray.push(hdaccount);
+      }
+      hdaccount.setIsArchived(false);
 
-            }
-            hdaccount.setIsArchived(false);
-
-        }
-
-        hdaccount.receiveAddressCount = accountPayload.receive_address_count ? accountPayload.receive_address_count : 0;
-        hdaccount.changeAddressCount = accountPayload.change_address_count ? accountPayload.change_address_count : 0;
-        hdaccount.address_labels = accountPayload.address_labels ? accountPayload.address_labels : [];
     }
 
-    success && success(hdwallet);
+    hdaccount.receiveAddressCount = accountPayload.receive_address_count ? accountPayload.receive_address_count : 0;
+    hdaccount.changeAddressCount = accountPayload.change_address_count ? accountPayload.change_address_count : 0;
+    hdaccount.address_labels = accountPayload.address_labels ? accountPayload.address_labels : [];
+  }
+
+  success(hdwallet);
 }
 
 function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallback) {

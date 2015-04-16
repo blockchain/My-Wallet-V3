@@ -27,7 +27,6 @@ var Buffer = Browserify.Buffer.Buffer;
 var Bitcoin = Browserify.Bitcoin;
 var ECKey = Bitcoin.ECKey;
 var assert = Browserify.assert;
-var JSONB = Browserify.JSONB;
 var SHA256 = Browserify.SHA256;
 var BIP39 = Browserify.BIP39;
 var ImportExport = Browserify.ImportExport;
@@ -1715,9 +1714,15 @@ var MyWallet = new function() {
   };
 
   this.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Password, secondPassword, successCallback, errorCallback) {
+    assert(seedHexString, "Seed hex string required");
+    assert(accountsArrayPayload, "Accounts payload missing");
+    // bip39Password, secondPassword are optional
+    assert(successCallback, "Success callback required()");
+    assert(errorCallback, "Error callback required()");
+       
     var _success = function(hdWallet) {
       WalletStore.setHDWallet(hdWallet);
-      successCallback && successCallback();
+      successCallback();
     };
 
     buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secondPassword, _success, errorCallback);
@@ -2195,17 +2200,24 @@ var MyWallet = new function() {
   };
 
   function internalRestoreWallet(success, error, decrypt_success, build_hd_success) {
-    if (WalletStore.getEncryptedWalletData() == null || WalletStore.getEncryptedWalletData().length == 0) {
+    assert(success, 'Success callback required');
+    assert(error, 'Error callback required');
+    assert(decrypt_success, 'Decrypt success callback required');
+    assert(build_hd_success, 'Build HD success callback required');
+        
+    var encryptedWalletData = WalletStore.getEncryptedWalletData();
+    
+    if (encryptedWalletData == null || encryptedWalletData.length == 0) {
       error('No Wallet Data To Decrypt');
       return;
     }
-
-    WalletCrypto.decryptWallet( WalletStore.getEncryptedWalletData()
-                              , WalletStore.getPassword()
-                              , function(obj, rootContainer) {
-      decrypt_success && decrypt_success();
-
-      try {
+    
+    WalletCrypto.decryptWallet( 
+      encryptedWalletData, 
+      WalletStore.getPassword(), 
+      function(obj, rootContainer) {      
+        decrypt_success();
+        
         WalletStore.setSharedKey(obj.sharedKey);
         sharedKey = WalletStore.getSharedKey();
 
@@ -2215,7 +2227,7 @@ var MyWallet = new function() {
 
         if (rootContainer) {
           WalletStore.setPbkdf2Iterations(rootContainer.pbkdf2_iterations);
-        }
+        }                
 
         if (obj.double_encryption && obj.dpasswordhash) {
           WalletStore.setDoubleEncryption(obj.double_encryption);
@@ -2226,13 +2238,14 @@ var MyWallet = new function() {
           $.extend(WalletStore.getWalletOptions(), obj.options);
         }
 
-        WalletStore.newLegacyAddressesFromJSON(obj.keys);
+        WalletStore.newLegacyAddressesFromJSON(obj.keys);        
 
-        WalletStore.newAddressBookFromJSON(obj.address_book);
+        WalletStore.newAddressBookFromJSON(obj.address_book);        
 
         if (obj.hd_wallets && obj.hd_wallets.length > 0) {
           WalletStore.setDidUpgradeToHd(true);
           var defaultHDWallet = obj.hd_wallets[0];
+          
           if (!WalletStore.isHaveBuildHDWallet()) {
             WalletStore.setEmptyXpubs();
             for (var i in defaultHDWallet.accounts) {
@@ -2242,50 +2255,59 @@ var MyWallet = new function() {
                 WalletStore.pushXpub(account.xpub);
               }
             }
-
+            
             // We're not passing a bip39 or second password
-            MyWallet.buildHDWallet(defaultHDWallet.seed_hex, defaultHDWallet.accounts, undefined, undefined, build_hd_success);
-            WalletStore.setHaveBuildHDWallet(true);
+            MyWallet.buildHDWallet(
+              defaultHDWallet.seed_hex, 
+              defaultHDWallet.accounts, 
+              undefined, 
+              undefined, 
+              build_hd_success, 
+              function() {console.log("Error");}
+            );
+            
+            WalletStore.setHaveSetServerTime(true);
           }
+                    
           if (defaultHDWallet.mnemonic_verified) {
             WalletStore.setMnemonicVerified(defaultHDWallet.mnemonic_verified);
           } else {
             WalletStore.setMnemonicVerified(false);
           }
+                    
           WalletStore.setDefaultAccountIndex(defaultHDWallet.default_account_idx)
 
           if (defaultHDWallet.paidTo != null) {
             WalletStore.setPaidTo(defaultHDWallet.paidTo);
             MyWallet.checkForRecentlyRedeemed(defaultHDWallet.paidTo);
           }
-
+          
         } else {
           WalletStore.setDidUpgradeToHd(false);
           WalletStore.sendEvent('hd_wallets_does_not_exist');
-        }
+        }        
 
         if (obj.tx_notes) {
           for (var tx_hash in obj.tx_notes) {
             var note = obj.tx_notes[tx_hash];
             WalletStore.setNote(tx_hash, note);
           }
-        }
+        }                
 
         WalletStore.setTags(obj.tx_tags);
         WalletStore.setTagNames(obj.tag_names);
-
+        
         //If we don't have a checksum then the wallet is probably brand new - so we can generate our own
         if (WalletStore.getPayloadChecksum() == null || WalletStore.getPayloadChecksum().length == 0) {
           WalletStore.setPayloadChecksum(WalletStore.generatePayloadChecksum());
         }
-
+        
         setIsInitialized();
 
         success();
-      } catch (e) {
-        error(e);
-      };
-    }, error);
+      }, 
+      error
+    );
   }
 
   this.makePairingCode = function(success, error) {
@@ -2354,6 +2376,11 @@ var MyWallet = new function() {
    * @param {function()=} build_hd_success Called when the HD part of the wallet was initialized successfully.
    */
   this.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_required, other_error, fetch_success, decrypt_success, build_hd_success) {
+    assert(success, 'Success callback required');
+    assert(other_error, 'Error callback required');
+    assert(decrypt_success, 'Decrypt success callback required');
+    assert(build_hd_success, 'Build HD success callback required');
+        
     if (!resend_code && WalletStore.isDidSetGuid()) {
       MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error, decrypt_success, build_hd_success);
       return;
@@ -2415,7 +2442,7 @@ var MyWallet = new function() {
           needs_two_factor_code(WalletStore.get2FAType());
           return;
         }
-
+        
         war_checksum = obj.war_checksum;
 
         setLocalSymbol(obj.symbol_local);
@@ -2442,7 +2469,7 @@ var MyWallet = new function() {
             }
           }
         });
-
+        
         if (obj.language && WalletStore.getLanguage() != obj.language) {
           WalletStore.setLanguage(obj.language);
         }
@@ -2456,50 +2483,19 @@ var MyWallet = new function() {
           return;
         }
 
-        // Disabled fallback to local cache.
-
-        // MyStore.get('guid', function(local_guid) {
-        //     MyStore.get('payload', function(local_payload) {
-        //         //Error downloading wallet from server
-        //         //But we can use the local cache
-        //
-        //         if (local_guid == user_guid && local_payload) {
-        //             fetch_success && fetch_success();
-        //             WalletStore.setEncryptedWalletData(local_payload);
-        //
-        //             //Generate a new Checksum
-        //             guid = local_guid;
-        //             payload_checksum = generatePayloadChecksum();
-        //             auth_type = 0;
-        //
-        //             didSetGuid = true;
-        //             MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error, decrypt_success, build_hd_success);
-        //         }  else {
         WalletStore.sendEvent('did_fail_set_guid');
 
-        try {
-          var obj = $.parseJSON(e.responseText);
+        var obj = $.parseJSON(e.responseText);
 
-          if (obj.authorization_required) {
-            authorization_required(function(authorization_received) {
-              MyWallet.pollForSessionGUID(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_received, other_error);
-            });
-          }
+        if (obj.authorization_required) {
+          authorization_required(function(authorization_received) {
+            MyWallet.pollForSessionGUID(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_received, other_error);
+          });
+        }
 
-          if (obj.initial_error) {
-            WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
-          }
-
-          return;
-        } catch (ex) {}
-
-        if (e.responseText)
-          WalletStore.sendEvent("msg", {type: "error", message: e.responseText});
-        else
-          WalletStore.sendEvent("msg", {type: "error", message: 'Error changing wallet identifier'});
-        //         }
-        //     });
-        // });
+        if (obj.initial_error) {
+          WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
+        }
       }
     });
   };
@@ -2548,6 +2544,10 @@ var MyWallet = new function() {
   };
 
   this.restoreWallet = function(pw, two_factor_auth_key, success, wrong_two_factor_code, other_error, decrypt_success, build_hd_success) {
+    assert(success, 'Success callback required');
+    assert(other_error, 'Error callback required');
+    assert(decrypt_success, 'Decrypt success callback required');
+    assert(build_hd_success, 'Build HD success callback required');
 
     if (isInitialized || WalletStore.isRestoringWallet()) {
       return;
@@ -2560,67 +2560,68 @@ var MyWallet = new function() {
       WalletStore.sendEvent('error_restoring_wallet');
       other_error(e);
     }
+    
+    WalletStore.setRestoringWallet(true);
+        
+    WalletStore.unsafeSetPassword(pw);
 
-    try {
-      WalletStore.setRestoringWallet(true);
-      WalletStore.unsafeSetPassword(pw);
-
-      //If we don't have any wallet data then we must have two factor authentication enabled
-      if (WalletStore.getEncryptedWalletData() == null || WalletStore.getEncryptedWalletData().length == 0) {
-        if (two_factor_auth_key == null) {
-          other_error('Two Factor Authentication code this null');
-          return;
-        }
-
-        if (two_factor_auth_key.length == 0 || two_factor_auth_key.length > 255) {
-          other_error('You must enter a Two Factor Authentication code');
-          return;
-        }
-
-        $.ajax({
-          timeout: 60000,
-          type: "POST",
-          // contentType: "application/json; charset=utf-8",
-          xhrFields: {
-            withCredentials: true
-          },
-          crossDomain: true,
-          url: BlockchainAPI.getRootURL() + "wallet",
-          data :  { guid: WalletStore.getGuid(), payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : WalletStore.getAPICode()},
-          success: function(data) {
-            try {
-              if (data == null || data.length == 0) {
-                other_error('Server Return Empty Wallet Data');
-                return;
-              }
-
-              if (data != 'Not modified') {
-                WalletStore.setEncryptedWalletData(data);
-              }
-
-              internalRestoreWallet(function() {
-                WalletStore.setRestoringWallet(false);
-
-                didDecryptWallet(success);
-              }, _error, decrypt_success, build_hd_success);
-            } catch (e) {
-              _error(e);
-            }
-          },
-          error : function (response) {
-            _error(response.responseText);
-            wrong_two_factor_code();
-          }
-        });
-      } else {
-        internalRestoreWallet(function() {
-          WalletStore.setRestoringWallet(false);
-
-          didDecryptWallet(success);
-        }, _error, decrypt_success, build_hd_success);
+    //If we don't have any wallet data then we must have two factor authentication enabled
+    var encryptedWalletData = WalletStore.getEncryptedWalletData();
+    if (encryptedWalletData == null || encryptedWalletData.length == 0) {
+      if (two_factor_auth_key == null) {
+        other_error('Two Factor Authentication code this null');
+        return;
       }
-    } catch (e) {
-      _error(e);
+
+      if (two_factor_auth_key.length == 0 || two_factor_auth_key.length > 255) {
+        other_error('You must enter a Two Factor Authentication code');
+        return;
+      }       
+
+      $.ajax({
+        timeout: 60000,
+        type: "POST",
+        // contentType: "application/json; charset=utf-8",
+        xhrFields: {
+          withCredentials: true
+        },
+        crossDomain: true,
+        url: BlockchainAPI.getRootURL() + "wallet",
+        data :  { guid: WalletStore.getGuid(), payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : WalletStore.getAPICode()},
+        success: function(data) {
+          if (data == null || data.length == 0) {
+            other_error('Server Return Empty Wallet Data');
+            return;
+          }
+
+          if (data != 'Not modified') {
+            WalletStore.setEncryptedWalletData(data);
+          }
+          
+          console.log("Call internal restoren")
+
+          internalRestoreWallet(
+            function() {
+              WalletStore.setRestoringWallet(false);
+              
+              didDecryptWallet(success);
+           }, 
+           _error, 
+           decrypt_success, 
+           build_hd_success
+         );
+        },
+        error : function (response) {
+          _error(response.responseText);
+          wrong_two_factor_code();
+        }
+      });
+    } else {
+      internalRestoreWallet(function() {
+        WalletStore.setRestoringWallet(false);
+
+        didDecryptWallet(success);
+      }, _error, decrypt_success, build_hd_success);
     }
   };
 
