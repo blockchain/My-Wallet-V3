@@ -3154,4 +3154,5 @@ var MyWallet = new function() {
 
     return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format == 'compsipa'));
   };
+
 };

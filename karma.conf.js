@@ -27,17 +27,18 @@ module.exports = function(config) {
       // 'src/wallet-crypto.js' : ['browserify', 'coverage'],
       // 'src/wallet-signup.js' : ['browserify', 'coverage'],
       
-      'src/transaction.js' : ['browserify', 'coverage'],
-      'tests/transaction_spend_spec.js.coffee' : ['browserify'],
-      'src/import-export.js' : ['browserify', 'coverage'],
-      'tests/bip38_spec.js.coffee' : ['browserify']
-      // 'src/blockchain-api.js' : ['browserify', 'coverage'],
-      // 'tests/blockchain_api_spec.js.coffee' : ['browserify']
+      // 'src/transaction.js' : ['browserify', 'coverage'],
+      // 'tests/transaction_spend_spec.js.coffee' : ['browserify'],
+      // 'src/import-export.js' : ['browserify', 'coverage'],
+      // 'tests/bip38_spec.js.coffee' : ['browserify']
+      'src/blockchain-api.js' : ['browserify', 'coverage'],
+      'tests/blockchain_api_spec.js' : ['browserify']
     },
 
     browserify: {
       debug: true,
-      transform: [ 'coffeeify', 'browserify-istanbul' ]
+      transform: [ 'browserify-istanbul' ],
+      plugin: [ 'proxyquire-universal' ]
     },
 
     coffeePreprocessor: {
@@ -63,9 +64,9 @@ module.exports = function(config) {
       'src/crypto-util-legacy.js',
       'src/shared.js',
       //'tests/**/*.js.coffee',
-      'tests/transaction_spend_spec.js.coffee',
-      'tests/bip38_spec.js.coffee',
-      // 'tests/blockchain_api_spec.js.coffee'
+      // 'tests/transaction_spend_spec.js.coffee',
+      // 'tests/bip38_spec.js.coffee',
+      'tests/blockchain_api_spec.js'
       
       // Or specify individual test files:
       // 'tests/blockchain_api_spec.js.coffee',

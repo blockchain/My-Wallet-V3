@@ -1,16 +1,9 @@
 BlockchainAPI = require('../src/blockchain-api')
 
+
 describe "BlockchainAPI", ->
   beforeEach ->
     window.karma = true
-    
-    spyOn(WalletStore, "sendEvent").and.callFake(
-      ()->
-    )
-    
-    spyOn(MyWallet, "get_history").and.callFake(
-      ()->
-    )
     
   describe "push_tx", ->
     it "should pass transaction hash to success callback", ->

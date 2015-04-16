@@ -307,9 +307,9 @@ var BlockchainAPI = new function() {
 
   // If successful, calls success() and passes the transaction hash.
   this.push_tx = function(tx, note, success, error) {
-    assert(success, "success callback required")
-    assert(error, "error callback required")
-    assert(tx, "transaction required")
+    assert(success, "success callback required");
+    assert(error, "error callback required");
+    assert(tx, "transaction required");
     
     var _success = function(tx_hash) {
       //Clear the Check Interval
@@ -334,7 +334,7 @@ var BlockchainAPI = new function() {
         error = null;
       }
     };
-    
+
     WalletStore.sendEvent("msg", {type: "info", message: 'Pushing Transaction'});
 
     var transactions = WalletStore.getTransactions();    
