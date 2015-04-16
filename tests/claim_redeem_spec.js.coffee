@@ -1,3 +1,10 @@
+proxyquire = require('proxyquireify')(require)
+
+WalletStore = {}
+
+MyWallet = proxyquire('../src/wallet', { './wallet-store': WalletStore })
+
+
 describe "checkForRecentlyRedeemed", ->
   paidTo = 
     "d14659f29c8d7380cc9998e1d696494e1a1cd27e030b1824499b5ce3afec5ca": 

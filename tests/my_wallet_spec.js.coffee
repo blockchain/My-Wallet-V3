@@ -1,18 +1,28 @@
+proxyquire = require('proxyquireify')(require)
+
+MyWallet = proxyquire('../src/wallet', {})
+
+
 describe "MyWallet", ->
   observer = undefined
-  
+  hdwallet = undefined
+        
   beforeEach ->    
     MyWallet.deleteHDWallet()
-    WalletStore.setDoubleEncryption(false)
 
-    hdWallet = new HDWallet(seed, null, null)
-    
+    observer =
+       success: (hdWallet) ->
+         hdwallet = hdWallet
+       error: () ->
+         console.log "error"
 
-    spyOn(WalletStore, "getHDWallet").and.returnValue(hdWallet)
-  
-    spyOn(MyWallet, 'backupWallet').and.callFake(() -> )
-    spyOn(MyWallet, 'backupWalletDelayed').and.callFake(() -> )
-    spyOn(MyWallet, 'listenToHDWalletAccount').and.callFake(() -> )
+    spyOn(observer, "success").and.callThrough()
+    spyOn(observer, "error")
+
+    MyWallet.buildHDWallet(seed, [], null, null, observer.success, observer.error)
+
+    MyWallet.backupWalletDelayed = () ->
+    MyWallet.backupWallet = () ->        
   
     account = MyWallet.createAccount("Spending", null, (()->), (()->))
     

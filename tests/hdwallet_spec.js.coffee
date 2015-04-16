@@ -1,3 +1,18 @@
+proxyquire = require('proxyquireify')(require)
+
+WalletStore = {}
+WalletCrypto = {}
+HDWallet = {}
+Bitcoin = {}
+
+stubs = { './wallet-store': WalletStore, './wallet-crypto': WalletCrypto, './hd-wallet': HDWallet, 'bitcoinjs-lib': Bitcoin }
+
+MyWallet = proxyquire('../src/wallet', stubs)
+BigInteger = require('bigi')
+bs58check = require('bs58check')
+assert = require('assert')
+
+
 # localStorage.clear()
 
 describe "HD Wallet", ->
@@ -78,7 +93,7 @@ describe "HD Wallet", ->
           neutered: Bitcoin.HDNode.prototype.neutered # Slow!
         }
         
-        buffer = Browserify.bs58check.decode(base58)
+        buffer = bs58check.decode(base58)
         
         assert.strictEqual(buffer.length, node.LENGTH, 'Invalid buffer length')
         
@@ -175,7 +190,7 @@ describe "HD Wallet", ->
           spyOn(observer, "success").and.callThrough()
           spyOn(observer, "error")
 
-          buildHDWallet(seed, accountsPayload, bip39Password, null, observer.success, observer.error)
+          MyWallet.buildHDWallet(seed, accountsPayload, bip39Password, null, observer.success, observer.error)
 
         it "should succeed", ->
           expect(observer.success).toHaveBeenCalled()
@@ -188,7 +203,7 @@ describe "HD Wallet", ->
           # In practice, you always need to provide a seed, e.g. 0
           fake_seed = 0
 
-          buildHDWallet(fake_seed, accountsPayload, null, ((hdWallet) -> hdwallet = hdWallet))
+          MyWallet.buildHDWallet(fake_seed, accountsPayload, null, ((hdWallet) -> hdwallet = hdWallet))
           expect(hdwallet.getAccountsCount()).toBe(2)
 
         it "should know the xpub for each account", ->
@@ -219,7 +234,7 @@ describe "HD Wallet", ->
 
           spyOn(observer, "success").and.callThrough()
 
-          buildHDWallet(fake_seed, accountsPayloadSecondPassword, null, null, observer.success)
+          MyWallet.buildHDWallet(fake_seed, accountsPayloadSecondPassword, null, null, observer.success)
 
         it "should load", ->
           expect(observer.success).toHaveBeenCalled()
@@ -243,7 +258,7 @@ describe "HD Wallet", ->
 
          spyOn(observer, "success").and.callThrough()
 
-         buildHDWallet(seed, [], bip39Password, null, observer.success)
+         MyWallet.buildHDWallet(seed, [], bip39Password, null, observer.success)
 
          expect(observer.success).toHaveBeenCalled()
 
@@ -255,7 +270,7 @@ describe "HD Wallet", ->
     describe "when 2nd password is disabled", ->
       hdwallet = undefined
       beforeEach ->
-        buildHDWallet(seed, accountsPayload, bip39Password, null, ((hdWallet) -> hdwallet = hdWallet))
+        MyWallet.buildHDWallet(seed, accountsPayload, bip39Password, null, ((hdWallet) -> hdwallet = hdWallet))
         account = hdwallet.createAccount("Mobile", null) # index 2
 
       it "should know the xpub", ->
@@ -282,7 +297,7 @@ describe "HD Wallet", ->
             
         spyOn(observer, "success").and.callThrough()
                 
-        buildHDWallet(fake_seed, accountsPayloadSecondPassword, null, second_password, observer.success, (error) -> console.log("Error:"); console.log(error))
+        MyWallet.buildHDWallet(fake_seed, accountsPayloadSecondPassword, null, second_password, observer.success, (error) -> console.log("Error:"); console.log(error))
 
       it "should load", ->
         expect(observer.success).toHaveBeenCalled()

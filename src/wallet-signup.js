@@ -106,7 +106,7 @@ var WalletSignup = new function() {
         if (guid.length != 36 || sharedKey.length != 36) {
           throw 'Error generating wallet identifier';
         }
-                
+
         // Upgrade to HD immediately:
         MyWallet.initializeHDWallet(
           null, 

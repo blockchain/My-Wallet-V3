@@ -1,4 +1,10 @@
-BlockchainAPI = require('../src/blockchain-api')
+proxyquire = require('proxyquireify')(require)
+
+stubs =
+  './wallet':
+     get_history: () ->
+
+BlockchainAPI = proxyquire('../src/blockchain-api', stubs)
 
 
 describe "BlockchainAPI", ->
@@ -22,6 +28,7 @@ describe "BlockchainAPI", ->
         {
           getId: () -> "1234"
           toHex: () -> ""
+          toBuffer: () -> new Buffer(0)
         }, 
         null, 
         observer.success, 

@@ -3,7 +3,6 @@ var ECKey = Bitcoin.ECKey;
 var BigInteger = require('bigi');
 var Buffer = require('buffer');
 var Base58 = require('bs58');
-var SHA256 = require('sha256');
 var BIP39 = require('bip39');
 
 var WalletStore = require('./wallet-store');
@@ -579,13 +578,13 @@ var MyWallet = new function() {
       var minikey = 'S' + Base58.encode(key.d.toBuffer(32)).substr(0, 21);
 
       //Append ? & hash it again
-      var bytes_appended = SHA256(minikey + '?', {asBytes: true});
+      var bytes_appended = Bitcoin.crypto.sha256(minikey + '?');
 
       //If zero byte then the key is valid
       if (bytes_appended[0] == 0) {
 
         //SHA256
-        var bytes = SHA256(minikey, {asBytes: true});
+        var bytes = Bitcoin.crypto.sha256(minikey);
 
         var eckey = new Bitcoin.ECKey(new BigInteger.fromBuffer(bytes), false);
 
@@ -3156,3 +3155,5 @@ var MyWallet = new function() {
   };
 
 };
+
+module.exports = MyWallet;

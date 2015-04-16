@@ -1,3 +1,12 @@
+proxyquire = require('proxyquireify')(require)
+
+WalletStore = {}
+
+stubs = { './wallet-store': WalletStore }
+
+MyWallet = proxyquire('../src/wallet', stubs)
+
+
 # externalAddresses = undefined
 # changeAddresses = undefined
 activeLegacyAddresses = undefined

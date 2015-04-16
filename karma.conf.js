@@ -1,44 +1,41 @@
-module.exports = function(config) {
+module.exports = function(karma) {
 
-  config.set({
+  karma.set({
     basePath : './',
-    
-    browserNoActivityTimeout: 60000,
-    
+
     frameworks: ['jasmine', 'browserify'],
-    
+
     browsers : ['Chrome'], //'PhantomJS'],
-    
+
+    browserNoActivityTimeout: 60000,
+
     // reportSlowerThan: 50,
-    
+
     client: {
       captureConsole: true
     },
-    
+
+    autoWatch: false,
+
+    // logLevel: config.LOG_DEBUG,
+
+    reporters: ['progress','coverage'],
+
+    coverageReporter: {
+      type : 'html',
+      dir : 'coverage/',
+      subdir: '.'
+    },
+
     preprocessors: {
-      // '**/!(transaction_spend_spec.js).coffee': ['coffee'],
-      // 'src/blockchain-api.js' : ['browserify', 'coverage'],
-      // 'src/blockchain-settings-api.js' : ['browserify', 'coverage'],
-      // 'src/hd-wallet.js' : ['browserify', 'coverage'],
-      // 'src/hd-account.js' : ['browserify', 'coverage'],
-      // 'src/import-export.js' : ['browserify', 'coverage'],
-      // 'src/wallet.js' : ['browserify', 'coverage'],
-      // 'src/wallet-store.js' : ['browserify', 'coverage'],
-      // 'src/wallet-crypto.js' : ['browserify', 'coverage'],
-      // 'src/wallet-signup.js' : ['browserify', 'coverage'],
-      
-      // 'src/transaction.js' : ['browserify', 'coverage'],
-      // 'tests/transaction_spend_spec.js.coffee' : ['browserify'],
-      // 'src/import-export.js' : ['browserify', 'coverage'],
-      // 'tests/bip38_spec.js.coffee' : ['browserify']
-      'src/blockchain-api.js' : ['browserify', 'coverage'],
-      'tests/blockchain_api_spec.js' : ['browserify']
+      'tests/*.js' : ['browserify']
     },
 
     browserify: {
       debug: true,
       transform: [ 'browserify-istanbul' ],
-      plugin: [ 'proxyquire-universal' ]
+      // transform: [ 'coffeeify', 'browserify-istanbul' ],
+      plugin: [ 'proxyquireify/plugin' ]
     },
 
     coffeePreprocessor: {
@@ -52,8 +49,6 @@ module.exports = function(config) {
         return path.replace(/\.coffee$/, '.js');
       }
     },
-        
-    autoWatch: true,
     
     files: [
       'build/bower_components.js',
@@ -63,33 +58,20 @@ module.exports = function(config) {
       'node_modules/xregexp/xregexp-all.js',
       'src/crypto-util-legacy.js',
       'src/shared.js',
-      //'tests/**/*.js.coffee',
-      // 'tests/transaction_spend_spec.js.coffee',
-      // 'tests/bip38_spec.js.coffee',
-      'tests/blockchain_api_spec.js'
-      
+      'tests/mocks/*.js',
+      'tests/**/*_spec.js',
       // Or specify individual test files:
-      // 'tests/blockchain_api_spec.js.coffee',
-      // 'tests/mocks/*.js.coffee',
-      // 'tests/bip38_spec.js.coffee',
-      // 'tests/claim_redeem_spec.js.coffee',
-      // 'tests/hdwallet_spec.js.coffee',
-      // 'tests/legacy_addresses_spec.js.coffee',
-      // 'tests/my_wallet_spec.js.coffee',
-      // 'tests/spend_spec.js.coffee',
-      // 'tests/tags_spec.js.coffee',
-      // 'tests/transaction_spec.js.coffee',
-      // 'tests/wallet_spec.js.coffee'
-    ],
-    
-    coverageReporter: {
-      type : 'html',
-      dir : 'coverage/',
-      subdir: '.'
-    },
-    
-    reporters: ['progress','coverage']
-    
+      // 'tests/bip38_spec.js',
+      // 'tests/blockchain_api_spec.js',
+      // 'tests/claim_redeem_spec.js',
+      // 'tests/hdwallet_spec.js',
+      // 'tests/legacy_addresses_spec.js',
+      // 'tests/my_wallet_spec.js',
+      // 'tests/spend_spec.js',
+      // 'tests/tags_spec.js',
+      // 'tests/transaction_spec.js',
+      // 'tests/transaction_spend_spec.js',
+      // 'tests/wallet_spec.js'
+    ]
   });
-
 };

@@ -1,3 +1,16 @@
+proxyquire = require('proxyquireify')(require)
+
+WalletStore = {}
+WalletCrypto = {}
+Bitcoin = {}
+BlockchainAPI = {}
+
+stubs = { './wallet-store': WalletStore, './wallet-crypto': WalletCrypto, 'bitcoinjs-lib': Bitcoin, './blockchain-api': BlockchainAPI }
+
+MyWallet = proxyquire('../src/wallet', stubs)
+BigInteger = require('bigi')
+
+
 # Spending from a legacy address is tested in legacy_addresses_spec
 
 # sendToAccount
@@ -817,7 +830,7 @@ describe "Spend", ->
 
       expectedWIF = "5JgQTisqR2v6vcsJnP71JF2mnm2nQdtSPk9Dh8jmwXtoytuD6aB"
       keys = MyWallet.generateNewMiniPrivateKey()
-      checkMiniKey = SHA256(keys.miniKey + '?', {asBytes: true})[0]
+      checkMiniKey = Bitcoin.crypto.sha256(keys.miniKey + '?')[0]
 
       expect(Bitcoin.ECKey.makeRandom.calls.count()).toEqual(2);
       expect(MyWallet.addPrivateKey).toHaveBeenCalled()

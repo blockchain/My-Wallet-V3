@@ -21,3 +21,6 @@ dist
 
 # Generated coverage reports
 coverage
+
+# TODO only until coffeify works with proxyrequireify
+tests/*js

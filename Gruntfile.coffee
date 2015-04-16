@@ -38,12 +38,15 @@ module.exports = (grunt) ->
           'node_modules/xregexp/xregexp-all.js'
         ]
         dest: "dist/my-wallet.js"
-
-    # coffee:
-    #  compile:
-    #    files:
-    #      'build/wallet-store.js' : 'src/coffee/wallet-store.coffee'
-    #      'build/wallet-crypto.js': 'src/coffee/wallet-crypto.coffee'
+ 
+    coffee:
+     compile:
+        expand: true,
+        flatten: true,
+        cwd: 'tests',
+        src: ['*.coffee'],
+        dest: 'tests/',
+        ext: '.js'
 
     uglify:
       options:
@@ -83,11 +86,9 @@ module.exports = (grunt) ->
       files: [
         #'src/blockchain-api.js'
         'src/blockchain-settings-api.js'
-        'src/browserify-imports.js'
         #'src/crypto-util-legacy.js'
         'src/hd-account.js'
         'src/hd-wallet.js'
-        'src/ie.js'
         'src/import-export.js'
         #'src/shared.js'
         #'src/sharedcoin.js'
@@ -108,8 +109,8 @@ module.exports = (grunt) ->
         tasks: ['build', 'karma:continuous']
 
       karma:
-        files: ['tests/**/*.js.coffee', 'tests/**/*.js']
-        tasks: ['karma:continuous']
+        files: ['tests/**/*.js.coffee']
+        tasks: ['build', 'karma:continuous']
 
     shell:
       check_dependencies:
@@ -146,20 +147,19 @@ module.exports = (grunt) ->
         ext: '.processed.js'
 
 
-
-  # Load the plugin that provides the "uglify" task.
   grunt.loadNpmTasks 'grunt-browserify'
   grunt.loadNpmTasks 'grunt-contrib-clean'
   grunt.loadNpmTasks 'grunt-contrib-concat'
   grunt.loadNpmTasks 'grunt-contrib-uglify'
   grunt.loadNpmTasks 'grunt-contrib-watch'
-  # grunt.loadNpmTasks('grunt-contrib-coffee');
+  grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks 'grunt-env'
   grunt.loadNpmTasks 'grunt-karma'
   grunt.loadNpmTasks 'grunt-preprocess'
   grunt.loadNpmTasks 'grunt-shell'
   grunt.loadNpmTasks 'grunt-shrinkwrap'
   grunt.loadNpmTasks 'grunt-contrib-jshint'
+
 
   grunt.registerTask "default", [
     "build"
@@ -168,7 +168,7 @@ module.exports = (grunt) ->
   ]
 
   grunt.registerTask "build", [
-    # "coffee:compile"
+    "coffee:compile"
     "env:build"
     "preprocess"
     "browserify:build"
@@ -181,7 +181,7 @@ module.exports = (grunt) ->
     "env:production"
     "clean:build"
     "clean:dist"
-    # "coffee:compile"
+    "coffee:compile"
     "shrinkwrap"
     "shell:check_dependencies"
     "clean:shrinkwrap"
@@ -199,7 +199,7 @@ module.exports = (grunt) ->
     "env:production"
     "clean:build"
     "clean:dist"
-    # "coffee:compile"
+    "coffee:compile"
     "shell:skip_check_dependencies"
     "preprocess"
     "browserify:production"
