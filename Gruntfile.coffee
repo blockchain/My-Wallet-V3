@@ -7,6 +7,7 @@ module.exports = (grunt) ->
       build: ["build"]
       dist: ["dist"]
       test: ["coverage"]
+      testjs: ["tests/*js"]
       shrinkwrap:
         src: ["npm-shrinkwrap.json"]
 
