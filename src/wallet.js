@@ -587,121 +587,7 @@ var MyWallet = new function() {
       }
     }
   };
-
-  function calcTxResult(tx, is_new, checkCompleted, incrementAccountTxCount) {
-    /* Calculate the result */
-    var result = 0;
-    var account2HasIncrementAccountTxCount = {};
-    var hasCountedlegacyAddressesNTxs = false;
-    for (var i = 0; i < tx.inputs.length; ++i) {
-
-      var output = tx.inputs[i].prev_out;
-
-      if (!output || !output.addr)
-        continue;
-
-      //If it is our address then subtract the value
-      var value = WalletStore.getValueOfLegacyAddress(output.addr);
-      result -= value;
-      if (is_new) {
-        WalletStore.addToTotalSent(value);
-        WalletStore.addToBalanceOfLegacyAddress(addr,-value);
-      }
-
-
-      if (hasCountedlegacyAddressesNTxs == false && WalletStore.isActiveLegacyAddress(output.addr)) {
-        hasCountedlegacyAddressesNTxs = true;
-        if (! incrementAccountTxCount) {
-          WalletStore.addLegacyAddressesNumTxFetched(1);
-        }
-      }
-
-      for (var j = 0; j < MyWallet.getAccountsCount(); j++) {
-        var account = WalletStore.getHDWallet().getAccount(j);
-        if (!account.isArchived() && output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
-          if (account2HasIncrementAccountTxCount[output.xpub] != true) {
-            account2HasIncrementAccountTxCount[output.xpub] = true;
-            if (incrementAccountTxCount) {
-              account.n_tx += 1;
-            } else {
-              account.n_tx += 1;
-              account.numTxFetched += 1;
-            }
-          }
-
-          var path = output.xpub.path.split("/");
-          path[1] = parseInt(path[1]);
-          path[2] = parseInt(path[2]);
-          if (path[1] == 0 && account.receiveAddressCount <= path[2]) {
-            account.receiveAddressCount = path[2]+1;
-          } else if (path[1] == 1 && account.changeAddressCount <= path[2]) {
-            account.changeAddressCount = path[2]+1;
-          }
-
-          tx.account_indexes.push(parseInt(j));
-          result -= parseInt(output.value);
-        }
-      }
-    }
-
-    for (var i = 0; i < tx.out.length; ++i) {
-      var output = tx.out[i];
-
-      if (!output || !output.addr)
-        continue;
-
-      // var addr = addresses[output.addr];
-      var addr = WalletStore.getAddress(output.addr);
-      if (addr) {
-        var value = parseInt(output.value);
-
-        result += value;
-
-        if (is_new) {
-          WalletStore.addToTotalReceived(value);
-          addr.balance += value;
-        }
-      }
-
-      if (hasCountedlegacyAddressesNTxs == false && WalletStore.isActiveLegacyAddress(output.addr)) {
-        hasCountedlegacyAddressesNTxs = true;
-        if (! incrementAccountTxCount) {
-          WalletStore.addLegacyAddressesNumTxFetched(1);
-        }
-      }
-
-      for (var j = 0; j < MyWallet.getAccountsCount(); j++) {
-        var account = WalletStore.getHDWallet().getAccount(j);
-        if (!account.isArchived() && output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
-          if (account2HasIncrementAccountTxCount[output.xpub] != true) {
-            account2HasIncrementAccountTxCount[output.xpub] = true;
-            if (incrementAccountTxCount) {
-              account.n_tx += 1;
-            } else {
-              account.n_tx += 1;
-              account.numTxFetched += 1;
-            }
-          }
-
-          var path = output.xpub.path.split("/");
-          path[1] = parseInt(path[1]);
-          path[2] = parseInt(path[2]);
-          if (path[1] == 0 && account.receiveAddressCount <= path[2]) {
-            account.receiveAddressCount = path[2]+1;;
-          } else if (path[1] == 1 && account.changeAddressCount <= path[2]) {
-            account.changeAddressCount = path[2]+1;;
-          }
-
-          tx.account_indexes.push(parseInt(j));
-          result += parseInt(output.value);
-        }
-      }
-
-    }
-
-    return result;
-  }
-
+  
   function wsSuccess(ws) {
     var last_on_change = null;
 
@@ -735,11 +621,7 @@ var MyWallet = new function() {
             if (transactions[key].txIndex == tx.txIndex) return;
           }
 
-          var result = calcTxResult(tx, true, false, true);
-
-          tx.result = result;
-
-          WalletStore.addToFinalBalance(result);
+          WalletStore.addToFinalBalance(tx_processed.result);
 
           if (tx_account) MyWallet.getAccount(tx_account.index).setBalance(WalletStore.getFinalBalance());
 
@@ -2106,10 +1988,8 @@ var MyWallet = new function() {
     WalletStore.setIsAccountRecommendedFeesValid(false);
     for (var i = 0; i < obj.txs.length; ++i) {
       var tx = TransactionFromJSON(obj.txs[i]);
-      //Don't use the result given by the api because it doesn't include archived addresses
-      tx.result = calcTxResult(tx, false, checkCompleted, false);
-
-      transactions.push(tx);
+  
+      WalletStore.pushTransaction(tx);
     }
 
     if (!cached) {
