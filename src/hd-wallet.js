@@ -164,6 +164,12 @@ var HDWallet = function(seedHex, bip39Password, second_password) {
 
   this.createAccount = function(label, second_password) {
     var seedHex = this.getSeedHexString(second_password);
+    account = this.createAccountWithSeedhex(label, seedHex, second_password);
+    
+    return account;
+  };
+    
+  this.createAccountWithSeedhex = function(label, seedHex, second_password) {
     var accountIdx = this.accountArray.length;
 
     var account = new HDAccount(this.getMasterHex(seedHex), null, label, accountIdx);
@@ -182,7 +188,7 @@ var HDWallet = function(seedHex, bip39Password, second_password) {
     var extendedPrivateKey = accountZero.toBase58();
     var extendedPublicKey =  accountZero.neutered().toBase58();    
 
-    account.extendedPrivateKey = extendedPrivateKey == null || second_password == null ? extendedPrivateKey : WalletCrypto.encryptSecretWithSecondPassword(extendedPrivateKey, second_password, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());
+    account.extendedPrivateKey = extendedPrivateKey == null || second_password == null ? extendedPrivateKey : WalletCrypto.encryptSecretWithSecondPassword(extendedPrivateKey, second_password, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());    
     account.extendedPublicKey = extendedPublicKey;
 
     account.generateCache();
@@ -244,6 +250,7 @@ function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secon
 }
 
 function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallback) {
+    assert(secondPassword === null || secondPassword, "Second password must be null or set.");
     var LOOK_AHEAD_ADDRESS_COUNT = 20;
     var accountIdx = 0;
 
@@ -336,7 +343,7 @@ function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallbac
     }
 
     if (hdwallet.getAccountsCount() < 1) {
-        hdwallet.createAccount("Account 1", hdwallet.getSeedHexString());
+        hdwallet.createAccountWithSeedhex("Account 1", hdwallet.getSeedHexString(), secondPassword);
     }
 
     if (successCallback)
