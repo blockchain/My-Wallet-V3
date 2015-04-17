@@ -25,11 +25,6 @@
     "commits" : ["d3ee704d5f6e9d450333395ba17ce5c654f19d72"],
     "repo" : "cryptocoinjs/bs58"
   },
-  "json-buffer" : {
-    "version": "2.0.11",
-    "commits" : ["30d41f371889e61f6ded06f3cd18aec0920fa7f7"],
-    "repo" : "dominictarr/json-buffer"
-  },
   "sha256" : {
     "version": "0.1.1",
     "commits" : ["6aa3967608b38e55a5d4f328453ca798821e67d2"],
@@ -64,11 +59,6 @@
     "version" : "2.0.1",
     "commits" : ["3af5a10c6b51f9e99d9f90394645d7ea630d5eaa"],
     "repo" : "isaacs/inherits"
-  },
-  "pbkdf2-compat" : {
-    "version" : "2.0.0",
-    "commits" : ["8bdd89160bcaae6ce87f827587b7036c6eabe13f", "20fe1b956e7d6c8cfe8db9f9d8e4ea889dc94e41"],
-    "repo" : "crypto-browserify/pbkdf2"
   },
   "bs58check" : {
     "version" : "1.0.5",
