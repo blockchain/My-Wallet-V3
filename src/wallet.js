@@ -2598,8 +2598,6 @@ var MyWallet = new function() {
             WalletStore.setEncryptedWalletData(data);
           }
           
-          console.log("Call internal restoren")
-
           internalRestoreWallet(
             function() {
               WalletStore.setRestoringWallet(false);
