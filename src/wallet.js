@@ -158,6 +158,15 @@ var MyWallet = new function() {
 
                 if (!WalletStore.getHDWallet().seedHex) throw 'Error re-encrypting wallet seed';
               }
+              
+              // Re-encrypt the BIP 39 password
+              if (WalletStore.didUpgradeToHd()) {
+                if(WalletStore.getHDWallet().getBip39Password() != "") {
+                  WalletStore.getHDWallet().setBip39Password(WalletCrypto.reencrypt(pw, WalletStore.getSharedKey(), previous_pbkdf2_iterations, pbkdf2_iterations)(WalletStore.getHDWallet().getBip39Password()));
+                }
+
+                if (!WalletStore.getHDWallet().getBip39Password()) throw 'Error re-encrypting wallet bip 39 password';
+              }
 
               // Generate a new password hash
               WalletStore.setDPasswordHash(hashPassword(WalletStore.getSharedKey() + pw, pbkdf2_iterations));
@@ -237,6 +246,9 @@ var MyWallet = new function() {
 
           if (WalletStore.didUpgradeToHd()) {
             WalletStore.getHDWallet().seedHex = WalletCrypto.decryptSecretWithSecondPassword(WalletStore.getHDWallet().seedHex, pw, sharedKey, pbkdf2_iterations);
+            if(WalletStore.getHDWallet().getBip39Password() != "") {
+              WalletStore.getHDWallet().setBip39Password(WalletCrypto.decryptSecretWithSecondPassword(WalletStore.getHDWallet().getBip39Password(), pw, sharedKey, pbkdf2_iterations));
+            }
           }
 
           WalletStore.setDoubleEncryption(false);
@@ -245,17 +257,18 @@ var MyWallet = new function() {
 
           MyWallet.backupWallet('update', function() {
             success();
-          }, function() {
-            panic(e);
+          }, function(e) {
             error(e);
+            panic(e);
           });
         } else {
           wrong_password();
         }
       });
     } catch (e) {
+      console.log(e);
       panic(e);
-      error(e);
+      // error(e);
     }
   };
 
@@ -297,6 +310,9 @@ var MyWallet = new function() {
 
       if (WalletStore.didUpgradeToHd()) {
         WalletStore.getHDWallet().seedHex = WalletCrypto.encryptSecretWithSecondPassword(WalletStore.getHDWallet().seedHex, password, sharedKey, pbkdf2_iterations);
+        if(WalletStore.getHDWallet().getBip39Password() != "") {
+          WalletStore.getHDWallet().setBip39Password(WalletCrypto.encryptSecretWithSecondPassword(WalletStore.getHDWallet().getBip39Password(), password, sharedKey, pbkdf2_iterations));
+        }    
       }
 
       WalletStore.setDPasswordHash(hashPassword(sharedKey + password, pbkdf2_iterations));
@@ -1547,6 +1563,10 @@ var MyWallet = new function() {
    * @param {function()=} errorCallback error callback function
    */
   this.recoverMyWalletHDWalletFromMnemonic = function(passphrase, bip39Password, getPassword, successCallback, errorCallback) {
+    if(bip39Password == undefined || bip39Password == null) {
+      bip39Password = "";
+    }
+    
     function recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, secondPassword, successCallback, errorCallback) {
       recoverHDWalletFromMnemonic(passphrase, bip39Password, secondPassword, function(hdWallet) {
         WalletStore.setHDWallet(hdWallet);
@@ -1657,7 +1677,7 @@ var MyWallet = new function() {
       error && error();
     };
 
-    MyWallet.initializeHDWallet(null, null, getPassword, _success, _error);
+    MyWallet.initializeHDWallet(null, "", getPassword, _success, _error);
   };
 
   /**
@@ -1729,7 +1749,10 @@ var MyWallet = new function() {
       });
     } else {
       var seed = WalletStore.getHDWallet().getSeedHexString();
-      successCallback(WalletStore.getHDWallet().getPassphraseString(seed));
+      successCallback(
+        WalletStore.getHDWallet().getPassphraseString(seed),
+        WalletStore.getHDWallet().getBip39Password()
+      );
     }
   };
 
@@ -1860,6 +1883,7 @@ var MyWallet = new function() {
 
       out += '    {\n';
       out += '      "seed_hex" : "'+ WalletStore.getHDWallet().getSeedHexString() +'",\n';
+      out += '      "passphrase" : "'+ WalletStore.getHDWallet().getBip39Password() +'",\n';
       out += '      "mnemonic_verified" : '+ WalletStore.isMnemonicVerified() +',\n';
       out += '      "default_account_idx" : '+ WalletStore.getDefaultAccountIndex() +',\n';
       if (WalletStore.getPaidToDictionary() != null) {
@@ -2095,7 +2119,8 @@ var MyWallet = new function() {
     WalletCrypto.decryptWallet( 
       encryptedWalletData, 
       WalletStore.getPassword(), 
-      function(obj, rootContainer) {      
+      function(obj, rootContainer) {   
+           
         decrypt_success();
         
         WalletStore.setSharedKey(obj.sharedKey);
@@ -2140,7 +2165,7 @@ var MyWallet = new function() {
             MyWallet.buildHDWallet(
               defaultHDWallet.seed_hex, 
               defaultHDWallet.accounts, 
-              undefined, 
+              defaultHDWallet.passphrase || "", 
               undefined, 
               build_hd_success, 
               function() {console.log("Error");}

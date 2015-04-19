@@ -16,8 +16,15 @@ function passphraseToPassphraseHexString(passphrase) {
 
 var HDWallet = function(seedHex, bip39Password, second_password) {
 
+  if (bip39Password == undefined || bip39Password == null) {
+    bip39Password = "";
+  }
+  
+  assert(typeof(bip39Password) === "string", "BIP 39 password must be set or an empty string")
+
   this.seedHex = seedHex == null || seedHex == undefined || seedHex == "" || second_password == null ? seedHex : WalletCrypto.encryptSecretWithSecondPassword(seedHex, second_password, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());
-  this.bip39Password = bip39Password;
+  this.bip39Password = bip39Password == "" || second_password == null ? bip39Password : WalletCrypto.encryptSecretWithSecondPassword(bip39Password, second_password, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());
+
   this.numTxFetched = 0;
   this.accountArray = [];
 
@@ -37,9 +44,23 @@ var HDWallet = function(seedHex, bip39Password, second_password) {
     }
   };
 
-  this.getMasterHex = function(seedHex) {
-    return BIP39.mnemonicToSeed(passphraseHexStringToPassphrase(seedHex), this.bip39Password);
+  this.getMasterHex = function(seedHex, bip39Password) {
+    return BIP39.mnemonicToSeed(passphraseHexStringToPassphrase(seedHex), bip39Password);
   };
+
+  this.getBip39Password = function(second_password) {
+    assert(typeof(this.bip39Password) === "string", "BIP 39 password must be set or an empty string")
+    
+    if(this.bip39Password === "" || second_password == null) {
+      return this.bip39Password;
+    } else {
+      return WalletCrypto.decryptSecretWithSecondPassword(this.bip39Password, second_password, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());
+    }
+  }
+  
+  this.setBip39Password = function(bip39Password) {
+    this.bip39Password = bip39Password;
+  }
 
   this.getAccountsCount = function() {
     return this.accountArray.length;
@@ -164,15 +185,21 @@ var HDWallet = function(seedHex, bip39Password, second_password) {
 
   this.createAccount = function(label, second_password) {
     var seedHex = this.getSeedHexString(second_password);
-    account = this.createAccountWithSeedhex(label, seedHex, second_password);
+    var bip39Password = this.getBip39Password(second_password);
+    
+    assert(typeof(bip39Password) === "string", "BIP 39 password must be set or an empty string")
+    
+    account = this.createAccountWithSeedhex(label, seedHex, bip39Password, second_password);
     
     return account;
   };
     
-  this.createAccountWithSeedhex = function(label, seedHex, second_password) {
+  this.createAccountWithSeedhex = function(label, seedHex, bip39Password, second_password) {
+    assert(typeof(bip39Password) === "string", "BIP 39 password must be set or an empty string")
+    
     var accountIdx = this.accountArray.length;
 
-    var account = new HDAccount(this.getMasterHex(seedHex), null, label, accountIdx);
+    var account = new HDAccount(this.getMasterHex(seedHex, bip39Password), null, label, accountIdx);
 
     /* BIP 44 defines the following 5 levels in BIP32 path:
      * m / purpose' / coin_type' / account' / change / address_index
@@ -203,6 +230,8 @@ var HDWallet = function(seedHex, bip39Password, second_password) {
 
 
 function buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secondPassword, success, error) {
+  assert(typeof(bip39Password) === "string", "BIP 39 password must be set or an empty string")
+  
   var hdwallet = new HDWallet(seedHexString, bip39Password, secondPassword);
 
   for (var i = 0; i < accountsArrayPayload.length; i++) {
@@ -343,7 +372,7 @@ function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallbac
     }
 
     if (hdwallet.getAccountsCount() < 1) {
-        hdwallet.createAccountWithSeedhex("Account 1", hdwallet.getSeedHexString(), secondPassword);
+        hdwallet.createAccountWithSeedhex("Account 1", hdwallet.getSeedHexString(), hdwallet.getBip39Password(), secondPassword);
     }
 
     if (successCallback)
@@ -351,11 +380,15 @@ function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallbac
 }
 
 function recoverHDWalletFromSeedHex(seedHex, bip39Password, secondPassword, successCallback, errorCallback) {
+    assert(typeof(bip39Password) === "string", "BIP 39 password must be set or an empty string")
+    
     var hdwallet = new HDWallet(seedHex, bip39Password, secondPassword);
     recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallback);
 }
 
 function recoverHDWalletFromMnemonic(passphrase, bip39Password, secondPassword, successCallback, errorCallback) {
+    assert(typeof(bip39Password) === "string", "BIP 39 password must be set or an empty string")
+    
     var hdwallet = new HDWallet(passphraseToPassphraseHexString(passphrase), bip39Password, secondPassword);
     recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallback);
 }
