@@ -1723,7 +1723,7 @@ var MyWallet = new function() {
   this.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Password, secondPassword, successCallback, errorCallback) {
     var _success = function(hdWallet) {
       WalletStore.setHDWallet(hdWallet);
-      successCallback && successCallback();
+      successCallback && successCallback(hdWallet);
     };
 
     HDWallet.buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secondPassword, _success, errorCallback);

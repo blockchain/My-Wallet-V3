@@ -2,8 +2,8 @@ var Bitcoin = require('bitcoinjs-lib');
 var BIP39 = require('bip39');
 var JSONB = require('json-buffer');
 
-var WalletStore = require('./wallet-store');
 var MyWallet = require('./wallet');
+var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 
 var HDAccount = require('./hd-account');
@@ -18,6 +18,11 @@ function HDWallet(seedHex, bip39Password, second_password) {
   this.bip39Password = bip39Password;
   this.numTxFetched = 0;
   this.accountArray = [];
+
+  console.log('HDWallet')
+  console.log(WalletStore.getSharedKey())
+  console.log(WalletStore.getPbkdf2Iterations())
+  // console.log(MyWallet.getBaseFee())
 }
 
 HDWallet.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Password, secondPassword, success, error) {

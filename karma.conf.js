@@ -60,6 +60,7 @@ module.exports = function(karma) {
       'src/shared.js',
       'tests/mocks/*.js',
       'tests/**/*_spec.js',
+      // TODO so it does work - it's just that some tests interfere with each other
       // Or specify individual test files:
       // 'tests/bip38_spec.js',
       // 'tests/blockchain_api_spec.js',
