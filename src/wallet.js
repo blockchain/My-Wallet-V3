@@ -1109,7 +1109,7 @@ var MyWallet = new function() {
     return network.feePerKb;
   };
 
-  this.recommendedTransactionFeeForAddress = function(address, balance) {
+  this.recommendedTransactionFeeForAddress = function(address, amount) {
     // TODO: calculate the correct fee:
     return MyWallet.getBaseFee();
   };
