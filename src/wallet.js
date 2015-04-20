@@ -608,75 +608,69 @@ var MyWallet = new function() {
     var last_on_change = null;
 
     ws.onmessage = function(message) {
+      
+      var obj = $.parseJSON(message.data);
+            
+      transactions = WalletStore.getTransactions();
 
-      try {
-        var obj = $.parseJSON(message.data);
-        transactions = WalletStore.getTransactions();
+      if (obj.op == 'on_change') {
+        var old_checksum = WalletStore.generatePayloadChecksum();
+        var new_checksum = obj.checksum;
 
-        if (obj.op == 'on_change') {
-          var old_checksum = WalletStore.generatePayloadChecksum();
-          var new_checksum = obj.checksum;
+        if (last_on_change != new_checksum && old_checksum != new_checksum) {
+          last_on_change = new_checksum;
 
-          if (last_on_change != new_checksum && old_checksum != new_checksum) {
-            last_on_change = new_checksum;
+          MyWallet.getWallet();
+        }
 
-            MyWallet.getWallet();
-          }
+      } else if (obj.op == 'utx') {
+        WalletStore.setIsAccountRecommendedFeesValid(false);
 
-        } else if (obj.op == 'utx') {
-          WalletStore.setIsAccountRecommendedFeesValid(false);
+        var tx = TransactionFromJSON(obj.x);
 
-          var tx = TransactionFromJSON(obj.x);
+        var tx_processed = MyWallet.processTransaction(tx);
+        var tx_account = tx_processed.to.account;
 
-          var tx_processed = MyWallet.processTransaction(tx);
-          var tx_account = tx_processed.to.account;
+        //Check if this is a duplicate
+        //Maybe should have a map_prev to check for possible double spends
+        for (var key in transactions) {
+          if (transactions[key].txIndex == tx.txIndex) return;
+        }
 
-          //Check if this is a duplicate
-          //Maybe should have a map_prev to check for possible double spends
-          for (var key in transactions) {
-            if (transactions[key].txIndex == tx.txIndex) return;
-          }
+        WalletStore.addToFinalBalance(tx_processed.result);
 
-          WalletStore.addToFinalBalance(tx_processed.result);
+        var account = MyWallet.getAccount(tx_account.index);
 
-          if (tx_account) MyWallet.getAccount(tx_account.index).setBalance(WalletStore.getFinalBalance());
+        if (tx_account) account.setBalance(account.getBalance() + tx_processed.result);
 
-          WalletStore.incNTransactions();
+        WalletStore.incNTransactions();
 
-          tx.setConfirmations(0);
+        tx.setConfirmations(0);
 
-          WalletStore.pushTransaction(tx);
+        WalletStore.pushTransaction(tx);
 
-          playSound('beep');
+        playSound('beep');
 
-          WalletStore.sendEvent('on_tx');
+        WalletStore.sendEvent('on_tx');
 
-        }  else if (obj.op == 'block') {
-          //Check any transactions included in this block, if the match one our ours then set the block index
-          for (var i = 0; i < obj.x.txIndexes.length; ++i) {
-            for (var ii = 0; ii < transactions.length; ++ii) {
-              if (transactions[ii].txIndex == obj.x.txIndexes[i]) {
-                if (transactions[ii].blockHeight == null || transactions[ii].blockHeight == 0) {
-                  transactions[ii].blockHeight = obj.x.height;
-                  break;
-                }
+      }  else if (obj.op == 'block') {
+        //Check any transactions included in this block, if the match one our ours then set the block index
+        for (var i = 0; i < obj.x.txIndexes.length; ++i) {
+          for (var ii = 0; ii < transactions.length; ++ii) {
+            if (transactions[ii].txIndex == obj.x.txIndexes[i]) {
+              if (transactions[ii].blockHeight == null || transactions[ii].blockHeight == 0) {
+                transactions[ii].blockHeight = obj.x.height;
+                break;
               }
             }
           }
-
-          WalletStore.setLatestBlock(BlockFromJSON(obj.x));
-
-          WalletStore.sendEvent('on_block');
         }
 
-      } catch(e) {
-        if (message && message.data) {
-          console.log('WebSocket error: ' + message.data);
-        }
-        else {
-          console.log(e);
-        }
+        WalletStore.setLatestBlock(BlockFromJSON(obj.x));
+
+        WalletStore.sendEvent('on_block');
       }
+
     };
 
     ws.onopen = function() {
