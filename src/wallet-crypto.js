@@ -141,6 +141,7 @@
           } catch (_error) {
             e = _error;
             error('Error Decrypting Wallet. Please check your password is correct.');
+            return;
           }
           
           success(root, obj);
