@@ -1,3 +1,5 @@
+var MyWallet = require('./wallet');
+
 var hasProp = {}.hasOwnProperty;
 
 var WalletStore = (function() {
