@@ -339,7 +339,7 @@
       archiveLegacyAddr: function(address) {
         var addr;
         addr = addresses[address];
-        if ((addr.tag === null) || addr.tag === 0) {
+        if (addr.tag === null || addr.tag === undefined || addr.tag === 0) {
           addr.tag = 2;
           MyWallet.backupWalletDelayed('update', function() {
             return MyWallet.get_history();
