@@ -2386,7 +2386,7 @@ var MyWallet = new function() {
 
         var obj = $.parseJSON(e.responseText);
 
-        if (obj.authorization_required) {
+        if (obj.authorization_required && typeof(authorization_required) === "function") {
           authorization_required(function(authorization_received) {
             MyWallet.pollForSessionGUID(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_received, other_error);
           });
