@@ -1,10 +1,5 @@
 {
   "ignore" : ["grunt", "jasmine-core", "jquery", "istanbul", "esprima", "typeforce", "convert-hex", "convert-string"],
-  "assert" : {
-    "version": "1.3.0",
-    "commits" : ["cc3c9020e9ca440bdc431f92570d676dd8a89a3c"],
-    "repo" : "defunctzombie/commonjs-assert"
-  },
   "bigi" : {
     "version": "1.4.0",
     "commits" : ["7897bc32837379603559b5a17d904c3d2b9b97de"],
@@ -24,11 +19,6 @@
     "version": "2.0.1",
     "commits" : ["d3ee704d5f6e9d450333395ba17ce5c654f19d72"],
     "repo" : "cryptocoinjs/bs58"
-  },
-  "sha256" : {
-    "version": "0.1.1",
-    "commits" : ["6aa3967608b38e55a5d4f328453ca798821e67d2"],
-    "repo" : "cryptocoinjs/sha256"
   },
   "sjcl" : {
     "version": "1.0.2",

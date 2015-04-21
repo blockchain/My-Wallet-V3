@@ -3,7 +3,8 @@ var Bitcoin = require('bitcoinjs-lib');
 var BigInteger = require('bigi');
 var Base58 = require('bs58');
 var Unorm = require('unorm');
-var SHA256 = require('sha256');
+
+var hash256 = Bitcoin.crypto.hash256;
 
 
 var ImportExport = new function() {
@@ -53,7 +54,7 @@ var ImportExport = new function() {
     var expChecksum = hex.slice(-4);
     hex = hex.slice(0, -4);
 
-    var checksum = SHA256.x2(hex, {asBytes: true});
+    var checksum = hash256(hex);
 
     if (checksum[0] != expChecksum[0] || checksum[1] != expChecksum[1] || checksum[2] != expChecksum[2] || checksum[3] != expChecksum[3]) {
       error('Invalid Private Key');
@@ -91,7 +92,7 @@ var ImportExport = new function() {
 
       var base58Address = tmpkey.pub.getAddress().toBase58Check();
 
-      checksum = SHA256.x2(base58Address, {asBytes: true});
+      checksum = hash256(base58Address);
 
       if (checksum[0] != hex[3] || checksum[1] != hex[4] || checksum[2] != hex[5] || checksum[3] != hex[6]) {
         wrong_password();
@@ -128,7 +129,7 @@ var ImportExport = new function() {
           passfactor = prefactorA;
         } else {
           var prefactorB = Buffer.concat([prefactorA, Buffer(ownerentropy)]);
-          passfactor = SHA256.x2(prefactorB, {asBytes: true});
+          passfactor = hash256(prefactorB);
         }
 
         var kp = new Bitcoin.ECKey(BigInteger.fromBuffer(passfactor));
@@ -158,7 +159,7 @@ var ImportExport = new function() {
 
           var seedb = Buffer.concat([Buffer(unencryptedpart1Bytes.slice(0, 0+16)), Buffer(unencryptedpart2Bytes.slice(8, 8+8))]);
 
-          var factorb = SHA256.x2(seedb, {asBytes: true});
+          var factorb = hash256(seedb);
 
           // secp256k1: N
           var N = BigInteger.fromHex('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141');
