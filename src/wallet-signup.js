@@ -3,6 +3,7 @@ var assert = require('assert');
 var MyWallet = require('./wallet');
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
+var BlockchainAPI = require('./blockchain-api');
 
 
 var WalletSignup = new function() {
@@ -11,6 +12,8 @@ var WalletSignup = new function() {
   function insertWallet(guid, sharedKey, password, extra, successcallback, errorcallback) {
     assert(successcallback, "Success callback missing");
     assert(errorcallback, "Success callback missing");
+    assert(guid, "GUID missing");
+    assert(sharedKey, "Shared Key missing");
 
     try {
       var data = MyWallet.makeCustomWalletJSON(null, guid, sharedKey);
@@ -27,7 +30,7 @@ var WalletSignup = new function() {
         crypted, 
         password, 
         function() { // success callback for decryptWallet
-        
+
           //SHA256 new_checksum verified by server in case of curruption during transit
           var new_checksum = CryptoJS.SHA256(crypted, {asBytes: true}).toString();
 
@@ -44,7 +47,7 @@ var WalletSignup = new function() {
             sharedKey : sharedKey,
             guid : guid
           };
-        
+
           $.extend(post_data, extra);
           MyWallet.securePost(
             'wallet', 
@@ -75,10 +78,12 @@ var WalletSignup = new function() {
       data: { format : 'json', n : n, api_code : WalletStore.getAPICode()},
       success: function(data) {
 
-        if (data.uuids && data.uuids.length == n)
+        if (data.uuids && data.uuids.length == n) {
+          console.log("Got my uids...", data.uuids);
           success(data.uuids);
-        else
+        } else {
           error('Unknown Error');
+        }
       },
       error : function(data) {
         error(data.responseText);
@@ -88,47 +93,43 @@ var WalletSignup = new function() {
 
   this.generateNewWallet = function(password, email, success, error) {
     this.generateUUIDs(2, function(uuids) {
-      try {
-        var guid = uuids[0];
-        var sharedKey = uuids[1];
+      var guid = uuids[0];
+      var sharedKey = uuids[1];
 
-        rng_seed_time();
+      rng_seed_time();
 
-        if (password.length > 255) {
-          throw 'Passwords must be at shorter than 256 characters';
-        }
-
-        //User reported this browser generated an invalid private key
-        if(navigator.userAgent.match(/MeeGo/i)) {
-          throw 'MeeGo browser currently not supported.';
-        }
-
-        if (guid.length != 36 || sharedKey.length != 36) {
-          throw 'Error generating wallet identifier';
-        }
-
-        // Upgrade to HD immediately:
-        MyWallet.initializeHDWallet(
-          null, 
-          null, 
-          function() {}, 
-          function() {
-            insertWallet(guid, sharedKey, password, {email : email}, function(message){
-              success(guid, sharedKey, password);
-            }, function(e) {
-              error(e);
-            });
-          }, 
-          function(e) {
-            error(e);
-          }
-        );
-      } catch (e) {
-        error(e);
+      if (password.length > 255) {
+        throw 'Passwords must be at shorter than 256 characters';
       }
+
+      //User reported this browser generated an invalid private key
+      if(navigator.userAgent.match(/MeeGo/i)) {
+        throw 'MeeGo browser currently not supported.';
+      }
+
+      if (guid.length != 36 || sharedKey.length != 36) {
+        throw 'Error generating wallet identifier';
+      }
+
+      // Upgrade to HD immediately:
+      MyWallet.initializeHDWallet(
+        null, 
+        "", 
+        function() {}, 
+        function() {
+          insertWallet(guid, sharedKey, password, {email : email}, function(message){
+            success(guid, sharedKey, password);
+          }, function(e) {
+            error(e);
+          });
+        }, 
+        function(e) {
+          error(e);
+        }
+      );
     }, error);
   };
-
+  
 };
 
 module.exports = WalletSignup;

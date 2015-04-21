@@ -105,8 +105,23 @@ var BlockchainSettingsAPI = new function() {
     updateAuthType(5, success, error);
   };
 
-  this.setTwoFactorYubiKey = function(success, error) {
-    updateAuthType(3, success, error);
+  this.setTwoFactorYubiKey = function(code, success, error) {
+    assert(code, "Activation code required");
+    assert(success, "Success callback required");
+    assert(error, "Error callback required");
+    
+    // Tell the server about the YubiKey and then enable 2FA with it: 
+    updateKV(
+      'Configuring Yubikey', 
+      'update-yubikey', 
+      code, 
+      function() {
+        updateAuthType(3, success, error);
+      }, 
+      function() {
+        error("Failed to configure Yubikey");
+      }
+    );
   };
 
   this.setTwoFactorEmail = function(success, error) {

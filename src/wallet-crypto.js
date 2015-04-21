@@ -139,11 +139,14 @@ var WalletCrypto = (function() {
         try {
           decrypted = this.decryptAesWithStretchedPassword(obj.payload, password, obj.pbkdf2_iterations);
           root = $.parseJSON(decrypted);
-          success(root, obj);
         } catch (_error) {
           e = _error;
           error('Error Decrypting Wallet. Please check your password is correct.');
+          return;
         }
+        
+        success(root, obj);
+
       } else {
         decrypted = void 0;
         try {
@@ -162,7 +165,6 @@ var WalletCrypto = (function() {
         }
       }
     },
-
     /**
      * Reencrypt data with password.
      * The decrypt call uses the currently set number of iterations, the encrypt call uses the new number of iterations we're just setting
@@ -174,7 +176,9 @@ var WalletCrypto = (function() {
       var enc;
       assert(pw, "password missing");
       assert(sharedKey, "password missing");
-      assert(pbkdf2_iterations, "pbkdf2_iterations missing");
+      assert(previous_pbkdf2_iterations, "previous_pbkdf2_iterations missing");
+      assert(new_pbkdf2_iterations, "new_pbkdf2_iterations missing");
+
       enc = function(data) {
         return WalletCrypto.encrypt(WalletCrypto.decryptSecretWithSecondPassword(data, pw, sharedKey, previous_pbkdf2_iterations), sharedKey + pw, new_pbkdf2_iterations);
       };

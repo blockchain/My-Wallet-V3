@@ -147,7 +147,7 @@ describe "HD Wallet", ->
       
     describe "without 2nd password", ->
       beforeEach ->
-        MyWallet.initializeHDWallet(null, null, null, observer.success, observer.error)
+        MyWallet.initializeHDWallet(null, "", null, observer.success, observer.error)
 
       it "should succeed", ->
         expect(observer.success).toHaveBeenCalled()
@@ -160,7 +160,7 @@ describe "HD Wallet", ->
           callback(second_password, (()->), (()->))
         spyOn(observer, "getPassword").and.callThrough()
 
-        MyWallet.initializeHDWallet(null, null, observer.getPassword, observer.success, observer.error)
+        MyWallet.initializeHDWallet(null, "", observer.getPassword, observer.success, observer.error)
 
         # Not sure why this gets called:
         MyWallet.backupWallet = () ->
@@ -190,7 +190,7 @@ describe "HD Wallet", ->
           spyOn(observer, "success").and.callThrough()
           spyOn(observer, "error")
 
-          MyWallet.buildHDWallet(seed, accountsPayload, bip39Password, null, observer.success, observer.error)
+          MyWallet.buildHDWallet(seed, accountsPayload, "", null, observer.success, observer.error)
 
         it "should succeed", ->
           expect(observer.success).toHaveBeenCalled()
@@ -203,7 +203,7 @@ describe "HD Wallet", ->
           # In practice, you always need to provide a seed, e.g. 0
           fake_seed = 0
 
-          MyWallet.buildHDWallet(fake_seed, accountsPayload, null, ((hdWallet) -> hdwallet = hdWallet))
+          MyWallet.buildHDWallet(fake_seed, accountsPayload, "", null, ((hdWallet) -> hdwallet = hdWallet))
           expect(hdwallet.getAccountsCount()).toBe(2)
 
         it "should know the xpub for each account", ->
@@ -234,7 +234,7 @@ describe "HD Wallet", ->
 
           spyOn(observer, "success").and.callThrough()
 
-          MyWallet.buildHDWallet(fake_seed, accountsPayloadSecondPassword, null, null, observer.success)
+          MyWallet.buildHDWallet(fake_seed, accountsPayloadSecondPassword, "", null, observer.success)
 
         it "should load", ->
           expect(observer.success).toHaveBeenCalled()
@@ -258,7 +258,7 @@ describe "HD Wallet", ->
 
          spyOn(observer, "success").and.callThrough()
 
-         MyWallet.buildHDWallet(seed, [], bip39Password, null, observer.success)
+         MyWallet.buildHDWallet(seed, [], "", null, observer.success)
 
          expect(observer.success).toHaveBeenCalled()
 
@@ -270,7 +270,7 @@ describe "HD Wallet", ->
     describe "when 2nd password is disabled", ->
       hdwallet = undefined
       beforeEach ->
-        MyWallet.buildHDWallet(seed, accountsPayload, bip39Password, null, ((hdWallet) -> hdwallet = hdWallet))
+        MyWallet.buildHDWallet(seed, accountsPayload, "", null, ((hdWallet) -> hdwallet = hdWallet))
         account = hdwallet.createAccount("Mobile", null) # index 2
 
       it "should know the xpub", ->
@@ -297,7 +297,7 @@ describe "HD Wallet", ->
             
         spyOn(observer, "success").and.callThrough()
                 
-        MyWallet.buildHDWallet(fake_seed, accountsPayloadSecondPassword, null, second_password, observer.success, (error) -> console.log("Error:"); console.log(error))
+        MyWallet.buildHDWallet(fake_seed, accountsPayloadSecondPassword, "", second_password, observer.success, (error) -> console.log("Error:"); console.log(error))
 
       it "should load", ->
         expect(observer.success).toHaveBeenCalled()

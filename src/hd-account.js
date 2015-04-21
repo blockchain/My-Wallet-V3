@@ -2,6 +2,7 @@ var crypto = require('crypto');
 var Bitcoin = require('bitcoinjs-lib');
 var JSONB = require('json-buffer');
 
+
 var HDAccount = function(seed, network, label, idx) {
 
   network = network || Bitcoin.networks.bitcoin;
@@ -320,10 +321,10 @@ var HDAccount = function(seed, network, label, idx) {
   };
 
   this.generateCache = function() {
-    this.cache.externalAccountPubKey = JSONB.stringify(this.externalAccount.pubKey.toBuffer());
-    this.cache.externalAccountChainCode = JSONB.stringify(this.externalAccount.chainCode);
-    this.cache.internalAccountPubKey = JSONB.stringify(this.internalAccount.pubKey.toBuffer());
-    this.cache.internalAccountChainCode = JSONB.stringify(this.internalAccount.chainCode);
+    this.cache.externalAccountPubKey = this.externalAccount.pubKey.toBuffer().toString("base64");
+    this.cache.externalAccountChainCode = this.externalAccount.chainCode.toString("base64");
+    this.cache.internalAccountPubKey = this.internalAccount.pubKey.toBuffer().toString("base64");
+    this.cache.internalAccountChainCode = this.internalAccount.chainCode.toString("base64");
   };
 
   this.undoGenerateAddress = function() {

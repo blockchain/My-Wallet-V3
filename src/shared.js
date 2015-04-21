@@ -106,7 +106,7 @@ function TransactionFromJSON(json) {
     inputs : json.inputs,
     out : json.out,
     blockIndex : json.block_index,
-    result : json.result,
+    // result : json.result,
     blockHeight : json.block_height,
     balance : json.balance,
     double_spend : json.double_spend,

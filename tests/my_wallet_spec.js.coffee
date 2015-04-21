@@ -19,7 +19,7 @@ describe "MyWallet", ->
     spyOn(observer, "success").and.callThrough()
     spyOn(observer, "error")
 
-    MyWallet.buildHDWallet(seed, [], null, null, observer.success, observer.error)
+    MyWallet.buildHDWallet(seed, [], "", null, observer.success, observer.error)
 
     MyWallet.backupWalletDelayed = () ->
     MyWallet.backupWallet = () ->        

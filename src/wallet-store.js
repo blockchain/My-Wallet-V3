@@ -3,6 +3,7 @@ var MyWallet = require('./wallet');
 var hasProp = {}.hasOwnProperty;
 
 var WalletStore = (function() {
+
   var languageCodeToLanguage = {
     'de': 'German',
     'hi': 'Hindi',
@@ -220,7 +221,9 @@ var WalletStore = (function() {
     },
     newAddressBookFromJSON: function(addressBook) {
       address_book = {};
-      var addEntry = function(e) {this.addAddressBookEntry(e.addr, e.label);};
+      var addEntry = function(e) {
+        this.WalletStore.addAddressBookEntry(e.addr, e.label);
+      };
       if (addressBook !== null && addressBook !== undefined) { 
         addressBook.forEach(addEntry); 
       }
@@ -293,7 +296,6 @@ var WalletStore = (function() {
     getTotalBalanceForActiveLegacyAddresses: function() {
       var add = function(x, y) {return x + y;};
       var balances = [];
-      var k, o;
       for (k in addresses) {
         if (!hasProp.call(addresses, k)) continue;
         o = addresses[k];
@@ -339,7 +341,7 @@ var WalletStore = (function() {
     archiveLegacyAddr: function(address) {
       var addr;
       addr = addresses[address];
-      if ((addr.tag === null) || addr.tag === 0) {
+      if (addr.tag === null || addr.tag === undefined || addr.tag === 0) {
         addr.tag = 2;
         MyWallet.backupWalletDelayed('update', function() {
           return MyWallet.get_history();
@@ -750,6 +752,7 @@ var WalletStore = (function() {
     },
     // not used
     getLocalWalletJson: function() {
+      var obj = null;
       try {
         var obj = $.parseJSON(localWalletJsonString);
         return obj;
