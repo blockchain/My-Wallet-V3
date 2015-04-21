@@ -1,7 +1,6 @@
 var assert = require('assert');
 var Bitcoin = require('bitcoinjs-lib');
 var BIP39 = require('bip39');
-var JSONB = require('json-buffer');
 
 var MyWallet = require('./wallet');
 var WalletStore = require('./wallet-store');
