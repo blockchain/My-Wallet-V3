@@ -41,6 +41,14 @@ rm -rf bower_components/ node_modules/
 
 Load `dist/my-wallet.js`.
 
+Optional: set alias for modules you use
+
+```javascript
+var MyWallet = Blockchain.MyWallet;
+var WalletStore = Blockchain.WalletStore;
+var Spender = Blockchain.Spender;
+var BlockchainAPI = Blockchain.BlockchainAPI;
+```
 
 Disable logout, if desired, for development work:
 ```javascript
@@ -98,31 +106,6 @@ MyWallet.get_history(_successFun, _errorFun);
 
 `get_history` will trigger the `did_multiaddr` event on completion, so the wallet stats and display can be updated.
 
-## Debug / Developement
-
-Include the following files instead of `my-wallet.js` for easier debugging:
-
-* `src/blockchain-api.js`
-* `src/blockchain-settings-api.js`
-* `src/crypto-util-legacy.js`
-* `src/hd-account.js`
-* `src/hd-wallet.js`
-* `src/shared.js`
-* `src/wallet-signup.js`
-* `src/wallet-store.js`
-* `src/wallet.js`
-* `build/browserify.js`
-* `node_modules/sjcl/sjcl.js`
-* `node_modules/xregexp/xregexp-all.js`
-* `bower_components/jquery/dist/jquery.js`
-* `bower_components/cryptojslib/rollups/sha256.js`
-* `bower_components/cryptojslib/rollups/aes.js`
-* `bower_components/cryptojslib/rollups/pbkdf2.js`
-* `bower_components/cryptojslib/components/cipher-core.js`
-* `bower_components/cryptojslib/components/pad-iso10126.js`
-* `bower_components/cryptojslib/components/mode-ecb.js`
-* `bower_components/cryptojslib/components/pad-nopadding.js`
-
 ## Distribution
 
 Run `GITHUB_USER=... GITHUB_PASSWORD=... grunt dist` to check all dependencies against `dependency-whitelist.json` and generate `my-wallet.min.js``.
@@ -130,7 +113,7 @@ Run `GITHUB_USER=... GITHUB_PASSWORD=... grunt dist` to check all dependencies a
 ## Adding a browserified dependency
 
 1. `npm install newpackage --save`
-2. Add the require in browserify-imports.js
+2. Add the require where needed
 3. `npm install`
 
 ### Whitelist dependencies

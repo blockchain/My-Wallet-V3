@@ -61,10 +61,10 @@ module.exports = (grunt) ->
     browserify:
       options:
         debug: true
-        browserifyOptions: { standalone: "Browserify" }
+        browserifyOptions: { standalone: "Blockchain" }
 
       build:
-        src: ['src/wallet.js']
+        src: ['src/index.js']
         dest: 'build/browserify.js'
 
       production:
