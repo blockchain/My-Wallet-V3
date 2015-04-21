@@ -4,7 +4,7 @@ var assert = require('assert');
 var Bitcoin = require('bitcoinjs-lib');
 var ECKey = Bitcoin.ECKey;
 var BigInteger = require('bigi');
-var Buffer = require('buffer');
+var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
 var BIP39 = require('bip39');
 
