@@ -12,12 +12,12 @@ grunt build
 ## Tests
 
 ```sh
-grunt karma:test
+npm test
 ```
 
 ## Dev
 
-Watch files, build and run tests on change
+Watch files and re-build
 
 ```sh
 grunt

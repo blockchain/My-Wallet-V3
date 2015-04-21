@@ -34,21 +34,12 @@ module.exports = (grunt) ->
           'build/shared.processed.js'
           'build/ie.processed.js'
           'build/crypto-util-legacy.processed.js'
-          'build/browserify.js'
+          'build/blockchain.js'
           'node_modules/sjcl/sjcl.js'
           'node_modules/xregexp/xregexp-all.js'
         ]
         dest: "dist/my-wallet.js"
  
-    coffee:
-     compile:
-        expand: true,
-        flatten: true,
-        cwd: 'tests',
-        src: ['*.coffee'],
-        dest: 'tests/',
-        ext: '.js'
-
     uglify:
       options:
         banner: "/*! <%= pkg.name %> <%= grunt.template.today(\"yyyy-mm-dd\") %> */\n"
@@ -65,22 +56,13 @@ module.exports = (grunt) ->
 
       build:
         src: ['src/index.js']
-        dest: 'build/browserify.js'
+        dest: 'build/blockchain.js'
 
       production:
         options:
           debug: false
         src: '<%= browserify.build.src %>'
-        dest: 'build/browserify.js'
-
-    karma:
-      unit:
-        configFile: 'karma.conf.js'
-        singleRun: false
-
-      continuous: # continuous integration mode: run tests once (what's in a name...)
-        configFile: 'karma.conf.js'
-        singleRun: true
+        dest: 'build/blockchain.js'
 
     # TODO should auto-run and work on all files
     jshint:
@@ -107,11 +89,7 @@ module.exports = (grunt) ->
         files: [
           'src/**/*.js'
         ]
-        tasks: ['build', 'karma:continuous']
-
-      karma:
-        files: ['tests/**/*.js.coffee']
-        tasks: ['build', 'karma:continuous']
+        tasks: ['build']
 
     shell:
       check_dependencies:
@@ -153,9 +131,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-contrib-concat'
   grunt.loadNpmTasks 'grunt-contrib-uglify'
   grunt.loadNpmTasks 'grunt-contrib-watch'
-  grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks 'grunt-env'
-  grunt.loadNpmTasks 'grunt-karma'
   grunt.loadNpmTasks 'grunt-preprocess'
   grunt.loadNpmTasks 'grunt-shell'
   grunt.loadNpmTasks 'grunt-shrinkwrap'
@@ -164,12 +140,10 @@ module.exports = (grunt) ->
 
   grunt.registerTask "default", [
     "build"
-    "karma:continuous"
     "watch"
   ]
 
   grunt.registerTask "build", [
-    "coffee:compile"
     "env:build"
     "preprocess"
     "browserify:build"
@@ -182,7 +156,6 @@ module.exports = (grunt) ->
     "env:production"
     "clean:build"
     "clean:dist"
-    "coffee:compile"
     "shrinkwrap"
     "shell:check_dependencies"
     "clean:shrinkwrap"
@@ -200,7 +173,6 @@ module.exports = (grunt) ->
     "env:production"
     "clean:build"
     "clean:dist"
-    "coffee:compile"
     "shell:skip_check_dependencies"
     "preprocess"
     "browserify:production"

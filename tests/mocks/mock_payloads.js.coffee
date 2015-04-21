@@ -1,16 +1,18 @@
+root = global
+
 # Using the same seed and passphrase for two wallets: one without and one with a second password.
-seed = "032e2c7c11329737f4b8d1b9076044ed"
-passphrase = "add imitate business carbon city orbit spray boss ribbon deposit bachelor sustain"
-bip39Password = null
+root.seed = "032e2c7c11329737f4b8d1b9076044ed"
+root.passphrase = "add imitate business carbon city orbit spray boss ribbon deposit bachelor sustain"
+root.bip39Password = null
 
-second_password = "1234"
+root.second_password = "1234"
 # Generated with: WalletCrypto.encryptSecretWithSecondPassword("032e2c7c11329737f4b8d1b9076044ed", "1234", "87654321-4321-4321-4321-ba0987654321", 1)
-seed_encrypted = "no6CHilGTEALs4+mBEV2GdKGar1q+3ul4paMYr4kGmRPHmqrjPCU2fx+KYJ4FgBO0gZyu9+IhXBR4jmNlqQ2CQ=="
+root.seed_encrypted = "no6CHilGTEALs4+mBEV2GdKGar1q+3ul4paMYr4kGmRPHmqrjPCU2fx+KYJ4FgBO0gZyu9+IhXBR4jmNlqQ2CQ=="
 
-xpubAccountZero  = "xpub6CcRcFnKD32pPkjV8sVNG4WejGQwQTCaAs31e3NoaFSSnYWfBuEWNo3nKWVZotgtN1dpoYGwSxUVyVfNrrgE7YwpSrUWsqgK2LdmuGDCBMp"
-xprivAccountZero = "xprv9yd5CkFRNfUXBGf22qxMtvZvBEaSzzUioe7QqeyC1uuTukBWeMvFpzjJUEDswuWby8JmGR84wQHy75djYEAsAktvJa5B2QueQkzuNQiqS1C"
+root.xpubAccountZero  = "xpub6CcRcFnKD32pPkjV8sVNG4WejGQwQTCaAs31e3NoaFSSnYWfBuEWNo3nKWVZotgtN1dpoYGwSxUVyVfNrrgE7YwpSrUWsqgK2LdmuGDCBMp"
+root.xprivAccountZero = "xprv9yd5CkFRNfUXBGf22qxMtvZvBEaSzzUioe7QqeyC1uuTukBWeMvFpzjJUEDswuWby8JmGR84wQHy75djYEAsAktvJa5B2QueQkzuNQiqS1C"
 
-decryptedWalletPayload = {
+root.decryptedWalletPayload = {
 	"guid" :      "12345678-1234-1234-1234-1234567890ab",
 	"sharedKey" : "87654321-4321-4321-4321-ba0987654321",
 	"options" : {
@@ -33,17 +35,17 @@ decryptedWalletPayload = {
 	"tag_names" : [],
 	"hd_wallets" : [
 	  {
-      "seed_hex" : seed,
+      "seed_hex" : root.seed,
       "mnemonic_verified" : "false",
       "default_account_idx" : "0",
-      "paidTo" : {"af3282da9abfae94573cb0493d59ba15882535b63e04da32c6110b40e8171b82":{"email":"test-email@purpledunes.com","mobile":null,"redeemedAt":1417171978,"address":"1NsGohE53dzWMNFJo2KynFpmDumpBCnFFf"}},
+      "paidTo" : {"af3282da9abfae94573cb0493d59ba15882535b63e04da32c6110b40e8171b82":{"email":"test-emailroot.purpledunes.com","mobile":null,"redeemedAt":1417171978,"address":"1NsGohE53dzWMNFJo2KynFpmDumpBCnFFf"}},
     	"accounts" : [
         {
           "label":"Checking",
           "archived":false,
           "change_addresses":3,
-          "xpriv":xprivAccountZero,
-          "xpub":xpubAccountZero
+          "xpriv":root.xprivAccountZero,
+          "xpub":root.xpubAccountZero
         }
         {
           "label":"Savings",
@@ -57,7 +59,7 @@ decryptedWalletPayload = {
 	]
 }
 
-decryptedWalletWithSecondPasswordPayload = {
+root.decryptedWalletWithSecondPasswordPayload = {
 	"guid" :      "12345678-1234-1234-1234-1234567890ab",
 	"sharedKey" : "87654321-4321-4321-4321-ba0987654321",
 	"options" : {
@@ -83,7 +85,7 @@ decryptedWalletWithSecondPasswordPayload = {
       "seed_hex" : "...",
       "mnemonic_verified" : "false",
       "default_account_idx" : "0",
-      "paidTo" : {"af3282da9abfae94573cb0493d59ba15882535b63e04da32c6110b40e8171b82":{"email":"test-email@purpledunes.com","mobile":null,"redeemedAt":1417171978,"address":"1NsGohE53dzWMNFJo2KynFpmDumpBCnFFf"}},
+      "paidTo" : {"af3282da9abfae94573cb0493d59ba15882535b63e04da32c6110b40e8171b82":{"email":"test-emailroot.purpledunes.com","mobile":null,"redeemedAt":1417171978,"address":"1NsGohE53dzWMNFJo2KynFpmDumpBCnFFf"}},
     	"accounts" : [
         {
           "label":"Checking",
@@ -97,11 +99,9 @@ decryptedWalletWithSecondPasswordPayload = {
           "archived":false,
           "change_addresses":0,
           "xpriv":"...",
-          "xpub":xpubAccountZero
+          "xpub":root.xpubAccountZero
         }
     	]
   	}
 	]
 }
-  
-

@@ -15,7 +15,7 @@ module.exports = function(karma) {
       captureConsole: true
     },
 
-    autoWatch: false,
+    autoWatch: true,
 
     // logLevel: config.LOG_DEBUG,
 
@@ -28,14 +28,18 @@ module.exports = function(karma) {
     },
 
     preprocessors: {
-      'tests/*.js' : ['browserify']
+      'tests/**/*.coffee' : ['browserify']
     },
 
     browserify: {
-      debug: true,
-      transform: [ 'browserify-istanbul' ],
-      // transform: [ 'coffeeify', 'browserify-istanbul' ],
-      plugin: [ 'proxyquireify/plugin' ]
+      configure: function(bundle) {
+        bundle.on('prebundle', function() {
+          bundle.transform('coffeeify');
+          bundle.transform('browserify-istanbul');
+          bundle.plugin('proxyquireify/plugin');
+        });
+      },
+      debug: true
     },
 
     coffeePreprocessor: {
@@ -58,8 +62,8 @@ module.exports = function(karma) {
       'node_modules/xregexp/xregexp-all.js',
       'src/crypto-util-legacy.js',
       'src/shared.js',
-      'tests/mocks/*.js',
-      'tests/**/*_spec.js',
+      'tests/**/*.coffee',
+      {pattern: 'src/**/*.js', included: false}
       // TODO so it does work - it's just that some tests interfere with each other
       // Or specify individual test files:
       // 'tests/bip38_spec.js',
