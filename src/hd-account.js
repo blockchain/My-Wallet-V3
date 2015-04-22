@@ -217,13 +217,13 @@ var HDAccount = function(seed, network, label, idx) {
     this.archived = archived;
   };
 
-  this.getAccountExtendedKey = function(isPrivate) {
-    if (isPrivate) {
-      return this.extendedPrivateKey;
-    }
-    else {
-      return this.extendedPublicKey;
-    }
+  this.getExtendedPublicKey = function(isPrivate) {
+    return this.extendedPublicKey;
+  };
+
+  this.getExtendedPrivateKey = function(isPrivate) {
+    return this.extendedPrivateKey;
+
   };
 
   this.generateCache = function() {

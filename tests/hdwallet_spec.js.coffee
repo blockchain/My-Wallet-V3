@@ -208,12 +208,12 @@ describe "HD Wallet", ->
 
         it "should know the xpub for each account", ->
           # The XPUB is loaded from the JSON payload, not calculated.
-          extendedPubKey = hdwallet.getAccounts()[0].getAccountExtendedKey(false)
+          extendedPubKey = hdwallet.getAccounts()[0].getExtendedPublicKey()
           expect(extendedPubKey).toBe(xpubAccountZero)
 
         it "should know the xpriv for each account", ->
            # The XPRIV is loaded from the JSON payload, not calculated.
-          extendedPrivateKey = hdwallet.getAccounts()[0].getAccountExtendedKey(true)
+          extendedPrivateKey = hdwallet.getAccounts()[0].getExtendedPrivateKey()
           expect(extendedPrivateKey).toBe(xprivAccountZero)
 
       describe "2nd password protected account", ->
@@ -240,7 +240,7 @@ describe "HD Wallet", ->
           expect(observer.success).toHaveBeenCalled()
 
         it "should only know the encrypted xpriv", ->
-          extendedPrivateKey = hdwallet.getAccounts()[0].getAccountExtendedKey(true)
+          extendedPrivateKey = hdwallet.getAccounts()[0].getExtendedPrivateKey()
           expect(extendedPrivateKey).toBe(decryptedWalletWithSecondPasswordPayload["hd_wallets"][0]["accounts"][0]["xpriv"])
 
         it "should only know the encrypted seed hex", ->
@@ -274,11 +274,11 @@ describe "HD Wallet", ->
         account = hdwallet.createAccount("Mobile", null) # index 2
 
       it "should know the xpub", ->
-        extendedPubKey = account.getAccountExtendedKey(false)
+        extendedPubKey = account.getExtendedPublicKey()
         expect(extendedPubKey).toBe("xpub6CcRcFnKD32pSYsYf97azD7YtChp1CMxFaDnXcoYpjm4YLGBvy4LojWFYsgJxRCyzRysWxSiZ9yiZLdtncB8vhCouoihMW2BZu4T6uyW6ue")
 
       it "should know the xpriv", ->
-        extendedPrivateKey = account.getAccountExtendedKey(true)
+        extendedPrivateKey = account.getExtendedPrivateKey()
         expect(extendedPrivateKey).toBe("xprv9yd5CkFRNfUXE4o5Z7aad5ApLAsKbje6tMJBjEPwGQE5fXw3PRk6FwBmhbLDduzdQGmFP3CfhxmLKaYHxHApmrrtkHswj4oL6g37McodpQd")
       
     describe "when 2nd password is enabled", ->
@@ -303,13 +303,13 @@ describe "HD Wallet", ->
         expect(observer.success).toHaveBeenCalled()
         
       it "should know the xpub", ->
-        extendedPubKey = account.getAccountExtendedKey(false)
+        extendedPubKey = account.getExtendedPublicKey()
         expect(extendedPubKey).toBe("xpub6CcRcFnKD32pSYsYf97azD7YtChp1CMxFaDnXcoYpjm4YLGBvy4LojWFYsgJxRCyzRysWxSiZ9yiZLdtncB8vhCouoihMW2BZu4T6uyW6ue")
         
       it "should only know the encrypted xpriv", ->
         
         # Key encryption is non deterministic, so we check if the decrypted result is correct
-        extendedPrivateKey = account.getAccountExtendedKey(true)
+        extendedPrivateKey = account.getExtendedPrivateKey()
         
         # console.log(WalletCrypto.encryptSecretWithSecondPassword("xprv9yd5CkFRNfUXE4o5Z7aad5ApLAsKbje6tMJBjEPwGQE5fXw3PRk6FwBmhbLDduzdQGmFP3CfhxmLKaYHxHApmrrtkHswj4oL6g37McodpQd", second_password, sharedKey, 1))
         

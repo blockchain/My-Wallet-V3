@@ -80,7 +80,6 @@ HDWallet.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Pass
 function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallback) {
   assert(secondPassword === null || secondPassword, "Second password must be null or set.");
 
-  var LOOK_AHEAD_ADDRESS_COUNT = 20;
   var accountIdx = 0;
 
   var continueLookingAheadAccount = true;
@@ -88,87 +87,17 @@ function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallbac
   while(continueLookingAheadAccount) {
     var account = hdwallet.createAccount("Account " + accountIdx.toString(), secondPassword);
 
+    var xpub = account.getExtendedPublicKey();
 
-    var lookAheadOffset = 0;
-    var accountAddressIdx = -1;
-    var continueLookingAheadAddress = true;
-    while(continueLookingAheadAddress) {
-      var addresses = [];
-      var addressToIdxDict = {};
-
-      for (var i = lookAheadOffset; i < lookAheadOffset + LOOK_AHEAD_ADDRESS_COUNT; i++) {
-        var address = account.generateAddress();
-        addresses.push(address);
-        addressToIdxDict[address] = i;
+    MyWallet.get_history_with_addresses(xpub, function(obj) {
+      if(obj.addresses[0].account_index == 0 && obj.addresses[0].change_index == 0) {
+        continueLookingAheadAccount = false;
+        hdwallet.accountArray.pop();
       }
-
-      MyWallet.get_history_with_addresses(addresses, function(obj) {
-        for (var i = 0; i < obj.addresses.length; ++i) {
-          if (obj.addresses[i].n_tx > 0 && addressToIdxDict[obj.addresses[i].address] > accountAddressIdx) {
-            accountAddressIdx = addressToIdxDict[obj.addresses[i].address];
-          }
-        }
-
-        if (accountAddressIdx < lookAheadOffset) {
-          continueLookingAheadAddress = false;
-        }
-
-        lookAheadOffset += LOOK_AHEAD_ADDRESS_COUNT;
-      }, function() {
-        if (errorCallback)
-          errorCallback();
-        return;
-      });
-    }
-
-    while(account.getAddressesCount() > accountAddressIdx+1) {
-      account.undoGenerateAddress();
-    }
-    account.receiveAddressCount = account.getAddressesCount();
-
-    lookAheadOffset = 0;
-    var accountChangeAddressIdx = -1;
-    var continueLookingAheadChangeAddress = true;
-    while(continueLookingAheadChangeAddress) {
-      var addresses = [];
-      var addressToIdxDict = {};
-
-      for (var i = lookAheadOffset; i < lookAheadOffset + LOOK_AHEAD_ADDRESS_COUNT; i++) {
-        var address = account.generateChangeAddress();
-        addresses.push(address);
-        addressToIdxDict[address] = i;
-      }
-
-      MyWallet.get_history_with_addresses(addresses, function(obj) {
-        for (var i = 0; i < obj.addresses.length; ++i) {
-          if (obj.addresses[i].n_tx > 0 && addressToIdxDict[obj.addresses[i].address] > accountChangeAddressIdx) {
-            accountChangeAddressIdx = addressToIdxDict[obj.addresses[i].address];
-          }
-        }
-
-        if (accountChangeAddressIdx < lookAheadOffset) {
-          continueLookingAheadChangeAddress = false;
-        }
-
-        lookAheadOffset += LOOK_AHEAD_ADDRESS_COUNT;
-      }, function() {
-        if (errorCallback)
-          errorCallback();
-        return;
-      });
-    }
-
-    while(account.getChangeAddressesCount() > accountChangeAddressIdx+1) {
-      account.undoGenerateChangeAddress();
-    }
-    account.changeAddressCount = account.getChangeAddressesCount();
-
-    if (accountAddressIdx == -1 && accountChangeAddressIdx == -1) {
-      continueLookingAheadAccount = false;
-      hdwallet.accountArray.pop();
-    } else {
       accountIdx += 1;
-    }
+    }, function() {
+      errorCallback && errorCallback();
+    });
   }
 
   if (hdwallet.getAccountsCount() < 1) {
@@ -267,7 +196,7 @@ HDWallet.prototype.filterTransactionsForAccount = function(accountIdx, transacti
       if (!output || !output.addr)
         continue;
 
-      if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
+      if (output.xpub != null && account.getExtendedPublicKey() == output.xpub.m) {
         isOrigin = true;
         transaction.amount -= output.value;
       } else {
@@ -280,14 +209,14 @@ HDWallet.prototype.filterTransactionsForAccount = function(accountIdx, transacti
       var output = tx.out[i];
       if (!output || !output.addr)
         continue;
-      if (output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
+      if (output.xpub != null && account.getExtendedPublicKey() == output.xpub.m) {
         transaction.amount += output.value;
       } else {
         transaction.to_addresses.push(output.addr);
         if (!isOrigin) {
           for (var j in this.getAccounts()) {
             var otherAccount = this.getAccount(j);
-            if (otherAccount.getAccountExtendedKey(false) == output.xpub.m) {
+            if (otherAccount.getExtendedPublicKey() == output.xpub.m) {
               transaction.intraWallet = true;
               break;
             }

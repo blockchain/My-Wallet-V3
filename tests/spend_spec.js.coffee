@@ -73,7 +73,8 @@ describe "Spend", ->
            irpvm4GESg9YLn9R386qpmnsrcC5rvrpEJAXSrfqQR3qGtjGv5ddV9g"
         isArchived: () -> false
         getReceiveAddress: () -> "1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX"
-        getAccountExtendedKey : (p) -> if p then this.extendedPrivateKey else this.extendedPublicKey 
+        getExtendedPublicKey: () -> this.extendedPublicKey
+        getExtendedPrivateKey: () -> this.extendedPrivateKey
         setUnspentOutputs: (utxo) -> return
       }
     ]
@@ -311,11 +312,11 @@ describe "Spend", ->
     tx             = undefined
     beforeEach ->  
       spyOn(WalletCrypto, "decryptSecretWithSecondPassword")
-        .and.returnValue(hdAccounts[0].getAccountExtendedKey(true))
+        .and.returnValue(hdAccounts[0].getExtendedPrivateKey())
     
       # Mocked objects
       # - all the methods in the accoupnt object (hdwallet.js)
-      #    - createTx, getBalance, getAccountExtendedKey, setUnspentOutputs
+      #    - createTx, getBalance, getExtendedPublicKey, getExtendedPrivateKey, setUnspentOutputs
       # - BlockchainAPI calls
       #    - get_unspent, push_tx 
       # - MyWallet
@@ -545,7 +546,7 @@ describe "Spend", ->
             ,data.amount
             ,data.fee
             ,getUnspendMock.unspent_outputs
-            ,hdAccounts[data.from].getAccountExtendedKey(true)
+            ,hdAccounts[data.from].getExtendedPrivateKey()
             ,observer.listener)
 
         expect(BlockchainAPI.push_tx)
@@ -663,7 +664,7 @@ describe "Spend", ->
             ,data.amount
             ,data.fee
             ,getUnspendMock.unspent_outputs
-            ,hdAccounts[data.from].getAccountExtendedKey(true)
+            ,hdAccounts[data.from].getExtendedPrivateKey()
             ,observer.listener)
 
         expect(BlockchainAPI.push_tx)

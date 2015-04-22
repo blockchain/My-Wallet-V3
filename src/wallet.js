@@ -879,7 +879,7 @@ MyWallet.processTransaction = function(tx) {
     } else {
       for (var j in MyWallet.getAccounts()) {
         var account = WalletStore.getHDWallet().getAccount(j);
-        if (!account.isArchived() && output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
+        if (!account.isArchived() && output.xpub != null && account.getExtendedPublicKey() == output.xpub.m) {
           amountFromAccount += output.value;
 
           if (! isOrigin) {
@@ -960,7 +960,7 @@ MyWallet.processTransaction = function(tx) {
       var toAccountSet = false;
       for (var j in MyWallet.getAccounts()) {
         var account = WalletStore.getHDWallet().getAccount(j);
-        if (!account.isArchived() && output.xpub != null && account.getAccountExtendedKey(false) == output.xpub.m) {
+        if (!account.isArchived() && output.xpub != null && account.getExtendedPublicKey() == output.xpub.m) {
           if (! toAccountSet) {
             if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
               transaction.from.account.amount -= output.value;
@@ -1128,7 +1128,7 @@ MyWallet.fetchMoreTransactionsForAccounts = function(success, error, didFetchOld
     for (var i in MyWallet.getAccounts()) {
       var account = WalletStore.getHDWallet().getAccount(i);
       if(!account.isArchived()) {
-        addresses.push(account.getAccountExtendedKey(false));
+        addresses.push(account.getExtendedPublicKey());
       }
     }
 
@@ -1173,7 +1173,7 @@ MyWallet.fetchMoreTransactionsForAccounts = function(success, error, didFetchOld
 MyWallet.fetchMoreTransactionsForAccount = function(accountIdx, success, error, didFetchOldestTransaction) {
   function getRawTransactionsForAccount(accountIdx, txOffset, numTx, success, error) {
     var account = WalletStore.getHDWallet().getAccount(accountIdx);
-    var accountExtendedPublicKey = account.getAccountExtendedKey(false);
+    var accountExtendedPublicKey = account.getExtendedPublicKey();
 
     BlockchainAPI.async_get_history_with_addresses([accountExtendedPublicKey], function(data) {
       if (success) success(data);
@@ -1493,7 +1493,7 @@ MyWallet.createAccount = function(label, getPassword, success, error) {
 // Assumes second password is needed if the argument is not null.
 function createAccount(label, second_password, success, error) {
   var account = WalletStore.getHDWallet().createAccount(label, second_password);
-  var accountExtendedPublicKey = account.getAccountExtendedKey(false);
+  var accountExtendedPublicKey = account.getExtendedPublicKey();
   account.setBalance(0);
   MyWallet.listenToHDWalletAccount(accountExtendedPublicKey);
   success();
@@ -1604,7 +1604,7 @@ MyWallet.listenToHDWalletAccounts = function() {
   for (var i in MyWallet.getAccounts()) {
     var account = WalletStore.getHDWallet().getAccount(i);
     if(!account.isArchived()) {
-      var accountExtendedPublicKey = account.getAccountExtendedKey(false);
+      var accountExtendedPublicKey = account.getExtendedPublicKey();
       MyWallet.listenToHDWalletAccount(accountExtendedPublicKey);
     }
   }
@@ -1700,7 +1700,7 @@ MyWallet.initializeHDWallet = function(passphrase, bip39Password, getPassword, s
 
       account.setBalance(0);
 
-      MyWallet.listenToHDWalletAccount(account.getAccountExtendedKey(false));
+      MyWallet.listenToHDWalletAccount(account.getExtendedPublicKey());
 
       success();
     };
@@ -1992,7 +1992,7 @@ function parseMultiAddressJSON(obj, cached, checkCompleted) {
       var account = WalletStore.getHDWallet().getAccount(j);
 
       if(!account.isArchived()) {
-        var extPubKey = account.getAccountExtendedKey(false);
+        var extPubKey = account.getExtendedPublicKey();
 
         if (extPubKey == obj.addresses[i].address) {
           account.setBalance(obj.addresses[i].final_balance);
