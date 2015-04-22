@@ -1516,9 +1516,8 @@ MyWallet.isValidateBIP39Mnemonic = function(mnemonic) {
  * @param {function()} successCallback success callback function
  * @param {function()} errorCallback error callback function
  */
-// TODO looks broken - where does passphrase come from?
 MyWallet.recoverMyWalletHDWalletFromSeedHex = function(seedHex, bip39Password, getPassword, successCallback, errorCallback) {
-  function recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, secondPassword, successCallback, errorCallback) {
+  function recoverMyWalletHDWalletFromSeedHex(seedHex, bip39Password, secondPassword, successCallback, errorCallback) {
     HDWallet.recoverHDWalletFromSeedHex(seedHex, bip39Password, secondPassword, function(hdWallet) {
       WalletStore.setHDWallet(hdWallet);
 
@@ -1538,14 +1537,14 @@ MyWallet.recoverMyWalletHDWalletFromSeedHex = function(seedHex, bip39Password, g
     getPassword(function(pw, correct_password, wrong_password) {
       if (MyWallet.validateSecondPassword(pw)) {
         correct_password();
-        recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, pw, successCallback, errorCallback);
+        recoverMyWalletHDWalletFromSeedHex(seedHex, bip39Password, pw, successCallback, errorCallback);
       } else {
         wrong_password();
         errorCallback();
       }
     });
   } else {
-    recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, null, successCallback, errorCallback);
+    recoverMyWalletHDWalletFromSeedHex(seedHex, bip39Password, null, successCallback, errorCallback);
   }
 };
 
