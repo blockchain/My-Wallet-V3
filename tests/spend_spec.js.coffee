@@ -72,7 +72,7 @@ describe "Spend", ->
           "xprv9zJ1cTHnqzgBP2boCwpP47LBzjGLKXkwYqXoYnV4yrBmstmw6SVt\
            irpvm4GESg9YLn9R386qpmnsrcC5rvrpEJAXSrfqQR3qGtjGv5ddV9g"
         isArchived: () -> false
-        getReceivingAddress: () -> "1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX"
+        getReceiveAddress: () -> "1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX"
         getAccountExtendedKey : (p) -> if p then this.extendedPrivateKey else this.extendedPublicKey 
         setUnspentOutputs: (utxo) -> return
       }
@@ -457,7 +457,7 @@ describe "Spend", ->
         data.from = 0 #iDX
         data.to = 0 #iDX
         adr = "18dRLjdquhJeCLc9iBuRYvNZWrp9wY4Qur"
-        hdAccounts[data.to].getReceivingAddress = () -> adr
+        hdAccounts[data.to].getReceiveAddress = () -> adr
         spyOn(MyWallet, 'sendBitcoinsForAccount').and.callThrough()
         MyWallet.sendToAccount data.from
                              , data.to

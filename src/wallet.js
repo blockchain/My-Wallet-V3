@@ -1313,7 +1313,7 @@ MyWallet.redeemFromEmailOrMobile = function(accountIdx, privatekey, successCallb
         var fee = MyWallet.getBaseFee();
         amount = amount - fee;
 
-        var toAddress = account.getReceivingAddress();
+        var toAddress = account.getReceiveAddress();
 
         // No change address needed - amount will be consumed in full
         var changeAddress = null;

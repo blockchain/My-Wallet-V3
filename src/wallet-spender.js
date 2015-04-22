@@ -95,7 +95,7 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
       toAccount: function(toIndex) {
         assert(typeof(toIndex) != "undefined", "to account index required");
         var toAccount = WalletStore.getHDWallet().getAccount(toIndex);
-        spendFrom(toAccount.getReceivingAddress());
+        spendFrom(toAccount.getReceiveAddress());
       },
       /**  
        * @param {string} email address
@@ -245,7 +245,7 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
       assert(typeof(fromIndex) != "undefined", "from account index required");
     
       var account = WalletStore.getHDWallet().getAccount(fromIndex);
-      var changeAddress = account.getChangeAddressAtIndex(account.changeAddressCount);
+      var changeAddress = account.getChangeAddress();
     
       // Create the send account (same account as current account, but created with xpriv and thus able to generate private keys)
       var sendAccount = new HDAccount();
