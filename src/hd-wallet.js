@@ -70,14 +70,13 @@ HDWallet.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Pass
 
     }
 
-    hdaccount.receiveAddressCount = accountPayload.receive_address_count ? accountPayload.receive_address_count : 0;
-    hdaccount.changeAddressCount = accountPayload.change_address_count ? accountPayload.change_address_count : 0;
     hdaccount.address_labels = accountPayload.address_labels ? accountPayload.address_labels : [];
   }
 
   success && success(hdwallet);
 };
 
+// TODO integrate changes to receive/change addr count
 function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallback) {
   assert(secondPassword === null || secondPassword, "Second password must be null or set.");
 
@@ -347,8 +346,6 @@ HDWallet.prototype.createAccountFromExtKey = function(label, possiblyEncryptedEx
 
   return account;
 };
-
-
 
 HDWallet.prototype.createAccount = function(label, second_password) {
   var seedHex = this.getSeedHexString(second_password);

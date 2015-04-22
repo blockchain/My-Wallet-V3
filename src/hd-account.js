@@ -12,8 +12,8 @@ var HDAccount = function(seed, network, label, idx) {
   this.idx = idx;
   this.extendedPrivateKey = null;
   this.extendedPublicKey = null;
-  this.receiveAddressCount = 0;
-  this.changeAddressCount = 0;
+  this.receiveIndex = 0;
+  this.changeIndex = 0;
   this.n_tx = 0;
   this.numTxFetched = 0;
   this.archived = false;
@@ -26,14 +26,11 @@ var HDAccount = function(seed, network, label, idx) {
   this.internalAccount = null;
   this.externalAccount = null;
 
-  // Addresses
-  this.addresses = [];
-  this.changeAddresses = [];
   // Transaction output data
   this.outputs = {};
 
   // In-memory cache for generated keys
-  var keyCache = [];
+  var receiveKeyCache = [];
   var changeKeyCache = [];
 
   if (seed) {
@@ -46,10 +43,7 @@ var HDAccount = function(seed, network, label, idx) {
     this.externalAccount = accountZero.derive(0);
     this.internalAccount = accountZero.derive(1);
 
-    self.addresses = [];
-    self.changeAddresses = [];
-
-    keyCache = [];
+    receiveKeyCache = [];
     changeKeyCache = [];
 
     self.outputs = {};
@@ -66,23 +60,32 @@ var HDAccount = function(seed, network, label, idx) {
       this.internalAccount = new Bitcoin.HDNode(cache.internalAccountPubKey, cache.internalAccountChainCode);
     }
 
-    self.addresses = [];
-    self.changeAddresses = [];
-
-    keyCache = [];
+    receiveKeyCache = [];
     changeKeyCache = [];
 
     self.outputs = {};
   };
 
-  this.getAddressAtIndex = function(idx) {
-    if (keyCache[idx]) {
-      return keyCache[idx].getAddress().toString();
+  this.getReceiveIndex = function() {
+    return this.receiveIndex;
+  };
+
+  this.getReceiveAddressAtIndex = function(idx) {
+    if (receiveKeyCache[idx]) {
+      return receiveKeyCache[idx].getAddress().toString();
     }
 
     var key = this.externalAccount.derive(idx);
-    keyCache[idx] = key;
+    receiveKeyCache[idx] = key;
     return key.getAddress().toString();
+  };
+
+  this.getReceiveAddress = function() {
+    return this.getReceiveAddressAtIndex(this.receiveIndex);
+  };
+
+  this.getChangeIndex = function() {
+    return this.changeIndex;
   };
 
   this.getChangeAddressAtIndex = function(idx) {
@@ -95,39 +98,8 @@ var HDAccount = function(seed, network, label, idx) {
     return key.getAddress().toString();
   };
 
-  this.generateAddress = function() {
-    var index = this.addresses.length;
-    var key;
-    if (keyCache[index]) {
-      key = keyCache[index];
-    }
-    else {
-      key = this.externalAccount.derive(index);
-    }
-
-    this.addresses.push(key.getAddress().toString());
-    return this.addresses[this.addresses.length - 1];
-  };
-
-  this.generateChangeAddress = function() {
-    var index = this.changeAddresses.length;
-    var key;
-    if (changeKeyCache[index]) {
-      key = changeKeyCache[index];
-    }
-    else {
-      key = this.internalAccount.derive(index);
-    }
-
-    this.changeAddresses.push(key.getAddress().toString());
-    return this.changeAddresses[this.changeAddresses.length - 1];
-  };
-
   this.getChangeAddress = function() {
-    if(self.changeAddresses.length === 0) {
-      self.generateChangeAddress();
-    }
-    return self.changeAddresses[self.changeAddresses.length - 1];
+    return self.getChangeAddressAtIndex(self.changeIndex);
   };
 
   this.generateKeyFromPath = function(path) {
@@ -148,12 +120,12 @@ var HDAccount = function(seed, network, label, idx) {
 
     if (receiveOrChange === 0) {
       // Receive
-      if (keyCache[index]) {
-        key = keyCache[index];
+      if (receiveKeyCache[index]) {
+        key = receiveKeyCache[index];
       }
       else {
         key = this.externalAccount.derive(index);
-        keyCache[index] = key;
+        receiveKeyCache[index] = key;
       }
     } else {
       // Change
@@ -174,11 +146,13 @@ var HDAccount = function(seed, network, label, idx) {
   };
 
   this.getPrivateKey = function(index) {
-    if (keyCache[index]) {
-      return keyCache[index].privKey;
+    if (receiveKeyCache[index]) {
+      return receiveKeyCache[index].privKey;
     }
 
-    return this.externalAccount.derive(index).privKey;
+    var key = this.externalAccount.derive(index);
+    receiveKeyCache[index] = key;
+    return key.privKey;
   };
 
   this.getInternalPrivateKey = function(index) {
@@ -186,33 +160,21 @@ var HDAccount = function(seed, network, label, idx) {
       return changeKeyCache[index].privKey;
     }
 
-    return this.internalAccount.derive(index).privKey;
+    var key = this.internalAccount.derive(index);
+    changeKeyCache[index] = key;
+    return key.privKey;
   };
-
-  function isReceiveAddress(address){
-    return self.addresses.indexOf(address) > -1;
-  }
-
-  function isChangeAddress(address){
-    return self.changeAddresses.indexOf(address) > -1;
-  }
-
-  function isMyAddress(address) {
-    return isReceiveAddress(address) || isChangeAddress(address);
-  }
-
 
   this.getAccountJsonData = function() {
     var accountJsonData = {
       label : this.getLabel(),
       archived : this.isArchived(),
-      receive_address_count : this.receiveAddressCount,
-      change_address_count : this.changeAddressCount,
       xpriv : this.extendedPrivateKey,
       xpub : this.extendedPublicKey,
       address_labels: this.address_labels,
       cache: this.cache
     };
+
     return accountJsonData;
   };
 
@@ -224,18 +186,6 @@ var HDAccount = function(seed, network, label, idx) {
     this.label = label;
   };
 
-  this.getLabelForAddress = function(addressIdx) {
-    for (var i in this.address_labels) {
-      var indexLabel = this.address_labels[i];
-      if (indexLabel.index == addressIdx) {
-        return indexLabel.label;
-        break;
-      }
-    }
-
-    return null;
-  };
-
   this.setLabelForAddress = function(addressIdx, label) {
     for (var i in this.address_labels) {
       var indexLabel = this.address_labels[i];
@@ -245,9 +195,6 @@ var HDAccount = function(seed, network, label, idx) {
       }
     }
 
-    if (addressIdx == this.receiveAddressCount) {
-      this.receiveAddressCount++;
-    }
     this.address_labels.push({'index': addressIdx, 'label': label});
   };
 
@@ -262,52 +209,12 @@ var HDAccount = function(seed, network, label, idx) {
     return false;
   };
 
-  this.getLabeledReceivingAddresses = function () {
-    var addresses = [];
-
-    for (var i in this.address_labels) {
-      var indexLabel = this.address_labels[i];
-
-      var item = { 'index' : indexLabel['index'],
-                   'label' : indexLabel['label'],
-                   'address' : this.getAddressAtIndex(indexLabel['index'])
-                 };
-
-      addresses.push(item);
-    }
-
-    return addresses;
-  };
-
   this.isArchived = function() {
     return this.archived;
   };
 
   this.setIsArchived = function(archived) {
     this.archived = archived;
-  };
-
-  this.getReceivingAddress = function() {
-    return this.getAddressAtIndex(this.receiveAddressCount);
-  };
-
-  this.getReceivingAddressIndex = function() {
-    return this.receiveAddressCount;
-  };
-
-  this.getAddressesCount = function() {
-    return this.addresses.length;
-  };
-
-  this.getChangeAddresses = function() {
-    while(this.changeAddresses.length < this.changeAddressCount) {
-      this.generateChangeAddress();
-    }
-    return this.changeAddresses;
-  };
-
-  this.getChangeAddressesCount = function() {
-    return this.changeAddresses.length;
   };
 
   this.getAccountExtendedKey = function(isPrivate) {
@@ -324,14 +231,6 @@ var HDAccount = function(seed, network, label, idx) {
     this.cache.externalAccountChainCode = this.externalAccount.chainCode.toString("base64");
     this.cache.internalAccountPubKey = this.internalAccount.pubKey.toBuffer().toString("base64");
     this.cache.internalAccountChainCode = this.internalAccount.chainCode.toString("base64");
-  };
-
-  this.undoGenerateAddress = function() {
-    return this.addresses.pop();
-  };
-
-  this.undoGenerateChangeAddress = function() {
-    return this.changeAddresses.pop();
   };
 
   this.getBalance = function() {

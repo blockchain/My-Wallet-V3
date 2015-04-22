@@ -822,11 +822,11 @@ MyWallet.getNumberOfTransactionsForAccount = function(accountIdx) {
  * @return {string} next unused address
  */
 MyWallet.getReceivingAddressForAccount = function(accountIdx) {
-  return WalletStore.getHDWallet().getAccount(accountIdx).getReceivingAddress();
+  return WalletStore.getHDWallet().getAccount(accountIdx).getReceiveAddress();
 };
 
 MyWallet.getReceivingAddressIndexForAccount = function(accountIdx) {
-  return WalletStore.getHDWallet().getAccount(accountIdx).getReceivingAddressIndex();
+  return WalletStore.getHDWallet().getAccount(accountIdx).getReceiveIndex();
 };
 
 /**
@@ -843,10 +843,6 @@ MyWallet.setLabelForAccountAddress = function(accountIdx, addressIdx, label, suc
     MyWallet.backupWalletDelayed();
     success();
   }
-};
-
-MyWallet.getLabeledReceivingAddressesForAccount = function(accountIdx) {
-  return WalletStore.getHDWallet().getAccount(accountIdx).getLabeledReceivingAddresses();
 };
 
 MyWallet.processTransaction = function(tx) {
@@ -2001,6 +1997,8 @@ function parseMultiAddressJSON(obj, cached, checkCompleted) {
         if (extPubKey == obj.addresses[i].address) {
           account.setBalance(obj.addresses[i].final_balance);
           account.n_tx = obj.addresses[i].n_tx;
+          account.receiveIndex = obj.addresses[i].account_index;
+          account.changeIndex = obj.addresses[i].change_index;
         }
       }
     }
