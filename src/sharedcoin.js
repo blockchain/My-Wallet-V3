@@ -1028,7 +1028,7 @@ var SharedCoin = new function() {
                     };
 
                     //Trim and remove non-printable characters
-                    var send_to_address = $.trim(send_to_input.val()).replace(/[\u200B-\u200D\uFEFF]/g, '');
+                  var send_to_address = (send_to_input.val()).replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
 
                     if (send_to_address == null || send_to_address.length == 0) {
                         throw 'You must enter a bitcoin address for each recipient';
