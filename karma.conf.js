@@ -63,20 +63,19 @@ module.exports = function(karma) {
       'src/crypto-util-legacy.js',
       'src/shared.js',
       'tests/**/*.coffee',
-      {pattern: 'src/**/*.js', included: false}
-      // TODO so it does work - it's just that some tests interfere with each other
+      {pattern: 'src/**/*.js', included: false},
       // Or specify individual test files:
-      // 'tests/bip38_spec.js',
-      // 'tests/blockchain_api_spec.js',
-      // 'tests/claim_redeem_spec.js',
-      // 'tests/hdwallet_spec.js',
-      // 'tests/legacy_addresses_spec.js',
-      // 'tests/my_wallet_spec.js',
-      // 'tests/spend_spec.js',
-      // 'tests/tags_spec.js',
-      // 'tests/transaction_spec.js',
-      // 'tests/transaction_spend_spec.js',
-      // 'tests/wallet_spec.js'
+      // 'tests/bip38_spec.js.coffee',
+      // 'tests/blockchain_api_spec.js.coffee',
+      // 'tests/claim_redeem_spec.js.coffee',
+      // 'tests/hdwallet_spec.js.coffee',
+      // 'tests/legacy_addresses_spec.js.coffee',
+      // 'tests/my_wallet_spec.js.coffee',
+      // 'tests/spend_spec.js.coffee'
+      // 'tests/tags_spec.js.coffee',
+      // 'tests/transaction_spec.js.coffee',
+      // 'tests/transaction_spend_spec.js.coffee',
+      // 'tests/wallet_spec.js.coffee'
     ]
   });
 };
