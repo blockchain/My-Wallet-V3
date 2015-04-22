@@ -89,7 +89,7 @@ function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallbac
 
     var xpub = account.getExtendedPublicKey();
 
-    MyWallet.get_history_with_addresses(xpub, function(obj) {
+    MyWallet.get_history_with_addresses([xpub], function(obj) {
       if(obj.addresses[0].account_index == 0 && obj.addresses[0].change_index == 0) {
         continueLookingAheadAccount = false;
         hdwallet.accountArray.pop();
