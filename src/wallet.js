@@ -1450,8 +1450,7 @@ MyWallet.archiveAccount = function(idx) {
 MyWallet.unarchiveAccount = function(idx, successcallback) {
   var archivedAccount = WalletStore.getHDWallet().getAccount(idx);
 
-  var account = new HDAccount(null, null, archivedAccount.label, idx);
-  account.newNodeFromExtKey(archivedAccount.extendedPublicKey);
+  var account = HDAccount.fromExtKey(archivedAccount.extendedPublicKey, null, archivedAccount.label, idx);
 
   account.generateCache();
 
@@ -2943,8 +2942,7 @@ MyWallet.checkAllKeys = function(second_password) {
     }
 
     try {
-      var hdWalletAccount = new HDAccount();
-      hdWalletAccount.newNodeFromExtKey(decryptedpk);
+      var hdWalletAccount = HDAccount.fromExtKey(decryptedpk);
     } catch (e) {
       console.log('Invalid extended private key');
       throw 'Invalid extended private key';

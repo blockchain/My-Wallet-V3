@@ -1,4 +1,5 @@
 var assert = require('assert');
+var Buffer = require('buffer').Buffer;
 var Bitcoin = require('bitcoinjs-lib');
 var BIP39 = require('bip39');
 
@@ -8,22 +9,18 @@ var WalletCrypto = require('./wallet-crypto');
 
 var HDAccount = require('./hd-account');
 
-
 // If second_password is not null we assume double encryption is set on the
-// wallet. We don't have access to the internal double_encryption variable
-// here.
-
+// wallet.
 
 function HDWallet(seedHex, bip39Password, second_password) {
-
   if (bip39Password == undefined || bip39Password == null) {
     bip39Password = "";
   }
 
   assert(typeof(bip39Password) === "string", "BIP 39 password must be set or an empty string");
 
-  this.seedHex = seedHex == null || seedHex == undefined || seedHex == "" || second_password == null ? seedHex : WalletCrypto.encryptSecretWithSecondPassword(seedHex, second_password, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());
-  this.bip39Password = bip39Password == "" || second_password == null ? bip39Password : WalletCrypto.encryptSecretWithSecondPassword(bip39Password, second_password, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());
+  this.seedHex = seedHex === null || seedHex === undefined || seedHex === "" || second_password === null ? seedHex : WalletCrypto.encryptSecretWithSecondPassword(seedHex, second_password, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());
+  this.bip39Password = bip39Password === "" || second_password === null ? bip39Password : WalletCrypto.encryptSecretWithSecondPassword(bip39Password, second_password, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());
 
   this.numTxFetched = 0;
   this.accountArray = [];
@@ -48,12 +45,13 @@ HDWallet.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Pass
       // encrypted. We're keeping it in an encrypted state.
 
       // :base64: is used in some older dev. versions of the HD wallet and does not occur "in the wild"
-      if(accountPayload.cache == undefined || accountPayload.cache.externalAccountPubKey == undefined || accountPayload.cache.externalAccountPubKey == "" || accountPayload.cache.externalAccountPubKey.slice(2,8) == "base64") {
+      if(accountPayload.cache === undefined || accountPayload.cache.externalAccountPubKey === undefined || accountPayload.cache.externalAccountPubKey === "" || accountPayload.cache.externalAccountPubKey.slice(2,8) === "base64") {
         hdaccount = hdwallet.createAccountFromExtKey(accountPayload.label, accountPayload.xpriv, accountPayload.xpub);
         hdaccount.generateCache();
         hdwallet.accountArray.push(hdaccount);
         MyWallet.backupWalletDelayed();
-      } else {
+      }
+      else {
         var cache = {
           externalAccountPubKey: Bitcoin.ECPubKey.fromBuffer(Buffer(accountPayload.cache.externalAccountPubKey, "base64")),
           externalAccountChainCode: Buffer(accountPayload.cache.externalAccountChainCode, "base64"),
@@ -64,10 +62,9 @@ HDWallet.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Pass
         hdaccount = hdwallet.createAccountFromExtKey(accountPayload.label, accountPayload.xpriv, accountPayload.xpub, cache);
         hdaccount.cache = accountPayload.cache;
         hdwallet.accountArray.push(hdaccount);
-
       }
-      hdaccount.setIsArchived(false);
 
+      hdaccount.setIsArchived(false);
     }
 
     hdaccount.address_labels = accountPayload.address_labels ? accountPayload.address_labels : [];
@@ -76,7 +73,6 @@ HDWallet.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Pass
   success && success(hdwallet);
 };
 
-// TODO integrate changes to receive/change addr count
 function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallback) {
   assert(secondPassword === null || secondPassword, "Second password must be null or set.");
 
@@ -120,7 +116,6 @@ HDWallet.recoverHDWalletFromMnemonic = function(passphrase, bip39Password, secon
   var hdwallet = new HDWallet(BIP39.mnemonicToEntropy(passphrase), bip39Password, secondPassword);
   recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallback);
 };
-
 
 HDWallet.prototype.getPassphraseString = function(seedHex) {
   return BIP39.entropyToMnemonic(seedHex);
@@ -256,7 +251,7 @@ HDWallet.prototype.getAccounts = function() {
 
 HDWallet.prototype.createArchivedAccount = function(label, possiblyEncryptedExtendedPrivateKey, extendedPublicKey) {
   var accountIdx = this.accountArray.length;
-  var account = new HDAccount(null, null, label, accountIdx);
+  var account = new HDAccount(label, accountIdx);
   account.extendedPrivateKey = possiblyEncryptedExtendedPrivateKey;
   account.extendedPublicKey = extendedPublicKey;
 
@@ -268,8 +263,7 @@ HDWallet.prototype.createArchivedAccount = function(label, possiblyEncryptedExte
 // encrypted. We're keeping it in an encrypted state.
 HDWallet.prototype.createAccountFromExtKey = function(label, possiblyEncryptedExtendedPrivateKey, extendedPublicKey, cache) {
   var accountIdx = this.accountArray.length;
-  var account = new HDAccount(null, null, label, accountIdx);
-  account.newNodeFromExtKey(extendedPublicKey, cache);
+  var account = HDAccount.fromExtKey(extendedPublicKey, cache, label, accountIdx);
   account.extendedPrivateKey = possiblyEncryptedExtendedPrivateKey;
   account.extendedPublicKey = extendedPublicKey;
 
@@ -292,7 +286,7 @@ HDWallet.prototype.createAccountWithSeedhex = function(label, seedHex, bip39Pass
 
   var accountIdx = this.accountArray.length;
 
-  var account = new HDAccount(this.getMasterHex(seedHex, bip39Password), null, label, accountIdx);
+  var account = new HDAccount(label, accountIdx);
 
   /* BIP 44 defines the following 5 levels in BIP32 path:
    * m / purpose' / coin_type' / account' / change / address_index
@@ -301,7 +295,9 @@ HDWallet.prototype.createAccountWithSeedhex = function(label, seedHex, bip39Pass
    * Purpose is a constant set to 44' following the BIP43 recommendation
    * Registered coin types: 0' for Bitcoin
    */
-  var accountZero = account.getMasterKey().deriveHardened(44).deriveHardened(0).deriveHardened(accountIdx);
+  var masterkey = Bitcoin.HDNode.fromSeedBuffer(this.getMasterHex(seedHex, bip39Password), account.network);
+  var accountZero = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(accountIdx);
+
   account.externalAccount = accountZero.derive(0);
   account.internalAccount = accountZero.derive(1);
 

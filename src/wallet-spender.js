@@ -246,13 +246,11 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
     
       var account = WalletStore.getHDWallet().getAccount(fromIndex);
       var changeAddress = account.getChangeAddress();
-    
-      // Create the send account (same account as current account, but created with xpriv and thus able to generate private keys)
-      var sendAccount = new HDAccount();
 
       obtainAccessToPrivateKeys(function() {
         var extendedPrivateKey = account.extendedPrivateKey == null || secondPassword == null ? account.extendedPrivateKey : WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, secondPassword, sharedKey, pbkdf2_iterations);
-        sendAccount.newNodeFromExtKey(extendedPrivateKey);
+        // Create the send account (same account as current account, but created with xpriv and thus able to generate private keys)
+        var sendAccount = HDAccount.fromExtKey(extendedPrivateKey);
       
         var spendFromAccountToAddress = function(address, postSendCallback) {
           MyWallet.getUnspentOutputsForAccount(
