@@ -33,7 +33,7 @@ module.exports = function(karma) {
 
     browserify: {
       configure: function(bundle) {
-        bundle.on('prebundle', function() {
+        bundle.once('prebundle', function() {
           bundle.transform('coffeeify');
           bundle.transform('browserify-istanbul');
           bundle.plugin('proxyquireify/plugin');
