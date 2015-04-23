@@ -1,17 +1,13 @@
 var assert = require('assert');
 var Bitcoin = require('bitcoinjs-lib');
 
-
-var addressesOfInputs = null;
-
 var Transaction = function (unspentOutputs, toAddress, amount, fee, changeAddress, listener) {
   var network = Bitcoin.networks.bitcoin;
   var defaultFee = network.feePerKb;
 
-  addressesOfInputs = [];
-
-  this.listener = listener;
   this.amount = amount;
+  this.listener = listener;
+  this.addressesOfInputs = [];
   this.privateKeys = null;
   this.addressesOfNeededPrivateKeys = [];
   this.pathsOfNeededPrivateKeys = [];
@@ -41,7 +37,7 @@ var Transaction = function (unspentOutputs, toAddress, amount, fee, changeAddres
     assert.notEqual(Bitcoin.scripts.classifyOutput(script), 'nonstandard', 'Strange Script');
     var address = Bitcoin.Address.fromOutputScript(script).toString();
     assert(address, 'Unable to decode output address from transaction hash ' + output.tx_hash);
-    addressesOfInputs.push(address);
+    this.addressesOfInputs.push(address);
 
     // Add to list of needed private keys
     if (output.xpub) {
@@ -74,19 +70,11 @@ var Transaction = function (unspentOutputs, toAddress, amount, fee, changeAddres
   this.transaction = transaction;
 };
 
-Transaction.prototype.addressesOfNeededPrivateKeys = function() {
-  return this.addressesOfNeededPrivateKeys;
-};
-
-Transaction.prototype.pathsOfNeededPrivateKeys = function() {
-  return this.pathsOfNeededPrivateKeys;
-};
-
 Transaction.prototype.addPrivateKeys = function(privateKeys) {
-  assert.equal(privateKeys.length, addressesOfInputs.length, 'Number of private keys needs to match inputs');
+  assert.equal(privateKeys.length, this.addressesOfInputs.length, 'Number of private keys needs to match inputs');
 
   for (var i = 0; i < privateKeys.length; i++) {
-    assert.equal(addressesOfInputs[i], privateKeys[i].pub.getAddress().toBase58Check(), 'Private key does not match bitcoin address ' + addressesOfInputs[i] + '!=' + privateKeys[i].pub.getAddress().toBase58Check());
+    assert.equal(this.addressesOfInputs[i], privateKeys[i].pub.getAddress().toBase58Check(), 'Private key does not match bitcoin address ' + this.addressesOfInputs[i] + '!=' + privateKeys[i].pub.getAddress().toBase58Check());
   }
 
   this.privateKeys = privateKeys;
@@ -101,17 +89,17 @@ Transaction.prototype.sign = function() {
   assert.equal(this.privateKeys.length, this.transaction.ins.length, 'Number of private keys needs to match inputs');
 
   for (var i = 0; i < this.privateKeys.length; i++) {
-    assert.equal(addressesOfInputs[i], this.privateKeys[i].pub.getAddress().toBase58Check(), 'Private key does not match bitcoin address ' + addressesOfInputs[i] + '!=' + this.privateKeys[i].pub.getAddress().toBase58Check());
+    assert.equal(this.addressesOfInputs[i], this.privateKeys[i].pub.getAddress().toBase58Check(), 'Private key does not match bitcoin address ' + this.addressesOfInputs[i] + '!=' + this.privateKeys[i].pub.getAddress().toBase58Check());
   }
 
   var listener = this.listener;
 
-  typeof(listener.on_begin_signing) === 'function' && listener.on_begin_signing();
+  listener && typeof(listener.on_begin_signing) === 'function' && listener.on_begin_signing();
 
   var transaction = this.transaction;
 
   for (var i = 0; i < transaction.ins.length; i++) {
-    typeof(listener.on_sign_progress) === 'function' && listener.on_sign_progress(i+1);
+    listener && typeof(listener.on_sign_progress) === 'function' && listener.on_sign_progress(i+1);
 
     var key = this.privateKeys[i];
 
@@ -120,13 +108,13 @@ Transaction.prototype.sign = function() {
     assert(transaction.ins[i].script, 'Error creating input script');
   }
 
-  typeof(listener.on_finish_signing) === 'function' && listener.on_finish_signing();
+  listener && typeof(listener.on_finish_signing) === 'function' && listener.on_finish_signing();
 
   return transaction;
 };
 
 function sortUnspentOutputs(unspentOutputs) {
-    var unspent = [];
+  var unspent = [];
 
   for (var key in unspentOutputs) {
     var output = unspentOutputs[key];
@@ -135,11 +123,11 @@ function sortUnspentOutputs(unspentOutputs) {
     }
   }
 
-  var sortByValueDesc = unspent.sort(function(o1, o2){
+  unspent.sort(function(o1, o2){
     return o2.value - o1.value;
   });
 
-  return sortByValueDesc;
+  return unspent;
 }
 
 module.exports = Transaction;
