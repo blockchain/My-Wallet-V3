@@ -17,7 +17,7 @@ module.exports = function(karma) {
 
     autoWatch: true,
 
-    // logLevel: config.LOG_DEBUG,
+    // logLevel: karma.LOG_DEBUG,
 
     reporters: ['progress','coverage'],
 
