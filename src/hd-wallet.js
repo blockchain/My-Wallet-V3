@@ -19,8 +19,8 @@ function HDWallet(seedHex, bip39Password, second_password) {
 
   assert(typeof(bip39Password) === "string", "BIP 39 password must be set or an empty string");
 
-  this.seedHex = seedHex === null || seedHex === undefined || seedHex === "" || second_password === null ? seedHex : WalletCrypto.encryptSecretWithSecondPassword(seedHex, second_password, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());
-  this.bip39Password = bip39Password === "" || second_password === null ? bip39Password : WalletCrypto.encryptSecretWithSecondPassword(bip39Password, second_password, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());
+  this.seedHex = seedHex === null || seedHex === undefined || seedHex === "" || second_password == null ? seedHex : WalletCrypto.encryptSecretWithSecondPassword(seedHex, second_password, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());
+  this.bip39Password = bip39Password === "" || second_password == null ? bip39Password : WalletCrypto.encryptSecretWithSecondPassword(bip39Password, second_password, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());
 
   this.numTxFetched = 0;
   this.accountArray = [];
@@ -74,7 +74,7 @@ HDWallet.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Pass
 };
 
 function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallback) {
-  assert(secondPassword === null || secondPassword, "Second password must be null or set.");
+  assert(secondPassword == null || secondPassword, "Second password must be null or set.");
 
   var accountIdx = 0;
 
