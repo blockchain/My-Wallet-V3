@@ -1,10 +1,6 @@
 var Bitcoin = require('bitcoinjs-lib');
 var assert = require('assert');
 
-// In-memory cache for generated keys
-var receiveKeyCache = [];
-var changeKeyCache = [];
-
 function HDAccount(label, index, network) {
   this.label = label;
   this.index = index;
@@ -26,6 +22,9 @@ function HDAccount(label, index, network) {
 
   // Cache for PubKeys and ChainCode to improve init speed
   this.cache= {};
+  // In-memory cache for generated keys
+  this.receiveKeyCache = [];
+  this.changeKeyCache = [];
 }
 
 HDAccount.fromExtKey = function(extKey, cache, label, index, network) {
@@ -78,12 +77,12 @@ HDAccount.prototype.incrementReceiveIndexIfLastIndexIsIncluded = function(addres
 HDAccount.prototype.getReceiveAddressAtIndex = function(index) {
   assert(typeof(index) === "number"); // Catches e.g. getReceiveAddress(this.getReceiveIndex) 
 
-  if (receiveKeyCache[index]) {
-    return receiveKeyCache[index].getAddress().toString();
+  if (this.receiveKeyCache[index]) {
+    return this.receiveKeyCache[index].getAddress().toString();
   }
 
   var key = this.externalAccount.derive(index);
-  receiveKeyCache[index] = key;
+  this.receiveKeyCache[index] = key;
   return key.getAddress().toString();
 };
 
@@ -96,12 +95,12 @@ HDAccount.prototype.getChangeIndex = function() {
 };
 
 HDAccount.prototype.getChangeAddressAtIndex = function(index) {
-  if (changeKeyCache[index]) {
-    return changeKeyCache[index].getAddress().toString();
+  if (this.changeKeyCache[index]) {
+    return this.changeKeyCache[index].getAddress().toString();
   }
 
   var key = this.internalAccount.derive(index);
-  changeKeyCache[index] = key;
+  this.changeKeyCache[index] = key;
   return key.getAddress().toString();
 };
 
@@ -127,21 +126,21 @@ HDAccount.prototype.generateKeyFromPath = function(path) {
 
   if (receiveOrChange === 0) {
     // Receive
-    if (receiveKeyCache[index]) {
-      key = receiveKeyCache[index];
+    if (this.receiveKeyCache[index]) {
+      key = this.receiveKeyCache[index];
     }
     else {
       key = this.externalAccount.derive(index);
-      receiveKeyCache[index] = key;
+      this.receiveKeyCache[index] = key;
     }
   } else {
     // Change
-    if (changeKeyCache[index]) {
-      key = changeKeyCache[index];
+    if (this.changeKeyCache[index]) {
+      key = this.changeKeyCache[index];
     }
     else {
       key = this.internalAccount.derive(index);
-      changeKeyCache[index] = key;
+      this.changeKeyCache[index] = key;
     }
   }
 
@@ -149,22 +148,22 @@ HDAccount.prototype.generateKeyFromPath = function(path) {
 };
 
 HDAccount.prototype.getPrivateKey = function(index) {
-  if (receiveKeyCache[index]) {
-    return receiveKeyCache[index].privKey;
+  if (this.receiveKeyCache[index]) {
+    return this.receiveKeyCache[index].privKey;
   }
 
   var key = this.externalAccount.derive(index);
-  receiveKeyCache[index] = key;
+  this.receiveKeyCache[index] = key;
   return key.privKey;
 };
 
 HDAccount.prototype.getInternalPrivateKey = function(index) {
-  if (changeKeyCache[index]) {
-    return changeKeyCache[index].privKey;
+  if (this.changeKeyCache[index]) {
+    return this.changeKeyCache[index].privKey;
   }
 
   var key = this.internalAccount.derive(index);
-  changeKeyCache[index] = key;
+  this.changeKeyCache[index] = key;
   return key.privKey;
 };
 
