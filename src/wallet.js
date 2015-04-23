@@ -763,6 +763,32 @@ MyWallet.getLabelForAccount = function(accountIdx) {
 };
 
 /**
+ * @param {number} accountIdx index of HD wallet account
+ * @param {number} receive address index for the label
+ * @return {string} receive address label
+ */
+MyWallet.getLabelForAccountReceiveAddress = function(accountIdx, receiveIdx) {
+  return WalletStore.getHDWallet().getAccount(accountIdx).getLabelForReceiveAddress(receiveIdx);
+};
+
+/**
+ * @param {number} accountIdx index of HD wallet account
+ * @param {number} receive address index for the label
+ * @return {string} receive address
+ */
+MyWallet.getReceiveAddressAtIndexForAccount= function(accountIdx, receiveIdx) {
+  return WalletStore.getHDWallet().getAccount(accountIdx).getReceiveAddressAtIndex(receiveIdx);
+};
+
+/**
+ * @param {number} accountIdx index of HD wallet account
+ * @return {array} of dictionaries with {address: label}
+ */
+MyWallet.getLabeledReceivingAddressesForAccount = function(accountIdx) {
+  return WalletStore.getHDWallet().getAccount(accountIdx).getLabeledReceivingAddresses();
+}
+
+/**
  * Validates proposed label for account
  * @param {string} label account label
  * @return {boolean} success or not
@@ -850,7 +876,12 @@ MyWallet.setLabelForAccountAddress = function(accountIdx, addressIdx, label, suc
   if (label != "" && ! MyWallet.isAlphaNumericSpace(label)) {
     error();
   } else {
-    WalletStore.getHDWallet().getAccount(accountIdx).setLabelForAddress(addressIdx, label);
+    account = WalletStore.getHDWallet().getAccount(accountIdx)
+    account.setLabelForAddress(addressIdx, label);
+    
+    // Bump receive address count if this was the last index:
+    account.incrementReceiveIndexIfLastIndex(addressIdx);
+    
     MyWallet.backupWalletDelayed();
     success();
   }
@@ -2008,6 +2039,11 @@ function parseMultiAddressJSON(obj, cached, checkCompleted) {
           account.setBalance(obj.addresses[i].final_balance);
           account.n_tx = obj.addresses[i].n_tx;
           account.receiveIndex = obj.addresses[i].account_index;
+          
+          // Bump receive address index one more if this is a labeled address:
+          // Slightly inefficient
+          account.incrementReceiveIndexIfCurrentIsLabeled()
+          
           account.changeIndex = obj.addresses[i].change_index;
         }
       }

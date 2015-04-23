@@ -65,6 +65,10 @@ var HDAccount = function(seed, network, label, idx) {
 
     self.outputs = {};
   };
+  
+  this.setReceiveIndex = function(idx) {
+    this.receiveIndex = idx;
+  };
 
   this.getReceiveIndex = function() {
     return this.receiveIndex;
@@ -72,6 +76,18 @@ var HDAccount = function(seed, network, label, idx) {
   
   this.incrementReceiveIndex = function() {
     this.receiveIndex++;
+  }
+  
+  this.incrementReceiveIndexIfLastIndex = function(idx) {
+    if(idx == this.getReceiveIndex()) {
+      this.incrementReceiveIndex();
+    }
+  }
+  
+  this.incrementReceiveIndexIfCurrentIsLabeled = function() {
+    if(this.getLabelForReceiveAddress(this.getReceiveIndex())) {
+      this.incrementReceiveIndex();
+    }
   }
   
   this.incrementReceiveIndexIfLastIndexIsIncluded = function(addresses) {
@@ -199,6 +215,16 @@ var HDAccount = function(seed, network, label, idx) {
   this.setLabel = function(label) {
     this.label = label;
   };
+    
+  this.getLabelForReceiveAddress = function(addressIdx) {
+    for (var i in this.address_labels) {
+      var indexLabel = this.address_labels[i];
+      if (indexLabel.index == addressIdx) {
+        return this.address_labels[i];
+        break;
+      }
+    }
+  };
 
   this.setLabelForAddress = function(addressIdx, label) {
     for (var i in this.address_labels) {
@@ -222,6 +248,10 @@ var HDAccount = function(seed, network, label, idx) {
     }
     return false;
   };
+  
+  this.getLabeledReceivingAddresses = function() {
+    return this.address_labels;
+  }
 
   this.isArchived = function() {
     return this.archived;
