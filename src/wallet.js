@@ -647,7 +647,18 @@ function wsSuccess(ws) {
 
       var account = MyWallet.getAccount(tx_account.index);
 
-      if (tx_account) account.setBalance(account.getBalance() + tx_processed.result);
+      if (tx_account) {
+        account.setBalance(account.getBalance() + tx_processed.result);
+        
+        // Increase receive address index if this was an incoming transaction using the highest index:
+        if((tx_processed.result > 0 || tx_processed.intraWallet)) {
+          var addresses = [];
+          for(i in tx.out) {
+            addresses.push(tx.out[i].addr);
+          }
+          account.incrementReceiveIndexIfLastIndexIsIncluded(addresses)
+        } 
+      }
 
       WalletStore.incNTransactions();
 

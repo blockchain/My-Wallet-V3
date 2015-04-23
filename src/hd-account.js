@@ -1,6 +1,6 @@
 var crypto = require('crypto');
 var Bitcoin = require('bitcoinjs-lib');
-
+var assert = require('assert');
 
 var HDAccount = function(seed, network, label, idx) {
 
@@ -69,8 +69,22 @@ var HDAccount = function(seed, network, label, idx) {
   this.getReceiveIndex = function() {
     return this.receiveIndex;
   };
+  
+  this.incrementReceiveIndex = function() {
+    this.receiveIndex++;
+  }
+  
+  this.incrementReceiveIndexIfLastIndexIsIncluded = function(addresses) {
+    for (i in addresses) {
+      if(this.getReceiveAddressAtIndex(this.getReceiveIndex()) === addresses[i]) {
+        this.incrementReceiveIndex();
+      }
+    }
+  }
 
   this.getReceiveAddressAtIndex = function(idx) {
+    assert(typeof(idx) === "number"); // Catches e.g. getReceiveAddress(this.getReceiveIndex) 
+    
     if (receiveKeyCache[idx]) {
       return receiveKeyCache[idx].getAddress().toString();
     }
