@@ -33,7 +33,6 @@ module.exports = (grunt) ->
           'build/bower_components.js'
           'build/shared.processed.js'
           'build/ie.processed.js'
-          'build/crypto-util-legacy.processed.js'
           'build/blockchain.js'
           'node_modules/sjcl/sjcl.js'
           'node_modules/xregexp/xregexp-all.js'
@@ -69,7 +68,6 @@ module.exports = (grunt) ->
       files: [
         #'src/blockchain-api.js'
         'src/blockchain-settings-api.js'
-        #'src/crypto-util-legacy.js'
         'src/hd-account.js'
         'src/hd-wallet.js'
         'src/import-export.js'

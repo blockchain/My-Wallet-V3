@@ -60,7 +60,6 @@ module.exports = function(karma) {
       'bower_components/es6-shim/es6-shim.min.js',
       'node_modules/sjcl/sjcl.js',
       'node_modules/xregexp/xregexp-all.js',
-      'src/crypto-util-legacy.js',
       'src/shared.js',
       'tests/**/*.coffee',
       // Or specify individual test files:
