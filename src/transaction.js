@@ -1,5 +1,6 @@
 var assert = require('assert');
 var Bitcoin = require('bitcoinjs-lib');
+var randomBytes = require('randombytes');
 
 var Transaction = function (unspentOutputs, toAddress, amount, fee, changeAddress, listener) {
   var network = Bitcoin.networks.bitcoin;
@@ -79,6 +80,30 @@ Transaction.prototype.addPrivateKeys = function(privateKeys) {
 
   this.privateKeys = privateKeys;
 };
+
+/** Shuffles the outputs of a transaction so that they receive and change 
+    addresses are in random order.
+ * @return {} nothing
+ */
+Transaction.prototype.randomizeOutputs = function () {
+  function randomNumberBetweenZeroAnd(i) {
+    assert(i < 256, "Shuffling more than 256 outputs is not supported.");
+    
+    while (true) {
+      var rand = randomBytes(1)[0]; // 0 - 255, uses crypto/msCrypto.getRandomValues()
+      if (rand < i) {
+        return rand;
+      }
+    }
+  }
+  
+  function shuffle(o){
+      for(var j, x, i = o.length; i; j = randomNumberBetweenZeroAnd(i), x = o[--i], o[i] = o[j], o[j] = x);
+      return o;
+  };
+    
+  shuffle(this.transaction.outs);
+}
 
 /** Sign the transaction
  * @return {Object} Signed transaction

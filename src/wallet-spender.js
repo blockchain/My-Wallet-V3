@@ -61,10 +61,10 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
   var performTransaction = function(tx, keys, postSendCallback) {
     tx.addPrivateKeys(keys);
 
+    tx.randomizeOutputs();
+
     var signedTransaction = tx.sign();
 
-    
-    // TODO: reuse this for all send functions
     BlockchainAPI.push_tx(
       signedTransaction,
       note,
