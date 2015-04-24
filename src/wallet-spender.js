@@ -253,6 +253,12 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
         var sendAccount = HDAccount.fromExtKey(extendedPrivateKey);
       
         var spendFromAccountToAddress = function(address, postSendCallback) {
+          // First check if the to address is not part of the from account:
+          if(account.containsAddressInCache(address)) {
+            errorCallback("Unable to move bitcoins within the same account.");
+            return;
+          }
+          
           MyWallet.getUnspentOutputsForAccount(
             fromIndex,
             function (unspent_outputs) {
