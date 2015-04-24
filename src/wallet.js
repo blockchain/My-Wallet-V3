@@ -2743,13 +2743,16 @@ MyWallet.handleNTPResponse = function(obj, clientTime) {
  * @param {string} message message
  * @return {string} message signature in base64
  */
-MyWallet.signmessage = function(address, message) {
+MyWallet.signMessage = function(address, message) {
   var addr = WalletStore.getAddress(address);
 
   if (!addr.priv)
     throw 'Cannot sign a watch only address';
 
-  var decryptedpk = MyWallet.decodePK(addr.priv);
+  var decryptedpk = addr.priv;
+
+  // TODO: deal with second password
+  // var decryptedpk = MyWallet.decodePK(addr.priv);
 
   var key = new ECKey(new BigInteger.fromBuffer(decryptedpk), false);
   if (key.pub.getAddress().toString() != address) {
