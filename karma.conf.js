@@ -63,7 +63,6 @@ module.exports = function(karma) {
       'src/crypto-util-legacy.js',
       'src/shared.js',
       'tests/**/*.coffee',
-      {pattern: 'src/**/*.js', included: false},
       // Or specify individual test files:
       // 'tests/mocks/*.coffee',
       // 'tests/bip38_spec.js.coffee',
