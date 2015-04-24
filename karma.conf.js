@@ -56,8 +56,6 @@ module.exports = function(karma) {
     
     files: [
       'build/bower_components.js',
-      'bower_components/es5-shim/es5-shim.min.js',
-      'bower_components/es6-shim/es6-shim.min.js',
       'node_modules/sjcl/sjcl.js',
       'node_modules/xregexp/xregexp-all.js',
       'src/shared.js',
