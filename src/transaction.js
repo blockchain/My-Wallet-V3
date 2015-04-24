@@ -81,31 +81,30 @@ Transaction.prototype.addPrivateKeys = function(privateKeys) {
   this.privateKeys = privateKeys;
 };
 
-/** Shuffles the outputs of a transaction so that they receive and change 
-    addresses are in random order.
- * @return {} nothing
+/**
+ * Shuffles the outputs of a transaction so that they receive and change 
+ * addresses are in random order.
  */
 Transaction.prototype.randomizeOutputs = function () {
   function randomNumberBetweenZeroAnd(i) {
-    assert(i < 256, "Shuffling more than 256 outputs is not supported.");
-    
-    while (true) {
-      var rand = randomBytes(1)[0]; // 0 - 255, uses crypto/msCrypto.getRandomValues()
-      if (rand < i) {
-        return rand;
-      }
-    }
-  }
-  
-  function shuffle(o){
-      for(var j, x, i = o.length; i; j = randomNumberBetweenZeroAnd(i), x = o[--i], o[i] = o[j], o[j] = x);
-      return o;
-  };
-    
-  shuffle(this.transaction.outs);
-}
+    assert(i < Math.pow(2, 16), 'Cannot shuffle more outputs than one transaction can handle');
 
-/** Sign the transaction
+    var randArray = randomBytes(2);
+    var rand = randArray[0] << 8 | randArray[1];
+
+    return rand%i;
+  }
+
+  function shuffle(o){
+    for(var j, x, i = o.length; i; j = randomNumberBetweenZeroAnd(i), x = o[--i], o[i] = o[j], o[j] = x);
+    return o;
+  };
+
+  shuffle(this.transaction.outs);
+};
+
+/**
+ * Sign the transaction
  * @return {Object} Signed transaction
  */
 Transaction.prototype.sign = function() {

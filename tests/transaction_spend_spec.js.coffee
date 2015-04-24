@@ -82,6 +82,10 @@ describe "Transaction", ->
 
       new Transaction(data.unspentMock, data.to, data.amount, data.fee, data.from, null)
 
+    it "should shuffle the outptus when asked to", ->
+
+      tx = new Transaction(data.unspentMock, data.to, data.amount, data.fee, data.from, null)
+      tx.randomizeOutputs()
 
   describe "provide Transaction with private keys", ->
 
