@@ -226,20 +226,20 @@ HDAccount.prototype.getLabeledReceivingAddresses = function() {
 };
 
 HDAccount.prototype.containsAddressInCache = function(address) {
-  for(i in this.receiveKeyCache) {
+  for(var i in this.receiveKeyCache) {
     if( this.receiveKeyCache[i].getAddress().toString() === address ) {
       return true;
     }
   }
-  
-  for(i in this.changeKeyCache) {
+
+  for(var i in this.changeKeyCache) {
     if( this.changeKeyCache[i].getAddress().toString() === address ) {
       return true;
     }
   }
-  
+
   return false;
-}
+};
 
 HDAccount.prototype.isArchived = function() {
   return this.archived;
