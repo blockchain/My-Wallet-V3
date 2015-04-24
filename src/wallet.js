@@ -2434,7 +2434,7 @@ MyWallet.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedP
 
       if (obj.authorization_required && typeof(authorization_required) === "function") {
         authorization_required(function(authorization_received) {
-          MyWallet.pollForSessionGUID(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_received, other_error);
+          MyWallet.pollForSessionGUID(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_received, other_error, fetch_success, decrypt_success, build_hd_success);
         });
       }
 
@@ -2445,7 +2445,12 @@ MyWallet.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedP
   });
 };
 
-MyWallet.pollForSessionGUID = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_received, other_error) {
+MyWallet.pollForSessionGUID = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_received, other_error, fetch_success, decrypt_success, build_hd_success) {
+ 
+  assert(fetch_success, "Fetch success callback required");
+  assert(decrypt_success, "Decrypt success callback required");
+  assert(build_hd_success, "Build HD success callback required");
+ 
   if (WalletStore.isPolling()) return;
 
   WalletStore.setIsPolling(true);
@@ -2470,7 +2475,7 @@ MyWallet.pollForSessionGUID = function(user_guid, shared_key, resend_code, input
 
         WalletStore.sendEvent("msg", {type: "success", message: 'Authorization Successful'});
 
-        MyWallet.fetchWalletJson(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, null, other_error);
+        MyWallet.fetchWalletJson(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, null, other_error, fetch_success, decrypt_success, build_hd_success);
       } else {
         if (WalletStore.getCounter() < 600) {
           WalletStore.incrementCounter();
