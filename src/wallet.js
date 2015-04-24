@@ -3088,6 +3088,6 @@ function parseValueBitcoin(valueString) {
 }
 
 //user precision (e.g. BTC or mBTC) to satoshi big int
-MyWallet.precisionToSatoshiBN() = function(x) {
+MyWallet.precisionToSatoshiBN = function(x) {
   return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, sShift(symbol_btc)).toString()));
 };
