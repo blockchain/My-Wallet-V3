@@ -17,32 +17,6 @@ var HDAccount = require('./hd-account');
 var Transaction = require('./transaction');
 var BlockchainAPI = require('./blockchain-api');
 
-
-//------
-//Should find somewhere else for these
-
-function parseValueBitcoin(valueString) {
-  var valueString = valueString.toString();
-  // TODO: Detect other number formats (e.g. comma as decimal separator)
-  var valueComp = valueString.split('.');
-  var integralPart = valueComp[0];
-  var fractionalPart = valueComp[1] || "0";
-  while (fractionalPart.length < 8) fractionalPart += "0";
-  fractionalPart = fractionalPart.replace(/^0+/g, '');
-  var value = BigInteger.valueOf(parseInt(integralPart));
-  value = value.multiply(BigInteger.valueOf(100000000));
-  value = value.add(BigInteger.valueOf(parseInt(fractionalPart)));
-  return value;
-}
-
-//user precision (e.g. BTC or mBTC) to satoshi big int
-function precisionToSatoshiBN(x) {
-  return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, sShift(symbol_btc)).toString()));
-}
-
-//-----
-
-
 var isInitialized = false;
 
 MyWallet.securePost = function(url, data, success, error) {
@@ -3097,4 +3071,23 @@ MyWallet.privateKeyStringToKey = function(value, format) {
     throw 'Result not 32 or 33 bytes in length';
 
   return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format == 'compsipa'));
+};
+
+function parseValueBitcoin(valueString) {
+  var valueString = valueString.toString();
+  // TODO: Detect other number formats (e.g. comma as decimal separator)
+  var valueComp = valueString.split('.');
+  var integralPart = valueComp[0];
+  var fractionalPart = valueComp[1] || "0";
+  while (fractionalPart.length < 8) fractionalPart += "0";
+  fractionalPart = fractionalPart.replace(/^0+/g, '');
+  var value = BigInteger.valueOf(parseInt(integralPart));
+  value = value.multiply(BigInteger.valueOf(100000000));
+  value = value.add(BigInteger.valueOf(parseInt(fractionalPart)));
+  return value;
+}
+
+//user precision (e.g. BTC or mBTC) to satoshi big int
+MyWallet.precisionToSatoshiBN() = function(x) {
+  return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, sShift(symbol_btc)).toString()));
 };
