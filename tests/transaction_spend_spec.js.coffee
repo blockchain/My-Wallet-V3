@@ -85,7 +85,19 @@ describe "Transaction", ->
     it "should shuffle the outptus when asked to", ->
 
       tx = new Transaction(data.unspentMock, data.to, data.amount, data.fee, data.from, null)
-      tx.randomizeOutputs()
+      out0 = tx.transaction.outs[0]
+      out1 = tx.transaction.outs[1]
+
+      found_not_switched = false
+      found_switched = false
+      while !found_not_switched || !found_switched
+        tx.randomizeOutputs()
+        if tx.transaction.outs[0] == out0 && tx.transaction.outs[1] == out1
+          found_not_switched = true
+        if tx.transaction.outs[0] == out1 && tx.transaction.outs[1] == out0
+          found_switched = true
+
+      expect(found_not_switched && found_switched).toBe(true)
 
   describe "provide Transaction with private keys", ->
 

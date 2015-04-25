@@ -96,7 +96,7 @@ Transaction.prototype.randomizeOutputs = function () {
   }
 
   function shuffle(o){
-    for(var j, x, i = o.length; i; j = randomNumberBetweenZeroAnd(i), x = o[--i], o[i] = o[j], o[j] = x);
+    for(var j, x, i = o.length; i > 1; j = randomNumberBetweenZeroAnd(i), x = o[--i], o[i] = o[j], o[j] = x); 
     return o;
   };
 
