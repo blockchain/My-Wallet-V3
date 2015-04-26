@@ -58,7 +58,7 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
         }
       });
     } else {
-      exito(null);
+      success(null);
     }
   }
 
