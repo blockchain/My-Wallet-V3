@@ -33,6 +33,7 @@
     "bitcoinjs-lib": "1.5.*",
     "bs58": "2.0.*",
     "randombytes": "^2.0.1",
+    "rsvp": "^3.0.18",
     "sjcl": "1.0.*",
     "unorm": "^1.3.3",
     "xregexp": "2.0.*"
