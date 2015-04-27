@@ -56,7 +56,7 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
           success(pw);
         } else {
           wrongCB();
-          error("wrong password, promise error");
+          error("wrong password (promise)");
         }
       });
     } else {
@@ -65,22 +65,21 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  // if postSendCallback is present, this must call successCallback() itself
+  // pastSendCB is post process for toEmail and toMobile actions
   var publishTransaction = function(signedTransaction) {
 
-    var succCallBack = function(tx_hash) {
+    var succ = function(tx_hash) {
       if(typeof(payment.postSendCB) == "undefined" || payment.postSendCB === null) {
-        successCallback && successCallback(signedTransaction.getId());
+        successCallback(signedTransaction.getId());
       } else {
         payment.postSendCB(signedTransaction);
       }
     };
-    var errCallBack = function (err) {errorCallback && errorCallback(err);}
 
-    BlockchainAPI.push_tx(signedTransaction, payment.note, succCallBack, errCallBack);
+    BlockchainAPI.push_tx(signedTransaction, payment.note, succ, errorCallback);
   };
   ////////////////////////////////////////////////////////////////////////////////
-  var spendCoinsToAddress = function() {
+  var spendCoins = function() {
 
     var tx = new Transaction( payment.coins, payment.toAddress, payment.amount,
                               payment.feeAmount, payment.changeAddress, listener);
@@ -93,20 +92,19 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-  var spendTo = {
+  var spend = {
     /**
      * @param {string} address to pay
      * @param {function} if present will replace success callback
      */
-    toAddress: function(toAddress, postSendCallback) {
+    toAddress: function(toAddress) {
       console.log("toAddress executed...");
       payment.toAddress = toAddress;
-      payment.postSendCB = postSendCallback;
       RSVP.hash(promises).then(function(result) {
         payment.secondPassword = result.secondPassword;
         payment.coins = result.coins;
-        spendCoinsToAddress();
-      }).catch(function (err) {errorCallback && errorCallback(err);});
+        spendCoins();
+      }).catch(errorCallback);
     },
     /**
      * @param {number} index of the account to pay
@@ -115,8 +113,40 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
       console.log("toAccount executed...");
       var toAccount = WalletStore.getHDWallet().getAccount(toIndex);
       var toAddress = toAccount.getReceiveAddress();
-      spendTo.toAddress(toAddress, null);
+      spend.toAddress(toAddress);
+    },
+    /**
+     * @param {string} email address
+     */
+    toEmail: function(email) {
+      console.log("toEmail executed...");
+      var key = MyWallet.generateNewKey();
+      var address = key.pub.getAddress().toString();
+      var privateKey = key.toWIF();
+      WalletStore.setLegacyAddressTag(address, 2);
+
+      console.log("addreça: "+ address);
+      console.log("privateKey: "+ privateKey);
+      // this is going to be executed after publish transaction
+      payment.postSendCB = function(tx){
+        console.log("Ara entrem a executar la toEmail postSendCB");
+        var postProcess = function (data) {
+          console.log("Ara estem post procesant el sendViaEmail");
+          WalletStore.setPaidToElement(tx.getId(), {email:email, mobile: null, redeemedAt: null, address: address});
+          MyWallet.backupWallet('update', function() {successCallback(tx.getId());});
+        }
+        BlockchainAPI.sendViaEmail(email, tx, privateKey, postProcess, errorCallback);
+      }
+
+      var saveAndSpend = function() {
+        MyWallet.backupWallet('update', function() {spend.toAddress(address);});
+      }
+      var err = function() { console.log('Unexpected error toEmail'); }
+
+      WalletStore.setLegacyAddressLabel(address, email + ' Sent Via Email', saveAndSpend, err);
+
     }
+
   }
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
@@ -133,6 +163,8 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
         MyWallet.getUnspentOutputsForAddresses(payment.fromAddress, success, error);
       });
 
+      // we set the private key obtainer function
+      // to be called later once we know the coins to sign.
       payment.getPrivateKeys = function (tx) {
         var getKeyForAddress = function (neededPrivateKeyAddress) {
           var k = WalletStore.getPrivateKey(neededPrivateKeyAddress);
@@ -155,7 +187,7 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
         return tx.addressesOfNeededPrivateKeys.map(getKeyForAddress);
       }
 
-      return spendTo;
+      return spend;
     },
     prepareAddressSweep: function(fromAddress) {
       console.log("prepareAddressSweep executed");
@@ -176,6 +208,8 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
         MyWallet.getUnspentOutputsForAccount(payment.fromAccountIndex, success, error)
       });
 
+      // we set the private key obtainer function
+      // to be called later once we know the coins to sign.
       payment.getPrivateKeys = function (tx) {
         // obtain xpriv
         var extendedPrivateKey = payment.fromAccount.extendedPrivateKey === null || payment.secondPassword === null
@@ -193,7 +227,7 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
         }
         return tx.pathsOfNeededPrivateKeys.map(getKeyForPath);
       }
-      return spendTo;
+      return spend;
     }
   }
   //////////////////////////////////////////////////////////////////////////////
