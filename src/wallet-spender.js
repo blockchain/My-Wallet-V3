@@ -79,13 +79,8 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
     // obtain the private keys for the coins we are going to spend
     var keys = payment.getPrivateKeys(tx);
     tx.addPrivateKeys(keys);
-<<<<<<< HEAD
-
     tx.randomizeOutputs();
-
-=======
     // sign the transaction
->>>>>>> moved out the old spender.
     var signedTransaction = tx.sign();
     // push the transaction to the network
     publishTransaction(signedTransaction);
@@ -99,17 +94,11 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
      */
     toAddress: function(toAddress) {
 
-<<<<<<< HEAD
-    BlockchainAPI.push_tx(
-      signedTransaction,
-      note,
-      function(tx_hash) {
-        if(typeof(postSendCallback) == "undefined") {
-          successCallback(signedTransaction.getId());
-        } else {
-          postSendCallback(signedTransaction);
-=======
       assert(toAddress, "to address required");
+      // First check if the to address is not part of the from account:
+      if(payment.fromAccount && payment.fromAccount.containsAddressInCache(toAddress)) {
+        errorCallback("Unable to move bitcoins within the same account.");
+      }
       payment.toAddress = toAddress;
       RSVP.hash(promises).then(function(result) {
         payment.secondPassword = result.secondPassword;
@@ -144,7 +133,6 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
           WalletStore.setPaidToElement(tx.getId()
             , {email:email, mobile: null, redeemedAt: null, address: address});
           MyWallet.backupWallet('update', function() {successCallback(tx.getId());});
->>>>>>> moved out the old spender.
         }
         BlockchainAPI.sendViaEmail(email, tx, privateKey, postProcess, errorCallback);
       }
