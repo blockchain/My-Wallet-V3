@@ -20,23 +20,24 @@ var RSVP = require('rsvp');
 var Spenderr = function(note, successCallback, errorCallback, listener, getSecondPassword) {
 
 ////////////////////////////////////////////////////////////////////////////////
-  var sharedKey = WalletStore.getSharedKey();
-  var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
   if(typeof(listener) == "undefined" || listener == null) {
     listener = {};
   }
 
   var payment = {
-    note:           null,
-    fromAddress:    null,
-    fromAccount:    null,
-    amount:         null,
-    feeAmount:      null,
-    toAddress:      null,
-    changeAddress:  null,
-    coins:          null,
-    secondPassword: null,
-    postSendCB:     null
+    note:              null,
+    fromAddress:       null,
+    fromAccount:       null,
+    amount:            null,
+    feeAmount:         null,
+    toAddress:         null,
+    changeAddress:     null,
+    coins:             null,
+    secondPassword:    null,
+    postSendCB:        null,
+    sharedKey:         null,
+    pbkdf2_iterations: null,
+    getPrivateKeys:    null
   }
 
   var promises = {
@@ -66,12 +67,8 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
   // if postSendCallback is present, this must call successCallback() itself
   var performTransaction = function(tx, keys, postSendCallback) {
 
-    console.log("performing transaction...");
-    console.log("P: TX: " + JSON.stringify(tx));
     tx.addPrivateKeys(keys);
-    console.log("hem afegit claus");
     var signedTransaction = tx.sign();
-    console.log("hem firmat!");
     // TODO: reuse this for all send functions
     BlockchainAPI.push_tx(
       signedTransaction,
@@ -87,28 +84,11 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
     );
   };
   ////////////////////////////////////////////////////////////////////////////////
-  var spendCoinsLog = function(object) {console.log(JSON.stringify(object));}
+  var spendCoinsToAddress = function() {
 
-  var spendCoins = function(payInfo) {
-
-    var tx = new Transaction( payInfo.coins, payInfo.toAddress, payInfo.amount,
-                              payInfo.feeAmount, payInfo.changeAddress, listener);
-
-    console.log("TX: " + tx);
-    var keys = tx.addressesOfNeededPrivateKeys.map(function (neededPrivateKeyAddress) {
-      var k = WalletStore.getPrivateKey(neededPrivateKeyAddress);
-      var privateKeyBase58 = payInfo.secondPassword === null ? k : WalletCrypto.decryptSecretWithSecondPassword(k, payInfo.secondPassword, sharedKey, pbkdf2_iterations);
-      // TODO If getPrivateKey returns null, it's a watch only address - ask for private key or show error or try again without watch only addresses
-      var format = MyWallet.detectPrivateKeyFormat(privateKeyBase58);
-      var key = MyWallet.privateKeyStringToKey(privateKeyBase58, format);
-
-      // If the address we looked for is not the public key address of the private key we found, try the compressed address
-      if (MyWallet.getCompressedAddressString(key) === neededPrivateKeyAddress) {
-        key = new Bitcoin.ECKey(key.d, true);
-      }
-      return key;
-    });
-    console.log("keys: " + keys);
+    var tx = new Transaction( payment.coins, payment.toAddress, payment.amount,
+                              payment.feeAmount, payment.changeAddress, listener);
+    var keys = payment.getPrivateKeys(tx);
     performTransaction(tx, keys, payment.postSendCB);
 
   }
@@ -118,15 +98,13 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
   var spendTo = {
     toAddress: function(toAddress, postSendCallback) {
       console.log("toAddress executed");
-
       payment.toAddress = toAddress;
       payment.postSendCB = postSendCallback;
-
       // here probably I have to call errorCallback if this fails! (not this catch)
       RSVP.hash(promises).then(function(result) {
         payment.secondPassword = result.secondPassword;
         payment.coins = result.coins;
-        spendCoins(payment);
+        spendCoinsToAddress();
       }).catch(function(reason) {
          console.error("SpendCoins error:", reason);
       });
@@ -148,7 +126,28 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
         MyWallet.getUnspentOutputsForAddresses(payment.fromAddress, success, error);
       });
 
-      // promises.coins.then(function(x){console.log(x);});
+      payment.getPrivateKeys = function (tx) {
+        var getKeyForAddress = function (neededPrivateKeyAddress) {
+          var k = WalletStore.getPrivateKey(neededPrivateKeyAddress);
+          var privateKeyBase58 = payment.secondPassword === null
+            ? k
+            : WalletCrypto.decryptSecretWithSecondPassword(
+                k, payment.secondPassword, payment.sharedKey, payment.pbkdf2_iterations);
+          // TODO If getPrivateKey returns null, it's a watch only address
+          // - ask for private key or show error or try again without watch only addresses
+          var format = MyWallet.detectPrivateKeyFormat(privateKeyBase58);
+          var key = MyWallet.privateKeyStringToKey(privateKeyBase58, format);
+
+          // If the address we looked for is not the public key address of the
+          // private key we found, try the compressed address
+          if (MyWallet.getCompressedAddressString(key) === neededPrivateKeyAddress) {
+            key = new Bitcoin.ECKey(key.d, true);
+          }
+          return key;
+        }
+        return tx.addressesOfNeededPrivateKeys.map(getKeyForAddress);
+      }
+
       return spendTo;
     },
     prepareAddressSweep: function(fromAddress) {
@@ -176,6 +175,8 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
   console.log("Preparing Spender!...");
   promises.secondPassword = new RSVP.Promise(getEncryptionPassword);
   payment.note = note;
+  payment.sharedKey = WalletStore.getSharedKey();
+  payment.pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
   // promises.secondPassword.then(function(x){console.log(x);});
 
 
