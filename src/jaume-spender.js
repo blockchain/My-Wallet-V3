@@ -105,7 +105,6 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
       console.log("toAddress executed...");
       payment.toAddress = toAddress;
       payment.postSendCB = postSendCallback;
-      // here probably I have to call errorCallback if this fails! (not this catch)
       RSVP.hash(promises).then(function(result) {
         payment.secondPassword = result.secondPassword;
         payment.coins = result.coins;
@@ -163,7 +162,9 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
     },
     prepareAddressSweep: function(fromAddress) {
       console.log("prepareAddressSweep executed");
-      return spendTo;
+      var feeAmount = MyWallet.getBaseFee();
+      var amount = WalletStore.getLegacyAddressBalance(fromAddress) - feeAmount;
+      return prepareFrom.prepareFromAddress(fromAddress, amount, feeAmount);
     },
     prepareFromAccount: function(fromIndex, amount, feeAmount) {
       console.log("Preparing From Account...");
