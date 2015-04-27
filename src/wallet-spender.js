@@ -263,9 +263,7 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
                                                         , payment.sharedKey
                                                         , payment.pbkdf2_iterations);
         // create an hd-account with xpriv decrypted
-        var sendAccount = new HDAccount();
-        sendAccount.newNodeFromExtKey(extendedPrivateKey);
-
+        var sendAccount = new HDAccount.fromExtKey(extendedPrivateKey);
         var getKeyForPath = function (neededPrivateKeyPath) {
           return sendAccount.generateKeyFromPath(neededPrivateKeyPath).privKey;
         }
