@@ -353,3 +353,57 @@ describe "HD Wallet", ->
       expect(observer.getPassword).toHaveBeenCalled()
       expect(observer.success).toHaveBeenCalledWith(passphrase)
         
+  describe "recoverHDWalletFromSeedHex()", ->
+    hdwallet = null
+    beforeEach ->
+      observer =
+        success: (newHDWallet) ->
+          hdwallet = newHDWallet
+        error: () ->
+          console.log "error"
+
+      history = (arr, success, error) ->
+        if arr[0] == 'xpub6CcRcFnKD32pPkjV8sVNG4WejGQwQTCaAs31e3NoaFSSnYWfBuEWNo3nKWVZotgtN1dpoYGwSxUVyVfNrrgE7YwpSrUWsqgK2LdmuGDCBMp'
+          retVal = {'addresses': [{'account_index': 12, 'change_index': 2}]}
+        else if arr[0] == 'xpub6CcRcFnKD32pRDxvXpakFFpEmS1QThoKwWGNcYtcWA9Jeb2bz7vPxmWqGvveYajzfzeQqCoC37oStYKwz6HC8gcfQbEWbW7vzyznUU3ZosU'
+          retVal = {'addresses': [{'account_index': 12, 'change_index': 2}]}
+        else
+          retVal = {'addresses': [{'account_index': 0, 'change_index': 0}]}
+        success(retVal)
+
+      spyOn(observer, "success").and.callThrough()
+      spyOn(MyWallet, "get_history_with_addresses").and.callFake history
+      spyOn(WalletStore, "getPbkdf2Iterations").and.returnValue(10)
+      
+    describe "without 2nd password", ->
+      beforeEach ->
+        HDWallet.recoverHDWalletFromSeedHex(seed, "", null, observer.success, observer.error)
+        
+      it "should succeed and create the right number of accounts", ->
+        expect(observer.success).toHaveBeenCalled()
+        expect(hdwallet.accountArray.length).toBe(2)
+
+  describe "recoverHDWalletFromMnemonic()", ->
+    hdwallet = null
+    beforeEach ->
+      observer =
+        success: (newHDWallet) ->
+          hdwallet = newHDWallet
+        error: () ->
+          console.log "error"
+
+      history = (arr, success, error) ->
+        retVal = {'addresses': [{'account_index': 0, 'change_index': 0}]}
+        success(retVal)
+
+      spyOn(observer, "success").and.callThrough()
+      spyOn(MyWallet, "get_history_with_addresses").and.callFake history
+      spyOn(WalletStore, "getPbkdf2Iterations").and.returnValue(10)
+      
+    describe "without 2nd password", ->
+      beforeEach ->
+        HDWallet.recoverHDWalletFromMnemonic(passphrase, "", null, observer.success, observer.error)
+        
+      it "should succeed and create the right number of accounts", ->
+        expect(observer.success).toHaveBeenCalled()
+        expect(hdwallet.accountArray.length).toBe(1)

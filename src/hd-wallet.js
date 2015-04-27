@@ -79,6 +79,7 @@ function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallbac
   var accountIdx = 0;
 
   var continueLookingAheadAccount = true;
+  var gotHistoryError = false;
 
   while(continueLookingAheadAccount) {
     var account = hdwallet.createAccount("Account " + accountIdx.toString(), secondPassword);
@@ -93,7 +94,13 @@ function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallbac
       accountIdx += 1;
     }, function() {
       errorCallback && errorCallback();
+      continueLookingAheadAccount = false;
+      gotHistoryError = true;
     });
+  }
+
+  if(gotHistoryError) {
+    return;
   }
 
   if (hdwallet.getAccountsCount() < 1) {
