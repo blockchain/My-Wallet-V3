@@ -97,8 +97,12 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
 ////////////////////////////////////////////////////////////////////////////////
 
   var spendTo = {
+    /**
+     * @param {string} address to pay
+     * @param {function} if present will replace success callback
+     */
     toAddress: function(toAddress, postSendCallback) {
-      console.log("toAddress executed");
+      console.log("toAddress executed...");
       payment.toAddress = toAddress;
       payment.postSendCB = postSendCallback;
       // here probably I have to call errorCallback if this fails! (not this catch)
@@ -107,6 +111,15 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
         payment.coins = result.coins;
         spendCoinsToAddress();
       }).catch(function (err) {errorCallback && errorCallback(err);});
+    },
+    /**
+     * @param {number} index of the account to pay
+     */
+    toAccount: function(toIndex) {
+      console.log("toAccount executed...");
+      var toAccount = WalletStore.getHDWallet().getAccount(toIndex);
+      var toAddress = toAccount.getReceiveAddress();
+      spendTo.toAddress(toAddress, null);
     }
   }
   //////////////////////////////////////////////////////////////////////////////
