@@ -32,7 +32,6 @@ module.exports = (grunt) ->
         src: [
           'build/bower_components.js'
           'build/shared.processed.js'
-          'build/ie.processed.js'
           'build/blockchain.js'
           'node_modules/sjcl/sjcl.js'
           'node_modules/xregexp/xregexp-all.js'
