@@ -9,7 +9,6 @@ stubs = {'./wallet-store': WalletStore, './wallet-crypto': WalletCrypto, 'bitcoi
 
 MyWallet = proxyquire('../src/wallet', stubs)
 Spender = require('../src/wallet-spender');
-Spenderr = require('../src/jaume-spender');
 BigInteger = require('bigi')
 
 ################################################################################
@@ -136,9 +135,6 @@ describe "walletSpender", ->
   #     tx = BlockchainAPI.push_tx.calls.argsFor(0)[0]
   #     console.log tx
 
-    value = undefined
-    flag = undefined
-
   describe "Spender (from) Constructor", ->
     it "should create a non empty prepare form", ->
       # we should check the note logic once it is implemented
@@ -186,28 +182,3 @@ describe "walletSpender", ->
       #     .toAddress(null, null);
 
       expect(3).toEqual(3)
-
-
-  describe 'Ajax Tests Using run() and waitsFor()', ->
-    flag = undefined
-    value = undefined
-    intId = undefined
-    beforeEach ->
-      flag = false
-      value = 0
-      intId = setInterval((->
-        console.log value
-        if ++value == 3
-          flag = true
-        return
-      ), 500)
-      return
-    afterEach ->
-      clearInterval intId
-      return
-    it 'should simulate an asynchronous call', ->
-      waitsFor (->
-        flag
-      ), 'The Value should be incremented', 5000
-      return
-    return
