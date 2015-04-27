@@ -66,23 +66,18 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
 
   //////////////////////////////////////////////////////////////////////////////
   // if postSendCallback is present, this must call successCallback() itself
-  var performTransaction = function(tx, keys, postSendCallback) {
+  var publishTransaction = function(signedTransaction) {
 
-    tx.addPrivateKeys(keys);
-    var signedTransaction = tx.sign();
-    // TODO: reuse this for all send functions
-    BlockchainAPI.push_tx(
-      signedTransaction,
-      note,
-      function(tx_hash) {
-        if(typeof(postSendCallback) == "undefined" || postSendCallback === null) {
-          successCallback && successCallback(signedTransaction.getId());
-        } else {
-          postSendCallback(signedTransaction);
-        }
-      },
-      function (err) {errorCallback && errorCallback(err);}
-    );
+    var succCallBack = function(tx_hash) {
+      if(typeof(payment.postSendCB) == "undefined" || payment.postSendCB === null) {
+        successCallback && successCallback(signedTransaction.getId());
+      } else {
+        payment.postSendCB(signedTransaction);
+      }
+    };
+    var errCallBack = function (err) {errorCallback && errorCallback(err);}
+
+    BlockchainAPI.push_tx(signedTransaction, payment.note, succCallBack, errCallBack);
   };
   ////////////////////////////////////////////////////////////////////////////////
   var spendCoinsToAddress = function() {
@@ -90,7 +85,9 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
     var tx = new Transaction( payment.coins, payment.toAddress, payment.amount,
                               payment.feeAmount, payment.changeAddress, listener);
     var keys = payment.getPrivateKeys(tx);
-    performTransaction(tx, keys, payment.postSendCB);
+    tx.addPrivateKeys(keys);
+    var signedTransaction = tx.sign();
+    publishTransaction(signedTransaction);
 
   }
 ////////////////////////////////////////////////////////////////////////////////
@@ -207,7 +204,6 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
   payment.note = note;
   payment.sharedKey = WalletStore.getSharedKey();
   payment.pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
-
   //////////////////////////////////////////////////////////////////////////////
   return prepareFrom;
 }
@@ -222,3 +218,4 @@ module.exports = Spenderr;
 // new Blockchain.Spenderr("mi nota", null, null, null, getSP).prepareFromAddress("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX", 20000, 10000).toAddress(null, null);
 // new Blockchain.Spenderr("mi nota", function(x){console.log("All ok: " +x);}, null, null, getSP).prepareFromAddress("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX", 20000, 10000).toAddress("1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN", null);
 // new Blockchain.Spenderr("mi nota", function(x){console.log("All ok: " +x);}, function(x){console.log("oh shit: " +x);}, null, getSP).prepareFromAccount(0, 10000000000, 10000).toAddress("1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN", null);
+// new Blockchain.Spenderr("mi nota", function(x){console.log("All ok: " +x);}, function(x){console.log("oh shit: " +x);}, null, getSP).prepareAddressSweep("1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN").toAccount(0);
