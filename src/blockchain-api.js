@@ -26,7 +26,7 @@ var BlockchainAPI = new function() {
     if (myHDWallet != null) {
       for (var i in myHDWallet.getAccounts()) {
         var account = myHDWallet.getAccount(i);
-        var accountExtendedPublicKey = account.getExtendedPublicKey();
+        var accountExtendedPublicKey = account.extendedPublicKey;
         allAddresses.push(accountExtendedPublicKey);
       }
     }

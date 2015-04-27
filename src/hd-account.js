@@ -42,40 +42,32 @@ HDAccount.fromExtKey = function(extKey, cache, label, index, network) {
   return account;
 };
 
-HDAccount.prototype.setReceiveIndex = function(index) {
-  this.receiveIndex = index;
-};
-
-HDAccount.prototype.getReceiveIndex = function() {
-  return this.receiveIndex;
-};
-
 HDAccount.prototype.incrementReceiveIndex = function() {
   this.receiveIndex++;
 };
 
 HDAccount.prototype.incrementReceiveIndexIfLastIndex = function(index) {
-  if(index == this.getReceiveIndex()) {
+  if(index == this.receiveIndex) {
     this.incrementReceiveIndex();
   }
 };
 
 HDAccount.prototype.incrementReceiveIndexIfCurrentIsLabeled = function() {
-  if(this.getLabelForReceiveAddress(this.getReceiveIndex())) {
+  if(this.getLabelForReceiveAddress(this.receiveIndex)) {
     this.incrementReceiveIndex();
   }
 };
 
 HDAccount.prototype.incrementReceiveIndexIfLastIndexIsIncluded = function(addresses) {
   for (var i in addresses) {
-    if(this.getReceiveAddressAtIndex(this.getReceiveIndex()) === addresses[i]) {
+    if(this.getReceiveAddressAtIndex(this.receiveIndex) === addresses[i]) {
       this.incrementReceiveIndex();
     }
   }
 };
 
 HDAccount.prototype.getReceiveAddressAtIndex = function(index) {
-  assert(typeof(index) === "number"); // Catches e.g. getReceiveAddress(this.getReceiveIndex) 
+  assert(typeof(index) === "number"); // Catches e.g. getReceiveAddress(this.receiveIndex) 
 
   if (this.receiveKeyCache[index]) {
     return this.receiveKeyCache[index].getAddress().toString();
@@ -88,10 +80,6 @@ HDAccount.prototype.getReceiveAddressAtIndex = function(index) {
 
 HDAccount.prototype.getReceiveAddress = function() {
   return this.getReceiveAddressAtIndex(this.receiveIndex);
-};
-
-HDAccount.prototype.getChangeIndex = function() {
-  return this.changeIndex;
 };
 
 HDAccount.prototype.getChangeAddressAtIndex = function(index) {
@@ -169,8 +157,8 @@ HDAccount.prototype.getInternalPrivateKey = function(index) {
 
 HDAccount.prototype.getAccountJsonData = function() {
   var accountJsonData = {
-    label : this.getLabel(),
-    archived : this.isArchived(),
+    label : this.label,
+    archived : this.archived,
     xpriv : this.extendedPrivateKey,
     xpub : this.extendedPublicKey,
     address_labels: this.address_labels,
@@ -178,14 +166,6 @@ HDAccount.prototype.getAccountJsonData = function() {
   };
 
   return accountJsonData;
-};
-
-HDAccount.prototype.getLabel = function() {
-  return this.label;
-};
-
-HDAccount.prototype.setLabel = function(label) {
-  this.label = label;
 };
 
 HDAccount.prototype.getLabelForReceiveAddress = function(addressIndex) {
@@ -241,23 +221,6 @@ HDAccount.prototype.containsAddressInCache = function(address) {
   return false;
 };
 
-HDAccount.prototype.isArchived = function() {
-  return this.archived;
-};
-
-HDAccount.prototype.setIsArchived = function(archived) {
-  this.archived = archived;
-};
-
-HDAccount.prototype.getExtendedPublicKey = function(isPrivate) {
-  return this.extendedPublicKey;
-};
-
-HDAccount.prototype.getExtendedPrivateKey = function(isPrivate) {
-  return this.extendedPrivateKey;
-
-};
-
 HDAccount.prototype.generateCache = function() {
   assert(this.externalAccount, "External Account not set");
   assert(this.internalAccount, "Internal Account not set");
@@ -266,14 +229,6 @@ HDAccount.prototype.generateCache = function() {
   this.cache.externalAccountChainCode = this.externalAccount.chainCode.toString("base64");
   this.cache.internalAccountPubKey = this.internalAccount.pubKey.toBuffer().toString("base64");
   this.cache.internalAccountChainCode = this.internalAccount.chainCode.toString("base64");
-};
-
-HDAccount.prototype.getBalance = function() {
-  return this.balance;
-};
-
-HDAccount.prototype.setBalance = function(balance) {
-  return this.balance = balance;
 };
 
 HDAccount.prototype.recommendedTransactionFee = function(amount) {

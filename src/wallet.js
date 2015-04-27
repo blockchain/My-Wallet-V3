@@ -622,7 +622,7 @@ function wsSuccess(ws) {
       var account = MyWallet.getAccount(tx_account.index);
 
       if (tx_account) {
-        account.setBalance(account.getBalance() + tx_processed.result);
+        account.balance += tx_processed.result;
         
         // Increase receive address index if this was an incoming transaction using the highest index:
         if((tx_processed.result > 0 || tx_processed.intraWallet)) {
@@ -733,7 +733,7 @@ MyWallet.base58ToSipa = function(x, addr) {
  * @return {string} account label
  */
 MyWallet.getLabelForAccount = function(accountIdx) {
-  return WalletStore.getHDWallet().getAccount(accountIdx).getLabel();
+  return WalletStore.getHDWallet().getAccount(accountIdx).label;
 };
 
 /**
@@ -787,7 +787,7 @@ MyWallet.setLabelForAccount = function(accountIdx, label) {
   if (!this.validateAccountLabel(label))
     return false;
 
-  WalletStore.getHDWallet().getAccount(accountIdx).setLabel(label);
+  WalletStore.getHDWallet().getAccount(accountIdx).label = label;
   MyWallet.backupWalletDelayed();
   return true;
 };
@@ -797,7 +797,7 @@ MyWallet.setLabelForAccount = function(accountIdx, label) {
  * @return {boolean} is account archived
  */
 MyWallet.isArchivedForAccount = function(accountIdx) {
-  return WalletStore.getHDWallet().getAccount(accountIdx).isArchived();
+  return WalletStore.getHDWallet().getAccount(accountIdx).archived;
 };
 
 /**
@@ -806,7 +806,7 @@ MyWallet.isArchivedForAccount = function(accountIdx) {
  * @param {boolean} isArchived is archived
  */
 MyWallet.setIsArchivedForAccount = function(accountIdx, isArchived) {
-  WalletStore.getHDWallet().getAccount(accountIdx).setIsArchived(isArchived);
+  WalletStore.getHDWallet().getAccount(accountIdx).archived = isArchived;
   MyWallet.backupWalletDelayed('update', function() {
     MyWallet.get_history();
   });
@@ -817,7 +817,7 @@ MyWallet.setIsArchivedForAccount = function(accountIdx, isArchived) {
  * @return {number} balance of account in satoshis
  */
 MyWallet.getBalanceForAccount = function(accountIdx) {
-  return WalletStore.getHDWallet().getAccount(accountIdx).getBalance();
+  return WalletStore.getHDWallet().getAccount(accountIdx).balance;
 };
 
 /**
@@ -837,7 +837,7 @@ MyWallet.getReceivingAddressForAccount = function(accountIdx) {
 };
 
 MyWallet.getReceivingAddressIndexForAccount = function(accountIdx) {
-  return WalletStore.getHDWallet().getAccount(accountIdx).getReceiveIndex();
+  return WalletStore.getHDWallet().getAccount(accountIdx).receiveIndex;
 };
 
 /**
@@ -850,14 +850,14 @@ MyWallet.setLabelForAccountAddress = function(accountIdx, addressIdx, label, suc
   if (label != "" && ! MyWallet.isAlphaNumericSpace(label)) {
     error();
   } else {
-    account = WalletStore.getHDWallet().getAccount(accountIdx)
+    var account = WalletStore.getHDWallet().getAccount(accountIdx);
     account.setLabelForAddress(addressIdx, label);
-    
+
     // Bump receive address count if this was the last index:
     account.incrementReceiveIndexIfLastIndex(addressIdx);
-    
+
     MyWallet.backupWalletDelayed();
-    success();
+    success && success();
   }
 };
 
@@ -895,7 +895,7 @@ MyWallet.processTransaction = function(tx) {
     } else {
       for (var j in MyWallet.getAccounts()) {
         var account = WalletStore.getHDWallet().getAccount(j);
-        if (!account.isArchived() && output.xpub != null && account.getExtendedPublicKey() == output.xpub.m) {
+        if (!account.archived && output.xpub != null && account.extendedPublicKey == output.xpub.m) {
           amountFromAccount += output.value;
 
           if (! isOrigin) {
@@ -976,7 +976,7 @@ MyWallet.processTransaction = function(tx) {
       var toAccountSet = false;
       for (var j in MyWallet.getAccounts()) {
         var account = WalletStore.getHDWallet().getAccount(j);
-        if (!account.isArchived() && output.xpub != null && account.getExtendedPublicKey() == output.xpub.m) {
+        if (!account.archived && output.xpub != null && account.extendedPublicKey == output.xpub.m) {
           if (! toAccountSet) {
             if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
               transaction.from.account.amount -= output.value;
@@ -1143,8 +1143,8 @@ MyWallet.fetchMoreTransactionsForAccounts = function(success, error, didFetchOld
     var addresses = [];
     for (var i in MyWallet.getAccounts()) {
       var account = WalletStore.getHDWallet().getAccount(i);
-      if(!account.isArchived()) {
-        addresses.push(account.getExtendedPublicKey());
+      if(!account.archived) {
+        addresses.push(account.extendedPublicKey);
       }
     }
 
@@ -1189,7 +1189,7 @@ MyWallet.fetchMoreTransactionsForAccounts = function(success, error, didFetchOld
 MyWallet.fetchMoreTransactionsForAccount = function(accountIdx, success, error, didFetchOldestTransaction) {
   function getRawTransactionsForAccount(accountIdx, txOffset, numTx, success, error) {
     var account = WalletStore.getHDWallet().getAccount(accountIdx);
-    var accountExtendedPublicKey = account.getExtendedPublicKey();
+    var accountExtendedPublicKey = account.extendedPublicKey;
 
     BlockchainAPI.async_get_history_with_addresses([accountExtendedPublicKey], function(data) {
       if (success) success(data);
@@ -1413,7 +1413,7 @@ MyWallet.fetchMoreTransactionsForLegacyAddresses = function(success, error, didF
 
 MyWallet.archiveAccount = function(idx) {
   var account = WalletStore.getHDWallet().getAccount(idx);
-  account.setIsArchived(true);
+  account.archived = true;
   MyWallet.backupWalletDelayed();
 };
 
@@ -1435,7 +1435,7 @@ MyWallet.unarchiveAccount = function(idx, successcallback) {
 
 
   MyWallet.fetchMoreTransactionsForAccount(idx,function(txs, balance) {
-    account.setBalance(balance);
+    account.balance = balance;
 
     MyWallet.listenToHDWalletAccount(account.extendedPrivateKey);
 
@@ -1508,8 +1508,8 @@ MyWallet.createAccount = function(label, getPassword, success, error) {
 // Assumes second password is needed if the argument is not null.
 function createAccount(label, second_password, success, error) {
   var account = WalletStore.getHDWallet().createAccount(label, second_password);
-  var accountExtendedPublicKey = account.getExtendedPublicKey();
-  account.setBalance(0);
+  var accountExtendedPublicKey = account.extendedPublicKey;
+  account.balance = 0;
   MyWallet.listenToHDWalletAccount(accountExtendedPublicKey);
   success();
   MyWallet.backupWalletDelayed();
@@ -1617,8 +1617,8 @@ MyWallet.listenToHDWalletAccount = function(accountExtendedPublicKey) {
 MyWallet.listenToHDWalletAccounts = function() {
   for (var i in MyWallet.getAccounts()) {
     var account = WalletStore.getHDWallet().getAccount(i);
-    if(!account.isArchived()) {
-      var accountExtendedPublicKey = account.getExtendedPublicKey();
+    if(!account.archived) {
+      var accountExtendedPublicKey = account.extendedPublicKey;
       MyWallet.listenToHDWalletAccount(accountExtendedPublicKey);
     }
   }
@@ -1712,9 +1712,9 @@ MyWallet.initializeHDWallet = function(passphrase, bip39Password, getPassword, s
     var _success = function () {
       var account = WalletStore.getHDWallet().createAccount("Spending", second_password);
 
-      account.setBalance(0);
+      account.balance = 0;
 
-      MyWallet.listenToHDWalletAccount(account.getExtendedPublicKey());
+      MyWallet.listenToHDWalletAccount(account.extendedPublicKey);
 
       success();
     };
@@ -2005,18 +2005,18 @@ function parseMultiAddressJSON(obj, cached, checkCompleted) {
     for (var j in MyWallet.getAccounts()) {
       var account = WalletStore.getHDWallet().getAccount(j);
 
-      if(!account.isArchived()) {
-        var extPubKey = account.getExtendedPublicKey();
+      if(!account.archived) {
+        var extPubKey = account.extendedPublicKey;
 
         if (extPubKey == obj.addresses[i].address) {
-          account.setBalance(obj.addresses[i].final_balance);
+          account.balance = obj.addresses[i].final_balance;
           account.n_tx = obj.addresses[i].n_tx;
           account.receiveIndex = obj.addresses[i].account_index;
-          
+
           // Bump receive address index one more if this is a labeled address:
           // Slightly inefficient
-          account.incrementReceiveIndexIfCurrentIsLabeled()
-          
+          account.incrementReceiveIndexIfCurrentIsLabeled();
+
           account.changeIndex = obj.addresses[i].change_index;
         }
       }

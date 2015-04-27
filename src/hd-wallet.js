@@ -37,7 +37,7 @@ HDWallet.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Pass
 
     if (accountPayload.archived == true) {
       hdaccount = hdwallet.createArchivedAccount(accountPayload.label, accountPayload.xpriv, accountPayload.xpub);
-      hdaccount.setIsArchived(true);
+      hdaccount.archived = true;
       hdwallet.accountArray.push(hdaccount);
     } else {
       // This is called when a wallet is loaded, not when it's initially created. 
@@ -64,7 +64,7 @@ HDWallet.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Pass
         hdwallet.accountArray.push(hdaccount);
       }
 
-      hdaccount.setIsArchived(false);
+      hdaccount.archived = false;
     }
 
     hdaccount.address_labels = accountPayload.address_labels ? accountPayload.address_labels : [];
@@ -84,7 +84,7 @@ function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallbac
   while(continueLookingAheadAccount) {
     var account = hdwallet.createAccount("Account " + accountIdx.toString(), secondPassword);
 
-    var xpub = account.getExtendedPublicKey();
+    var xpub = account.extendedPublicKey;
 
     MyWallet.get_history_with_addresses([xpub], function(obj) {
       if(obj.addresses[0].account_index == 0 && obj.addresses[0].change_index == 0) {
@@ -198,7 +198,7 @@ HDWallet.prototype.filterTransactionsForAccount = function(accountIdx, transacti
       if (!output || !output.addr)
         continue;
 
-      if (output.xpub != null && account.getExtendedPublicKey() == output.xpub.m) {
+      if (output.xpub != null && account.extendedPublicKey == output.xpub.m) {
         isOrigin = true;
         transaction.amount -= output.value;
       } else {
@@ -211,14 +211,14 @@ HDWallet.prototype.filterTransactionsForAccount = function(accountIdx, transacti
       var output = tx.out[i];
       if (!output || !output.addr)
         continue;
-      if (output.xpub != null && account.getExtendedPublicKey() == output.xpub.m) {
+      if (output.xpub != null && account.extendedPublicKey == output.xpub.m) {
         transaction.amount += output.value;
       } else {
         transaction.to_addresses.push(output.addr);
         if (!isOrigin) {
           for (var j in this.getAccounts()) {
             var otherAccount = this.getAccount(j);
-            if (otherAccount.getExtendedPublicKey() == output.xpub.m) {
+            if (otherAccount.extendedPublicKey == output.xpub.m) {
               transaction.intraWallet = true;
               break;
             }

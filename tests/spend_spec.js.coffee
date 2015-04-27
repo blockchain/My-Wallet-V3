@@ -71,10 +71,8 @@ describe "Spend", ->
         extendedPrivateKey: 
           "xprv9zJ1cTHnqzgBP2boCwpP47LBzjGLKXkwYqXoYnV4yrBmstmw6SVt\
            irpvm4GESg9YLn9R386qpmnsrcC5rvrpEJAXSrfqQR3qGtjGv5ddV9g"
-        isArchived: () -> false
+        archived: false
         getReceiveAddress: () -> "1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX"
-        getExtendedPublicKey: () -> this.extendedPublicKey
-        getExtendedPrivateKey: () -> this.extendedPrivateKey
         setUnspentOutputs: (utxo) -> return
       }
     ]
@@ -312,11 +310,11 @@ describe "Spend", ->
     tx             = undefined
     beforeEach ->  
       spyOn(WalletCrypto, "decryptSecretWithSecondPassword")
-        .and.returnValue(hdAccounts[0].getExtendedPrivateKey())
+        .and.returnValue(hdAccounts[0].extendedPrivateKey)
     
       # Mocked objects
       # - all the methods in the accoupnt object (hdwallet.js)
-      #    - createTx, getBalance, getExtendedPublicKey, getExtendedPrivateKey, setUnspentOutputs
+      #    - createTx, setUnspentOutputs
       # - BlockchainAPI calls
       #    - get_unspent, push_tx 
       # - MyWallet
@@ -354,7 +352,7 @@ describe "Spend", ->
       ]
       tx = Bitcoin.Transaction.fromHex '010000000117cba71f08fc8e7af50088d87f94fa7ce8d70dfaa74c4544eccbf261eaeca2e9010000006a47304402201424b613b9558ec05dac1f4a457b5542b5c1d26cfb3e71277d0cc8199b2e5c29022034a1c7ef03a21f73cd8c78730bec21f63a44685943db9b1841f41edddae9bb9e01210349802adc55cc58eca077ab42b9fe10037146bd61cca9f8b6abf729c8126237a9ffffffff02c0270900000000001976a914078d35591e340799ee96968936e8b2ea8ce504a688ac30e60200000000001976a914d930f7f7cbfde68eb30d1a6b5efc6d368c1b78a588ac00000000'
       hdAccounts[data.from].createTx = () -> tx
-      hdAccounts[data.from].getBalance = () -> 810000
+      hdAccounts[data.from].balance = 810000
 
       spyOn(BlockchainAPI, "sendViaEmail")
         .and.callFake((email, tx, privateKey, success, error) ->
@@ -373,7 +371,6 @@ describe "Spend", ->
 
         spyOn(WalletStore.getHDWallet(),"getAccount").and.callThrough()
         spyOn(hdAccounts[data.from], 'createTx').and.callThrough()
-        spyOn(hdAccounts[data.from], 'getBalance').and.callThrough()
 
         WalletStore.setDoubleEncryption(false)
         MyWallet.sendBitcoinsForAccount  data.from
@@ -390,7 +387,6 @@ describe "Spend", ->
         expect(BlockchainAPI.get_unspent).toHaveBeenCalled()
         xpub = BlockchainAPI.get_unspent.calls.argsFor(0)[0][0]
         expect(xpub).toBe(hdAccounts[0].extendedPublicKey)
-        expect(hdAccounts[data.from].getBalance).toHaveBeenCalled()
         expect(BlockchainAPI.push_tx).toHaveBeenCalled()
         transaction = BlockchainAPI.push_tx.calls.argsFor(0)[0].toHex()
         expect(transaction).toBe(tx.toHex())
@@ -546,7 +542,7 @@ describe "Spend", ->
             ,data.amount
             ,data.fee
             ,getUnspendMock.unspent_outputs
-            ,hdAccounts[data.from].getExtendedPrivateKey()
+            ,hdAccounts[data.from].extendedPrivateKey
             ,observer.listener)
 
         expect(BlockchainAPI.push_tx)
@@ -664,7 +660,7 @@ describe "Spend", ->
             ,data.amount
             ,data.fee
             ,getUnspendMock.unspent_outputs
-            ,hdAccounts[data.from].getExtendedPrivateKey()
+            ,hdAccounts[data.from].extendedPrivateKey
             ,observer.listener)
 
         expect(BlockchainAPI.push_tx)
