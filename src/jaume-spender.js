@@ -27,6 +27,7 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
   var payment = {
     note:              null,
     fromAddress:       null,
+    fromAccountIndex:  null,
     fromAccount:       null,
     amount:            null,
     feeAmount:         null,
@@ -75,12 +76,12 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
       note,
       function(tx_hash) {
         if(typeof(postSendCallback) == "undefined" || postSendCallback === null) {
-          successCallback(signedTransaction.getId());
+          successCallback && successCallback(signedTransaction.getId());
         } else {
           postSendCallback(signedTransaction);
         }
       },
-      function(e) { errorCallback(e);}
+      function (err) {errorCallback && errorCallback(err);}
     );
   };
   ////////////////////////////////////////////////////////////////////////////////
@@ -105,10 +106,7 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
         payment.secondPassword = result.secondPassword;
         payment.coins = result.coins;
         spendCoinsToAddress();
-      }).catch(function(reason) {
-         console.error("SpendCoins error:", reason);
-      });
-
+      }).catch(function (err) {errorCallback && errorCallback(err);});
     }
   }
   //////////////////////////////////////////////////////////////////////////////
@@ -157,15 +155,33 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
     prepareFromAccount: function(fromIndex, amount, feeAmount) {
       console.log("Preparing From Account...");
 
-      payment.fromAccount = fromIndex;
+      payment.fromAccountIndex = fromIndex;
+      payment.fromAccount = WalletStore.getHDWallet().getAccount(fromIndex);
+      payment.changeAddress = payment.fromAccount.getChangeAddress();
       payment.amount = amount;
       payment.feeAmount = feeAmount;
 
       promises.coins = new RSVP.Promise(function(success, error) {
-        MyWallet.getUnspentOutputsForAccount(payment.fromAccount, success, error)
+        MyWallet.getUnspentOutputsForAccount(payment.fromAccountIndex, success, error)
       });
 
-      // promises.coins.then(function(x){console.log(x);});
+      payment.getPrivateKeys = function (tx) {
+        // obtain xpriv
+        var extendedPrivateKey = payment.fromAccount.extendedPrivateKey === null || payment.secondPassword === null
+          ? payment.fromAccount.extendedPrivateKey
+          : WalletCrypto.decryptSecretWithSecondPassword( payment.fromAccount.extendedPrivateKey
+                                                        , payment.secondPassword
+                                                        , payment.sharedKey
+                                                        , payment.pbkdf2_iterations);
+        // create an hd-account with xpriv decrypted
+        var sendAccount = new HDAccount();
+        sendAccount.newNodeFromExtKey(extendedPrivateKey);
+
+        var getKeyForPath = function (neededPrivateKeyPath) {
+          return sendAccount.generateKeyFromPath(neededPrivateKeyPath).privKey;
+        }
+        return tx.pathsOfNeededPrivateKeys.map(getKeyForPath);
+      }
       return spendTo;
     }
   }
@@ -177,8 +193,6 @@ var Spenderr = function(note, successCallback, errorCallback, listener, getSecon
   payment.note = note;
   payment.sharedKey = WalletStore.getSharedKey();
   payment.pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
-  // promises.secondPassword.then(function(x){console.log(x);});
-
 
   //////////////////////////////////////////////////////////////////////////////
   return prepareFrom;
@@ -193,3 +207,4 @@ module.exports = Spenderr;
 // Blockchain.MyWallet.getUnspentOutputsForAccount(0, function(u){console.log(u)});
 // new Blockchain.Spenderr("mi nota", null, null, null, getSP).prepareFromAddress("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX", 20000, 10000).toAddress(null, null);
 // new Blockchain.Spenderr("mi nota", function(x){console.log("All ok: " +x);}, null, null, getSP).prepareFromAddress("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX", 20000, 10000).toAddress("1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN", null);
+// new Blockchain.Spenderr("mi nota", function(x){console.log("All ok: " +x);}, function(x){console.log("oh shit: " +x);}, null, getSP).prepareFromAccount(0, 10000000000, 10000).toAddress("1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN", null);
