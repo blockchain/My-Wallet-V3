@@ -103,9 +103,10 @@ describe "Wallet", ->
       
       spyOn(callbacks, "success")
       spyOn(callbacks, "error").and.callFake((e) -> console.log(e)) #.and.callThrough()
-      
-      spyOn(WalletSignup, "generateUUIDs").and.callFake (n, success, error) ->
-        success(["68019bee-7a27-490b-ab8a-446c2749bf1f","78019bee-7a27-490b-ab8a-446c2749bf1f"]) # Fake UID and shared key
+
+      spyOn($, "ajax").and.callFake (params) ->
+        data = {uuids: ["68019bee-7a27-490b-ab8a-446c2749bf1f","78019bee-7a27-490b-ab8a-446c2749bf1f"]}
+        params.success(data)
       
       spyOn(MyWallet, "securePost").and.callFake (name, post_data, success, error) ->
         success("Successfully created new wallet")
@@ -119,8 +120,15 @@ describe "Wallet", ->
       
       expect(callbacks.success).toHaveBeenCalled()
       expect(callbacks.error).not.toHaveBeenCalled()
+
+    it "should fail if password is too long", ->
+      try
+        MyWallet.createNewWallet("a@b.com", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "en", "EUR", callbacks.success, callbacks.error)
+      catch e
+        expect(e).toBe('Passwords must be shorter than 256 characters')
       
-      
+      expect(callbacks.success).not.toHaveBeenCalled()
+
     it "should create an HD wallet", ->
       
       MyWallet.createNewWallet("a@b.com", "1234567890", "en", "EUR", callbacks.success, callbacks.error)
@@ -180,3 +188,36 @@ describe "Wallet", ->
       expect(observer.success).toHaveBeenCalled()
 
       expect(WalletStore.getPbkdf2Iterations()).toBe(pbkdf2_iterations)
+
+  describe "createNewWallet() with bad server repsonse", ->
+    beforeEach ->
+      callbacks = 
+        success: () ->
+        error: (e) -> console.log(e)
+      
+      spyOn(callbacks, "success")
+      spyOn(callbacks, "error")
+
+    it "should fail if server returns weird UUIDs", ->
+      spyOn($, "ajax").and.callFake (params) ->
+        data = {uuids: ["68019bee-7a27-490b-ab8a-",null]}
+        params.success(data)
+      
+      try
+        MyWallet.createNewWallet("a@b.com", "aa", "en", "EUR", callbacks.success, callbacks.error)
+      catch e
+        expect(e).toBe('Error generating wallet identifier')
+      
+      expect(callbacks.success).not.toHaveBeenCalled()
+
+    it "should fail if server returns no data", ->
+      spyOn($, "ajax").and.callFake (params) ->
+        data = {}
+        params.success(data)
+      
+      try
+        MyWallet.createNewWallet("a@b.com", "aa", "en", "EUR", callbacks.success, callbacks.error)
+      catch e
+        expect(e).toBe('Error generating wallet identifier')
+      
+      expect(callbacks.success).not.toHaveBeenCalled()
