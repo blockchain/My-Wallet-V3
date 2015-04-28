@@ -222,7 +222,7 @@ var WalletStore = (function() {
     newAddressBookFromJSON: function(addressBook) {
       address_book = {};
       var addEntry = function(e) {
-        this.WalletStore.addAddressBookEntry(e.addr, e.label);
+        WalletStore.addAddressBookEntry(e.addr, e.label);
       };
       if (addressBook !== null && addressBook !== undefined) { 
         addressBook.forEach(addEntry); 
