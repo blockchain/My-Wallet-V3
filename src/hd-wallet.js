@@ -52,14 +52,7 @@ HDWallet.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Pass
         MyWallet.backupWalletDelayed();
       }
       else {
-        var cache = {
-          externalAccountPubKey: Bitcoin.ECPubKey.fromBuffer(Buffer(accountPayload.cache.externalAccountPubKey, "base64")),
-          externalAccountChainCode: Buffer(accountPayload.cache.externalAccountChainCode, "base64"),
-          internalAccountPubKey: Bitcoin.ECPubKey.fromBuffer(Buffer(accountPayload.cache.internalAccountPubKey, "base64")),
-          internalAccountChainCode: Buffer(accountPayload.cache.internalAccountChainCode, "base64")
-        };
-
-        hdaccount = hdwallet.createAccountFromExtKey(accountPayload.label, accountPayload.xpriv, accountPayload.xpub, cache);
+        hdaccount = hdwallet.createAccountFromExtKey(accountPayload.label, accountPayload.xpriv, accountPayload.xpub, accountPayload.cache);
         hdaccount.cache = accountPayload.cache;
         hdwallet.accountArray.push(hdaccount);
       }

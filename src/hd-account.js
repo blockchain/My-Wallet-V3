@@ -31,8 +31,8 @@ HDAccount.fromExtKey = function(extKey, cache, label, index, network) {
   var account = new HDAccount(label, index, network);
 
   if(cache) {
-    account.externalAccount = new Bitcoin.HDNode(cache.externalAccountPubKey, cache.externalAccountChainCode);
-    account.internalAccount = new Bitcoin.HDNode(cache.internalAccountPubKey, cache.internalAccountChainCode);
+    account.externalAccount = Bitcoin.HDNode.fromBase58(cache.receiveAccount);
+    account.internalAccount = Bitcoin.HDNode.fromBase58(cache.changeAccount);
   } else {
     var accountZero = Bitcoin.HDNode.fromBase58(extKey);
     account.externalAccount = accountZero.derive(0);
@@ -225,10 +225,8 @@ HDAccount.prototype.generateCache = function() {
   assert(this.externalAccount, "External Account not set");
   assert(this.internalAccount, "Internal Account not set");
 
-  this.cache.externalAccountPubKey = this.externalAccount.pubKey.toBuffer().toString("base64");
-  this.cache.externalAccountChainCode = this.externalAccount.chainCode.toString("base64");
-  this.cache.internalAccountPubKey = this.internalAccount.pubKey.toBuffer().toString("base64");
-  this.cache.internalAccountChainCode = this.internalAccount.chainCode.toString("base64");
+  this.cache.receiveAccount = this.externalAccount.neutered().toBase58();
+  this.cache.changeAccount = this.internalAccount.neutered().toBase58();
 };
 
 HDAccount.prototype.recommendedTransactionFee = function(amount) {
