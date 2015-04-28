@@ -5,30 +5,46 @@ WalletCrypto = {}
 Bitcoin = {}
 BlockchainAPI = {}
 
-stubs = {'./wallet-store': WalletStore, './wallet-crypto': WalletCrypto, 'bitcoinjs-lib': Bitcoin, './blockchain-api': BlockchainAPI}
+stubs = {
+          './wallet-crypto'  : WalletCrypto
+        , './wallet-store'   : WalletStore
+        , 'bitcoinjs-lib'    : Bitcoin
+        , './blockchain-api' : BlockchainAPI
+      }
+
+# spenderStubs = {
+#           './wallet-crypto'  : WalletCrypto
+#         , './wallet-store'   : WalletStore
+#         , 'bitcoinjs-lib'    : Bitcoin
+#         , './blockchain-api' : BlockchainAPI
+#       }
 
 MyWallet = proxyquire('../src/wallet', stubs)
-Spender = require('../src/wallet-spender');
+Spender = proxyquire('../src/wallet-spender', stubs)
+# Spender = require('../src/wallet-spender');
+# WalletStore = require('../src/wallet-store');
+
 BigInteger = require('bigi')
 
 ################################################################################
 ################################################################################
-describe "walletSpender", ->
+describe "Spender", ->
 
   observer   = undefined
   hdAccounts = undefined
   legacyData = undefined
+  getPass    = undefined
 
   beforeEach ->
-    window.formatBTC = (str) -> str
-    legacyData =
-      from: "17k7jQsewpru3uxMkaUMxahyvACVc7fjjb"
-      to: "1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h"
-      amount: 50000
-      fee: 10000
-      note: "That is an expensive toy"
-      email: "emmy@noether.me"
-      mobile: "+34649999999"
+    # window.formatBTC = (str) -> str
+    # legacyData =
+    #   from: "17k7jQsewpru3uxMkaUMxahyvACVc7fjjb"
+    #   to: "1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h"
+    #   amount: 50000
+    #   fee: 10000
+    #   note: "That is an expensive toy"
+    #   email: "emmy@noether.me"
+    #   mobile: "+34649999999"
 
     # general vars for every test
     observer =
@@ -46,6 +62,12 @@ describe "walletSpender", ->
     spyOn(observer, 'error')
     spyOn(observer, 'listener')
     spyOn(observer, 'getPassword').and.callThrough()
+
+    getPass = (tryPassword) -> () -> tryPassword(
+      '1234'
+      , -> console.log 'Correct password'
+      , -> console.log 'Wrong password'
+    )
 
     hdAccounts = [
       {
@@ -90,95 +112,45 @@ describe "walletSpender", ->
         console.log("Jaume: get_unspent mock called")
         success(getUnspentMock))
 
-    spyOn(WalletStore, "getPrivateKey").and.callFake((address) -> 'AWrnMsqe2AJYmrzKsN8qRosHRiCSKag3fcmvUA9wdJDj')
-    spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
-  # describe "Spender (from) Constructor", ->
-  #   it "should create a non empty prepare form", ->
-  #     # we should check the note logic once it is implemented
-  #     form = new Spender( null, observer.success, observer.error,
-  #                         null, observer.getPassword)
-
-  #     # check creation of the spender with three (from) methods
-  #     expect(typeof(form.prepareFromAddress)).toEqual("function")
-  #     expect(typeof(form.prepareAddressSweep)).toEqual("function")
-  #     expect(typeof(form.prepareFromAccount)).toEqual("function")
-
-  # describe "Spender (to) Constructor", ->
-  #   it "should create a non empty spend form", ->
-  #     spyOn(observer, 'toSpenderSpy')
-  #     new Spender( null, observer.success, observer.error,
-  #                         null, observer.getPassword)
-  #             .prepareFromAddress legacyData.from,
-  #                                 legacyData.amount,
-  #                                 legacyData.fee,
-  #                                 observer.toSpenderSpy
-  #                                 # (from) -> from.toAddress(legacyData.to); return
-  #                                 # (from) -> console.log from; return
-  #     # check creation of the spender with four (to) methods
-  #     expect(observer.toSpenderSpy).toHaveBeenCalled();
-  #     form = observer.toSpenderSpy.calls.argsFor(0)[0]
-  #     expect(typeof(form.toAddress)).toEqual("function")
-  #     expect(typeof(form.toAccount)).toEqual("function")
-  #     expect(typeof(form.toEmail)).toEqual("function")
-  #     expect(typeof(form.toMobile)).toEqual("function")
-
-  # describe "prepareFromAddress - toAddress", ->
-  #   it "should ...", ->
-  #     console.log "#########################################"
-  #     new Spender( null, observer.success, observer.error,
-  #                         null, observer.getPassword)
-  #             .prepareFromAddress legacyData.from,
-  #                                 legacyData.amount,
-  #                                 legacyData.fee,
-  #                                 (from) -> from.toAddress(legacyData.to); return
-  #     # check creation of the spender with four (to) methods
-  #     tx = BlockchainAPI.push_tx.calls.argsFor(0)[0]
-  #     console.log tx
-
-  describe "Spender (from) Constructor", ->
-    it "should create a non empty prepare form", ->
-      # we should check the note logic once it is implemented
-      # getPass2 = (callback) ->
-
-      #   s = ->
-      #     console.log 'exit'
-      #     return
-
-      #   e = ->
-      #     console.log 'fail'
-      #     return
-
-      #   setTimeout (->
-      #     callback '1234', s, e
-      #     return
-      #   ), 3000
-      #   return
+    # spyOn(WalletStore, "getPrivateKey").and.callFake((address) -> 'AWrnMsqe2AJYmrzKsN8qRosHRiCSKag3fcmvUA9wdJDj')
 
 
-      # getPass = (tryPassword) ->
-      #   setTimeout(
-      #     () -> tryPassword('1234', -> console.log 'Correct password'); return,
-      #     2000
-      #   )
-      #   return
+    # spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
 
-      # test = () ->
-      #   setTimeout ->
-      #     console.log "hola"
-      #     return
-      #   return
 
-      # # new Spenderr( null, test, observer.error, null, getPass2)
+  describe "Constructor", ->
 
-      # # console.log("jaume 0");
-      # # new Spender( null, observer.success, observer.error, null, observer.getPassword)
-      # #         .prepareFromAddress legacyData.from,
-      # #                             legacyData.amount,
-      # #                             legacyData.fee,
-      # #                             (from) -> from.toAddress(legacyData.to); return
+    it "should create all (from) methods", ->
 
-      # new Spenderr(null, null, null, null, null)
-      #   .prepareFromAddress(null, null, null)
-      #     .toAddress(null, null);
+      spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
 
-      expect(3).toEqual(3)
+      prepare = new Spender(null, observer.success, observer.error, null, null)
+
+      expect(typeof(prepare.fromAccount)).toEqual("function")
+      expect(typeof(prepare.fromAddress)).toEqual("function")
+      expect(typeof(prepare.addressSweep)).toEqual("function")
+
+    it "should create all (to) methods", ->
+
+      spyOn(WalletStore, "getDoubleEncryption").and.returnValue(false)
+
+      fromAddress = new Spender(null, observer.success, observer.error, null, null)
+                          .fromAddress("mi address", 10, 10)
+
+      expect(typeof(fromAddress.toAddress)).toEqual("function")
+      expect(typeof(fromAddress.toAccount)).toEqual("function")
+      expect(typeof(fromAddress.toMobile)).toEqual("function")
+      expect(typeof(fromAddress.toEmail)).toEqual("function")
+
+  describe "fromAddress", ->
+
+    it "should ...", ->
+      console.log("TEST QUE FEM----------------------------------");
+      spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
+      spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
+
+      Spender("my note", observer.success, observer.error, observer.listener, getPass)
+        .fromAddress("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX", 30000, 10000)
+          .toAddress("1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF")
+
+      expect(2).toEqual 2
