@@ -301,8 +301,8 @@ HDWallet.prototype.createAccountWithSeedhex = function(label, seedHex, bip39Pass
   var masterkey = Bitcoin.HDNode.fromSeedBuffer(this.getMasterHex(seedHex, bip39Password), account.network);
   var accountZero = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(accountIdx);
 
-  account.externalAccount = accountZero.derive(0);
-  account.internalAccount = accountZero.derive(1);
+  account.receiveChain = accountZero.derive(0);
+  account.changeChain = accountZero.derive(1);
 
   var extendedPrivateKey = accountZero.toBase58();
   var extendedPublicKey =  accountZero.neutered().toBase58();    

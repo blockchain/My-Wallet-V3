@@ -6,8 +6,8 @@ function HDAccount(label, index, network) {
   this.index = index;
   this.network = network || Bitcoin.networks.bitcoin;
 
-  this.externalAccount = null;
-  this.internalAccount = null;
+  this.receiveChain = null;
+  this.changeChain = null;
   this.extendedPrivateKey = null;
   this.extendedPublicKey = null;
 
@@ -31,8 +31,8 @@ HDAccount.fromExtKey = function(extKey, label, index, network) {
   var account = new HDAccount(label, index, network);
 
   var accountZero = Bitcoin.HDNode.fromBase58(extKey);
-  account.externalAccount = accountZero.derive(0);
-  account.internalAccount = accountZero.derive(1);
+  account.receiveChain = accountZero.derive(0);
+  account.changeChain = accountZero.derive(1);
 
   return account;
 };
@@ -40,8 +40,8 @@ HDAccount.fromExtKey = function(extKey, label, index, network) {
 HDAccount.fromCache = function(cache, label, index, network) {
   var account = new HDAccount(label, index, network);
 
-  account.externalAccount = Bitcoin.HDNode.fromBase58(cache.receiveAccount);
-  account.internalAccount = Bitcoin.HDNode.fromBase58(cache.changeAccount);
+  account.receiveChain = Bitcoin.HDNode.fromBase58(cache.receiveAccount);
+  account.changeChain = Bitcoin.HDNode.fromBase58(cache.changeAccount);
 
   account.cache = cache;
 
@@ -79,7 +79,7 @@ HDAccount.prototype.getReceiveAddressAtIndex = function(index) {
     return this.receiveKeyCache[index].getAddress().toString();
   }
 
-  var key = this.externalAccount.derive(index);
+  var key = this.receiveChain.derive(index);
   this.receiveKeyCache[index] = key;
   return key.getAddress().toString();
 };
@@ -93,7 +93,7 @@ HDAccount.prototype.getChangeAddressAtIndex = function(index) {
     return this.changeKeyCache[index].getAddress().toString();
   }
 
-  var key = this.internalAccount.derive(index);
+  var key = this.changeChain.derive(index);
   this.changeKeyCache[index] = key;
   return key.getAddress().toString();
 };
@@ -124,7 +124,7 @@ HDAccount.prototype.generateKeyFromPath = function(path) {
       key = this.receiveKeyCache[index];
     }
     else {
-      key = this.externalAccount.derive(index);
+      key = this.receiveChain.derive(index);
       this.receiveKeyCache[index] = key;
     }
   } else {
@@ -133,7 +133,7 @@ HDAccount.prototype.generateKeyFromPath = function(path) {
       key = this.changeKeyCache[index];
     }
     else {
-      key = this.internalAccount.derive(index);
+      key = this.changeChain.derive(index);
       this.changeKeyCache[index] = key;
     }
   }
@@ -146,7 +146,7 @@ HDAccount.prototype.getPrivateKey = function(index) {
     return this.receiveKeyCache[index].privKey;
   }
 
-  var key = this.externalAccount.derive(index);
+  var key = this.receiveChain.derive(index);
   this.receiveKeyCache[index] = key;
   return key.privKey;
 };
@@ -156,7 +156,7 @@ HDAccount.prototype.getInternalPrivateKey = function(index) {
     return this.changeKeyCache[index].privKey;
   }
 
-  var key = this.internalAccount.derive(index);
+  var key = this.changeChain.derive(index);
   this.changeKeyCache[index] = key;
   return key.privKey;
 };
@@ -228,11 +228,11 @@ HDAccount.prototype.containsAddressInCache = function(address) {
 };
 
 HDAccount.prototype.generateCache = function() {
-  assert(this.externalAccount, "External Account not set");
-  assert(this.internalAccount, "Internal Account not set");
+  assert(this.receiveChain, "External Account not set");
+  assert(this.changeChain, "Internal Account not set");
 
-  this.cache.receiveAccount = this.externalAccount.neutered().toBase58();
-  this.cache.changeAccount = this.internalAccount.neutered().toBase58();
+  this.cache.receiveAccount = this.receiveChain.neutered().toBase58();
+  this.cache.changeAccount = this.changeChain.neutered().toBase58();
 };
 
 HDAccount.prototype.recommendedTransactionFee = function(amount) {
