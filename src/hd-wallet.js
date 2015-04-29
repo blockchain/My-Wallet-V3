@@ -44,8 +44,9 @@ HDWallet.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Pass
       // If second password is enabled then accountPayload.xpriv has already been 
       // encrypted. We're keeping it in an encrypted state.
 
-      // :base64: is used in some older dev. versions of the HD wallet and does not occur "in the wild"
-      if(accountPayload.cache === undefined || accountPayload.cache.externalAccountPubKey === undefined || accountPayload.cache.externalAccountPubKey === "" || accountPayload.cache.externalAccountPubKey.slice(2,8) === "base64") {
+      // externalAccountPubKey was used in older dev. versions of the HD wallet
+      // and does not occur "in the wild"
+      if(accountPayload.cache === undefined || accountPayload.cache.externalAccountPubKey) { 
         hdaccount = hdwallet.createAccountFromExtKey(accountPayload.label, accountPayload.xpriv, accountPayload.xpub);
         hdaccount.generateCache();
         hdwallet.accountArray.push(hdaccount);

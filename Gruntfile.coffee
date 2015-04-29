@@ -37,7 +37,19 @@ module.exports = (grunt) ->
           'node_modules/xregexp/xregexp-all.js'
         ]
         dest: "dist/my-wallet.js"
- 
+
+    replace:
+      # monkey patch deps
+      bitcoinjs:
+        # comment out value validation in fromBuffer to speed up node
+        # creation from cached xpub/xpriv values
+        src: ['node_modules/bitcoinjs-lib/src/hdnode.js'],
+        overwrite: true,
+        replacements: [{
+          from: /\n    curve\.validate\(Q\)/g
+          to:   '\n    // curve.validate(Q)'
+        }]
+
     uglify:
       options:
         banner: "/*! <%= pkg.name %> <%= grunt.template.today(\"yyyy-mm-dd\") %> */\n"
@@ -129,10 +141,11 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-contrib-uglify'
   grunt.loadNpmTasks 'grunt-contrib-watch'
   grunt.loadNpmTasks 'grunt-env'
+  grunt.loadNpmTasks 'grunt-contrib-jshint'
   grunt.loadNpmTasks 'grunt-preprocess'
   grunt.loadNpmTasks 'grunt-shell'
   grunt.loadNpmTasks 'grunt-shrinkwrap'
-  grunt.loadNpmTasks 'grunt-contrib-jshint'
+  grunt.loadNpmTasks 'grunt-text-replace'
 
 
   grunt.registerTask "default", [
@@ -143,6 +156,7 @@ module.exports = (grunt) ->
   grunt.registerTask "build", [
     "env:build"
     "preprocess"
+    "replace:bitcoinjs"
     "browserify:build"
     "concat:bower"
     "concat:mywallet"
@@ -159,6 +173,7 @@ module.exports = (grunt) ->
     "shell:npm_install_dependencies"
     "shell:bower_install_dependencies"
     "preprocess"
+    "replace:bitcoinjs"
     "browserify:production"
     "concat:bower"
     "concat:mywallet"
@@ -172,6 +187,7 @@ module.exports = (grunt) ->
     "clean:dist"
     "shell:skip_check_dependencies"
     "preprocess"
+    "replace:bitcoinjs"
     "browserify:production"
     "concat:bower"
     "concat:mywallet"
