@@ -105,13 +105,11 @@ HDAccount.prototype.getChangeAddress = function() {
 HDAccount.prototype.generateKeyFromPath = function(path) {
   var components = path.split("/");
 
-  if (components[0] != 'M') {
-    throw 'Invalid Path Prefix';
-  }
+  assert(components[0] === 'M', 'Invalid Path prefix');
 
-  if (components.length != 3) {
-    throw 'Invalid Path Length';
-  }
+  assert(components[1] === '0' || components[1] === '1', 'Invalid Path: change/receive index out of bounds');
+
+  assert(components.length === 3, 'Invalid Path length');
 
   var receiveOrChange = parseInt(components[1]);
   var index = parseInt(components[2]);
@@ -139,26 +137,6 @@ HDAccount.prototype.generateKeyFromPath = function(path) {
   }
 
   return key;
-};
-
-HDAccount.prototype.getPrivateKey = function(index) {
-  if (this.receiveKeyCache[index]) {
-    return this.receiveKeyCache[index].privKey;
-  }
-
-  var key = this.receiveChain.derive(index);
-  this.receiveKeyCache[index] = key;
-  return key.privKey;
-};
-
-HDAccount.prototype.getInternalPrivateKey = function(index) {
-  if (this.changeKeyCache[index]) {
-    return this.changeKeyCache[index].privKey;
-  }
-
-  var key = this.changeChain.derive(index);
-  this.changeKeyCache[index] = key;
-  return key.privKey;
 };
 
 HDAccount.prototype.getAccountJsonData = function() {
