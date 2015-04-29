@@ -1424,7 +1424,7 @@ MyWallet.archiveAccount = function(idx) {
 MyWallet.unarchiveAccount = function(idx, successcallback) {
   var archivedAccount = WalletStore.getHDWallet().getAccount(idx);
 
-  var account = HDAccount.fromExtKey(archivedAccount.extendedPublicKey, null, archivedAccount.label, idx);
+  var account = HDAccount.fromExtKey(archivedAccount.extendedPublicKey, archivedAccount.label, idx);
 
   account.generateCache();
 

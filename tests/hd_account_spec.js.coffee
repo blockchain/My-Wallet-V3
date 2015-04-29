@@ -31,22 +31,31 @@ describe "HDAccount", ->
       internalXpub: 'xpub6F7ynyBM2LWmrgGxKK7g6cLVqYmkeX3kGQHnR7FN9Yy6uqKyQge8iEWUhxHZRiKaFixprq6U1jNeRVEprrKyG4R2MovGc4A2FbJ1ypaU16q'
       externalXpub: 'xpub6F7ynyBM2LWmqM3RbhVRMJ7AQhmCeznwmc3JwSwvBmYiNi8pZkmkPu3ZQT7aXLobarBGxSxgNiswZZo57jvNLRgKbBXEJt3riFwkdjquKSY'
 
-  describe ".fromExtKey() with cache", ->
+  describe ".fromCache()", ->
     account = null
 
     beforeEach ->
-      account = HDAccount.fromExtKey(data.xpub, cache, data.label, data.index)
+      account = HDAccount.fromCache(cache, data.label, data.index)
 
-    it "should create the right internal and external account", ->
+    it "should create the internal and external account", ->
       expect(account.internalAccount.toBase58()).toBe(result.internalXpub)
       expect(account.externalAccount.toBase58()).toBe(result.externalXpub)
 
-  describe ".fromExtKey() without cache", ->
+    it "should re-create the cache", ->
+      expect(account.cache.changeAccount).toBe(result.internalXpub)
+      expect(account.cache.receiveAccount).toBe(result.externalXpub)
+
+  describe ".fromExtKey()", ->
     account = null
 
     beforeEach ->
-      account = HDAccount.fromExtKey(data.xpub, null, data.label, data.index)
+      account = HDAccount.fromExtKey(data.xpub, data.label, data.index)
 
-    it "should create the right internal and external account", ->
+    it "should create the internal and external account", ->
       expect(account.internalAccount.neutered().toBase58()).toBe(result.internalXpub)
       expect(account.externalAccount.neutered().toBase58()).toBe(result.externalXpub)
+
+    it "should generate the cache", ->
+      account.generateCache()
+      expect(account.cache.changeAccount).toBe(result.internalXpub)
+      expect(account.cache.receiveAccount).toBe(result.externalXpub)

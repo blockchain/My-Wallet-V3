@@ -27,17 +27,23 @@ function HDAccount(label, index, network) {
   this.changeKeyCache = [];
 }
 
-HDAccount.fromExtKey = function(extKey, cache, label, index, network) {
+HDAccount.fromExtKey = function(extKey, label, index, network) {
   var account = new HDAccount(label, index, network);
 
-  if(cache) {
-    account.externalAccount = Bitcoin.HDNode.fromBase58(cache.receiveAccount);
-    account.internalAccount = Bitcoin.HDNode.fromBase58(cache.changeAccount);
-  } else {
-    var accountZero = Bitcoin.HDNode.fromBase58(extKey);
-    account.externalAccount = accountZero.derive(0);
-    account.internalAccount = accountZero.derive(1);
-  }
+  var accountZero = Bitcoin.HDNode.fromBase58(extKey);
+  account.externalAccount = accountZero.derive(0);
+  account.internalAccount = accountZero.derive(1);
+
+  return account;
+};
+
+HDAccount.fromCache = function(cache, label, index, network) {
+  var account = new HDAccount(label, index, network);
+
+  account.externalAccount = Bitcoin.HDNode.fromBase58(cache.receiveAccount);
+  account.internalAccount = Bitcoin.HDNode.fromBase58(cache.changeAccount);
+
+  account.cache = cache;
 
   return account;
 };

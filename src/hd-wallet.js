@@ -264,7 +264,9 @@ HDWallet.prototype.createArchivedAccount = function(label, possiblyEncryptedExte
 // encrypted. We're keeping it in an encrypted state.
 HDWallet.prototype.createAccountFromExtKey = function(label, possiblyEncryptedExtendedPrivateKey, extendedPublicKey, cache) {
   var accountIdx = this.accountArray.length;
-  var account = HDAccount.fromExtKey(extendedPublicKey, cache, label, accountIdx);
+  var account = cache ?
+        HDAccount.fromCache(cache, label, accountIdx) :
+        HDAccount.fromExtKey(extendedPublicKey, label, accountIdx);
   account.extendedPrivateKey = possiblyEncryptedExtendedPrivateKey;
   account.extendedPublicKey = extendedPublicKey;
 
