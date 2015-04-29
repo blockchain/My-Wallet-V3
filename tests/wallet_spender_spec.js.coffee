@@ -4,119 +4,50 @@ WalletStore = {}
 WalletCrypto = {}
 Bitcoin = {}
 BlockchainAPI = {}
+MyWallet = {}
+HDAccount = {}
 
-stubs = {
+spenderStubs = {
           './wallet-crypto'  : WalletCrypto
         , './wallet-store'   : WalletStore
         , 'bitcoinjs-lib'    : Bitcoin
         , './blockchain-api' : BlockchainAPI
+        , './wallet'         : MyWallet
+        , './hd-account'     : HDAccount
       }
 
-# spenderStubs = {
-#           './wallet-crypto'  : WalletCrypto
-#         , './wallet-store'   : WalletStore
-#         , 'bitcoinjs-lib'    : Bitcoin
-#         , './blockchain-api' : BlockchainAPI
-#       }
-
-MyWallet = proxyquire('../src/wallet', stubs)
-Spender = proxyquire('../src/wallet-spender', stubs)
-# Spender = require('../src/wallet-spender');
-# WalletStore = require('../src/wallet-store');
-
+Spender = proxyquire('../src/wallet-spender', spenderStubs)
+RSVP = require('RSVP')
 BigInteger = require('bigi')
 
 ################################################################################
 ################################################################################
 describe "Spender", ->
 
-  observer   = undefined
+  obs        = undefined
   hdAccounts = undefined
-  legacyData = undefined
   getPass    = undefined
 
   beforeEach ->
     # window.formatBTC = (str) -> str
-    # legacyData =
-    #   from: "17k7jQsewpru3uxMkaUMxahyvACVc7fjjb"
-    #   to: "1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h"
-    #   amount: 50000
-    #   fee: 10000
-    #   note: "That is an expensive toy"
-    #   email: "emmy@noether.me"
-    #   mobile: "+34649999999"
-
-    # general vars for every test
-    observer =
+    obs =
       success: () -> return
       error: () -> return
       listener: () -> return
       correct_password: () -> return
       wrong_password: () -> return
-      getPassword: (callback) -> callback
-      toSpenderSpy: (x) -> return
+      getPassword: (cb) -> cb('pass', obs.correct_password, obs.wrong_password)
 
-    spyOn(observer, "correct_password")
-    spyOn(observer, "wrong_password")
-    spyOn(observer, 'success')
-    spyOn(observer, 'error')
-    spyOn(observer, 'listener')
-    spyOn(observer, 'getPassword').and.callThrough()
-
-    getPass = (tryPassword) -> () -> tryPassword(
-      '1234'
-      , -> console.log 'Correct password'
-      , -> console.log 'Wrong password'
-    )
-
-    hdAccounts = [
-      {
-        extendedPublicKey:
-          "xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp\
-           9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ"
-        extendedPrivateKey:
-          "xprv9zJ1cTHnqzgBP2boCwpP47LBzjGLKXkwYqXoYnV4yrBmstmw6SVt\
-           irpvm4GESg9YLn9R386qpmnsrcC5rvrpEJAXSrfqQR3qGtjGv5ddV9g"
-        archived: false
-        getReceivingAddress: () -> "1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX"
-        getAccountExtendedKey : (p) -> if p then this.extendedPrivateKey else this.extendedPublicKey
-        setUnspentOutputs: (utxo) -> return
-      }
-    ]
-    spyOn(MyWallet, "getAccounts").and.returnValue(hdAccounts)
-    spyOn(WalletStore, "getHDWallet").and.returnValue({
-      getAccounts: () -> hdAccounts
-      getAccount: (idx) ->  hdAccounts[idx]
-    })
+    spyOn(obs, "correct_password")
+    spyOn(obs, "wrong_password")
+    spyOn(obs, 'success').and.callThrough()
+    spyOn(obs, 'error').and.callThrough()
+    spyOn(obs, 'getPassword').and.callThrough()
+    # spyOn(obs, 'listener')
 
     spyOn(BlockchainAPI, "push_tx")
-      .and.callFake((tx, note, success, error) ->
-        console.log "Jaume: push_tx mock called."
-        success(tx.hash))
-
-    getUnspentMock = 'unspent_outputs': [
-        {
-          "tx_hash": "594c66729d5068b7d816760fc304accd760629ee75a371529049a94cffa50861"
-          "tx_hash_big_endian": "6108a5ff4ca949905271a375ee290676cdac04c30f7616d8b768509d72664c59"
-          "tx_index": 82222265
-          "tx_output_n": 0
-          "script": "76a91449f842901a0c81fb9c0c0f8c61027d2b085a2a9088ac"
-          "value": 617460
-          "value_hex": "00f132"
-          "confirmations": 0
-        }
-    ]
-
-    spyOn(BlockchainAPI, "get_unspent")
-      .and.callFake((xpubList,success,error,conf,nocache) ->
-        console.log("Jaume: get_unspent mock called")
-        success(getUnspentMock))
-
-    # spyOn(WalletStore, "getPrivateKey").and.callFake((address) -> 'AWrnMsqe2AJYmrzKsN8qRosHRiCSKag3fcmvUA9wdJDj')
-
-
-    # spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
-
+      .and.callFake((tx, note, success, error) -> success(tx))
+################################################################################
 
   describe "Constructor", ->
 
@@ -124,7 +55,7 @@ describe "Spender", ->
 
       spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
 
-      prepare = new Spender(null, observer.success, observer.error, null, null)
+      prepare = new Spender(null, obs.success, obs.error, null, null)
 
       expect(typeof(prepare.fromAccount)).toEqual("function")
       expect(typeof(prepare.fromAddress)).toEqual("function")
@@ -134,23 +65,133 @@ describe "Spender", ->
 
       spyOn(WalletStore, "getDoubleEncryption").and.returnValue(false)
 
-      fromAddress = new Spender(null, observer.success, observer.error, null, null)
-                          .fromAddress("mi address", 10, 10)
+      fromAddress = new Spender(null, obs.success, obs.error, null, null)
+                          .fromAddress("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX", 10, 10)
 
       expect(typeof(fromAddress.toAddress)).toEqual("function")
       expect(typeof(fromAddress.toAccount)).toEqual("function")
       expect(typeof(fromAddress.toMobile)).toEqual("function")
       expect(typeof(fromAddress.toEmail)).toEqual("function")
 
-  describe "fromAddress", ->
+################################################################################
+  describe "(secondPassword test)", ->
 
-    it "should ...", ->
-      console.log("TEST QUE FEM----------------------------------");
+    beforeEach ->
+      spyOn(BlockchainAPI, "get_unspent")
+        .and.callFake((xpubList,success,error,conf,nocache) ->
+          success(spenderM.fromAdd.coins))
+
+    it "should call correct_password", (done) ->
+
       spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
       spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
 
-      Spender("my note", observer.success, observer.error, observer.listener, getPass)
+      Spender("my note", done, done, obs.listener, obs.getPassword)
         .fromAddress("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX", 30000, 10000)
           .toAddress("1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF")
 
-      expect(2).toEqual 2
+      expect(obs.correct_password).toHaveBeenCalled()
+      expect(obs.wrong_password).not.toHaveBeenCalled()
+
+    it "should call wrong_password", (done) ->
+
+      spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
+      spyOn(MyWallet, "validateSecondPassword").and.returnValue(false)
+
+      Spender("my note", done, done, obs.listener, obs.getPassword)
+        .fromAddress("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX", 30000, 10000)
+          .toAddress("1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF")
+
+      expect(obs.correct_password).not.toHaveBeenCalled()
+      expect(obs.wrong_password).toHaveBeenCalled()
+
+    it "should not call correct_password or wrong_password", (done) ->
+
+      spyOn(WalletStore, "getDoubleEncryption").and.returnValue(false)
+
+      Spender("my note", done, done, obs.listener, obs.getPassword)
+        .fromAddress("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX", 30000, 10000)
+          .toAddress("1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF")
+
+      expect(obs.correct_password).not.toHaveBeenCalled()
+      expect(obs.wrong_password).not.toHaveBeenCalled()
+
+################################################################################
+  describe "from Address to Address", ->
+
+    M = spenderM.addToAdd
+    beforeEach (done) ->
+
+      spyOn(BlockchainAPI, "get_unspent")
+        .and.callFake((xpubList,success,error,conf,nocache) ->
+          success(M.coins))
+      spyOn(WalletStore, "getPrivateKey")
+       .and.returnValue(M.encPrivateKey)
+      spyOn(WalletCrypto, "decryptSecretWithSecondPassword")
+        .and.returnValue(M.privateKey)
+      spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
+      spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
+
+      Spender(M.note, done, done, obs.listener, obs.getPassword)
+        .fromAddress(M.fromAddress, M.amount, M.fee)
+          .toAddress(M.toAddress)
+
+    it "should push the right transaction to the network", ->
+
+      tx = BlockchainAPI.push_tx.calls.argsFor(0)[0]
+      testTx = tx.toHex() is M.txHash1 or M.txHash1
+      note = BlockchainAPI.push_tx.calls.argsFor(0)[1]
+
+      expect(testTx).toBeTruthy()
+      expect(note).toEqual(M.note)
+################################################################################
+  # describe "from Address to HD Account", ->
+
+  #   M = spenderM.addToAdd
+  #   beforeEach (done) ->
+
+  #     spyOn(BlockchainAPI, "get_unspent")
+  #       .and.callFake((xpubList,success,error,conf,nocache) -> success(M.coins))
+  #     spyOn(WalletStore, "getPrivateKey")
+  #      .and.returnValue(M.encPrivateKey)
+  #     spyOn(WalletCrypto, "decryptSecretWithSecondPassword")
+  #       .and.returnValue(M.privateKey)
+  #     spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
+  #     spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
+
+  #     hdAccounts = [
+  #         {
+  #           f: () -> "hola"
+  #           extendedPublicKey:
+  #             "xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp\
+  #              9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ"
+  #           extendedPrivateKey:
+  #             "xprv9zJ1cTHnqzgBP2boCwpP47LBzjGLKXkwYqXoYnV4yrBmstmw6SVt\
+  #              irpvm4GESg9YLn9R386qpmnsrcC5rvrpEJAXSrfqQR3qGtjGv5ddV9g"
+  #           archived: false
+  #           getReceivingAddress: () -> "1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX"
+  #           getAccountExtendedKey: (p) -> if p then this.extendedPrivateKey else this.extendedPublicKey
+  #           setUnspentOutputs: (utxo) -> return
+  #         }
+  #       ]
+
+  #     spyOn(WalletStore, "getHDWallet").and.returnValue({getAccount: (idx) ->  hdAccounts[idx]})
+
+
+  #     Spender(M.note, done, done, obs.listener, obs.getPassword)
+  #       .fromAddress(M.fromAddress, M.amount, M.fee)
+  #         .toAccount(0)
+
+  #   it "should push the right transaction to the network", ->
+
+  #     tx = BlockchainAPI.push_tx.calls.argsFor(0)[0]
+  #     testTx = tx.toHex() is M.txHash1 or M.txHash1
+  #     note = BlockchainAPI.push_tx.calls.argsFor(0)[1]
+
+  #     console.log("sssssssssssssssssssssss -> " + hdAccounts[0].f);
+  #     console.log("sssssssssssssssssssssss -> " + WalletStore.getHDWallet().getAccount(0).getReceivingAddress());
+
+  #     expect(testTx).toBeTruthy()
+  #     expect(note).toEqual(M.note)
+  #     expect(3).toEqual 3
+################################################################################
