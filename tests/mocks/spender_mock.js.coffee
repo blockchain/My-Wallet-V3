@@ -53,7 +53,7 @@ spenderM.hdAccounts = [
         "xprv9zJ1cTHnqzgBP2boCwpP47LBzjGLKXkwYqXoYnV4yrBmstmw6SVt\
          irpvm4GESg9YLn9R386qpmnsrcC5rvrpEJAXSrfqQR3qGtjGv5ddV9g"
       archived: false
-      getReceivingAddress: () -> "1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX"
+      getReceiveAddress: () -> "1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX"
       getAccountExtendedKey : (p) -> if p then this.extendedPrivateKey else this.extendedPublicKey
       setUnspentOutputs: (utxo) -> return
     }
