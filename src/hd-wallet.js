@@ -35,31 +35,25 @@ HDWallet.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Pass
     var accountPayload = accountsArrayPayload[i];
     var hdaccount;
 
-    if (accountPayload.archived == true) {
-      hdaccount = hdwallet.createArchivedAccount(accountPayload.label, accountPayload.xpriv, accountPayload.xpub);
-      hdaccount.archived = true;
+    // This is called when a wallet is loaded, not when it's initially created. 
+    // If second password is enabled then accountPayload.xpriv has already been 
+    // encrypted. We're keeping it in an encrypted state.
+
+    // externalAccountPubKey was used in older dev. versions of the HD wallet
+    // and does not occur "in the wild"
+    if(accountPayload.cache === undefined || accountPayload.cache.externalAccountPubKey) { 
+      hdaccount = hdwallet.createAccountFromExtKey(accountPayload.label, accountPayload.xpriv, accountPayload.xpub);
+      hdaccount.generateCache();
       hdwallet.accountArray.push(hdaccount);
-    } else {
-      // This is called when a wallet is loaded, not when it's initially created. 
-      // If second password is enabled then accountPayload.xpriv has already been 
-      // encrypted. We're keeping it in an encrypted state.
-
-      // externalAccountPubKey was used in older dev. versions of the HD wallet
-      // and does not occur "in the wild"
-      if(accountPayload.cache === undefined || accountPayload.cache.externalAccountPubKey) { 
-        hdaccount = hdwallet.createAccountFromExtKey(accountPayload.label, accountPayload.xpriv, accountPayload.xpub);
-        hdaccount.generateCache();
-        hdwallet.accountArray.push(hdaccount);
-        MyWallet.backupWalletDelayed();
-      }
-      else {
-        hdaccount = hdwallet.createAccountFromExtKey(accountPayload.label, accountPayload.xpriv, accountPayload.xpub, accountPayload.cache);
-        hdaccount.cache = accountPayload.cache;
-        hdwallet.accountArray.push(hdaccount);
-      }
-
-      hdaccount.archived = false;
+      MyWallet.backupWalletDelayed();
     }
+    else {
+      hdaccount = hdwallet.createAccountFromExtKey(accountPayload.label, accountPayload.xpriv, accountPayload.xpub, accountPayload.cache);
+      hdaccount.cache = accountPayload.cache;
+      hdwallet.accountArray.push(hdaccount);
+    }
+
+    hdaccount.archived = accountPayload.archived;
 
     hdaccount.address_labels = accountPayload.address_labels ? accountPayload.address_labels : [];
   }
@@ -165,98 +159,8 @@ HDWallet.prototype.replaceAccount = function(accountIdx, account) {
   this.accountArray[accountIdx] = account;
 };
 
-HDWallet.prototype.filterTransactionsForAccount = function(accountIdx, transactions, paidTo, tx_notes) {
-  var account = this.accountArray[accountIdx];
-
-  var idx = accountIdx;
-
-  var filteredTransactions = [];
-  var rawTxs = transactions.filter(function(element) {
-    return element.account_indexes.indexOf(idx) != -1;
-  });
-
-  for (var i in rawTxs) {
-    var tx = rawTxs[i];
-    var transaction = {};
-
-    // Default values:
-    transaction.to_account= null;
-    transaction.from_account = null;
-    transaction.from_addresses = [];
-    transaction.to_addresses = [];
-    transaction.amount = 0;
-
-    var isOrigin = false;
-    for (var i = 0; i < tx.inputs.length; ++i) {
-      var output = tx.inputs[i].prev_out;
-      if (!output || !output.addr)
-        continue;
-
-      if (output.xpub != null && account.extendedPublicKey == output.xpub.m) {
-        isOrigin = true;
-        transaction.amount -= output.value;
-      } else {
-        transaction.from_addresses.push(output.addr);
-      }
-    }
-
-    transaction.intraWallet = false;
-    for (var i = 0; i < tx.out.length; ++i) {
-      var output = tx.out[i];
-      if (!output || !output.addr)
-        continue;
-      if (output.xpub != null && account.extendedPublicKey == output.xpub.m) {
-        transaction.amount += output.value;
-      } else {
-        transaction.to_addresses.push(output.addr);
-        if (!isOrigin) {
-          for (var j in this.getAccounts()) {
-            var otherAccount = this.getAccount(j);
-            if (otherAccount.extendedPublicKey == output.xpub.m) {
-              transaction.intraWallet = true;
-              break;
-            }
-          }
-        }
-      }
-    }
-
-    transaction.hash = tx.hash;
-    transaction.confirmations = MyWallet.getConfirmationsForTx(WalletStore.getLatestBlock(), tx);
-
-    if(isOrigin) {
-      transaction.from_account = idx;
-    } else {
-      transaction.to_account = idx;
-    }
-
-    transaction.note = tx_notes[tx.hash] ? tx_notes[tx.hash] : null;
-
-    if (tx.time > 0) {
-      transaction.txTime = new Date(tx.time * 1000);
-    }
-
-    if (paidTo[transaction.hash] != null) {
-      transaction.paidTo = paidTo[transaction.hash];
-    }
-
-    filteredTransactions.push(transaction);
-  }
-
-  return filteredTransactions;
-};
-
 HDWallet.prototype.getAccounts = function() {
   return this.accountArray;
-};
-
-HDWallet.prototype.createArchivedAccount = function(label, possiblyEncryptedExtendedPrivateKey, extendedPublicKey) {
-  var accountIdx = this.accountArray.length;
-  var account = new HDAccount(label, accountIdx);
-  account.extendedPrivateKey = possiblyEncryptedExtendedPrivateKey;
-  account.extendedPublicKey = extendedPublicKey;
-
-  return account;
 };
 
 // This is called when a wallet is loaded, not when it's initially created. 
