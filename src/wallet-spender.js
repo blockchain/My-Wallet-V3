@@ -1,6 +1,7 @@
 var assert = require('assert');
 var Bitcoin = require('bitcoinjs-lib');
 var RSVP = require('rsvp');
+
 var MyWallet = require('./wallet');
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
@@ -19,9 +20,11 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
 
   assert(successCallback, "success callback required");
   assert(errorCallback, "error callback required");
+
   if(typeof(listener) == "undefined" || listener == null) {
     listener = {};
   }
+
   var payment = {
     note:              null,
     fromAddress:       null,
@@ -38,10 +41,12 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
     pbkdf2_iterations: null,
     getPrivateKeys:    null
   };
+
   var promises = {
     secondPassword: null,
     coins: null
   };
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
   var getEncryptionPassword = function(success, error) {
@@ -58,7 +63,7 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
     } else {
       success(null);
     }
-  }
+  };
   //////////////////////////////////////////////////////////////////////////////
   var publishTransaction = function(signedTransaction) {
 
@@ -84,7 +89,7 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
     var signedTransaction = tx.sign();
     // push the transaction to the network
     publishTransaction(signedTransaction);
-  }
+  };
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
   var spend = {
@@ -139,14 +144,14 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
           WalletStore.setPaidToElement(tx.getId()
             , {email:email, mobile: null, redeemedAt: null, address: address});
           MyWallet.backupWallet('update', function() {successCallback(tx.getId());});
-        }
+        };
         BlockchainAPI.sendViaEmail(email, tx, privateKey, postProcess, errorCallback);
-      }
+      };
 
       var saveAndSpend = function() {
         MyWallet.backupWallet('update', function() {spend.toAddress(address);});
-      }
-      var err = function() { console.log('Unexpected error toEmail'); }
+      };
+      var err = function() { console.log('Unexpected error toEmail'); };
 
       WalletStore.setLegacyAddressLabel(address, email + ' Sent Via Email', saveAndSpend, err);
     },
@@ -176,9 +181,9 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
             , {email:null, mobile: mobile, redeemedAt: null, address: address});
 
           MyWallet.backupWallet('update', function() {successCallback(tx.getId());});
-        }
+        };
         BlockchainAPI.sendViaSMS(mobile, tx, miniKeyAddrobj.miniKey, postProcess, errorCallback);
-      }
+      };
 
       var saveAndSpend = function() {
         MyWallet.backupWallet('update', function() {spend.toAddress(address);});
@@ -231,7 +236,7 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
           return key;
         }
         return tx.addressesOfNeededPrivateKeys.map(getKeyForAddress);
-      }
+      };
 
       return spend;
     },
@@ -283,7 +288,7 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
       }
       return spend;
     }
-  }
+  };
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
@@ -293,7 +298,8 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
   payment.pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
   //////////////////////////////////////////////////////////////////////////////
   return prepareFrom;
-}
+};
+
 module.exports = Spender;
 
 // example of usage:
