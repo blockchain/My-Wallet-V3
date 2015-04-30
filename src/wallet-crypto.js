@@ -185,7 +185,7 @@ function reencrypt(pw, sharedKey, previous_pbkdf2_iterations, new_pbkdf2_iterati
   assert(new_pbkdf2_iterations, "new_pbkdf2_iterations missing");
 
   enc = function(data) {
-    return WalletCrypto.encrypt(WalletCrypto.decryptSecretWithSecondPassword(data, pw, sharedKey, previous_pbkdf2_iterations), sharedKey + pw, new_pbkdf2_iterations);
+    return encrypt(decryptSecretWithSecondPassword(data, pw, sharedKey, previous_pbkdf2_iterations), sharedKey + pw, new_pbkdf2_iterations);
   };
   return enc;
 }
@@ -205,7 +205,7 @@ function stretchPassword(password, salt, pbkdf2_iterations) {
   hmacSHA1 = function(key) {
     var hasher;
     hasher = new sjcl.misc.hmac(key, sjcl.hash.sha1);
-    encrypt = function() {
+    this.encrypt = function() {
       return hasher.encrypt.apply(hasher, arguments);
     };
   };

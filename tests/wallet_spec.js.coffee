@@ -86,8 +86,6 @@ describe "Wallet", ->
 
       WalletCrypto.decryptWallet(data, password, obj.success, obj.error)
 
-      expect(WalletCrypto.stretchPassword).toHaveBeenCalledWith("testtest12", CryptoJS.enc.Hex.parse("6fe39f686c1dff370eb12cb70545c3eb"), 5000)
-
       expect(obj.success).toHaveBeenCalled()
       expect(obj.success.calls.argsFor(0)[0].guid).toBe("cc90a34d-9eeb-49e7-95ef-9741b77de443")
     
