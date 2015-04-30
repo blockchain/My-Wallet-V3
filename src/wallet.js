@@ -1,3 +1,5 @@
+'use strict';
+
 var MyWallet = module.exports = {};
 
 var assert = require('assert');
@@ -965,7 +967,8 @@ MyWallet.processTransaction = function(tx) {
         transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
       }
       transaction.fee -= output.value;
-    } else if (WalletStore.getPaidToDictionary() && (paidToItem = WalletStore.getPaidToDictionary()[tx.hash]) && paidToItem.address == output.addr ) {
+    } else if (WalletStore.getPaidToDictionary() && WalletStore.getPaidToDictionary()[tx.hash] && WalletStore.getPaidToDictionary()[tx.hash].address == output.addr) {
+      var paidToItem = WalletStore.getPaidToDictionary()[tx.hash];
       if(paidToItem.email) {
         transaction.to.email = { email: paidToItem.email, redeemedAt: paidToItem.redeemedAt };
       } else if (paidToItem.mobile) {

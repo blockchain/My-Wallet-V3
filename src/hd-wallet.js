@@ -1,3 +1,5 @@
+'use strict';
+
 var assert = require('assert');
 var Buffer = require('buffer').Buffer;
 var Bitcoin = require('bitcoinjs-lib');

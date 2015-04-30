@@ -1,3 +1,5 @@
+'use strict';
+
 var Bitcoin = require('bitcoinjs-lib');
 var assert = require('assert');
 

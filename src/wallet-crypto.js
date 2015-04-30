@@ -1,3 +1,5 @@
+'use strict';
+
 var assert = require('assert');
 
 var SUPPORTED_ENCRYPTION_VERSION = 3.0;

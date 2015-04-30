@@ -1,3 +1,5 @@
+'use strict';
+
 var MyWallet = require('./wallet');
 var WalletCrypto = require('./wallet-crypto');
 
