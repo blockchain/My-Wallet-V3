@@ -1,6 +1,5 @@
 var assert = require('assert');
 
-// TODO remove dependencies on wallet
 var WalletStore = require('./wallet-store');
 var MyWallet = require('./wallet');
 
