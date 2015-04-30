@@ -130,6 +130,12 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
       // this is going to be executed after publish transaction
       payment.postSendCB = function(tx){
         var postProcess = function (data) {
+          if(payment.secondPassword){
+            WalletStore.encryptPrivateKey( payment.toAddress
+                                         , payment.secondPassword
+                                         , payment.sharedKey
+                                         , payment.pbkdf2_iterations);
+          }
           WalletStore.setPaidToElement(tx.getId()
             , {email:email, mobile: null, redeemedAt: null, address: address});
           MyWallet.backupWallet('update', function() {successCallback(tx.getId());});
@@ -160,6 +166,12 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
       // this is going to be executed after publish transaction
       payment.postSendCB = function(tx){
         var postProcess = function (data) {
+          if(payment.secondPassword){
+            WalletStore.encryptPrivateKey( payment.toAddress
+                                         , payment.secondPassword
+                                         , payment.sharedKey
+                                         , payment.pbkdf2_iterations);
+          }
           WalletStore.setPaidToElement(tx.getId()
             , {email:null, mobile: mobile, redeemedAt: null, address: address});
 
@@ -285,6 +297,6 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
 module.exports = Spender;
 
 // example of usage:
-// var getSP = function(tryPassword){setTimeout(function() { tryPassword("hola", function(){console.log("Correct password")}, function(){console.log("Wrong password")})}, 2500)};
-// Spender("my note", function(x){console.log("All ok: " +x);}, function(x){console.log("oh fail: " +x);}, null, getSP)
-//   .fromAccount(0, 10000000000, 10000).toAddress("1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN");
+// var getSP = function(tryPassword){setTimeout(function() { tryPassword("jaume", function(){console.log("Correct password")}, function(){console.log("Wrong password")})}, 2500)};
+// Spender("to email test", function(x){console.log("All ok: " +x);}, function(x){console.log("oh fail: " +x);}, null, getSP)
+//   .fromAccount(0, 20000, 10000).toEmail("pedro@ximenez.com");

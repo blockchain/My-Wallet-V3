@@ -1,4 +1,5 @@
 var MyWallet = require('./wallet');
+var WalletCrypto = require('./wallet-crypto');
 
 var hasProp = {}.hasOwnProperty;
 
@@ -224,14 +225,14 @@ var WalletStore = (function() {
       var addEntry = function(e) {
         WalletStore.addAddressBookEntry(e.addr, e.label);
       };
-      if (addressBook !== null && addressBook !== undefined) { 
-        addressBook.forEach(addEntry); 
+      if (addressBook !== null && addressBook !== undefined) {
+        addressBook.forEach(addEntry);
       }
     },
     newLegacyAddressesFromJSON: function(keysArray) {
       var results = [];
       if (keysArray !== null && keysArray !== undefined) {
-        result = keysArray.map(unsafeAddLegacyAddress); 
+        result = keysArray.map(unsafeAddLegacyAddress);
       }
       return results;
     },
@@ -300,7 +301,7 @@ var WalletStore = (function() {
         if (!hasProp.call(addresses, k)) continue;
         o = addresses[k];
         if (o.tag !== 2) balances.push(o.balance);
-      }        
+      }
       return balances.reduce(add, 0);
     },
     deleteLegacyAddress: function(address) {
@@ -312,6 +313,15 @@ var WalletStore = (function() {
         return addresses[address].priv;
       } else {
         return null;
+      }
+    },
+    encryptPrivateKey: function(ad, pw, sk, it) {
+      if (ad in addresses) {
+        var pk = addresses[ad].priv;
+        addresses[ad].priv = WalletCrypto.encryptSecretWithSecondPassword(pk, pw, sk, it);
+        return true
+      } else {
+        return false;
       }
     },
     setLegacyAddressLabel: function(address, label, success, error) {
@@ -792,7 +802,7 @@ var WalletStore = (function() {
     getCounter: function () {
       return counter;
     },
-    // looks like there are two different timeouts. One inside wallet options. 
+    // looks like there are two different timeouts. One inside wallet options.
     // maybe one is a redundant old thing.
     getLogoutTimeout: function () {
       return logout_timeout;
