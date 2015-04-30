@@ -3,10 +3,46 @@ var assert = require('assert');
 var WalletStore = require('./wallet-store');
 var MyWallet = require('./wallet');
 
-var AjaxTimeout = 60000;
+var AJAX_TIMEOUT = 60000;
+var AJAX_RETRY_DEFAULT = 2;
 
 function getRootURL() {
   return "https://blockchain.info/";
+};
+
+function retryAjax(ajaxParams) {
+  var errorCallback;
+  ajaxParams.tryCount = ajaxParams.tryCount || 0;
+  ajaxParams.retryLimit = ajaxParams.retryLimit || AJAX_RETRY_DEFAULT;
+  ajaxParams.suppressErrors = true;
+
+  if (ajaxParams.error) {
+    errorCallback = ajaxParams.error;
+    delete ajaxParams.error;
+  } else {
+    errorCallback = function () { };
+  }
+
+  ajaxParams.complete = function (jqXHR, textStatus) {
+    if ($.inArray(textStatus, ['timeout', 'abort', 'error']) > -1) {
+      this.tryCount++;
+      if (this.tryCount <= this.retryLimit) {
+
+        // fire error handling on the last try
+        if (this.tryCount === this.retryLimit) {
+          this.error = errorCallback;
+          delete this.suppressErrors;
+        }
+
+        //try again
+        $.ajax(this);
+        return true;
+      }
+      return true;
+    }
+  };
+
+  $.ajax(ajaxParams);
 };
 
 function get_history(success, error, tx_filter, offset, n) {
@@ -50,7 +86,7 @@ function get_history(success, error, tx_filter, offset, n) {
     dataType: 'json',
     url: getRootURL() +'multiaddr',
     data: data,
-    timeout: AjaxTimeout,
+    timeout: AJAX_TIMEOUT,
     success: function(obj) {
       if (obj.error != null) {
         WalletStore.sendEvent("msg", {type: "error", message: obj.error});
@@ -104,7 +140,7 @@ function get_history_with_addresses(addresses, success, error, tx_filter, offset
     url: getRootURL() +'multiaddr',
     data: data,
     async: false,
-    timeout: AjaxTimeout,
+    timeout: AJAX_TIMEOUT,
     success: function(obj) {
       if (obj.error != null) {
         WalletStore.sendEvent("msg", {type: "error", message: obj.error});
@@ -153,7 +189,7 @@ function async_get_history_with_addresses(addresses, success, error, tx_filter, 
     url: getRootURL() +'multiaddr',
     data: data,
     async: true,
-    timeout: AjaxTimeout,
+    timeout: AJAX_TIMEOUT,
     success: function(obj) {
       if (obj.error != null) {
         WalletStore.sendEvent("msg", {type: "error", message: obj.error});
@@ -181,7 +217,7 @@ function get_balances(addresses, success, error) {
     type: "POST",
     url: getRootURL() + 'multiaddr',
     dataType: 'json',
-    timeout: AjaxTimeout,
+    timeout: AJAX_TIMEOUT,
     data : {active : addresses.join('|'), simple : true, api_code : WalletStore.getAPICode(), format : 'json'},
     success: function(obj) {
       for (var key in obj) {
@@ -250,7 +286,7 @@ function getFiatAtTime(time, value, currencyCode, successCallback, errorCallback
     dataType: 'json',
     url: getRootURL() +'frombtc',
     data: {value : value, currency: currencyCode, time: time, textual: false, nosavecurrency: true, api_code : WalletStore.getAPICode()},
-    timeout: AjaxTimeout,
+    timeout: AJAX_TIMEOUT,
     success: function(data) {
       successCallback(data);
     },
@@ -268,7 +304,7 @@ function get_ticker(successCallback, errorCallback) {
     dataType: 'json',
     url: getRootURL() +'ticker',
     data: {format : 'json', api_code : WalletStore.getAPICode()},
-    timeout: AjaxTimeout,
+    timeout: AJAX_TIMEOUT,
     success: function(data) {
       WalletStore.sendEvent('ticker_updated');
       successCallback(data);
@@ -285,7 +321,7 @@ function get_rejection_reason(hexhash, got_reason, not_rejected, error) {
     type: "GET",
     url: getRootURL() + 'q/rejected/'+hexhash,
     data : {format : 'plain', api_code : WalletStore.getAPICode()},
-    timeout: AjaxTimeout,
+    timeout: AJAX_TIMEOUT,
     success: function(data) {
       if (data == null || data.length == 0)
         error();
@@ -345,7 +381,7 @@ function push_tx(tx, note, success, error) {
   var did_push = function() {
     _success(tx_hash);
 
-    function call_history() {        
+    function call_history() {
       MyWallet.get_history(function() {
         if (transactions.length == 0 || transactions[0].txIndex == first_tx_index) {
           get_rejection_reason(tx_hash, function(reason) {
@@ -426,7 +462,7 @@ function push_tx(tx, note, success, error) {
     data: fd,
     processData: false,
     contentType: false,
-    timeout: AjaxTimeout,
+    timeout: AJAX_TIMEOUT,
     type: 'POST',
     success: function(){
       if (did_push) {
@@ -451,7 +487,7 @@ function get_unspent(fromAddresses, success, error, confirmations, do_not_use_un
     type: "POST",
     dataType: 'json',
     url: getRootURL() +'unspent',
-    timeout: AjaxTimeout,
+    timeout: AJAX_TIMEOUT,
     data: {active : fromAddresses.join('|'), format : 'json', api_code : WalletStore.getAPICode(), confirmations : confirmations ? confirmations : 0},
     success: function(obj) {
       if (obj.error != null) {
