@@ -40,8 +40,6 @@ describe "Spender", ->
 
     spyOn(obs, "correct_password")
     spyOn(obs, "wrong_password")
-    spyOn(obs, 'success').and.callThrough()
-    spyOn(obs, 'error').and.callThrough()
     spyOn(obs, 'getPassword').and.callThrough()
     # spyOn(obs, 'listener')
 
@@ -50,12 +48,11 @@ describe "Spender", ->
 ################################################################################
 
   describe "Constructor", ->
-
     it "should create all (from) methods", ->
 
       spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
 
-      prepare = new Spender(null, obs.success, obs.error, null, null)
+      prepare = new Spender(null, (()->), (()->), null, null)
 
       expect(typeof(prepare.fromAccount)).toEqual("function")
       expect(typeof(prepare.fromAddress)).toEqual("function")
@@ -65,13 +62,13 @@ describe "Spender", ->
 
       spyOn(WalletStore, "getDoubleEncryption").and.returnValue(false)
 
-      fromAddress = new Spender(null, obs.success, obs.error, null, null)
+      fromAddress = new Spender(null, (()->), (()->), null, null)
                           .fromAddress("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX", 10, 10)
 
       expect(typeof(fromAddress.toAddress)).toEqual("function")
       expect(typeof(fromAddress.toAccount)).toEqual("function")
       expect(typeof(fromAddress.toMobile)).toEqual("function")
-      expect(typeof(fromAddress.toEmail)).toEqual("function")
+      expect(typeof(fromAddress.toEmail)).toEqual("function")         
 
 ################################################################################
   describe "(secondPassword test)", ->
@@ -81,38 +78,39 @@ describe "Spender", ->
         .and.callFake((xpubList,success,error,conf,nocache) ->
           success(spenderM.fromAdd.coins))
 
-    it "should call correct_password", (done) ->
-
+    it "should call correct_password", () ->
+      
       spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
       spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
 
-      Spender("my note", done, done, obs.listener, obs.getPassword)
+      Spender("my note", (()->), (()->), obs.listener, obs.getPassword)
         .fromAddress("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX", 30000, 10000)
           .toAddress("1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF")
 
       expect(obs.correct_password).toHaveBeenCalled()
       expect(obs.wrong_password).not.toHaveBeenCalled()
-
-    it "should call wrong_password", (done) ->
+      
+    it "should call wrong_password", () ->
 
       spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
       spyOn(MyWallet, "validateSecondPassword").and.returnValue(false)
 
-      Spender("my note", done, done, obs.listener, obs.getPassword)
+      Spender("my note",  (()->), (()->), obs.listener, obs.getPassword)
         .fromAddress("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX", 30000, 10000)
           .toAddress("1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF")
 
       expect(obs.correct_password).not.toHaveBeenCalled()
       expect(obs.wrong_password).toHaveBeenCalled()
 
-    it "should not call correct_password or wrong_password", (done) ->
+    it "should not call correct_password or wrong_password if there's no 2nd password", () ->
 
       spyOn(WalletStore, "getDoubleEncryption").and.returnValue(false)
 
-      Spender("my note", done, done, obs.listener, obs.getPassword)
+      Spender("my note", (()->), (()->), obs.listener, obs.getPassword)
         .fromAddress("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX", 30000, 10000)
           .toAddress("1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF")
 
+      expect(obs.getPassword).not.toHaveBeenCalled()
       expect(obs.correct_password).not.toHaveBeenCalled()
       expect(obs.wrong_password).not.toHaveBeenCalled()
 
@@ -144,6 +142,18 @@ describe "Spender", ->
 
       expect(testTx).toBeTruthy()
       expect(note).toEqual(M.note)
+      
+    # it "should call success if the transaction works out", (done) ->
+    #   spyOn(obs, "success").and.callFake () -> done(); return
+    #   spyOn(obs, "error").and.callFake () -> done(); return
+    #
+    #   Spender(M.note, obs.success, obs.error, obs.listener, obs.getPassword)
+    #     .fromAddress(M.fromAddress, M.amount, M.fee)
+    #       .toAddress(M.toAddress)
+    #
+    #   expect(obs.success).toHaveBeenCalled()
+    #   expect(obs.error).not.toHaveBeenCalled()
+    
 ################################################################################
   # describe "from Address to HD Account", ->
 

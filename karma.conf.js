@@ -63,17 +63,17 @@ module.exports = function(karma) {
       // Or specify individual test files:
       'tests/mocks/*.coffee',
       'tests/wallet_spender_spec.js.coffee', // Throws a timeout if you put this at the end of the list
-      'tests/blockchain_api_spec.js.coffee',
-      'tests/claim_redeem_spec.js.coffee',
-      'tests/legacy_addresses_spec.js.coffee',
-      'tests/tags_spec.js.coffee',
-      'tests/transaction_spec.js.coffee',
-      'tests/transaction_spend_spec.js.coffee',
-      'tests/my_wallet_spec.js.coffee', // This seems to leave some global state around, see below:
-      'tests/wallet_spec.js.coffee', // Throws an error unless my_wallet_spec runs first (bad...)
-      'tests/bip38_spec.js.coffee',
-      'tests/hd_account_spec.js.coffee',
-      'tests/hdwallet_spec.js.coffee',
+      // 'tests/blockchain_api_spec.js.coffee',
+      // 'tests/claim_redeem_spec.js.coffee',
+      // 'tests/legacy_addresses_spec.js.coffee',
+      // 'tests/tags_spec.js.coffee',
+      // 'tests/transaction_spec.js.coffee',
+      // 'tests/transaction_spend_spec.js.coffee',
+      // 'tests/my_wallet_spec.js.coffee', // This seems to leave some global state around, see below:
+      // 'tests/wallet_spec.js.coffee', // Throws an error unless my_wallet_spec runs first (bad...)
+      // 'tests/bip38_spec.js.coffee',
+      // 'tests/hd_account_spec.js.coffee',
+      // 'tests/hdwallet_spec.js.coffee',
     ]
   });
 };
