@@ -149,53 +149,53 @@ describe "Spender", ->
       expect(obs.error).not.toHaveBeenCalled()
 
 ################################################################################
-  # describe "from Address to HD Account", ->
+  describe "from Address to HD Account", ->
 
-  #   M = spenderM.addToAdd
-  #   beforeEach (done) ->
+    M = spenderM.addToAdd
+    beforeEach (done) ->
 
-  #     spyOn(BlockchainAPI, "get_unspent")
-  #       .and.callFake((xpubList,success,error,conf,nocache) -> success(M.coins))
-  #     spyOn(WalletStore, "getPrivateKey")
-  #      .and.returnValue(M.encPrivateKey)
-  #     spyOn(WalletCrypto, "decryptSecretWithSecondPassword")
-  #       .and.returnValue(M.privateKey)
-  #     spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
-  #     spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
+      spyOn(BlockchainAPI, "get_unspent")
+        .and.callFake((xpubList,success,error,conf,nocache) -> success(M.coins))
+      spyOn(WalletStore, "getPrivateKey")
+       .and.returnValue(M.encPrivateKey)
+      spyOn(WalletCrypto, "decryptSecretWithSecondPassword")
+        .and.returnValue(M.privateKey)
+      spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
+      spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
 
-  #     hdAccounts = [
-  #         {
-  #           f: () -> "hola"
-  #           extendedPublicKey:
-  #             "xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp\
-  #              9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ"
-  #           extendedPrivateKey:
-  #             "xprv9zJ1cTHnqzgBP2boCwpP47LBzjGLKXkwYqXoYnV4yrBmstmw6SVt\
-  #              irpvm4GESg9YLn9R386qpmnsrcC5rvrpEJAXSrfqQR3qGtjGv5ddV9g"
-  #           archived: false
-  #           getReceivingAddress: () -> "1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX"
-  #           getAccountExtendedKey: (p) -> if p then this.extendedPrivateKey else this.extendedPublicKey
-  #           setUnspentOutputs: (utxo) -> return
-  #         }
-  #       ]
+      hdAccounts = [
+          {
+            f: () -> "hola"
+            extendedPublicKey:
+              "xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp\
+               9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ"
+            extendedPrivateKey:
+              "xprv9zJ1cTHnqzgBP2boCwpP47LBzjGLKXkwYqXoYnV4yrBmstmw6SVt\
+               irpvm4GESg9YLn9R386qpmnsrcC5rvrpEJAXSrfqQR3qGtjGv5ddV9g"
+            archived: false
+            getReceiveAddress: () -> "1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX"
+            getAccountExtendedKey: (p) -> if p then this.extendedPrivateKey else this.extendedPublicKey
+            setUnspentOutputs: (utxo) -> return
+          }
+        ]
 
-  #     spyOn(WalletStore, "getHDWallet").and.returnValue({getAccount: (idx) ->  hdAccounts[idx]})
+      spyOn(WalletStore, "getHDWallet").and.returnValue({getAccount: (idx) ->  hdAccounts[idx]})
 
 
-  #     Spender(M.note, done, done, obs.listener, obs.getPassword)
-  #       .fromAddress(M.fromAddress, M.amount, M.fee)
-  #         .toAccount(0)
+      Spender(M.note, done, done, obs.listener, obs.getPassword)
+        .fromAddress(M.fromAddress, M.amount, M.fee)
+          .toAccount(0)
 
-  #   it "should push the right transaction to the network", ->
+    it "should push the right transaction to the network", ->
 
-  #     tx = BlockchainAPI.push_tx.calls.argsFor(0)[0]
-  #     testTx = tx.toHex() is M.txHash1 or M.txHash1
-  #     note = BlockchainAPI.push_tx.calls.argsFor(0)[1]
+      tx = BlockchainAPI.push_tx.calls.argsFor(0)[0]
+      testTx = tx.toHex() is M.txHash1 or M.txHash1
+      note = BlockchainAPI.push_tx.calls.argsFor(0)[1]
 
-  #     console.log("sssssssssssssssssssssss -> " + hdAccounts[0].f);
-  #     console.log("sssssssssssssssssssssss -> " + WalletStore.getHDWallet().getAccount(0).getReceivingAddress());
+      console.log("sssssssssssssssssssssss -> " + hdAccounts[0].f);
+      console.log("sssssssssssssssssssssss -> " + WalletStore.getHDWallet().getAccount(0).getReceiveAddress());
 
-  #     expect(testTx).toBeTruthy()
-  #     expect(note).toEqual(M.note)
-  #     expect(3).toEqual 3
+      expect(testTx).toBeTruthy()
+      expect(note).toEqual(M.note)
+      expect(3).toEqual 3
 ################################################################################
