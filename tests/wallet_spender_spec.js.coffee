@@ -68,7 +68,7 @@ describe "Spender", ->
       expect(typeof(fromAddress.toAddress)).toEqual("function")
       expect(typeof(fromAddress.toAccount)).toEqual("function")
       expect(typeof(fromAddress.toMobile)).toEqual("function")
-      expect(typeof(fromAddress.toEmail)).toEqual("function")         
+      expect(typeof(fromAddress.toEmail)).toEqual("function")
 
 ################################################################################
   describe "(secondPassword test)", ->
@@ -79,7 +79,7 @@ describe "Spender", ->
           success(spenderM.fromAdd.coins))
 
     it "should call correct_password", () ->
-      
+
       spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
       spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
 
@@ -89,7 +89,7 @@ describe "Spender", ->
 
       expect(obs.correct_password).toHaveBeenCalled()
       expect(obs.wrong_password).not.toHaveBeenCalled()
-      
+
     it "should call wrong_password", () ->
 
       spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
@@ -130,7 +130,10 @@ describe "Spender", ->
       spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
       spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
 
-      Spender(M.note, done, done, obs.listener, obs.getPassword)
+      spyOn(obs, "success").and.callFake () -> done(); return
+      spyOn(obs, "error").and.callFake () -> done(); return
+
+      Spender(M.note, obs.success, obs.error, obs.listener, obs.getPassword)
         .fromAddress(M.fromAddress, M.amount, M.fee)
           .toAddress(M.toAddress)
 
@@ -142,18 +145,9 @@ describe "Spender", ->
 
       expect(testTx).toBeTruthy()
       expect(note).toEqual(M.note)
-      
-    # it "should call success if the transaction works out", (done) ->
-    #   spyOn(obs, "success").and.callFake () -> done(); return
-    #   spyOn(obs, "error").and.callFake () -> done(); return
-    #
-    #   Spender(M.note, obs.success, obs.error, obs.listener, obs.getPassword)
-    #     .fromAddress(M.fromAddress, M.amount, M.fee)
-    #       .toAddress(M.toAddress)
-    #
-    #   expect(obs.success).toHaveBeenCalled()
-    #   expect(obs.error).not.toHaveBeenCalled()
-    
+      expect(obs.success).toHaveBeenCalled()
+      expect(obs.error).not.toHaveBeenCalled()
+
 ################################################################################
   # describe "from Address to HD Account", ->
 
