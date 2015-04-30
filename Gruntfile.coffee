@@ -33,8 +33,6 @@ module.exports = (grunt) ->
           'build/bower_components.js'
           'build/shared.processed.js'
           'build/blockchain.js'
-          'node_modules/sjcl/sjcl.js'
-          'node_modules/xregexp/xregexp-all.js'
         ]
         dest: "dist/my-wallet.js"
 

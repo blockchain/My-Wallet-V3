@@ -2,6 +2,8 @@
 
 var assert = require('assert');
 
+var sjcl = require('sjcl');
+
 var SUPPORTED_ENCRYPTION_VERSION = 3.0;
 
 function decryptSecretWithSecondPassword(secret, password, sharedKey, pbkdf2_iterations) {

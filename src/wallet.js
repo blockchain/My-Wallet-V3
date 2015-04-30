@@ -3,6 +3,7 @@
 var MyWallet = module.exports = {};
 
 var assert = require('assert');
+var xregexp = require('xregexp');
 var Bitcoin = require('bitcoinjs-lib');
 var ECKey = Bitcoin.ECKey;
 var BigInteger = require('bigi');
@@ -1956,7 +1957,7 @@ MyWallet.getConfirmationsForTx = function(latest_block, tx) {
 // Must allow the following characters:
 // + : needed for sent to phone number labels
 MyWallet.isAlphaNumericSpace = function (input) {
-  return XRegExp("^\\p{L}[\\p{L}@ \\-,._']*$").test(input) || /^[\w\-+,._  ]+$/.test(input);
+  return xregexp.XRegExp("^\\p{L}[\\p{L}@ \\-,._']*$").test(input) || /^[\w\-+,._  ]+$/.test(input);
 };
 
 function parseMultiAddressJSON(obj, cached, checkCompleted) {
