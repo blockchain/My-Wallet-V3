@@ -232,11 +232,9 @@ var WalletStore = (function() {
       }
     },
     newLegacyAddressesFromJSON: function(keysArray) {
-      var results = [];
       if (keysArray !== null && keysArray !== undefined) {
-        result = keysArray.map(unsafeAddLegacyAddress);
+        keysArray.map(unsafeAddLegacyAddress);
       }
-      return results;
     },
     getAddresses: function() {
       return addresses;
@@ -299,6 +297,7 @@ var WalletStore = (function() {
     getTotalBalanceForActiveLegacyAddresses: function() {
       var add = function(x, y) {return x + y;};
       var balances = [];
+      var k, o;
       for (k in addresses) {
         if (!hasProp.call(addresses, k)) continue;
         o = addresses[k];
