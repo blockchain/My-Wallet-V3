@@ -22,9 +22,12 @@ module.exports = (grunt) ->
           'bower_components/cryptojslib/rollups/aes.js'
           'bower_components/cryptojslib/rollups/pbkdf2.js'
           'bower_components/cryptojslib/components/cipher-core.js'
-          'bower_components/cryptojslib/components/pad-iso10126.js'
-          'bower_components/cryptojslib/components/mode-ecb.js'
           'bower_components/cryptojslib/components/pad-nopadding.js'
+          'bower_components/cryptojslib/components/pad-iso10126.js'
+          'bower_components/cryptojslib/components/pad-zeropadding.js'
+          'bower_components/cryptojslib/components/pad-iso97971.js'
+          'bower_components/cryptojslib/components/mode-ecb.js'
+          'bower_components/cryptojslib/components/mode-ofb.js'
         ]
         dest: "build/bower_components.js"
 

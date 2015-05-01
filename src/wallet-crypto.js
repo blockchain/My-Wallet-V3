@@ -11,7 +11,8 @@ function decryptSecretWithSecondPassword(secret, password, sharedKey, pbkdf2_ite
   assert(password, "password missing");
   assert(sharedKey, "sharedKey missing");
   assert(pbkdf2_iterations, "pbkdf2_iterations missing");
-  return decrypt(secret, sharedKey + password, pbkdf2_iterations);
+
+  return decryptAes(secret, sharedKey + password, pbkdf2_iterations);
 }
 
 function encryptSecretWithSecondPassword(base58, password, sharedKey, pbkdf2_iterations) {
@@ -23,87 +24,126 @@ function encryptSecretWithSecondPassword(base58, password, sharedKey, pbkdf2_ite
 }
 
 function decrypt(data, password, pbkdf2_iterations) {
-  var decoded, e;
   assert(data, "data missing");
   assert(password, "password missing");
   assert(pbkdf2_iterations, "pbkdf2_iterations missing");
-  try {
 
-    /* This is currently (2014-11-28) the default wallet format. 
-     There are two steps to decrypting the wallet. The first step is to
-     stretch the users password using PBKDF2. This essentially generates
-     an AES key which we need for the second step, which is to decrypt
-     the payload using AES.
-     
-     Strechting the password requires a salt. AES requires an IV. We use
-     the same for both. It's the first 32 hexadecimals characters (i.e.
-     16 bytes).
-     
-     The conversions between different encodings can probably be achieved
-     with fewer methods.
-     */
-    decoded = decryptAesWithStretchedPassword(data, password, pbkdf2_iterations);
-    if (decoded !== null && decoded.length > 0) {
-      return decoded;
+  var decrypted, json;
+
+  // v1: CBC, ISO10126, 10 iterations
+  try {
+    decrypted = decryptAes(data, password, pbkdf2_iterations);
+    json = $.parseJSON(decrypted);
+    if (decrypted !== null && decrypted.length > 0 && json) {
+      return decrypted;
     }
-  } catch (_error) {
-    e = _error;
-    console.log("Decrypt threw an expection");
-    console.log(e);
+  } catch (e) {
+    console.log('Decryption error');
   }
-  decoded = CryptoJS.AES.decrypt(data, password, {
-    mode: CryptoJS.mode.CBC,
-    padding: CryptoJS.pad.Iso10126,
-    iterations: 1
-  });
-  if (decoded === null) {
-    throw "Decoding failed";
+
+  // v1: OFB, nopad, 1 iteration
+  try {
+    decrypted = decryptAesWithOptions(data, password, 1, {
+      mode: CryptoJS.mode.OFB,
+      padding: CryptoJS.pad.NoPadding});
+    json = $.parseJSON(decrypted);
+    if (decrypted !== null && decrypted.length > 0 && json) {
+      return decrypted;
+    }
+  } catch (e) {
+    console.log('Decryption error');
   }
-  if (decoded.length === 0) {
-    throw "Decoding failed";
+
+  // v1: OFB, ISO7816, 1 iteration
+  // ISO/IEC 9797-1 Padding method 2 is the same as ISO/IEC 7816-4:2005
+  try {
+    decrypted = decryptAesWithOptions(data, password, 1, {
+      mode: CryptoJS.mode.OFB,
+      padding: CryptoJS.pad.Iso97971});
+    json = $.parseJSON(decrypted);
+    if (decrypted !== null && decrypted.length > 0 && json) {
+      return decrypted;
+    }
+  } catch (e) {
+    console.log('Decryption error');
   }
-  return decoded;
+
+    // v1: CBC, ISO10126, 1 iteration
+  try {
+    decrypted = decryptAesWithOptions(data, password, 1, {
+      mode: CryptoJS.mode.CBC,
+      padding: CryptoJS.pad.Iso10126});
+    json = $.parseJSON(decrypted);
+    if (decrypted !== null && decrypted.length > 0 && json) {
+      return decrypted;
+    }
+  } catch (e) {
+    console.log('Decryption error');
+  }
+
+  throw 'Decrypting wallet failed';
 }
 
 function encrypt(data, password, pbkdf2_iterations) {
-  var encrypted, iv, payload, res, salt, streched_password;
   assert(data, "data missing");
   assert(password, "password missing");
   assert(pbkdf2_iterations, "pbkdf2_iterations missing");
-  salt = CryptoJS.lib.WordArray.random(16);
-  streched_password = stretchPassword(password, salt, pbkdf2_iterations);
-  iv = salt;
-  payload = CryptoJS.enc.Utf8.parse(data);
-  encrypted = CryptoJS.AES.encrypt(payload, streched_password, {
+
+  var salt = CryptoJS.lib.WordArray.random(16);
+  var stretched_password = stretchPassword(password, salt, pbkdf2_iterations);
+  var iv = salt;
+  var payload = CryptoJS.enc.Utf8.parse(data);
+  var encrypted = CryptoJS.AES.encrypt(payload, stretched_password, {
     mode: CryptoJS.mode.CBC,
     padding: CryptoJS.pad.Iso10126,
     iv: iv
   });
-  res = iv.toString() + encrypted.ciphertext.toString();
+  var res = iv.toString() + encrypted.ciphertext.toString();
   return CryptoJS.enc.Hex.parse(res).toString(CryptoJS.enc.Base64);
 }
 
-function decryptAesWithStretchedPassword(data, password, pbkdf2_iterations) {
-  var data_hex_string, decoded, decrypted, iv, payload, payload_base_64, payload_hex_string, salt, streched_password;
+function decryptAes(data, password, pbkdf2_iterations, options) {
+  return decryptAesWithOptions(data, password, pbkdf2_iterations);
+}
+
+function decryptAesWithOptions(data, password, pbkdf2_iterations, options) {
+  /* There are two steps to decrypting with AES. The first step is to
+   stretch the password using PBKDF2. This essentially generates
+   an AES key which we need for the second step, which is to decrypt
+   the payload using AES.
+   
+   Strechting the password requires a salt. AES requires an IV. We use
+   the same for both. It's the first 32 hexadecimals characters (i.e.
+   16 bytes). */
+  
+   // The conversions between different encodings can probably be achieved
+   // with fewer methods.
+
   assert(data, "data missing");
   assert(password, "password missing");
   assert(pbkdf2_iterations, "pbkdf2_iterations missing");
-  data_hex_string = CryptoJS.enc.Base64.parse(data).toString();
-  iv = CryptoJS.enc.Hex.parse(data_hex_string.slice(0, 32));
-  salt = iv;
-  streched_password = stretchPassword(password, salt, pbkdf2_iterations);
-  payload_hex_string = data_hex_string.slice(32);
-  payload = CryptoJS.enc.Hex.parse(payload_hex_string);
-  payload_base_64 = payload.toString(CryptoJS.enc.Base64);
-  decrypted = CryptoJS.AES.decrypt({
+
+  // Default wallet encryption options (as of 2014-11-28)
+  options = options || {};
+  var mode = options.mode || CryptoJS.mode.CBC;
+  var padding = options.padding || CryptoJS.pad.Iso10126;
+
+  var data_hex_string = CryptoJS.enc.Base64.parse(data).toString();
+  var iv = CryptoJS.enc.Hex.parse(data_hex_string.slice(0, 32));
+  var salt = iv;
+  var stretched_password = stretchPassword(password, salt, pbkdf2_iterations);
+  var payload_hex_string = data_hex_string.slice(32);
+  var payload = CryptoJS.enc.Hex.parse(payload_hex_string);
+
+  var decrypted = CryptoJS.AES.decrypt({
     ciphertext: payload,
     salt: ''
-  }, streched_password, {
-    mode: CryptoJS.mode.CBC,
-    padding: CryptoJS.pad.Iso10126,
+  }, stretched_password, {
+    mode: mode,
+    padding: padding,
     iv: iv
   });
-  decoded = decrypted.toString(CryptoJS.enc.Utf8);
+  var decoded = decrypted.toString(CryptoJS.enc.Utf8);
   return decoded;
 }
 
@@ -112,6 +152,7 @@ function encryptWallet(data, password, pbkdf2_iterations, version) {
   assert(password, "password missing");
   assert(pbkdf2_iterations, "pbkdf2_iterations missing");
   assert(version, "version missing");
+
   return JSON.stringify({
     pbkdf2_iterations: pbkdf2_iterations,
     version: version,
@@ -120,56 +161,48 @@ function encryptWallet(data, password, pbkdf2_iterations, version) {
 }
 
 function decryptWallet(data, password, success, error) {
-  var decrypted, e, obj, root, walletVersion;
-  assert(data, "data missing");
-  assert(password, "password missing");
+  assert(data, 'Encrypted wallet data missing');
+  assert(password, 'Password missing or empty');
   assert(success, 'Success callback required');
   assert(error, 'Error callback required');
-  walletVersion = null;
-  if (data[0] !== '{') {
-    walletVersion = 1;
-  } else {
-    obj = null;
-    try {
-      obj = $.parseJSON(data);
-    } catch (_error) {
-      e = _error;
-      error('Failed to parse JSON');
-    }
-    if (obj && obj.payload && obj.pbkdf2_iterations) {
-      walletVersion = obj.version;
-    }
-  }
-  if (walletVersion > SUPPORTED_ENCRYPTION_VERSION) {
-    error('Wallet version ' + obj.version + ' not supported. Please upgrade to the newest Blockchain Wallet.');
-  }
-  if (walletVersion >= 2) {
-    try {
-      decrypted = decryptAesWithStretchedPassword(obj.payload, password, obj.pbkdf2_iterations);
-      root = $.parseJSON(decrypted);
-    } catch (_error) {
-      e = _error;
-      error('Error Decrypting Wallet. Please check your password is correct.');
-      return;
-    }
-    
-    success(root, obj);
 
-  } else {
-    decrypted = void 0;
-    try {
-      decrypted = decrypt(data, password, 10);
-    } catch (_error) {
-      e = _error;
-      error('Error Decrypting Wallet. Please check your password is correct.');
-      return;
+  var walletVersion = null;
+  var jsonWrapper = null;
+  try {
+    jsonWrapper = $.parseJSON(data);
+    if (jsonWrapper) {
+      assert(jsonWrapper.payload, 'v2 Wallet error: missing payload');
+      assert(jsonWrapper.pbkdf2_iterations, 'v2 Wallet error: missing pbkdf2 iterations');
+      assert(jsonWrapper.version, 'v2 Wallet error: missing version');
+
+      walletVersion = jsonWrapper.version;
     }
+  } catch (e) {
+    // v1 Wallet format does not have a json wrapper, just the encrypted wallet.json
+    walletVersion = 1;
+  }
+
+  var decryptedWallet, jsonWallet;
+  if (walletVersion > SUPPORTED_ENCRYPTION_VERSION) {
+    error('Wallet version ' + walletVersion + ' not supported. Please upgrade to the newest Blockchain Wallet.');
+  }
+  else if (walletVersion >= 2) {
     try {
-      root = $.parseJSON(decrypted);
-      success(root);
-    } catch (_error) {
-      e = _error;
-      error('Could not parse JSON.');
+      decryptedWallet = decryptAes(jsonWrapper.payload, password, jsonWrapper.pbkdf2_iterations);
+      jsonWallet = $.parseJSON(decryptedWallet);
+
+      success(jsonWallet, jsonWrapper);
+    } catch (e) {
+      error('Error Decrypting Wallet. Please check your password is correct.');
+    }
+  } else {
+    try {
+      decryptedWallet = decrypt(data, password, 10);
+      jsonWallet = $.parseJSON(decryptedWallet);
+
+      success(jsonWallet);
+    } catch (e) {
+      error('Error Decrypting Wallet. Please check your password is correct.');
     }
   }
 }
@@ -198,15 +231,15 @@ function decryptPasswordWithProcessedPin(data, password, pbkdf2_iterations) {
   assert(data, "data missing");
   assert(password, "password missing");
   assert(pbkdf2_iterations, "pbkdf2_iterations missing");
-  return decryptAesWithStretchedPassword(data, password, pbkdf2_iterations);
+  return decryptAes(data, password, pbkdf2_iterations);
 }
 
 function stretchPassword(password, salt, pbkdf2_iterations) {
-  var hmacSHA1, streched_password;
   assert(salt, "salt missing");
   assert(password, "password missing");
   assert(pbkdf2_iterations, "pbkdf2_iterations missing");
-  hmacSHA1 = function(key) {
+
+  var hmacSHA1 = function(key) {
     var hasher;
     hasher = new sjcl.misc.hmac(key, sjcl.hash.sha1);
     this.encrypt = function() {
@@ -214,8 +247,8 @@ function stretchPassword(password, salt, pbkdf2_iterations) {
     };
   };
   salt = sjcl.codec.hex.toBits(salt.toString(CryptoJS.enc.Hex));
-  streched_password = sjcl.misc.pbkdf2(password, salt, pbkdf2_iterations, 256, hmacSHA1);
-  return CryptoJS.enc.Hex.parse(sjcl.codec.hex.fromBits(streched_password));
+  var stretched_password = sjcl.misc.pbkdf2(password, salt, pbkdf2_iterations, 256, hmacSHA1);
+  return CryptoJS.enc.Hex.parse(sjcl.codec.hex.fromBits(stretched_password));
 }
 
 module.exports = {
@@ -223,7 +256,6 @@ module.exports = {
   encryptSecretWithSecondPassword: encryptSecretWithSecondPassword,
   decrypt: decrypt,
   encrypt: encrypt,
-  decryptAesWithStretchedPassword: decryptAesWithStretchedPassword,
   encryptWallet: encryptWallet,
   decryptWallet: decryptWallet,
   reencrypt: reencrypt,
