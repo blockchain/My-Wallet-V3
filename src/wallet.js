@@ -357,34 +357,12 @@ MyWallet.addWatchOnlyLegacyAddress = function(addressString) {
   }
 };
 
-//temperary workaround instead instead of modding bitcoinjs to do it TODO: not efficient
+// Temporary workaround instead instead of modding bitcoinjs to do it TODO: not efficient
 MyWallet.getCompressedAddressString = function(key) {
   return new ECKey(key.d, true).pub.getAddress().toString();
 };
 MyWallet.getUnCompressedAddressString = function(key) {
   return new ECKey(key.d, false).pub.getAddress().toString();
-};
-
-MyWallet.extractAddresses = function(script, addresses) {
-  switch (Bitcoin.scripts.classifyOutput(script)) {
-  case 'pubkeyhash':
-    addresses.push(Bitcoin.Address.fromOutputScript(script));
-    return 1;
-  case 'pubkey':
-    addresses.push(new Bitcoin.Address(Bitcoin.crypto.hash160(script.chunks[0]), Bitcoin.networks.bitcoin.pubKeyHash));
-    return 1;
-  case 'scripthash':
-    //if script output is to a multisig address, classifyOutput will return scripthash
-    addresses.push(Bitcoin.Address.fromOutputScript(script));
-    return 1;
-  case 'multisig':
-    for (var i = 1; i < script.chunks.length-2; ++i) {
-      addresses.push(new Bitcoin.Address(Bitcoin.crypto.hash160(script.chunks[i]), Bitcoin.networks.bitcoin.pubKeyHash));
-    }
-    return script.chunks[0] - Bitcoin.opcodes.OP_1 + 1;
-  default:
-    throw 'Encountered non-standard scriptPubKey';
-  }
 };
 
 /**
