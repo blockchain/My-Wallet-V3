@@ -514,3 +514,33 @@ describe "Spender", ->
       expect(obs.success).toHaveBeenCalled()
       expect(obs.error).not.toHaveBeenCalled()
 ################################################################################
+  describe "from HD Account to Address", ->
+
+    M = spenderM.AccountToAdd
+    beforeEach (done) ->
+
+      spyOn(WalletStore, "getDoubleEncryption").and.returnValue(false)
+      spyOn(MyWallet, "validateSecondPassword").and.returnValue(false)
+
+      spyOn(WalletStore, "getHDWallet").and.returnValue({getAccount: (idx) ->  M.fromHdAccountERROR[idx]})
+
+      spyOn(BlockchainAPI, "get_unspent")
+        .and.callFake((xpubList,success,error,conf,nocache) ->
+          success(M.coins))
+      spyOn(WalletStore, "getPrivateKey")
+       .and.returnValue(M.encPrivateKey)
+      spyOn(WalletCrypto, "decryptSecretWithSecondPassword")
+        .and.returnValue(M.privateKey)
+
+      spyOn(obs, "success").and.callFake () -> done(); return
+      spyOn(obs, "error").and.callFake () -> done(); return
+
+      Spender(M.note, obs.success, obs.error, obs.listener, obs.getPassword)
+        .fromAccount(M.fromAccount, M.amount, M.fee)
+          .toAddress(M.toAddress)
+
+    it "should call error callback when moving bitcoins within the same account", ->
+
+      expect(obs.success).not.toHaveBeenCalled()
+      expect(obs.error).toHaveBeenCalled()
+################################################################################
