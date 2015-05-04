@@ -10,7 +10,6 @@ MyWallet = proxyquire('../src/wallet', stubs)
 
 # TODO only to get coverage report until there are tests for these files:
 BlockchainSettingsAPI = proxyquire('../src/blockchain-settings-api', {})
-WalletSpender = proxyquire('../src/wallet-spender', {})
 
 
 describe "Wallet", ->
@@ -265,3 +264,57 @@ describe "Wallet", ->
         expect(e).toBe('Error generating wallet identifier')
       
       expect(callbacks.success).not.toHaveBeenCalled()
+
+  describe "setSecondPassword()", ->
+    password = null
+
+    beforeEach ->
+      callbacks = 
+        success: () ->
+        error: (e) -> console.log(e)
+
+      spyOn(callbacks, "success")
+      spyOn(callbacks, "error")
+
+      spyOn(WalletStore, "didUpgradeToHd").and.returnValue(false)
+
+      password = 'testpassword'
+
+    it "should set the second password", ->
+      MyWallet.setSecondPassword(password, callbacks.success, callbacks.error)
+      expect(MyWallet.validateSecondPassword(password)).toBe(true)
+
+  describe "unsetSecondPassword()", ->
+    password = null
+
+    beforeEach ->
+      callbacks = 
+        success: () ->
+        error: (e) -> console.log(e)
+        getPassword: (callback) ->
+          callback('testpassword', (()->), (()->))
+
+      spyOn(callbacks, "success")
+      spyOn(callbacks, "error")
+
+      spyOn(WalletStore, "didUpgradeToHd").and.returnValue(false)
+
+      password = 'testpassword'
+
+      MyWallet.setSecondPassword(password, (()->), (()->))
+
+    it "should unset the second password", ->
+      expect(WalletStore.getDoubleEncryption()).toBe(true)
+      MyWallet.unsetSecondPassword(callbacks.success, callbacks.error, callbacks.getPassword)
+      expect(callbacks.success).toHaveBeenCalled()
+      expect(callbacks.error).not.toHaveBeenCalled()
+      expect(WalletStore.getDoubleEncryption()).toBe(false)
+
+    it "should fail if second password is wrong", ->
+      expect(WalletStore.getDoubleEncryption()).toBe(true)
+      callbacks.getPassword = (callback) ->
+          callback('wrongpassword', (()->), (()->))
+      MyWallet.unsetSecondPassword(callbacks.success, callbacks.error, callbacks.getPassword)
+      expect(callbacks.success).not.toHaveBeenCalled()
+      expect(callbacks.error).not.toHaveBeenCalled()
+      expect(WalletStore.getDoubleEncryption()).toBe(true)
