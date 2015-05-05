@@ -78,6 +78,14 @@ spenderM.AccountToAdd.fromHdAccount = [
     extendedPrivateKey: "xprv9zJ1cTHnqzgBP2boCwpP47LBzjGLKXkwYqXoYnV4yrBmstmw6SVtirpvm4GESg9YLn9R386qpmnsrcC5rvrpEJAXSrfqQR3qGtjGv5ddV9g"
   }
 ]
+spenderM.AccountToAdd.fromHdAccountERROR = [
+  {
+    getReceiveAddress: () -> "1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF"
+    getChangeAddress: () -> "1PiHKNK4NTxcuZEWqxKn9tF82kUoen2QTD"
+    containsAddressInCache: () -> true
+    extendedPrivateKey: "xprv9zJ1cTHnqzgBP2boCwpP47LBzjGLKXkwYqXoYnV4yrBmstmw6SVtirpvm4GESg9YLn9R386qpmnsrcC5rvrpEJAXSrfqQR3qGtjGv5ddV9g"
+  }
+]
 ################################################################################
 spenderM.toEmail = {}
 spenderM.toEmail.key = Bitcoin.ECKey.fromWIF("KzX25APdEb9E1kAdLntYQnhPbrau7LMfKgYJJXvkczsUw6yffkwN")
