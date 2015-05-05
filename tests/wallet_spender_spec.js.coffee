@@ -49,25 +49,25 @@ describe "Spender", ->
   describe "Constructor", ->
     it "should create all (from) methods", ->
 
-      spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
+      spyOn(WalletStore, "getDoubleEncryption").and.returnValue(false)
 
-      prepare = new Spender(null, (()->), (()->), null, null)
+      p = new Spender(null, (()->), (()->), null, null)
 
-      expect(typeof(prepare.fromAccount)).toEqual("function")
-      expect(typeof(prepare.fromAddress)).toEqual("function")
-      expect(typeof(prepare.addressSweep)).toEqual("function")
+      expect(typeof(p.fromAccount)).toEqual("function")
+      expect(typeof(p.fromAddress)).toEqual("function")
+      expect(typeof(p.addressSweep)).toEqual("function")
 
     it "should create all (to) methods", ->
 
       spyOn(WalletStore, "getDoubleEncryption").and.returnValue(false)
 
-      fromAddress = new Spender(null, (()->), (()->), null, null)
-                          .fromAddress("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX", 10, 10)
+      fa = new Spender(null, (()->), (()->), null, null)
+                  .fromAddress("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX", 10, 10)
 
-      expect(typeof(fromAddress.toAddress)).toEqual("function")
-      expect(typeof(fromAddress.toAccount)).toEqual("function")
-      expect(typeof(fromAddress.toMobile)).toEqual("function")
-      expect(typeof(fromAddress.toEmail)).toEqual("function")
+      expect(typeof(fa.toAddress)).toEqual("function")
+      expect(typeof(fa.toAccount)).toEqual("function")
+      expect(typeof(fa.toMobile)).toEqual("function")
+      expect(typeof(fa.toEmail)).toEqual("function")
 
 ################################################################################
   describe "(secondPassword test)", ->
@@ -146,38 +146,6 @@ describe "Spender", ->
       expect(obs.success).toHaveBeenCalled()
       expect(obs.error).not.toHaveBeenCalled()
 
-################################################################################
-  describe "from Address to HD Account", ->
-
-    M = spenderM.addToAdd
-    beforeEach (done) ->
-
-      spyOn(BlockchainAPI, "get_unspent")
-        .and.callFake((xpubList,success,error,conf,nocache) -> success(M.coins))
-      spyOn(WalletStore, "getPrivateKey")
-       .and.returnValue(M.encPrivateKey)
-      spyOn(WalletCrypto, "decryptSecretWithSecondPassword")
-        .and.returnValue(M.privateKey)
-      spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
-      spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
-      spyOn(WalletStore, "getHDWallet").and.returnValue({getAccount: (idx) ->  M.toHdAccount[idx]})
-      spyOn(obs, "success").and.callFake () -> done(); return
-      spyOn(obs, "error").and.callFake () -> done(); return
-
-      Spender(M.note, obs.success, obs.error, obs.listener, obs.getPassword)
-        .fromAddress(M.fromAddress, M.amount, M.fee)
-          .toAccount(0)
-
-    it "should push the right transaction to the network", ->
-
-      txHex = (BlockchainAPI.push_tx.calls.argsFor(0)[0]).toHex()
-      testTx = txHex is M.txHash1 or txHex is M.txHash2
-      note = BlockchainAPI.push_tx.calls.argsFor(0)[1]
-
-      expect(testTx).toBeTruthy()
-      expect(note).toEqual(M.note)
-      expect(obs.success).toHaveBeenCalled()
-      expect(obs.error).not.toHaveBeenCalled()
 ################################################################################
   describe "from Address to Email (with second password active)", ->
 
@@ -544,3 +512,35 @@ describe "Spender", ->
       expect(obs.success).not.toHaveBeenCalled()
       expect(obs.error).toHaveBeenCalled()
 ################################################################################
+
+  describe "from Address to HD Account", ->
+
+    M = spenderM.addToAdd
+    beforeEach (done) ->
+
+      spyOn(BlockchainAPI, "get_unspent")
+        .and.callFake((xpubList,success,error,conf,nocache) -> success(M.coins))
+      spyOn(WalletStore, "getPrivateKey")
+       .and.returnValue(M.encPrivateKey)
+      spyOn(WalletCrypto, "decryptSecretWithSecondPassword")
+        .and.returnValue(M.privateKey)
+      spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
+      spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
+      spyOn(WalletStore, "getHDWallet").and.returnValue({getAccount: (idx) ->  M.toHdAccount[idx]})
+      spyOn(obs, "success").and.callFake () -> done(); return
+      spyOn(obs, "error").and.callFake () -> done(); return
+
+      Spender(M.note, obs.success, obs.error, obs.listener, obs.getPassword)
+        .fromAddress(M.fromAddress, M.amount, M.fee)
+          .toAccount(0)
+
+    it "should push the right transaction to the network", ->
+
+      txHex = (BlockchainAPI.push_tx.calls.argsFor(0)[0]).toHex()
+      testTx = txHex is M.txHash1 or txHex is M.txHash2
+      note = BlockchainAPI.push_tx.calls.argsFor(0)[1]
+
+      expect(testTx).toBeTruthy()
+      expect(note).toEqual(M.note)
+      expect(obs.success).toHaveBeenCalled()
+      expect(obs.error).not.toHaveBeenCalled()
