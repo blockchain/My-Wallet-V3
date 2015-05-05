@@ -207,5 +207,6 @@ module.exports = {
   setTwoFactorGoogleAuthenticator: setTwoFactorGoogleAuthenticator,
   confirmTwoFactorGoogleAuthenticator: confirmTwoFactorGoogleAuthenticator,
   resendEmailConfirmation: resendEmailConfirmation,
-  verifyEmail: verifyEmail  
+  verifyEmail: verifyEmail,
+  verifyMobile: verifyMobile
 };
