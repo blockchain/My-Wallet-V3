@@ -732,16 +732,6 @@ MyWallet.getLabelForAccount = function(accountIdx) {
 /**
  * @param {number} accountIdx index of HD wallet account
  * @param {number} receive address index for the label
- * @return {string} receive address label
- */
-// [NOT USED]
-MyWallet.getLabelForAccountReceiveAddress = function(accountIdx, receiveIdx) {
-  return WalletStore.getHDWallet().getAccount(accountIdx).getLabelForReceiveAddress(receiveIdx);
-};
-
-/**
- * @param {number} accountIdx index of HD wallet account
- * @param {number} receive address index for the label
  * @return {string} receive address
  */
  // used on frontend
@@ -800,34 +790,12 @@ MyWallet.isArchivedForAccount = function(accountIdx) {
 };
 
 /**
- * Set account archived flag to isArchived and backup wallet.
- * @param {number} accountIdx index of HD wallet account
- * @param {boolean} isArchived is archived
- */
-// [NOT USED]
-MyWallet.setIsArchivedForAccount = function(accountIdx, isArchived) {
-  WalletStore.getHDWallet().getAccount(accountIdx).archived = isArchived;
-  MyWallet.backupWalletDelayed('update', function() {
-    MyWallet.get_history();
-  });
-};
-
-/**
  * @param {number} accountIdx index of HD wallet account
  * @return {number} balance of account in satoshis
  */
  // used in frontend and iOS
 MyWallet.getBalanceForAccount = function(accountIdx) {
   return WalletStore.getHDWallet().getAccount(accountIdx).balance;
-};
-
-/**
- * @param {number} accountIdx index of HD wallet account
- * @return {number} number of transactions for account
- */
- // [NOT USED]
-MyWallet.getNumberOfTransactionsForAccount = function(accountIdx) {
-  return WalletStore.getHDWallet().getAccount(accountIdx).n_tx;
 };
 
 /**
@@ -1542,47 +1510,6 @@ MyWallet.isValidateBIP39Mnemonic = function(mnemonic) {
 };
 
 /**
- * Recover HD wallet from passphrase by recreating all accounts and querying the balance of all accounts and addresses
- * @param {string} seedHex passphrase seed in hex
- * @param {?string} bip39Password bip39 Password
- * @param {function()} getPassword
- * @param {function()} successCallback success callback function
- * @param {function()} errorCallback error callback function
- */
- // [NOT USED]
-MyWallet.recoverMyWalletHDWalletFromSeedHex = function(seedHex, bip39Password, getPassword, successCallback, errorCallback) {
-  function recoverMyWalletHDWalletFromSeedHex(seedHex, bip39Password, secondPassword, successCallback, errorCallback) {
-    HDWallet.recoverHDWalletFromSeedHex(seedHex, bip39Password, secondPassword, function(hdWallet) {
-      WalletStore.setHDWallet(hdWallet);
-
-      if (successCallback)
-        successCallback();
-
-      MyWallet.backupWalletDelayed('update', function() {
-        MyWallet.get_history();
-      });
-    }, function() {
-      if (errorCallback)
-        errorCallback();
-    });
-  }
-
-  if (WalletStore.getDoubleEncryption()) {
-    getPassword(function(pw, correct_password, wrong_password) {
-      if (MyWallet.validateSecondPassword(pw)) {
-        correct_password();
-        recoverMyWalletHDWalletFromSeedHex(seedHex, bip39Password, pw, successCallback, errorCallback);
-      } else {
-        wrong_password();
-        errorCallback();
-      }
-    });
-  } else {
-    recoverMyWalletHDWalletFromSeedHex(seedHex, bip39Password, null, successCallback, errorCallback);
-  }
-};
-
-/**
  * Recover HD wallet from mnemonic by recreating all accounts and querying the balance of all accounts and addresses
  * @param {string} passphrase seed in words
  * @param {?string} bip39Password
@@ -1668,6 +1595,7 @@ MyWallet.generateHDWalletSeedHex = function() {
   var passPhrase = MyWallet.generateHDWalletPassphrase();
   return BIP39.mnemonicToEntropy(passPhrase);
 };
+// @if !PRODUCTION
 // [NOT USED]
 MyWallet.deleteHDWallet = function(successCallback, errorCallback) {
   if(WalletStore.getHDWallet == undefined || WalletStore.getHDWallet() == null) {
@@ -1684,7 +1612,7 @@ MyWallet.deleteHDWallet = function(successCallback, errorCallback) {
       errorCallback();
   });
 };
-
+// @endif
 /**
  * Upgrade legacy wallet to HD wallet.
  * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
@@ -2597,15 +2525,6 @@ MyWallet.connectWebSocket = function() {
   webSocketConnect(wsSuccess);
 };
 
-// [NOT USED]
-function emailBackup() {
-  MyWallet.securePost("wallet", { method : 'email-backup' }, function(data) {
-    WalletStore.sendEvent("msg", {type: "success", message: 'backup-success' + data});
-  }, function(e) {
-    WalletStore.sendEvent("msg", {type: "error", message: e.responseText});
-  });
-}
-
 //Can call multiple times in a row and it will backup only once after a certain delay of activity
 // used on mywallet and frontend
 MyWallet.backupWalletDelayed = function(method, success, error, extra) {
@@ -2839,67 +2758,6 @@ MyWallet.validateSecondPassword = function(input) {
    //*/
 
   return false;
-};
-// [NOT USED]
-MyWallet.runCompressedCheck = function() {
-  var to_check = [];
-  var key_map = {};
-
-  // TODO: this probably can be abstracted too in WalletStore
-  var addresses = WalletStore.getAddresses();
-  for (var key in addresses) {
-    var addr = addresses[key];
-
-    if (addr.priv != null) {
-      var decryptedpk = MyWallet.decodePK(addr.priv);
-
-      var privatekey = new ECKey(new BigInteger.fromBuffer(decryptedpk), false);
-
-      var uncompressed_address = MyWallet.getUnCompressedAddressString(privatekey);
-      var compressed_address = MyWallet.getCompressedAddressString(privatekey);
-
-      var isCompressed = false;
-      if (addr.addr != uncompressed_address) {
-        key_map[uncompressed_address] = addr.priv;
-        to_check.push(uncompressed_address);
-      }
-
-      if (addr.addr != compressed_address) {
-        key_map[compressed_address] = addr.priv;
-        to_check.push(compressed_address);
-        isCompressed = true;
-      }
-    }
-  }
-
-  if (to_check.length == 0) {
-    alert('to_check length == 0');
-  }
-
-  BlockchainAPI.get_balances(to_check, function(results) {
-    var total_balance = 0;
-    for (var key in results) {
-      var balance = results[key].final_balance;
-      if (balance > 0) {
-        var ecKey = new ECKey(new BigInteger.fromBuffer(MyWallet.decodePK(key_map[key])), isCompressed);
-
-        var address = ecKey.getBitcoinAddress().toString();
-
-        if (MyWallet.addPrivateKey(ecKey, {compressed : address != key, app_name : IMPORTED_APP_NAME, app_version : IMPORTED_APP_VERSION})) {
-          alert(formatBTC(balance) + ' claimable in address ' + key);
-        }
-      }
-      total_balance += balance;
-    }
-
-    alert(formatBTC(total_balance) + ' found in compressed addresses');
-
-    if (total_balance > 0) {
-      MyWallet.backupWallet('update', function() {
-        MyWallet.get_history();
-      });
-    }
-  });
 };
 
 /**
