@@ -113,11 +113,7 @@ var WalletStore = (function() {
 
   var wallet_options = {
     fee_policy : 0,  //Default Fee policy (-1 Tight, 0 Normal, 1 High)
-    html5_notifications : false, //HTML 5 Desktop notifications
     logout_time : 600000, //Default 10 minutes
-    tx_display : 0, //Compact or detailed transactions
-    always_keep_local_backup : false, //Whether to always keep a backup in localStorage regardless of two factor authentication
-    transactions_per_page : 30, //Number of transactions per page
     additional_seeds : [],
     enable_multiple_accounts : true //Allow multiple accounts in the wallet
   };
@@ -803,8 +799,6 @@ var WalletStore = (function() {
     getCounter: function () {
       return counter;
     },
-    // looks like there are two different timeouts. One inside wallet options.
-    // maybe one is a redundant old thing.
     getLogoutTimeout: function () {
       return logout_timeout;
     },
@@ -903,24 +897,6 @@ var WalletStore = (function() {
         if (errorCallback)
           errorCallback();
       });
-    },
-    setAlwaysKeepLocalBackup: function(val) {
-      wallet_options.always_keep_local_backup = val;
-    },
-    getAlwaysKeepLocalBackup: function() {
-      return wallet_options.always_keep_local_backup;
-    },
-    setNTransactionsPerPage: function(val) {
-      wallet_options.transactions_per_page = val;
-    },
-    getNTransactionsPerPage: function() {
-      return wallet_options.transactions_per_page;
-    },
-    getHTML5Notifications: function() {
-      return wallet_options.html5_notifications;
-    },
-    setHTML5Notifications: function(val) {
-      wallet_options.html5_notifications = val;
     },
     getWalletOptions: function (){
       return wallet_options;

@@ -1879,7 +1879,7 @@ MyWallet.get_history_with_addresses = function(addresses, success, error) {
   }, function() {
     if (error) error();
 
-  }, 0, 0, WalletStore.getNTransactionsPerPage());
+  }, 0, 0, 30);
 };
 // used on myWallet and iOS
 MyWallet.get_history = function(success, error) {
@@ -1892,7 +1892,7 @@ MyWallet.get_history = function(success, error) {
   }, function() {
     error && error();
 
-  }, 0, 0, WalletStore.getNTransactionsPerPage());
+  }, 0, 0, 30);
 };
 // used on wallet-store and locally (wallet.js)
 MyWallet.getConfirmationsForTx = function(latest_block, tx) {
@@ -2030,7 +2030,7 @@ MyWallet.getHistoryAndParseMultiAddressJSON = function(_success) {
     success && success();
   }, function() {
     error && error();
-  }, 0, 0, WalletStore.getNTransactionsPerPage());
+  }, 0, 0, 30);
 };
 
 // used once
