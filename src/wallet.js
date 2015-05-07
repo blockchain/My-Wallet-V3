@@ -2124,15 +2124,6 @@ function internalRestoreWallet(success, error, decrypt_success, build_hd_success
         var defaultHDWallet = obj.hd_wallets[0];
 
         if (!WalletStore.isHaveBuildHDWallet()) {
-          WalletStore.setEmptyXpubs();
-          for (var i in defaultHDWallet.accounts) {
-            var account  = defaultHDWallet.accounts[i];
-
-            if(!account.archived) {
-              WalletStore.pushXpub(account.xpub);
-            }
-          }
-
           // We're not passing a bip39 or second password
           MyWallet.buildHDWallet(
             defaultHDWallet.seed_hex,

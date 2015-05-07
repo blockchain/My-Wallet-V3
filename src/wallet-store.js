@@ -64,7 +64,6 @@ var WalletStore = (function() {
   var dpasswordhash; //double encryption Password
   var language = 'en';
   var mnemonicVerified = false;
-  var xpubs = [];
   var transactions = [];
   var n_tx = 0;
   var addresses = {};
@@ -177,14 +176,10 @@ var WalletStore = (function() {
     isMnemonicVerified: function() {
       return mnemonicVerified;
     },
-    setEmptyXpubs: function() {
-      xpubs = [];
-    },
-    pushXpub: function(xpub) {
-      xpubs.push(xpub);
-    },
-    getXpubs: function() {
-      return xpubs;
+    getXpubs: function(){
+      function getxpub(hdacc) {return hdacc.extendedPublicKey;}
+      function isNotArchived(hdacc) {return !hdacc.archived;}
+      return myHDWallet.getAccounts().filter(isNotArchived).map(getxpub);
     },
     getTransactions: function() {
       return transactions;
