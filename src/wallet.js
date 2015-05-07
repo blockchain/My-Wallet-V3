@@ -1916,7 +1916,6 @@ function parseMultiAddressJSON(obj, cached, checkCompleted) {
   if (!cached) {
 
     WalletStore.setMixerFee(obj.mixer_fee);
-    WalletStore.setRecommendIncludeFee(obj.recommend_include_fee);
 
     if (obj.info) {
       if (obj.info.symbol_local)
@@ -2300,7 +2299,6 @@ MyWallet.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedP
       }
 
       WalletStore.setGuid(obj.guid);
-      WalletStore.setAuthType(obj.auth_type);
       WalletStore.setRealAuthType(obj.real_auth_type);
       WalletStore.setSyncPubKeys(obj.sync_pubkeys);
 
@@ -2562,10 +2560,7 @@ MyWallet.backupWallet = function(method, successcallback, errorcallback) {
     if (method == null) {
       method = 'update';
     }
-
     var data = MyWallet.makeWalletJSON();
-    WalletStore.setLocalWalletJson(data); // I think this is not necessary
-
     //Everything looks ok, Encrypt the JSON output
     var crypted = WalletCrypto.encryptWallet( data
                                               , WalletStore.getPassword()

@@ -85,7 +85,6 @@ var WalletStore = (function() {
   var tag_names = [];
   var api_code = "0";
   var haveBuildHDWallet = false;
-  var auth_type; //The two factor authentication type used. 0 for none.
   var real_auth_type = 0; //The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
   var encrypted_wallet_data; //Encrypted wallet data (Base64, AES 256)
   var payload_checksum; //SHA256 hash of the current wallet.aes.json
@@ -94,9 +93,7 @@ var WalletStore = (function() {
   var sharedKey; //Shared key used to prove that the wallet has succesfully been decrypted, meaning you can't overwrite a wallet backup even if you have the guid
   var didSetGuid = false;
   var isPolling = false;
-  var localWalletJsonString = null;
   var legacyAddressesNumTxFetched = 0;
-  var recommend_include_fee = true; //Number of unconfirmed transactions in blockchain.info's memory pool
   var default_pbkdf2_iterations = 5000;
   var isRestoringWallet = false;
   var counter = 0;
@@ -672,13 +669,6 @@ var WalletStore = (function() {
       }
       return stringType;
     },
-    // probably not used
-    setAuthType: function(number) {
-      auth_type = number;
-    },
-    getDemoGuid: function() {
-      return demo_guid;
-    },
     getGuid: function() {
       return guid;
     },
@@ -752,32 +742,11 @@ var WalletStore = (function() {
     setIsPolling: function (bool) {
       isPolling = bool;
     },
-    // not used
-    getLocalWalletJson: function() {
-      var obj = null;
-      try {
-        var obj = $.parseJSON(localWalletJsonString);
-        return obj;
-      } catch (e) {
-        return null;
-      }
-    },
-    // this probably can be deleted too
-    setLocalWalletJson: function(data){
-      localWalletJsonString = data;
-    },
     getLegacyAddressesNumTxFetched: function(){
       return legacyAddressesNumTxFetched;
     },
     addLegacyAddressesNumTxFetched: function (number){
       legacyAddressesNumTxFetched += number;
-    },
-    // probably useless too: it is set but never called the getter
-    getRecommendIncludeFee: function() {
-      return recommend_include_fee;
-    },
-    setRecommendIncludeFee: function(value) {
-      recommend_include_fee = value;
     },
     getDefaultPbkdf2Iterations: function() {
       return default_pbkdf2_iterations;
