@@ -123,6 +123,7 @@ module.exports = (grunt) ->
     env:
       build:
         DEBUG: "1"
+        PRODUCTION: "0"
 
       production:
         PRODUCTION: "1"
