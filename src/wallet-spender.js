@@ -41,7 +41,8 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
     postSendCB:        null,
     sharedKey:         null,
     pbkdf2_iterations: null,
-    getPrivateKeys:    null
+    getPrivateKeys:    null,
+    newKeyRedeemed:    false
   };
 
   var promises = {
@@ -251,6 +252,19 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
       var feeAmount = MyWallet.getBaseFee();
       var amount = WalletStore.getLegacyAddressBalance(fromAddress) - feeAmount;
       return prepareFrom.fromAddress(fromAddress, amount, feeAmount);
+    },
+
+    fromPrivateKey: function(privateKey) {
+      assert(privateKey, "privateKey required");
+
+      var format = MyWallet.detectPrivateKeyFormat(privateKey);
+      var key    = MyWallet.privateKeyStringToKey(privateKey, format);
+      var addrCompressed = MyWallet.getCompressedAddressString(key);
+      var addrUncompressed = MyWallet.getUnCompressedAddressString(key);
+
+      // 7dBCyQ7decFjHkbeNb6JXN1VSWe3hRdWHtDxJ4FN7khh
+      // MyWallet.addPrivateKey(key)
+
     },
     /**
      * @param {number} fromIndex account index
