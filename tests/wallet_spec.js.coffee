@@ -318,3 +318,31 @@ describe "Wallet", ->
       expect(callbacks.success).not.toHaveBeenCalled()
       expect(callbacks.error).not.toHaveBeenCalled()
       expect(WalletStore.getDoubleEncryption()).toBe(true)
+
+  describe "generateNewMiniPrivateKey()", ->
+
+    beforeEach ->
+      spyOn(MyWallet, "addPrivateKey").and.callFake((key, comp) -> true)
+
+    it "generates a valid mini private key", ->
+      info = MyWallet.generateNewMiniPrivateKey()
+      key = info.key
+      miniKey = info.miniKey
+      expect(MyWallet.addPrivateKey).toHaveBeenCalled()
+      expect(key.pub.compressed).toBe(false)
+      format = MyWallet.detectPrivateKeyFormat(miniKey)
+      expect(format).toBe('mini')
+      keyCheck = MyWallet.privateKeyStringToKey(miniKey, format)
+      expect(key.toWIF()).toEqual(keyCheck.toWIF())
+
+  describe "generateNewKey()", ->
+
+    beforeEach ->
+      spyOn(MyWallet, "addPrivateKey").and.callFake((key, comp) -> true)
+
+    it "generates a valid private key", ->
+      key = MyWallet.generateNewKey()
+      expect(MyWallet.addPrivateKey).toHaveBeenCalled()
+      expect(key.pub.compressed).toBe(true)
+      format = MyWallet.detectPrivateKeyFormat(key.toWIF())
+      expect(format).toBe('compsipa')
