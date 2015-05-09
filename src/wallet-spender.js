@@ -111,6 +111,13 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
       RSVP.hash(promises).then(function(result) {
         payment.secondPassword = result.secondPassword;
         payment.coins = result.coins;
+        if (newKeyRedeemed && payment.secondPassword) {
+          // encrypt newFrom address if added and second password
+          WalletStore.encryptPrivateKey( payment.fromAddress
+                                       , payment.secondPassword
+                                       , payment.sharedKey
+                                       , payment.pbkdf2_iterations);
+        };
         spendCoins();
       }).catch(errorCallback);
     },
@@ -259,12 +266,18 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
 
       var format = MyWallet.detectPrivateKeyFormat(privateKey);
       var key    = MyWallet.privateKeyStringToKey(privateKey, format);
-      var addrCompressed = MyWallet.getCompressedAddressString(key);
-      var addrUncompressed = MyWallet.getUnCompressedAddressString(key);
-
-      // 7dBCyQ7decFjHkbeNb6JXN1VSWe3hRdWHtDxJ4FN7khh
-      // MyWallet.addPrivateKey(key)
-
+      var addr   = null;
+      // I think there is a bug related to the key compression on privateKeyStringToKey
+      if(!key.pub.compressed){
+        addr = MyWallet.getCompressedAddressString(key);}
+      else{
+        addr = MyWallet.getUnCompressedAddressString(key);}
+      console.log(addr);
+      if(WalletStore.legacyAddressExists(addr)){
+        MyWallet.addPrivateKey(key);
+        newKeyRedeemed = true;
+      }
+      return prepareFrom.addressSweep(addr);
     },
     /**
      * @param {number} fromIndex account index
@@ -322,3 +335,5 @@ module.exports = Spender;
 // var getSP = function(tryPassword){setTimeout(function() { tryPassword("jaume", function(){console.log("Correct password")}, function(){console.log("Wrong password")})}, 2500)};
 // Spender("to email test", function(x){console.log("All ok: " +x);}, function(x){console.log("oh fail: " +x);}, null, getSP)
 //   .fromAccount(0, 20000, 10000).toEmail("pedro@ximenez.com");
+// 7dBCyQ7decFjHkbeNb6JXN1VSWe3hRdWHtDxJ4FN7khh
+// Spender("nota", function(x){console.log("All ok: " +x);}, function(x){console.log("oh fail: " +x);}, null, getSP).fromPrivateKey("7dBCyQ7decFjHkbeNb6JXN1VSWe3hRdWHtDxJ4FN7khh");
