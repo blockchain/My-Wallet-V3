@@ -81,6 +81,13 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
   };
   ////////////////////////////////////////////////////////////////////////////////
   var spendCoins = function() {
+    if (payment.newKeyRedeemed && payment.secondPassword) {
+      // encrypt newFrom address if added and second password
+      WalletStore.encryptPrivateKey( payment.fromAddress
+                                   , payment.secondPassword
+                                   , payment.sharedKey
+                                   , payment.pbkdf2_iterations);
+    };
     // create the transaction (the coins are choosen here)
     var tx = new Transaction( payment.coins, payment.toAddress, payment.amount,
                               payment.feeAmount, payment.changeAddress, listener);
@@ -111,13 +118,6 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
       RSVP.hash(promises).then(function(result) {
         payment.secondPassword = result.secondPassword;
         payment.coins = result.coins;
-        if (newKeyRedeemed && payment.secondPassword) {
-          // encrypt newFrom address if added and second password
-          WalletStore.encryptPrivateKey( payment.fromAddress
-                                       , payment.secondPassword
-                                       , payment.sharedKey
-                                       , payment.pbkdf2_iterations);
-        };
         spendCoins();
       }).catch(errorCallback);
     },
@@ -257,10 +257,14 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
 
       assert(fromAddress, "fromAddress required");
       var feeAmount = MyWallet.getBaseFee();
+      console.log(feeAmount);
       var amount = WalletStore.getLegacyAddressBalance(fromAddress) - feeAmount;
+      console.log(amount);
       return prepareFrom.fromAddress(fromAddress, amount, feeAmount);
     },
-
+    /**
+     * @param {string} private key of the coins you want to redeem
+     */
     fromPrivateKey: function(privateKey) {
       assert(privateKey, "privateKey required");
 
@@ -269,14 +273,15 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
       var addr   = null;
       // I think there is a bug related to the key compression on privateKeyStringToKey
       if(!key.pub.compressed){
-        addr = MyWallet.getCompressedAddressString(key);}
+        addr = Blockchain.MyWallet.getCompressedAddressString(key);}
       else{
-        addr = MyWallet.getUnCompressedAddressString(key);}
+        addr = Blockchain.MyWallet.getUnCompressedAddressString(key);}
       console.log(addr);
-      if(WalletStore.legacyAddressExists(addr)){
+      if(!WalletStore.legacyAddressExists(addr)){
         MyWallet.addPrivateKey(key);
         newKeyRedeemed = true;
       }
+      BlockchainAPI.get_balances([addr],console.log, console.log);
       return prepareFrom.addressSweep(addr);
     },
     /**
