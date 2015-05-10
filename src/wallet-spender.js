@@ -270,18 +270,16 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
 
       var format = MyWallet.detectPrivateKeyFormat(privateKey);
       var key    = MyWallet.privateKeyStringToKey(privateKey, format);
-      var addr   = null;
-      // I think there is a bug related to the key compression on privateKeyStringToKey
-      if(!key.pub.compressed){
-        addr = Blockchain.MyWallet.getCompressedAddressString(key);}
-      else{
-        addr = Blockchain.MyWallet.getUnCompressedAddressString(key);}
+      // we should fix all the compressed non-compressed keys related code.
+      key.pub.compressed = true;
+      var addr = key.pub.getAddress().toString();
       console.log(addr);
       if(!WalletStore.legacyAddressExists(addr)){
         MyWallet.addPrivateKey(key);
-        newKeyRedeemed = true;
+        payment.newKeyRedeemed = true;
       }
-      BlockchainAPI.get_balances([addr],console.log, console.log);
+      // this must be a promise
+      BlockchainAPI.get_balances([addr], function (x) {console.log(x);}, function (x) {console.log(x);});
       return prepareFrom.addressSweep(addr);
     },
     /**
