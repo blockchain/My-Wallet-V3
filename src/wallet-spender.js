@@ -42,7 +42,8 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
     sharedKey:         null,
     pbkdf2_iterations: null,
     getPrivateKeys:    null,
-    newKeyRedeemed:    false
+    newKeyAdded:       false,
+    isSweep:           false
   };
 
   var promises = {
@@ -68,6 +69,40 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
     }
   };
   //////////////////////////////////////////////////////////////////////////////
+  var getUnspentOutputsForAddresses = function(addresses, successCallback, errorCallback) {
+    BlockchainAPI.get_unspent([addresses], function (obj) {
+
+      obj.unspent_outputs.forEach(function(utxo) {
+        var txBuffer = new Buffer(utxo.tx_hash, "hex");
+        Array.prototype.reverse.call(txBuffer);
+        utxo.hash = txBuffer.toString("hex");
+        utxo.index = utxo.tx_output_n;
+      });
+
+      successCallback && successCallback(obj.unspent_outputs);
+    }, function(e) {
+      errorCallback && errorCallback(e.message || e.responseText);
+    }, 0, true);
+  };
+  //////////////////////////////////////////////////////////////////////////////
+  var getUnspentOutputsForAccount = function(accountIdx, successCallback, errorCallback) {
+    var account = WalletStore.getHDWallet().getAccount(accountIdx);
+
+    BlockchainAPI.get_unspent([account.extendedPublicKey], function (obj) {
+
+      obj.unspent_outputs.forEach(function(utxo) {
+        var txBuffer = new Buffer(utxo.tx_hash, "hex");
+        Array.prototype.reverse.call(txBuffer);
+        utxo.hash = txBuffer.toString("hex");
+        utxo.index = utxo.tx_output_n;
+      });
+
+      successCallback && successCallback(obj.unspent_outputs);
+    }, function(e) {
+      errorCallback && errorCallback(e.message || e.responseText);
+    }, 0, true);
+  };
+  //////////////////////////////////////////////////////////////////////////////
   var publishTransaction = function(signedTransaction) {
 
     var succ = function(tx_hash) {
@@ -81,13 +116,18 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
   };
   ////////////////////////////////////////////////////////////////////////////////
   var spendCoins = function() {
-    if (payment.newKeyRedeemed && payment.secondPassword) {
-      // encrypt newFrom address if added and second password
-      WalletStore.encryptPrivateKey( payment.fromAddress
-                                   , payment.secondPassword
-                                   , payment.sharedKey
-                                   , payment.pbkdf2_iterations);
+
+    if (payment.newKeyAdded && payment.secondPassword) {
+      WalletStore.encryptPrivateKey( payment.fromAddress, payment.secondPassword
+                                   , payment.sharedKey, payment.pbkdf2_iterations);
     };
+
+    if (payment.isSweep) {
+      var getValue = function(coin) {return coin.value;};
+      var add = function(x, y) {return x + y;};
+      payment.amount = payment.coins.map(getValue).reduce(add,0) - payment.feeAmount;
+    };
+
     // create the transaction (the coins are choosen here)
     var tx = new Transaction( payment.coins, payment.toAddress, payment.amount,
                               payment.feeAmount, payment.changeAddress, listener);
@@ -217,12 +257,13 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
       assert(amount, "amount required");
       assert(feeAmount, "fee required");
       payment.fromAddress = fromAddress ? [fromAddress] : WalletStore.getLegacyActiveAddresses();
+      console.log(payment.fromAddress);
       payment.changeAddress = fromAddress || WalletStore.getPreferredLegacyAddress();
       payment.amount = amount;
       payment.feeAmount = feeAmount;
 
       promises.coins = new RSVP.Promise(function(success, error) {
-        MyWallet.getUnspentOutputsForAddresses(payment.fromAddress, success, error);
+        getUnspentOutputsForAddresses(payment.fromAddress, success, error);
       });
 
       // set the private key obtainer function
@@ -256,11 +297,9 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
     addressSweep: function(fromAddress) {
 
       assert(fromAddress, "fromAddress required");
+      payment.isSweep = true;
       var feeAmount = MyWallet.getBaseFee();
-      console.log(feeAmount);
-      var amount = WalletStore.getLegacyAddressBalance(fromAddress) - feeAmount;
-      console.log(amount);
-      return prepareFrom.fromAddress(fromAddress, amount, feeAmount);
+      return prepareFrom.fromAddress(fromAddress, feeAmount, feeAmount);
     },
     /**
      * @param {string} private key of the coins you want to redeem
@@ -270,16 +309,13 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
 
       var format = MyWallet.detectPrivateKeyFormat(privateKey);
       var key    = MyWallet.privateKeyStringToKey(privateKey, format);
-      // we should fix all the compressed non-compressed keys related code.
+      // I should take care of inconsistent web addresses related to compresion from the old wallet
       key.pub.compressed = true;
       var addr = key.pub.getAddress().toString();
-      console.log(addr);
       if(!WalletStore.legacyAddressExists(addr)){
         MyWallet.addPrivateKey(key);
-        payment.newKeyRedeemed = true;
+        payment.newKeyAdded = true;
       }
-      // this must be a promise
-      BlockchainAPI.get_balances([addr], function (x) {console.log(x);}, function (x) {console.log(x);});
       return prepareFrom.addressSweep(addr);
     },
     /**
@@ -299,7 +335,7 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
       payment.feeAmount = feeAmount;
 
       promises.coins = new RSVP.Promise(function(success, error) {
-        MyWallet.getUnspentOutputsForAccount(payment.fromAccountIndex, success, error)
+        getUnspentOutputsForAccount(payment.fromAccountIndex, success, error)
       });
 
       // set the private key obtainer function

@@ -1045,40 +1045,6 @@ MyWallet.calculateTransactionResult = function(transaction) {
 
   return result;
 };
-// used on the wallet-spender.js and locally once (move to walletspender)
-MyWallet.getUnspentOutputsForAddresses = function(addresses, successCallback, errorCallback) {
-  BlockchainAPI.get_unspent([addresses], function (obj) {
-
-    obj.unspent_outputs.forEach(function(utxo) {
-      var txBuffer = new Buffer(utxo.tx_hash, "hex");
-      Array.prototype.reverse.call(txBuffer);
-      utxo.hash = txBuffer.toString("hex");
-      utxo.index = utxo.tx_output_n;
-    });
-
-    successCallback && successCallback(obj.unspent_outputs);
-  }, function(e) {
-    errorCallback && errorCallback(e.message || e.responseText);
-  }, 0, true);
-};
-// used on the wallet-spender (move to walletspender)
-MyWallet.getUnspentOutputsForAccount = function(accountIdx, successCallback, errorCallback) {
-  var account = WalletStore.getHDWallet().getAccount(accountIdx);
-
-  BlockchainAPI.get_unspent([account.extendedPublicKey], function (obj) {
-
-    obj.unspent_outputs.forEach(function(utxo) {
-      var txBuffer = new Buffer(utxo.tx_hash, "hex");
-      Array.prototype.reverse.call(txBuffer);
-      utxo.hash = txBuffer.toString("hex");
-      utxo.index = utxo.tx_output_n;
-    });
-
-    successCallback && successCallback(obj.unspent_outputs);
-  }, function(e) {
-    errorCallback && errorCallback(e.message || e.responseText);
-  }, 0, true);
-};
 // used on the frontend and iOS
 MyWallet.recommendedTransactionFeeForAccount = function(accountIdx, amount) {
 
@@ -1275,62 +1241,6 @@ MyWallet.getBalanceForRedeemCode = function(privatekey, successCallback, errorCa
     if (errorCallback)
       errorCallback();
   });
-};
-
-/**
- * Redeem bitcoins sent from email or mobile.
- * @param {number} accountIdx index of HD wallet account
- * @param {string} privatekey private key to redeem
- * @param {function()} successCallback success callback function
- * @param {function()} errorCallback error callback function
- */
- // used only on the frontend
-MyWallet.redeemFromEmailOrMobile = function(accountIdx, privatekey, successCallback, errorCallback)  {
-  var account = this.getAccount(accountIdx);
-
-  try {
-    var format = MyWallet.detectPrivateKeyFormat(privatekey);
-    var privateKeyToSweep = MyWallet.privateKeyStringToKey(privatekey, format);
-    var from_address_compressed = MyWallet.getCompressedAddressString(privateKeyToSweep);
-    var from_address_uncompressed = MyWallet.getUnCompressedAddressString(privateKeyToSweep);
-
-    MyWallet.getUnspentOutputsForAddresses(
-      [from_address_compressed, from_address_uncompressed],
-      function (unspent_outputs) {
-        var values = unspent_outputs.map(function(unspent) {
-          return unspent.value;
-        });
-        var amount = values.reduce(function(a, b) {
-          return a + b;
-        });
-
-        var fee = MyWallet.getBaseFee();
-        amount = amount - fee;
-
-        var toAddress = account.getReceiveAddress();
-
-        // No change address needed - amount will be consumed in full
-        var changeAddress = null;
-
-        var listener = null;
-
-        var tx = new Transaction(unspent_outputs, toAddress, amount, fee, changeAddress, listener);
-
-        var keys = [privatekey];
-        if (tx.addressesOfNeededPrivateKeys.length === 2) {
-          keys.push(privatekey);
-        }
-
-        tx.addPrivateKeys(keys);
-
-        var signedTransaction = tx.sign();
-
-        BlockchainAPI.push_tx(signedTransaction, null, successCallback, errorCallback);
-      });
-  } catch (e) {
-    console.log(e);
-    WalletStore.sendEvent("msg", {type: "error", message: 'Error Decoding Private Key. Could not claim coins.'});
-  }
 };
 
 /**
