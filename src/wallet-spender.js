@@ -316,6 +316,7 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
         MyWallet.addPrivateKey(key);
         payment.newKeyAdded = true;
       }
+      WalletStore.setLegacyAddressTag(addr, 2);
       return prepareFrom.addressSweep(addr);
     },
     /**
