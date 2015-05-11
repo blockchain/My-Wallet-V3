@@ -505,7 +505,6 @@ var WalletStore = (function() {
       } else {
         defaultAccountIdx = 0;
       }
-      MyWallet.backupWalletDelayed();
     },
     getDefaultAccountIndex: function() {
       return defaultAccountIdx;
