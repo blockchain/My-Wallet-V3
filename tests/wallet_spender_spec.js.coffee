@@ -408,7 +408,7 @@ describe "Spender", ->
       # success finished
       expect(obs.success).toHaveBeenCalled()
       expect(obs.error).not.toHaveBeenCalled()
-################################################################################
+# ################################################################################
   describe "from addressSweep to Address", ->
 
     M = spenderM.addToAdd
@@ -418,7 +418,6 @@ describe "Spender", ->
       spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
 
       spyOn(MyWallet, "getBaseFee").and.returnValue(M.fee)
-      spyOn(WalletStore, "getLegacyAddressBalance").and.returnValue(M.amount + M.fee)
       spyOn(BlockchainAPI, "get_unspent")
         .and.callFake((xpubList,success,error,conf,nocache) ->
           success(M.coins))
@@ -437,7 +436,118 @@ describe "Spender", ->
     it "should push the right transaction to the network", ->
 
       txHex = (BlockchainAPI.push_tx.calls.argsFor(0)[0]).toHex()
-      testTx = txHex is M.txHash1 or txHex is M.txHash2
+      testTx = txHex is M.sweepHex
+      note = BlockchainAPI.push_tx.calls.argsFor(0)[1]
+
+      expect(testTx).toBeTruthy()
+      expect(note).toEqual(M.note)
+      expect(obs.success).toHaveBeenCalled()
+      expect(obs.error).not.toHaveBeenCalled()
+################################################################################
+  describe "from PrivateKey to Address (with second password)", ->
+
+    M = spenderM.addToAdd
+    beforeEach (done) ->
+      spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
+      spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
+
+      spyOn(MyWallet, "getBaseFee").and.returnValue(M.fee)
+      spyOn(BlockchainAPI, "get_unspent")
+        .and.callFake((xpubList,success,error,conf,nocache) ->
+          success(M.coins))
+      spyOn(WalletStore, "encryptPrivateKey")
+      spyOn(WalletStore, "legacyAddressExists").and.returnValue(false)
+      spyOn(MyWallet, "addPrivateKey")
+      spyOn(WalletStore, "setLegacyAddressTag")
+      spyOn(WalletStore, "setLegacyAddressLabel")
+      spyOn(WalletStore, "getPrivateKey")
+       .and.returnValue(M.encPrivateKey)
+      spyOn(WalletCrypto, "decryptSecretWithSecondPassword")
+        .and.returnValue(M.privateKey)
+      spyOn(obs, "success").and.callFake () -> done(); return
+      spyOn(obs, "error").and.callFake () -> done(); return
+
+      Spender(M.note, obs.success, obs.error, obs.listener, obs.getPassword)
+        .fromPrivateKey(M.privKey)
+          .toAddress(M.toAddress)
+
+    it "should push the right transaction to the network", ->
+
+      txHex = (BlockchainAPI.push_tx.calls.argsFor(0)[0]).toHex()
+      testTx = txHex is M.sweepHex
+      note = BlockchainAPI.push_tx.calls.argsFor(0)[1]
+
+      expect(testTx).toBeTruthy()
+      expect(note).toEqual(M.note)
+      expect(WalletStore.encryptPrivateKey).toHaveBeenCalled()
+      expect(obs.success).toHaveBeenCalled()
+      expect(obs.error).not.toHaveBeenCalled()
+  ################################################################################
+  describe "from PrivateKey to Address (without second password)", ->
+
+    M = spenderM.addToAdd
+    beforeEach (done) ->
+      spyOn(WalletStore, "getDoubleEncryption").and.returnValue(false)
+
+      spyOn(MyWallet, "getBaseFee").and.returnValue(M.fee)
+      spyOn(BlockchainAPI, "get_unspent")
+        .and.callFake((xpubList,success,error,conf,nocache) ->
+          success(M.coins))
+      spyOn(WalletStore, "encryptPrivateKey")
+      spyOn(WalletStore, "legacyAddressExists").and.returnValue(false)
+      spyOn(MyWallet, "addPrivateKey")
+      spyOn(WalletStore, "setLegacyAddressTag")
+      spyOn(WalletStore, "setLegacyAddressLabel")
+      spyOn(WalletStore, "getPrivateKey")
+       .and.returnValue(M.privateKey)
+      spyOn(WalletCrypto, "decryptSecretWithSecondPassword")
+        .and.returnValue(M.privateKey)
+      spyOn(obs, "success").and.callFake () -> done(); return
+      spyOn(obs, "error").and.callFake () -> done(); return
+
+      Spender(M.note, obs.success, obs.error, obs.listener, obs.getPassword)
+        .fromPrivateKey(M.privateKey)
+          .toAddress(M.toAddress)
+
+    it "should push the right transaction to the network", ->
+
+      txHex = (BlockchainAPI.push_tx.calls.argsFor(0)[0]).toHex()
+      testTx = txHex is M.sweepHex
+      note = BlockchainAPI.push_tx.calls.argsFor(0)[1]
+
+      expect(testTx).toBeTruthy()
+      expect(note).toEqual(M.note)
+      expect(WalletStore.encryptPrivateKey).not.toHaveBeenCalled()
+      expect(obs.success).toHaveBeenCalled()
+      expect(obs.error).not.toHaveBeenCalled()
+################################################################################
+  describe "from PrivateKey to Address redeemed address already imported", ->
+
+    M = spenderM.addToAdd
+    beforeEach (done) ->
+      spyOn(WalletStore, "getDoubleEncryption").and.returnValue(false)
+
+      spyOn(MyWallet, "getBaseFee").and.returnValue(M.fee)
+      spyOn(BlockchainAPI, "get_unspent")
+        .and.callFake((xpubList,success,error,conf,nocache) ->
+          success(M.coins))
+      spyOn(WalletStore, "encryptPrivateKey")
+      spyOn(WalletStore, "legacyAddressExists").and.returnValue(true)
+      spyOn(WalletStore, "getPrivateKey")
+       .and.returnValue(M.privateKey)
+      spyOn(WalletCrypto, "decryptSecretWithSecondPassword")
+        .and.returnValue(M.privateKey)
+      spyOn(obs, "success").and.callFake () -> done(); return
+      spyOn(obs, "error").and.callFake () -> done(); return
+
+      Spender(M.note, obs.success, obs.error, obs.listener, obs.getPassword)
+        .fromPrivateKey(M.privateKey)
+          .toAddress(M.toAddress)
+
+    it "should push the right transaction to the network", ->
+
+      txHex = (BlockchainAPI.push_tx.calls.argsFor(0)[0]).toHex()
+      testTx = txHex is M.sweepHex
       note = BlockchainAPI.push_tx.calls.argsFor(0)[1]
 
       expect(testTx).toBeTruthy()
