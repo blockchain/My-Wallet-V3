@@ -44,6 +44,21 @@ describe "Wallet", ->
 
               expect(decrypted_password).toBe('testtest12')
 
+  describe "pairing code", ->
+    it "should decrypt", (done) ->
+      observer = 
+        success: (decrypted) ->
+          expect(decrypted).toBe("")
+      
+      spyOn(observer, "success")
+          
+      encryption_phrase = "491fcc9f99a9f978b2cc0a8cef64a43839b886fac0a5e4171ccbcf060e1b6dc9"
+      uid               = "30b1bfb0-cd30-475d-a071-e79c038827a0"
+      payload = "MzNbCMrPmYEs02MeWsFMk/GR1UJaMC4CJI2914DaF0zHnVIT/cGF86nOSx0GpNC32afsXmacesiLLbWb7EdTIWHdgW9+Y5tMI6zpYL+DTCQ="
+      
+      WalletCrypto.decrypt(payload, encryption_phrase, 10, observer.success)
+        
+      expect(observer.success).toHaveBeenCalled() 
 
   describe "decryptWallet()", ->
 
