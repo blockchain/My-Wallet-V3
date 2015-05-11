@@ -28,13 +28,16 @@ function decrypt(data, password, pbkdf2_iterations) {
   assert(password, "password missing");
   assert(pbkdf2_iterations, "pbkdf2_iterations missing");
 
-  var decrypted, json;
+  var decrypted;
 
+  // Default encryption mode
+  // v2 and v3 wallet format encryption with pkbdf2_iterations from json
+  // v1 wallet encryption with 10 iterations
   // v1: CBC, ISO10126, 10 iterations
   try {
     decrypted = decryptAes(data, password, pbkdf2_iterations);
-    json = $.parseJSON(decrypted);
-    if (decrypted !== null && decrypted.length > 0 && json) {
+
+    if (decrypted !== null && decrypted.length > 0) {
       return decrypted;
     }
   } catch (e) {
@@ -43,11 +46,11 @@ function decrypt(data, password, pbkdf2_iterations) {
 
   // v1: OFB, nopad, 1 iteration
   try {
-    decrypted = decryptAesWithOptions(data, password, 1, {
+    decrypted = decryptAes(data, password, 1, {
       mode: CryptoJS.mode.OFB,
       padding: CryptoJS.pad.NoPadding});
-    json = $.parseJSON(decrypted);
-    if (decrypted !== null && decrypted.length > 0 && json) {
+
+    if (decrypted !== null && decrypted.length > 0) {
       return decrypted;
     }
   } catch (e) {
@@ -57,11 +60,11 @@ function decrypt(data, password, pbkdf2_iterations) {
   // v1: OFB, ISO7816, 1 iteration
   // ISO/IEC 9797-1 Padding method 2 is the same as ISO/IEC 7816-4:2005
   try {
-    decrypted = decryptAesWithOptions(data, password, 1, {
+    decrypted = decryptAes(data, password, 1, {
       mode: CryptoJS.mode.OFB,
       padding: CryptoJS.pad.Iso97971});
-    json = $.parseJSON(decrypted);
-    if (decrypted !== null && decrypted.length > 0 && json) {
+
+    if (decrypted !== null && decrypted.length > 0) {
       return decrypted;
     }
   } catch (e) {
@@ -70,18 +73,18 @@ function decrypt(data, password, pbkdf2_iterations) {
 
     // v1: CBC, ISO10126, 1 iteration
   try {
-    decrypted = decryptAesWithOptions(data, password, 1, {
+    decrypted = decryptAes(data, password, 1, {
       mode: CryptoJS.mode.CBC,
       padding: CryptoJS.pad.Iso10126});
-    json = $.parseJSON(decrypted);
-    if (decrypted !== null && decrypted.length > 0 && json) {
+
+    if (decrypted !== null && decrypted.length > 0) {
       return decrypted;
     }
   } catch (e) {
     console.log('Decryption error');
   }
 
-  throw 'Decrypting wallet failed';
+  throw 'Decryption failed';
 }
 
 function encrypt(data, password, pbkdf2_iterations) {
@@ -103,10 +106,6 @@ function encrypt(data, password, pbkdf2_iterations) {
 }
 
 function decryptAes(data, password, pbkdf2_iterations, options) {
-  return decryptAesWithOptions(data, password, pbkdf2_iterations);
-}
-
-function decryptAesWithOptions(data, password, pbkdf2_iterations, options) {
   /* There are two steps to decrypting with AES. The first step is to
    stretch the password using PBKDF2. This essentially generates
    an AES key which we need for the second step, which is to decrypt

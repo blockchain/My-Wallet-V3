@@ -347,18 +347,12 @@ describe "Wallet", ->
       expect(format).toBe('compsipa')
 
   describe "pairing code", ->
-    it "should decrypt", (done) ->
-      observer =
-        success: (decrypted) ->
-          expect(decrypted).toBe("")
-          done()
+    it "should decrypt", ->
 
-      spyOn(observer, "success")
+      payload = "qf7x+dZBbUQnzgbL6SJfI8w/nracmNe4YiGIww+J40V42u4T8SgyjfJdIqPsKkQC7m0UMpQ4OpvkBl2H4NIolJizO/N0zauRnkaSeqK32rY="
+      encryption_phrase = "efd93e61900251ab6cd19a4f14e5a2229866e150b04f40fe7912f392c24b5a7d"
+      guid = "6f209355-9e4b-4708-9d64-272d76bb8062"
 
-      encryption_phrase = "491fcc9f99a9f978b2cc0a8cef64a43839b886fac0a5e4171ccbcf060e1b6dc9"
-      uid               = "30b1bfb0-cd30-475d-a071-e79c038827a0"
-      payload = "MzNbCMrPmYEs02MeWsFMk/GR1UJaMC4CJI2914DaF0zHnVIT/cGF86nOSx0GpNC32afsXmacesiLLbWb7EdTIWHdgW9+Y5tMI6zpYL+DTCQ="
-
-      WalletCrypto.decrypt(payload, encryption_phrase, 10, observer.success)
-
-      expect(observer.success).toHaveBeenCalled()
+      decrypted = WalletCrypto.decrypt(payload, encryption_phrase, 10)
+      components = decrypted.split('|')
+      expect(components[0]).toBe(guid)
