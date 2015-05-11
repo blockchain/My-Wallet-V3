@@ -473,13 +473,13 @@ function push_tx(tx, note, success, error) {
       }
     },
     error : function(e) {
-      if (!e.responseText || e.responseText.indexOf('Parse:') == 0) {
-        setTimeout(function() {
-          push_normal();
-        }, 2000);
-      } else {
-        _error(e ? e.responseText : null);
-      }
+      // if (!e.responseText || e.responseText.indexOf('Parse:') == 0) {
+      //   setTimeout(function() {
+      //     push_normal();
+      //   }, 2000);
+      // } else {
+      _error(e ? e.responseText : null);
+      // }
     }
   });
 };
