@@ -13,7 +13,7 @@ BlockchainSettingsAPI = proxyquire('../src/blockchain-settings-api', {})
 
 
 describe "Wallet", ->
-  
+
   callbacks = undefined
 
   beforeEach ->
@@ -22,16 +22,16 @@ describe "Wallet", ->
       success()
     spyOn(MyWallet, "backupWalletDelayed").and.callFake (method, success, error) ->
       success()
-    
+
     MyWallet.deleteHDWallet()
-    
-  
+
+
   describe "stretchPassword()", ->
     it "should stretch a password", ->
       password = "1234567890"
       salt = CryptoJS.enc.Hex.parse("a633e05b567f64482d7620170bd45201")
       pbkdf2_iterations = 10
-      
+
       expect(WalletCrypto.stretchPassword(password, salt, pbkdf2_iterations).toString()).toBe("4be158806522094dd184bc9c093ea185c6a4ec003bdc6323108e3f5eeb7e388d")
 
   describe "decryptPasswordWithProcessedPin()", ->
@@ -43,22 +43,6 @@ describe "Wallet", ->
               decrypted_password = WalletCrypto.decryptPasswordWithProcessedPin(data, password, pbkdf2_iterations)
 
               expect(decrypted_password).toBe('testtest12')
-
-  describe "pairing code", ->
-    it "should decrypt", (done) ->
-      observer = 
-        success: (decrypted) ->
-          expect(decrypted).toBe("")
-      
-      spyOn(observer, "success")
-          
-      encryption_phrase = "491fcc9f99a9f978b2cc0a8cef64a43839b886fac0a5e4171ccbcf060e1b6dc9"
-      uid               = "30b1bfb0-cd30-475d-a071-e79c038827a0"
-      payload = "MzNbCMrPmYEs02MeWsFMk/GR1UJaMC4CJI2914DaF0zHnVIT/cGF86nOSx0GpNC32afsXmacesiLLbWb7EdTIWHdgW9+Y5tMI6zpYL+DTCQ="
-      
-      WalletCrypto.decrypt(payload, encryption_phrase, 10, observer.success)
-        
-      expect(observer.success).toHaveBeenCalled() 
 
   describe "decryptWallet()", ->
 
@@ -148,34 +132,34 @@ describe "Wallet", ->
 
       expect(obj.success).toHaveBeenCalled()
       expect(obj.success.calls.argsFor(0)[0].guid).toBe("cc90a34d-9eeb-49e7-95ef-9741b77de443")
-    
+
     return
 
   describe "createNewWallet()", ->
-    beforeEach ->      
-      callbacks = 
+    beforeEach ->
+      callbacks =
         success: () ->
-    
+
         error: (e) ->
           console.log(e)
-      
+
       spyOn(callbacks, "success")
       spyOn(callbacks, "error").and.callFake((e) -> console.log(e)) #.and.callThrough()
 
       spyOn($, "ajax").and.callFake (params) ->
         data = {uuids: ["68019bee-7a27-490b-ab8a-446c2749bf1f","78019bee-7a27-490b-ab8a-446c2749bf1f"]}
         params.success(data)
-      
+
       spyOn(MyWallet, "securePost").and.callFake (name, post_data, success, error) ->
         success("Successfully created new wallet")
-        
+
       spyOn(WalletStore, "setLanguage").and.returnValue null
-      
+
       spyOn(MyWallet, "makeCustomWalletJSON").and.callThrough()
-      
+
     it "should create a wallet", ->
       MyWallet.createNewWallet("a@b.com", "1234567890", "en", "EUR", callbacks.success, callbacks.error)
-      
+
       expect(callbacks.success).toHaveBeenCalled()
       expect(callbacks.error).not.toHaveBeenCalled()
 
@@ -184,17 +168,17 @@ describe "Wallet", ->
         MyWallet.createNewWallet("a@b.com", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "en", "EUR", callbacks.success, callbacks.error)
       catch e
         expect(e).toBe('Passwords must be shorter than 256 characters')
-      
+
       expect(callbacks.success).not.toHaveBeenCalled()
 
     it "should create an HD wallet", ->
-      
+
       MyWallet.createNewWallet("a@b.com", "1234567890", "en", "EUR", callbacks.success, callbacks.error)
-      
+
       data = MyWallet.makeWalletJSON()
       expect(JSON.parse(data)["hd_wallets"]).toBeDefined()
       expect(JSON.parse(data)["hd_wallets"].length).toBeGreaterThan(0)
-      
+
   describe "setPbkdf2Iterations()", ->
     it "should set the PBKDF2 iterations", ->
       pbkdf2_iterations = 900
@@ -208,8 +192,8 @@ describe "Wallet", ->
         callback("")
 
       spyOn(obj, "success")
-      
-      spyOn(WalletStore, "setPbkdf2Iterations").and.callFake((n) -> 
+
+      spyOn(WalletStore, "setPbkdf2Iterations").and.callFake((n) ->
       )
 
       MyWallet.setPbkdf2Iterations(pbkdf2_iterations, obj.success, obj.error, getPassword)
@@ -249,10 +233,10 @@ describe "Wallet", ->
 
   describe "createNewWallet() with bad server repsonse", ->
     beforeEach ->
-      callbacks = 
+      callbacks =
         success: () ->
         error: (e) -> console.log(e)
-      
+
       spyOn(callbacks, "success")
       spyOn(callbacks, "error")
 
@@ -260,31 +244,31 @@ describe "Wallet", ->
       spyOn($, "ajax").and.callFake (params) ->
         data = {uuids: ["68019bee-7a27-490b-ab8a-",null]}
         params.success(data)
-      
+
       try
         MyWallet.createNewWallet("a@b.com", "aa", "en", "EUR", callbacks.success, callbacks.error)
       catch e
         expect(e).toBe('Error generating wallet identifier')
-      
+
       expect(callbacks.success).not.toHaveBeenCalled()
 
     it "should fail if server returns no data", ->
       spyOn($, "ajax").and.callFake (params) ->
         data = {}
         params.success(data)
-      
+
       try
         MyWallet.createNewWallet("a@b.com", "aa", "en", "EUR", callbacks.success, callbacks.error)
       catch e
         expect(e).toBe('Error generating wallet identifier')
-      
+
       expect(callbacks.success).not.toHaveBeenCalled()
 
   describe "setSecondPassword()", ->
     password = null
 
     beforeEach ->
-      callbacks = 
+      callbacks =
         success: () ->
         error: (e) -> console.log(e)
 
@@ -303,7 +287,7 @@ describe "Wallet", ->
     password = null
 
     beforeEach ->
-      callbacks = 
+      callbacks =
         success: () ->
         error: (e) -> console.log(e)
         getPassword: (callback) ->
@@ -361,3 +345,20 @@ describe "Wallet", ->
       expect(key.pub.compressed).toBe(true)
       format = MyWallet.detectPrivateKeyFormat(key.toWIF())
       expect(format).toBe('compsipa')
+
+  describe "pairing code", ->
+    it "should decrypt", (done) ->
+      observer =
+        success: (decrypted) ->
+          expect(decrypted).toBe("")
+          done()
+
+      spyOn(observer, "success")
+
+      encryption_phrase = "491fcc9f99a9f978b2cc0a8cef64a43839b886fac0a5e4171ccbcf060e1b6dc9"
+      uid               = "30b1bfb0-cd30-475d-a071-e79c038827a0"
+      payload = "MzNbCMrPmYEs02MeWsFMk/GR1UJaMC4CJI2914DaF0zHnVIT/cGF86nOSx0GpNC32afsXmacesiLLbWb7EdTIWHdgW9+Y5tMI6zpYL+DTCQ="
+
+      WalletCrypto.decrypt(payload, encryption_phrase, 10, observer.success)
+
+      expect(observer.success).toHaveBeenCalled()
