@@ -1486,8 +1486,6 @@ MyWallet.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Pass
   assert.notEqual(seedHexString, undefined, "Seed hex string required");
   assert.notEqual(seedHexString, null, "Seed hex string required");
   assert(accountsArrayPayload, "Accounts payload missing");
-  // bip39Password, secondPassword are optional
-  assert(successCallback, "Success callback required()");
 
   var _success = function(hdWallet) {
     WalletStore.setHDWallet(hdWallet);
@@ -1987,8 +1985,6 @@ MyWallet.getWallet = function(success, error) {
 function internalRestoreWallet(success, error, decrypt_success, build_hd_success) {
   assert(success, 'Success callback required');
   assert(error, 'Error callback required');
-  assert(decrypt_success, 'Decrypt success callback required');
-  assert(build_hd_success, 'Build HD success callback required');
 
   var encryptedWalletData = WalletStore.getEncryptedWalletData();
 
@@ -2002,7 +1998,7 @@ function internalRestoreWallet(success, error, decrypt_success, build_hd_success
     WalletStore.getPassword(),
     function(obj, rootContainer) {
 
-      decrypt_success();
+      decrypt_success && decrypt_success();
 
       WalletStore.setSharedKey(obj.sharedKey);
       var sharedKey = WalletStore.getSharedKey();
@@ -2156,8 +2152,6 @@ MyWallet.resendTwoFactorSms = function(user_guid, success, error) {
 MyWallet.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_required, other_error, fetch_success, decrypt_success, build_hd_success) {
   assert(success, 'Success callback required');
   assert(other_error, 'Error callback required');
-  assert(decrypt_success, 'Decrypt success callback required');
-  assert(build_hd_success, 'Build HD success callback required');
 
   if (!resend_code && WalletStore.isDidSetGuid()) {
     MyWallet.restoreWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error, decrypt_success, build_hd_success);
@@ -2281,8 +2275,6 @@ MyWallet.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedP
 MyWallet.pollForSessionGUID = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_received, other_error, fetch_success, decrypt_success, build_hd_success) {
 
   assert(fetch_success, "Fetch success callback required");
-  assert(decrypt_success, "Decrypt success callback required");
-  assert(build_hd_success, "Build HD success callback required");
 
   if (WalletStore.isPolling()) return;
 
@@ -2329,8 +2321,6 @@ MyWallet.pollForSessionGUID = function(user_guid, shared_key, resend_code, input
 MyWallet.restoreWallet = function(pw, two_factor_auth_key, success, wrong_two_factor_code, other_error, decrypt_success, build_hd_success) {
   assert(success, 'Success callback required');
   assert(other_error, 'Error callback required');
-  assert(decrypt_success, 'Decrypt success callback required');
-  assert(build_hd_success, 'Build HD success callback required');
 
   if (isInitialized || WalletStore.isRestoringWallet()) {
     return;
