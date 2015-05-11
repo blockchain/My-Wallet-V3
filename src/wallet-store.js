@@ -506,6 +506,11 @@ var WalletStore = (function() {
         defaultAccountIdx = 0;
       }
     },
+    changeDefaultAccountIndex: function(accountIdx) {
+      if (defaultAccountIdx === accountIdx) return;
+      WalletStore.setDefaultAccountIndex(accountIdx);
+      MyWallet.backupWalletDelayed();
+    },
     getDefaultAccountIndex: function() {
       return defaultAccountIdx;
     },
