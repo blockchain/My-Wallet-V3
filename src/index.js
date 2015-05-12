@@ -5,5 +5,6 @@ module.exports = {
   Spender: require('./wallet-spender'),
   ImportExport: require('./import-export'),
   BlockchainAPI: require('./blockchain-api'),
-  BlockchainSettingsAPI: require('./blockchain-settings-api')
+  BlockchainSettingsAPI: require('./blockchain-settings-api'),
+  Wallet: require('./w')
 };
