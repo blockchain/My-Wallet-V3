@@ -41,7 +41,7 @@ function decrypt(data, password, pbkdf2_iterations) {
       return decrypted;
     }
   } catch (e) {
-    console.log('Decryption error');
+    console.log('Decryption error for CBC, ISO10126, 10 iterations');
   }
 
   // v1: OFB, nopad, 1 iteration
@@ -54,7 +54,7 @@ function decrypt(data, password, pbkdf2_iterations) {
       return decrypted;
     }
   } catch (e) {
-    console.log('Decryption error');
+    console.log('Decryption error for  OFB, nopad, 1 iteration');
   }
 
   // v1: OFB, ISO7816, 1 iteration
