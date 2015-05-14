@@ -3,10 +3,12 @@ proxyquire = require('proxyquireify')(require)
 WalletStore = {}
 WalletCrypto = {}
 WalletSignup = {}
+$ = {}
 
-stubs = { './wallet-store': WalletStore, './wallet-crypto': WalletCrypto, './wallet-signup': WalletSignup }
+stubs = { './wallet-store': WalletStore, './wallet-crypto': WalletCrypto, './wallet-signup': WalletSignup, 'jquery': $ }
 
 MyWallet = proxyquire('../src/wallet', stubs)
+CryptoJS = require('crypto-js')
 
 # TODO only to get coverage report until there are tests for these files:
 BlockchainSettingsAPI = proxyquire('../src/blockchain-settings-api', {})

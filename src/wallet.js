@@ -3,6 +3,8 @@
 var MyWallet = module.exports = {};
 
 var assert = require('assert');
+var $ = require('jquery');
+var CryptoJS = require('crypto-js');
 var xregexp = require('xregexp');
 var Bitcoin = require('bitcoinjs-lib');
 var ECKey = Bitcoin.ECKey;

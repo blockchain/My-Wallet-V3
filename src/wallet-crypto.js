@@ -1,7 +1,8 @@
 'use strict';
 
 var assert = require('assert');
-
+var $ = require('jquery');
+var CryptoJS = require('crypto-js');
 var sjcl = require('sjcl');
 
 var SUPPORTED_ENCRYPTION_VERSION = 3.0;

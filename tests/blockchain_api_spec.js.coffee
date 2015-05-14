@@ -1,11 +1,12 @@
 proxyquire = require('proxyquireify')(require)
 
+$ = {}
+
 stubs =
-  './wallet':
-     get_history: () ->
+  './wallet': get_history: () ->
+  'jquery': $
 
 BlockchainAPI = proxyquire('../src/blockchain-api', stubs)
-
 
 describe "BlockchainAPI", ->
   beforeEach ->

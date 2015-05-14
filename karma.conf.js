@@ -55,7 +55,6 @@ module.exports = function(karma) {
     },
     
     files: [
-      'build/bower_components.js',
       'src/shared.js',
       // 'tests/**/*.coffee',
       // Or specify individual test files:

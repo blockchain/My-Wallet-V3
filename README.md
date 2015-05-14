@@ -34,7 +34,7 @@ grunt clean
 Remove all installed dependencies:
 
 ```sh
-rm -rf bower_components/ node_modules/
+rm -rf node_modules/
 ```
 
 ## Getting Started

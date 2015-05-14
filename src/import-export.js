@@ -1,6 +1,7 @@
 'use strict';
 
 var assert = require('assert');
+var CryptoJS = require('crypto-js');
 var Bitcoin = require('bitcoinjs-lib');
 var BigInteger = require('bigi');
 var Base58 = require('bs58');

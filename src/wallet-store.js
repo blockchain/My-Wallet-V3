@@ -1,5 +1,7 @@
 'use strict';
 
+var CryptoJS = require('crypto-js');
+
 var MyWallet = require('./wallet');
 var WalletCrypto = require('./wallet-crypto');
 

@@ -15,25 +15,8 @@ module.exports = (grunt) ->
       options:
         separator: ";"
 
-      bower:
-        src: [
-          'bower_components/jquery/dist/jquery.js'
-          'bower_components/cryptojslib/rollups/sha256.js'
-          'bower_components/cryptojslib/rollups/aes.js'
-          'bower_components/cryptojslib/rollups/pbkdf2.js'
-          'bower_components/cryptojslib/components/cipher-core.js'
-          'bower_components/cryptojslib/components/pad-nopadding.js'
-          'bower_components/cryptojslib/components/pad-iso10126.js'
-          'bower_components/cryptojslib/components/pad-zeropadding.js'
-          'bower_components/cryptojslib/components/pad-iso97971.js'
-          'bower_components/cryptojslib/components/mode-ecb.js'
-          'bower_components/cryptojslib/components/mode-ofb.js'
-        ]
-        dest: "build/bower_components.js"
-
       mywallet:
         src: [
-          'build/bower_components.js'
           'build/shared.processed.js'
           'build/blockchain.js'
         ]
@@ -108,15 +91,11 @@ module.exports = (grunt) ->
 
       skip_check_dependencies:
         command: () ->
-          'cp -r node_modules build && cp -r bower_components build'
+          'cp -r node_modules build'
 
       npm_install_dependencies:
         command: () ->
            'cd build && npm install'
-
-      bower_install_dependencies:
-        command: () ->
-           'cd build && ../node_modules/bower/bin/bower install'
 
     shrinkwrap: {}
 
@@ -160,7 +139,6 @@ module.exports = (grunt) ->
     "preprocess"
     "replace:bitcoinjs"
     "browserify:build"
-    "concat:bower"
     "concat:mywallet"
   ]
 
@@ -173,11 +151,9 @@ module.exports = (grunt) ->
     "shell:check_dependencies"
     "clean:shrinkwrap"
     "shell:npm_install_dependencies"
-    "shell:bower_install_dependencies"
     "preprocess"
     "replace:bitcoinjs"
     "browserify:production"
-    "concat:bower"
     "concat:mywallet"
     "uglify:mywallet"
   ]
@@ -191,7 +167,6 @@ module.exports = (grunt) ->
     "preprocess"
     "replace:bitcoinjs"
     "browserify:production"
-    "concat:bower"
     "concat:mywallet"
     "uglify:mywallet"
   ]

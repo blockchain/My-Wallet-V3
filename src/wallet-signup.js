@@ -1,6 +1,8 @@
 'use strict';
 
 var assert = require('assert');
+var $ = require('jquery');
+var CryptoJS = require('crypto-js');
 
 var MyWallet = require('./wallet');
 var WalletStore = require('./wallet-store');
