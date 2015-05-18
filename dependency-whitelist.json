@@ -6,8 +6,8 @@
     "repo" : "cryptocoinjs/bigi"
   },
   "bip39" : {
-    "version": "2.1.0",
-    "commits" : ["69c0e2b6651fab5dbe030f51a479c2edac828d02", "1e60a65062137aad04a5ba8587d387b318d9b545"],
+    "version": "2.1.2",
+    "commits" : ["3beea7b1212881f59a9306dc0893c95cc583b488"],
     "repo" : "weilu/bip39"
   },
   "bitcoinjs-lib" : {
