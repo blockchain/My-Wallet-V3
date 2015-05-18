@@ -30,11 +30,6 @@
     "commits" : ["fc69aaf7d9cd56ac06e0cda6cdf2e4625c7dcaf3"],
     "repo" : "slevithan/XRegExp"
   },
-  "cryptojslib" : {
-    "version": "3.1.2",
-    "commits" : ["1c6bda1e3de6269d0b219cc0b525766640ca22ac"],
-    "repo" : "sytelus/CryptoJS"
-  },
   "util" : {
     "version" : "0.10.3",
     "commits" : ["b5d10a26402c3b60ce496e675a13c58bbed47801"],
@@ -89,5 +84,10 @@
     "version" : "2.0.1",
     "commits" : ["849c4a44af3275dd1fa5ae221e5e87304b43e165"],
     "repo" : "crypto-browserify/randombytes"
+  },
+  "crypto-js" : {
+    "version" : "3.1.2",
+    "commits" : ["8d4a2d3de4d072ba772d794a97042be04a66e38c"],
+    "repo" : "evanvosberg/crypto-js"
   }
 }
