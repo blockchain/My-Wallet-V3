@@ -76,8 +76,8 @@
     "repo" : "crypto-browserify/ripemd160"
   },
   "sha.js" : {
-    "version" : "2.3.6",
-    "commits" : ["73ae700d77d9be033ddc02820b7bc7958c44e0f8"],
+    "version" : "2.4.0",
+    "commits" : ["7ae291a222663f525f3339e3d2fec0493b13606a"],
     "repo" : "crypto-browserify/sha.js"
   },
   "create-hmac" : {
