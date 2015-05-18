@@ -89,5 +89,10 @@
     "version" : "3.1.2",
     "commits" : ["8d4a2d3de4d072ba772d794a97042be04a66e38c"],
     "repo" : "evanvosberg/crypto-js"
+  },
+  "rsvp" : {
+    "version" : "3.0.18",
+    "commits" : ["1979d5ad89293dadbe7656dd53d152f7426fa35e"],
+    "repo" : "tildeio/rsvp.js"
   }
 }
