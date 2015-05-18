@@ -82,7 +82,7 @@ def check_commits!(deps, whitelist, output_deps, type)
       elsif requested_digits[2] == "*" and first_two_digits_match(requested_version, whitelist[key]['version'])
       else
         # https://github.com/weilu/bip39/compare/2.1.0...2.1.2
-        url = "https://github.com/#{ whitelist[key]["repo"] }/compare/#{ whitelist[key]['version'] }..#{ requested_version }"
+        url = "https://github.com/#{ whitelist[key]["repo"] }/compare/#{ whitelist[key]['version'] }...#{ requested_version }"
         puts "#{ key } version #{ requested_version } has not been whitelisted yet. Most recent: #{ whitelist[key]['version'] }. Difference: \n" + url
         @failed = true
         next
