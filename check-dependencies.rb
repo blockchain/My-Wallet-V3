@@ -16,6 +16,8 @@ require 'open-uri'
 
 whitelist = JSON.parse(File.read('dependency-whitelist.json'))
 
+@failed = false
+
 ##########
 # Common #
 ##########
@@ -79,8 +81,10 @@ def check_commits!(deps, whitelist, output_deps, type)
       elsif requested_digits[2] != "*" && requested_version == whitelist[key]['version'] # Exact match
       elsif requested_digits[2] == "*" and first_two_digits_match(requested_version, whitelist[key]['version'])
       else
-        abort "#{ key } version #{ requested_version } has not been whitelisted yet. Most recent: #{ whitelist[key]['version'] }"
-        # TODO: generate URL showing all commits since the last whitelisted one
+        # https://github.com/weilu/bip39/compare/2.1.0...2.1.2
+        url = "https://github.com/#{ whitelist[key]["repo"] }/compare/#{ whitelist[key]['version'] }..#{ requested_version }"
+        puts "#{ key } version #{ requested_version } has not been whitelisted yet. Most recent: #{ whitelist[key]['version'] }. Difference: \n" + url
+        @failed = true
         next
       end
 
@@ -150,7 +154,8 @@ def check_commits!(deps, whitelist, output_deps, type)
         check_commits!(deps[key]["dependencies"], whitelist, output_deps[key]["dependencies"], type)
       end
     else
-      abort "#{key} not whitelisted!"
+      puts "#{key} not whitelisted!"
+      @failed = true
     end
   end
 end
@@ -191,7 +196,7 @@ output.delete("license")
 output.delete("repository")
 output["scripts"].delete("test")
 if package["name"] == "My-Wallet-HD"
-  output["scripts"]["postinstall"] = "../node_modules/bower/bin/bower install && cd node_modules/sjcl && ./configure --with-sha1 && make && cd -"
+  output["scripts"]["postinstall"] = "cd node_modules/sjcl && ./configure --with-sha1 && make && cd -"
 elsif package["name"] == "angular-blockchain-wallet"
   output["scripts"].delete("postinstall")
 else
@@ -204,18 +209,24 @@ File.write("build/package.json", JSON.pretty_generate(output))
 #########
 # Bower #
 #########
+# Only used by the frontend
+if package["name"] == "angular-blockchain-wallet"
+  bower = JSON.parse(File.read('bower.json'))
+  output = bower.dup
+  output.delete("authors")
+  output.delete("main")
+  output.delete("ignore")
+  output.delete("license")
+  output.delete("keywords")
+  # output.delete("devDependencies") # TODO don't load LocalStorageModule in production
 
-bower = JSON.parse(File.read('bower.json'))
-output = bower.dup
-output.delete("authors")
-output.delete("main")
-output.delete("ignore")
-output.delete("license")
-output.delete("keywords")
-# output.delete("devDependencies") # TODO don't load LocalStorageModule in production
+  deps = bower["dependencies"]
 
-deps = bower["dependencies"]
+  check_commits!(deps, whitelist, output["dependencies"], :bower)
 
-check_commits!(deps, whitelist, output["dependencies"], :bower)
+  File.write("build/bower.json", JSON.pretty_generate(output))
+end
 
-File.write("build/bower.json", JSON.pretty_generate(output))
+if @failed
+  abort "Please fix the above issues..."
+end
