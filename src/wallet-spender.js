@@ -29,7 +29,7 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
   }
 
   var payment = {
-    note:              null,
+    note:              note,
     fromAddress:       null,
     fromAccountIndex:  null,
     fromAccount:       null,
