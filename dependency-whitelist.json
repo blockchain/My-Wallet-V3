@@ -94,5 +94,10 @@
     "version" : "3.0.18",
     "commits" : ["1979d5ad89293dadbe7656dd53d152f7426fa35e"],
     "repo" : "tildeio/rsvp.js"
+  },
+  "pbkdf2" : {
+    "version" : "3.0.4",
+    "commits" : ["c9b595c784154e433995faf6cd81813aef29c713"],
+    "repo" : "crypto-browserify/pbkdf2"
   }
 }
