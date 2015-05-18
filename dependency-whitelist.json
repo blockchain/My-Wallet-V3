@@ -11,8 +11,8 @@
     "repo" : "weilu/bip39"
   },
   "bitcoinjs-lib" : {
-    "version": "1.5.6",
-    "commits" : ["7f2f81233aa6e43e1d36269944c8389032ebfb5f"],
+    "version": "1.5.7",
+    "commits" : ["d50d49bd29010fc1f9d2fef3038e8b1cbabc2abc"],
     "repo" : "bitcoinjs/bitcoinjs-lib"
   },
   "bs58" : {
