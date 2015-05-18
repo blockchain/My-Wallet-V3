@@ -26,7 +26,7 @@ def first_two_digits_match(a, b)
   # e.g. "1.1.x" and "1.1.3" matches
   #      "1.1.x" and "1.2.0" does not match
   
-  a.split(".")[0].to_i <= b.split(".")[0].to_i && a.split(".")[1].to_i <= b.split(".")[1].to_i
+  a.split(".")[0].to_i == b.split(".")[0].to_i && a.split(".")[1].to_i == b.split(".")[1].to_i
 end
 
 
@@ -92,6 +92,7 @@ def check_commits!(deps, whitelist, output_deps, type)
       url = "https://api.github.com/repos/#{ whitelist[key]["repo"] }/tags"
       # puts url
       tags = getJSONfromURL(url)
+      
       tag = nil
 
       tags.each do |candidate|
@@ -99,10 +100,14 @@ def check_commits!(deps, whitelist, output_deps, type)
           tag = candidate
           break
         elsif requested_digits[2] == "*" && first_two_digits_match(requested_version, candidate["name"])
-          # TODO: warn if not using the latest version in range
+          if whitelist[key]["version"] < candidate["name"].gsub("v","")
+            puts "Warning: a more recent version #{ candidate["name"] } is available for #{ key }"
+          else
+            tag = candidate
+            break
+          end
           
-          tag = candidate
-          break
+
         end
       end
 
