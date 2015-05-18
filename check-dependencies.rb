@@ -77,7 +77,8 @@ def check_commits!(deps, whitelist, output_deps, type)
       requested_digits = requested_version.split(".")
       
       if requested_version[0] == "~" || requested_digits.length != 3 || requested_digits[2] == "x"
-        abort "Version format not supported: #{ key } #{ requested_version }"
+        puts "Version format not supported: #{ key } #{ requested_version }"
+        @failed = true
       elsif requested_digits[2] != "*" && requested_version == whitelist[key]['version'] # Exact match
       elsif requested_digits[2] == "*" and first_two_digits_match(requested_version, whitelist[key]['version'])
       else
@@ -115,7 +116,8 @@ def check_commits!(deps, whitelist, output_deps, type)
           end
 
         else
-          abort "Error: v#{ dep['version'] } of #{ key } does not match the whitelist."
+          puts "Error: v#{ dep['version'] } of #{ key } does not match the whitelist."
+          @failed = true
           next
         end
 
@@ -160,51 +162,53 @@ def check_commits!(deps, whitelist, output_deps, type)
   end
 end
 
+package = JSON.parse(File.read('package.json'))
+
 #########
 # NPM   #
 #########
+if package["name"] == "My-Wallet-HD" # Only My-Wallet-HD uses NPM
 
-shrinkwrap = JSON.parse(File.read('npm-shrinkwrap.json'))
-deps = shrinkwrap["dependencies"]
+  shrinkwrap = JSON.parse(File.read('npm-shrinkwrap.json'))
+  deps = shrinkwrap["dependencies"]
 
-output = JSON.parse(File.read('npm-shrinkwrap.json')) # More reliable than cloning
-output_deps = output["dependencies"]
+  output = JSON.parse(File.read('npm-shrinkwrap.json')) # More reliable than cloning
+  output_deps = output["dependencies"]
 
-check_commits!(deps, whitelist, output_deps, :npm)
+  check_commits!(deps, whitelist, output_deps, :npm)
 
-# TODO: shrinkwrap each subdependency and/or disallow packages to install dependencies themselves?
+  # TODO: shrinkwrap each subdependency and/or disallow packages to install dependencies themselves?
 
-File.write("build/npm-shrinkwrap.json", JSON.pretty_generate(output))
+  File.write("build/npm-shrinkwrap.json", JSON.pretty_generate(output))
 
 
-package = JSON.parse(File.read('package.json'))
 
-output = package.dup
+  output = package.dup
 
-# output["dependencies"] = {}
+  # output["dependencies"] = {}
 
-# Remove unessential dev dependencies:
-output["devDependencies"].keys.each do |devDep|
-  output["devDependencies"].delete(devDep) unless ["grunt-contrib-clean", "grunt-contrib-concat", "grunt-surround", "grunt-contrib-coffee"].include?(devDep)
+  # Remove unessential dev dependencies:
+  output["devDependencies"].keys.each do |devDep|
+    output["devDependencies"].delete(devDep) unless ["grunt-contrib-clean", "grunt-contrib-concat", "grunt-surround", "grunt-contrib-coffee"].include?(devDep)
+  end
+
+  output.delete("author")
+  output.delete("contributors")
+  output.delete("homepage")
+  output.delete("bugs")
+  output.delete("license")
+  output.delete("repository")
+  output["scripts"].delete("test")
+  if package["name"] == "My-Wallet-HD"
+    output["scripts"]["postinstall"] = "cd node_modules/sjcl && ./configure --with-sha1 && make && cd -"
+  elsif package["name"] == "angular-blockchain-wallet"
+    output["scripts"].delete("postinstall")
+  else
+    abort("Package renamed? " + package["name"])
+  end
+
+  File.write("build/package.json", JSON.pretty_generate(output))
 end
-
-output.delete("author")
-output.delete("contributors")
-output.delete("homepage")
-output.delete("bugs")
-output.delete("license")
-output.delete("repository")
-output["scripts"].delete("test")
-if package["name"] == "My-Wallet-HD"
-  output["scripts"]["postinstall"] = "cd node_modules/sjcl && ./configure --with-sha1 && make && cd -"
-elsif package["name"] == "angular-blockchain-wallet"
-  output["scripts"].delete("postinstall")
-else
-  abort("Package renamed? " + package["name"])
-end
-
-File.write("build/package.json", JSON.pretty_generate(output))
-
 
 #########
 # Bower #
