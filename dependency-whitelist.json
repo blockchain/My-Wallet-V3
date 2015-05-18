@@ -71,8 +71,8 @@
     "repo" : "crypto-browserify/createHash"
   },
   "ripemd160" : {
-    "version" : "1.0.0",
-    "commits" : ["60345ba3ca19874b2066ac430e492cff387ad7c5"],
+    "version" : "1.0.1",
+    "commits" : ["42172c6527a55a24a9ee306996b4a8578d4780db"],
     "repo" : "crypto-browserify/ripemd160"
   },
   "sha.js" : {
