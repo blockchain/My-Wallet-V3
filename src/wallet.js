@@ -26,7 +26,7 @@ var isInitialized = false;
 
 // used on MyWallet
 MyWallet.securePost = function(url, data, success, error) {
-  var clone = jQuery.extend({}, data);
+  var clone = $.extend({}, data);
   var sharedKey = WalletStore.getSharedKey();
 
   if (!data.sharedKey) {
