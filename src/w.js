@@ -17,8 +17,8 @@ var WalletCrypto = require('./wallet-crypto');
 var HDWallet = require('./hd-wallet');
 var HDAccount = require('./hd-account');
 var Address = require('./a');
+var Helpers = require('./helpers');
 
-function isNumber(num) {return typeof num == 'number' && !isNaN(num);}
 ////////////////////////////////////////////////////////////////////////////////
 // Wallet
 
@@ -64,7 +64,7 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function() { return this._pbkdf2_iterations;},
     set: function(n) {
-      if(isNumber(n)) this._pbkdf2_iterations = n;
+      if(Helpers.isNumber(n)) this._pbkdf2_iterations = n;
     }
   },
   "addresses": {

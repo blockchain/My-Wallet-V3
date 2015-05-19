@@ -5,9 +5,7 @@ module.exports = Address;
 var Base58       = require('bs58');
 var Bitcoin      = require('bitcoinjs-lib');
 var WalletCrypto = require('./wallet-crypto');
-////////////////////////////////////////////////////////////////////////////////
-function isString(str) {return typeof str == 'string' || str instanceof String;}
-function isAlphaNum(str) {return /^[\-+,._\w\d\s]+$/.test(str);}
+var Helpers      = require('./helpers');
 ////////////////////////////////////////////////////////////////////////////////
 // Address class
 function Address(object){
@@ -40,7 +38,7 @@ Object.defineProperties(Address.prototype, {
     configurable: false,
     get: function() { return this._label;},
     set: function(str) {
-      if (isString(str) && isAlphaNum(str)){this._label = str;};
+      if (Helpers.isString(str) && Helpers.isAlphaNum(str)){this._label = str;};
     }
   },
   "created_time": {

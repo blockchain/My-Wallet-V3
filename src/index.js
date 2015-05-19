@@ -8,6 +8,8 @@ module.exports = {
   BlockchainSettingsAPI: require('./blockchain-settings-api'),
   Wallet: require('./w'),
   Address: require('./a'),
+  Helpers: require('./helpers'),
+  // only for debugging
   Bitcoin: require('bitcoinjs-lib'),
   Base58: require('bs58'),
   BigInteger: require('bigi')
