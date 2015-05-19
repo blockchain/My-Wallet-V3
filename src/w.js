@@ -4,9 +4,7 @@ module.exports = Wallet;
 
 ////////////////////////////////////////////////////////////////////////////////
 // dependencies
-
 var assert = require('assert');
-var xregexp = require('xregexp');
 var Bitcoin = require('bitcoinjs-lib');
 var ECKey = Bitcoin.ECKey;
 var BigInteger = require('bigi');
@@ -16,174 +14,150 @@ var BIP39 = require('bip39');
 
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
-var WalletSignup = require('./wallet-signup');
-var ImportExport = require('./import-export');
 var HDWallet = require('./hd-wallet');
 var HDAccount = require('./hd-account');
-var Transaction = require('./transaction');
-var BlockchainAPI = require('./blockchain-api');
 var Address = require('./a');
 
+function isNumber(num) {return typeof num == 'number' && !isNaN(num);}
 ////////////////////////////////////////////////////////////////////////////////
-// Address class
+// Wallet
 
+function Wallet(object) {
+  // private members
+  var obj = object || {};
 
-// function Address(obj, parent){
+  this._guid = obj.guid;
+  this._sharedKey = obj.sharedKey;
+  this._double_encryption = obj.double_encryption;
+  this._dpasswordhash = obj.dpasswordhash;
+  //options
+  this._pbkdf2_iterations = obj.options.pbkdf2_iterations;
+  this._fee_policy = obj.options.fee_policy;
 
-//   function isString(str) {return typeof str == 'string' || str instanceof String;}
-//   function isAlphaNum(str) {return /^[\-+,._\w\d\s]+$/.test(str);}
-
-//   // members
-//   var addr                   = obj.addr;
-//   var priv                   = obj.priv;
-//   var tag                    = obj.tag;
-//   var label                  = obj.label;
-//   var created_time           = obj.created_time;
-//   var created_device_name    = obj.created_device_name;
-//   var created_device_version = obj.created_device_version;
-//   var wallet   = parent;
-//   var archived = undefined;
-
-//   if(tag === 0){archived = false;}
-//   if(tag === 2){archived = true;}
-
-//   // getters and setters
-//   Object.defineProperties(this, {
-//     "addr": {
-//       enumerable: true,
-//       get: function() { return addr;}
-//     },
-//     "priv": {
-//       enumerable: true,
-//       get: function() { return priv;}
-//     },
-//     "label": {
-//       enumerable: true,
-//       get: function() { return label;},
-//       set: function(str) {
-//         if (isString(str) && isAlphaNum(str)){label = str;};
-//       }
-//     },
-//     "tag": {
-//       enumerable: true,
-//       get: function() { return tag;},
-//     },
-//     "created_time": {
-//       enumerable: true,
-//       get: function() {return created_time;}
-//     },
-//     "created_device_name": {
-//       enumerable: true,
-//       get: function() {return created_device_name;}
-//     },
-//     "created_device_version": {
-//       enumerable: true,
-//       get: function() {return created_device_version;}
-//     },
-//     ////////////////////////////////////////////////////////////////////////////
-//     // computed properties
-//     "archived": {
-//       enumerable: false,
-//       get: function() { return archived;},
-//       set: function(value) {
-//         if (typeof(value) === "boolean") {
-//           archived = value
-//           if (archived) {tag = 2;} else {tag = 0;}
-//         };
-//       }
-//     }
-//   });
-//   //////////////////////////////////////////////////////////////////////////////
-//   // public methods
-//   // this.archive = function(){
-//   //   tag = 2;
-//   //   archived = true;
-//   // };
-//   // this.unArchive = function(){
-//   //   tag = 0;
-//   //   archived = false;
-//   // };
-//   this.encrypt = function(pw) {
-//     priv = priv === null || pw === null || pw === undefined
-//       ? priv
-//       : WalletCrypto.encryptSecretWithSecondPassword(priv, pw, wallet.sharedKey, wallet.pbkdf2_iterations);
-//     if (priv === null) { throw 'Error Encoding key'; };
-//   };
-//   this.decrypt = function(pw) {
-//     priv = priv === null || pw === null || pw === undefined
-//       ? priv
-//       : WalletCrypto.decryptSecretWithSecondPassword(priv, pw, wallet.sharedKey, wallet.pbkdf2_iterations);
-//     if (priv === null) { throw 'Error Decoding key'; };
-//   };
-//   this.fromKey = function(_key, _pw, _label){
-//     addr     = _key.pub.getAddress().toString();
-//     priv     = Base58.encode(_key.d.toBuffer(32));
-//     created_time           = Date.now();
-//     created_device_name    = APP_NAME;
-//     created_device_version = APP_VERSION;
-//     // this.unArchive();
-//     this.archived = false;
-//     this.label = _label;
-//     this.encrypt(_pw);
-//   };
-// }
-
-
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-// constructor
-
-function Wallet(g, sk) {
-  // members
-  var guid = g;
-  var sharedKey = sk;
-  var pbkdf2_iterations = 5000;
-
-  var keys = {};
-  var hdWallet  = {};
-
-  Object.defineProperties(this, {
-
-    "guid": {
-      enumerable: true,
-      get: function() { return guid;}
-    },
-    "sharedKey": {
-      enumerable: true,
-      get: function() { return sharedKey;}
-    },
-    "pbkdf2_iterations": {
-      enumerable: true,
-      get: function() { return pbkdf2_iterations;}
-    }
-  });
-
-  this.toJSON = function() {
-    var newWallet = new Wallet();
-    newWallet["keys"] = this.keys();
-    return newWallet;
-  };
-  this.addKey = function(_key, _password, _label) {
-    var addr = _key.pub.getAddress().toString();
-    var a = new Address({}, this);
-    keys[addr] = a.fromKey(_key, _password, _label);
-  };
-  this.addKeyFromWIF = function(wif, password, label) {
-    var k = Bitcoin.ECKey.fromWIF(wif);
-    this.addKey(k, password, label);
-  };
-  this.key = function(addr) {return keys[addr];};
-  this.keys = function() {return this.addresses().map(this.key);};
-  this.addresses = function() {return Object.keys(keys)};
-  this.encrypt = function(pw) {
-    function f(k) {k.encrypt(pw);};
-    this.keys().map(f);
-  };
-  this.decrypt = function(pw) {
-    function f(k) {k.decrypt(pw);};
-    this.keys().map(f);
-  };
+  this._addresses = object.keys
+    ? object.keys.reduce(function(o, v) { o[v.addr] = new Address(v); return o;}, {})
+    : {};
 }
+
+Object.defineProperties(Wallet.prototype, {
+  "guid": {
+    configurable: false,
+    get: function() { return this._guid;}
+  },
+  "sharedKey": {
+    configurable: false,
+    get: function() { return this._sharedKey;}
+  },
+  "double_encryption": {
+    configurable: false,
+    get: function() { return this._double_encryption;}
+  },
+  "dpasswordhash": {
+    configurable: false,
+    get: function() { return this._dpasswordhash;}
+  },
+  "fee_policy": {
+    configurable: false,
+    get: function() { return this._fee_policy;}
+  },
+  "pbkdf2_iterations": {
+    configurable: false,
+    get: function() { return this._pbkdf2_iterations;},
+    set: function(n) {
+      if(isNumber(n)) this._pbkdf2_iterations = n;
+    }
+  },
+  "addresses": {
+    configurable: false,
+    get: function(){return Object.keys(this._addresses);}
+  },
+  "key": {
+    configurable: false,
+    value: function(addr) {return this._addresses[addr];}
+  },
+  "keys": {
+    configurable: false,
+    get: function() {
+      var that = this;
+      return that.addresses.map(function(a){return that.key(a)});
+    }
+  }
+});
+
+Wallet.prototype.toJSON = function(){
+  var wallet = {};
+  wallet.options = {};
+
+  wallet.guid = this.guid;
+  wallet.sharedKey = this.sharedKey;
+  wallet.double_encryption = this.double_encryption;
+  wallet.dpasswordhash = this.dpasswordhash;
+
+  wallet.options.pbkdf2_iterations = this.pbkdf2_iterations;
+  wallet.options.fee_policy = this.fee_policy;
+
+  wallet.keys = this.keys;
+
+  return wallet;
+};
+
+
+Wallet.prototype.importLegacyAddress = function(key, label, secPass){
+  var ad = Address.import(key, label);
+  ad.encrypt(secPass, this.sharedKey, this.pbkdf2_iterations);
+  this._addresses[ad.addr] = ad;
+};
+
+Wallet.prototype.newLegacyAddress = function(label, pw){
+  var ad = Address.new(label);
+  ad.encrypt(pw, this.sharedKey, this.pbkdf2_iterations);
+  this._addresses[ad.addr] = ad;
+};
+
+Wallet.prototype.setDefaultPbkdf2Iterations = function(){
+  this._pbkdf2_iterations = 5000;
+};
+
+Wallet.prototype.encrypt = function(pw){
+  var that = this;
+  function f(k) {k.encrypt(pw, that.sharedKey, that.pbkdf2_iterations);};
+  this.keys.map(f);
+};
+
+Wallet.prototype.decrypt = function(pw){
+  var that = this;
+  function f(k) {k.decrypt(pw, that.sharedKey, that.pbkdf2_iterations);};
+  this.keys.map(f);
+};
+
+// example wallet. This should be the new constructor (ask server data)
+Wallet.new = function(){
+  var object = {};
+
+  object.guid = "37f008fe-4456-43b8-8862-d2ac67053f52";
+  object.sharedKey = "f5c0e85d-b379-4588-ad2b-052360b6e6ec";
+  object.double_encryption = true;
+  object.dpasswordhash = "9f334a27ba54e317ae351177c5cdb1ec5d1463e7a03ee0da6fb7ae6aada72682";
+  //options
+  object.options.fee_policy = 0;
+  object.options.pbkdf2_iterations = 5000;
+  // object.keys = [];
+  return new Wallet(object);
+};
+
+Wallet.reviver = function(k,v){
+  if (k === '') return new Wallet(v);
+  return v;
+};
+
+// example of serialization
+// var x = new Blockchain.Wallet.new();
+// x.newLegacyAddress();
+// x.newLegacyAddress();
+// x.newLegacyAddress();
+// var j = JSON.stringify(x);
+// var t = JSON.parse(j,Blockchain.Wallet.reviver);
+
+// loading old wallet to new model
+// var oldJson = Blockchain.MyWallet.makeWalletJSON();
+// var newModel = JSON.parse(oldJson,Blockchain.Wallet.reviver);
