@@ -206,7 +206,6 @@ describe "Wallet", ->
 
     it "should set the PBKDF2 iterations when 2nd password is enabled", ->
       WalletStore.setDoubleEncryption(true)
-
       observer = {}
 
       observer.success = () ->
@@ -227,6 +226,8 @@ describe "Wallet", ->
       spyOn(MyWallet, "getAccounts").and.returnValue 0
       spyOn(WalletStore, "didUpgradeToHd").and.returnValue false
 
+      # set previous pbkdf2 iterations
+      WalletStore.setPbkdf2Iterations(9967);
       MyWallet.setPbkdf2Iterations(pbkdf2_iterations, observer.success, observer.error, observer.getPassword)
 
       expect(observer.success).toHaveBeenCalled()
