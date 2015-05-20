@@ -60,7 +60,7 @@ def check_commits!(deps, whitelist, output_deps, type)
   
   deps.keys.each do |key|
     if whitelist["ignore"].include? key # Skip check
-      unless ["angular", "angular-mocks", "angular-animate", "angular-bootstrap", "angular-cookies", "angular-sanitize", "bootstrap-css-only"].include? key   # Skip package altoghether 
+      unless ["angular", "angular-mocks", "angular-animate", "angular-bootstrap", "angular-cookies", "angular-sanitize", "angular-translate-loader-static-files","bootstrap-sass"].include? key   # Skip package altoghether 
         output_deps.delete(key)
       end
       next
