@@ -96,7 +96,8 @@ function hashPassword(password, iterations) {
  */
 // used on iOS, frontend and MyWallet
 MyWallet.setPbkdf2Iterations = function(pbkdf2_iterations, success, error, getPassword) {
-  var previous_pbkdf2_iterations = WalletStore.setPbkdf2Iterations(pbkdf2_iterations);
+  var previous_pbkdf2_iterations = WalletStore.getPbkdf2Iterations(pbkdf2_iterations);
+  WalletStore.setPbkdf2Iterations(pbkdf2_iterations);
 
   if(pbkdf2_iterations == previous_pbkdf2_iterations) {
     success();
