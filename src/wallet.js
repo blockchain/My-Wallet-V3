@@ -1010,6 +1010,7 @@ MyWallet.processTransaction = function(tx) {
   transaction.confirmations = MyWallet.getConfirmationsForTx(WalletStore.getLatestBlock(), tx);
 
   transaction.txTime = tx.time;
+  transaction.publicNote = tx.note || null;
   transaction.note = WalletStore.getNote(tx.hash);
   transaction.tags = WalletStore.getTags(tx.hash);
   transaction.size = tx.size;
