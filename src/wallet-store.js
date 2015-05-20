@@ -140,7 +140,8 @@ var WalletStore = (function() {
     // Public functions
     ////////////////////////////////////////////////////////////////////////////
     setPbkdf2Iterations: function(iterations) {
-      return pbkdf2_iterations = iterations;
+      pbkdf2_iterations = iterations;
+      return;
     },
     getPbkdf2Iterations: function() {
       return pbkdf2_iterations;
