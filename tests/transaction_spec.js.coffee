@@ -217,6 +217,7 @@ describe "Transaction", ->
           'hash': 'cfb77ea99f7d97e551afae96e1fe028e56933621d8cc4342b399fba03bfe8826'
           'confirmations': 71
           'txTime': 1425942592
+          'publicNote': null
           'note': null
           'tags': []
           'size': 226
@@ -326,6 +327,7 @@ describe "Transaction", ->
             'hash': 'b0cf5a859187e9c0cd7f7836fac88ade98713021eb2c3bcb92d677ac4a2a45ba'
             'confirmations': 8
             'txTime': 1419598158
+            'publicNote': null
             'note': null
             'tags': []
             'size': 226
@@ -400,6 +402,7 @@ describe "Transaction", ->
           'hash': '62636544b31da6a14a419ab1ee3a253bb1ebca65175d351ba4bb54b00b896a87'
           'confirmations': 6
           'txTime': 1425727751
+          'publicNote': null
           'note': null
           'tags': []
           'size': 191
@@ -552,6 +555,7 @@ describe "Transaction", ->
             "hash": "fb405e49418ba1541e7c9419fbb74e97de7115c5af1e6e2b44d9db5faea90604",
             "confirmations": 0,
             "txTime": 1427744469,
+            "publicNote": null,
             "note": null,
             "tags": [],
             "size": 669,
@@ -647,6 +651,7 @@ describe "Transaction", ->
           'hash': '68ca0a6593f546ab50a41f70b3241795f80d16b8ede7a238f3b9a5b6520f6a6d'
           'confirmations': 3
           'txTime': 1425659266
+          'publicNote': null
           'note': null
           'tags': []
           'size': 225
@@ -754,6 +759,7 @@ describe "Transaction", ->
           'hash': 'eb70c6df08de770782b351c84fb2a96ea100d37ff8edcad579c32c52213c26f7'
           'confirmations': 27
           'txTime': 1419596460
+          'publicNote': null
           'note': null
           'tags': []
           'size': 225
@@ -846,6 +852,7 @@ describe "Transaction", ->
         'hash': '391cfffa273d82866b367af7941fb3aca35b5a1a95003140a148166bf5d02ee8'
         'confirmations': 37
         'txTime': 1419595953
+        'publicNote': null
         'note': null
         'tags': []
         'size': 257
@@ -937,6 +944,7 @@ describe "Transaction", ->
         'hash': '7134e24bdc3a26522e251dfd1e4c2f94b2fb63541d65eda323a87456bb80de9f'
         'confirmations': 0
         'txTime': 1425918981
+        'publicNote': null
         'note': null
         'tags': []
         'size': 258
@@ -1030,6 +1038,7 @@ describe "Transaction", ->
         'hash': '6c3224f1bd35ec8e57fc8494c65f6964ba4eec8eba1a1b6c77410a480cba6a01'
         'confirmations': 0
         'txTime': 1425915550
+        'publicNote': null
         'note': null
         'tags': []
         'size': 257
@@ -1135,6 +1144,7 @@ describe "Transaction", ->
           'hash': '9d470a7518f3f98b865f2c68f4a39f64138fc61807ba4168764b104798800911'
           'confirmations': 0
           'txTime': 1425912653
+          'publicNote': null
           'note': null
           'tags': []
           'size': 226
@@ -1229,6 +1239,7 @@ describe "Transaction", ->
           'hash': '1ae6e674f0ea63284ea471f2809f5c84574237d589e16eee356c76d691fe9272'
           'confirmations': 25
           'txTime': 1420717021
+          'publicNote': null
           'note': null
           'tags': []
           'size': 226
@@ -1332,6 +1343,7 @@ describe "Transaction", ->
         "hash": "3d14659f29c8d7380cc9998e1d696494e1a1cd27e030b1824499b5ce3afec5ca",
         "confirmations": 4,
         "txTime": 1426761515,
+        "publicNote": null,
         "note": "Naar email",
         "tags": [],
         "size": 225,
@@ -1437,6 +1449,7 @@ describe "Transaction", ->
         "hash": "f7cab2c5c2df517fae77e90cd1d85f77b826e92b4769113cbfb9aff61a9b5b81",
         "confirmations": 232,
         "txTime": 1426623900,
+        "publicNote": null,
         "note": null,
         "tags": [],
         "size": 225,
