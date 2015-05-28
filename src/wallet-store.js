@@ -848,9 +848,11 @@ var WalletStore = (function() {
     },
     setLogoutTime: function(logout_time) {
       wallet_options.logout_time = logout_time;
+      this.resetLogoutTimeout();
+    },
+    resetLogoutTimeout: function() {
       clearInterval(this.getLogoutTimeout());
-      var log_time_out = setTimeout(MyWallet.logout, this.getLogoutTime());
-      this.setLogoutTimeout(log_time_out);
+      this.setLogoutTimeout(setTimeout(MyWallet.logout, this.getLogoutTime()));
     },
     getFeePolicy: function() {
       return wallet_options.fee_policy;
