@@ -65,13 +65,13 @@ Object.defineProperties(Address.prototype, {
 });
 
 Address.import = function(key, label){
-  var object = {};
-  // private members
-  object.addr  = key.pub.getAddress().toString();
-  object.priv  = Base58.encode(key.d.toBuffer(32));
-  object.created_time           = Date.now();
-  object.created_device_name    = APP_NAME;
-  object.created_device_version = APP_VERSION;
+  var object = {
+    addr                   : key.pub.getAddress().toString(),
+    priv                   : Base58.encode(key.d.toBuffer(32)),
+    created_time           : Date.now(),
+    created_device_name    : APP_NAME,
+    created_device_version : APP_VERSION
+  };
   //initialization
   var address = new Address(object);
   address.label    = label;
@@ -90,29 +90,34 @@ Address.reviver = function(k,v){
 }
 
 Address.prototype.toJSON = function(){
-  var address = {};
-  address.addr = this.addr;
-  address.priv = this.priv;
-  address.tag = this.tag;
-  address.label = this.label;
-  address.created_time = this.created_time;
-  address.created_device_name = this.created_device_name;
-  address.created_device_version = this.created_device_version;
+  var address = {
+    addr: this.addr,
+    priv: this.priv,
+    tag: this.tag,
+    label: this.label,
+    created_time: this.created_time,
+    created_device_name: this.created_device_name,
+    created_device_version: this.created_device_version
+  };
   return address;
 };
 
 Address.prototype.encrypt = function(password, sharedKey, pbkdf2Iterations){
-  this._priv = !password || !sharedKey || !pbkdf2Iterations
+  var priv = !password || !sharedKey || !pbkdf2Iterations
     ? this._priv
     : WalletCrypto.encryptSecretWithSecondPassword(this._priv, password, sharedKey, pbkdf2Iterations);
-  if (this._priv === null) { throw 'Error Encoding key'; };
+  if (!priv) { throw 'Error Encoding key'; };
+  this._priv = priv;
+  return this;
 };
 
 Address.prototype.decrypt = function(password, sharedKey, pbkdf2Iterations){
-  this._priv = !password || !sharedKey || !pbkdf2Iterations
+  var priv = !password || !sharedKey || !pbkdf2Iterations
     ? this._priv
     : WalletCrypto.decryptSecretWithSecondPassword(this._priv, password, sharedKey, pbkdf2Iterations);
-  if (this._priv === null) { throw 'Error Decoding key'; };
+  if (!priv) { throw 'Error Decoding key'; };
+  this._priv = priv;
+  return this;
 };
 
 // JSON serialization

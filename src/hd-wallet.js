@@ -30,20 +30,20 @@ function HDWallet(seedHex, bip39Password, second_password) {
 
 HDWallet.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Password, secondPassword, success, error) {
   assert(typeof(bip39Password) === "string", "BIP 39 password must be set or an empty string");
-
+  console.log(accountsArrayPayload);
   var hdwallet = new HDWallet(seedHexString, bip39Password, secondPassword);
 
   for (var i = 0; i < accountsArrayPayload.length; i++) {
     var accountPayload = accountsArrayPayload[i];
     var hdaccount;
 
-    // This is called when a wallet is loaded, not when it's initially created. 
-    // If second password is enabled then accountPayload.xpriv has already been 
+    // This is called when a wallet is loaded, not when it's initially created.
+    // If second password is enabled then accountPayload.xpriv has already been
     // encrypted. We're keeping it in an encrypted state.
 
     // externalAccountPubKey was used in older dev. versions of the HD wallet
     // and does not occur "in the wild"
-    if(accountPayload.cache === undefined || accountPayload.cache.externalAccountPubKey) { 
+    if(accountPayload.cache === undefined || accountPayload.cache.externalAccountPubKey) {
       hdaccount = hdwallet.createAccountFromExtKey(accountPayload.label, accountPayload.xpriv, accountPayload.xpub);
       hdaccount.generateCache();
       hdwallet.accountArray.push(hdaccount);
@@ -107,7 +107,7 @@ HDWallet.recoverHDWalletFromSeedHex = function(seedHex, bip39Password, secondPas
   recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallback);
 };
 
-HDWallet.recoverHDWalletFromMnemonic = function(passphrase, bip39Password, secondPassword, successCallback, errorCallback) {  
+HDWallet.recoverHDWalletFromMnemonic = function(passphrase, bip39Password, secondPassword, successCallback, errorCallback) {
   assert(typeof(bip39Password) === "string", "BIP 39 password must be set or an empty string");
 
   var hdwallet = new HDWallet(BIP39.mnemonicToEntropy(passphrase), bip39Password, secondPassword);
@@ -165,8 +165,8 @@ HDWallet.prototype.getAccounts = function() {
   return this.accountArray;
 };
 
-// This is called when a wallet is loaded, not when it's initially created. 
-// If second password is enabled then accountPayload.xpriv has already been 
+// This is called when a wallet is loaded, not when it's initially created.
+// If second password is enabled then accountPayload.xpriv has already been
 // encrypted. We're keeping it in an encrypted state.
 HDWallet.prototype.createAccountFromExtKey = function(label, possiblyEncryptedExtendedPrivateKey, extendedPublicKey, cache) {
   var accountIdx = this.accountArray.length;
@@ -211,9 +211,9 @@ HDWallet.prototype.createAccountWithSeedhex = function(label, seedHex, bip39Pass
   account.changeChain = accountZero.derive(1);
 
   var extendedPrivateKey = accountZero.toBase58();
-  var extendedPublicKey =  accountZero.neutered().toBase58();    
+  var extendedPublicKey =  accountZero.neutered().toBase58();
 
-  account.extendedPrivateKey = extendedPrivateKey == null || second_password == null ? extendedPrivateKey : WalletCrypto.encryptSecretWithSecondPassword(extendedPrivateKey, second_password, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());    
+  account.extendedPrivateKey = extendedPrivateKey == null || second_password == null ? extendedPrivateKey : WalletCrypto.encryptSecretWithSecondPassword(extendedPrivateKey, second_password, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());
   account.extendedPublicKey = extendedPublicKey;
 
   account.generateCache();

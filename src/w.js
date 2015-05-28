@@ -23,8 +23,9 @@ var Helpers = require('./helpers');
 // Wallet
 
 function Wallet(object) {
-  // private members
+
   var obj = object || {};
+  obj.options = obj.options || {};
 
   this._guid = obj.guid;
   this._sharedKey = obj.sharedKey;
@@ -85,63 +86,65 @@ Object.defineProperties(Wallet.prototype, {
 });
 
 Wallet.prototype.toJSON = function(){
-  var wallet = {};
-  wallet.options = {};
-
-  wallet.guid = this.guid;
-  wallet.sharedKey = this.sharedKey;
-  wallet.double_encryption = this.double_encryption;
-  wallet.dpasswordhash = this.dpasswordhash;
-
-  wallet.options.pbkdf2_iterations = this.pbkdf2_iterations;
-  wallet.options.fee_policy = this.fee_policy;
-
-  wallet.keys = this.keys;
-
+  var wallet = {
+    guid: this.guid,
+    sharedKey: this.sharedKey,
+    double_encryption: this.double_encryption,
+    dpasswordhash: this.dpasswordhash,
+    options: {
+      pbkdf2_iterations: this.pbkdf2_iterations,
+      fee_policy: this.fee_policy
+    },
+    keys: this.keys
+  };
   return wallet;
 };
-
 
 Wallet.prototype.importLegacyAddress = function(key, label, secPass){
   var ad = Address.import(key, label);
   ad.encrypt(secPass, this.sharedKey, this.pbkdf2_iterations);
   this._addresses[ad.addr] = ad;
+  return this;
 };
 
 Wallet.prototype.newLegacyAddress = function(label, pw){
   var ad = Address.new(label);
   ad.encrypt(pw, this.sharedKey, this.pbkdf2_iterations);
   this._addresses[ad.addr] = ad;
+  return this;
 };
 
 Wallet.prototype.setDefaultPbkdf2Iterations = function(){
   this._pbkdf2_iterations = 5000;
+  return this;
 };
 
 Wallet.prototype.encrypt = function(pw){
   var that = this;
   function f(k) {k.encrypt(pw, that.sharedKey, that.pbkdf2_iterations);};
   this.keys.map(f);
+  return this;
 };
 
 Wallet.prototype.decrypt = function(pw){
   var that = this;
   function f(k) {k.decrypt(pw, that.sharedKey, that.pbkdf2_iterations);};
   this.keys.map(f);
+  return this;
 };
 
 // example wallet. This should be the new constructor (ask server data)
-Wallet.new = function(){
-  var object = {};
-
-  object.guid = "37f008fe-4456-43b8-8862-d2ac67053f52";
-  object.sharedKey = "f5c0e85d-b379-4588-ad2b-052360b6e6ec";
-  object.double_encryption = true;
-  object.dpasswordhash = "9f334a27ba54e317ae351177c5cdb1ec5d1463e7a03ee0da6fb7ae6aada72682";
-  //options
-  object.options.fee_policy = 0;
-  object.options.pbkdf2_iterations = 5000;
-  // object.keys = [];
+Wallet.example = function(){
+  var object = {
+    guid              : "37f008fe-4456-43b8-8862-d2ac67053f52",
+    sharedKey         : "f5c0e85d-b379-4588-ad2b-052360b6e6ec",
+    double_encryption : true,
+    dpasswordhash     : "9f334a27ba54e317ae351177c5cdb1ec5d1463e7a03ee0da6fb7ae6aada72682",
+    options: {
+      fee_policy        :  0,
+      pbkdf2_iterations : 5000
+    }
+  };
   return new Wallet(object);
 };
 
@@ -151,11 +154,11 @@ Wallet.reviver = function(k,v){
 };
 
 // example of serialization
-// var x = new Blockchain.Wallet.new();
+// var x = Blockchain.Wallet.new();
 // x.newLegacyAddress();
 // x.newLegacyAddress();
 // x.newLegacyAddress();
-// var j = JSON.stringify(x);
+// var j = JSON.stringify(x,null,2);
 // var t = JSON.parse(j,Blockchain.Wallet.reviver);
 
 // loading old wallet to new model
