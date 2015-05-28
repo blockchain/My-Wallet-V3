@@ -492,7 +492,7 @@ var WalletStore = (function() {
     },
     setNote: function(txHash, text) {
       var isValidNote;
-      isValidNote = MyWallet.isAlphaNumericSpace(text) && (text != null);
+      isValidNote = text != null;
       if (isValidNote) {
         tx_notes[txHash] = text;
         MyWallet.backupWalletDelayed();
