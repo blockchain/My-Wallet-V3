@@ -160,14 +160,14 @@ describe "Wallet", ->
       spyOn(MyWallet, "makeCustomWalletJSON").and.callThrough()
 
     it "should create a wallet", ->
-      MyWallet.createNewWallet("a@b.com", "1234567890", "en", "EUR", callbacks.success, callbacks.error)
+      MyWallet.createNewWallet("a@b.com", "1234567890", "First Account", "en", "EUR", callbacks.success, callbacks.error)
 
       expect(callbacks.success).toHaveBeenCalled()
       expect(callbacks.error).not.toHaveBeenCalled()
 
     it "should fail if password is too long", ->
       try
-        MyWallet.createNewWallet("a@b.com", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "en", "EUR", callbacks.success, callbacks.error)
+        MyWallet.createNewWallet("a@b.com", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "First Account", "en", "EUR", callbacks.success, callbacks.error)
       catch e
         expect(e).toBe('Passwords must be shorter than 256 characters')
 
@@ -175,7 +175,7 @@ describe "Wallet", ->
 
     it "should create an HD wallet", ->
 
-      MyWallet.createNewWallet("a@b.com", "1234567890", "en", "EUR", callbacks.success, callbacks.error)
+      MyWallet.createNewWallet("a@b.com", "1234567890", "First Account", "en", "EUR", callbacks.success, callbacks.error)
 
       data = MyWallet.makeWalletJSON()
       expect(JSON.parse(data)["hd_wallets"]).toBeDefined()
@@ -249,7 +249,7 @@ describe "Wallet", ->
         params.success(data)
 
       try
-        MyWallet.createNewWallet("a@b.com", "aa", "en", "EUR", callbacks.success, callbacks.error)
+        MyWallet.createNewWallet("a@b.com", "aa", "First Account", "en", "EUR", callbacks.success, callbacks.error)
       catch e
         expect(e).toBe('Error generating wallet identifier')
 
@@ -261,7 +261,7 @@ describe "Wallet", ->
         params.success(data)
 
       try
-        MyWallet.createNewWallet("a@b.com", "aa", "en", "EUR", callbacks.success, callbacks.error)
+        MyWallet.createNewWallet("a@b.com", "aa", "First Account", "en", "EUR", callbacks.success, callbacks.error)
       catch e
         expect(e).toBe('Error generating wallet identifier')
 

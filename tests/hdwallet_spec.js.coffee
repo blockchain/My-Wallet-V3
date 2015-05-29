@@ -147,7 +147,7 @@ describe "HD Wallet", ->
       
     describe "without 2nd password", ->
       beforeEach ->
-        MyWallet.initializeHDWallet(null, "", null, observer.success, observer.error)
+        MyWallet.initializeHDWallet(null, "", "First Account", null, observer.success, observer.error)
 
       it "should succeed", ->
         expect(observer.success).toHaveBeenCalled()
@@ -160,7 +160,7 @@ describe "HD Wallet", ->
           callback(second_password, (()->), (()->))
         spyOn(observer, "getPassword").and.callThrough()
 
-        MyWallet.initializeHDWallet(null, "", observer.getPassword, observer.success, observer.error)
+        MyWallet.initializeHDWallet(null, "", "First Account", observer.getPassword, observer.success, observer.error)
 
         # Not sure why this gets called:
         MyWallet.backupWallet = () ->
