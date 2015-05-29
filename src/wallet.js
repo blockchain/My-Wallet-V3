@@ -2387,8 +2387,7 @@ MyWallet.restoreWallet = function(pw, two_factor_auth_key, success, wrong_two_fa
         );
       },
       error : function (response) {
-        _error(response.responseText);
-        wrong_two_factor_code();
+        wrong_two_factor_code(response.responseText);
       }
     });
   } else {
