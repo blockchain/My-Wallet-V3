@@ -89,7 +89,7 @@ function generateUUIDs(n, success, error) {
   });
 };
 
-function generateNewWallet(password, email, success, error) {
+function generateNewWallet(password, email, firstAccountName, success, error) {
   this.generateUUIDs(2, function(uuids) {
     var guid = uuids[0];
     var sharedKey = uuids[1];
@@ -111,6 +111,7 @@ function generateNewWallet(password, email, success, error) {
     MyWallet.initializeHDWallet(
       null, 
       "", 
+      firstAccountName,
       function() {}, 
       function() {
         insertWallet(guid, sharedKey, password, {email : email}, function(message){

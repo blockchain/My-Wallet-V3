@@ -1532,7 +1532,7 @@ MyWallet.deleteHDWallet = function(successCallback, errorCallback) {
  * @param {?function()=} error Error callback function.
  */
  // used on iOS and frontend
-MyWallet.upgradeToHDWallet = function(getPassword, success, error) {
+MyWallet.upgradeToHDWallet = function(firstAccountName, getPassword, success, error) {
   if (WalletStore.didUpgradeToHd()) {
     success && success();
     return;
@@ -1548,11 +1548,11 @@ MyWallet.upgradeToHDWallet = function(getPassword, success, error) {
     error && error();
   };
 
-  MyWallet.initializeHDWallet(null, "", getPassword, _success, _error);
+  MyWallet.initializeHDWallet(null, "", firstAccountName, getPassword, _success, _error);
 };
 
 /**
- * Initialize HD wallet and create "Spending" account.
+ * Initialize HD wallet and create "My Bitcoin Wallet" account.
  * @param {?string} passphrase HD passphrase to generate the seed. If null, a seed will be generated.
  * @param {?string} bip39Password Password to protect the seed when generating seed from mnemonic.
  * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
@@ -1560,7 +1560,7 @@ MyWallet.upgradeToHDWallet = function(getPassword, success, error) {
  * @param {function()} error Error callback function.
  */
  // used on MyWallet
-MyWallet.initializeHDWallet = function(passphrase, bip39Password, getPassword, success, error)  {
+MyWallet.initializeHDWallet = function(passphrase, bip39Password, firstAccountName, getPassword, success, error)  {
   function initializeHDWallet(passphrase, bip39Password, second_password, success, error) {
     WalletStore.setDidUpgradeToHd(true);
     var seedHexString;
@@ -1573,7 +1573,10 @@ MyWallet.initializeHDWallet = function(passphrase, bip39Password, getPassword, s
     }
 
     var _success = function () {
-      var account = WalletStore.getHDWallet().createAccount("Spending", second_password);
+      if(firstAccountName == undefined) {
+        firstAccountName = "My Bitcoin Wallet";
+      }
+      var account = WalletStore.getHDWallet().createAccount(firstAccountName, second_password);
 
       account.balance = 0;
 
@@ -2732,8 +2735,8 @@ MyWallet.checkAllKeys = function(second_password) {
  * @param {function(string)} error callback function with error message
  */
  // used on mywallet, iOS and frontend
-MyWallet.createNewWallet = function(inputedEmail, inputedPassword, languageCode, currencyCode, success, error) {
-  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, function(createdGuid, createdSharedKey, createdPassword) {
+MyWallet.createNewWallet = function(inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, success, error) {
+  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, firstAccountName, function(createdGuid, createdSharedKey, createdPassword) {
     MyStore.clear();
     if (languageCode)
       WalletStore.setLanguage(languageCode);
