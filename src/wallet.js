@@ -205,10 +205,12 @@ MyWallet.B58LegacyDecode = function(input) {
  */
 // used on frontend
 MyWallet.unsetSecondPassword = function(success, error, getPassword) {
+  WalletStore.lockJson();
   var sharedKey = WalletStore.getSharedKey();
   var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
 
   var panic = function(e) {
+    WalletStore.unlockJson();
     console.log('Panic ' + e);
 
     //If we caught an exception here the wallet could be in a inconsistent state
@@ -243,7 +245,7 @@ MyWallet.unsetSecondPassword = function(success, error, getPassword) {
         }
 
         WalletStore.setDoubleEncryption(false);
-
+        WalletStore.unlockJson();
         MyWallet.checkAllKeys(null);
 
         MyWallet.backupWallet('update', function() {
@@ -253,6 +255,7 @@ MyWallet.unsetSecondPassword = function(success, error, getPassword) {
           panic(e);
         });
       } else {
+        WalletStore.unlockJson();
         wrong_password();
       }
     });
@@ -272,6 +275,7 @@ MyWallet.unsetSecondPassword = function(success, error, getPassword) {
  // used on frontend
 MyWallet.setSecondPassword = function(password, success, error) {
   var panic = function(e) {
+    WalletStore.unlockJson();
     console.log('Panic ');
     console.log(e);
 
@@ -280,7 +284,7 @@ MyWallet.setSecondPassword = function(password, success, error) {
     //But for now panic!
     // window.location.reload();
   };
-
+  WalletStore.lockJson();
   var sharedKey = WalletStore.getSharedKey();
   var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
 
@@ -314,7 +318,7 @@ MyWallet.setSecondPassword = function(password, success, error) {
 
     try {
       MyWallet.checkAllKeys(password);
-
+      WalletStore.unlockJson();
       MyWallet.backupWallet('update', function() {
         success();
       }, function(e) {
@@ -2441,6 +2445,13 @@ MyWallet.backupWalletDelayed = function(method, success, error, extra) {
 //Save the javascript wallet to the remote server
 // used on frontend, iOS and mywallet
 MyWallet.backupWallet = function(method, successcallback, errorcallback) {
+
+  //if the jsonfile is locked don't backup
+  if (WalletStore.isJsonLocked()) {
+    console.log("backup aborted");
+    return
+  };
+  
   var sharedKey = WalletStore.getSharedKey();
   if (!sharedKey || sharedKey.length == 0 || sharedKey.length != 36) {
     throw 'Cannot backup wallet now. Shared key is not set';

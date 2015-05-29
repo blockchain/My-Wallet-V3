@@ -108,6 +108,7 @@ var WalletStore = (function() {
   var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
   var archTimer; //Delayed Backup wallet timer
   var paidTo = {};
+  var jsonLock = false; // lock to prevent backingup while somebody is modifying the json
 
   var wallet_options = {
     fee_policy : 0,  //Default Fee policy (-1 Tight, 0 Normal, 1 High)
@@ -139,6 +140,9 @@ var WalletStore = (function() {
     ////////////////////////////////////////////////////////////////////////////
     // Public functions
     ////////////////////////////////////////////////////////////////////////////
+    lockJson: function() {jsonLock = true;},
+    unlockJson: function() {jsonLock = false;},
+    isJsonLocked: function() {return jsonLock},
     setPbkdf2Iterations: function(iterations) {
       pbkdf2_iterations = iterations;
       return;
