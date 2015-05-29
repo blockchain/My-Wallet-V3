@@ -205,12 +205,10 @@ MyWallet.B58LegacyDecode = function(input) {
  */
 // used on frontend
 MyWallet.unsetSecondPassword = function(success, error, getPassword) {
-  WalletStore.lockJson();
   var sharedKey = WalletStore.getSharedKey();
   var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
 
   var panic = function(e) {
-    WalletStore.unlockJson();
     console.log('Panic ' + e);
 
     //If we caught an exception here the wallet could be in a inconsistent state
@@ -230,6 +228,8 @@ MyWallet.unsetSecondPassword = function(success, error, getPassword) {
       if (MyWallet.validateSecondPassword(pw)) {
         correct_password();
 
+        WalletStore.lockJson();
+
         WalletStore.mapToLegacyAddressesPrivateKeys(decrypt(pw));
 
         for (var i in MyWallet.getAccounts()) {
@@ -245,8 +245,10 @@ MyWallet.unsetSecondPassword = function(success, error, getPassword) {
         }
 
         WalletStore.setDoubleEncryption(false);
-        WalletStore.unlockJson();
+
         MyWallet.checkAllKeys(null);
+
+        WalletStore.unlockJson();
 
         MyWallet.backupWallet('update', function() {
           success();
@@ -255,11 +257,11 @@ MyWallet.unsetSecondPassword = function(success, error, getPassword) {
           panic(e);
         });
       } else {
-        WalletStore.unlockJson();
         wrong_password();
       }
     });
   } catch (e) {
+    WalletStore.unlockJson();
     console.log(e);
     panic(e);
     // error(e);
@@ -275,16 +277,15 @@ MyWallet.unsetSecondPassword = function(success, error, getPassword) {
  // used on frontend
 MyWallet.setSecondPassword = function(password, success, error) {
   var panic = function(e) {
-    WalletStore.unlockJson();
     console.log('Panic ');
     console.log(e);
 
     //If we caught an exception here the wallet could be in a inconsistent state
     //We probably haven't synced it, so no harm done
     //But for now panic!
-    // window.location.reload();
+    window.location.reload();
   };
-  WalletStore.lockJson();
+
   var sharedKey = WalletStore.getSharedKey();
   var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
 
@@ -296,7 +297,10 @@ MyWallet.setSecondPassword = function(password, success, error) {
   };
 
   try {
+    WalletStore.lockJson();
+
     WalletStore.setDoubleEncryption(true);
+
     WalletStore.mapToLegacyAddressesPrivateKeys(encrypt(password, WalletStore.getSharedKey(), pbkdf2_iterations));
 
     for (var i in MyWallet.getAccounts()) {
@@ -318,7 +322,9 @@ MyWallet.setSecondPassword = function(password, success, error) {
 
     try {
       MyWallet.checkAllKeys(password);
+
       WalletStore.unlockJson();
+
       MyWallet.backupWallet('update', function() {
         success();
       }, function(e) {
@@ -326,11 +332,12 @@ MyWallet.setSecondPassword = function(password, success, error) {
         error(e);
       });
     } catch(e) {
+      WalletStore.unlockJson();
       panic(e);
       error(e);
     }
-
   } catch(e) {
+    WalletStore.unlockJson();
     panic(e);
     error(e);
   }
