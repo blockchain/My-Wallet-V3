@@ -2166,7 +2166,7 @@ MyWallet.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedP
     other_error('Cannot Set GUID Once Initialized');
     return;
   }
-
+  
   WalletStore.setGuid(user_guid);
   WalletStore.setSharedKey(shared_key);
   var sharedKey = WalletStore.getSharedKey();
@@ -2344,12 +2344,12 @@ MyWallet.restoreWallet = function(pw, two_factor_auth_key, success, wrong_two_fa
 
   //If we don't have any wallet data then we must have two factor authentication enabled
   var encryptedWalletData = WalletStore.getEncryptedWalletData();
+    
   if (encryptedWalletData == null || encryptedWalletData.length == 0) {
     if (two_factor_auth_key == null) {
       other_error('Two Factor Authentication code this null');
       return;
     }
-
     if (two_factor_auth_key.length == 0 || two_factor_auth_key.length > 255) {
       other_error('You must enter a Two Factor Authentication code');
       return;
@@ -2387,6 +2387,7 @@ MyWallet.restoreWallet = function(pw, two_factor_auth_key, success, wrong_two_fa
         );
       },
       error : function (response) {
+        WalletStore.setRestoringWallet(false);
         wrong_two_factor_code(response.responseText);
       }
     });
