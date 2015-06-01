@@ -228,8 +228,6 @@ MyWallet.unsetSecondPassword = function(success, error, getPassword) {
       if (MyWallet.validateSecondPassword(pw)) {
         correct_password();
 
-        WalletStore.lockJson();
-
         WalletStore.mapToLegacyAddressesPrivateKeys(decrypt(pw));
 
         for (var i in MyWallet.getAccounts()) {
@@ -248,8 +246,6 @@ MyWallet.unsetSecondPassword = function(success, error, getPassword) {
 
         MyWallet.checkAllKeys(null);
 
-        WalletStore.unlockJson();
-
         MyWallet.backupWallet('update', function() {
           success();
         }, function(e) {
@@ -261,7 +257,6 @@ MyWallet.unsetSecondPassword = function(success, error, getPassword) {
       }
     });
   } catch (e) {
-    WalletStore.unlockJson();
     console.log(e);
     panic(e);
     // error(e);
@@ -297,8 +292,6 @@ MyWallet.setSecondPassword = function(password, success, error) {
   };
 
   try {
-    WalletStore.lockJson();
-
     WalletStore.setDoubleEncryption(true);
 
     WalletStore.mapToLegacyAddressesPrivateKeys(encrypt(password, WalletStore.getSharedKey(), pbkdf2_iterations));
@@ -323,8 +316,6 @@ MyWallet.setSecondPassword = function(password, success, error) {
     try {
       MyWallet.checkAllKeys(password);
 
-      WalletStore.unlockJson();
-
       MyWallet.backupWallet('update', function() {
         success();
       }, function(e) {
@@ -332,12 +323,10 @@ MyWallet.setSecondPassword = function(password, success, error) {
         error(e);
       });
     } catch(e) {
-      WalletStore.unlockJson();
       panic(e);
       error(e);
     }
   } catch(e) {
-    WalletStore.unlockJson();
     panic(e);
     error(e);
   }
@@ -2452,12 +2441,6 @@ MyWallet.backupWalletDelayed = function(method, success, error, extra) {
 //Save the javascript wallet to the remote server
 // used on frontend, iOS and mywallet
 MyWallet.backupWallet = function(method, successcallback, errorcallback) {
-
-  //if the jsonfile is locked don't backup
-  if (WalletStore.isJsonLocked()) {
-    console.log("backup aborted");
-    return
-  };
 
   var sharedKey = WalletStore.getSharedKey();
   if (!sharedKey || sharedKey.length == 0 || sharedKey.length != 36) {
