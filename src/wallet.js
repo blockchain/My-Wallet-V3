@@ -205,6 +205,7 @@ MyWallet.B58LegacyDecode = function(input) {
  */
 // used on frontend
 MyWallet.unsetSecondPassword = function(success, error, getPassword) {
+  var hasCalledPasswordCallback = false;
   var sharedKey = WalletStore.getSharedKey();
   var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
 
@@ -226,6 +227,12 @@ MyWallet.unsetSecondPassword = function(success, error, getPassword) {
   try {
     getPassword(function(pw, correct_password, wrong_password) {
       if (MyWallet.validateSecondPassword(pw)) {
+        if (hasCalledPasswordCallback) {
+          // TODO should throw an error
+          return;
+        }
+        hasCalledPasswordCallback = true;
+
         correct_password();
 
         WalletStore.mapToLegacyAddressesPrivateKeys(decrypt(pw));
