@@ -13,7 +13,11 @@ function decryptSecretWithSecondPassword(secret, password, sharedKey, pbkdf2_ite
   assert(sharedKey, "sharedKey missing");
   assert(pbkdf2_iterations, "pbkdf2_iterations missing");
 
-  return decryptAes(secret, sharedKey + password, pbkdf2_iterations);
+  var result = decryptAes(secret, sharedKey + password, pbkdf2_iterations);
+  if (result === "") {
+    throw 'Second password decryption failure.';
+  }
+  return result;
 }
 
 function encryptSecretWithSecondPassword(base58, password, sharedKey, pbkdf2_iterations) {
@@ -111,11 +115,11 @@ function decryptAes(data, password, pbkdf2_iterations, options) {
    stretch the password using PBKDF2. This essentially generates
    an AES key which we need for the second step, which is to decrypt
    the payload using AES.
-   
+
    Strechting the password requires a salt. AES requires an IV. We use
    the same for both. It's the first 32 hexadecimals characters (i.e.
    16 bytes). */
-  
+
    // The conversions between different encodings can probably be achieved
    // with fewer methods.
 
@@ -260,5 +264,5 @@ module.exports = {
   decryptWallet: decryptWallet,
   reencrypt: reencrypt,
   decryptPasswordWithProcessedPin: decryptPasswordWithProcessedPin,
-  stretchPassword: stretchPassword  
+  stretchPassword: stretchPassword
 };
