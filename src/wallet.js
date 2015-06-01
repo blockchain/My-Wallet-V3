@@ -205,6 +205,7 @@ MyWallet.B58LegacyDecode = function(input) {
  */
 // used on frontend
 MyWallet.unsetSecondPassword = function(success, error, getPassword) {
+  var hasCalledPasswordCallback = false;
   var sharedKey = WalletStore.getSharedKey();
   var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
 
@@ -226,6 +227,12 @@ MyWallet.unsetSecondPassword = function(success, error, getPassword) {
   try {
     getPassword(function(pw, correct_password, wrong_password) {
       if (MyWallet.validateSecondPassword(pw)) {
+        if (hasCalledPasswordCallback) {
+          // TODO should throw an error
+          return;
+        }
+        hasCalledPasswordCallback = true;
+
         correct_password();
 
         WalletStore.mapToLegacyAddressesPrivateKeys(decrypt(pw));
@@ -278,7 +285,7 @@ MyWallet.setSecondPassword = function(password, success, error) {
     //If we caught an exception here the wallet could be in a inconsistent state
     //We probably haven't synced it, so no harm done
     //But for now panic!
-    // window.location.reload();
+    window.location.reload();
   };
 
   var sharedKey = WalletStore.getSharedKey();
@@ -293,6 +300,7 @@ MyWallet.setSecondPassword = function(password, success, error) {
 
   try {
     WalletStore.setDoubleEncryption(true);
+
     WalletStore.mapToLegacyAddressesPrivateKeys(encrypt(password, WalletStore.getSharedKey(), pbkdf2_iterations));
 
     for (var i in MyWallet.getAccounts()) {
@@ -325,7 +333,6 @@ MyWallet.setSecondPassword = function(password, success, error) {
       panic(e);
       error(e);
     }
-
   } catch(e) {
     panic(e);
     error(e);
@@ -2070,7 +2077,7 @@ function internalRestoreWallet(success, error, decrypt_success, build_hd_success
       if (obj.tx_notes) {
         for (var tx_hash in obj.tx_notes) {
           var note = obj.tx_notes[tx_hash];
-          WalletStore.setNote(tx_hash, note);
+          WalletStore.initializeNote(tx_hash, note);
         }
       }
 
@@ -2444,6 +2451,7 @@ MyWallet.backupWalletDelayed = function(method, success, error, extra) {
 //Save the javascript wallet to the remote server
 // used on frontend, iOS and mywallet
 MyWallet.backupWallet = function(method, successcallback, errorcallback) {
+
   var sharedKey = WalletStore.getSharedKey();
   if (!sharedKey || sharedKey.length == 0 || sharedKey.length != 36) {
     throw 'Cannot backup wallet now. Shared key is not set';

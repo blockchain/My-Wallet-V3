@@ -490,6 +490,14 @@ var WalletStore = (function() {
       delete tx_notes[txHash];
       MyWallet.backupWalletDelayed();
     },
+    initializeNote: function(txHash, text) {
+      var isValidNote;
+      isValidNote = text != null;
+      if (isValidNote) {
+        tx_notes[txHash] = text;
+      }
+      return isValidNote;
+    },
     setNote: function(txHash, text) {
       var isValidNote;
       isValidNote = text != null;
