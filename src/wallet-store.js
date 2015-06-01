@@ -100,6 +100,7 @@ var WalletStore = (function() {
   var isRestoringWallet = false;
   var counter = 0;
   var logout_timeout; //setTimeout return value for the automatic logout
+  var logout_ticker;
   var sync_pubkeys = false;
   var isSynchronizedWithServer = true;
   var haveSetServerTime = false; //Whether or not we have synced with server time
@@ -782,6 +783,14 @@ var WalletStore = (function() {
       return logout_timeout;
     },
     setLogoutTimeout: function (value) {
+      if (!logout_ticker) {
+        logout_ticker = setInterval(function () {
+          if (Date.now() > logout_timeout) {
+            clearInterval(logout_ticker);
+            MyWallet.logout();
+          }
+        }, 20000);
+      }
       logout_timeout = value;
     },
     setSyncPubKeys: function (bool){
@@ -859,8 +868,7 @@ var WalletStore = (function() {
       this.resetLogoutTimeout();
     },
     resetLogoutTimeout: function() {
-      clearInterval(this.getLogoutTimeout());
-      this.setLogoutTimeout(setTimeout(MyWallet.logout, this.getLogoutTime()));
+      this.setLogoutTimeout(Date.now() + this.getLogoutTime());
     },
     getFeePolicy: function() {
       return wallet_options.fee_policy;

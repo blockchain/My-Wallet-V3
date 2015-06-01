@@ -1919,8 +1919,7 @@ function didDecryptWallet(success) {
   //We need to check if the wallet has changed
   MyWallet.getWallet();
 
-  var log_time_out = setTimeout(MyWallet.logout, WalletStore.getLogoutTime());
-  WalletStore.setLogoutTimeout(log_time_out);
+  WalletStore.resetLogoutTimeout();
 
   success();
 }
@@ -2520,8 +2519,7 @@ MyWallet.backupWallet = function(method, successcallback, errorcallback) {
 
                                 WalletStore.setIsSynchronizedWithServer(true);
                                 WalletStore.enableLogout();
-                                var log_time_out = setTimeout(MyWallet.logout, WalletStore.getLogoutTime());
-                                WalletStore.setLogoutTimeout(log_time_out);
+                                WalletStore.resetLogoutTimeout();
                                 WalletStore.sendEvent('on_backup_wallet_success');
                               },
                               function() {
