@@ -2081,7 +2081,7 @@ function internalRestoreWallet(success, error, decrypt_success, build_hd_success
       if (obj.tx_notes) {
         for (var tx_hash in obj.tx_notes) {
           var note = obj.tx_notes[tx_hash];
-          WalletStore.setNote(tx_hash, note);
+          WalletStore.initializeNote(tx_hash, note);
         }
       }
 
@@ -2461,7 +2461,7 @@ MyWallet.backupWallet = function(method, successcallback, errorcallback) {
     console.log("backup aborted");
     return
   };
-  
+
   var sharedKey = WalletStore.getSharedKey();
   if (!sharedKey || sharedKey.length == 0 || sharedKey.length != 36) {
     throw 'Cannot backup wallet now. Shared key is not set';
