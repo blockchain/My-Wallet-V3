@@ -12,12 +12,14 @@ describe "Transaction", ->
       privateKey: 'AWrnMsqe2AJYmrzKsN8qRosHRiCSKag3fcmvUA9wdJDj'
       to: "1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h"
       amount: 50000
+      toMultiple: ["1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h","1FfmbHfnpaZjKFvyi1okTjJJusN455paPH"]
+      multipleAmounts: [20000,10000]
       fee: 10000
       note: "That is an expensive toy"
       email: "emmy@noether.me"
       mobile: "+34649999999"
-      unspentMock: [  
-          {  
+      unspentMock: [
+          {
             "tx_hash": "594c66729d5068b7d816760fc304accd760629ee75a371529049a94cffa50861"
             "hash": "6108a5ff4ca949905271a375ee290676cdac04c30f7616d8b768509d72664c59"
             "tx_hash_big_endian": "6108a5ff4ca949905271a375ee290676cdac04c30f7616d8b768509d72664c59"
@@ -32,11 +34,11 @@ describe "Transaction", ->
       ]
 
 
-    observer = 
-      success: () -> return 
+    observer =
+      success: () -> return
       error: () -> return
       listener: () -> return
-    
+
     spyOn(observer, 'success')
     spyOn(observer, 'error')
     spyOn(observer, 'listener')
@@ -52,7 +54,7 @@ describe "Transaction", ->
         success())
 
     spyOn(BlockchainAPI, "get_unspent")
-      .and.callFake((xpubList,success,error,conf,nocache) -> 
+      .and.callFake((xpubList,success,error,conf,nocache) ->
         success(getUnspentMock))
 
     # spyOn(WalletStore, "getPrivateKey").and.callFake((address) -> 'AWrnMsqe2AJYmrzKsN8qRosHRiCSKag3fcmvUA9wdJDj')
@@ -98,6 +100,21 @@ describe "Transaction", ->
           found_switched = true
 
       expect(found_not_switched && found_switched).toBe(true)
+
+    it "should create multiple outputs", ->
+
+      tx = new Transaction(data.unspentMock, data.toMultiple, data.multipleAmounts, data.fee, data.from, null)
+
+      privateKeyBase58 = data.privateKey
+      format = MyWallet.detectPrivateKeyFormat(privateKeyBase58)
+      key = MyWallet.privateKeyStringToKey(privateKeyBase58, format)
+      privateKeys = [key]
+
+      tx.addPrivateKeys(privateKeys)
+      tx = tx.sign()
+
+      expectedHex = '0100000001594c66729d5068b7d816760fc304accd760629ee75a371529049a94cffa50861000000008a47304402205ac37e79a6fcd45c896612c5402de75dcce32841481f205a25b2bd106a61964602207447c87298393b4ed4b256a2cc576e971ba6d20785f4399321b71f3dc645d3f7014104a7392f5628776b530aa5fbb41ac10c327ccd2cf64622a81671038ecda25084af786fd54d43689241694d1d65e6bde98756fa01dfd2f5a90d5318ab3fb7bad8c1ffffffff03204e0000000000001976a914078d35591e340799ee96968936e8b2ea8ce504a688ac10270000000000001976a914a0e6ca5444e4d8b7c80f70237f332320387f18c788acf2540000000000001976a91449f842901a0c81fb9c0c0f8c61027d2b085a2a9088ac00000000'
+      expect(tx.toHex()).toEqual(expectedHex)
 
   describe "provide Transaction with private keys", ->
 
