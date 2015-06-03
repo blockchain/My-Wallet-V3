@@ -102,13 +102,15 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
   ////////////////////////////////////////////////////////////////////////////////
   var spendCoins = function() {
 
+    var getValue = function(coin) {return coin.value;};
+    var add = function(x, y) {return x + y;};
+    var isSmall = function(value) {return value < 500000;};
+
     if (payment.newKeyAdded && payment.secondPassword) {
       WalletStore.encryptPrivateKey( payment.fromAddress, payment.secondPassword
                                    , payment.sharedKey, payment.pbkdf2_iterations);
     };
     if (payment.isSweep) {
-      var getValue = function(coin) {return coin.value;};
-      var add = function(x, y) {return x + y;};
       payment.amount = payment.coins.map(getValue).reduce(add,0) - payment.feeAmount;
     };
 
@@ -121,6 +123,12 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
     tx.randomizeOutputs();
     // sign the transaction
     var signedTransaction = tx.sign();
+
+    // cancel the transaction if public note and small output
+    var anySmall = tx.transaction.outs.map(getValue).some(isSmall);
+    if(anySmall && payment.note !== undefined)
+      {throw "There is an output too small to publish a note";}
+
     // push the transaction to the network
     publishTransaction(signedTransaction);
   };
