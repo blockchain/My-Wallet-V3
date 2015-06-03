@@ -5,37 +5,44 @@ module.exports = HDAccount;
 var Bitcoin = require('bitcoinjs-lib');
 var assert  = require('assert');
 var Helpers = require('./helpers');
+
 ////////////////////////////////////////////////////////////////////////////////
-// HDAccount class
+// HDAccount Raw Constructor
+
 function HDAccount(object){
 
   var obj = object || {};
   obj.cache = obj.cache || {};
 
-  this._label = obj.label;
-  this._archived = obj.archived;
-  this._xpriv = obj.xpriv;
-  this._xpub = obj.xpub;
-  this._receiveAccountCache = obj.cache.receiveAccount;
-  this._changeAccountCache = obj.cache.changeAccount;
+  // serializable data
+  this._label    = obj.label;
+  this._archived = obj.archived || false;
+  this._xpriv    = obj.xpriv;
+  this._xpub     = obj.xpub;
+    // Cache for ChainCode to improve init speed
+  this._cache    = obj.cache;
+  // this._address_labels  // this is on the json too
+  this._network  = obj.network || Bitcoin.networks.bitcoin;
+
+  // computed properties
+  this._receiveChain  = null;
+  this._changeChain   = null;
+  this._receiveIndex  = 0;
+  this._changeIndex   = 0;
+  this._n_tx          = 0;
+  this._numTxFetched  = 0;
+  this._balance       = null;
+
+  // In-memory cache for generated keys
+  this.receiveKeyCache = [];
+  this.changeKeyCache = [];
 }
 
-HDAccount.example = function(){
-  var object = {
-    label: "my new account",
-    archived: false,
-    xpriv: "xprv9zJ1cTHnqzgBP2boCwpP47LBzjGLKXkwYqXoYnV4yrBmstmw6SVtirpvm4GESg9YLn9R386qpmnsrcC5rvrpEJAXSrfqQR3qGtjGv5ddV9g",
-    xpub: "xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ",
-    // address_label: [{"index":0,"label":"first payment received","address":"1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX"},{"index":1,"label":"second address","address":"14m58GqSxSKPH2cVx3o8vB26gAuoKqiwej"}],
-    cache: {
-      receiveAccount :"xpub6EjrVkXYSDBsnqR3yh4d7XsZVbG8ytXU7zWa8pgSmCyxSeURGHJE6mQWvdvoE1tWn2MzsCjZ7ZFEXQwBKegG3rjnoJRW6DMRNMn5Cpvh6XJ",
-      changeAccount  :"xpub6EjrVkXYSDBssYWSbuWwHDvneJqYnYoNhAXtjrpoEkiHctqp9hgRMxgyspRaHhCLDuMHY2fhbNbDmL4pgfKkbyq2pZRepdjV2meeSGmcCfT"
-    }
-  };
-  return new HDAccount(object);
-};
+////////////////////////////////////////////////////////////////////////////////
+// PUBLIC PROPERTIES
 
 Object.defineProperties(HDAccount.prototype, {
+
   "label": {
     configurable: false,
     get: function() { return this._label;},
@@ -50,44 +57,153 @@ Object.defineProperties(HDAccount.prototype, {
       if (typeof(value) === "boolean") {this._archived = value;};
     }
   },
-  "extendedPublicKey": {
-    configurable: false,
-    get: function() { return this._xpub;},
-  },
+  // "extendedPublicKey": {
+  //   configurable: false,
+  //   get: function() { return this._xpub;},
+  // },
   "extendedPrivateKey": {
     configurable: false,
     get: function() { return this._xpriv;},
-  },
-  "receiveAccountCache": {
-    configurable: false,
-    get: function() { return this._receiveAccountCache;},
-  },
-  "changeAccountCache": {
-    configurable: false,
-    get: function() { return this._changeAccountCache;},
   }
 });
 
-HDAccount.reviver = function(k,v){
-  if (k === '') return new HDAccount(v);
-  return v;
+////////////////////////////////////////////////////////////////////////////////
+// CONSTRUCTORS
+
+HDAccount.example = function(){
+
+  return HDAccount.fromExtKey("xprv9zJ1cTHnqzgBP2boCwpP47LBzjGLKXkwYqXoYnV4yrBmstmw6SVtirpvm4GESg9YLn9R386qpmnsrcC5rvrpEJAXSrfqQR3qGtjGv5ddV9g", "Example account");
 };
 
+/* BIP 44 defines the following 5 levels in BIP32 path:
+ * m / purpose' / coin_type' / account' / change / address_index
+ * Apostrophe in the path indicates that BIP32 hardened derivation is used.
+ *
+ * Purpose is a constant set to 44' following the BIP43 recommendation
+ * Registered coin types: 0' for Bitcoin
+ */
+HDAccount.fromAccountMasterKey = function(accountZero, label){
+
+  assert(accountZero, "Account MasterKey must be given to create an account.");
+  var receive = accountZero.derive(0);
+  var change = accountZero.derive(1);
+  var account    = new HDAccount();
+  account.label  = label;
+  account._xpriv = accountZero.toBase58();
+  account._xpub  = accountZero.neutered().toBase58();
+  account._receiveChain = receive;
+  account._changeChain  = change;
+  account.generateCache();
+  return account;
+};
+
+HDAccount.fromWalletMasterKey = function(masterkey, index, label) {
+
+  assert(masterkey, "Wallet MasterKey must be given to create an account.");
+  assert(Helpers.isNumber(index), "Derivation index must be an integer.");
+  var accountZero = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(index);
+  return HDAccount.fromAccountMasterKey(accountZero, label);
+};
+
+HDAccount.fromExtKey = function(extKey, label){
+
+  assert(extKey, "Extended private key must be given to create an account.");
+  var accountZero = Bitcoin.HDNode.fromBase58(extKey);
+  return HDAccount.fromAccountMasterKey(accountZero, label);
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// JSON DESERIALIZER
+HDAccount.reviver = function(k,v){
+
+  switch(k) {
+    case '':
+      return new HDAccount(v);
+      break;
+    case 'label':
+      return Helpers.isString(v) && Helpers.isAlphaNum(v) ? v : undefined;
+      break;
+    case 'archived':
+      return typeof(v) === "boolean" ? v : false;
+      break;
+    // add more checks over the keys
+    default:
+      return v;
+  }
+};
+
+HDAccount.fromJSON = function(text){
+
+  var account = JSON.parse(text, HDAccount.reviver);
+  // check for missing fields
+    // account.drama ? console.log("tenim drama") : console.log("no tenim drama");
+
+  account.restoreChains();
+  // probably we should backup after making sanity checks when loading if something changed
+
+
+  return account;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// JSON SERIALIZER
+
 HDAccount.prototype.toJSON = function(){
+
+  // should we add checks on the serializer too?
   var hdaccount = {
-    label: this.label,
-    archived: this.archived,
-    xpriv : this.extendedPrivateKey,
-    xpub : this.extendedPublicKey,
-    // address_labels: this.address_labels,
+    label    : this._label,
+    archived : this._archived,
+    xpriv    : this._xpriv,
+    xpub     : this._xpub,
+    cache    : this._cache
   };
-  if(this.receiveAccountCache || this.changeAccountCache){hdaccount.cache = {};};
-  if(this.receiveAccountCache) {hdaccount.cache.receiveAccount = this.receiveAccountCache;};
-  if(this.changeAccountCache) {hdaccount.cache.changeAccount = this.changeAccountCache;};
 
   return hdaccount;
 };
 
+
+// address_labels":[
+//   {
+//   "index":0,
+//   "label":"first payment received",
+//   "address":"1D4fdALjnmAaRKD3WuaSwV7zSAkofDXddX"}
+//   ,
+//   {"index":1,"label":"second address","address":"14m58GqSxSKPH2cVx3o8vB26gAuoKqiwej"}]
+////////////////////////////////////////////////////////////////////////////////
+// METHODS
+HDAccount.prototype.isCached = function(){
+
+  var x = (this._cache && this._cache.receiveAccount && this._cache.changeAccount);
+  return (x !== null) && (x !== undefined);
+};
+
+HDAccount.prototype.restoreChains = function(){
+
+  if (this.isCached()) {
+    this._receiveChain = Bitcoin.HDNode.fromBase58(cache.receiveAccount);
+    this._changeChain = Bitcoin.HDNode.fromBase58(cache.changeAccount);
+  }
+  else {
+    var accountZero = Bitcoin.HDNode.fromBase58(this._xpriv);
+    this._receiveChain = accountZero.derive(0);
+    this._changeChain = accountZero.derive(1);
+    this.generateCache();
+  };
+  return this;
+};
+
+HDAccount.prototype.generateCache = function() {
+
+  assert(this._receiveChain, "External Account not set");
+  assert(this._changeChain, "Internal Account not set");
+  this._cache = {};
+  this._cache.receiveAccount = this._receiveChain.neutered().toBase58();
+  this._cache.changeAccount = this._changeChain.neutered().toBase58();
+  return this;
+};
+
 // var x = Blockchain.HDAccount.example();
-// var y = JSON.stringify(x, null, 2);
-// JSON.parse(y, Blockchain.HDAccount.reviver);
+// delete x._cache
+// var j = JSON.stringify(x, null, 2);
+// var xx = Blockchain.HDAccount.fromJSON(j);
