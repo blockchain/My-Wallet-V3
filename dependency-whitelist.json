@@ -21,8 +21,8 @@
     "repo" : "cryptocoinjs/bs58"
   },
   "sjcl" : {
-    "version": "1.0.2",
-    "commits" : ["0f8fe271941fdd65e4a22ac6b4b29384cfb8fc33"],
+    "version": "1.0.3",
+    "commits" : ["fb1ba931a46d41a7c238717492b66201b2995840"],
     "repo" : "bitwiseshiftleft/sjcl"
   },
   "xregexp" : {
@@ -86,9 +86,9 @@
     "repo" : "crypto-browserify/randombytes"
   },
   "crypto-js" : {
-    "version" : "3.1.2",
-    "commits" : ["8d4a2d3de4d072ba772d794a97042be04a66e38c"],
-    "repo" : "evanvosberg/crypto-js"
+    "version" : "3.1.4",
+    "commits" : ["7ed8a08ceac45093aacbcc5aed11e28bcbb7c58e"],
+    "repo" : "brix/crypto-js"
   },
   "rsvp" : {
     "version" : "3.0.18",
