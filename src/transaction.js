@@ -4,11 +4,14 @@ var assert = require('assert');
 var Bitcoin = require('bitcoinjs-lib');
 var randomBytes = require('randombytes');
 
-var Transaction = function (unspentOutputs, toAddress, amount, fee, changeAddress, listener) {
+var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAddress, listener) {
+
+  if (!Array.isArray(toAddresses)) {toAddresses = [toAddresses];}
+  if (!Array.isArray(amounts)) {amounts = [amounts];}
   var network = Bitcoin.networks.bitcoin;
   var defaultFee = network.feePerKb;
 
-  this.amount = amount;
+  this.amount = amounts.reduce(function(a, b) {return a + b;},0);
   this.listener = listener;
   this.addressesOfInputs = [];
   this.privateKeys = null;
@@ -17,12 +20,14 @@ var Transaction = function (unspentOutputs, toAddress, amount, fee, changeAddres
 
   fee = fee || defaultFee;
 
-  assert(amount > network.dustThreshold, amount + ' must be above dust threshold (' + network.dustThreshold + ' Satoshis)');
-
+  assert(toAddresses.length == amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
+  assert(this.amount > network.dustThreshold, this.amount + ' must be above dust threshold (' + network.dustThreshold + ' Satoshis)');
   assert(unspentOutputs && unspentOutputs.length > 0, 'No Free Outputs To Spend');
 
   var transaction = new Bitcoin.Transaction();
-  transaction.addOutput(toAddress, amount);
+  // add all outputs
+  function addOutput(e, i) {transaction.addOutput(toAddresses[i],amounts[i]);}
+  toAddresses.map(addOutput);
 
   // Choose inputs
   var unspent = sortUnspentOutputs(unspentOutputs);
@@ -54,7 +59,7 @@ var Transaction = function (unspentOutputs, toAddress, amount, fee, changeAddres
     var currentFee = fee > estimatedFee ? fee : estimatedFee;
 
     accum += output.value;
-    subTotal = amount + currentFee;
+    subTotal = this.amount + currentFee;
     if (accum >= subTotal) {
       var change = accum - subTotal;
 
@@ -84,7 +89,7 @@ Transaction.prototype.addPrivateKeys = function(privateKeys) {
 };
 
 /**
- * Shuffles the outputs of a transaction so that they receive and change 
+ * Shuffles the outputs of a transaction so that they receive and change
  * addresses are in random order.
  */
 Transaction.prototype.randomizeOutputs = function () {
@@ -98,7 +103,7 @@ Transaction.prototype.randomizeOutputs = function () {
   }
 
   function shuffle(o){
-    for(var j, x, i = o.length; i > 1; j = randomNumberBetweenZeroAnd(i), x = o[--i], o[i] = o[j], o[j] = x); 
+    for(var j, x, i = o.length; i > 1; j = randomNumberBetweenZeroAnd(i), x = o[--i], o[i] = o[j], o[j] = x);
     return o;
   };
 

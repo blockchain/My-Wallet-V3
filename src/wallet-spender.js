@@ -154,6 +154,32 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
       }).catch(errorCallback);
     },
     /**
+     * @param {string} address to pay
+     * @param {function} if present will replace success callback
+     */
+    toAddresses: function(toAddresses, amounts) {
+
+      assert(toAddresses, "to address required");
+      assert(amounts, "amounts required");
+      // we must assert amount = sum (amounts)
+
+      // First check if the to address is not part of the from account:
+      function checkAddress(add) {
+        if(payment.fromAccount && payment.fromAccount.containsAddressInCache(add)) {
+          errorCallback("Unable to move bitcoins within the same account.");
+        }
+      };
+      toAddresses.map(checkAddress);
+      payment.toAddress = toAddresses;
+      payment.amount = amounts;
+
+      RSVP.hash(promises).then(function(result) {
+        payment.secondPassword = result.secondPassword;
+        payment.coins = result.coins;
+        spendCoins();
+      }).catch(errorCallback);
+    },
+    /**
      * @param {number} index of the account to pay
      */
     toAccount: function(toIndex) {
