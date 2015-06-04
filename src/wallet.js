@@ -955,7 +955,7 @@ MyWallet.processTransaction = function(tx) {
         transaction.to.mobile = { number: paidToItem.mobile, redeemedAt: paidToItem.redeemedAt };
       };
       transaction.intraWallet = false;
-    } else {
+    }else {
       var toAccountSet = false;
       for (var j in MyWallet.getAccounts()) {
         var account = WalletStore.getHDWallet().getAccount(j);
@@ -971,11 +971,11 @@ MyWallet.processTransaction = function(tx) {
           } else {
             if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
               transaction.from.account.amount -= output.value;
-            } else if ((transaction.to.externalAddresses == null ||
-                        output.value > transaction.to.externalAddresses.amount) &&
-                       (transaction.from.account != null ||
-                        transaction.from.legacyAddresses != null)) {
-              transaction.to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
+              // vale aixo es per triar el tema
+            } else if ((transaction.from.account != null || transaction.from.legacyAddresses != null)) {
+                if (transaction.to.externalAddresses == null)
+                    transaction.to.externalAddresses = [];
+                transaction.to.externalAddresses.push({address: output.addr, amount: output.value});
             }
             transaction.fee -= output.value;
           }
@@ -984,11 +984,10 @@ MyWallet.processTransaction = function(tx) {
       }
 
       if (! toAccountSet) {
-        if ((transaction.to.externalAddresses == null ||
-             output.value > transaction.to.externalAddresses.amount) &&
-            (transaction.from.account != null ||
-             transaction.from.legacyAddresses != null)) {
-          transaction.to.externalAddresses = {addressWithLargestOutput: output.addr, amount: output.value};
+        if ((transaction.from.account != null || transaction.from.legacyAddresses != null)) {
+          if (transaction.to.externalAddresses == null)
+              transaction.to.externalAddresses = [];
+          transaction.to.externalAddresses.push({address: output.addr, amount: output.value});
         }
         transaction.fee -= output.value;
         transaction.intraWallet = false;
@@ -2175,7 +2174,7 @@ MyWallet.fetchWalletJson = function(user_guid, shared_key, resend_code, inputedP
     other_error('Cannot Set GUID Once Initialized');
     return;
   }
-  
+
   WalletStore.setGuid(user_guid);
   WalletStore.setSharedKey(shared_key);
   var sharedKey = WalletStore.getSharedKey();
@@ -2353,7 +2352,7 @@ MyWallet.restoreWallet = function(pw, two_factor_auth_key, success, wrong_two_fa
 
   //If we don't have any wallet data then we must have two factor authentication enabled
   var encryptedWalletData = WalletStore.getEncryptedWalletData();
-    
+
   if (encryptedWalletData == null || encryptedWalletData.length == 0) {
     if (two_factor_auth_key == null) {
       other_error('Two Factor Authentication code this null');
