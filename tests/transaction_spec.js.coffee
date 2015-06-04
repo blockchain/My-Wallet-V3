@@ -14,10 +14,10 @@ defaultSampleTx = undefined
 paidTo = {}
 
 hdAccounts = undefined
-  
-describe "Transaction", ->  
+
+describe "Transaction", ->
   beforeEach ->
-    defaultSampleTx = 
+    defaultSampleTx =
       'hash': 'b0cf5a859187e9c0cd7f7836fac88ade98713021eb2c3bcb92d677ac4a2a45ba'
       'size': 226
       'txIndex': 72945763
@@ -82,7 +82,7 @@ describe "Transaction", ->
       "1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX"
       "1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF"
     ]
-    
+
     hdAccounts = [
       {
         extendedPublicKey:
@@ -103,7 +103,7 @@ describe "Transaction", ->
         archived: false
       }
     ]
-    
+
     spyOn(WalletStore, "isActiveLegacyAddress").and.callFake((address)->
       activeLegacyAddresses.indexOf(address) > -1
     )
@@ -114,18 +114,18 @@ describe "Transaction", ->
       getAccounts: () -> hdAccounts
       getAccount: (idx) ->  hdAccounts[idx]
     })
-    
+
     spyOn(WalletStore, "getPaidToDictionary").and.returnValue(paidTo)
-    
+
     spyOn(WalletStore, "getLatestBlock").and.returnValue(true)
-        
+
     # Terminology:
     # account: an HD wallet account (which has external and change addresses)
-    # legacy address: an non-HD address for which we have 
+    # legacy address: an non-HD address for which we have
     #                 the private key or a watch-only address
-    # external address: an address outside our wallet (not to be confused 
+    # external address: an address outside our wallet (not to be confused
     #                   with "external address" inside an HD account)
-    
+
   describe "processTransaction()", ->
     beforeEach ->
       spyOn(WalletStore, "getTags").and.returnValue([])
@@ -133,14 +133,14 @@ describe "Transaction", ->
       spyOn(MyWallet, "getConfirmationsForTx").and.callFake(
         (block, tx)-> tx.confirmations
       )
-    
+
     describe "from account to external address", ->
-      
+
       tx = undefined
       transaction = undefined
-      
+
       beforeEach ->
-        tx = 
+        tx =
           'hash': 'cfb77ea99f7d97e551afae96e1fe028e56933621d8cc4342b399fba03bfe8826'
           'size': 226
           'txIndex': 80064446
@@ -196,8 +196,8 @@ describe "Transaction", ->
             0
           ]
           'confirmations': 71
-          
-        transaction = 
+
+        transaction =
           'from':
             'account':
               'index': 2
@@ -207,10 +207,11 @@ describe "Transaction", ->
           'to':
             'account': null
             'legacyAddresses': null
-            'externalAddresses':
-              'addressWithLargestOutput': '1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg'
+            'externalAddresses': [
+              'address': '1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg'
               'amount': 30000
-            'email': null 
+            ]
+            'email': null
             'mobile': null
           'fee': 10000
           'intraWallet': false
@@ -224,32 +225,32 @@ describe "Transaction", ->
           'tx_index': 80064446
           'block_height': 346920
           'result': -40000
-            
-                
+
+
       it "should recognize from account", ->
         expect(MyWallet.processTransaction(tx).from).toEqual(transaction.from)
-    
+
       it "should recognize to address", ->
         expect(MyWallet.processTransaction(tx).to).toEqual(transaction.to)
-    
+
       it "should have the correct amount", ->
         expect(MyWallet.processTransaction(tx).result).toEqual(transaction.result)
-    
+
       it "should not be intra wallet", ->
        result = MyWallet.processTransaction(tx)
-       expect(result.intraWallet).toBe(false)  
-        
+       expect(result.intraWallet).toBe(false)
+
       ##########################################################################
       describe "if sender is change address", ->
-        # This shouldn't happen (every tx has a new change address), but we 
+        # This shouldn't happen (every tx has a new change address), but we
         # need to be able to process it.
-      
+
         # b0cf5a859187e9c0cd7f7836fac88ade98713021eb2c3bcb92d677ac4a2a45ba
-        # Sent 0.00075196 BTC from account index 0 
+        # Sent 0.00075196 BTC from account index 0
         #   to address 1FeerpCgswvGRLVKme759C96DUBtf7SvA2
         #      0.0001 mining fee
         # From address:   1MaCbDwkC74tiEDSnchASxiAARHh94CVSG
-        # Change address: 1MaCbDwkC74tiEDSnchASxiAARHh94CVSG 
+        # Change address: 1MaCbDwkC74tiEDSnchASxiAARHh94CVSG
         tx =
           'hash': 'b0cf5a859187e9c0cd7f7836fac88ade98713021eb2c3bcb92d677ac4a2a45ba'
           'size': 226
@@ -320,7 +321,7 @@ describe "Transaction", ->
               'externalAddresses':
                 'addressWithLargestOutput': '1FeerpCgswvGRLVKme759C96DUBtf7SvA2'
                 'amount': 75196
-              'email': null 
+              'email': null
               'mobile': null
             'fee': 10000
             'intraWallet': false
@@ -333,17 +334,17 @@ describe "Transaction", ->
             'size': 226
             'tx_index': 72945763
             'block_height': 335985
-            'result': -85196  
-            
+            'result': -85196
+
         it "should be recognized", ->
           result = MyWallet.processTransaction(tx)
           expect(MyWallet.processTransaction(tx)).toEqual(transaction)
-      
+
       ##########################################################################
       it "should be recognized if there's no change", ->
         # tx where one account address was completely emptied
         # pending()
-        tx = 
+        tx =
           'hash': '62636544b31da6a14a419ab1ee3a253bb1ebca65175d351ba4bb54b00b896a87'
           'size': 191
           'txIndex': 79823045
@@ -382,7 +383,7 @@ describe "Transaction", ->
           'account_indexes': [ 0 ]
           'confirmations': 6
 
-        transaction = 
+        transaction =
           'from':
             'account':
               'index': 2
@@ -392,10 +393,11 @@ describe "Transaction", ->
           'to':
             'account': null
             'legacyAddresses': null
-            'externalAddresses':
-              'addressWithLargestOutput': '1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg'
+            'externalAddresses': [
+              'address': '1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg'
               'amount': 100000
-            'email': null 
+            ]
+            'email': null
             'mobile': null
           'fee': 10000
           'intraWallet': false
@@ -413,7 +415,7 @@ describe "Transaction", ->
         expect(MyWallet.processTransaction(tx)).toEqual(transaction)
 
       ##########################################################################
-      
+
       describe "with multiple inputs", ->
         tx = undefined
         transaction = undefined
@@ -543,10 +545,10 @@ describe "Transaction", ->
             "to": {
                 "account": null,
                 "legacyAddresses": null,
-                "externalAddresses": {
-                    "addressWithLargestOutput": "1PZ5GCtYQesYMKEQMtkRQcutLXpkMCWCTM",
+                "externalAddresses": [{
+                    "address": "1PZ5GCtYQesYMKEQMtkRQcutLXpkMCWCTM",
                     "amount": 123120
-                },
+                }],
                 "email": null,
                 "mobile": null
             },
@@ -565,21 +567,21 @@ describe "Transaction", ->
 
         it "should recognize from account", ->
           expect(MyWallet.processTransaction(tx).from.account).toBeDefined()
-    
+
         it "should recognize to address", ->
           expect(MyWallet.processTransaction(tx).to).toEqual(transaction.to)
-    
+
         it "should have the correct amount", ->
           expect(MyWallet.processTransaction(tx).result).toEqual(transaction.result)
-    
+
         it "should not be intra wallet", ->
          result = MyWallet.processTransaction(tx)
          expect(result.intraWallet).toBe(false)
-        
+
     describe "from external address to account", ->
       tx = undefined
       transaction = undefined
-      
+
       beforeEach ->
         tx =
           'hash': '68ca0a6593f546ab50a41f70b3241795f80d16b8ede7a238f3b9a5b6520f6a6d'
@@ -644,7 +646,7 @@ describe "Transaction", ->
               'amount': 100000
             'legacyAddresses': null
             'externalAddresses': null
-            'email': null 
+            'email': null
             'mobile': null
           'fee': 10000
           'intraWallet': false
@@ -661,18 +663,18 @@ describe "Transaction", ->
       ##########################################################################
       it "should recognize from address", ->
         expect(MyWallet.processTransaction(tx).from).toEqual(transaction.from)
-    
+
       it "should recognize to account", ->
         expect(MyWallet.processTransaction(tx).to).toEqual(transaction.to)
-    
+
       it "should have the correct amount", ->
         expect(MyWallet.processTransaction(tx).result).toEqual(transaction.result)
-    
+
       it "should not be intra wallet", ->
        result = MyWallet.processTransaction(tx)
-       expect(result.intraWallet).toBe(false)  
-    
-    
+       expect(result.intraWallet).toBe(false)
+
+
     describe "between accounts", ->
       tx = undefined
       transaction = undefined
@@ -752,7 +754,7 @@ describe "Transaction", ->
               'amount': 100000
             'legacyAddresses': null
             'externalAddresses': null
-            'email': null 
+            'email': null
             'mobile': null
           'fee': 10000
           'intraWallet': true
@@ -766,21 +768,21 @@ describe "Transaction", ->
           'tx_index': 72943968
           'block_height': 335980
           'result': 100000
-        
+
       ##########################################################################
       it "should recognize from account", ->
         expect(MyWallet.processTransaction(tx).from).toEqual(transaction.from)
-      
+
       it "should recognize to account", ->
         expect(MyWallet.processTransaction(tx).to).toEqual(transaction.to)
-      
+
       it "should have the correct amount", ->
         expect(MyWallet.processTransaction(tx).result).toEqual(transaction.result)
-              
+
       it "should be intra wallet", ->
        result = MyWallet.processTransaction(tx)
        expect(result.intraWallet).toBe(true)
-        
+
     describe "from legacy address to external address", ->
       # 391cfffa273d82866b367af7941fb3aca35b5a1a95003140a148166bf5d02ee8
       # sent 0.0002, with 0.0007 of change and 0.0001 for the miners
@@ -842,10 +844,11 @@ describe "Transaction", ->
         'to':
           'account': null
           'legacyAddresses': []
-          'externalAddresses':
-            'addressWithLargestOutput': '1FeerpCgswvGRLVKme759C96DUBtf7SvA2'
+          'externalAddresses': [
+            'address': '1FeerpCgswvGRLVKme759C96DUBtf7SvA2'
             'amount': 20000
-          'email': null 
+          ]
+          'email': null
           'mobile': null
         'fee': 10000
         'intraWallet': false
@@ -859,23 +862,23 @@ describe "Transaction", ->
         'tx_index': 72943525
         'block_height': 335980
         'result': -30000
-              
-              
+
+
       it "should recognize from address", ->
         expect(MyWallet.processTransaction(tx).from).toEqual(transaction.from)
-      
+
       it "should recognize to address", ->
         expect(MyWallet.processTransaction(tx).to).toEqual(transaction.to)
-      
+
       it "should have the correct amount", ->
         expect(MyWallet.processTransaction(tx).result).toEqual(transaction.result)
-        
+
       it "should not be intra wallet", ->
        result = MyWallet.processTransaction(tx)
        expect(result.intraWallet).toBe(false)
-        
+
     describe "between legacy addresses", ->
-      tx = 
+      tx =
         'hash': '7134e24bdc3a26522e251dfd1e4c2f94b2fb63541d65eda323a87456bb80de9f'
         'size': 258
         'txIndex': 80032677
@@ -922,7 +925,7 @@ describe "Transaction", ->
         'account_indexes': []
         'confirmations': 0
 
-      transaction = 
+      transaction =
         'from':
           'account': null
           'legacyAddresses': [ {
@@ -937,7 +940,7 @@ describe "Transaction", ->
             'amount': 30000
           } ]
           'externalAddresses': null
-          'email': null 
+          'email': null
           'mobile': null
         'fee': 10000
         'intraWallet': true
@@ -951,22 +954,22 @@ describe "Transaction", ->
         'tx_index': 80032677
         'block_height': null
         'result': 30000
-        
+
       it "should recognize from address", ->
         expect(MyWallet.processTransaction(tx).from).toEqual(transaction.from)
-      
+
       it "should recognize to address", ->
         expect(MyWallet.processTransaction(tx).to).toEqual(transaction.to)
-      
+
       it "should have the correct amount", ->
         expect(MyWallet.processTransaction(tx).result).toEqual(transaction.result)
-      
+
       it "should be intra wallet", ->
        result = MyWallet.processTransaction(tx)
        expect(result.intraWallet).toBe(true)
-        
+
     describe "from legacy address to account", ->
-      tx = 
+      tx =
         'hash': '6c3224f1bd35ec8e57fc8494c65f6964ba4eec8eba1a1b6c77410a480cba6a01'
         'size': 257
         'txIndex': 80026565
@@ -1017,7 +1020,7 @@ describe "Transaction", ->
         'account_indexes': [ 0 ]
         'confirmations': 0
 
-      transaction = 
+      transaction =
         'from':
           'account': null
           'legacyAddresses': [ {
@@ -1031,7 +1034,7 @@ describe "Transaction", ->
             'amount': 60000
           'legacyAddresses': []
           'externalAddresses': null
-          'email': null 
+          'email': null
           'mobile': null
         'fee': 10000
         'intraWallet': true
@@ -1045,28 +1048,28 @@ describe "Transaction", ->
         'tx_index': 80026565
         'block_height': null
         'result': 60000
-        
+
       ##########################################################################
       it "should recognize from address", ->
         expect(MyWallet.processTransaction(tx).from).toEqual(transaction.from)
-      
+
       it "should recognize to account", ->
         expect(MyWallet.processTransaction(tx).to).toEqual(transaction.to)
-      
+
       it "should have the correct amount", ->
         expect(MyWallet.processTransaction(tx).result).toEqual(transaction.result)
-      
+
       it "should be intra wallet", ->
        result = MyWallet.processTransaction(tx)
        expect(result.intraWallet).toBe(true)
-        
+
     describe "from account to legacy address", ->
       tx = undefined
       transaction = undefined
-      
+
       beforeEach ->
         ##########################################################################
-        tx = 
+        tx =
           'hash': '9d470a7518f3f98b865f2c68f4a39f64138fc61807ba4168764b104798800911'
           'size': 226
           'txIndex': 80021322
@@ -1123,7 +1126,7 @@ describe "Transaction", ->
           ]
           'confirmations': 0
 
-        transaction = 
+        transaction =
           'from':
             'account':
               'index': 2
@@ -1137,7 +1140,7 @@ describe "Transaction", ->
               'amount': 50000
             } ]
             'externalAddresses': null
-            'email': null 
+            'email': null
             'mobile': null
           'fee': 10000
           'intraWallet': true
@@ -1154,24 +1157,24 @@ describe "Transaction", ->
 
       it "should recognize from account", ->
         expect(MyWallet.processTransaction(tx).from).toEqual(transaction.from)
-    
+
       it "should recognize to address", ->
         expect(MyWallet.processTransaction(tx).to).toEqual(transaction.to)
-    
+
       it "should have the correct amount", ->
         expect(MyWallet.processTransaction(tx).result).toEqual(transaction.result)
-    
+
       it "should be intra wallet", ->
        result = MyWallet.processTransaction(tx)
        expect(result.intraWallet).toBe(true)
-        
+
     describe "from external address to legacy address", ->
       ##########################################################################
       it "should be recoginized", ->
         # 1ae6e674f0ea63284ea471f2809f5c84574237d589e16eee356c76d691fe9272
         # received 0.00040959 from 18xLMRUADGRgty6gjmSZyeKZzALCXHY6AS
         # 0.03237531 BTC change went to another address (not ours)
-        # 14msrp3yc4JRZEu49u7zYeAkKer4ETH6ag is a legacy address in our wallet    
+        # 14msrp3yc4JRZEu49u7zYeAkKer4ETH6ag is a legacy address in our wallet
         tx =
           'hash': '1ae6e674f0ea63284ea471f2809f5c84574237d589e16eee356c76d691fe9272'
           'size': 226
@@ -1232,7 +1235,7 @@ describe "Transaction", ->
               'amount': 40959
             } ]
             'externalAddresses': null
-            'email': null 
+            'email': null
             'mobile': null
           'fee': 10000
           'intraWallet': false
@@ -1248,19 +1251,19 @@ describe "Transaction", ->
           'result': 40959
 
         result = MyWallet.processTransaction(tx)
-        
+
         # Amount should be ex. change
         expect(result["from"]).toEqual(transaction["from"])
-        # It shouldn't include the change 
-        expect(result["to"]).toEqual(transaction["to"]) 
+        # It shouldn't include the change
+        expect(result["to"]).toEqual(transaction["to"])
 
     describe "to email", ->
-      paidTo["3d14659f29c8d7380cc9998e1d696494e1a1cd27e030b1824499b5ce3afec5ca"] = 
+      paidTo["3d14659f29c8d7380cc9998e1d696494e1a1cd27e030b1824499b5ce3afec5ca"] =
         address: "1K9H68VuHYgzEW13srbBRHQiZ48qsCZiz2"
         email: "info@blockchain.com"
         mobile: null
         redeemedAt: null
-      
+
       tx = {
         "hash": "3d14659f29c8d7380cc9998e1d696494e1a1cd27e030b1824499b5ce3afec5ca",
         "size": 225,
@@ -1318,7 +1321,7 @@ describe "Transaction", ->
         ],
         "confirmations": 4
       }
-      
+
       transaction = {
         "from": {
             "account": {
@@ -1351,22 +1354,22 @@ describe "Transaction", ->
         "block_height": 348273,
         "result": -10000
       }
-      
+
       it "should be recognized", ->
         result = MyWallet.processTransaction(tx)
         expect(result.to).toEqual(transaction.to)
-        
+
       it "should not be intra wallet", ->
        result = MyWallet.processTransaction(tx)
        expect(result.intraWallet).toBe(false)
-        
+
     describe "to mobile", ->
-      paidTo["f7cab2c5c2df517fae77e90cd1d85f77b826e92b4769113cbfb9aff61a9b5b81"] = 
+      paidTo["f7cab2c5c2df517fae77e90cd1d85f77b826e92b4769113cbfb9aff61a9b5b81"] =
         "email":null,
         "mobile":"+31111111111",
         "redeemedAt":null,
         "address": "1CifSS1USfx3ZCRozis5MnRAP3Ev9cT7Zu"
-      
+
       tx = {
         "hash": "f7cab2c5c2df517fae77e90cd1d85f77b826e92b4769113cbfb9aff61a9b5b81",
         "size": 225,
@@ -1424,7 +1427,7 @@ describe "Transaction", ->
         ],
         "confirmations": 232
       }
-      
+
       transaction = {
         "from": {
             "account": {
@@ -1457,47 +1460,47 @@ describe "Transaction", ->
         "block_height": 348037,
         "result": -10000
       }
-      
-        
+
+
       it "should be recognized", ->
         result = MyWallet.processTransaction(tx)
-        expect(result.to).toEqual(transaction.to)     
-        
+        expect(result.to).toEqual(transaction.to)
+
       it "should not be intra wallet", ->
        result = MyWallet.processTransaction(tx)
-       expect(result.intraWallet).toBe(false)  
-    
+       expect(result.intraWallet).toBe(false)
+
     describe "confirmations", ->
       ##########################################################################
       it "should be fetched via getConfirmationsForTx()", ->
         MyWallet.processTransaction(defaultSampleTx)
-        expect(MyWallet.getConfirmationsForTx).toHaveBeenCalled()    
+        expect(MyWallet.getConfirmationsForTx).toHaveBeenCalled()
 
   describe "getConfirmationsForTx()", ->
     ##########################################################################
     it "a tx with null confirmations should return 0 and tx.setConfirmations(0) should be called.", ->
-      latestBlock = 
+      latestBlock =
         height: 335984
       defaultSampleTx.blockHeight = null
-      defaultSampleTx.setConfirmations = (c) -> c 
+      defaultSampleTx.setConfirmations = (c) -> c
       spyOn(defaultSampleTx, "setConfirmations")
-      
+
       conf = MyWallet.getConfirmationsForTx latestBlock, defaultSampleTx
-      
+
       expect(defaultSampleTx.setConfirmations).toHaveBeenCalled()
       expect(defaultSampleTx.setConfirmations).toHaveBeenCalledWith(0)
       expect(conf).toEqual(0)
-      
+
     it "defaultSampleTx should have 100 confirmations with the mocked latest block", ->
-      latestBlock = 
+      latestBlock =
         height: 336084
 
       conf = MyWallet.getConfirmationsForTx latestBlock, defaultSampleTx
-      
+
       expect(conf).toEqual(100)
 
     it "defaultSampleTx should have 1 confirmation with the mocked latest block", ->
-      latestBlock = 
+      latestBlock =
         height: 335985
 
       conf = MyWallet.getConfirmationsForTx latestBlock, defaultSampleTx
