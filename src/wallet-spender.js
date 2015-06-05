@@ -126,7 +126,7 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
 
     // cancel the transaction if public note and small output
     var anySmall = tx.transaction.outs.map(getValue).some(isSmall);
-    if(anySmall && payment.note !== undefined)
+    if(anySmall && payment.note !== undefined && payment.note !== null)
       {throw "There is an output too small to publish a note";}
 
     // push the transaction to the network
@@ -315,7 +315,6 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
      * @param {string} fromAddress address from where we are spending
      */
     addressSweep: function(fromAddress) {
-
       assert(fromAddress, "fromAddress required");
       payment.isSweep = true;
       var feeAmount = MyWallet.getBaseFee();
