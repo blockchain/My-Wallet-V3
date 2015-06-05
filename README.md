@@ -110,6 +110,8 @@ MyWallet.get_history(_successFun, _errorFun);
 
 Run `GITHUB_USER=... GITHUB_PASSWORD=... grunt dist` to check all dependencies against `dependency-whitelist.json` and generate `my-wallet.min.js``.
 
+If package.json contains a version like "1.2.*", the latest version is 1.2.3, but the latest whitelisted version is 1.2.2 then it will use 1.2.2 and show a warning. This also applies to dependencies! Even if you specificy a package version like 1.2.*, if that package depends on an another package and specifies a specific version that's not whitelist, the script will abort.
+
 ## Adding a browserified dependency
 
 1. `npm install newpackage --save`
