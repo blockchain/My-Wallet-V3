@@ -272,8 +272,8 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
     fromAddress: function(fromAddress, amount, feeAmount) {
 
       assert(fromAddress, "fromAddress required");
-      assert(amount, "amount required");
-      assert(feeAmount, "fee required");
+      assert(typeof(amount) === "number", "amount required");
+      assert(typeof(feeAmount) === "number", "fee required");
       payment.fromAddress = fromAddress ? fromAddress : WalletStore.getLegacyActiveAddresses();
       payment.changeAddress = fromAddress || WalletStore.getPreferredLegacyAddress();
       payment.amount = amount;
@@ -350,8 +350,8 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
     fromAccount: function(fromIndex, amount, feeAmount) {
 
       assert(fromIndex !== undefined || fromIndex !== null, "from account index required");
-      assert(amount, "amount required");
-      assert(feeAmount, "fee required");
+      assert(typeof(amount) === "number", "amount required");
+      assert(typeof(feeAmount) === "number", "fee required");
       payment.fromAccountIndex = fromIndex;
       payment.fromAccount = WalletStore.getHDWallet().getAccount(fromIndex);
       payment.changeAddress = payment.fromAccount.getChangeAddress();

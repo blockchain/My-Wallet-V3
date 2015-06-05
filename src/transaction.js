@@ -18,7 +18,9 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
   this.addressesOfNeededPrivateKeys = [];
   this.pathsOfNeededPrivateKeys = [];
 
-  fee = fee || defaultFee;
+  if(typeof(fee)!="number") {
+    fee = defaultFee;
+  }
 
   assert(toAddresses.length == amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
   assert(this.amount > network.dustThreshold, this.amount + ' must be above dust threshold (' + network.dustThreshold + ' Satoshis)');
@@ -55,11 +57,8 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
       this.addressesOfNeededPrivateKeys.push(address);
     }
 
-    var estimatedFee = network.estimateFee(transaction);
-    var currentFee = fee > estimatedFee ? fee : estimatedFee;
-
     accum += output.value;
-    subTotal = this.amount + currentFee;
+    subTotal = this.amount + fee;
     if (accum >= subTotal) {
       var change = accum - subTotal;
 
