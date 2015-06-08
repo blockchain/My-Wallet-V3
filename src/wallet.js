@@ -814,7 +814,11 @@ MyWallet.getBalanceForAccount = function(accountIdx) {
  */
  // used in frontend and iOS
 MyWallet.getReceivingAddressForAccount = function(accountIdx) {
-  return WalletStore.getHDWallet().getAccount(accountIdx).getReceiveAddress();
+  if (WalletStore.getHDWallet()){
+    return WalletStore.getHDWallet().getAccount(accountIdx).getReceiveAddress();
+  } else{
+    return "";
+  };
 };
 // used in frontend
 MyWallet.getReceivingAddressIndexForAccount = function(accountIdx) {
