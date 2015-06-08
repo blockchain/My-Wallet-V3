@@ -65,11 +65,11 @@ HDWallet.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Pass
 
 function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallback) {
   assert(secondPassword == null || secondPassword, "Second password must be null or set.");
-
   var accountIdx = 0;
 
   var continueLookingAheadAccount = true;
   var gotHistoryError = false;
+  var emptyAccountsInARow = 0;
 
   while(continueLookingAheadAccount) {
     var account = hdwallet.createAccount("Account " + accountIdx.toString(), secondPassword);
@@ -78,9 +78,15 @@ function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallbac
 
     MyWallet.get_history_with_addresses([xpub], function(obj) {
       if(obj.addresses[0].account_index == 0 && obj.addresses[0].change_index == 0) {
-        continueLookingAheadAccount = false;
-        hdwallet.accountArray.pop();
+        emptyAccountsInARow += 1;
       }
+      else {
+        emptyAccountsInARow = 0;
+      };
+      if (emptyAccountsInARow === 10) {
+        continueLookingAheadAccount = false;
+        hdwallet.accountArray.splice(-10);
+      };
       accountIdx += 1;
     }, function() {
       errorCallback && errorCallback();
