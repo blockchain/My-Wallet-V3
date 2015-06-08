@@ -1943,11 +1943,7 @@ MyWallet.getHistoryAndParseMultiAddressJSON = function(_success) {
     });
   };
 
-  var addresses = WalletStore.getLegacyActiveAddresses();
-  if (WalletStore.didUpgradeToHd()) {
-    addresses.concat(WalletStore.getXpubs());
-  }
-
+  var addresses = WalletStore.getXpubs().concat(WalletStore.getLegacyActiveAddresses());
   BlockchainAPI.async_get_history_with_addresses(addresses, function(data) {
     parseMultiAddressJSON(data, false, false);
     success && success();
