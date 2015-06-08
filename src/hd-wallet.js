@@ -37,13 +37,13 @@ HDWallet.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Pass
     var accountPayload = accountsArrayPayload[i];
     var hdaccount;
 
-    // This is called when a wallet is loaded, not when it's initially created. 
-    // If second password is enabled then accountPayload.xpriv has already been 
+    // This is called when a wallet is loaded, not when it's initially created.
+    // If second password is enabled then accountPayload.xpriv has already been
     // encrypted. We're keeping it in an encrypted state.
 
     // externalAccountPubKey was used in older dev. versions of the HD wallet
     // and does not occur "in the wild"
-    if(accountPayload.cache === undefined || accountPayload.cache.externalAccountPubKey) { 
+    if(accountPayload.cache === undefined || accountPayload.cache.externalAccountPubKey) {
       hdaccount = hdwallet.createAccountFromExtKey(accountPayload.label, accountPayload.xpriv, accountPayload.xpub);
       hdaccount.generateCache();
       hdwallet.accountArray.push(hdaccount);
@@ -65,11 +65,11 @@ HDWallet.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Pass
 
 function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallback) {
   assert(secondPassword == null || secondPassword, "Second password must be null or set.");
-
   var accountIdx = 0;
 
   var continueLookingAheadAccount = true;
   var gotHistoryError = false;
+  var emptyAccountsInARow = 0;
 
   while(continueLookingAheadAccount) {
     var account = hdwallet.createAccount("Account " + accountIdx.toString(), secondPassword);
@@ -78,9 +78,15 @@ function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallbac
 
     MyWallet.get_history_with_addresses([xpub], function(obj) {
       if(obj.addresses[0].account_index == 0 && obj.addresses[0].change_index == 0) {
-        continueLookingAheadAccount = false;
-        hdwallet.accountArray.pop();
+        emptyAccountsInARow += 1;
       }
+      else {
+        emptyAccountsInARow = 0;
+      };
+      if (emptyAccountsInARow === 10) {
+        continueLookingAheadAccount = false;
+        hdwallet.accountArray.splice(-10);
+      };
       accountIdx += 1;
     }, function() {
       errorCallback && errorCallback();
@@ -107,7 +113,7 @@ HDWallet.recoverHDWalletFromSeedHex = function(seedHex, bip39Password, secondPas
   recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallback);
 };
 
-HDWallet.recoverHDWalletFromMnemonic = function(passphrase, bip39Password, secondPassword, successCallback, errorCallback) {  
+HDWallet.recoverHDWalletFromMnemonic = function(passphrase, bip39Password, secondPassword, successCallback, errorCallback) {
   assert(typeof(bip39Password) === "string", "BIP 39 password must be set or an empty string");
 
   var hdwallet = new HDWallet(BIP39.mnemonicToEntropy(passphrase), bip39Password, secondPassword);
@@ -165,8 +171,8 @@ HDWallet.prototype.getAccounts = function() {
   return this.accountArray;
 };
 
-// This is called when a wallet is loaded, not when it's initially created. 
-// If second password is enabled then accountPayload.xpriv has already been 
+// This is called when a wallet is loaded, not when it's initially created.
+// If second password is enabled then accountPayload.xpriv has already been
 // encrypted. We're keeping it in an encrypted state.
 HDWallet.prototype.createAccountFromExtKey = function(label, possiblyEncryptedExtendedPrivateKey, extendedPublicKey, cache) {
   var accountIdx = this.accountArray.length;
@@ -211,9 +217,9 @@ HDWallet.prototype.createAccountWithSeedhex = function(label, seedHex, bip39Pass
   account.changeChain = accountZero.derive(1);
 
   var extendedPrivateKey = accountZero.toBase58();
-  var extendedPublicKey =  accountZero.neutered().toBase58();    
+  var extendedPublicKey =  accountZero.neutered().toBase58();
 
-  account.extendedPrivateKey = extendedPrivateKey == null || second_password == null ? extendedPrivateKey : WalletCrypto.encryptSecretWithSecondPassword(extendedPrivateKey, second_password, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());    
+  account.extendedPrivateKey = extendedPrivateKey == null || second_password == null ? extendedPrivateKey : WalletCrypto.encryptSecretWithSecondPassword(extendedPrivateKey, second_password, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());
   account.extendedPublicKey = extendedPublicKey;
 
   account.generateCache();
