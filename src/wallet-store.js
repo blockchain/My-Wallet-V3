@@ -180,7 +180,8 @@ var WalletStore = (function() {
     getXpubs: function(){
       function getxpub(hdacc) {return hdacc.extendedPublicKey;}
       function isNotArchived(hdacc) {return !hdacc.archived;}
-      return myHDWallet.getAccounts().filter(isNotArchived).map(getxpub);
+      var accounts = myHDWallet? myHDWallet.getAccounts() : [];
+      return accounts.filter(isNotArchived).map(getxpub);
     },
     getTransactions: function() {
       return transactions;
