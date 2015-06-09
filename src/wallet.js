@@ -977,7 +977,6 @@ MyWallet.processTransaction = function(tx) {
           } else {
             if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
               transaction.from.account.amount -= output.value;
-              // vale aixo es per triar el tema
             } else if ((transaction.from.account != null || transaction.from.legacyAddresses != null)) {
                 if (transaction.to.externalAddresses == null)
                     transaction.to.externalAddresses = [];
