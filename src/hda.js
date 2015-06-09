@@ -47,14 +47,21 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function() { return this._label;},
     set: function(str) {
-      if (Helpers.isString(str) && Helpers.isAlphaNum(str)){this._label = str;};
+      switch (HDAccount.isValidLabel(str)){
+        case true:
+          this._label = str;
+          break;
+        case false:
+        default:
+          throw 'Error: the account label must be an alphanumeric string';
+      }
     }
   },
   "archived": {
     configurable: false,
     get: function() { return this._archived;},
     set: function(value) {
-      if (typeof(value) === "boolean") {this._archived = value;};
+      if (Helpers.isBoolean(value)) {this._archived = value;};
     }
   },
   // "extendedPublicKey": {
@@ -202,6 +209,14 @@ HDAccount.prototype.generateCache = function() {
   this._cache.changeAccount = this._changeChain.neutered().toBase58();
   return this;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+// checkers
+
+HDAccount.isValidLabel = function(text){
+  return Helpers.isString(text) && Helpers.isAlphaNum(text);
+}
+
 
 // var x = Blockchain.HDAccount.example();
 // delete x._cache
