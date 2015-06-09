@@ -805,7 +805,9 @@ MyWallet.isArchivedForAccount = function(accountIdx) {
  */
  // used in frontend and iOS
 MyWallet.getBalanceForAccount = function(accountIdx) {
-  return WalletStore.getHDWallet().getAccount(accountIdx).balance;
+  var wallet = WalletStore.getHDWallet();
+  var balance = wallet? wallet.getAccount(accountIdx).balance : null;
+  return balance;
 };
 
 /**
