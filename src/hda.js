@@ -7,7 +7,7 @@ var assert  = require('assert');
 var Helpers = require('./helpers');
 
 ////////////////////////////////////////////////////////////////////////////////
-// HDAccount Raw Constructor
+// HDAccount Class
 
 function HDAccount(object){
 
@@ -22,8 +22,7 @@ function HDAccount(object){
   this._xpub     = obj.xpub;
   this._network  = obj.network || Bitcoin.networks.bitcoin;
   this._address_labels = [];
-  obj.address_labels
-    .map(function(e){self.setLabelForReceivingAddress(e.index,e.label);});
+  obj.address_labels.map(function(e){self.setLabelForReceivingAddress(e.index,e.label);});
   // Cache for ChainCode to improve init speed
   this._cache    = obj.cache;
 
@@ -82,7 +81,7 @@ Object.defineProperties(HDAccount.prototype, {
         throw 'Error: account.changeIndex must be a number';
     }
   },
-  "addressLabels": {
+  "receivingAddressesLabels": {
     configurable: false,
     get: function() {
       var denseArray = [];
@@ -147,36 +146,23 @@ HDAccount.fromExtKey = function(extKey, label){
 
 ////////////////////////////////////////////////////////////////////////////////
 // JSON DESERIALIZER
-HDAccount.reviver = function(k,v){
+// HDAccount.reviver = function(k,v){
 
-  switch(k) {
-    case '':
-      return new HDAccount(v);
-      break;
-    case 'label':
-      return Helpers.isValidLabel(v) ? v : undefined;
-      break;
-    case 'archived':
-      return Helpers.isBoolean(v) ? v : false;
-      break;
-    // add more checks over the keys
-    default:
-      return v;
-  }
-};
-
-HDAccount.fromJSON = function(text){
-
-  var account = JSON.parse(text, HDAccount.reviver);
-  // check for missing fields
-    // account.drama ? console.log("tenim drama") : console.log("no tenim drama");
-
-  account.restoreChains();
-  // probably we should backup after making sanity checks when loading if something changed
-
-
-  return account;
-};
+//   switch(k) {
+//     case '':
+//       return new HDAccount(v);
+//       break;
+//     case 'label':
+//       return Helpers.isValidLabel(v) ? v : undefined;
+//       break;
+//     case 'archived':
+//       return Helpers.isBoolean(v) ? v : false;
+//       break;
+//     // add more checks over the keys
+//     default:
+//       return v;
+//   }
+// };
 
 ////////////////////////////////////////////////////////////////////////////////
 // JSON SERIALIZER
@@ -189,8 +175,8 @@ HDAccount.prototype.toJSON = function(){
     archived      : this._archived,
     xpriv         : this._xpriv,
     xpub          : this._xpub,
-    cache         : this._cache,
-    address_labels: this.addressLabels
+    address_labels: this.receivingAddressesLabels,
+    cache         : this._cache
   };
 
   return hdaccount;
@@ -232,6 +218,7 @@ HDAccount.prototype.generateCache = function() {
 // index managment
 HDAccount.prototype.incrementReceiveIndex = function() {
   this._receiveIndex++;
+  return this;
 };
 ////////////////////////////////////////////////////////////////////////////////
 // receive chain managment
@@ -283,16 +270,11 @@ HDAccount.prototype.setLabelForReceivingAddress = function(index, label) {
   assert(Helpers.isNumber(index), "Error: address index must be a number");
   assert(Helpers.isValidLabel(label), "Error: address label must be alphanumeric");
   this._address_labels[index] = label;
+  return this;
 }
 HDAccount.prototype.getLabelForReceivingAddress = function(index) {
   assert(Helpers.isNumber(index), "Error: address index must be a number");
   return this._address_labels[index];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// checkers
-HDAccount.isValidLabel = function(text){
-  return Helpers.isString(text) && Helpers.isAlphaNum(text);
 }
 
 // var x = Blockchain.HDAccount.example();

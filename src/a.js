@@ -38,7 +38,10 @@ Object.defineProperties(Address.prototype, {
     configurable: false,
     get: function() { return this._label;},
     set: function(str) {
-      if (Helpers.isString(str) && Helpers.isAlphaNum(str)){this._label = str;};
+      if(Helpers.isValidLabel(str))
+        this._label = str;
+      else
+        throw 'Error: address.label must be an alphanumeric string';
     }
   },
   "created_time": {
@@ -57,9 +60,10 @@ Object.defineProperties(Address.prototype, {
     configurable: false,
     get: function() { return this._tag === 2;},
     set: function(value) {
-      if (typeof(value) === "boolean") {
+      if(Helpers.isBoolean(value))
         if (value) {this._tag = 2;} else {this._tag = 0;}
-      };
+      else
+        throw 'Error: address.archived must be a boolean';
     }
   }
 });
@@ -91,13 +95,13 @@ Address.reviver = function(k,v){
 
 Address.prototype.toJSON = function(){
   var address = {
-    addr: this.addr,
-    priv: this.priv,
-    tag: this.tag,
-    label: this.label,
-    created_time: this.created_time,
-    created_device_name: this.created_device_name,
-    created_device_version: this.created_device_version
+    addr   : this.addr,
+    priv   : this.priv,
+    tag    : this.tag,
+    label  : this.label,
+    created_time           : this.created_time,
+    created_device_name    : this.created_device_name,
+    created_device_version : this.created_device_version
   };
   return address;
 };

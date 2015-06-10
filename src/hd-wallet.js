@@ -30,7 +30,6 @@ function HDWallet(seedHex, bip39Password, second_password) {
 
 HDWallet.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Password, secondPassword, success, error) {
   assert(typeof(bip39Password) === "string", "BIP 39 password must be set or an empty string");
-  console.log(accountsArrayPayload);
   var hdwallet = new HDWallet(seedHexString, bip39Password, secondPassword);
 
   for (var i = 0; i < accountsArrayPayload.length; i++) {

@@ -14,8 +14,8 @@ var BIP39 = require('bip39');
 
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
-var HDWallet = require('./hd-wallet');
-var HDAccount = require('./hd-account');
+var HDWallet = require('./hdw');
+var HDAccount = require('./hda');
 var Address = require('./a');
 var Helpers = require('./helpers');
 
@@ -24,20 +24,26 @@ var Helpers = require('./helpers');
 
 function Wallet(object) {
 
-  var obj = object || {};
-  obj.options = obj.options || {};
+  var obj        = object || {};
+  obj.options    = obj.options || {};
+  obj.keys       = obj.keys || [];
+  obj.hd_wallets = obj.hd_wallets || [];
 
-  this._guid = obj.guid;
-  this._sharedKey = obj.sharedKey;
-  this._double_encryption = obj.double_encryption;
-  this._dpasswordhash = obj.dpasswordhash;
+  this._guid              = obj.guid;
+  this._sharedKey         = obj.sharedKey;
+  this._double_encryption = obj.double_encryption || false;
+  this._dpasswordhash     = obj.dpasswordhash;
   //options
   this._pbkdf2_iterations = obj.options.pbkdf2_iterations;
-  this._fee_policy = obj.options.fee_policy;
+  this._fee_policy        = obj.options.fee_policy;
+  // lists
+  this._addresses         = obj.keys
+  this._hd_wallets        = obj.hd_wallets
 
-  this._addresses = object.keys
-    ? object.keys.reduce(function(o, v) { o[v.addr] = new Address(v); return o;}, {})
-    : {};
+  // missing address book
+  // missing tx_notes
+  // missing tx_tags
+  // missing tag_names
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -64,8 +70,11 @@ Object.defineProperties(Wallet.prototype, {
   "pbkdf2_iterations": {
     configurable: false,
     get: function() { return this._pbkdf2_iterations;},
-    set: function(n) {
-      if(Helpers.isNumber(n)) this._pbkdf2_iterations = n;
+    set: function(value) {
+      if(Helpers.isNumber(value))
+        this._pbkdf2_iterations = value;
+      else
+        throw 'Error: wallet.pbkdf2_iterations must be a number';
     }
   },
   "addresses": {
@@ -87,29 +96,36 @@ Object.defineProperties(Wallet.prototype, {
 
 Wallet.prototype.toJSON = function(){
   var wallet = {
-    guid: this.guid,
-    sharedKey: this.sharedKey,
-    double_encryption: this.double_encryption,
-    dpasswordhash: this.dpasswordhash,
-    options: {
-      pbkdf2_iterations: this.pbkdf2_iterations,
-      fee_policy: this.fee_policy
+    guid              : this.guid,
+    sharedKey         : this.sharedKey,
+    double_encryption : this.double_encryption,
+    dpasswordhash     : this.dpasswordhash,
+    options           : {
+      pbkdf2_iterations : this.pbkdf2_iterations,
+      fee_policy        : this.fee_policy
     },
-    keys: this.keys
+    keys              : this.keys,
+    hd_wallets        : this._hd_wallets
   };
   return wallet;
 };
 
 Wallet.prototype.importLegacyAddress = function(key, label, secPass){
   var ad = Address.import(key, label);
-  ad.encrypt(secPass, this.sharedKey, this.pbkdf2_iterations);
+  if (this.double_encryption) {
+    assert(secPass, "Error: second password needed");
+    ad.encrypt(secPass, this.sharedKey, this.pbkdf2_iterations);
+  };
   this._addresses[ad.addr] = ad;
   return this;
 };
 
 Wallet.prototype.newLegacyAddress = function(label, pw){
   var ad = Address.new(label);
-  ad.encrypt(pw, this.sharedKey, this.pbkdf2_iterations);
+  if (this.double_encryption) {
+    assert(pw, "Error: second password needed");
+    ad.encrypt(pw, this.sharedKey, this.pbkdf2_iterations);
+  };
   this._addresses[ad.addr] = ad;
   return this;
 };
@@ -149,7 +165,21 @@ Wallet.example = function(){
 };
 
 Wallet.reviver = function(k,v){
-  if (k === '') return new Wallet(v);
+
+  function reviveHDAccount(o) { var a = new HDAccount(o); a.restoreChains(); return a;};
+  function reviveHDWallet(o)  { return new HDWallet(o);};
+  function reviveAddress(o,a) { o[a.addr] = new Address(a); return o;};
+
+  if (k === '')
+    return new Wallet(v);
+  if (k === 'keys')
+    return v.reduce(reviveAddress, {})
+  if (k === 'hd_wallets')
+    return v.map(reviveHDWallet);
+  if (k === 'accounts')
+    return v.map(reviveHDAccount);
+
+  // default
   return v;
 };
 
