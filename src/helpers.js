@@ -14,5 +14,14 @@ Helpers.isNumber = function(num){
 Helpers.isBoolean = function(value){
   return typeof(value) === "boolean";
 };
+// Return a memoized version of function f
+Helpers.memoize = function(f){
+  var cache = {};
+  return function() {
+    var key = arguments.length + Array.prototype.join.call(arguments, ",");
+    if (key in cache) return cache[key];
+    else return cache[key] = f.apply(this, arguments);  
+  };
+}
 
 module.exports = Helpers;
