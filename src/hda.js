@@ -11,18 +11,21 @@ var Helpers = require('./helpers');
 
 function HDAccount(object){
 
+  var self = this;
   var obj = object || {};
   obj.cache = obj.cache || {};
-
+  obj.address_labels = obj.address_labels || [];
   // serializable data
   this._label    = obj.label;
   this._archived = obj.archived || false;
   this._xpriv    = obj.xpriv;
   this._xpub     = obj.xpub;
-    // Cache for ChainCode to improve init speed
-  this._cache    = obj.cache;
-  this._address_labels = {};
   this._network  = obj.network || Bitcoin.networks.bitcoin;
+  this._address_labels = [];
+  obj.address_labels
+    .map(function(e){self.setLabelForReceivingAddress(e.index,e.label);});
+  // Cache for ChainCode to improve init speed
+  this._cache    = obj.cache;
 
   // computed properties
   this._receiveChain  = null;
@@ -43,7 +46,7 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function() { return this._label;},
     set: function(str) {
-      if(HDAccount.isValidLabel(str))
+      if(Helpers.isValidLabel(str))
         this._label = str;
       else
         throw 'Error: account.label must be an alphanumeric string';
@@ -79,25 +82,15 @@ Object.defineProperties(HDAccount.prototype, {
         throw 'Error: account.changeIndex must be a number';
     }
   },
-  //////////////////////////////////////////////////////////////////////////////
-  // this must be rethinked
-  "labels": {
-    configurable: false,
-    get: function(){return Object.keys(this._address_labels);}
-  },
-  "addressLabelAtIndex": {
-    configurable: false,
-    value: function(index) {return this._address_labels[index];}
-  },
-  "address_labels": {
+  "addressLabels": {
     configurable: false,
     get: function() {
-      var that = this;
-      return that.labels.map(function(i){return that.addressLabelAtIndex(i)});
+      var denseArray = [];
+      this._address_labels
+        .map(function(lab,ind){denseArray.push({"index": ind, "label": lab})});
+      return denseArray;
     }
   },
-  // end of rethink
-  //////////////////////////////////////////////////////////////////////////////
   "extendedPublicKey": {
      configurable: false,
      get: function() { return this._xpub;},
@@ -112,11 +105,7 @@ Object.defineProperties(HDAccount.prototype, {
 // CONSTRUCTORS
 
 HDAccount.example = function(){
-
-  var ex = HDAccount.fromExtKey("xprv9zJ1cTHnqzgBP2boCwpP47LBzjGLKXkwYqXoYnV4yrBmstmw6SVtirpvm4GESg9YLn9R386qpmnsrcC5rvrpEJAXSrfqQR3qGtjGv5ddV9g", "Example account");
-  var labels = [{"index":0,"label":"temita label","address":"1MZqtYMvdiBjiwruDExyTRZ9jT3CkdUcrD"},{"index":3,"label":"tema","address":"1Gcv2oRzUzqhBVSJuNvw6nuaJiwG2gdArs"}];
-  ex._address_labels = labels.reduce(function(o, v) { o[v.index] = v.label; return o;}, {});
-  return ex;
+  return HDAccount.fromExtKey("xprv9zJ1cTHnqzgBP2boCwpP47LBzjGLKXkwYqXoYnV4yrBmstmw6SVtirpvm4GESg9YLn9R386qpmnsrcC5rvrpEJAXSrfqQR3qGtjGv5ddV9g", "Example account");
 };
 
 /* BIP 44 defines the following 5 levels in BIP32 path:
@@ -165,7 +154,7 @@ HDAccount.reviver = function(k,v){
       return new HDAccount(v);
       break;
     case 'label':
-      return HDAccount.isValidLabel(v) ? v : undefined;
+      return Helpers.isValidLabel(v) ? v : undefined;
       break;
     case 'archived':
       return Helpers.isBoolean(v) ? v : false;
@@ -196,11 +185,12 @@ HDAccount.prototype.toJSON = function(){
 
   // should we add checks on the serializer too?
   var hdaccount = {
-    label    : this._label,
-    archived : this._archived,
-    xpriv    : this._xpriv,
-    xpub     : this._xpub,
-    cache    : this._cache
+    label         : this._label,
+    archived      : this._archived,
+    xpriv         : this._xpriv,
+    xpub          : this._xpub,
+    cache         : this._cache,
+    address_labels: this.addressLabels
   };
 
   return hdaccount;
@@ -288,11 +278,22 @@ HDAccount.prototype.generateKeyFromPath = function(path) {
   return key;
 };
 ////////////////////////////////////////////////////////////////////////////////
+// address labels
+HDAccount.prototype.setLabelForReceivingAddress = function(index, label) {
+  assert(Helpers.isNumber(index), "Error: address index must be a number");
+  assert(Helpers.isValidLabel(label), "Error: address label must be alphanumeric");
+  this._address_labels[index] = label;
+}
+HDAccount.prototype.getLabelForReceivingAddress = function(index) {
+  assert(Helpers.isNumber(index), "Error: address index must be a number");
+  return this._address_labels[index];
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // checkers
 HDAccount.isValidLabel = function(text){
   return Helpers.isString(text) && Helpers.isAlphaNum(text);
 }
-
 
 // var x = Blockchain.HDAccount.example();
 // delete x._cache

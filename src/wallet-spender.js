@@ -28,7 +28,6 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
     listener = {};
   }
 
-  console.log(successCallback.toString());
   var payment = {
     note:              note,
     fromAddress:       null,
