@@ -71,11 +71,17 @@ function update_tor_ip_block(enabled, success, error) {
 };
 
 function update_password_hint1(value, success, error) {
-  updateKV('Updating Main Password Hint', 'update-password-hint1', value, success, error);
+  if (value.split('').some(function(c){return c.charCodeAt(0) > 255;}))
+    error(101);
+  else
+    updateKV('Updating Main Password Hint', 'update-password-hint1', value, success, error);
 };
 
 function update_password_hint2(value, success, error) {
-  updateKV('Updating Second Password Hint', 'update-password-hint2', value, success, error);
+  if (value.split('').some(function(c){return c.charCodeAt(0) > 255;}))
+    error(101);
+  else
+    updateKV('Updating Second Password Hint', 'update-password-hint2', value, success, error);
 };
 
 function change_email(email, success, error) {
@@ -109,15 +115,15 @@ function setTwoFactorYubiKey(code, success, error) {
   assert(code, "Activation code required");
   assert(success, "Success callback required");
   assert(error, "Error callback required");
-  
-  // Tell the server about the YubiKey and then enable 2FA with it: 
+
+  // Tell the server about the YubiKey and then enable 2FA with it:
   updateKV(
-    'Configuring Yubikey', 
-    'update-yubikey', 
-    code, 
+    'Configuring Yubikey',
+    'update-yubikey',
+    code,
     function() {
       updateAuthType(3, success, error);
-    }, 
+    },
     function() {
       error("Failed to configure Yubikey");
     }
