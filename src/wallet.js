@@ -610,6 +610,7 @@ function wsSuccess(ws) {
       var tx = TransactionFromJSON(obj.x);
 
       var tx_processed = MyWallet.processTransaction(tx);
+      console.log(tx_processed);
       var tx_account = tx_processed.to.account;
 
       //Check if this is a duplicate
@@ -620,9 +621,8 @@ function wsSuccess(ws) {
 
       WalletStore.addToFinalBalance(tx_processed.result);
 
-      var account = MyWallet.getAccount(tx_account.index);
-
       if (tx_account) {
+        var account = MyWallet.getAccount(tx_account.index);
         account.balance += tx_processed.result;
 
         // Increase receive address index if this was an incoming transaction using the highest index:
