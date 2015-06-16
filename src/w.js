@@ -166,7 +166,7 @@ Wallet.example = function(){
 
 Wallet.reviver = function(k,v){
 
-  function reviveHDAccount(o) { var a = new HDAccount(o); a.restoreChains(); return a;};
+  function reviveHDAccount(o) { return new HDAccount(o);};
   function reviveHDWallet(o)  { return new HDWallet(o);};
   function reviveAddress(o,a) { o[a.addr] = new Address(a); return o;};
 
