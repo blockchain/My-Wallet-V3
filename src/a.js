@@ -106,19 +106,15 @@ Address.prototype.toJSON = function(){
   return address;
 };
 
-Address.prototype.encrypt = function(password, sharedKey, pbkdf2Iterations){
-  var priv = !password || !sharedKey || !pbkdf2Iterations
-    ? this._priv
-    : WalletCrypto.encryptSecretWithSecondPassword(this._priv, password, sharedKey, pbkdf2Iterations);
+Address.prototype.encrypt = function(cipher){
+  var priv = cipher(this._priv);
   if (!priv) { throw 'Error Encoding key'; };
   this._priv = priv;
   return this;
 };
 
-Address.prototype.decrypt = function(password, sharedKey, pbkdf2Iterations){
-  var priv = !password || !sharedKey || !pbkdf2Iterations
-    ? this._priv
-    : WalletCrypto.decryptSecretWithSecondPassword(this._priv, password, sharedKey, pbkdf2Iterations);
+Address.prototype.decrypt = function(cipher){
+  var priv = cipher(this._priv);
   if (!priv) { throw 'Error Decoding key'; };
   this._priv = priv;
   return this;

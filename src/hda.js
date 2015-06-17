@@ -204,21 +204,17 @@ HDAccount.prototype.getLabelForReceivingAddress = function(index) {
   return this._address_labels[index];
 }
 
-HDAccount.prototype.encrypt = function(password, sharedKey, pbkdf2Iterations){
+HDAccount.prototype.encrypt = function(cipher){
   if(!this._xpriv) return this;
-  var xpriv = !password || !sharedKey || !pbkdf2Iterations
-    ? this._xpriv
-    : WalletCrypto.encryptSecretWithSecondPassword(this._xpriv, password, sharedKey, pbkdf2Iterations);
+  var xpriv = cipher(this._xpriv);
   if (!xpriv) { throw 'Error Encoding account extended private key'; };
   this._xpriv = xpriv;
   return this;
 };
 
-HDAccount.prototype.decrypt = function(password, sharedKey, pbkdf2Iterations){
+HDAccount.prototype.decrypt = function(cipher){
   if(!this._xpriv) return this;
-  var xpriv = !password || !sharedKey || !pbkdf2Iterations
-    ? this._xpriv
-    : WalletCrypto.decryptSecretWithSecondPassword(this._xpriv, password, sharedKey, pbkdf2Iterations);
+  var xpriv = cipher(this._xpriv);
   if (!xpriv) { throw 'Error Decoding account extended private key'; };
   this._xpriv = xpriv;
   return this;

@@ -19,7 +19,7 @@ function HDWallet(object){
   this._bip39Password       = obj.passphrase;
   this._mnemonic_verified   = obj.mnemonic_verified;
   this._default_account_idx = obj.default_account_idx;
-  this._accounts            = obj.accounts;
+  this._accounts            = obj.accounts || [];
 
   this._paidTo              = obj.paidTo;
 
@@ -92,6 +92,16 @@ HDWallet.new = function(seedHex, bip39Password){
   return new HDWallet(hdwallet);
 };
 
+// HDWallet.prototype.newAccount = function(label, secondPassword){
+//   // we assume second password active if there is a password
+//   var account = HDAccount.new(label);
+//   if (this.double_encryption) {
+//     assert(pw, "Error: second password needed");
+//     ad.encrypt(pw, this.sharedKey, this.pbkdf2_iterations);
+//   };
+//   this._addresses[ad.addr] = ad;
+//   return this;
+// };
 ////////////////////////////////////////////////////////////////////////////////
 // JSON serializer
 
@@ -111,35 +121,29 @@ HDWallet.prototype.toJSON = function(){
 // methods
 
 HDWallet.prototype.verifyMnemonic = function(){
-
   this._mnemonic_verified = true;
   return this;
 };
 ////////////////////////////////////////////////////////////////////////////////
 // account managment
 
-HDWallet.prototype.newAccount = function(label){
-
+HDWallet.prototype.encrypt = function(cipher){
+  function f(acc) {acc.encrypt(cipher);};
+  this._accounts.forEach(f);
+  this._seedHex = chiper(this._seedHex);
+  this._bip39Password = this._bip39Password === ""
+   ? this._bip39Password
+   : cipher(this._bip39Password);
   return this;
 };
 
-HDWallet.prototype.encrypt = function(password, sharedKey, pbkdf2Iterations){
-  function f(acc) {acc.encrypt(password, sharedKey, pbkdf2Iterations);};
+HDWallet.prototype.decrypt = function(cipher){
+  function f(acc) {acc.decrypt(cipher);};
   this._accounts.forEach(f);
-  this._seedHex = WalletCrypto.encryptSecretWithSecondPassword(this._seedHex, password, sharedKey, pbkdf2Iterations);
+  this._seedHex = cipher(this._seedHex);
   this._bip39Password = this._bip39Password === ""
    ? this._bip39Password
-   : WalletCrypto.encryptSecretWithSecondPassword(this._bip39Password, password, sharedKey, pbkdf2Iterations);
-  return this;
-};
-
-HDWallet.prototype.decrypt = function(password, sharedKey, pbkdf2Iterations){
-  function f(acc) {acc.decrypt(password, sharedKey, pbkdf2Iterations);};
-  this._accounts.forEach(f);
-  this._seedHex = WalletCrypto.decryptSecretWithSecondPassword(this._seedHex, password, sharedKey, pbkdf2Iterations);
-  this._bip39Password = this._bip39Password === ""
-   ? this._bip39Password
-   : WalletCrypto.decryptSecretWithSecondPassword(this._bip39Password, password, sharedKey, pbkdf2Iterations);
+   : cipher(this._bip39Password);
   return this;
 };
 ////////////////////////////////////////////////////////////////////////////////

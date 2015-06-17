@@ -149,9 +149,9 @@ Wallet.prototype.validateSecondPassword = function(inputString) {
 };
 
 Wallet.prototype.encrypt = function(pw){
-  var self = this;
   if (!this._double_encryption) {
-    function f(element) {element.encrypt(pw, self.sharedKey, self.pbkdf2_iterations);};
+    var g = WalletCrypto.encryptionFunction(pw, this._sharedKey, this._pbkdf2_iterations);
+    var f = function(element) {element.encrypt(g);};
     this.keys.forEach(f);
     this._hd_wallets.forEach(f);
     this._dpasswordhash = WalletCrypto.hashNTimes(this._sharedKey + pw, this._pbkdf2_iterations);
@@ -162,8 +162,8 @@ Wallet.prototype.encrypt = function(pw){
 
 Wallet.prototype.decrypt = function(pw){
   if (this._double_encryption) {
-    var self = this;
-    function f(element) {element.decrypt(pw, self.sharedKey, self.pbkdf2_iterations);};
+    var g = WalletCrypto.decryptionFunction(pw, this._sharedKey, this._pbkdf2_iterations);
+    var f = function(element) {element.decrypt(g);};
     this.keys.forEach(f);
     this._hd_wallets.forEach(f);
     this._dpasswordhash = undefined;

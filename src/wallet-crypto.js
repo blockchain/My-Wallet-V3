@@ -28,6 +28,26 @@ function encryptSecretWithSecondPassword(base58, password, sharedKey, pbkdf2_ite
   return encrypt(base58, sharedKey + password, pbkdf2_iterations);
 }
 
+function encryptionFunction(password, sharedKey, pbkdf2Iterations) {
+  if (!password || !sharedKey || !pbkdf2Iterations) {
+    var f = function (msg) {return msg;};
+  }
+  else{
+    var f = function (msg) {return encryptSecretWithSecondPassword(msg, password, sharedKey, pbkdf2Iterations);};
+  };
+  return f;
+}
+
+function decryptionFunction(password, sharedKey, pbkdf2Iterations) {
+  if (!password || !sharedKey || !pbkdf2Iterations) {
+    var f = function (msg) {return msg;};
+  }
+  else{
+    var f = function (msg) {return decryptSecretWithSecondPassword(msg, password, sharedKey, pbkdf2Iterations);};
+  };
+  return f;
+}
+
 function decrypt(data, password, pbkdf2_iterations) {
   assert(data, "data missing");
   assert(password, "password missing");
@@ -274,5 +294,7 @@ module.exports = {
   reencrypt: reencrypt,
   decryptPasswordWithProcessedPin: decryptPasswordWithProcessedPin,
   stretchPassword: stretchPassword,
-  hashNTimes: hashNTimes
+  hashNTimes: hashNTimes,
+  encryptionFunction: encryptionFunction,
+  decryptionFunction: decryptionFunction
 };
