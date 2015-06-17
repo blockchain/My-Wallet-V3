@@ -90,23 +90,23 @@ Object.defineProperties(HDAccount.prototype, {
   },
   "extendedPublicKey": {
      configurable: false,
-     get: function() { return this._xpub;},
+     get: function() { return this._xpub;}
    },
   "extendedPrivateKey": {
     configurable: false,
-    get: function() { return this._xpriv;},
+    get: function() { return this._xpriv;}
   },
   "keyRing": {
     configurable: false,
-    get: function() { return this._keyRing;},
+    get: function() { return this._keyRing;}
   },
   "receiveAddress": {
     configurable: false,
-    get: function() { return this._keyRing.receive.getAddress(this._receiveIndex);},
+    get: function() { return this._keyRing.receive.getAddress(this._receiveIndex);}
   },
   "changeAddress": {
     configurable: false,
-    get: function() { return this._keyRing.change.getAddress(this._changeIndex);},
+    get: function() { return this._keyRing.change.getAddress(this._changeIndex);}
   }
 });
 
