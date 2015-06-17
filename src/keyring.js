@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = KeySet;
+module.exports = KeyRing;
 ////////////////////////////////////////////////////////////////////////////////
 var Bitcoin = require('bitcoinjs-lib');
 var assert  = require('assert');
@@ -8,15 +8,15 @@ var Helpers = require('./helpers');
 var KeyChain = require('./keychain');
 
 ////////////////////////////////////////////////////////////////////////////////
-// keyset: A collection of keychains
+// keyring: A collection of keychains
 
-function KeySet(extendedKey, cache) {
+function KeyRing(extendedKey, cache) {
   this._receiveChain = null;
   this._changeChain  = null;
   this.init(extendedKey, cache);
 };
 
-Object.defineProperties(KeySet.prototype, {
+Object.defineProperties(KeyRing.prototype, {
   "receive": {
     configurable: false,
     get: function() {return this._receiveChain;}
@@ -27,17 +27,21 @@ Object.defineProperties(KeySet.prototype, {
   }
 });
 
-KeySet.prototype.init = function (extendedKey, cache){
-  if (this._receiveChain && this._changeChain) return this;
+KeyRing.prototype.init = function (extendedKey, cache){
   cache = cache || {};
-  this._receiveChain = cache.receiveAccount
-    ? new KeyChain(null,null,cache.receiveAccount ) : new KeyChain(extendedKey,0);
-  this._changeChain  = cache.changeAccount
-    ? new KeyChain(null,null,cache.changeAccount ) : new KeyChain(extendedKey,1);
+
+  if (this._receiveChain && this._changeChain) return this;
+
+  if (extendedKey || cache.receiveAccount && cache.changeAccount) {
+    this._receiveChain = cache.receiveAccount
+      ? new KeyChain(null,null,cache.receiveAccount ) : new KeyChain(extendedKey,0);
+    this._changeChain  = cache.changeAccount
+      ? new KeyChain(null,null,cache.changeAccount ) : new KeyChain(extendedKey,1);
+  }
   return this;
 };
 
-KeySet.prototype.privateKeyFromPath = function (path) {
+KeyRing.prototype.privateKeyFromPath = function (path) {
   var components = path.split("/");
   assert(components[0] === 'M', 'Invalid Path prefix');
   assert(components[1] === '0' || components[1] === '1'
@@ -51,7 +55,7 @@ KeySet.prototype.privateKeyFromPath = function (path) {
   return key;
 };
 
-KeySet.prototype.toJSON = function (){
+KeyRing.prototype.toJSON = function (){
   var cacheJSON = {
     receiveAccount : this._receiveChain.xpub,
     changeAccount  : this._changeChain.xpub

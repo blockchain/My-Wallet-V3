@@ -27,16 +27,6 @@ Object.defineProperties(KeyChain.prototype, {
   }
 });
 
-KeyChain.prototype.getAddress = function(index) {
-  assert(typeof(index) === "number" && index >= 0, "Address index must be integer >= 0");
-  return this._getKey(index).getAddress().toString();
-};
-
-KeyChain.prototype.getPrivateKey = function(index) {
-  assert(typeof(index) === "number" && index >= 0 , "private key index must be integer >= 0");
-  var key = this._getKey(index).privKey;
-  return key ? key : null;
-};
 KeyChain.prototype.init = function(extendedKey, index, cache) {
   // don't override the chain once initialized
   if (this._chainRoot) return this;
@@ -50,4 +40,15 @@ KeyChain.prototype.init = function(extendedKey, index, cache) {
       ? Bitcoin.HDNode.fromBase58(extendedKey).derive(index) : undefined;
   };
   return this;
+};
+
+KeyChain.prototype.getAddress = function(index) {
+  assert(typeof(index) === "number" && index >= 0, "Address index must be integer >= 0");
+  return this._getKey(index).getAddress().toString();
+};
+
+KeyChain.prototype.getPrivateKey = function(index) {
+  assert(typeof(index) === "number" && index >= 0 , "private key index must be integer >= 0");
+  var key = this._getKey(index).privKey;
+  return key ? key : null;
 };

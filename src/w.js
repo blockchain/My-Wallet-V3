@@ -192,5 +192,5 @@ Wallet.reviver = function(k,v){
 // var t = JSON.parse(j,Blockchain.Wallet.reviver);
 
 // loading old wallet to new model
-// var oldJson = Blockchain.MyWallet.makeWalletJSON();
-// var newModel = JSON.parse(oldJson,Blockchain.Wallet.reviver);
+// var o = Blockchain.MyWallet.makeWalletJSON();
+// var n = JSON.parse(oldJson,Blockchain.Wallet.reviver);

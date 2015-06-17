@@ -15,7 +15,7 @@ module.exports = {
   HDAccount: require('./hda'),
   HDWallet: require('./hdw'),
   KeyChain: require('./keychain'),
-  KeySet: require('./keyset'),
+  KeyRing: require('./keyring'),
   Bitcoin: require('bitcoinjs-lib'),
   Base58: require('bs58'),
   BigInteger: require('bigi')

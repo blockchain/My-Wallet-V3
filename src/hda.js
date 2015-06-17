@@ -5,7 +5,7 @@ module.exports = HDAccount;
 var Bitcoin = require('bitcoinjs-lib');
 var assert  = require('assert');
 var Helpers = require('./helpers');
-var KeySet  = require('./keyset');
+var KeyRing  = require('./keyring');
 
 ////////////////////////////////////////////////////////////////////////////////
 // HDAccount Class
@@ -26,7 +26,7 @@ function HDAccount(object){
   obj.address_labels.map(function(e){self.setLabelForReceivingAddress(e.index,e.label);});
 
   // computed properties
-  this._keys     = KeySet(obj.xpub, obj.cache);
+  this._keyRing       = new KeyRing(obj.xpub, obj.cache);
   this._receiveIndex  = 0;
   this._changeIndex   = 0;
   this._n_tx          = 0;
@@ -95,6 +95,18 @@ Object.defineProperties(HDAccount.prototype, {
   "extendedPrivateKey": {
     configurable: false,
     get: function() { return this._xpriv;},
+  },
+  "keyRing": {
+    configurable: false,
+    get: function() { return this._keyRing;},
+  },
+  "receiveAddress": {
+    configurable: false,
+    get: function() { return this._keyRing.receive.getAddress(this._receiveIndex);},
+  },
+  "changeAddress": {
+    configurable: false,
+    get: function() { return this._keyRing.change.getAddress(this._changeIndex);},
   }
 });
 
@@ -123,7 +135,7 @@ HDAccount.fromAccountMasterKey = function(accountZero, label){
   account.label  = label;
   account._xpriv = accountZero.toBase58();
   account._xpub  = accountZero.neutered().toBase58();
-  account._keys.init(this._xpub, null);
+  account._keyRing.init(account._xpub, null);
   return account;
 };
 
@@ -154,26 +166,6 @@ HDAccount.fromExtPrivateKey = function(extPrivateKey, label){
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// JSON DESERIALIZER
-// HDAccount.reviver = function(k,v){
-
-//   switch(k) {
-//     case '':
-//       return new HDAccount(v);
-//       break;
-//     case 'label':
-//       return Helpers.isValidLabel(v) ? v : undefined;
-//       break;
-//     case 'archived':
-//       return Helpers.isBoolean(v) ? v : false;
-//       break;
-//     // add more checks over the keys
-//     default:
-//       return v;
-//   }
-// };
-
-////////////////////////////////////////////////////////////////////////////////
 // JSON SERIALIZER
 
 HDAccount.prototype.toJSON = function(){
@@ -185,82 +177,18 @@ HDAccount.prototype.toJSON = function(){
     xpriv         : this._xpriv,
     xpub          : this._xpub,
     address_labels: this.receivingAddressesLabels,
-    cache         : this._keys
+    cache         : this._keyRing
   };
 
   return hdaccount;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// METHODS
-// HDAccount.prototype.isCached = function(){
 
-//   var x = (this._cache && this._cache.receiveAccount && this._cache.changeAccount);
-//   return (x !== null) && (x !== undefined);
-// };
-
-// HDAccount.prototype.generateChains = function(){
-
-//   if (this.isCached()) {
-//     this._receiveChain = Bitcoin.HDNode.fromBase58(this._cache.receiveAccount);
-//     this._changeChain = Bitcoin.HDNode.fromBase58(this._cache.changeAccount);
-//   }
-//   else {
-//     if (this._xpub) {
-//       var accountZeroPublic = Bitcoin.HDNode.fromBase58(this._xpub);
-//       this._receiveChain = accountZeroPublic.derive(0).neutered();
-//       this._changeChain = accountZeroPublic.derive(1).neutered();
-//       this.generateCache();
-//     };
-//   };
-//   return this;
-// };
-
-// HDAccount.prototype.generateCache = function() {
-
-//   assert(this._receiveChain, "External Account not set");
-//   assert(this._changeChain, "Internal Account not set");
-//   this._cache = {};
-//   this._cache.receiveAccount = this._receiveChain.neutered().toBase58();
-//   this._cache.changeAccount = this._changeChain.neutered().toBase58();
-//   return this;
-// };
-////////////////////////////////////////////////////////////////////////////////
-// index managment
 HDAccount.prototype.incrementReceiveIndex = function() {
   this._receiveIndex++;
   return this;
 };
-////////////////////////////////////////////////////////////////////////////////
-// receive chain managment
-// HDAccount.prototype.getReceiveKeyAtIndex = Helpers.memoize(function(index) {
-//   assert(typeof(index) === "number");
-//   return this._receiveChain.derive(index);
-// });
-
-// HDAccount.prototype.getReceiveAddressAtIndex = function(index) {
-//   assert(typeof(index) === "number");
-//   return this.getReceiveKeyAtIndex(index).getAddress().toString();
-// };
-
-// HDAccount.prototype.getReceiveAddress = function() {
-//   return this.getReceiveAddressAtIndex(this._receiveIndex);
-// };
-//------------------------------------------------------------------------------
-// change chain managment
-// HDAccount.prototype.getChangeKeyAtIndex = Helpers.memoize(function(index) {
-//   assert(typeof(index) === "number");
-//   return this._changeChain.derive(index);
-// });
-
-// HDAccount.prototype.getChangeAddressAtIndex = function(index) {
-//   assert(typeof(index) === "number");
-//   return this.getChangeKeyAtIndex(index).getAddress().toString();
-// };
-
-// HDAccount.prototype.getChangeAddress = function() {
-//   return this.getChangeAddressAtIndex(this._changeIndex);
-// };
 ////////////////////////////////////////////////////////////////////////////////
 // address labels
 HDAccount.prototype.setLabelForReceivingAddress = function(index, label) {
