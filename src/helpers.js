@@ -25,6 +25,6 @@ Helpers.memoize = function(f){
     if (key in cache) return cache[key];
     else return cache[key] = f.apply(this, arguments);
   };
-}
+};
 
 module.exports = Helpers;

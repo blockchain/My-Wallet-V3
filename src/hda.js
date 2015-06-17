@@ -5,6 +5,7 @@ module.exports = HDAccount;
 var Bitcoin = require('bitcoinjs-lib');
 var assert  = require('assert');
 var Helpers = require('./helpers');
+var WalletCrypto = require('./wallet-crypto');
 var KeyRing  = require('./keyring');
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -22,6 +23,7 @@ function HDAccount(object){
   this._xpriv    = obj.xpriv;
   this._xpub     = obj.xpub;
   this._network  = obj.network || Bitcoin.networks.bitcoin;
+
   this._address_labels = [];
   obj.address_labels.map(function(e){self.setLabelForReceivingAddress(e.index,e.label);});
 
@@ -201,6 +203,26 @@ HDAccount.prototype.getLabelForReceivingAddress = function(index) {
   assert(Helpers.isNumber(index), "Error: address index must be a number");
   return this._address_labels[index];
 }
+
+HDAccount.prototype.encrypt = function(password, sharedKey, pbkdf2Iterations){
+  if(!this._xpriv) return this;
+  var xpriv = !password || !sharedKey || !pbkdf2Iterations
+    ? this._xpriv
+    : WalletCrypto.encryptSecretWithSecondPassword(this._xpriv, password, sharedKey, pbkdf2Iterations);
+  if (!xpriv) { throw 'Error Encoding account extended private key'; };
+  this._xpriv = xpriv;
+  return this;
+};
+
+HDAccount.prototype.decrypt = function(password, sharedKey, pbkdf2Iterations){
+  if(!this._xpriv) return this;
+  var xpriv = !password || !sharedKey || !pbkdf2Iterations
+    ? this._xpriv
+    : WalletCrypto.decryptSecretWithSecondPassword(this._xpriv, password, sharedKey, pbkdf2Iterations);
+  if (!xpriv) { throw 'Error Decoding account extended private key'; };
+  this._xpriv = xpriv;
+  return this;
+};
 
 // var x = Blockchain.HDAccount.example();
 // delete x._cache

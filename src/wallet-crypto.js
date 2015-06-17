@@ -255,6 +255,15 @@ function stretchPassword(password, salt, pbkdf2_iterations) {
   return CryptoJS.enc.Hex.parse(sjcl.codec.hex.fromBits(stretched_password));
 }
 
+function hashNTimes(password, iterations) {
+  //N rounds of SHA 256
+  var round_data = CryptoJS.SHA256(password);
+  for (var i = 1; i < iterations; ++i) {
+    round_data = CryptoJS.SHA256(round_data);
+  }
+  return round_data.toString();
+};
+
 module.exports = {
   decryptSecretWithSecondPassword: decryptSecretWithSecondPassword,
   encryptSecretWithSecondPassword: encryptSecretWithSecondPassword,
@@ -264,5 +273,6 @@ module.exports = {
   decryptWallet: decryptWallet,
   reencrypt: reencrypt,
   decryptPasswordWithProcessedPin: decryptPasswordWithProcessedPin,
-  stretchPassword: stretchPassword
+  stretchPassword: stretchPassword,
+  hashNTimes: hashNTimes
 };

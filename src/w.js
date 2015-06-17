@@ -72,6 +72,7 @@ Object.defineProperties(Wallet.prototype, {
     get: function() { return this._pbkdf2_iterations;},
     set: function(value) {
       if(Helpers.isNumber(value))
+        // this needs to reencrypt the wallets probably
         this._pbkdf2_iterations = value;
       else
         throw 'Error: wallet.pbkdf2_iterations must be a number';
@@ -91,6 +92,10 @@ Object.defineProperties(Wallet.prototype, {
       var that = this;
       return that.addresses.map(function(a){return that.key(a)});
     }
+  },
+  "hdwallet": {
+    configurable: false,
+    get: function() {return this._hd_wallets[0];}
   }
 });
 
@@ -131,21 +136,39 @@ Wallet.prototype.newLegacyAddress = function(label, pw){
 };
 
 Wallet.prototype.setDefaultPbkdf2Iterations = function(){
-  this._pbkdf2_iterations = 5000;
+  this.pbkdf2_iterations = 5000;
   return this;
 };
 
+Wallet.prototype.validateSecondPassword = function(inputString) {
+
+  // old wallets default_iterations is 10
+  var it = !this._pbkdf2_iterations ? 10 : this._pbkdf2_iterations;
+  var password_hash = WalletCrypto.hashNTimes(this._sharedKey + inputString, it);
+  return password_hash === this._dpasswordhash;
+};
+
 Wallet.prototype.encrypt = function(pw){
-  var that = this;
-  function f(k) {k.encrypt(pw, that.sharedKey, that.pbkdf2_iterations);};
-  this.keys.map(f);
+  var self = this;
+  if (!this._double_encryption) {
+    function f(element) {element.encrypt(pw, self.sharedKey, self.pbkdf2_iterations);};
+    this.keys.forEach(f);
+    this._hd_wallets.forEach(f);
+    this._dpasswordhash = WalletCrypto.hashNTimes(this._sharedKey + pw, this._pbkdf2_iterations);
+    this._double_encryption = true;
+  };
   return this;
 };
 
 Wallet.prototype.decrypt = function(pw){
-  var that = this;
-  function f(k) {k.decrypt(pw, that.sharedKey, that.pbkdf2_iterations);};
-  this.keys.map(f);
+  if (this._double_encryption) {
+    var self = this;
+    function f(element) {element.decrypt(pw, self.sharedKey, self.pbkdf2_iterations);};
+    this.keys.forEach(f);
+    this._hd_wallets.forEach(f);
+    this._dpasswordhash = undefined;
+    this._double_encryption = false;
+  };
   return this;
 };
 

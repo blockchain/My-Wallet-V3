@@ -29,9 +29,7 @@ Object.defineProperties(KeyRing.prototype, {
 
 KeyRing.prototype.init = function (extendedKey, cache){
   cache = cache || {};
-
   if (this._receiveChain && this._changeChain) return this;
-
   if (extendedKey || cache.receiveAccount && cache.changeAccount) {
     this._receiveChain = cache.receiveAccount
       ? new KeyChain(null,null,cache.receiveAccount ) : new KeyChain(extendedKey,0);
