@@ -150,7 +150,7 @@ Wallet.prototype.validateSecondPassword = function(inputString) {
 
 Wallet.prototype.encrypt = function(pw){
   if (!this._double_encryption) {
-    var g = WalletCrypto.encryptionFunction(pw, this._sharedKey, this._pbkdf2_iterations);
+    var g = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
     var f = function(element) {element.encrypt(g);};
     this.keys.forEach(f);
     this._hd_wallets.forEach(f);
@@ -162,7 +162,7 @@ Wallet.prototype.encrypt = function(pw){
 
 Wallet.prototype.decrypt = function(pw){
   if (this._double_encryption) {
-    var g = WalletCrypto.decryptionFunction(pw, this._sharedKey, this._pbkdf2_iterations);
+    var g = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "dec");
     var f = function(element) {element.decrypt(g);};
     this.keys.forEach(f);
     this._hd_wallets.forEach(f);
@@ -204,6 +204,15 @@ Wallet.reviver = function(k,v){
 
   // default
   return v;
+};
+
+Wallet.prototype.newAccount = function(label, pw){
+  var cipher = undefined;
+  if (this._double_encryption) {
+    cipher = WalletCrypto.cipherFunction.bind(undefined, pw, this._sharedKey, this._pbkdf2_iterations);
+  };
+  this.hdwallet.newAccount(label, cipher);
+  return this;
 };
 
 // example of serialization

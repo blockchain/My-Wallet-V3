@@ -28,24 +28,22 @@ function encryptSecretWithSecondPassword(base58, password, sharedKey, pbkdf2_ite
   return encrypt(base58, sharedKey + password, pbkdf2_iterations);
 }
 
-function encryptionFunction(password, sharedKey, pbkdf2Iterations) {
-  if (!password || !sharedKey || !pbkdf2Iterations) {
-    var f = function (msg) {return msg;};
-  }
+function cipherFunction(password, sharedKey, pbkdf2Iterations, operation) {
+  // operation can be "enc" or "dec"
+  var id = function (msg) {return msg;};
+  if (!password || !sharedKey || !pbkdf2Iterations) { return id;}
   else{
-    var f = function (msg) {return encryptSecretWithSecondPassword(msg, password, sharedKey, pbkdf2Iterations);};
+    switch(operation) {
+      case "enc":
+        return function (msg) {return encryptSecretWithSecondPassword(msg, password, sharedKey, pbkdf2Iterations);};
+        break;
+      case "dec":
+        return function (msg) {return decryptSecretWithSecondPassword(msg, password, sharedKey, pbkdf2Iterations);};
+        break;
+      default:
+        return id;
+    };
   };
-  return f;
-}
-
-function decryptionFunction(password, sharedKey, pbkdf2Iterations) {
-  if (!password || !sharedKey || !pbkdf2Iterations) {
-    var f = function (msg) {return msg;};
-  }
-  else{
-    var f = function (msg) {return decryptSecretWithSecondPassword(msg, password, sharedKey, pbkdf2Iterations);};
-  };
-  return f;
 }
 
 function decrypt(data, password, pbkdf2_iterations) {
@@ -295,6 +293,5 @@ module.exports = {
   decryptPasswordWithProcessedPin: decryptPasswordWithProcessedPin,
   stretchPassword: stretchPassword,
   hashNTimes: hashNTimes,
-  encryptionFunction: encryptionFunction,
-  decryptionFunction: decryptionFunction
+  cipherFunction: cipherFunction,
 };

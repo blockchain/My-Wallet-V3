@@ -8,6 +8,10 @@ Helpers.isString = function(str){
 Helpers.isAlphaNum = function(str){
   return /^[\-+,._\w\d\s]+$/.test(str);
 };
+Helpers.isHex = function(str){
+// "F12a3" === "F12a3".match(/^[A-Fa-f0-9]+/)[0];
+  return /^[A-Fa-f0-9]+$/.test(str);
+};
 Helpers.isNumber = function(num){
   return typeof num == 'number' && !isNaN(num);
 };

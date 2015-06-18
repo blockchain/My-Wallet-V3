@@ -7,6 +7,7 @@ var assert  = require('assert');
 var Helpers = require('./helpers');
 var HDAccount = require('./hda');
 var WalletCrypto = require('./wallet-crypto');
+var BIP39 = require('bip39');
 ////////////////////////////////////////////////////////////////////////////////
 // Address class
 function HDWallet(object){
@@ -20,7 +21,6 @@ function HDWallet(object){
   this._mnemonic_verified   = obj.mnemonic_verified;
   this._default_account_idx = obj.default_account_idx;
   this._accounts            = obj.accounts || [];
-
   this._paidTo              = obj.paidTo;
 
   //computed properties
@@ -62,6 +62,34 @@ Object.defineProperties(HDWallet.prototype, {
   }
 });
 ////////////////////////////////////////////////////////////////////////////////
+// non exposed functions
+function decryptMnemonic (seedHex, cipher){
+  if (cipher) {
+    return BIP39.entropyToMnemonic(cipher(seedHex));
+  } else {
+    if (Helpers.isHex(seedHex)) {
+      return BIP39.entropyToMnemonic(seedHex);
+    } else {
+      throw "Decryption function needed to get the mnemonic";
+    };
+  };
+};
+
+function decryptPassphrase (bip39Password, cipher){
+  if (bip39Password === "") {return bip39Password};
+  if (cipher) {
+    return cipher(bip39Password);
+  } else {
+    return bip39Password;
+  };
+};
+
+function getMasterHex (seedHex, bip39Password, cipher){
+  var mnemonic   = decryptMnemonic(seedHex, cipher);
+  var passphrase = decryptPassphrase(bip39Password, cipher);
+  return BIP39.mnemonicToSeed(mnemonic, passphrase);
+};
+////////////////////////////////////////////////////////////////////////////////
 // Constructors
 
 HDWallet.example = function(){
@@ -92,16 +120,25 @@ HDWallet.new = function(seedHex, bip39Password){
   return new HDWallet(hdwallet);
 };
 
-// HDWallet.prototype.newAccount = function(label, secondPassword){
-//   // we assume second password active if there is a password
-//   var account = HDAccount.new(label);
-//   if (this.double_encryption) {
-//     assert(pw, "Error: second password needed");
-//     ad.encrypt(pw, this.sharedKey, this.pbkdf2_iterations);
-//   };
-//   this._addresses[ad.addr] = ad;
-//   return this;
-// };
+HDWallet.prototype.newAccount = function(label, cipher){
+
+  var accIndex   = this._accounts.length;
+  var dec = undefined;
+  var enc = undefined;
+
+  if (cipher) {
+    dec    = cipher("dec");
+    enc    = cipher("enc");
+  };
+
+  var masterhex = getMasterHex(this._seedHex, this._bip39Password, dec);
+  var network   = Bitcoin.networks.bitcoin;
+  var masterkey = Bitcoin.HDNode.fromSeedBuffer(masterhex, network);
+  var account   = HDAccount.fromWalletMasterKey(masterkey, accIndex, label);
+  account.encrypt(enc);
+  this._accounts.push(account);
+  return this;
+};
 ////////////////////////////////////////////////////////////////////////////////
 // JSON serializer
 
@@ -130,7 +167,7 @@ HDWallet.prototype.verifyMnemonic = function(){
 HDWallet.prototype.encrypt = function(cipher){
   function f(acc) {acc.encrypt(cipher);};
   this._accounts.forEach(f);
-  this._seedHex = chiper(this._seedHex);
+  this._seedHex = cipher(this._seedHex);
   this._bip39Password = this._bip39Password === ""
    ? this._bip39Password
    : cipher(this._bip39Password);
