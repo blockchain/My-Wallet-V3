@@ -96,8 +96,7 @@ function hashPassword(password, iterations) {
  */
 // used on iOS, frontend and MyWallet
 MyWallet.setPbkdf2Iterations = function(pbkdf2_iterations, success, error, getPassword) {
-  var previous_pbkdf2_iterations = WalletStore.getPbkdf2Iterations(pbkdf2_iterations);
-  WalletStore.setPbkdf2Iterations(pbkdf2_iterations);
+  var previous_pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
 
   if(pbkdf2_iterations == previous_pbkdf2_iterations) {
     success();
@@ -117,11 +116,11 @@ MyWallet.setPbkdf2Iterations = function(pbkdf2_iterations, success, error, getPa
 
   var setPbkdf2IterationsAndBackupWallet = function() {
     WalletStore.setPbkdf2Iterations(pbkdf2_iterations);
-    success();
     MyWallet.backupWalletDelayed('update', function() {
     }, function(e) {
       panic(e);
     });
+    success();
   };
 
   try {
@@ -152,10 +151,9 @@ MyWallet.setPbkdf2Iterations = function(pbkdf2_iterations, success, error, getPa
             if (WalletStore.didUpgradeToHd()) {
               if(WalletStore.getHDWallet().getBip39Password() != "") {
                 WalletStore.getHDWallet().setBip39Password(WalletCrypto.reencrypt(pw, WalletStore.getSharedKey(), previous_pbkdf2_iterations, pbkdf2_iterations)(WalletStore.getHDWallet().getBip39Password()));
-              }
-
-              if (!WalletStore.getHDWallet().getBip39Password()) throw 'Error re-encrypting wallet bip 39 password';
-            }
+                if (!WalletStore.getHDWallet().getBip39Password()) throw 'Error re-encrypting wallet bip 39 password';
+              };
+            };
 
             // Generate a new password hash
             WalletStore.setDPasswordHash(hashPassword(WalletStore.getSharedKey() + pw, pbkdf2_iterations));
@@ -610,7 +608,6 @@ function wsSuccess(ws) {
       var tx = TransactionFromJSON(obj.x);
 
       var tx_processed = MyWallet.processTransaction(tx);
-      console.log(tx_processed);
       var tx_account = tx_processed.to.account;
 
       //Check if this is a duplicate
@@ -621,8 +618,9 @@ function wsSuccess(ws) {
 
       WalletStore.addToFinalBalance(tx_processed.result);
 
+      var account = MyWallet.getAccount(tx_account.index);
+
       if (tx_account) {
-        var account = MyWallet.getAccount(tx_account.index);
         account.balance += tx_processed.result;
 
         // Increase receive address index if this was an incoming transaction using the highest index:
