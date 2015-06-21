@@ -80,8 +80,8 @@ MyWallet.securePost = function(url, data, success, error) {
 
 function hashPassword(password, iterations) {
   //N rounds of SHA 256
-  var round_data = CryptoJS.SHA256(password);
-  for (var i = 1; i < iterations; ++i) {
+  var round_data = password;
+  for (var i = 0; i < iterations; ++i) {
     round_data = CryptoJS.SHA256(round_data);
   }
   return round_data.toString();
@@ -2604,16 +2604,8 @@ MyWallet.isCorrectSecondPassword = function(input) {
   if (! WalletStore.getDoubleEncryption()) {
     throw 'No second password set';
   }
-
-  var thash = CryptoJS.SHA256(WalletStore.getSharedKey() + input);
-
-  var password_hash = hashPassword(thash, WalletStore.getPbkdf2Iterations()-1);  //-1 because we have hashed once in the previous line
-
-  if (password_hash == WalletStore.getDPasswordHash()) {
-    return true;
-  }
-
-  return false;
+  var password_hash = hashPassword(WalletStore.getSharedKey() + input, WalletStore.getPbkdf2Iterations());
+  return password_hash === WalletStore.getDPasswordHash();
 };
 
 /**
@@ -2622,24 +2614,20 @@ MyWallet.isCorrectSecondPassword = function(input) {
  */
  // used on mywallet and iOS
 MyWallet.validateSecondPassword = function(input) {
-  var thash = CryptoJS.SHA256(WalletStore.getSharedKey() + input);
 
-  var password_hash = hashPassword(thash, WalletStore.getPbkdf2Iterations()-1);  //-1 because we have hashed once in the previous line
-
-  if (password_hash == WalletStore.getDPasswordHash()) {
-    return true;
-  }
+  var isCorrect = MyWallet.isCorrectSecondPassword(input);
+  if (isCorrect) return true;
 
   //Try 10 rounds
-  if (WalletStore.getPbkdf2Iterations() != 10) {
-    var iter_10_hash = hashPassword(thash, 10-1);  //-1 because we have hashed once in the previous line
-
-    if (iter_10_hash == WalletStore.getDPasswordHash()) {
-      // dpassword = input;
-      WalletStore.setDPasswordHash(password_hash);
+  if (WalletStore.getPbkdf2Iterations() !== 10) {
+    var password_hash = hashPassword(WalletStore.getSharedKey() + input, WalletStore.getPbkdf2Iterations());
+    if (password_hash === WalletStore.getDPasswordHash()) {
+      WalletStore.setPbkdf2Iterations(10);
       return true;
-    }
-  }
+    };
+  };
+
+  return false;
 
   /*
    //disable old crypto stuff
