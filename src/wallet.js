@@ -2620,7 +2620,7 @@ MyWallet.validateSecondPassword = function(input) {
 
   //Try 10 rounds
   if (WalletStore.getPbkdf2Iterations() !== 10) {
-    var password_hash = hashPassword(WalletStore.getSharedKey() + input, WalletStore.getPbkdf2Iterations());
+    var password_hash = hashPassword(WalletStore.getSharedKey() + input, 10);
     if (password_hash === WalletStore.getDPasswordHash()) {
       WalletStore.setPbkdf2Iterations(10);
       return true;
