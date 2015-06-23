@@ -17,7 +17,7 @@ spenderStubs = {
       }
 
 Spender = proxyquire('../src/wallet-spender', spenderStubs)
-RSVP = require('RSVP')
+RSVP = require('rsvp')
 BigInteger = require('bigi')
 
 ################################################################################
