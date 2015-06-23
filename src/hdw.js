@@ -20,7 +20,7 @@ function HDWallet(object){
   this._bip39Password       = obj.passphrase;
   this._mnemonic_verified   = obj.mnemonic_verified;
   this._default_account_idx = obj.default_account_idx;
-  this._accounts            = obj.accounts || [];
+  this._accounts = obj.accounts ? obj.accounts.map(HDAccount.factory) : [];
   this._paidTo              = obj.paidTo;
 
   //computed properties
@@ -118,6 +118,13 @@ HDWallet.new = function(seedHex, bip39Password){
     accounts            : []
   };
   return new HDWallet(hdwallet);
+};
+
+HDWallet.factory = function(o){
+  if (o instanceof Object && !(o instanceof HDWallet)) {
+    return new HDWallet(o);
+  }
+  else { return o; };
 };
 
 HDWallet.prototype.newAccount = function(label, cipher){

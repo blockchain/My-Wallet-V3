@@ -37,8 +37,8 @@ function Wallet(object) {
   this._pbkdf2_iterations = obj.options.pbkdf2_iterations;
   this._fee_policy        = obj.options.fee_policy;
   // lists
-  this._addresses         = obj.keys
-  this._hd_wallets        = obj.hd_wallets
+  this._addresses         = obj.keys;
+  this._hd_wallets = obj.hd_wallets ? obj.hd_wallets.map(HDWallet.factory) : undefined;
 
   // missing address book
   // missing tx_notes

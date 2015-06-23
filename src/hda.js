@@ -51,6 +51,16 @@ Object.defineProperties(HDAccount.prototype, {
         throw 'Error: account.label must be an alphanumeric string';
     }
   },
+  "balance": {
+    configurable: false,
+    get: function() { return this._balance;},
+    set: function(str) {
+      if(Helpers.isNumber(num))
+        this._balance = num;
+      else
+        throw 'Error: account.balance must be an alphanumeric number';
+    }
+  },
   "archived": {
     configurable: false,
     get: function() { return this._archived;},
@@ -167,6 +177,12 @@ HDAccount.fromExtPrivateKey = function(extPrivateKey, label){
   return HDAccount.fromAccountMasterKey(accountZero, label);
 };
 
+HDAccount.factory = function(o){
+  if (o instanceof Object && !(o instanceof HDAccount)) {
+    return new HDAccount(o);
+  }
+  else { return o; };
+};
 ////////////////////////////////////////////////////////////////////////////////
 // JSON SERIALIZER
 

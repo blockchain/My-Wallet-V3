@@ -213,19 +213,23 @@ function decryptWallet(data, password, success, error) {
       decryptedWallet = decryptAes(jsonWrapper.payload, password, jsonWrapper.pbkdf2_iterations);
       jsonWallet = $.parseJSON(decryptedWallet);
 
-      success(jsonWallet, jsonWrapper);
+
     } catch (e) {
       error('Error Decrypting Wallet. Please check your password is correct.');
+      return;
     }
+    success(jsonWallet, jsonWrapper);
   } else {
     try {
       decryptedWallet = decrypt(data, password, 10);
       jsonWallet = $.parseJSON(decryptedWallet);
 
-      success(jsonWallet);
+
     } catch (e) {
       error('Error Decrypting Wallet. Please check your password is correct.');
+      return;
     }
+    success(jsonWallet);
   }
 }
 
