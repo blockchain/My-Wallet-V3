@@ -1,6 +1,6 @@
 module.exports = function(karma) {
 
-  karma.set({
+  var configuration = {
     basePath : './',
 
     frameworks: ['jasmine', 'browserify'],
@@ -72,5 +72,11 @@ module.exports = function(karma) {
       'tests/hd_account_spec.js.coffee',
       'tests/hdwallet_spec.js.coffee'
     ]
-  });
+  };
+
+  if(process.env.TRAVIS) {
+    configuration.browsers = ['Chrome_travis_ci'];
+  }
+
+  karma.set(configuration);
 };
