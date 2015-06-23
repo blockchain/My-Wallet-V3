@@ -7,6 +7,13 @@ module.exports = function(karma) {
 
     browsers : ['Chrome'], //'PhantomJS'],
 
+    customLaunchers: {
+      Chrome_travis_ci: {
+        base: 'Chrome',
+        flags: ['--no-sandbox']
+      }
+    },
+
     browserNoActivityTimeout: 60000,
 
     // reportSlowerThan: 50,
