@@ -36,8 +36,9 @@ function Wallet(object) {
   //options
   this._pbkdf2_iterations = obj.options.pbkdf2_iterations;
   this._fee_policy        = obj.options.fee_policy;
+  this._isMultipleAccount = obj.options.enable_multiple_accounts;
   // lists
-  this._addresses         = obj.keys;
+  this._addresses  = obj.keys ? obj.keys.reduce(Address.factory, {}) : undefined;
   this._hd_wallets = obj.hd_wallets ? obj.hd_wallets.map(HDWallet.factory) : undefined;
 
   // missing address book
@@ -55,7 +56,7 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function() { return this._sharedKey;}
   },
-  "double_encryption": {
+  "isDoubleEncrypted": {
     configurable: false,
     get: function() { return this._double_encryption;}
   },
@@ -96,6 +97,14 @@ Object.defineProperties(Wallet.prototype, {
   "hdwallet": {
     configurable: false,
     get: function() {return this._hd_wallets[0];}
+  },
+  "isUpgradedToHD":{
+    configurable: false,
+    get: function() {return !(this._hd_wallets === undefined || this._hd_wallets === null);}
+  },
+  "isMultipleAccount":{
+    configurable: false,
+    get: function() {return this._isMultipleAccount;}
   }
 });
 
@@ -106,8 +115,9 @@ Wallet.prototype.toJSON = function(){
     double_encryption : this.double_encryption,
     dpasswordhash     : this.dpasswordhash,
     options           : {
-      pbkdf2_iterations : this.pbkdf2_iterations,
-      fee_policy        : this.fee_policy
+      pbkdf2_iterations        : this.pbkdf2_iterations,
+      fee_policy               : this.fee_policy,
+      enable_multiple_accounts : this.isMultipleAccount
     },
     keys              : this.keys,
     hd_wallets        : this._hd_wallets

@@ -129,10 +129,6 @@ HDAccount.exampleReadOnly = function(){
   return HDAccount.fromExtPublicKey("xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ", "Example account");
 };
 
-HDAccount.example = function(){
-  return HDAccount.fromExtPrivateKey("xprv9zJ1cTHnqzgBP2boCwpP47LBzjGLKXkwYqXoYnV4yrBmstmw6SVtirpvm4GESg9YLn9R386qpmnsrcC5rvrpEJAXSrfqQR3qGtjGv5ddV9g", "Example account");
-};
-
 /* BIP 44 defines the following 5 levels in BIP32 path:
  * m / purpose' / coin_type' / account' / change / address_index
  * Apostrophe in the path indicates that BIP32 hardened derivation is used.

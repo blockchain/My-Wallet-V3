@@ -2028,7 +2028,6 @@ function decryptAndLoadWallet(success, error, decrypt_success, build_hd_success)
 
       MyWallet.wallet = new Wallet(obj);
 
-      console.log(rootContainer);
       // WalletStore.setSharedKey(obj.sharedKey);
       // var sharedKey = WalletStore.getSharedKey();
 

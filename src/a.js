@@ -68,6 +68,16 @@ Object.defineProperties(Address.prototype, {
   }
 });
 
+Address.factory = function(o,a){
+  if (a instanceof Object && !(a instanceof Address)) {
+    o[a.addr] = new Address(a);
+  }
+  else {
+    o[a.addr] = a;
+  };
+  return o;
+};
+
 Address.import = function(key, label){
   var object = {
     addr                   : key.pub.getAddress().toString(),

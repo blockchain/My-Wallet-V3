@@ -36,7 +36,7 @@ Object.defineProperties(HDWallet.prototype, {
     configurable: false,
     get: function() { return this._bip39Password;}
   },
-  "mnemonicVerified": {
+  "isMnemonicVerified": {
     configurable: false,
     get: function() { return this._mnemonic_verified;}
   },
@@ -58,6 +58,12 @@ Object.defineProperties(HDWallet.prototype, {
     configurable: false,
     get: function() {
       return this._accounts.map(function(a){return (a)});
+    }
+  },
+  "xpubs":{
+    configurable: false,
+    get: function() {
+      return this._accounts.map(function(a){return (a.extendedPublicKey)});
     }
   }
 });
