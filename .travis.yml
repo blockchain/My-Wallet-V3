@@ -1,11 +1,11 @@
 language: node_js
-
 node_js:
-  - "node"
-
+- node
 script: node_modules/karma/bin/karma start karma.conf.js --single-run
-
 before_install:
-  - export CHROME_BIN=chromium-browser
-  - export DISPLAY=:99.0
-  - sh -e /etc/init.d/xvfb start
+- export CHROME_BIN=chromium-browser
+- export DISPLAY=:99.0
+- sh -e /etc/init.d/xvfb start
+notifications:
+  slack:
+    secure: qNpaZxLw3xv2ZgQtPUk+5vR8hEkaZuzifOgIygQ0qIXK55CUfi81EjAbOFXfppB1ErD2lU4OlhCJDzhF+g5mENqTpgxH57FkIeV3Abzw53N0TnwfL3kW+h3oJEnE5Cis1KW9ISLLOMoWh/+yIljXo374z8sEJ33OgmqhjjRQG7nkm8l4QBERd3JbnKJ29m951km2zDzIbp3Iu+mkfxjgllysiUrAUyzBiuJOXTTDMyc9vNDXtMv22jzNh1bNpofuNXDQeZEzUIDkBGG3tMOLfP+8TuUO1pYY7wjWb5IrwEGqmiwdzojslVq+UPfhjTzGGlSW7RAN15z2dlE8nQvxbaZZG4DRu7JEf1gkd7OHvJuVYvpsauL+xoOKRyZEs0hEj/mgleKxgK6G6QkpLmBBh5Llzcq16i/8ntipQ8vQlJFxBSRMZSnjD7QsQ4mgugfb/g0xf2FcJkFgdStb3WLiRPdrS4kX94ttfS8S1EWKEbdb+VJUKNJ9gGwyCatWzQ9ZXp29KLW3+AYhwYdO3iMkDAqUn2VEQaJbMpq40f3tPQKs2gZXSSyGfdiqzeMXH0v3NhQ1Sjnw2JtNuPYShLVqQJjU10J4vGkAWIxqWStvptAV1OEVtHg5CcC6VxY+WK3oQwnw74T0a29bh55uq+A+04/5FD1HFM1p6BLmoI4PJmY=
