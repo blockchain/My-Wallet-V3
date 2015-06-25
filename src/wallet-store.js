@@ -302,9 +302,11 @@ var WalletStore = (function() {
       delete addresses[address];
       MyWallet.backupWalletDelayed();
     },
-    getPrivateKey: function(address) {
+    getPrivateKey: function(address, pw) {
       if (address in addresses) {
-        return addresses[address].priv;
+        var ep = addresses[address].priv;
+        var up = pw ? WalletCrypto.decryptSecretWithSecondPassword(ep, pw, sharedKey, pbkdf2_iterations) : ep;
+        return up;
       } else {
         return null;
       }
