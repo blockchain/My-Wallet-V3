@@ -145,6 +145,38 @@ describe "Spender", ->
       expect(note).toEqual(M.note)
       expect(obs.success).toHaveBeenCalled()
       expect(obs.error).not.toHaveBeenCalled()
+################################################################################
+  describe "from Address to Addresses", ->
+
+    M = spenderM.addToAdd
+    beforeEach (done) ->
+
+      spyOn(BlockchainAPI, "get_unspent")
+        .and.callFake((xpubList,success,error,conf,nocache) ->
+          success(M.coins))
+      spyOn(WalletStore, "getPrivateKey")
+       .and.returnValue(M.encPrivateKey)
+      spyOn(WalletCrypto, "decryptSecretWithSecondPassword")
+        .and.returnValue(M.privateKey)
+      spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
+      spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
+      spyOn(obs, "success").and.callFake () -> done(); return
+      spyOn(obs, "error").and.callFake () -> done(); return
+
+      Spender(M.note, obs.success, obs.error, obs.listener, obs.getPassword)
+        .fromAddress(M.fromAddress, 30000, M.fee)
+          .toAddresses(M.toAddresses, M.amounts)
+
+    it "should push the right transaction to the network", ->
+
+      txHex = (BlockchainAPI.push_tx.calls.argsFor(0)[0]).toHex()
+      testTx = txHex is M.txHash1M or txHex is M.txHash2M
+      note = BlockchainAPI.push_tx.calls.argsFor(0)[1]
+
+      expect(testTx).toBeTruthy()
+      expect(note).toEqual(M.note)
+      expect(obs.success).toHaveBeenCalled()
+      expect(obs.error).not.toHaveBeenCalled()
 
 ################################################################################
   describe "from Address to Email (with second password active)", ->
