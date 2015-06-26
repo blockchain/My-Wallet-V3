@@ -27,7 +27,7 @@ function retryAjax(ajaxParams) {
   }
 
   ajaxParams.complete = function (jqXHR, textStatus) {
-    if ($.inArray(textStatus, ['timeout', 'abort', 'error']) > -1) {
+    if (['timeout', 'abort', 'error'].some(function(e){return e === textStatus})) {
       this.tryCount++;
       if (this.tryCount <= this.retryLimit) {
 
@@ -418,10 +418,10 @@ function push_tx(tx, note, success, error) {
   //Appear that there are conditions where the ajax call to pushtx may not respond in a timely fashion
   var checkTxExistsInterval = setInterval(function() {
     get_rejection_reason(
-      tx_hash, 
+      tx_hash,
       function(e) {
         console.log(e);
-      }, 
+      },
       function() {
         if (did_push) {
           did_push();
@@ -430,7 +430,7 @@ function push_tx(tx, note, success, error) {
 
         clearInterval(checkTxExistsInterval);
         checkTxExistsInterval = null;
-      }, 
+      },
       function(e) {
         console.log(e);
       }
