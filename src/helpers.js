@@ -30,5 +30,18 @@ Helpers.memoize = function(f){
     else return cache[key] = f.apply(this, arguments);
   };
 };
+// Return an async version of f that it will run after miliseconds
+// no matter how many times you call the new function, it will run only once
+Helpers.asyncOnce = function(f, miliseconds){
+  var timer = null;
+  return function() {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    };
+    var myArgs = arguments;
+    timer = setTimeout(function(){f.apply(this, myArgs);}, miliseconds);
+  };
+};
 
 module.exports = Helpers;
