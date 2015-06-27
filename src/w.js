@@ -34,17 +34,33 @@ function Wallet(object) {
   this._double_encryption = obj.double_encryption || false;
   this._dpasswordhash     = obj.dpasswordhash;
   //options
-  this._pbkdf2_iterations = obj.options.pbkdf2_iterations;
-  this._fee_policy        = obj.options.fee_policy;
-  this._isMultipleAccount = obj.options.enable_multiple_accounts;
-  // lists
-  this._addresses  = obj.keys ? obj.keys.reduce(Address.factory, {}) : undefined;
+  this._pbkdf2_iterations        = obj.options.pbkdf2_iterations;
+  this._fee_policy               = obj.options.fee_policy;
+  this._enable_multiple_accounts = obj.options.enable_multiple_accounts;
+  this._html5_notifications      = obj.options.html5_notifications;
+  this._logout_time              = obj.options.logout_time;
+
+  // legacy addresses list
+  this._addresses = obj.keys ? obj.keys.reduce(Address.factory, {}) : undefined;
+  // hdwallets list
   this._hd_wallets = obj.hd_wallets ? obj.hd_wallets.map(HDWallet.factory) : undefined;
 
-  // missing address book
-  // missing tx_notes
-  // missing tx_tags
-  // missing tag_names
+  // paidTo dictionary
+  this._paidTo = obj.paidTo || {};
+  Helpers.merge(this._paidTo, this.hdwallet._paidTo); // move paidTo from the wrong place
+  delete this.hdwallet._paidTo;
+
+  // address book list
+  this._address_book = obj.address_book || [];
+
+  // tx_notes dictionary
+  this._tx_notes = obj.tx_notes || {};
+
+  // tx_tags list (not sure if list or object)
+  // this._tx_tags = obj.tx_tags || [];
+
+  // tag_names list (check how is represented each tag-name)
+  this._tx_names = obj.tx_names || [];
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -104,7 +120,7 @@ Object.defineProperties(Wallet.prototype, {
   },
   "isMultipleAccount":{
     configurable: false,
-    get: function() {return this._isMultipleAccount;}
+    get: function() {return this._enable_multiple_accounts;}
   }
 });
 
@@ -117,10 +133,17 @@ Wallet.prototype.toJSON = function(){
     options           : {
       pbkdf2_iterations        : this.pbkdf2_iterations,
       fee_policy               : this.fee_policy,
-      enable_multiple_accounts : this.isMultipleAccount
+      enable_multiple_accounts : this.isMultipleAccount,
+      html5_notifications      : this._html5_notifications,
+      logout_time              : this._logout_time
     },
+    address_book      : this._address_book,
+    tx_notes          : this._tx_notes,
+    // tx_tags           : this._tx_tags,
+    tx_names          : this._tx_names,
     keys              : this.keys,
-    hd_wallets        : this._hd_wallets
+    hd_wallets        : this._hd_wallets,
+    paidTo            : this._paidTo
   };
   return wallet;
 };

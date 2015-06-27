@@ -162,7 +162,7 @@ HDWallet.prototype.toJSON = function(){
     passphrase          : this._bip39Password,
     mnemonic_verified   : this._mnemonic_verified,
     default_account_idx : this._default_account_idx,
-    paidTo              : this._paidTo,
+    // paidTo              : this._paidTo,
     accounts            : this._accounts
   };
   return hdwallet;

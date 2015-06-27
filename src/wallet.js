@@ -2023,7 +2023,9 @@ function decryptAndLoadWallet(success, error, decrypt_success, build_hd_success)
     encryptedWalletData,
     WalletStore.getPassword(),
     function(obj, rootContainer) {
-
+      console.log(JSON.stringify(obj, null, 2));
+      console.log("--------------------");
+      console.log(JSON.stringify(rootContainer, null, 2));
       decrypt_success && decrypt_success();
 
       MyWallet.wallet = new Wallet(obj);
