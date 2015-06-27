@@ -10,6 +10,7 @@ module.exports = {
   BlockchainSettingsAPI: require('./blockchain-settings-api'),
   // only for debugging
   Helpers: require('./helpers'),
+  Payload: require('./payload'),
   Wallet: require('./w'),
   Address: require('./a'),
   HDAccount: require('./hda'),
