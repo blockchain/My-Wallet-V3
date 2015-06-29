@@ -61,6 +61,12 @@ function Wallet(object) {
 
   // tag_names list (check how is represented each tag-name)
   this._tx_names = obj.tx_names || [];
+
+  // fetched data from the server
+  this._totalSent     = 0;
+  this._totalReceived = 0;
+  this._finalBalance  = 0;
+  this._numberTx      = 0;
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -93,6 +99,46 @@ Object.defineProperties(Wallet.prototype, {
         this._pbkdf2_iterations = value;
       else
         throw 'Error: wallet.pbkdf2_iterations must be a number';
+    }
+  },
+  "totalSent": {
+    configurable: false,
+    get: function() { return this._totalSent;},
+    set: function(value) {
+      if(Helpers.isNumber(value))
+        this._totalSent = value;
+      else
+        throw 'Error: wallet.totalSent must be a number';
+    }
+  },
+  "totalReceived": {
+    configurable: false,
+    get: function() { return this._totalReceived;},
+    set: function(value) {
+      if(Helpers.isNumber(value))
+        this._totalReceived = value;
+      else
+        throw 'Error: wallet.totalReceived must be a number';
+    }
+  },
+  "finalBalance": {
+    configurable: false,
+    get: function() { return this._finalBalance;},
+    set: function(value) {
+      if(Helpers.isNumber(value))
+        this._finalBalance = value;
+      else
+        throw 'Error: wallet.finalBalance must be a number';
+    }
+  },
+  "numberTx": {
+    configurable: false,
+    get: function() { return this._numberTx;},
+    set: function(value) {
+      if(Helpers.isNumber(value))
+        this._numberTx = value;
+      else
+        throw 'Error: wallet.numberTx must be a number';
     }
   },
   "addresses": {

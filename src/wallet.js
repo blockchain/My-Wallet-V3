@@ -1866,17 +1866,17 @@ function parseMultiAddressJSON(obj, cached, checkCompleted) {
   transactions.length = 0;
 
   if (obj.wallet == null) {
-    WalletStore.setTotalReceived(0);
-    WalletStore.setTotalSent(0);
-    WalletStore.setFinalBalance(0);
-    WalletStore.setNTransactions(0);
+    MyWallet.wallet.totalSent     = 0;
+    MyWallet.wallet.totalReceived = 0;
+    MyWallet.wallet.finalBalance  = 0;
+    MyWallet.wallet.numberTx      = 0;
     return;
-  }
+  };
 
-  WalletStore.setTotalReceived(obj.wallet.total_received);
-  WalletStore.setTotalSent(obj.wallet.total_sent);
-  WalletStore.setFinalBalance(obj.wallet.final_balance);
-  WalletStore.setNTransactions(obj.wallet.n_tx);
+  MyWallet.wallet.totalSent     = obj.wallet.total_sent;
+  MyWallet.wallet.totalReceived = obj.wallet.total_received;
+  MyWallet.wallet.finalBalance  = obj.wallet.final_balance;
+  MyWallet.wallet.numberTx      = obj.wallet.n_tx;
 
   for (var i = 0; i < obj.addresses.length; ++i) {
     if (WalletStore.legacyAddressExists(obj.addresses[i].address)) {
@@ -2024,7 +2024,6 @@ function decryptAndLoadWallet(success, error, decrypt_success, build_hd_success)
     WalletStore.getPassword(),
     function(obj, rootContainer) {
       decrypt_success && decrypt_success();
-
       MyWallet.wallet = new Wallet(obj);
 
       // WalletStore.setSharedKey(obj.sharedKey);
