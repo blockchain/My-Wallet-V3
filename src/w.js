@@ -99,6 +99,10 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function(){return Object.keys(this._addresses);}
   },
+  "activeAddresses": {
+    configurable: false,
+    get: function(){return this.activeKeys.map(function(k){return k.addr;});}
+  },
   "key": {
     configurable: false,
     value: function(addr) {return this._addresses[addr];}
@@ -109,6 +113,10 @@ Object.defineProperties(Wallet.prototype, {
       var that = this;
       return that.addresses.map(function(a){return that.key(a)});
     }
+  },
+  "activeKeys": {
+    configurable: false,
+    get: function(){return this.keys.filter(function(a){return !a.archived;})}
   },
   "hdwallet": {
     configurable: false,

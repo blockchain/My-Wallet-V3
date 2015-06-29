@@ -1950,7 +1950,7 @@ MyWallet.getHistoryAndParseMultiAddressJSON = function(_success) {
     });
   };
 
-  var addresses = WalletStore.getXpubs().concat(WalletStore.getLegacyActiveAddresses());
+  var addresses = this.wallet.hdwallet.activeXpubs.concat(this.wallet.hdwallet.activeAddresses);
   BlockchainAPI.async_get_history_with_addresses(addresses, function(data) {
     parseMultiAddressJSON(data, false, false);
     success && success();
@@ -2023,9 +2023,6 @@ function decryptAndLoadWallet(success, error, decrypt_success, build_hd_success)
     encryptedWalletData,
     WalletStore.getPassword(),
     function(obj, rootContainer) {
-      console.log(JSON.stringify(obj, null, 2));
-      console.log("--------------------");
-      console.log(JSON.stringify(rootContainer, null, 2));
       decrypt_success && decrypt_success();
 
       MyWallet.wallet = new Wallet(obj);
