@@ -38,7 +38,7 @@ function updateKV(txt, method, value, success, error, extra) {
 }
 
 function update_API_access(enabled, success, error) {
-  updateKV('Updating Api Access', 'update-api-access-enabled', enabled ? true : false, success, error);
+  updateKV('Updating Api Access', 'update-api-access-enabled', enabled ? 1 : 0, success, error);
 };
 
 /**
