@@ -1,223 +1,238 @@
 'use strict';
 
+module.exports = HDAccount;
+////////////////////////////////////////////////////////////////////////////////
 var Bitcoin = require('bitcoinjs-lib');
-var assert = require('assert');
+var assert  = require('assert');
+var Helpers = require('./helpers');
+var WalletCrypto = require('./wallet-crypto');
+var KeyRing  = require('./keyring');
 
-function HDAccount(label, index, network) {
-  this.label = label;
-  this.index = index;
-  this.network = network || Bitcoin.networks.bitcoin;
+////////////////////////////////////////////////////////////////////////////////
+// HDAccount Class
 
-  this.receiveChain = null;
-  this.changeChain = null;
-  this.extendedPrivateKey = null;
-  this.extendedPublicKey = null;
+function HDAccount(object){
 
-  this.receiveIndex = 0;
-  this.changeIndex = 0;
-  this.n_tx = 0;
-  this.numTxFetched = 0;
-  this.balance = null;
+  var self = this;
+  var obj = object || {};
+  obj.cache = obj.cache || {};
+  obj.address_labels = obj.address_labels || [];
+  // serializable data
+  this._label    = obj.label;
+  this._archived = obj.archived || false;
+  this._xpriv    = obj.xpriv;
+  this._xpub     = obj.xpub;
+  this._network  = obj.network || Bitcoin.networks.bitcoin;
 
-  this.archived = false;
-  this.address_labels= [];
+  this._address_labels = [];
+  obj.address_labels.map(function(e){self.setLabelForReceivingAddress(e.index,e.label);});
 
-  // Cache for PubKeys and ChainCode to improve init speed
-  this.cache= {};
-  // In-memory cache for generated keys
-  this.receiveKeyCache = [];
-  this.changeKeyCache = [];
+  // computed properties
+  this._keyRing       = new KeyRing(obj.xpub, obj.cache);
+  this._receiveIndex  = 0;
+  this._changeIndex   = 0;
+  this._n_tx          = 0;
+  this._numTxFetched  = 0;
+  this._balance       = null;
 }
 
-HDAccount.fromExtKey = function(extKey, label, index, network) {
-  var account = new HDAccount(label, index, network);
+////////////////////////////////////////////////////////////////////////////////
+// PUBLIC PROPERTIES
 
-  var accountZero = Bitcoin.HDNode.fromBase58(extKey);
-  account.receiveChain = accountZero.derive(0);
-  account.changeChain = accountZero.derive(1);
+Object.defineProperties(HDAccount.prototype, {
 
+  "label": {
+    configurable: false,
+    get: function() { return this._label;},
+    set: function(str) {
+      if(Helpers.isValidLabel(str))
+        this._label = str;
+      else
+        throw 'Error: account.label must be an alphanumeric string';
+    }
+  },
+  "balance": {
+    configurable: false,
+    get: function() { return this._balance;},
+    set: function(str) {
+      if(Helpers.isNumber(num))
+        this._balance = num;
+      else
+        throw 'Error: account.balance must be an alphanumeric number';
+    }
+  },
+  "archived": {
+    configurable: false,
+    get: function() { return this._archived;},
+    set: function(value) {
+      if(Helpers.isBoolean(value))
+        this._archived = value;
+      else
+        throw 'Error: account.archived must be a boolean';
+    }
+  },
+  "receiveIndex": {
+    configurable: false,
+    get: function() { return this._receiveIndex;},
+    set: function(value) {
+      if(Helpers.isNumber(value))
+        this._receiveIndex = value;
+      else
+        throw 'Error: account.receiveIndex must be a number';
+    }
+  },
+  "changeIndex": {
+    configurable: false,
+    get: function() { return this._changeIndex;},
+    set: function(value) {
+      if(Helpers.isNumber(value))
+        this._changeIndex = value;
+      else
+        throw 'Error: account.changeIndex must be a number';
+    }
+  },
+  "receivingAddressesLabels": {
+    configurable: false,
+    get: function() {
+      var denseArray = [];
+      this._address_labels
+        .map(function(lab,ind){denseArray.push({"index": ind, "label": lab})});
+      return denseArray;
+    }
+  },
+  "extendedPublicKey": {
+     configurable: false,
+     get: function() { return this._xpub;}
+   },
+  "extendedPrivateKey": {
+    configurable: false,
+    get: function() { return this._xpriv;}
+  },
+  "keyRing": {
+    configurable: false,
+    get: function() { return this._keyRing;}
+  },
+  "receiveAddress": {
+    configurable: false,
+    get: function() { return this._keyRing.receive.getAddress(this._receiveIndex);}
+  },
+  "changeAddress": {
+    configurable: false,
+    get: function() { return this._keyRing.change.getAddress(this._changeIndex);}
+  }
+});
+
+////////////////////////////////////////////////////////////////////////////////
+// CONSTRUCTORS
+
+HDAccount.exampleReadOnly = function(){
+  return HDAccount.fromExtPublicKey("xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ", "Example account");
+};
+
+/* BIP 44 defines the following 5 levels in BIP32 path:
+ * m / purpose' / coin_type' / account' / change / address_index
+ * Apostrophe in the path indicates that BIP32 hardened derivation is used.
+ *
+ * Purpose is a constant set to 44' following the BIP43 recommendation
+ * Registered coin types: 0' for Bitcoin
+ */
+HDAccount.fromAccountMasterKey = function(accountZero, label){
+
+  assert(accountZero, "Account MasterKey must be given to create an account.");
+  var account    = new HDAccount();
+  account.label  = label;
+  account._xpriv = accountZero.toBase58();
+  account._xpub  = accountZero.neutered().toBase58();
+  account._keyRing.init(account._xpub, null);
   return account;
 };
 
-HDAccount.fromCache = function(cache, label, index, network) {
-  var account = new HDAccount(label, index, network);
+HDAccount.fromWalletMasterKey = function(masterkey, index, label) {
 
-  account.receiveChain = Bitcoin.HDNode.fromBase58(cache.receiveAccount);
-  account.changeChain = Bitcoin.HDNode.fromBase58(cache.changeAccount);
-
-  account.cache = cache;
-
-  return account;
+  assert(masterkey, "Wallet MasterKey must be given to create an account.");
+  assert(Helpers.isNumber(index), "Derivation index must be an integer.");
+  var accountZero = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(index);
+  return HDAccount.fromAccountMasterKey(accountZero, label);
 };
 
-HDAccount.prototype.incrementReceiveIndex = function() {
-  this.receiveIndex++;
+HDAccount.fromExtPublicKey = function(extPublicKey, label){
+  // this is creating a read-only account
+  assert(extPublicKey && extPublicKey[2] && extPublicKey[2] === "u"
+      , "Extended public key must be given to create an account.");
+  var accountZero = Bitcoin.HDNode.fromBase58(extPublicKey);
+  var a = HDAccount.fromAccountMasterKey(accountZero, label);
+  a._xpriv = null;
+  return a;
 };
 
-HDAccount.prototype.incrementReceiveIndexIfLastIndex = function(index) {
-  if(index == this.receiveIndex) {
-    this.incrementReceiveIndex();
+HDAccount.fromExtPrivateKey = function(extPrivateKey, label){
+
+  assert(extPrivateKey && extPrivateKey[2] && extPrivateKey[2] ==="r"
+      , "Extended private key must be given to create an account.");
+  var accountZero = Bitcoin.HDNode.fromBase58(extPrivateKey);
+  return HDAccount.fromAccountMasterKey(accountZero, label);
+};
+
+HDAccount.factory = function(o){
+  if (o instanceof Object && !(o instanceof HDAccount)) {
+    return new HDAccount(o);
   }
+  else { return o; };
 };
+////////////////////////////////////////////////////////////////////////////////
+// JSON SERIALIZER
 
-HDAccount.prototype.incrementReceiveIndexIfCurrentIsLabeled = function() {
-  if(this.getLabelForReceiveAddress(this.receiveIndex)) {
-    this.incrementReceiveIndex();
-  }
-};
+HDAccount.prototype.toJSON = function(){
 
-HDAccount.prototype.incrementReceiveIndexIfLastIndexIsIncluded = function(addresses) {
-  for (var i in addresses) {
-    if(this.getReceiveAddressAtIndex(this.receiveIndex) === addresses[i]) {
-      this.incrementReceiveIndex();
-    }
-  }
-};
-
-HDAccount.prototype.getReceiveAddressAtIndex = function(index) {
-  assert(typeof(index) === "number"); // Catches e.g. getReceiveAddress(this.receiveIndex) 
-
-  if (this.receiveKeyCache[index]) {
-    return this.receiveKeyCache[index].getAddress().toString();
-  }
-
-  var key = this.receiveChain.derive(index);
-  this.receiveKeyCache[index] = key;
-  return key.getAddress().toString();
-};
-
-HDAccount.prototype.getReceiveAddress = function() {
-  return this.getReceiveAddressAtIndex(this.receiveIndex);
-};
-
-HDAccount.prototype.getChangeAddressAtIndex = function(index) {
-  if (this.changeKeyCache[index]) {
-    return this.changeKeyCache[index].getAddress().toString();
-  }
-
-  var key = this.changeChain.derive(index);
-  this.changeKeyCache[index] = key;
-  return key.getAddress().toString();
-};
-
-HDAccount.prototype.getChangeAddress = function() {
-  return this.getChangeAddressAtIndex(this.changeIndex);
-};
-
-HDAccount.prototype.generateKeyFromPath = function(path) {
-  var components = path.split("/");
-
-  assert(components[0] === 'M', 'Invalid Path prefix');
-
-  assert(components[1] === '0' || components[1] === '1', 'Invalid Path: change/receive index out of bounds');
-
-  assert(components.length === 3, 'Invalid Path length');
-
-  var receiveOrChange = parseInt(components[1]);
-  var index = parseInt(components[2]);
-
-  var key;
-
-  if (receiveOrChange === 0) {
-    // Receive
-    if (this.receiveKeyCache[index]) {
-      key = this.receiveKeyCache[index];
-    }
-    else {
-      key = this.receiveChain.derive(index);
-      this.receiveKeyCache[index] = key;
-    }
-  } else {
-    // Change
-    if (this.changeKeyCache[index]) {
-      key = this.changeKeyCache[index];
-    }
-    else {
-      key = this.changeChain.derive(index);
-      this.changeKeyCache[index] = key;
-    }
-  }
-
-  return key;
-};
-
-HDAccount.prototype.getAccountJsonData = function() {
-  var accountJsonData = {
-    label : this.label,
-    archived : this.archived,
-    xpriv : this.extendedPrivateKey,
-    xpub : this.extendedPublicKey,
-    address_labels: this.address_labels,
-    cache: this.cache
+  // should we add checks on the serializer too?
+  var hdaccount = {
+    label         : this._label,
+    archived      : this._archived,
+    xpriv         : this._xpriv,
+    xpub          : this._xpub,
+    address_labels: this.receivingAddressesLabels,
+    cache         : this._keyRing
   };
 
-  return accountJsonData;
+  return hdaccount;
 };
 
-HDAccount.prototype.getLabelForReceiveAddress = function(addressIndex) {
-  for (var i in this.address_labels) {
-    var indexLabel = this.address_labels[i];
-    if (indexLabel.index == addressIndex) {
-      return this.address_labels[i];
-      break;
-    }
-  }
+////////////////////////////////////////////////////////////////////////////////
+
+HDAccount.prototype.incrementReceiveIndex = function() {
+  this._receiveIndex++;
+  return this;
+};
+////////////////////////////////////////////////////////////////////////////////
+// address labels
+HDAccount.prototype.setLabelForReceivingAddress = function(index, label) {
+  assert(Helpers.isNumber(index), "Error: address index must be a number");
+  assert(Helpers.isValidLabel(label), "Error: address label must be alphanumeric");
+  this._address_labels[index] = label;
+  return this;
+}
+HDAccount.prototype.getLabelForReceivingAddress = function(index) {
+  assert(Helpers.isNumber(index), "Error: address index must be a number");
+  return this._address_labels[index];
+}
+
+HDAccount.prototype.encrypt = function(cipher){
+  if(!this._xpriv) return this;
+  var xpriv = cipher? cipher(this._xpriv) : this._xpriv;
+  if (!xpriv) { throw 'Error Encoding account extended private key'; };
+  this._xpriv = xpriv;
+  return this;
 };
 
-HDAccount.prototype.setLabelForAddress = function(addressIndex, label) {
-  for (var i in this.address_labels) {
-    var indexLabel = this.address_labels[i];
-    if (indexLabel.index == addressIndex) {
-      this.address_labels.splice(i, 1);
-      break;
-    }
-  }
-
-  this.address_labels.push({'index': addressIndex, 'label': label});
+HDAccount.prototype.decrypt = function(cipher){
+  if(!this._xpriv) return this;
+  var xpriv = cipher? cipher(this._xpriv) : this._xpriv;
+  if (!xpriv) { throw 'Error Decoding account extended private key'; };
+  this._xpriv = xpriv;
+  return this;
 };
 
-HDAccount.prototype.unsetLabelForAddress = function(addressIndex) {
-  for (var i in this.address_labels) {
-    var indexLabel = this.address_labels[i];
-    if (indexLabel.index == addressIndex) {
-      this.address_labels.splice(i, 1);
-      return true;
-    }
-  }
-  return false;
-};
-
-HDAccount.prototype.getLabeledReceivingAddresses = function() {
-  return this.address_labels;
-};
-
-HDAccount.prototype.containsAddressInCache = function(address) {
-  for(var i in this.receiveKeyCache) {
-    if( this.receiveKeyCache[i].getAddress().toString() === address ) {
-      return true;
-    }
-  }
-
-  for(var i in this.changeKeyCache) {
-    if( this.changeKeyCache[i].getAddress().toString() === address ) {
-      return true;
-    }
-  }
-
-  return false;
-};
-
-HDAccount.prototype.generateCache = function() {
-  assert(this.receiveChain, "External Account not set");
-  assert(this.changeChain, "Internal Account not set");
-
-  this.cache.receiveAccount = this.receiveChain.neutered().toBase58();
-  this.cache.changeAccount = this.changeChain.neutered().toBase58();
-};
-
-HDAccount.prototype.recommendedTransactionFee = function(amount) {
-  // TODO To get the correct value depending on amount and inputs, we have to call getUnspentOutputs (server call) and create a fake transaction
-  return this.network.feePerKb;
-};
-
-module.exports = HDAccount;
+// var x = Blockchain.HDAccount.example();
+// delete x._cache
+// var j = JSON.stringify(x, null, 2);
+// var xx = Blockchain.HDAccount.fromJSON(j);

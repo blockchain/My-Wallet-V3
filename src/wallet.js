@@ -21,7 +21,7 @@ var HDWallet = require('./hd-wallet');
 var HDAccount = require('./hd-account');
 var Transaction = require('./transaction');
 var BlockchainAPI = require('./blockchain-api');
-var Wallet = require('./w');
+var Wallet = require('./blockchain-wallet');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;

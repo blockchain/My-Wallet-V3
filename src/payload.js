@@ -6,7 +6,7 @@ module.exports = Payload;
 // dependencies
 var assert = require('assert');
 var WalletCrypto = require('./wallet-crypto');
-var Wallet = require('./w');
+var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
 
 ////////////////////////////////////////////////////////////////////////////////

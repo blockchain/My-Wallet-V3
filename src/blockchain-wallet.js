@@ -14,9 +14,9 @@ var BIP39 = require('bip39');
 
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
-var HDWallet = require('./hdw');
-var HDAccount = require('./hda');
-var Address = require('./a');
+var HDWallet = require('./hd-wallet');
+var HDAccount = require('./hd-account');
+var Address = require('./address');
 var Helpers = require('./helpers');
 
 ////////////////////////////////////////////////////////////////////////////////
