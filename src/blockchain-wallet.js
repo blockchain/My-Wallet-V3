@@ -187,7 +187,7 @@ Wallet.prototype.toJSON = function(){
     options           : {
       pbkdf2_iterations        : this.pbkdf2_iterations,
       fee_policy               : this.fee_policy,
-      enable_multiple_accounts : this.isMultipleAccount,
+      // enable_multiple_accounts : this.isMultipleAccount,
       html5_notifications      : this._html5_notifications,
       logout_time              : this._logout_time
     },
