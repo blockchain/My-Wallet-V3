@@ -54,11 +54,20 @@ Object.defineProperties(HDAccount.prototype, {
   "balance": {
     configurable: false,
     get: function() { return this._balance;},
-    set: function(str) {
+    set: function(num) {
       if(Helpers.isNumber(num))
         this._balance = num;
       else
-        throw 'Error: account.balance must be an alphanumeric number';
+        throw 'Error: account.balance must be a number';
+    }
+  },
+  "n_tx": {
+    get: function() { return this._n_tx;},
+    set: function(num) {
+      if(Helpers.isNumber(num))
+        this._n_tx = num;
+      else
+        throw 'Error: account.n_tx must be a number';
     }
   },
   "archived": {

@@ -1878,37 +1878,27 @@ function parseMultiAddressJSON(obj, cached, checkCompleted) {
   MyWallet.wallet.finalBalance  = obj.wallet.final_balance;
   MyWallet.wallet.numberTx      = obj.wallet.n_tx;
 
-  for (var i = 0; i < obj.addresses.length; ++i) {
-    if (WalletStore.legacyAddressExists(obj.addresses[i].address)) {
-      WalletStore.setLegacyAddressBalance(obj.addresses[i].address, obj.addresses[i].final_balance);
-      // addresses[obj.addresses[i].address].balance = obj.addresses[i].final_balance;
-    }
-
-    for (var j in MyWallet.getAccounts()) {
-      var account = WalletStore.getHDWallet().getAccount(j);
-
-      if(!account.archived) {
-        var extPubKey = account.extendedPublicKey;
-
-        if (extPubKey == obj.addresses[i].address) {
-          account.balance = obj.addresses[i].final_balance;
-          account.n_tx = obj.addresses[i].n_tx;
-          account.receiveIndex = obj.addresses[i].account_index;
-
-          // Bump receive address index one more if this is a labeled address:
-          // Slightly inefficient
-          account.incrementReceiveIndexIfCurrentIsLabeled();
-
-          account.changeIndex = obj.addresses[i].change_index;
-        }
-      }
-    }
-  }
+  function updateAccountAndAddressesInfo(e) {
+    var account = MyWallet.wallet.hdwallet.activeAccount(e.address);
+    var address = MyWallet.wallet.activeKey(e.address);
+    if (account){
+      account.balance      = e.final_balance;
+      account.n_tx         = e.n_tx;
+      account.receiveIndex = e.account_index;
+      account.changeIndex  = e.change_index;
+      if (account.getLabelForReceivingAddress(account.receiveIndex)) {
+        account.incrementReceiveIndex();
+      };
+    };
+    if (address){
+      address.balance = e.final_balance;
+    };
+  };
+  obj.addresses.forEach(updateAccountAndAddressesInfo);
 
   WalletStore.setIsAccountRecommendedFeesValid(false);
   for (var i = 0; i < obj.txs.length; ++i) {
     var tx = TransactionFromJSON(obj.txs[i]);
-
     WalletStore.pushTransaction(tx);
   }
 
@@ -1950,7 +1940,7 @@ MyWallet.getHistoryAndParseMultiAddressJSON = function(_success) {
     });
   };
 
-  var addresses = this.wallet.hdwallet.activeXpubs.concat(this.wallet.hdwallet.activeAddresses);
+  var addresses = this.wallet.hdwallet.activeXpubs.concat(this.wallet.activeAddresses);
   BlockchainAPI.async_get_history_with_addresses(addresses, function(data) {
     parseMultiAddressJSON(data, false, false);
     success && success();

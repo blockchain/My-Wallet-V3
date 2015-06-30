@@ -153,6 +153,14 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     value: function(addr) {return this._addresses[addr];}
   },
+  "activeKey": {
+    configurable: false,
+    value: function(addr) {
+      var k = this._addresses[addr];
+      var r = !k || k.archived ? null : k;
+      return r;
+    }
+  },
   "keys": {
     configurable: false,
     get: function() {

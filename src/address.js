@@ -18,6 +18,8 @@ function Address(object){
   this._created_time           = obj.created_time;
   this._created_device_name    = obj.created_device_name;
   this._created_device_version = obj.created_device_version;
+  // non saved properties
+  this._balance                = null; // updated from the server
 }
 
 // public members
@@ -55,6 +57,16 @@ Object.defineProperties(Address.prototype, {
   "created_device_version": {
     configurable: false,
     get: function() {return this._created_device_version;}
+  },
+  "balance": {
+    configurable: false,
+    get: function() { return this._balance;},
+    set: function(num) {
+      if(Helpers.isNumber(num))
+        this._balance = num;
+      else
+        throw 'Error: address.balance must be a number';
+    }
   },
   "archived": {
     configurable: false,

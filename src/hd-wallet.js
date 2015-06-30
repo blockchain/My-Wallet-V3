@@ -186,6 +186,20 @@ HDWallet.prototype.verifyMnemonic = function(){
   this._mnemonic_verified = true;
   return this;
 };
+
+HDWallet.prototype.account = function(xpub){
+  var f = this._accounts
+            .filter(function(a){return a.extendedPublicKey === xpub})
+  var r = f === [] ? null : f[0];
+  return r;
+};
+
+HDWallet.prototype.activeAccount = function(xpub){
+  var a = this.account(xpub);
+  var r = !a || a.archived ? null : a;
+  return r;
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 // account managment
 
