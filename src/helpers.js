@@ -21,6 +21,9 @@ Helpers.isBoolean = function (value){
 Helpers.isValidLabel = function (text){
   return Helpers.isString(text) && Helpers.isAlphaNum(text);
 };
+Helpers.add = function (x,y){
+  return x + y;
+};
 // Return a memoized version of function f
 Helpers.memoize = function (f){
   var cache = {};

@@ -68,6 +68,10 @@ Object.defineProperties(Address.prototype, {
         throw 'Error: address.balance must be a number';
     }
   },
+  "isWatchOnly": {
+    configurable: false,
+    get: function() { return this._priv == null;}
+  },
   "archived": {
     configurable: false,
     get: function() { return this._tag === 2;},

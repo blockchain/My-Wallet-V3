@@ -77,6 +77,18 @@ Object.defineProperties(HDWallet.prototype, {
     get: function() {
       return this.activeAccounts.map(function(a){return (a.extendedPublicKey)});
     }
+  },
+  "balanceActiveAccounts":{
+    configurable: false,
+    get: function() {
+      var r = this.activeAccounts
+               .map(function(k){return k.balance;})
+                 .reduce(Helpers.add, 0);
+      if (isNaN(r))
+        return null;
+      else
+        return r;
+    }
   }
 });
 ////////////////////////////////////////////////////////////////////////////////

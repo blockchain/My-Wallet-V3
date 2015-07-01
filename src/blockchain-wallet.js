@@ -183,6 +183,14 @@ Object.defineProperties(Wallet.prototype, {
   "isMultipleAccount":{
     configurable: false,
     get: function() {return this._enable_multiple_accounts;}
+  },
+  "balanceActiveLegacy":{
+    configurable: false,
+    get: function() {
+      return this.activeKeys
+               .map(function(k){return k.balance;})
+                 .reduce(Helpers.add, 0);
+    }
   }
 });
 
