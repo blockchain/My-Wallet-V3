@@ -875,17 +875,16 @@ MyWallet.processTransaction = function(tx) {
     var output = tx.inputs[i].prev_out;
     if (!output || !output.addr)
       continue;
-
-    if (WalletStore.isActiveLegacyAddress(output.addr)) {
+    if (MyWallet.wallet.activeKey(output.addr)) {
       isOrigin = true;
       if (transaction.from.legacyAddresses == null)
         transaction.from.legacyAddresses = [];
       transaction.from.legacyAddresses.push({address: output.addr, amount: output.value});
       transaction.fee += output.value;
     } else {
-      for (var j in MyWallet.getAccounts()) {
-        var account = WalletStore.getHDWallet().getAccount(j);
-        if (!account.archived && output.xpub != null && account.extendedPublicKey == output.xpub.m) {
+      for (var j in MyWallet.wallet.accounts) {
+        var account = MyWallet.wallet.hdwallet.accounts[i];
+        if (!account.archived && output.xpub != null && account.extendedPublicKey === output.xpub.m) {
           amountFromAccount += output.value;
 
           if (! isOrigin) {
@@ -939,7 +938,7 @@ MyWallet.processTransaction = function(tx) {
     if (!output || !output.addr)
       continue;
 
-    if (WalletStore.isActiveLegacyAddress(output.addr)) {
+    if (MyWallet.wallet.activeKey(output.addr)) {
       if (transaction.to.legacyAddresses == null)
         transaction.to.legacyAddresses = [];
 
@@ -955,8 +954,8 @@ MyWallet.processTransaction = function(tx) {
         transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
       }
       transaction.fee -= output.value;
-    } else if (WalletStore.getPaidToDictionary() && WalletStore.getPaidToDictionary()[tx.hash] && WalletStore.getPaidToDictionary()[tx.hash].address == output.addr) {
-      var paidToItem = WalletStore.getPaidToDictionary()[tx.hash];
+    } else if (MyWallet.wallet.getPaidTo(tx.hash) && MyWallet.wallet.getPaidTo(tx.hash).address == output.addr) {
+      var paidToItem = MyWallet.wallet.getPaidTo(tx.hash);
       if(paidToItem.email) {
         transaction.to.email = { email: paidToItem.email, redeemedAt: paidToItem.redeemedAt };
       } else if (paidToItem.mobile) {
@@ -965,8 +964,8 @@ MyWallet.processTransaction = function(tx) {
       transaction.intraWallet = false;
     }else {
       var toAccountSet = false;
-      for (var j in MyWallet.getAccounts()) {
-        var account = WalletStore.getHDWallet().getAccount(j);
+      for (var j in MyWallet.wallet.hdwallet.accounts) {
+        var account = MyWallet.wallet.hdwallet.accounts[j];
         if (!account.archived && output.xpub != null && account.extendedPublicKey == output.xpub.m) {
           if (! toAccountSet) {
             if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
@@ -1024,14 +1023,14 @@ MyWallet.processTransaction = function(tx) {
 
   transaction.txTime = tx.time;
   transaction.publicNote = tx.note || null;
-  transaction.note = WalletStore.getNote(tx.hash);
-  transaction.tags = WalletStore.getTags(tx.hash);
+  transaction.note = MyWallet.wallet.getNote(tx.hash);
+  // TODO: review tags
+  // transaction.tags = WalletStore.getTags(tx.hash);
   transaction.size = tx.size;
   transaction.tx_index = tx.txIndex;
   transaction.block_height = tx.blockHeight;
 
   transaction.result = MyWallet.calculateTransactionResult(transaction);
-
   return transaction;
 };
 // used once on this file

@@ -310,6 +310,14 @@ Wallet.prototype.newAccount = function(label, pw){
   return this;
 };
 
+Wallet.prototype.getPaidTo = function(txHash){
+  return this._paidTo[txHash];
+};
+
+Wallet.prototype.getNote = function(txHash){
+  return this._tx_notes[txHash];
+};
+
 // example of serialization
 // var x = Blockchain.Wallet.new();
 // x.newLegacyAddress();
