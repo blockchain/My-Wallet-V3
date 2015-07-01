@@ -117,10 +117,10 @@ MyWallet.setPbkdf2Iterations = function(pbkdf2_iterations, success, error, getPa
   var setPbkdf2IterationsAndBackupWallet = function() {
     WalletStore.setPbkdf2Iterations(pbkdf2_iterations);
     MyWallet.backupWalletDelayed('update', function() {
+      success();
     }, function(e) {
       panic(e);
     });
-    success();
   };
 
   try {
