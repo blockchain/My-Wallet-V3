@@ -63,7 +63,7 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
           success(pw);
         } else {
           wrongCB();
-          error('INCORRECT_PASSWORD');
+          error('SECOND_PASSWORD_INCORRECT');
         }
       });
     } else {
