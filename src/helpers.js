@@ -57,4 +57,11 @@ Helpers.merge = function (o, p) {
   return o;
 };
 
+Function.prototype.compose = function(g) {
+     var fn = this;
+     return function() {
+         return fn.call(this, g.apply(this, arguments));
+   };
+};
+
 module.exports = Helpers;

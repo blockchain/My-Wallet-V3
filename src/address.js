@@ -81,6 +81,11 @@ Object.defineProperties(Address.prototype, {
       else
         throw 'Error: address.archived must be a boolean';
     }
+  },
+  "active": {
+    configurable: false,
+    get: function() { return !this.archived;},
+    set: function(value) { this.archived = !value; }
   }
 });
 

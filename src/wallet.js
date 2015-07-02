@@ -1096,44 +1096,27 @@ MyWallet.recommendedTransactionFeeForAddress = function(address, amount) {
 MyWallet.fetchMoreTransactionsForAccounts = function(success, error, didFetchOldestTransaction) {
 
   function getRawTransactionsForAccounts(txOffset, numTx, success, error) {
-    var addresses = [];
-    for (var i in MyWallet.getAccounts()) {
-      var account = WalletStore.getHDWallet().getAccount(i);
-      if(!account.archived) {
-        addresses.push(account.extendedPublicKey);
-      }
-    }
-
-    BlockchainAPI.async_get_history_with_addresses(addresses, function(data) {
-      if (success) success(data.txs);
-    }, function() {
-      if (error) error();
-
-    }, 0, txOffset, numTx);
+    BlockchainAPI.async_get_history_with_addresses(
+        MyWallet.wallet.hdwallet.activeXpubs
+      , function(data) { success && success(data.txs);}
+      , function()     { error && error();}
+      , 0, txOffset, numTx
+    );
   }
-
-  getRawTransactionsForAccounts(WalletStore.getHDWallet().numTxFetched, WalletStore.getNumOldTxsToFetchAtATime(), function(data) {
-    var processedTransactions = [];
-
-    for (var i in data) {
-      var tx = data[i];
-
-      var tx = TransactionFromJSON(data[i]);
-
-      var transaction = MyWallet.processTransaction(tx);
-      processedTransactions.push(transaction);
-    }
-
-    WalletStore.getHDWallet().numTxFetched += processedTransactions.length;
-
-    if (processedTransactions.length < WalletStore.getNumOldTxsToFetchAtATime()) {
-      didFetchOldestTransaction();
-    }
-
-    success(processedTransactions);
-  }, function(e) {
-    error(e);
-  });
+  console.log("calling fetchMoreTransactionsForAccounts on wallet.js");
+  getRawTransactionsForAccounts(
+      MyWallet.wallet.hdwallet.numTxFetched
+    , WalletStore.getNumOldTxsToFetchAtATime()
+    , function(data) {
+        var pTx = data.map(MyWallet.processTransaction.compose(TransactionFromJSON));
+        MyWallet.wallet.hdwallet.numTxFetched += pTx.length;
+        if (pTx.length < WalletStore.getNumOldTxsToFetchAtATime()) {
+          didFetchOldestTransaction();
+        }
+        success(pTx);
+      }
+    , function(e) { error && error(e);}
+  );
 };
 
 /**
@@ -1145,42 +1128,30 @@ MyWallet.fetchMoreTransactionsForAccounts = function(success, error, didFetchOld
  // used once locally and in the frontend
 MyWallet.fetchMoreTransactionsForAccount = function(accountIdx, success, error, didFetchOldestTransaction) {
   function getRawTransactionsForAccount(accountIdx, txOffset, numTx, success, error) {
-    var account = WalletStore.getHDWallet().getAccount(accountIdx);
-    var accountExtendedPublicKey = account.extendedPublicKey;
-
-    BlockchainAPI.async_get_history_with_addresses([accountExtendedPublicKey], function(data) {
-      if (success) success(data);
-    }, function() {
-      if (error) error();
-
-    }, 0, txOffset, numTx);
+    var xpub = MyWallet.wallet.hdwallet.accounts[accountIdx].extendedPublicKey;
+    BlockchainAPI.async_get_history_with_addresses(
+        [xpub]
+      , function(data) {success && success(data);}
+      , function()     {error   && error();}
+      , 0, txOffset, numTx);
   }
 
-  var account = WalletStore.getHDWallet().getAccount(accountIdx);
-  getRawTransactionsForAccount(accountIdx, account.numTxFetched, WalletStore.getNumOldTxsToFetchAtATime(), function(data) {
-    var processedTransactions = [];
-
-    for (var i in data.txs) {
-      var tx = data.txs[i];
-
-      var tx = TransactionFromJSON(data.txs[i]);
-
-      var transaction = MyWallet.processTransaction(tx);
-
-      processedTransactions.push(transaction);
+  console.log("calling fetchMoreTransactionsForAccount on wallet.js");
+  var account = MyWallet.wallet.hdwallet.accounts[accountIdx];
+  getRawTransactionsForAccount(
+      accountIdx
+    , account.numTxFetched
+    , WalletStore.getNumOldTxsToFetchAtATime()
+    , function(data) {
+        var pTx = data.txs.map(MyWallet.processTransaction.compose(TransactionFromJSON));
+        account.numTxFetched += pTx.length;
+        if (pTx.length < WalletStore.getNumOldTxsToFetchAtATime()) {
+          didFetchOldestTransaction();
+        }
+        success && success(pTx, data.wallet.final_balance);
     }
-
-
-    account.numTxFetched += processedTransactions.length;
-
-    if (processedTransactions.length < WalletStore.getNumOldTxsToFetchAtATime()) {
-      didFetchOldestTransaction();
-    }
-
-    success(processedTransactions, data.wallet.final_balance);
-  }, function(e) {
-    error(e);
-  });
+    , function(e) {error && error(e);}
+  );
 };
 
 // Reads from and writes to global paidTo

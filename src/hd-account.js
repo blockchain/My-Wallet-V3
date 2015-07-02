@@ -80,6 +80,11 @@ Object.defineProperties(HDAccount.prototype, {
         throw 'Error: account.archived must be a boolean';
     }
   },
+  "active": {
+    configurable: false,
+    get: function() { return !this.archived;},
+    set: function(value) { this.archived = !value; }
+  },
   "receiveIndex": {
     configurable: false,
     get: function() { return this._receiveIndex;},

@@ -51,7 +51,7 @@ function Wallet(object) {
   delete this.hdwallet._paidTo;
 
   // address book list
-  this._address_book = obj.address_book || [];
+  this._address_book = obj.address_book || {};
 
   // tx_notes dictionary
   this._tx_notes = obj.tx_notes || {};
@@ -320,6 +320,10 @@ Wallet.prototype.newAccount = function(label, pw){
 
 Wallet.prototype.getPaidTo = function(txHash){
   return this._paidTo[txHash];
+};
+
+Wallet.prototype.getAddressBookLabel = function(address){
+  return this._address_book[address];
 };
 
 Wallet.prototype.getNote = function(txHash){

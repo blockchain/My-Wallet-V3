@@ -36,6 +36,16 @@ Object.defineProperties(HDWallet.prototype, {
     configurable: false,
     get: function() { return this._bip39Password;}
   },
+  "numTxFetched": {
+    configurable: false,
+    get: function() { return this._numTxFetched;},
+    set: function(num) {
+    if(Helpers.isNumber(num))
+        this._numTxFetched = num;
+      else
+        throw 'Error: hdwallet.numTxFetched must be a number';
+    }
+  },
   "isMnemonicVerified": {
     configurable: false,
     get: function() { return this._mnemonic_verified;}
