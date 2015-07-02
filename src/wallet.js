@@ -441,7 +441,6 @@ MyWallet.importPrivateKey = function(privateKeyString, getPassword, getBIP38Pass
                 reallyInsertKey(key, isCompPoint, pw);
               } else {
                 wrong_password();
-                error('Second Password incorrect');
               }
             });
           } else {
@@ -478,7 +477,6 @@ MyWallet.importPrivateKey = function(privateKeyString, getPassword, getBIP38Pass
         reallyInsertKey(key, (format !== 'sipa'), pw);
       } else {
         wrong_password();
-        error('Second Password incorrect');
       }
     });
   } else {
