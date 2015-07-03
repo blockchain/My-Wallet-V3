@@ -127,41 +127,37 @@ MyWallet.setPbkdf2Iterations = function(pbkdf2_iterations, success, error, getPa
     // If double encryption is enabled we need to re-encrypt all private keys
     if(WalletStore.getDoubleEncryption()) {
       getPassword(
-        function(pw, correct_password, wrong_password) {
-          if (MyWallet.validateSecondPassword(pw)) {
-            correct_password();
-            WalletStore.mapToLegacyAddressesPrivateKeys(WalletCrypto.reencrypt(pw, WalletStore.getSharedKey(), previous_pbkdf2_iterations, pbkdf2_iterations));
+        function(pw) {
+          assert(MyWallet.validateSecondPassword(pw),"You must verify the 2nd password calling this.");
+          
+          WalletStore.mapToLegacyAddressesPrivateKeys(WalletCrypto.reencrypt(pw, WalletStore.getSharedKey(), previous_pbkdf2_iterations, pbkdf2_iterations));
 
-            // Re-encrypt all HD account keys
-            for (var i in MyWallet.getAccounts()) {
-              var account = WalletStore.getHDWallet().getAccount(i);
-              account.extendedPrivateKey = WalletCrypto.reencrypt(pw, WalletStore.getSharedKey(), previous_pbkdf2_iterations, pbkdf2_iterations)(account.extendedPrivateKey);
+          // Re-encrypt all HD account keys
+          for (var i in MyWallet.getAccounts()) {
+            var account = WalletStore.getHDWallet().getAccount(i);
+            account.extendedPrivateKey = WalletCrypto.reencrypt(pw, WalletStore.getSharedKey(), previous_pbkdf2_iterations, pbkdf2_iterations)(account.extendedPrivateKey);
 
-              if (!account.extendedPrivateKey) throw 'Error re-encrypting account private key';
-            }
+            if (!account.extendedPrivateKey) throw 'Error re-encrypting account private key';
+          }
 
-            // Re-encrypt the HD seed
-            if (WalletStore.didUpgradeToHd()) {
-              WalletStore.getHDWallet().seedHex = WalletCrypto.reencrypt(pw, WalletStore.getSharedKey(), previous_pbkdf2_iterations, pbkdf2_iterations)(WalletStore.getHDWallet().seedHex);
+          // Re-encrypt the HD seed
+          if (WalletStore.didUpgradeToHd()) {
+            WalletStore.getHDWallet().seedHex = WalletCrypto.reencrypt(pw, WalletStore.getSharedKey(), previous_pbkdf2_iterations, pbkdf2_iterations)(WalletStore.getHDWallet().seedHex);
 
-              if (!WalletStore.getHDWallet().seedHex) throw 'Error re-encrypting wallet seed';
-            }
+            if (!WalletStore.getHDWallet().seedHex) throw 'Error re-encrypting wallet seed';
+          }
 
-            // Re-encrypt the BIP 39 password
-            if (WalletStore.didUpgradeToHd()) {
-              if(WalletStore.getHDWallet().getBip39Password() != "") {
-                WalletStore.getHDWallet().setBip39Password(WalletCrypto.reencrypt(pw, WalletStore.getSharedKey(), previous_pbkdf2_iterations, pbkdf2_iterations)(WalletStore.getHDWallet().getBip39Password()));
-                if (!WalletStore.getHDWallet().getBip39Password()) throw 'Error re-encrypting wallet bip 39 password';
-              };
+          // Re-encrypt the BIP 39 password
+          if (WalletStore.didUpgradeToHd()) {
+            if(WalletStore.getHDWallet().getBip39Password() != "") {
+              WalletStore.getHDWallet().setBip39Password(WalletCrypto.reencrypt(pw, WalletStore.getSharedKey(), previous_pbkdf2_iterations, pbkdf2_iterations)(WalletStore.getHDWallet().getBip39Password()));
+              if (!WalletStore.getHDWallet().getBip39Password()) throw 'Error re-encrypting wallet bip 39 password';
             };
+          };
 
-            // Generate a new password hash
-            WalletStore.setDPasswordHash(hashPassword(WalletStore.getSharedKey() + pw, pbkdf2_iterations));
-            setPbkdf2IterationsAndBackupWallet();
-          }
-          else {
-            wrong_password();
-          }
+          // Generate a new password hash
+          WalletStore.setDPasswordHash(hashPassword(WalletStore.getSharedKey() + pw, pbkdf2_iterations));
+          setPbkdf2IterationsAndBackupWallet(); 
         });
     }
     else {
@@ -223,43 +219,38 @@ MyWallet.unsetSecondPassword = function(success, error, getPassword) {
   };
 
   try {
-    getPassword(function(pw, correct_password, wrong_password) {
-      if (MyWallet.validateSecondPassword(pw)) {
-        if (hasCalledPasswordCallback) {
-          // TODO should throw an error
-          return;
-        }
-        hasCalledPasswordCallback = true;
-
-        correct_password();
-
-        WalletStore.mapToLegacyAddressesPrivateKeys(decrypt(pw));
-
-        for (var i in MyWallet.getAccounts()) {
-          var account = WalletStore.getHDWallet().getAccount(i);
-          account.extendedPrivateKey = WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, pw, sharedKey, pbkdf2_iterations);
-        }
-
-        if (WalletStore.didUpgradeToHd()) {
-          WalletStore.getHDWallet().seedHex = WalletCrypto.decryptSecretWithSecondPassword(WalletStore.getHDWallet().seedHex, pw, sharedKey, pbkdf2_iterations);
-          if(WalletStore.getHDWallet().getBip39Password() != "") {
-            WalletStore.getHDWallet().setBip39Password(WalletCrypto.decryptSecretWithSecondPassword(WalletStore.getHDWallet().getBip39Password(), pw, sharedKey, pbkdf2_iterations));
-          }
-        }
-
-        WalletStore.setDoubleEncryption(false);
-
-        MyWallet.checkAllKeys(null);
-
-        MyWallet.backupWallet('update', function() {
-          success();
-        }, function(e) {
-          error(e);
-          panic(e);
-        });
-      } else {
-        wrong_password();
+    getPassword(function(pw) {
+      assert(MyWallet.validateSecondPassword(pw),"You must verify the 2nd password calling this.");
+      if (hasCalledPasswordCallback) {
+        // TODO should throw an error
+        return;
       }
+      hasCalledPasswordCallback = true;
+
+      WalletStore.mapToLegacyAddressesPrivateKeys(decrypt(pw));
+
+      for (var i in MyWallet.getAccounts()) {
+        var account = WalletStore.getHDWallet().getAccount(i);
+        account.extendedPrivateKey = WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, pw, sharedKey, pbkdf2_iterations);
+      }
+
+      if (WalletStore.didUpgradeToHd()) {
+        WalletStore.getHDWallet().seedHex = WalletCrypto.decryptSecretWithSecondPassword(WalletStore.getHDWallet().seedHex, pw, sharedKey, pbkdf2_iterations);
+        if(WalletStore.getHDWallet().getBip39Password() != "") {
+          WalletStore.getHDWallet().setBip39Password(WalletCrypto.decryptSecretWithSecondPassword(WalletStore.getHDWallet().getBip39Password(), pw, sharedKey, pbkdf2_iterations));
+        }
+      }
+
+      WalletStore.setDoubleEncryption(false);
+
+      MyWallet.checkAllKeys(null);
+
+      MyWallet.backupWallet('update', function() {
+        success();
+      }, function(e) {
+        error(e);
+        panic(e);
+      });
     });
   } catch (e) {
     console.log(e);
@@ -426,6 +417,7 @@ MyWallet.importPrivateKey = function(privateKeyString, getPassword, getBIP38Pass
   }
 
   if (format == 'bip38') {
+    // Note: BIP 38 password != second password
     getBIP38Password(function(_password, correct_password, wrong_password) {
       WalletStore.disableLogout();
       ImportExport.parseBIP38toECKey(
@@ -435,13 +427,9 @@ MyWallet.importPrivateKey = function(privateKeyString, getPassword, getBIP38Pass
           WalletStore.enableLogout();
           correct_password();
           if(WalletStore.getDoubleEncryption()) {
-            getPassword(function(pw, correct_password, wrong_password) {
-              if (MyWallet.validateSecondPassword(pw)) {
-                correct_password();
-                reallyInsertKey(key, isCompPoint, pw);
-              } else {
-                wrong_password();
-              }
+            getPassword(function(pw) {
+              assert(MyWallet.validateSecondPassword(pw),"You must verify the 2nd password calling this.");              
+              reallyInsertKey(key, isCompPoint, pw);
             });
           } else {
             reallyInsertKey(key, isCompPoint, null);
@@ -471,13 +459,9 @@ MyWallet.importPrivateKey = function(privateKeyString, getPassword, getBIP38Pass
   }
 
   if(WalletStore.getDoubleEncryption()) {
-    getPassword(function(pw, correct_password, wrong_password) {
-      if (MyWallet.validateSecondPassword(pw)) {
-        correct_password();
-        reallyInsertKey(key, (format !== 'sipa'), pw);
-      } else {
-        wrong_password();
-      }
+    getPassword(function(pw) {
+      assert(MyWallet.validateSecondPassword(pw),"You must verify the 2nd password calling this.");
+      reallyInsertKey(key, (format !== 'sipa'), pw);
     });
   } else {
     reallyInsertKey(key, (format !== 'sipa'), null);
@@ -1400,14 +1384,9 @@ MyWallet.createAccount = function(label, getPassword, success, error) {
   }
 
   if (WalletStore.getDoubleEncryption()) {
-    getPassword(function(pw, correct_password, incorrect_password) {
-      if (MyWallet.validateSecondPassword(pw)) {
-        correct_password();
-        createAccount(label, pw, success, error);
-      } else {
-        incorrect_password();
-        error();
-      }
+    getPassword(function(pw) {
+      assert(MyWallet.validateSecondPassword(pw),"You must verify the 2nd password calling this.");
+      createAccount(label, pw, success, error);
     });
   } else {
     createAccount(label, null, success, error);
@@ -1464,14 +1443,9 @@ MyWallet.recoverMyWalletHDWalletFromMnemonic = function(passphrase, bip39Passwor
   }
 
   if (WalletStore.getDoubleEncryption()) {
-    getPassword(function(pw, correct_password, wrong_password) {
-      if (MyWallet.validateSecondPassword(pw)) {
-        correct_password();
-        recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, pw, successCallback, errorCallback);
-      } else {
-        wrong_password();
-        errorCallback();
-      }
+    getPassword(function(pw) {
+      assert(MyWallet.validateSecondPassword(pw),"You must verify the 2nd password calling this.");
+      recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, pw, successCallback, errorCallback);
     });
   } else {
     recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, null, successCallback, errorCallback);
@@ -1599,14 +1573,9 @@ MyWallet.initializeHDWallet = function(passphrase, bip39Password, firstAccountNa
   }
 
   if (WalletStore.getDoubleEncryption()) {
-    getPassword(function(pw, correct_password, wrong_password) {
-      if (MyWallet.validateSecondPassword(pw)) {
-        correct_password();
-        initializeHDWallet(passphrase, bip39Password, pw, success, error);
-      } else {
-        wrong_password();
-        error();
-      }
+    getPassword(function(pw) {
+      assert(MyWallet.validateSecondPassword(pw),"You must verify the 2nd password calling this.");
+      initializeHDWallet(passphrase, bip39Password, pw, success, error);
     });
 
   } else {
@@ -1622,15 +1591,10 @@ MyWallet.initializeHDWallet = function(passphrase, bip39Password, firstAccountNa
  // used on the frontend
 MyWallet.getHDWalletPassphraseString = function(getPassword, successCallback, errorCallback) {
   if (WalletStore.getDoubleEncryption()) {
-    getPassword(function(pw, correct_password, incorrect_password) {
-      if (MyWallet.validateSecondPassword(pw)) {
-        correct_password();
-        var seed = WalletCrypto.decryptSecretWithSecondPassword(WalletStore.getHDWallet().getSeedHexString(), pw, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());
-        successCallback(WalletStore.getHDWallet().getPassphraseString(seed));
-      } else {
-        incorrect_password();
-        errorCallback();
-      }
+    getPassword(function(pw) {
+      assert(MyWallet.validateSecondPassword(pw),"You must verify the 2nd password calling this.");
+      var seed = WalletCrypto.decryptSecretWithSecondPassword(WalletStore.getHDWallet().getSeedHexString(), pw, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());
+      successCallback(WalletStore.getHDWallet().getPassphraseString(seed));
     });
   } else {
     var seed = WalletStore.getHDWallet().getSeedHexString();
