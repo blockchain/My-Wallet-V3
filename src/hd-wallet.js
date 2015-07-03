@@ -100,7 +100,9 @@ function recoverHDWallet(hdwallet, secondPassword, successCallback, errorCallbac
   }
 
   if (hdwallet.getAccountsCount() < 1) {
-    hdwallet.createAccountWithSeedhex("Account 1", hdwallet.getSeedHexString(), hdwallet.getBip39Password(), secondPassword);
+    var seedHex  = (secondPassword == undefined || secondPassword == null || secondPassword === "") ? hdwallet.getSeedHexString() : WalletCrypto.decryptSecretWithSecondPassword(hdwallet.getSeedHexString(), secondPassword, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations()); 
+    var bip39pwd = (secondPassword == undefined || secondPassword == null || secondPassword === "") ? hdwallet.getBip39Password() : WalletCrypto.decryptSecretWithSecondPassword(hdwallet.getBip39Password(), secondPassword, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());     
+    hdwallet.createAccountWithSeedhex("Account 1", seedHex, bip39pwd, secondPassword);
   }
 
   successCallback && successCallback(hdwallet);
