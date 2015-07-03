@@ -114,7 +114,6 @@ var WalletStore = (function() {
     fee_policy : 0,  //Default Fee policy (-1 Tight, 0 Normal, 1 High)
     logout_time : 600000, //Default 10 minutes
     additional_seeds : [],
-    enable_multiple_accounts : true //Allow multiple accounts in the wallet
   };
   ////////////////////////////////////////////////////////////////////////////
   // Private functions
@@ -849,13 +848,6 @@ var WalletStore = (function() {
     },
     getPassword: function(){
       return password;
-    },
-    getMultiAccountSetting: function() {
-      return wallet_options.enable_multiple_accounts;
-    },
-    setMultiAccountSetting: function(flag) {
-      MyWallet.backupWalletDelayed();
-      wallet_options.enable_multiple_accounts = flag;
     },
     addAdditionalSeeds: function(val) {
       wallet_options.additional_seeds.push(val);
