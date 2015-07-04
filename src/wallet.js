@@ -882,9 +882,9 @@ MyWallet.processTransaction = function(tx) {
       transaction.from.legacyAddresses.push({address: output.addr, amount: output.value});
       transaction.fee += output.value;
     } else {
-      for (var j in MyWallet.wallet.accounts) {
-        var account = MyWallet.wallet.hdwallet.accounts[i];
-        if (!account.archived && output.xpub != null && account.extendedPublicKey === output.xpub.m) {
+      for (var j in MyWallet.wallet.hdwallet.accounts) {
+        var account = MyWallet.wallet.hdwallet.accounts[j];
+        if (account.active && output.xpub != null && account.extendedPublicKey === output.xpub.m) {
           amountFromAccount += output.value;
 
           if (! isOrigin) {
@@ -966,7 +966,7 @@ MyWallet.processTransaction = function(tx) {
       var toAccountSet = false;
       for (var j in MyWallet.wallet.hdwallet.accounts) {
         var account = MyWallet.wallet.hdwallet.accounts[j];
-        if (!account.archived && output.xpub != null && account.extendedPublicKey == output.xpub.m) {
+        if (account.active && output.xpub != null && account.extendedPublicKey == output.xpub.m) {
           if (! toAccountSet) {
             if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
               transaction.from.account.amount -= output.value;

@@ -11,6 +11,14 @@ var BIP39 = require('bip39');
 ////////////////////////////////////////////////////////////////////////////////
 // Address class
 function HDWallet(object){
+
+  var accountCounter = 0;
+  function addAccount (o){
+    o.index = accountCounter;
+    accountCounter++;
+    return HDAccount.factory(o);
+  };
+
   // private members
   var obj      = object || {};
   obj.accounts = obj.accounts || [];
@@ -20,7 +28,7 @@ function HDWallet(object){
   this._bip39Password       = obj.passphrase;
   this._mnemonic_verified   = obj.mnemonic_verified;
   this._default_account_idx = obj.default_account_idx;
-  this._accounts = obj.accounts ? obj.accounts.map(HDAccount.factory) : [];
+  this._accounts = obj.accounts ? obj.accounts.map(addAccount) : [];
   this._paidTo              = obj.paidTo;
 
   //computed properties

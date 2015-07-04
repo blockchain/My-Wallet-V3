@@ -34,6 +34,7 @@ function HDAccount(object){
   this._n_tx          = 0;
   this._numTxFetched  = 0;
   this._balance       = null;
+  this._index         = Helpers.isNumber(obj.index) ? obj.index : null;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -133,6 +134,10 @@ Object.defineProperties(HDAccount.prototype, {
   "changeAddress": {
     configurable: false,
     get: function() { return this._keyRing.change.getAddress(this._changeIndex);}
+  },
+  "index": {
+    configurable: false,
+    get: function() { return this._index;}
   }
 });
 
