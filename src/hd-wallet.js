@@ -12,10 +12,8 @@ var BIP39 = require('bip39');
 // Address class
 function HDWallet(object){
 
-  var accountCounter = 0;
-  function addAccount (o){
-    o.index = accountCounter;
-    accountCounter++;
+  function addAccount (o, index){
+    o.index = index;
     return HDAccount.factory(o);
   };
 
