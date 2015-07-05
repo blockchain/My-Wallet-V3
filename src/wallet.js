@@ -1061,30 +1061,10 @@ MyWallet.calculateTransactionResult = function(transaction) {
 
   return result;
 };
-// used on the frontend and iOS
-MyWallet.recommendedTransactionFeeForAccount = function(accountIdx, amount) {
-
-  if (!WalletStore.isAccountRecommendedFeesValid()) {
-    WalletStore.setAmountToRecommendedFee({});
-    WalletStore.setIsAccountRecommendedFeesValid(true);
-  }
-
-  var recFee = WalletStore.getAmountToRecommendedFee();
-  if (recFee === null) {
-    recFee = WalletStore.getHDWallet().getAccount(accountIdx).recommendedTransactionFee(amount);
-    WalletStore.setAmountToRecommendedFee(amount, recFee);
-  }
-  return recFee;
-};
 // used on wallet-spender and locally
 MyWallet.getBaseFee = function() {
   var network = Bitcoin.networks.bitcoin;
   return network.feePerKb;
-};
-// used on the frontend and iOS
-MyWallet.recommendedTransactionFeeForAddress = function(address, amount) {
-  // TODO: calculate the correct fee:
-  return MyWallet.getBaseFee();
 };
 
 /**
