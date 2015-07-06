@@ -1337,7 +1337,10 @@ MyWallet.getAccountsCount = function() {
   }
   return WalletStore.getHDWallet().getAccountsCount();
 };
-
+MyWallet.printPassword = function (pw) {
+  console.log("this is the password: " + pw);
+  return ("modified password: " + pw);
+};
 /**
  * Create new account and backup wallet
  * @param {string} label label name
@@ -1365,11 +1368,20 @@ MyWallet.createAccount = function(label, getPassword, success, error) {
 
 // Assumes second password is needed if the argument is not null.
 function createAccount(label, pw, success, error) {
-  var account = MyWallet.wallet.newAccount(label, pw).lastAccount;
-  var accountExtendedPublicKey = account.extendedPublicKey;
+  var newAccount = MyWallet.wallet.newAccount(label, pw).lastAccount;
+  var accountExtendedPublicKey = newAccount.extendedPublicKey;
   MyWallet.listenToHDWalletAccount(accountExtendedPublicKey);
-  success && success();
+  success && success(newAccount);
   // MyWallet.backupWalletDelayed();
+}
+
+// Assumes second password is needed if the argument is not null.
+MyWallet.jaumeAccount = function (label, pw) {
+  var newAccount = MyWallet.wallet.newAccount(label, pw).lastAccount;
+  var accountExtendedPublicKey = newAccount.extendedPublicKey;
+  MyWallet.listenToHDWalletAccount(accountExtendedPublicKey);
+  // MyWallet.backupWalletDelayed();
+  return newAccount;
 }
 
 /**

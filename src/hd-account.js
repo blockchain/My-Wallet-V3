@@ -145,7 +145,7 @@ Object.defineProperties(HDAccount.prototype, {
 // CONSTRUCTORS
 
 HDAccount.exampleReadOnly = function(){
-  return HDAccount.fromExtPublicKey("xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ", "Example account");
+  return HDAccount.fromExtPublicKey("xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ", undefined, "Example account");
 };
 
 /* BIP 44 defines the following 5 levels in BIP32 path:
@@ -155,10 +155,11 @@ HDAccount.exampleReadOnly = function(){
  * Purpose is a constant set to 44' following the BIP43 recommendation
  * Registered coin types: 0' for Bitcoin
  */
-HDAccount.fromAccountMasterKey = function(accountZero, label){
+HDAccount.fromAccountMasterKey = function(accountZero, index, label){
 
   assert(accountZero, "Account MasterKey must be given to create an account.");
   var account    = new HDAccount();
+  account._index = index ? index : null;
   account.label  = label;
   account._xpriv = accountZero.toBase58();
   account._xpub  = accountZero.neutered().toBase58();
@@ -171,25 +172,25 @@ HDAccount.fromWalletMasterKey = function(masterkey, index, label) {
   assert(masterkey, "Wallet MasterKey must be given to create an account.");
   assert(Helpers.isNumber(index), "Derivation index must be an integer.");
   var accountZero = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(index);
-  return HDAccount.fromAccountMasterKey(accountZero, label);
+  return HDAccount.fromAccountMasterKey(accountZero, index, label);
 };
 
-HDAccount.fromExtPublicKey = function(extPublicKey, label){
+HDAccount.fromExtPublicKey = function(extPublicKey, index, label){
   // this is creating a read-only account
   assert(extPublicKey && extPublicKey[2] && extPublicKey[2] === "u"
       , "Extended public key must be given to create an account.");
   var accountZero = Bitcoin.HDNode.fromBase58(extPublicKey);
-  var a = HDAccount.fromAccountMasterKey(accountZero, label);
+  var a = HDAccount.fromAccountMasterKey(accountZero, index, label);
   a._xpriv = null;
   return a;
 };
 
-HDAccount.fromExtPrivateKey = function(extPrivateKey, label){
+HDAccount.fromExtPrivateKey = function(extPrivateKey, index, label){
 
   assert(extPrivateKey && extPrivateKey[2] && extPrivateKey[2] ==="r"
       , "Extended private key must be given to create an account.");
   var accountZero = Bitcoin.HDNode.fromBase58(extPrivateKey);
-  return HDAccount.fromAccountMasterKey(accountZero, label);
+  return HDAccount.fromAccountMasterKey(accountZero, index, label);
 };
 
 HDAccount.factory = function(o){
