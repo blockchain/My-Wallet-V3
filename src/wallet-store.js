@@ -141,11 +141,11 @@ var WalletStore = (function() {
     // Public functions
     ////////////////////////////////////////////////////////////////////////////
     setPbkdf2Iterations: function(iterations) {
-      pbkdf2_iterations = iterations;
+      MyWallet.wallet.pbkdf2_iterations = iterations;
       return;
     },
     getPbkdf2Iterations: function() {
-      return pbkdf2_iterations;
+      return MyWallet.wallet.pbkdf2_iterations;
     },
     getLanguage: function() {
       if (language != null) {

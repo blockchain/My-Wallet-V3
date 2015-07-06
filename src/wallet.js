@@ -1347,34 +1347,29 @@ MyWallet.getAccountsCount = function() {
  */
  // used in the frontend and iOS
 MyWallet.createAccount = function(label, getPassword, success, error) {
-  if(!this.validateAccountLabel(label)) {
-    error("Invalid label");
-    return;
+  // if(!this.validateAccountLabel(label)) {
+  //   error("Invalid label");
+  //   return;
+  // }
+  try {
+    if (MyWallet.wallet.isDoubleEncrypted) {
+      getPassword(function(pw) {createAccount(label, pw, success, error);});
+    } else {
+      createAccount(label, null, success, error);
+    }
   }
-
-  if (WalletStore.getDoubleEncryption()) {
-    getPassword(function(pw, correct_password, incorrect_password) {
-      if (MyWallet.validateSecondPassword(pw)) {
-        correct_password();
-        createAccount(label, pw, success, error);
-      } else {
-        incorrect_password();
-        error();
-      }
-    });
-  } else {
-    createAccount(label, null, success, error);
-  }
+  catch (e) {
+    error && error(e);
+  };
 };
 
 // Assumes second password is needed if the argument is not null.
-function createAccount(label, second_password, success, error) {
-  var account = WalletStore.getHDWallet().createAccount(label, second_password);
+function createAccount(label, pw, success, error) {
+  var account = MyWallet.wallet.newAccount(label, pw).lastAccount;
   var accountExtendedPublicKey = account.extendedPublicKey;
-  account.balance = 0;
   MyWallet.listenToHDWalletAccount(accountExtendedPublicKey);
-  success();
-  MyWallet.backupWalletDelayed();
+  success && success();
+  // MyWallet.backupWalletDelayed();
 }
 
 /**

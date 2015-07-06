@@ -191,6 +191,12 @@ Object.defineProperties(Wallet.prototype, {
                .map(function(k){return k.balance;})
                  .reduce(Helpers.add, 0);
     }
+  },
+  "lastAccount":{
+    configurable: false,
+    get: function() {
+      return this.hdwallet._accounts[this.hdwallet._accounts.length-1];
+    }
   }
 });
 
