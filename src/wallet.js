@@ -129,7 +129,7 @@ MyWallet.setPbkdf2Iterations = function(pbkdf2_iterations, success, error, getPa
       getPassword(
         function(pw) {
           assert(MyWallet.validateSecondPassword(pw),"You must verify the 2nd password calling this.");
-          
+
           WalletStore.mapToLegacyAddressesPrivateKeys(WalletCrypto.reencrypt(pw, WalletStore.getSharedKey(), previous_pbkdf2_iterations, pbkdf2_iterations));
 
           // Re-encrypt all HD account keys
@@ -157,7 +157,7 @@ MyWallet.setPbkdf2Iterations = function(pbkdf2_iterations, success, error, getPa
 
           // Generate a new password hash
           WalletStore.setDPasswordHash(hashPassword(WalletStore.getSharedKey() + pw, pbkdf2_iterations));
-          setPbkdf2IterationsAndBackupWallet(); 
+          setPbkdf2IterationsAndBackupWallet();
         });
     }
     else {
@@ -428,7 +428,7 @@ MyWallet.importPrivateKey = function(privateKeyString, getPassword, getBIP38Pass
           correct_password();
           if(WalletStore.getDoubleEncryption()) {
             getPassword(function(pw) {
-              assert(MyWallet.validateSecondPassword(pw),"You must verify the 2nd password calling this.");              
+              assert(MyWallet.validateSecondPassword(pw),"You must verify the 2nd password calling this.");
               reallyInsertKey(key, isCompPoint, pw);
             });
           } else {
@@ -504,10 +504,6 @@ MyWallet.addPrivateKey = function(key, opts, second_password) {
     throw 'Decoded Key address does not match generated address';
   }
 
-  if (addr != MyWallet.getUnCompressedAddressString(key) && addr != MyWallet.getCompressedAddressString(key)) {
-    throw 'Decoded Key address does not match generated address';
-  }
-
   //TODO: Move this once opts and probably all addPrivateKey func to walletstore
   var addresses = WalletStore.getAddresses();
   if (WalletStore.addLegacyAddress(addr, encoded)) {
@@ -524,7 +520,7 @@ MyWallet.addPrivateKey = function(key, opts, second_password) {
       ws.send('{"op":"addr_sub", "addr":"'+addr+'"}');
     } catch (e) { }
   } else {
-    throw 'Unable to add generated private key.';
+    throw 'Could not add address. This address already exists in your wallet.';
   }
 
   return addr;
@@ -1009,7 +1005,7 @@ MyWallet.processTransaction = function(tx) {
   transaction.block_height = tx.blockHeight;
 
   transaction.result = MyWallet.calculateTransactionResult(transaction);
-  
+
   // Check if fee is frugal (incomplete):
   transaction.frugal = transaction.fee < 10000
 
