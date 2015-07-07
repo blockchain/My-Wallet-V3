@@ -48,8 +48,8 @@ KeyRing.prototype.privateKeyFromPath = function (path) {
   var receiveOrChange = parseInt(components[1]);
   var index = parseInt(components[2]);
   var key = receiveOrChange === 0 ?
-    _receiveChain.getPrivateKey(index) :
-    _changeChain.getPrivateKey(index) ;
+    this._receiveChain.getPrivateKey(index) :
+    this._changeChain.getPrivateKey(index) ;
   return key;
 };
 

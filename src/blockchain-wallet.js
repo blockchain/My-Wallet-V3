@@ -226,7 +226,7 @@ Wallet.prototype.importLegacyAddress = function(key, label, secPass){
     ad.encrypt(secPass, this.sharedKey, this.pbkdf2_iterations);
   };
   this._addresses[ad.addr] = ad;
-  return this;
+  return ad;
 };
 
 Wallet.prototype.newLegacyAddress = function(label, pw){
@@ -236,7 +236,7 @@ Wallet.prototype.newLegacyAddress = function(label, pw){
     ad.encrypt(pw, this.sharedKey, this.pbkdf2_iterations);
   };
   this._addresses[ad.addr] = ad;
-  return this;
+  return ad;
 };
 
 Wallet.prototype.setDefaultPbkdf2Iterations = function(){

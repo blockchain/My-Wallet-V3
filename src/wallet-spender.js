@@ -11,6 +11,8 @@ var WalletCrypto = require('./wallet-crypto');
 var HDAccount = require('./hd-account');
 var Transaction = require('./transaction');
 var BlockchainAPI = require('./blockchain-api');
+var Helpers = require('./helpers');
+var KeyRing  = require('./keyring');
 
   /**
    * @param {?string} note transaction note
@@ -19,7 +21,7 @@ var BlockchainAPI = require('./blockchain-api');
    * @param {Object} listener callback functions for send progress
    * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
    */
-var Spender = function(note, successCallback, errorCallback, listener, getSecondPassword) {
+var Spender = function(note, successCallback, errorCallback, listener, secondPassword) {
 
   assert(successCallback, "success callback required");
   assert(errorCallback, "error callback required");
@@ -43,34 +45,16 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
     sharedKey:         null,
     pbkdf2_iterations: null,
     getPrivateKeys:    null,
-    newKeyAdded:       false,
     isSweep:           false,
     extraAddress:      null
   };
 
   var promises = {
-    secondPassword: null,
     coins: null
   };
 
 ////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-  var getEncryptionPassword = function(success, error) {
-    if (WalletStore.getDoubleEncryption()) {
-      getSecondPassword(function(pw, rightCB, wrongCB){
-        if (MyWallet.validateSecondPassword(pw)) {
-          rightCB();
-          success(pw);
-        } else {
-          wrongCB();
-          error("wrong password (promise)");
-        }
-      });
-    } else {
-      success(null);
-    }
-  };
-  //////////////////////////////////////////////////////////////////////////////
+
   var getUnspentOutputs = function(addressList, success, error) {
     var processCoins = function (obj) {
       var processCoin = function(utxo) {
@@ -101,17 +85,11 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
   };
   ////////////////////////////////////////////////////////////////////////////////
   var spendCoins = function() {
-
     var getValue = function(coin) {return coin.value;};
-    var add = function(x, y) {return x + y;};
     var isSmall = function(value) {return value < 500000;};
 
-    if (payment.newKeyAdded && payment.secondPassword) {
-      WalletStore.encryptPrivateKey( payment.fromAddress, payment.secondPassword
-                                   , payment.sharedKey, payment.pbkdf2_iterations);
-    };
     if (payment.isSweep) {
-      payment.amount = payment.coins.map(getValue).reduce(add,0) - payment.feeAmount;
+      payment.amount = payment.coins.map(getValue).reduce(Helpers.add,0) - payment.feeAmount;
     };
 
     // create the transaction (the coins are choosen here)
@@ -142,13 +120,8 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
     toAddress: function(toAddress) {
 
       assert(toAddress, "to address required");
-      // First check if the to address is not part of the from account:
-      if(payment.fromAccount && payment.fromAccount.containsAddressInCache(toAddress)) {
-        errorCallback("Unable to move bitcoins within the same account.");
-      }
       payment.toAddress = toAddress;
       RSVP.hash(promises).then(function(result) {
-        payment.secondPassword = result.secondPassword;
         payment.coins = result.coins;
         spendCoins();
       }).catch(errorCallback);
@@ -162,19 +135,10 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
       assert(toAddresses, "to address required");
       assert(amounts, "amounts required");
       // we must assert amount = sum (amounts)
-
-      // First check if the to address is not part of the from account:
-      function checkAddress(add) {
-        if(payment.fromAccount && payment.fromAccount.containsAddressInCache(add)) {
-          errorCallback("Unable to move bitcoins within the same account.");
-        }
-      };
-      toAddresses.map(checkAddress);
       payment.toAddress = toAddresses;
       payment.amount = amounts;
 
       RSVP.hash(promises).then(function(result) {
-        payment.secondPassword = result.secondPassword;
         payment.coins = result.coins;
         spendCoins();
       }).catch(errorCallback);
@@ -193,7 +157,7 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
      * @param {string} email address
      */
     toEmail: function(email) {
-
+      // this needs to be refactored for the new model
       assert(email, "to Email required");
       var key = MyWallet.generateNewKey();
       var address = key.pub.getAddress().toString();
@@ -227,7 +191,7 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
      * @param {string} mobile number in int. format, e.g. "+1123555123"
      */
     toMobile: function(mobile) {
-
+      // this needs to be refactored for the new model
       assert(mobile, "to mobile required");
       if (mobile.charAt(0) == '0') { mobile = mobile.substring(1);}
       if (mobile.charAt(0) != '+') { mobile = '+' + mobile;}
@@ -274,8 +238,8 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
       assert(fromAddress, "fromAddress required");
       assert(typeof(amount) === "number", "amount required");
       assert(typeof(feeAmount) === "number", "fee required");
-      payment.fromAddress = fromAddress ? fromAddress : WalletStore.getLegacyActiveAddresses();
-      payment.changeAddress = fromAddress || WalletStore.getPreferredLegacyAddress();
+      payment.fromAddress = fromAddress ? fromAddress : MyWallet.wallet.activeAddresses;
+      payment.changeAddress = fromAddress || MyWallet.wallet.activeAddresses[0];
       payment.amount = amount;
       payment.feeAmount = feeAmount;
 
@@ -290,8 +254,8 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
       // set the private key obtainer function
       payment.getPrivateKeys = function (tx) {
         var getKeyForAddress = function (neededPrivateKeyAddress) {
-          var k = WalletStore.getPrivateKey(neededPrivateKeyAddress);
-          var privateKeyBase58 = payment.secondPassword === null
+          var k = MyWallet.wallet.key(neededPrivateKeyAddress).priv;
+          var privateKeyBase58 = payment.secondPassword == null
             ? k
             : WalletCrypto.decryptSecretWithSecondPassword(
                 k, payment.secondPassword, payment.sharedKey, payment.pbkdf2_iterations);
@@ -333,11 +297,9 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
       payment.extraAddress = key.pub.getAddress().toString();
       key.pub.compressed = true;
       var addr = key.pub.getAddress().toString();
-      if(!WalletStore.legacyAddressExists(addr)){
-        MyWallet.addPrivateKey(key);
-        payment.newKeyAdded = true;
-        WalletStore.setLegacyAddressTag(addr, 2);
-        WalletStore.setLegacyAddressLabel(addr, "Redeemed code.");
+      if(!(addr in MyWallet.wallet.addresses)){
+        var address = MyWallet.wallet.importLegacyAddress(key, "Redeemed code.", payment.secondPassword);
+        address.archived = true;
       }
       return prepareFrom.addressSweep(addr);
     },
@@ -352,8 +314,8 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
       assert(typeof(amount) === "number", "amount required");
       assert(typeof(feeAmount) === "number", "fee required");
       payment.fromAccountIndex = fromIndex;
-      payment.fromAccount = WalletStore.getHDWallet().getAccount(fromIndex);
-      payment.changeAddress = payment.fromAccount.getChangeAddress();
+      payment.fromAccount = MyWallet.wallet.hdwallet.accounts[fromIndex];
+      payment.changeAddress = payment.fromAccount.changeAddress;
       payment.amount = amount;
       payment.feeAmount = feeAmount;
 
@@ -370,10 +332,11 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
                                                         , payment.secondPassword
                                                         , payment.sharedKey
                                                         , payment.pbkdf2_iterations);
-        // create an hd-account with xpriv decrypted
-        var sendAccount = new HDAccount.fromExtKey(extendedPrivateKey);
+
+
         var getKeyForPath = function (neededPrivateKeyPath) {
-          return sendAccount.generateKeyFromPath(neededPrivateKeyPath).privKey;
+          var keyring = new KeyRing(extendedPrivateKey);
+          return keyring.privateKeyFromPath(neededPrivateKeyPath);
         }
         return tx.pathsOfNeededPrivateKeys.map(getKeyForPath);
       }
@@ -382,11 +345,10 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
   };
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
-
-  promises.secondPassword = new RSVP.Promise(getEncryptionPassword);
-  payment.note = note;
-  payment.sharedKey = WalletStore.getSharedKey();
-  payment.pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
+  payment.note              = note;
+  payment.secondPassword    = secondPassword;
+  payment.sharedKey         = MyWallet.wallet.sharedKey;
+  payment.pbkdf2_iterations = MyWallet.wallet.pbkdf2_iterations;
   //////////////////////////////////////////////////////////////////////////////
   return prepareFrom;
 };
@@ -399,3 +361,5 @@ module.exports = Spender;
 //   .fromAccount(0, 20000, 10000).toEmail("pedro@ximenez.com");
 // 7dBCyQ7decFjHkbeNb6JXN1VSWe3hRdWHtDxJ4FN7khh
 // Spender("nota", function(x){console.log("All ok: " +x);}, function(x){console.log("oh fail: " +x);}, null, getSP).fromPrivateKey("7dBCyQ7decFjHkbeNb6JXN1VSWe3hRdWHtDxJ4FN7khh");
+// var s = new Blockchain.Spender(undefined, function(x){console.log("All ok: " +x);}, function(x){console.log("oh fail: " +x);}, null, null).fromAddress("1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF", 10000, 10000).toAddress("17YGjHkWtEVUnN5JXeLfuh5sSMVNMBh2UX", 10000);
+// ask for coins: Blockchain.BlockchainAPI.get_unspent(["1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF"], function(x){console.log(x);}, undefined, 0, true);
