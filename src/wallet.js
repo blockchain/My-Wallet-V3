@@ -2089,7 +2089,7 @@ MyWallet.resendTwoFactorSms = function(user_guid, success, error) {
     crossDomain: true,
     data : {
       format : 'json',
-      resend_code : 1,
+      resend_code : true,
       ct : (new Date()).getTime(),
       api_code : WalletStore.getAPICode(),
       shared_key: WalletStore.getSharedKey()
