@@ -223,18 +223,31 @@ HDAccount.prototype.incrementReceiveIndex = function() {
   this._receiveIndex++;
   return this;
 };
+HDAccount.prototype.incrementReceiveIndexIfLast = function(index) {
+  if (this._receiveIndex === index){
+    this.incrementReceiveIndex();
+  };
+  return this;
+};
 ////////////////////////////////////////////////////////////////////////////////
 // address labels
 HDAccount.prototype.setLabelForReceivingAddress = function(index, label) {
   assert(Helpers.isNumber(index), "Error: address index must be a number");
   assert(Helpers.isValidLabel(label), "Error: address label must be alphanumeric");
   this._address_labels[index] = label;
+  this.incrementReceiveIndexIfLast(index);
   return this;
-}
+};
+
 HDAccount.prototype.getLabelForReceivingAddress = function(index) {
   assert(Helpers.isNumber(index), "Error: address index must be a number");
   return this._address_labels[index];
-}
+};
+
+HDAccount.prototype.receiveAddressAtIndex = function(index) {
+  assert(Helpers.isNumber(index), "Error: address index must be a number");
+  return this._keyRing.receive.getAddress(index);
+};
 
 HDAccount.prototype.encrypt = function(cipher){
   if(!this._xpriv) return this;
