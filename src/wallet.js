@@ -1337,52 +1337,6 @@ MyWallet.getAccountsCount = function() {
   }
   return WalletStore.getHDWallet().getAccountsCount();
 };
-MyWallet.printPassword = function (pw) {
-  console.log("this is the password: " + pw);
-  return ("modified password: " + pw);
-};
-/**
- * Create new account and backup wallet
- * @param {string} label label name
- * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
- * @param {function()} success called when account creation was successful
- * @param {function()} error called when account creation failed
- */
- // used in the frontend and iOS
-MyWallet.createAccount = function(label, getPassword, success, error) {
-  // if(!this.validateAccountLabel(label)) {
-  //   error("Invalid label");
-  //   return;
-  // }
-  try {
-    if (MyWallet.wallet.isDoubleEncrypted) {
-      getPassword(function(pw) {createAccount(label, pw, success, error);});
-    } else {
-      createAccount(label, null, success, error);
-    }
-  }
-  catch (e) {
-    error && error(e);
-  };
-};
-
-// Assumes second password is needed if the argument is not null.
-function createAccount(label, pw, success, error) {
-  var newAccount = MyWallet.wallet.newAccount(label, pw).lastAccount;
-  var accountExtendedPublicKey = newAccount.extendedPublicKey;
-  MyWallet.listenToHDWalletAccount(accountExtendedPublicKey);
-  success && success(newAccount);
-  // MyWallet.backupWalletDelayed();
-}
-
-// Assumes second password is needed if the argument is not null.
-MyWallet.jaumeAccount = function (label, pw) {
-  var newAccount = MyWallet.wallet.newAccount(label, pw).lastAccount;
-  var accountExtendedPublicKey = newAccount.extendedPublicKey;
-  MyWallet.listenToHDWalletAccount(accountExtendedPublicKey);
-  // MyWallet.backupWalletDelayed();
-  return newAccount;
-}
 
 /**
  * @param {string} mnemonic mnemonic

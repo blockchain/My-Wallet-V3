@@ -105,6 +105,12 @@ Object.defineProperties(HDWallet.prototype, {
       else
         return r;
     }
+  },
+  "lastAccount":{
+    configurable: false,
+    get: function() {
+      return this._accounts[this._accounts.length-1];
+    }
   }
 });
 ////////////////////////////////////////////////////////////////////////////////

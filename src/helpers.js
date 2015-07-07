@@ -19,7 +19,7 @@ Helpers.isBoolean = function (value){
   return typeof(value) === "boolean";
 };
 Helpers.isValidLabel = function (text){
-  return Helpers.isString(text) && Helpers.isAlphaNum(text);
+  return Helpers.isString(text);
 };
 Helpers.add = function (x,y){
   return x + y;

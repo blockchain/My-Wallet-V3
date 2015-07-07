@@ -18,6 +18,7 @@ var HDWallet = require('./hd-wallet');
 var HDAccount = require('./hd-account');
 var Address = require('./address');
 var Helpers = require('./helpers');
+var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 
 ////////////////////////////////////////////////////////////////////////////////
 // Wallet
@@ -191,12 +192,6 @@ Object.defineProperties(Wallet.prototype, {
                .map(function(k){return k.balance;})
                  .reduce(Helpers.add, 0);
     }
-  },
-  "lastAccount":{
-    configurable: false,
-    get: function() {
-      return this.hdwallet._accounts[this.hdwallet._accounts.length-1];
-    }
   }
 });
 
@@ -320,8 +315,10 @@ Wallet.prototype.newAccount = function(label, pw){
   if (this._double_encryption) {
     cipher = WalletCrypto.cipherFunction.bind(undefined, pw, this._sharedKey, this._pbkdf2_iterations);
   };
-  this.hdwallet.newAccount(label, cipher);
-  return this;
+  var newAccount = this.hdwallet.newAccount(label, cipher).lastAccount;
+  MyWallet.listenToHDWalletAccount(newAccount.extendedPublicKey);
+  // MyWallet.backupWalletDelayed();
+  return newAccount;
 };
 
 Wallet.prototype.getPaidTo = function(txHash){
