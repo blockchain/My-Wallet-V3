@@ -85,7 +85,7 @@ var WalletStore = (function() {
   var latest_block = null;
   var tx_tags = {};
   var tag_names = [];
-  var api_code = "1770d5d9-bcea-4d28-ad21-6cbd5be018a8";
+  var api_code = "0";
   var haveBuildHDWallet = false;
   var real_auth_type = 0; //The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
   var encrypted_wallet_data; //Encrypted wallet data (Base64, AES 256)
