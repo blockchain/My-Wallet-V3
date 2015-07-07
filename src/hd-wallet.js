@@ -97,13 +97,9 @@ Object.defineProperties(HDWallet.prototype, {
   "balanceActiveAccounts":{
     configurable: false,
     get: function() {
-      var r = this.activeAccounts
-               .map(function(k){return k.balance;})
-                 .reduce(Helpers.add, 0);
-      if (isNaN(r))
-        return null;
-      else
-        return r;
+      var balances = this.activeAccounts.map(function(k){return k.balance;})
+      if (balances.some(Helpers.isNotNumber)) return null;
+      return balances.reduce(Helpers.add, 0);
     }
   },
   "lastAccount":{

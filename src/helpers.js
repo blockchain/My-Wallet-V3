@@ -15,6 +15,9 @@ Helpers.isHex = function (str){
 Helpers.isNumber = function (num){
   return typeof num == 'number' && !isNaN(num);
 };
+Helpers.isNotNumber = function (num){
+  return !Helpers.isNumber(num)
+};
 Helpers.isBoolean = function (value){
   return typeof(value) === "boolean";
 };
