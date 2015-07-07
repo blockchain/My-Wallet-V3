@@ -77,30 +77,6 @@ describe "Spender", ->
         .and.callFake((xpubList,success,error,conf,nocache) ->
           success(spenderM.fromAdd.coins))
 
-    it "should call correct_password", () ->
-
-      spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
-      spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
-
-      Spender("my note", (()->), (()->), obs.listener, obs.getPassword)
-        .fromAddress("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX", 30000, 10000)
-          .toAddress("1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF")
-
-      expect(obs.correct_password).toHaveBeenCalled()
-      expect(obs.wrong_password).not.toHaveBeenCalled()
-
-    it "should call wrong_password", () ->
-
-      spyOn(WalletStore, "getDoubleEncryption").and.returnValue(true)
-      spyOn(MyWallet, "validateSecondPassword").and.returnValue(false)
-
-      Spender("my note",  (()->), (()->), obs.listener, obs.getPassword)
-        .fromAddress("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX", 30000, 10000)
-          .toAddress("1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF")
-
-      expect(obs.correct_password).not.toHaveBeenCalled()
-      expect(obs.wrong_password).toHaveBeenCalled()
-
     it "should not call correct_password or wrong_password if there's no 2nd password", () ->
 
       spyOn(WalletStore, "getDoubleEncryption").and.returnValue(false)

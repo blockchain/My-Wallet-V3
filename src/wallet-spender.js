@@ -57,14 +57,9 @@ var Spender = function(note, successCallback, errorCallback, listener, getSecond
 ////////////////////////////////////////////////////////////////////////////////
   var getEncryptionPassword = function(success, error) {
     if (WalletStore.getDoubleEncryption()) {
-      getSecondPassword(function(pw, rightCB, wrongCB){
-        if (MyWallet.validateSecondPassword(pw)) {
-          rightCB();
-          success(pw);
-        } else {
-          wrongCB();
-          error('SECOND_PASSWORD_INCORRECT');
-        }
+      getSecondPassword(function(pw){
+        assert(MyWallet.validateSecondPassword(pw),"You must verify the 2nd password calling this.");        
+        success(pw);
       });
     } else {
       success(null);
