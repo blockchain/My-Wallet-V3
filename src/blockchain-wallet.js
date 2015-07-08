@@ -333,6 +333,10 @@ Wallet.prototype.getNote = function(txHash){
   return this._tx_notes[txHash];
 };
 
+Wallet.prototype.getMnemonic = function(password){
+  return "asdf1 asdf2 asdf3 asdf4 asdf5 asdf6 asdf7 asdf8 asdf9 asdf10 asdf11 asdf12"
+};
+
 // example of serialization
 // var x = Blockchain.Wallet.new();
 // x.newLegacyAddress();

@@ -20,24 +20,24 @@ describe "HD Wallet", ->
   accountsPayloadSecondPassword = undefined
   observer = undefined
   sharedKey = "87654321-4321-4321-4321-ba0987654321"
-  
-  beforeEach ->    
+
+  beforeEach ->
     spyOn(WalletStore, "getSharedKey").and.returnValue sharedKey
-    
+
     spyOn(MyWallet, "backupWallet").and.callFake () ->
     spyOn(MyWallet, "backupWalletDelayed").and.callFake () ->
     MyWallet.deleteHDWallet()
-      
+
     accountsPayload = decryptedWalletPayload["hd_wallets"][0]["accounts"]
     accountsPayloadSecondPassword = decryptedWalletWithSecondPasswordPayload["hd_wallets"][0]["accounts"]
     WalletStore.setDoubleEncryption(false)
-    
+
     # Caching derive() on HDNode protoype doesn't do much good, because fromBase58()
     # for a new object is just as slow as derive() on an existing one.
-    
+
     # The slowness is caused by calls to "new ECKey" and "new ECPubKey", but these
     # can't be mocked because they are internal to the module.
-    
+
     # The solution is to mock HDNode.fromBase58() as well.
 
     Bitcoin.HDNode.prototype.originalDerive = Bitcoin.HDNode.prototype.derive
@@ -46,7 +46,7 @@ describe "HD Wallet", ->
       cacheKey = "Bitcoin.HDNode.prototype.derive " + this.toBase58() + " " + index
       if base58 = localStorage.getItem(cacheKey)
         start = new Date().getTime();
-        
+
         # Too slow by itself:
         node = Bitcoin.HDNode.fromBase58(base58)
       else
@@ -57,14 +57,14 @@ describe "HD Wallet", ->
 
       node
     )
-    
+
     Bitcoin.HDNode.originalFromBase58 = Bitcoin.HDNode.fromBase58
-    
+
     spyOn(Bitcoin.HDNode, "fromBase58").and.callFake((base58)->
       node = undefined
-      
+
       cacheKey = "Bitcoin.HDNode.fromBase58 " + base58
-      
+
       if hex = localStorage.getItem(cacheKey)
         priv_key_hex = hex.split(" ")[0]
         pub_key_hex = hex.split(" ")[1]
@@ -89,22 +89,22 @@ describe "HD Wallet", ->
           MASTER_SECRET: new Buffer('Bitcoin seed')
           HIGHEST_BIT: 0x80000000
           LENGTH: 78
-          
+
           neutered: Bitcoin.HDNode.prototype.neutered # Slow!
         }
-        
+
         buffer = bs58check.decode(base58)
-        
+
         assert.strictEqual(buffer.length, node.LENGTH, 'Invalid buffer length')
-        
+
         # 1 byte: depth: 0x00 for master nodes, 0x01 for level-1 descendants, ...
         depth = buffer.readUInt8(4)
 
         # 4 bytes: the fingerprint of the parent's key (0x00000000 if master key)
         parentFingerprint = buffer.readUInt32BE(5)
-        if depth is 0 
+        if depth is 0
           assert.strictEqual(parentFingerprint, 0x00000000, 'Invalid parent fingerprint')
-        
+
 
         # 4 bytes: child number. This is the number i in xi = xpar/i, with xi the key being serialized.
         # This is encoded in MSB order. (0x00000000 if master key)
@@ -117,34 +117,34 @@ describe "HD Wallet", ->
         node.depth = depth
         node.index = theIndex
         node.parentFingerprint = parentFingerprint
-        
-        
-      else        
+
+
+      else
         node = Bitcoin.HDNode.originalFromBase58(base58)
 
         priv_key_hex = if node.privKey? then node.privKey.d.toBuffer().toString('hex') else "-"
-        
+
         pub_key_hex = if node.pubKey? then node.pubKey.toHex() else "-"
 
         hex = [priv_key_hex, pub_key_hex, node.chainCode.toString('hex')].join(" ")
-        
+
         localStorage.setItem(cacheKey, hex)
-      
+
       node
     )
-  
+
   describe "initializeHDWallet()", ->
     beforeEach ->
       observer =
         success: () ->
         error: () ->
           console.log "error"
-      
+
       spyOn(observer, "success").and.callThrough()
       spyOn(MyWallet, "validateSecondPassword").and.returnValue(true)
       spyOn(MyWallet, "generateHDWalletSeedHex").and.returnValue(seed)
       spyOn(WalletStore, "getPbkdf2Iterations").and.returnValue(10)
-      
+
     describe "without 2nd password", ->
       beforeEach ->
         MyWallet.initializeHDWallet(null, "", "First Account", null, observer.success, observer.error)
@@ -228,9 +228,9 @@ describe "HD Wallet", ->
             success: (hdWallet) ->
               hdwallet = hdWallet
               hdwallet.setSeedHexString(seed_encrypted)
-              
-          spyOn(WalletStore, "getPbkdf2Iterations").and.returnValue 1        
-          
+
+          spyOn(WalletStore, "getPbkdf2Iterations").and.returnValue 1
+
 
           spyOn(observer, "success").and.callThrough()
 
@@ -244,10 +244,10 @@ describe "HD Wallet", ->
           expect(extendedPrivateKey).toBe(decryptedWalletWithSecondPasswordPayload["hd_wallets"][0]["accounts"][0]["xpriv"])
 
         it "should only know the encrypted seed hex", ->
-          expect(hdwallet.getSeedHexString()).toBe(seed_encrypted)
+          expect(hdwallet.seedHex).toBe(seed_encrypted)
 
         it "decrypting the seed should work", ->
-          decrypted_seed = hdwallet.getSeedHexString(second_password)
+          decrypted_seed = hdwallet.seedHex
           expect(decrypted_seed).toBe(seed)
 
     describe "when generating a new wallet", ->
@@ -280,39 +280,39 @@ describe "HD Wallet", ->
       it "should know the xpriv", ->
         extendedPrivateKey = account.extendedPrivateKey
         expect(extendedPrivateKey).toBe("xprv9yd5CkFRNfUXE4o5Z7aad5ApLAsKbje6tMJBjEPwGQE5fXw3PRk6FwBmhbLDduzdQGmFP3CfhxmLKaYHxHApmrrtkHswj4oL6g37McodpQd")
-      
+
     describe "when 2nd password is enabled", ->
-        
+
       account = undefined
-      
+
       beforeEach ->
-        spyOn(WalletStore, "getPbkdf2Iterations").and.returnValue 1        
-        
+        spyOn(WalletStore, "getPbkdf2Iterations").and.returnValue 1
+
         fake_seed = "00000000000000000000000000000000"
-        
-        observer =  
+
+        observer =
           success: (hdwallet) ->
             hdwallet.setSeedHexString(seed_encrypted)
             account = hdwallet.createAccount("Mobile", second_password)
-            
+
         spyOn(observer, "success").and.callThrough()
-                
+
         MyWallet.buildHDWallet(fake_seed, accountsPayloadSecondPassword, "", second_password, observer.success, (error) -> console.log("Error:"); console.log(error))
 
       it "should load", ->
         expect(observer.success).toHaveBeenCalled()
-        
+
       it "should know the xpub", ->
         extendedPubKey = account.extendedPublicKey
         expect(extendedPubKey).toBe("xpub6CcRcFnKD32pSYsYf97azD7YtChp1CMxFaDnXcoYpjm4YLGBvy4LojWFYsgJxRCyzRysWxSiZ9yiZLdtncB8vhCouoihMW2BZu4T6uyW6ue")
-        
+
       it "should only know the encrypted xpriv", ->
-        
+
         # Key encryption is non deterministic, so we check if the decrypted result is correct
         extendedPrivateKey = account.extendedPrivateKey
-        
+
         # console.log(WalletCrypto.encryptSecretWithSecondPassword("xprv9yd5CkFRNfUXE4o5Z7aad5ApLAsKbje6tMJBjEPwGQE5fXw3PRk6FwBmhbLDduzdQGmFP3CfhxmLKaYHxHApmrrtkHswj4oL6g37McodpQd", second_password, sharedKey, 1))
-        
+
         decryptedExtendedPrivateKey = WalletCrypto.decryptSecretWithSecondPassword(extendedPrivateKey, second_password, sharedKey, 1)
         expect(decryptedExtendedPrivateKey).toBe("xprv9yd5CkFRNfUXE4o5Z7aad5ApLAsKbje6tMJBjEPwGQE5fXw3PRk6FwBmhbLDduzdQGmFP3CfhxmLKaYHxHApmrrtkHswj4oL6g37McodpQd")
 
@@ -352,7 +352,7 @@ describe "HD Wallet", ->
 
       expect(observer.getPassword).toHaveBeenCalled()
       expect(observer.success).toHaveBeenCalledWith(passphrase)
-        
+
   describe "recoverHDWalletFromSeedHex()", ->
     hdwallet = null
     beforeEach ->
@@ -374,11 +374,11 @@ describe "HD Wallet", ->
       spyOn(observer, "success").and.callThrough()
       spyOn(MyWallet, "get_history_with_addresses").and.callFake history
       spyOn(WalletStore, "getPbkdf2Iterations").and.returnValue(10)
-      
+
     describe "without 2nd password", ->
       beforeEach ->
         HDWallet.recoverHDWalletFromSeedHex(seed, "", null, observer.success, observer.error)
-        
+
       it "should succeed and create the right number of accounts", ->
         expect(observer.success).toHaveBeenCalled()
         expect(hdwallet.accountArray.length).toBe(2)
@@ -399,11 +399,11 @@ describe "HD Wallet", ->
       spyOn(observer, "success").and.callThrough()
       spyOn(MyWallet, "get_history_with_addresses").and.callFake history
       spyOn(WalletStore, "getPbkdf2Iterations").and.returnValue(10)
-      
+
     describe "without 2nd password", ->
       beforeEach ->
         HDWallet.recoverHDWalletFromMnemonic(passphrase, "", null, observer.success, observer.error)
-        
+
       it "should succeed and create the right number of accounts", ->
         expect(observer.success).toHaveBeenCalled()
         expect(hdwallet.accountArray.length).toBe(1)
