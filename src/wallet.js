@@ -1083,7 +1083,6 @@ MyWallet.fetchMoreTransactionsForAccounts = function(success, error, didFetchOld
       , 0, txOffset, numTx
     );
   }
-  console.log("calling fetchMoreTransactionsForAccounts on wallet.js");
   getRawTransactionsForAccounts(
       MyWallet.wallet.hdwallet.numTxFetched
     , WalletStore.getNumOldTxsToFetchAtATime()

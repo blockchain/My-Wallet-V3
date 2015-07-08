@@ -252,28 +252,36 @@ Wallet.prototype.validateSecondPassword = function(inputString) {
   return password_hash === this._dpasswordhash;
 };
 
-Wallet.prototype.encrypt = function(pw){
-  if (!this._double_encryption) {
-    var g = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
-    var f = function(element) {element.encrypt(g);};
-    this.keys.forEach(f);
-    this._hd_wallets.forEach(f);
-    this._dpasswordhash = WalletCrypto.hashNTimes(this._sharedKey + pw, this._pbkdf2_iterations);
-    this._double_encryption = true;
-  };
-  return this;
+Wallet.prototype.encrypt = function(pw, success, error){
+  try {
+    if (!this._double_encryption) {
+      var g = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
+      var f = function(element) {element.encrypt(g);};
+      this.keys.forEach(f);
+      this._hd_wallets.forEach(f);
+      this._dpasswordhash = WalletCrypto.hashNTimes(this._sharedKey + pw, this._pbkdf2_iterations);
+      this._double_encryption = true;
+    };
+  }
+  catch (e){ error && error(e);};
+  success && success(this)
+  // return this;
 };
-
-Wallet.prototype.decrypt = function(pw){
-  if (this._double_encryption) {
-    var g = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "dec");
-    var f = function(element) {element.decrypt(g);};
-    this.keys.forEach(f);
-    this._hd_wallets.forEach(f);
-    this._dpasswordhash = undefined;
-    this._double_encryption = false;
-  };
-  return this;
+// this functions should return Either Wallet MessageError instead of using callbacks
+Wallet.prototype.decrypt = function(pw, success, error){
+  try {
+    if (this._double_encryption) {
+      var g = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "dec");
+      var f = function(element) {element.decrypt(g);};
+      this.keys.forEach(f);
+      this._hd_wallets.forEach(f);
+      this._dpasswordhash = undefined;
+      this._double_encryption = false;
+    };
+  }
+  catch (e){ error && error(e);};
+  success && success(this)
+  // return this;
 };
 
 // example wallet. This should be the new constructor (ask server data)
