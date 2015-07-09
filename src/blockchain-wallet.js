@@ -93,14 +93,13 @@ Object.defineProperties(Wallet.prototype, {
   },
   "pbkdf2_iterations": {
     configurable: false,
-    get: function() { return this._pbkdf2_iterations;},
-    set: function(value) {
-      if(Helpers.isNumber(value))
-        // this needs to reencrypt the wallets probably
-        this._pbkdf2_iterations = value;
-      else
-        throw 'Error: wallet.pbkdf2_iterations must be a number';
-    }
+    get: function() { return this._pbkdf2_iterations;}
+    // set: function(value) {
+    //   if(Helpers.isNumber(value))
+    //     this._pbkdf2_iterations = value;
+    //   else
+    //     throw 'Error: wallet.pbkdf2_iterations must be a number';
+    // }
   },
   "totalSent": {
     configurable: false,
@@ -351,6 +350,21 @@ Wallet.prototype.getMnemonic = function(password){
             ) :
           this.hdwallet.seedHex;
   return BIP39.entropyToMnemonic(seedHex);
+};
+
+Wallet.prototype.changePbkdf2Iterations = function(newIterations, password){
+  assert(Helpers.isNumber(newIterations), "wallet.pbkdf2_iterations must be a number");
+  if (newIterations !== this._pbkdf2_iterations) {
+    if (this.isDoubleEncrypted) {
+      this.decrypt(password);
+      this._pbkdf2_iterations = newIterations;
+      this.encrypt(password);
+    }
+    else { // no double encrypted wallet
+      this._pbkdf2_iterations = newIterations;
+    };
+  };
+  return true;
 };
 
 // example of serialization

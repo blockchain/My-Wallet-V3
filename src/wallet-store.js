@@ -141,7 +141,7 @@ var WalletStore = (function() {
     // Public functions
     ////////////////////////////////////////////////////////////////////////////
     setPbkdf2Iterations: function(iterations) {
-      MyWallet.wallet.pbkdf2_iterations = iterations;
+      MyWallet.wallet._pbkdf2_iterations = iterations;
       return;
     },
     getPbkdf2Iterations: function() {
