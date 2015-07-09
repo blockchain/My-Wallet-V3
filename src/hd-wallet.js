@@ -54,8 +54,7 @@ Object.defineProperties(HDWallet.prototype, {
   },
   "isMnemonicVerified": {
     configurable: false,
-    get: function() { return this._mnemonic_verified;},
-    set: function(value) { this._mnemonic_verified = value;}
+    get: function() { return this._mnemonic_verified;}
   },
   "defaultAccountIndex": {
     configurable: false,
