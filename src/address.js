@@ -99,13 +99,21 @@ Address.factory = function(o,a){
   return o;
 };
 
-Address.import = function(key, label){
-  var object = {
-    addr                   : key.pub.getAddress().toString(),
-    priv                   : Base58.encode(key.d.toBuffer(32)),
-    created_time           : Date.now(),
-    created_device_name    : APP_NAME,
-    created_device_version : APP_VERSION
+Address.import = function(key, label, watch){
+  var object;
+  if (watch) {
+    object = {
+      addr                   : key
+    }
+  }
+  else {
+    object = {
+      addr                   : key.pub.getAddress().toString(),
+      priv                   : Base58.encode(key.d.toBuffer(32)),
+      created_time           : Date.now(),
+      created_device_name    : APP_NAME,
+      created_device_version : APP_VERSION
+    }
   };
   //initialization
   var address = new Address(object);
