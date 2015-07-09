@@ -199,7 +199,7 @@ Wallet.prototype.toJSON = function(){
   var wallet = {
     guid              : this.guid,
     sharedKey         : this.sharedKey,
-    double_encryption : this.double_encryption,
+    double_encryption : this.isDoubleEncrypted,
     dpasswordhash     : this.dpasswordhash,
     options           : {
       pbkdf2_iterations        : this.pbkdf2_iterations,
@@ -254,7 +254,7 @@ Wallet.prototype.validateSecondPassword = function(inputString) {
 
 Wallet.prototype.encrypt = function(pw, success, error){
   try {
-    if (!this._double_encryption) {
+    if (!this.isDoubleEncrypted) {
       var g = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
       var f = function(element) {element.encrypt(g);};
       this.keys.forEach(f);
@@ -270,7 +270,7 @@ Wallet.prototype.encrypt = function(pw, success, error){
 // this functions should return Either Wallet MessageError instead of using callbacks
 Wallet.prototype.decrypt = function(pw, success, error){
   try {
-    if (this._double_encryption) {
+    if (this.isDoubleEncrypted) {
       var g = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "dec");
       var f = function(element) {element.decrypt(g);};
       this.keys.forEach(f);
@@ -320,7 +320,7 @@ Wallet.reviver = function(k,v){
 
 Wallet.prototype.newAccount = function(label, pw){
   var cipher = undefined;
-  if (this._double_encryption) {
+  if (this.isDoubleEncrypted) {
     cipher = WalletCrypto.cipherFunction.bind(undefined, pw, this._sharedKey, this._pbkdf2_iterations);
   };
   var newAccount = this.hdwallet.newAccount(label, cipher).lastAccount;
@@ -342,7 +342,15 @@ Wallet.prototype.getNote = function(txHash){
 };
 
 Wallet.prototype.getMnemonic = function(password){
-  return "asdf1 asdf2 asdf3 asdf4 asdf5 asdf6 asdf7 asdf8 asdf9 asdf10 asdf11 asdf12"
+  var seedHex = this.isDoubleEncrypted ?
+          WalletCrypto.decryptSecretWithSecondPassword(
+                  this.hdwallet.seedHex
+                , password
+                , this.sharedKey
+                , this.pbkdf2_iterations
+            ) :
+          this.hdwallet.seedHex;
+  return BIP39.entropyToMnemonic(seedHex);
 };
 
 // example of serialization
