@@ -148,7 +148,7 @@ Object.defineProperties(Wallet.prototype, {
   },
   "activeAddresses": {
     configurable: false,
-    get: function(){return this.activeKeys.map(function(k){return k.addr;});}
+    get: function(){return this.activeKeys.map(function(k){return k.address;});}
   },
   "key": {
     configurable: false,
@@ -225,7 +225,7 @@ Wallet.prototype.importLegacyAddress = function(key, label, secPass){
     assert(secPass, "Error: second password needed");
     ad.encrypt(secPass, this.sharedKey, this.pbkdf2_iterations);
   };
-  this._addresses[ad.addr] = ad;
+  this._addresses[ad.address] = ad;
   return ad;
 };
 
@@ -235,7 +235,7 @@ Wallet.prototype.newLegacyAddress = function(label, pw){
     assert(pw, "Error: second password needed");
     ad.encrypt(pw, this.sharedKey, this.pbkdf2_iterations);
   };
-  this._addresses[ad.addr] = ad;
+  this._addresses[ad.address] = ad;
   return ad;
 };
 
@@ -303,7 +303,7 @@ Wallet.reviver = function(k,v){
 
   function reviveHDAccount(o) { return new HDAccount(o);};
   function reviveHDWallet(o)  { return new HDWallet(o);};
-  function reviveAddress(o,a) { o[a.addr] = new Address(a); return o;};
+  function reviveAddress(o,a) { o[a.address] = new Address(a); return o;};
 
   if (k === '')
     return new Wallet(v);

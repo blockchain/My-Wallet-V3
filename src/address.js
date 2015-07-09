@@ -24,7 +24,7 @@ function Address(object){
 
 // public members
 Object.defineProperties(Address.prototype, {
-  "addr": {
+  "address": {
     configurable: false,
     get: function() { return this._addr;}
   },
@@ -126,7 +126,7 @@ Address.reviver = function(k,v){
 
 Address.prototype.toJSON = function(){
   var address = {
-    addr   : this.addr,
+    addr   : this.address,
     priv   : this.priv,
     tag    : this.tag,
     label  : this.label,

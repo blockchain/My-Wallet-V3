@@ -2528,15 +2528,15 @@ MyWallet.checkAllKeys = function(second_password) {
   for (var key in addresses) {
     var addr = addresses[key];
 
-    if (addr.addr == null) {
+    if (addr.address == null) {
       console.log('Null Address Found in wallet ' + key);
       throw 'Null Address Found in wallet ' + key;
     }
 
     //Will throw an exception if the checksum does not validate
-    if (addr.addr.toString() == null) {
-      console.log('Error decoding wallet address ' + addr.addr);
-      throw 'Error decoding wallet address ' + addr.addr;
+    if (addr.address.toString() == null) {
+      console.log('Error decoding wallet address ' + addr.address);
+      throw 'Error decoding wallet address ' + addr.address;
     }
 
     if (addr.priv != null) {
@@ -2553,9 +2553,9 @@ MyWallet.checkAllKeys = function(second_password) {
       var privatekey = new ECKey(new BigInteger.fromBuffer(decodedpk), false);
 
       var actual_addr = MyWallet.getUnCompressedAddressString(privatekey);
-      if (actual_addr != addr.addr && MyWallet.getCompressedAddressString(privatekey) != addr.addr) {
-        console.log('Private key does not match bitcoin address ' + addr.addr + " != " + actual_addr);
-        throw 'Private key does not match bitcoin address ' + addr.addr + " != " + actual_addr;
+      if (actual_addr != addr.address && MyWallet.getCompressedAddressString(privatekey) != addr.address) {
+        console.log('Private key does not match bitcoin address ' + addr.address + " != " + actual_addr);
+        throw 'Private key does not match bitcoin address ' + addr.address + " != " + actual_addr;
       }
 
       if (second_password != null) {
