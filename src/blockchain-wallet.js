@@ -220,19 +220,22 @@ Wallet.prototype.toJSON = function(){
   return wallet;
 };
 
-Wallet.prototype.import = function(addr, label, secPass, bipPass){
+Wallet.prototype.importLegacyAddress = function(addr, label, secPass, bipPass){
   var defer = RSVP.defer();
 
-  var importPrivateKey = (function(key) {
-    var address = this.importAddress(key, label, secPass);
-    if (address) defer.resolve(address);
-    else defer.reject('presentInWallet');
+  var importAddress = (function(key) {
+    var ad = Address.import(key, label);
+    if (this.containsLegacyAddress(ad)) { defer.reject('presentInWallet'); };
+    if (this.double_encryption) {
+      assert(secPass, "Error: second password needed");
+      ad.encrypt(secPass, this.sharedKey, this.pbkdf2_iterations);
+    };
+    this._addresses[ad.address] = ad;
+    defer.resolve(ad);
   }).bind(this)
 
   if (MyWallet.isValidAddress(addr)) {
-    var address = this.importAddress(addr, label, secPass)
-    if (address) defer.resolve(address);
-    else defer.reject('presentInWallet');
+    importAddress(addr)
   }
 
   else if (MyWallet.isValidPrivateKey(addr)) {
@@ -242,33 +245,23 @@ Wallet.prototype.import = function(addr, label, secPass, bipPass){
 
       else ImportExport.parseBIP38toECKey(
         addr, bipPass,
-        function (key) { importPrivateKey(key); },
+        function (key) { importAddress(key); },
         function () { defer.reject('wrongBipPass'); },
         function () { defer.reject('importError'); }
       )
 
     } else {
-      importPrivateKey(Bitcoin.ECKey.fromWIF(addr));
+      importAddress(Bitcoin.ECKey.fromWIF(addr));
     }
   }
 
   else {
-    defer.reject('invalid')
+    // Should never get here
+    throw 'Error: addr was not an address or private key';
   }
 
   return defer.promise;
 };
-
-Wallet.prototype.importAddress = function(key, label, secPass) {
-  var ad = Address.import(key, label);
-  if (this.containsLegacyAddress(ad)) {return false};
-  if (this.double_encryption) {
-    assert(secPass, "Error: second password needed");
-    ad.encrypt(secPass, this.sharedKey, this.pbkdf2_iterations);
-  };
-  this._addresses[ad.address] = ad;
-  return ad;
-}
 
 Wallet.prototype.containsLegacyAddress = function(address) {
   if (address instanceof Address) address = address.address;
