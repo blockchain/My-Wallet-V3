@@ -9,7 +9,7 @@
 # gem install json
 
 # Github API requires authentication because of rate limiting. So run with:
-# GITHUB_USER=username GITHUB_PASSWORD=password ruby check-dependencies.rb
+# GITHUB_USER=username GITHUB_TOKEN=personal_access_token ruby check-dependencies.rb
 
 require 'json'
 require 'open-uri'
@@ -31,8 +31,8 @@ end
 
 
 def getJSONfromURL(url)
-  if ENV['GITHUB_USER'] and ENV['GITHUB_PASSWORD']
-    http_options = {:http_basic_authentication=>[ENV['GITHUB_USER'], ENV['GITHUB_PASSWORD']]}
+  if ENV['GITHUB_USER'] and ENV['GITHUB_TOKEN']
+    http_options = {:http_basic_authentication=>[ENV['GITHUB_USER'], ENV['GITHUB_TOKEN']]}
     json = JSON.load(open(url, http_options))
   else
     json = JSON.load(open(url))
