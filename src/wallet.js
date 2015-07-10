@@ -2098,75 +2098,81 @@ MyWallet.login = function ( user_guid
 
   // this is IOS
   data.api_code = WalletStore.getAPICode();
+  
+  var tryToFetchWalletJSON = function() {
+    $.ajax({
+      type: "GET",
+      dataType: 'json',
+      url: BlockchainAPI.getRootURL() + 'wallet/'+user_guid,
+      // contentType: "application/json; charset=utf-8",
+      xhrFields: {
+        withCredentials: true
+      },
+      crossDomain: true,
+      data : data,
+      timeout: 60000,
+      success: function(obj) {
 
-  $.ajax({
-    type: "GET",
-    dataType: 'json',
-    url: BlockchainAPI.getRootURL() + 'wallet/'+user_guid,
-    // contentType: "application/json; charset=utf-8",
-    xhrFields: {
-      withCredentials: true
-    },
-    crossDomain: true,
-    data : data,
-    timeout: 60000,
-    success: function(obj) {
+        fetch_success && fetch_success();
 
-      fetch_success && fetch_success();
-
-      MyWallet.handleNTPResponse(obj, clientTime);
+        MyWallet.handleNTPResponse(obj, clientTime);
 
 
-      if (!obj.guid) {
-        WalletStore.sendEvent("msg", {type: "error", message: 'Server returned null guid.'});
-        other_error('Server returned null guid.');
-        return;
-      }
+        if (!obj.guid) {
+          WalletStore.sendEvent("msg", {type: "error", message: 'Server returned null guid.'});
+          other_error('Server returned null guid.');
+          return;
+        }
 
-      // I should create a new class to store the encrypted wallet over wallet
-      WalletStore.setGuid(obj.guid);
-      WalletStore.setRealAuthType(obj.real_auth_type);
-      WalletStore.setSyncPubKeys(obj.sync_pubkeys);
+        // I should create a new class to store the encrypted wallet over wallet
+        WalletStore.setGuid(obj.guid);
+        WalletStore.setRealAuthType(obj.real_auth_type);
+        WalletStore.setSyncPubKeys(obj.sync_pubkeys);
 
-      if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
-        WalletStore.setEncryptedWalletData(obj.payload);
-      } else {
+        if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
+          WalletStore.setEncryptedWalletData(obj.payload);
+        } else {
+          WalletStore.setDidSetGuid();
+          needs_two_factor_code(WalletStore.get2FAType());
+          return;
+        }
+
+        war_checksum = obj.war_checksum;
+
+        if (obj.language && WalletStore.getLanguage() != obj.language) {
+          WalletStore.setLanguage(obj.language);
+        }
+
         WalletStore.setDidSetGuid();
-        needs_two_factor_code(WalletStore.get2FAType());
-        return;
+
+        MyWallet.loadWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error, decrypt_success, build_hd_success);
+      },
+      error : function(e) {
+        if(e.responseJSON && e.responseJSON.initial_error && !e.responseJSON.authorization_required) {
+          other_error(e.responseJSON.initial_error);
+          return;
+        }
+
+        WalletStore.sendEvent('did_fail_set_guid');
+
+        var obj = $.parseJSON(e.responseText);
+
+        if (obj.authorization_required && typeof(authorization_required) === "function") {
+          authorization_required(function() {
+            MyWallet.pollForSessionGUID(function() {
+              tryToFetchWalletJSON();
+            });
+          });
+        }
+
+        if (obj.initial_error) {
+          WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
+        }
       }
+    });    
+  }
 
-      war_checksum = obj.war_checksum;
-
-      if (obj.language && WalletStore.getLanguage() != obj.language) {
-        WalletStore.setLanguage(obj.language);
-      }
-
-      WalletStore.setDidSetGuid();
-
-      MyWallet.loadWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error, decrypt_success, build_hd_success);
-    },
-    error : function(e) {
-      if(e.responseJSON && e.responseJSON.initial_error && !e.responseJSON.authorization_required) {
-        other_error(e.responseJSON.initial_error);
-        return;
-      }
-
-      WalletStore.sendEvent('did_fail_set_guid');
-
-      var obj = $.parseJSON(e.responseText);
-
-      if (obj.authorization_required && typeof(authorization_required) === "function") {
-        authorization_required(function(authorization_received) {
-          MyWallet.pollForSessionGUID(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_received, other_error, fetch_success, decrypt_success, build_hd_success);
-        });
-      }
-
-      if (obj.initial_error) {
-        WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
-      }
-    }
-  });
+  tryToFetchWalletJSON()
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2175,9 +2181,7 @@ MyWallet.login = function ( user_guid
 ////////////////////////////////////////////////////////////////////////////////
 
 // used locally
-MyWallet.pollForSessionGUID = function(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, authorization_received, other_error, fetch_success, decrypt_success, build_hd_success) {
-
-  assert(fetch_success, "Fetch success callback required");
+MyWallet.pollForSessionGUID = function(successCallback) {
 
   if (WalletStore.isPolling()) return;
 
@@ -2199,11 +2203,8 @@ MyWallet.pollForSessionGUID = function(user_guid, shared_key, resend_code, input
 
         WalletStore.setIsPolling(false);
 
-        authorization_received();
-
         WalletStore.sendEvent("msg", {type: "success", message: 'Authorization Successful'});
-
-        MyWallet.fetchWalletJson(user_guid, shared_key, resend_code, inputedPassword, twoFACode, success, needs_two_factor_code, wrong_two_factor_code, null, other_error, fetch_success, decrypt_success, build_hd_success);
+        successCallback()
       } else {
         if (WalletStore.getCounter() < 600) {
           WalletStore.incrementCounter();
