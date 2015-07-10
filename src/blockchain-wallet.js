@@ -234,30 +234,19 @@ Wallet.prototype.importLegacyAddress = function(addr, label, secPass, bipPass){
     defer.resolve(ad);
   }).bind(this)
 
-  if (MyWallet.isValidAddress(addr)) {
-    importAddress(addr)
-  }
+  if (MyWallet.detectPrivateKeyFormat(addr) === 'bip38') {
 
-  else if (MyWallet.isValidPrivateKey(addr)) {
-    if (MyWallet.detectPrivateKeyFormat(addr) === 'bip38') {
+    if (bipPass === '') defer.reject('needsBip38');
 
-      if (bipPass === '') defer.reject('needsBip38');
+    else ImportExport.parseBIP38toECKey(
+      addr, bipPass,
+      function (key) { importAddress(key); },
+      function () { defer.reject('wrongBipPass'); },
+      function () { defer.reject('importError'); }
+    )
 
-      else ImportExport.parseBIP38toECKey(
-        addr, bipPass,
-        function (key) { importAddress(key); },
-        function () { defer.reject('wrongBipPass'); },
-        function () { defer.reject('importError'); }
-      )
-
-    } else {
-      importAddress(Bitcoin.ECKey.fromWIF(addr));
-    }
-  }
-
-  else {
-    // Should never get here
-    throw 'Error: addr was not an address or private key';
+  } else {
+    importAddress(addr);
   }
 
   return defer.promise;

@@ -117,6 +117,11 @@ Address.import = function(key, label){
       object.addr = key.pub.getAddress().toString();
       object.priv = Base58.encode(key.d.toBuffer(32));
       break;
+    case Helpers.isBitcoinPrivateKey(key):
+      key = Bitcoin.ECKey.fromWIF(key)
+      object.addr = key.pub.getAddress().toString();
+      object.priv = Base58.encode(key.d.toBuffer(32));
+      break;
     default:
       throw 'Error: address import format not supported';
   };

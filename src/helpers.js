@@ -17,6 +17,13 @@ Helpers.isBitcoinAddress = function(candidate) {
   }
   catch (e) { return false; };
 };
+Helpers.isBitcoinPrivateKey = function(candidate) {
+  try {
+    Bitcoin.ECKey.fromWIF(candidate);
+    return true;
+  }
+  catch (e) { return false; };
+};
 Helpers.isAlphaNum = function (str){
   return /^[\-+,._\w\d\s]+$/.test(str);
 };
