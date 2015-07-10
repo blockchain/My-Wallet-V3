@@ -321,12 +321,38 @@ Wallet.reviver = function(k,v){
   return v;
 };
 
-Wallet.prototype.newAccount = function(label, pw){
+Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, firstAccountLabel, pw){
+  // seedHex computation can fail
+  var seedHex = BIP39.mnemonicToEntropy(mnemonic);
+  var pass39  = Helpers.isString(bip39Password) ? bip39Password : "";
+  var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
+  var newHDwallet = HDWallet.restore(seedHex, pass39, encoder);
+  this._hd_wallets.push(newHDwallet);
+  var label = firstAccountLabel ? firstAccountLabel : "My Bitcoin Wallet";
+  this.newAccount(label, pw, this._hd_wallets.length-1);
+  return newHDwallet;
+};
+
+Wallet.prototype.newHDWallet = function(firstAccountLabel, pw){
+
+  var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
+  var newHDwallet = HDWallet.new(encoder);
+  this._hd_wallets.push(newHDwallet);
+  var label = firstAccountLabel ? firstAccountLabel : "My Bitcoin Wallet";
+  this.newAccount(label, pw, this._hd_wallets.length-1);
+  return newHDwallet;
+};
+
+Wallet.prototype.newAccount = function(label, pw, hdwalletIndex){
+  console.log(hdwalletIndex);
+  console.log("aixo era index");
+  if (!this.isUpgradedToHD) { return false; };
+  var index = Helpers.isNumber(hdwalletIndex) ? hdwalletIndex : 0;
   var cipher = undefined;
   if (this.isDoubleEncrypted) {
     cipher = WalletCrypto.cipherFunction.bind(undefined, pw, this._sharedKey, this._pbkdf2_iterations);
   };
-  var newAccount = this.hdwallet.newAccount(label, cipher).lastAccount;
+  var newAccount = this._hd_wallets[index].newAccount(label, cipher).lastAccount;
   MyWallet.listenToHDWalletAccount(newAccount.extendedPublicKey);
   // MyWallet.backupWalletDelayed();
   return newAccount;

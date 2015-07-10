@@ -154,7 +154,13 @@ HDWallet.example = function(){
 // load hdwallet
 // restore hdwallet
 
-HDWallet.new = function(seedHex, bip39Password){
+HDWallet.new = function(cipher){
+  var mnemonic = BIP39.generateMnemonic();
+  var seedHex  = BIP39.mnemonicToEntropy(mnemonic);
+  return HDWallet.restore(seedHex, '', cipher);
+};
+
+HDWallet.restore = function(seedHex, bip39Password, cipher){
 
   assert(Helpers.isString(seedHex), 'hdwallet.seedHex must exist');
   if (!Helpers.isString(bip39Password)) bip39Password = "";
@@ -165,7 +171,9 @@ HDWallet.new = function(seedHex, bip39Password){
     default_account_idx : 0,
     accounts            : []
   };
-  return new HDWallet(hdwallet);
+  var newHDwallet = new HDWallet(hdwallet);
+  if (cipher) {newHDwallet.encrypt(cipher)};
+  return newHDwallet;
 };
 
 HDWallet.factory = function(o){

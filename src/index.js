@@ -19,5 +19,6 @@ module.exports = {
   KeyRing: require('./keyring'),
   Bitcoin: require('bitcoinjs-lib'),
   Base58: require('bs58'),
-  BigInteger: require('bigi')
+  BigInteger: require('bigi'),
+  BIP39: require('bip39')
 };
