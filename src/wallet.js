@@ -2207,8 +2207,6 @@ MyWallet.login = function ( user_guid
   }
   
   var didFetchWalletJSON = function(obj) {
-    console.log("didFetchWalletJSON");
-    console.log(obj);
 
     if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
      WalletStore.setEncryptedWalletData(obj.payload);
