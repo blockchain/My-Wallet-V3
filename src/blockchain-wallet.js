@@ -11,6 +11,7 @@ var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
 var BIP39 = require('bip39');
+var RSVP = require('rsvp');
 
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
@@ -19,6 +20,7 @@ var HDAccount = require('./hd-account');
 var Address = require('./address');
 var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
+var ImportExport = require('./import-export');
 
 ////////////////////////////////////////////////////////////////////////////////
 // Wallet
@@ -222,15 +224,42 @@ Wallet.prototype.toJSON = function(){
   return wallet;
 };
 
-Wallet.prototype.importLegacyAddress = function(key, label, secPass){
-  var ad = Address.import(key, label);
-  if (this.double_encryption) {
-    assert(secPass, "Error: second password needed");
-    ad.encrypt(secPass, this.sharedKey, this.pbkdf2_iterations);
-  };
-  this._addresses[ad.address] = ad;
-  return ad;
+Wallet.prototype.importLegacyAddress = function(addr, label, secPass, bipPass){
+  var defer = RSVP.defer();
+
+  var importAddress = (function(key) {
+    var ad = Address.import(key, label);
+    if (this.containsLegacyAddress(ad)) { defer.reject('presentInWallet'); };
+    if (this.double_encryption) {
+      assert(secPass, "Error: second password needed");
+      ad.encrypt(secPass, this.sharedKey, this.pbkdf2_iterations);
+    };
+    this._addresses[ad.address] = ad;
+    defer.resolve(ad);
+  }).bind(this)
+
+  if (MyWallet.detectPrivateKeyFormat(addr) === 'bip38') {
+
+    if (bipPass === '') defer.reject('needsBip38');
+
+    else ImportExport.parseBIP38toECKey(
+      addr, bipPass,
+      function (key) { importAddress(key); },
+      function () { defer.reject('wrongBipPass'); },
+      function () { defer.reject('importError'); }
+    )
+
+  } else {
+    importAddress(addr);
+  }
+
+  return defer.promise;
 };
+
+Wallet.prototype.containsLegacyAddress = function(address) {
+  if (address instanceof Address) address = address.address;
+  return this._addresses.hasOwnProperty(address);
+}
 
 Wallet.prototype.newLegacyAddress = function(label, pw){
   var ad = Address.new(label);
