@@ -385,8 +385,6 @@ MyWallet.getUnCompressedAddressString = function(key) {
   return new ECKey(key.d, false).pub.getAddress().toString();
 };
 
-MyWallet.parseBIP38toECKey = ImportExport.parseBIP38toECKey
-
 /**
  * Import Private Key, backup wallet and refresh balances
  * @param {string} privateKeyString private Key

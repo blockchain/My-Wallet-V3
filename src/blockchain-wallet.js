@@ -11,6 +11,7 @@ var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
 var BIP39 = require('bip39');
+var RSVP = require('rsvp');
 
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
@@ -19,6 +20,7 @@ var HDAccount = require('./hd-account');
 var Address = require('./address');
 var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
+var ImportExport = require('./import-export');
 
 ////////////////////////////////////////////////////////////////////////////////
 // Wallet
@@ -218,7 +220,46 @@ Wallet.prototype.toJSON = function(){
   return wallet;
 };
 
-Wallet.prototype.importLegacyAddress = function(key, label, secPass){
+Wallet.prototype.import = function(addr, label, secPass, bipPass){
+  var defer = RSVP.defer();
+
+  var importPrivateKey = (function(key) {
+    var address = this.importAddress(key, label, secPass);
+    if (address) defer.resolve(address);
+    else defer.reject('presentInWallet');
+  }).bind(this)
+
+  if (MyWallet.isValidAddress(addr)) {
+    var address = this.importAddress(addr, label, secPass)
+    if (address) defer.resolve(address);
+    else defer.reject('presentInWallet');
+  }
+
+  else if (MyWallet.isValidPrivateKey(addr)) {
+    if (MyWallet.detectPrivateKeyFormat(addr) === 'bip38') {
+
+      if (bipPass === '') defer.reject('needsBip38');
+
+      else ImportExport.parseBIP38toECKey(
+        addr, bipPass,
+        function (key) { importPrivateKey(key); },
+        function () { defer.reject('wrongBipPass'); },
+        function () { defer.reject('importError'); }
+      )
+
+    } else {
+      importPrivateKey(Bitcoin.ECKey.fromWIF(addr));
+    }
+  }
+
+  else {
+    defer.reject('invalid')
+  }
+
+  return defer.promise;
+};
+
+Wallet.prototype.importAddress = function(key, label, secPass) {
   var ad = Address.import(key, label);
   if (this.containsLegacyAddress(ad)) {return false};
   if (this.double_encryption) {
@@ -227,7 +268,7 @@ Wallet.prototype.importLegacyAddress = function(key, label, secPass){
   };
   this._addresses[ad.address] = ad;
   return ad;
-};
+}
 
 Wallet.prototype.containsLegacyAddress = function(address) {
   if (address instanceof Address) address = address.address;
