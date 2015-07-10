@@ -1908,7 +1908,7 @@ MyWallet.getWallet = function(success, error) {
 // Jaume: FrontEndBranch: wallet-hd-refactored
 // copy of internalRestoreWallet
 
-function decryptAndLoadWallet(success, error, decrypt_success, build_hd_success) {
+function decryptAndInitializeWallet(success, error, decrypt_success, build_hd_success) {
   // assert(success, 'Success callback required');
   // assert(error, 'Error callback required');
 
@@ -2088,9 +2088,9 @@ MyWallet.login = function ( user_guid
                           , decrypt_success
                           , build_hd_success) {
 
-  // assert(success, 'Success callback required');
-  // assert(other_error, 'Error callback required');
-
+  assert(success, 'Success callback required');
+  assert(other_error, 'Error callback required');
+  assert(twoFACode !== undefined, '2FA code must null or set');
 
   // WalletStore.setGuid(user_guid);
   var clientTime=(new Date()).getTime();
@@ -2099,11 +2099,11 @@ MyWallet.login = function ( user_guid
   // this is IOS
   data.api_code = WalletStore.getAPICode();
   
-  var tryToFetchWalletJSON = function() {
+  var tryToFetchWalletJSON = function(guid, successCallback) {
     $.ajax({
       type: "GET",
       dataType: 'json',
-      url: BlockchainAPI.getRootURL() + 'wallet/'+user_guid,
+      url: BlockchainAPI.getRootURL() + 'wallet/' + guid,
       // contentType: "application/json; charset=utf-8",
       xhrFields: {
         withCredentials: true
@@ -2114,38 +2114,32 @@ MyWallet.login = function ( user_guid
       success: function(obj) {
 
         fetch_success && fetch_success();
-
+        
+        // Even if Two Factor is enabled, some settings need to be saved here,
+        // because they won't be part of the 2FA response.
+        
         MyWallet.handleNTPResponse(obj, clientTime);
-
 
         if (!obj.guid) {
           WalletStore.sendEvent("msg", {type: "error", message: 'Server returned null guid.'});
           other_error('Server returned null guid.');
           return;
         }
-
+        
         // I should create a new class to store the encrypted wallet over wallet
         WalletStore.setGuid(obj.guid);
         WalletStore.setRealAuthType(obj.real_auth_type);
         WalletStore.setSyncPubKeys(obj.sync_pubkeys);
-
+        
         if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
-          WalletStore.setEncryptedWalletData(obj.payload);
         } else {
           WalletStore.setDidSetGuid();
-          needs_two_factor_code(WalletStore.get2FAType());
+          needs_two_factor_code(obj.auth_type);
           return;
         }
+        
+        successCallback(obj)
 
-        war_checksum = obj.war_checksum;
-
-        if (obj.language && WalletStore.getLanguage() != obj.language) {
-          WalletStore.setLanguage(obj.language);
-        }
-
-        WalletStore.setDidSetGuid();
-
-        MyWallet.loadWallet(inputedPassword, twoFACode, success, wrong_two_factor_code, other_error, decrypt_success, build_hd_success);
       },
       error : function(e) {
         if(e.responseJSON && e.responseJSON.initial_error && !e.responseJSON.authorization_required) {
@@ -2160,7 +2154,7 @@ MyWallet.login = function ( user_guid
         if (obj.authorization_required && typeof(authorization_required) === "function") {
           authorization_required(function() {
             MyWallet.pollForSessionGUID(function() {
-              tryToFetchWalletJSON();
+              tryToFetchWalletJSON(guid, successCallback);
             });
           });
         }
@@ -2172,7 +2166,70 @@ MyWallet.login = function ( user_guid
     });    
   }
 
-  tryToFetchWalletJSON()
+  var tryToFetchWalletWith2FA = function (guid, two_factor_auth_key, successCallback) {
+    if (two_factor_auth_key == null) {
+      other_error('Two Factor Authentication code this null');
+      return;
+    }
+    if (two_factor_auth_key.length == 0 || two_factor_auth_key.length > 255) {
+     other_error('You must enter a Two Factor Authentication code');
+     return;
+    }
+
+    $.ajax({
+      timeout: 60000,
+      type: "POST",
+      // contentType: "application/json; charset=utf-8",
+      xhrFields: {
+       withCredentials: true
+      },
+      crossDomain: true,
+      url: BlockchainAPI.getRootURL() + "wallet",
+      data :  { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : WalletStore.getAPICode()},
+      success: function(data) {
+       if (data == null || data.length == 0) {
+         other_error('Server Return Empty Wallet Data');
+         return;
+       }
+
+       if (data != 'Not modified') {
+         WalletStore.setEncryptedWalletData(data);
+       }
+
+       successCallback(data);
+
+      },
+      error : function (response) {
+       WalletStore.setRestoringWallet(false);
+       wrong_two_factor_code(response.responseText);
+      }
+    });
+  }
+  
+  var didFetchWalletJSON = function(obj) {
+    console.log("didFetchWalletJSON");
+    console.log(obj);
+
+    if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
+     WalletStore.setEncryptedWalletData(obj.payload);
+    } 
+
+    war_checksum = obj.war_checksum;
+
+    if (obj.language && WalletStore.getLanguage() != obj.language) {
+     WalletStore.setLanguage(obj.language);
+    }
+
+    WalletStore.setDidSetGuid();
+
+    MyWallet.initializeWallet(inputedPassword, success, other_error, decrypt_success, build_hd_success);
+  }
+
+  if(twoFACode == null) {
+    tryToFetchWalletJSON(user_guid, didFetchWalletJSON)
+  } else {
+    tryToFetchWalletWith2FA(user_guid, twoFACode, didFetchWalletJSON)
+  }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2226,7 +2283,7 @@ MyWallet.pollForSessionGUID = function(successCallback) {
 // Jaume: FrontEndBranch: wallet-hd-refactored
 // copy of restoreWallet
 
-MyWallet.loadWallet = function(pw, two_factor_auth_key, success, wrong_two_factor_code, other_error, decrypt_success, build_hd_success) {
+MyWallet.initializeWallet = function(pw, success, other_error, decrypt_success, build_hd_success) {
   // assert(success, 'Success callback required');
   // assert(other_error, 'Error callback required');
   if (isInitialized || WalletStore.isRestoringWallet()) {
@@ -2246,11 +2303,9 @@ MyWallet.loadWallet = function(pw, two_factor_auth_key, success, wrong_two_facto
   // jaume: this should be stored in the encryptedWallet object
   WalletStore.unsafeSetPassword(pw);
 
-  //If we don't have any wallet data then we must have two factor authentication enabled
   var encryptedWalletData = WalletStore.getEncryptedWalletData();
 
-  // I deleted here all two factor call
-  decryptAndLoadWallet(
+  decryptAndInitializeWallet(
     function() {
       WalletStore.setRestoringWallet(false);
       // didDecryptWallet(success);
