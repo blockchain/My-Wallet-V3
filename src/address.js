@@ -99,22 +99,28 @@ Address.factory = function(o,a){
   return o;
 };
 
-Address.import = function(key, label, watch){
-  var object;
-  if (watch) {
-    object = {
-      addr                   : key
-    }
-  }
-  else {
-    object = {
-      addr                   : key.pub.getAddress().toString(),
-      priv                   : Base58.encode(key.d.toBuffer(32)),
-      created_time           : Date.now(),
-      created_device_name    : APP_NAME,
-      created_device_version : APP_VERSION
-    }
+Address.import = function(key, label){
+  var object = {
+    addr                   : null,
+    priv                   : null,
+    created_time           : Date.now(),
+    created_device_name    : APP_NAME,
+    created_device_version : APP_VERSION
   };
+
+  switch (true){
+    case Helpers.isBitcoinAddress(key):
+      object.addr = key;
+      object.priv = null;
+      break;
+    case Helpers.isKey(key):
+      object.addr = key.pub.getAddress().toString();
+      object.priv = Base58.encode(key.d.toBuffer(32));
+      break;
+    default:
+      throw 'Error: address import format not supported';
+  };
+
   //initialization
   var address = new Address(object);
   address.label    = label;

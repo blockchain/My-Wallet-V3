@@ -218,8 +218,9 @@ Wallet.prototype.toJSON = function(){
   return wallet;
 };
 
-Wallet.prototype.importLegacyAddress = function(key, label, secPass, watch){
-  var ad = Address.import(key, label, watch);
+Wallet.prototype.importLegacyAddress = function(key, label, secPass){
+  var ad = Address.import(key, label);
+  if (this.containsLegacyAddress(ad)) {return false};
   if (this.double_encryption) {
     assert(secPass, "Error: second password needed");
     ad.encrypt(secPass, this.sharedKey, this.pbkdf2_iterations);

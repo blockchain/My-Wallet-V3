@@ -1,9 +1,21 @@
 'use strict';
 
+var Bitcoin = require('bitcoinjs-lib');
+
 var Helpers = {};
 
 Helpers.isString = function (str){
   return typeof str == 'string' || str instanceof String;
+};
+Helpers.isKey = function (bitcoinKey){
+  return bitcoinKey instanceof Bitcoin.ECKey;
+};
+Helpers.isBitcoinAddress = function(candidate) {
+  try {
+    Bitcoin.Address.fromBase58Check(candidate);
+    return true;
+  }
+  catch (e) { return false; };
 };
 Helpers.isAlphaNum = function (str){
   return /^[\-+,._\w\d\s]+$/.test(str);
