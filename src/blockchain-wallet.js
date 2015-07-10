@@ -48,8 +48,10 @@ function Wallet(object) {
 
   // paidTo dictionary
   this._paidTo = obj.paidTo || {};
-  Helpers.merge(this._paidTo, this.hdwallet._paidTo); // move paidTo from the wrong place
-  delete this.hdwallet._paidTo;
+  if (this.isUpgradedToHD){
+    Helpers.merge(this._paidTo, this.hdwallet._paidTo); // move paidTo from the wrong place
+    delete this.hdwallet._paidTo;
+  };
 
   // address book list
   this._address_book = obj.address_book || {};
@@ -178,7 +180,9 @@ Object.defineProperties(Wallet.prototype, {
   },
   "isUpgradedToHD":{
     configurable: false,
-    get: function() {return !(this._hd_wallets === undefined || this._hd_wallets === null);}
+    get: function() {
+      return !(this._hd_wallets == null || this._hd_wallets.length === 0);
+    }
   },
   "isMultipleAccount":{
     configurable: false,

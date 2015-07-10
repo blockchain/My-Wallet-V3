@@ -2094,7 +2094,7 @@ MyWallet.login = function ( user_guid
   var data = {format : 'json', resend_code : null, ct : clientTime};
 
   // this is IOS
-  // data.api_code = WalletStore.getAPICode();
+  data.api_code = WalletStore.getAPICode();
 
   $.ajax({
     type: "GET",
