@@ -1952,9 +1952,9 @@ function decryptAndLoadWallet(success, error, decrypt_success, build_hd_success)
 
       // WalletStore.newAddressBookFromJSON(obj.address_book);
 
-      if (obj.hd_wallets && obj.hd_wallets.length > 0) {
-        WalletStore.setDidUpgradeToHd(true);
-      };
+      // if (obj.hd_wallets && obj.hd_wallets.length > 0) {
+      //   WalletStore.setDidUpgradeToHd(true);
+      // };
       //   if (!WalletStore.isHaveBuildHDWallet()) {
       //     // We're not passing a bip39 or second password
       //     MyWallet.buildHDWallet(
@@ -2002,6 +2002,9 @@ function decryptAndLoadWallet(success, error, decrypt_success, build_hd_success)
         WalletStore.setPayloadChecksum(WalletStore.generatePayloadChecksum());
       }
 
+      if (MyWallet.wallet.isUpgradedToHD === false) {
+        WalletStore.sendEvent('hd_wallets_does_not_exist');
+      };
       setIsInitialized();
 
       success();
