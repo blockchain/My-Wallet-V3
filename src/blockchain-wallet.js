@@ -363,7 +363,6 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, firstAccoun
 };
 
 Wallet.prototype.newHDWallet = function(firstAccountLabel, pw){
-
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
   var newHDwallet = HDWallet.new(encoder);
   this._hd_wallets.push(newHDwallet);
@@ -373,8 +372,6 @@ Wallet.prototype.newHDWallet = function(firstAccountLabel, pw){
 };
 
 Wallet.prototype.newAccount = function(label, pw, hdwalletIndex){
-  console.log(hdwalletIndex);
-  console.log("aixo era index");
   if (!this.isUpgradedToHD) { return false; };
   var index = Helpers.isNumber(hdwalletIndex) ? hdwalletIndex : 0;
   var cipher = undefined;
