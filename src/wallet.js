@@ -2098,7 +2098,7 @@ MyWallet.login = function ( user_guid
 
   // this is IOS
   data.api_code = WalletStore.getAPICode();
-  
+
   var tryToFetchWalletJSON = function(guid, successCallback) {
     $.ajax({
       type: "GET",
@@ -2114,10 +2114,10 @@ MyWallet.login = function ( user_guid
       success: function(obj) {
 
         fetch_success && fetch_success();
-        
+
         // Even if Two Factor is enabled, some settings need to be saved here,
         // because they won't be part of the 2FA response.
-        
+
         MyWallet.handleNTPResponse(obj, clientTime);
 
         if (!obj.guid) {
@@ -2125,19 +2125,19 @@ MyWallet.login = function ( user_guid
           other_error('Server returned null guid.');
           return;
         }
-        
+
         // I should create a new class to store the encrypted wallet over wallet
         WalletStore.setGuid(obj.guid);
         WalletStore.setRealAuthType(obj.real_auth_type);
         WalletStore.setSyncPubKeys(obj.sync_pubkeys);
-        
+
         if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
         } else {
           WalletStore.setDidSetGuid();
           needs_two_factor_code(obj.auth_type);
           return;
         }
-        
+
         successCallback(obj)
 
       },
@@ -2163,7 +2163,7 @@ MyWallet.login = function ( user_guid
           WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
         }
       }
-    });    
+    });
   }
 
   var tryToFetchWalletWith2FA = function (guid, two_factor_auth_key, successCallback) {
@@ -2205,12 +2205,12 @@ MyWallet.login = function ( user_guid
       }
     });
   }
-  
+
   var didFetchWalletJSON = function(obj) {
 
     if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
      WalletStore.setEncryptedWalletData(obj.payload);
-    } 
+    }
 
     war_checksum = obj.war_checksum;
 

@@ -350,15 +350,51 @@ Wallet.reviver = function(k,v){
   return v;
 };
 
-Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, firstAccountLabel, pw){
+Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
+  // this should be rethinked.
+  //     1) include failure.
+  //     2) not necessary to encrypt while looking for funds in further accounts.
+  //     3) progress notification to frontend. (we don't know how many accounts we will find)
   // seedHex computation can fail
+  // get_history can fail
+  //////////////////////////////////////////////////////////////////////////////
+  // wallet restoration
   var seedHex = BIP39.mnemonicToEntropy(mnemonic);
   var pass39  = Helpers.isString(bip39Password) ? bip39Password : "";
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
   var newHDwallet = HDWallet.restore(seedHex, pass39, encoder);
-  this._hd_wallets.push(newHDwallet);
-  var label = firstAccountLabel ? firstAccountLabel : "My Bitcoin Wallet";
-  this.newAccount(label, pw, this._hd_wallets.length-1);
+  this._hd_wallets[0] = newHDwallet;
+  //////////////////////////////////////////////////////////////////////////////
+  // first account creation
+  var account       = null;
+  account = this.newAccount("Account 1", pw, 0);
+  MyWallet.get_history_with_addresses([account.extendedPublicKey]);
+  //////////////////////////////////////////////////////////////////////////////
+    function isAccountUsed(account, success, error) {
+    MyWallet.get_history_with_addresses(
+        [account.extendedPublicKey]
+      , function(obj){success(obj.addresses[0].account_index === 0 && obj.addresses[0].change_index === 0);}
+      , function(){error("get_history_error")}
+    );
+  };
+  //////////////////////////////////////////////////////////////////////////////
+  // accounts retoration
+  var lookAhead     = true;
+  var emptyAccounts = 0;
+  var accountIndex  = 1;
+  var historyError  = false;
+  while (lookAhead) {
+    accountIndex++;
+    account = this.newAccount("Account " + accountIndex.toString(), pw, 0);
+    function ifUsed(used) {
+      if (used) { emptyAccounts ++;};
+      if (emptyAccounts === 10 ){ lookAhead = false; this.hdwallet._accounts.splice(-10);};
+    };
+    function ifError() { historyError = true; lookAhead = false;};
+    isAccountUsed(account, ifUsed.bind(this), ifError);
+  };
+
+  if (historyError) {return false};
   return newHDwallet;
 };
 
