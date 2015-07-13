@@ -252,7 +252,7 @@ Wallet.prototype.importLegacyAddress = function(addr, label, secPass, bipPass){
   } else {
     importAddress(addr);
   }
-
+  MyWallet.syncWallet();
   return defer.promise;
 };
 
@@ -268,13 +268,15 @@ Wallet.prototype.newLegacyAddress = function(label, pw){
     ad.encrypt(pw, this.sharedKey, this.pbkdf2_iterations);
   };
   this._addresses[ad.address] = ad;
+  MyWallet.syncWallet();
   return ad;
 };
 
-Wallet.prototype.setDefaultPbkdf2Iterations = function(){
-  this.pbkdf2_iterations = 5000;
-  return this;
-};
+// Wallet.prototype.setDefaultPbkdf2Iterations = function(){
+//   this._pbkdf2_iterations = 5000;
+//   MyWallet.syncWallet();
+//   return this;
+// };
 
 Wallet.prototype.validateSecondPassword = function(inputString) {
 
@@ -296,6 +298,7 @@ Wallet.prototype.encrypt = function(pw, success, error){
     };
   }
   catch (e){ error && error(e);};
+  MyWallet.syncWallet();
   success && success(this)
   // return this;
 };
@@ -312,6 +315,7 @@ Wallet.prototype.decrypt = function(pw, success, error){
     };
   }
   catch (e){ error && error(e);};
+  MyWallet.syncWallet();
   success && success(this)
   // return this;
 };
@@ -395,6 +399,7 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
   };
 
   if (historyError) {return false};
+  MyWallet.syncWallet();
   return newHDwallet;
 };
 
@@ -404,6 +409,7 @@ Wallet.prototype.newHDWallet = function(firstAccountLabel, pw){
   this._hd_wallets.push(newHDwallet);
   var label = firstAccountLabel ? firstAccountLabel : "My Bitcoin Wallet";
   this.newAccount(label, pw, this._hd_wallets.length-1);
+  MyWallet.syncWallet();
   return newHDwallet;
 };
 
@@ -416,7 +422,7 @@ Wallet.prototype.newAccount = function(label, pw, hdwalletIndex){
   };
   var newAccount = this._hd_wallets[index].newAccount(label, cipher).lastAccount;
   MyWallet.listenToHDWalletAccount(newAccount.extendedPublicKey);
-  // MyWallet.backupWalletDelayed();
+  MyWallet.syncWallet();
   return newAccount;
 };
 
@@ -456,6 +462,7 @@ Wallet.prototype.changePbkdf2Iterations = function(newIterations, password){
       this._pbkdf2_iterations = newIterations;
     };
   };
+  MyWallet.syncWallet();
   return true;
 };
 

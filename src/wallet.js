@@ -22,6 +22,7 @@ var HDAccount = require('./hd-account');
 var Transaction = require('./transaction');
 var BlockchainAPI = require('./blockchain-api');
 var Wallet = require('./blockchain-wallet');
+var Helpers = require('./helpers');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -1889,7 +1890,7 @@ MyWallet.getWallet = function(success, error) {
 
     WalletStore.setEncryptedWalletData(obj.payload);
 
-    internalRestoreWallet(function() {
+    decryptAndInitializeWallet(function() {
       MyWallet.get_history();
 
       if (success) success();
@@ -2336,6 +2337,99 @@ function setIsInitialized() {
 MyWallet.connectWebSocket = function() {
   webSocketConnect(wsSuccess);
 };
+////////////////////////////////////////////////////////////////////////////////
+// This should replace backup functions
+function syncWallet (successcallback, errorcallback) {
+  // console.log("sync...");
+  // this is the wallet object --> Mywallet.wallet
+  if (!MyWallet.wallet || !MyWallet.wallet.sharedKey
+      || MyWallet.wallet.sharedKey.length === 0
+      || MyWallet.wallet.sharedKey.length !== 36)
+    { throw 'Cannot backup wallet now. Shared key is not set'; };
+
+  WalletStore.disableLogout();
+
+  var _errorcallback = function(e) {
+    WalletStore.sendEvent('on_backup_wallet_error');
+    WalletStore.sendEvent("msg", {type: "error", message: 'Error Saving Wallet: ' + e});
+    // Re-fetch the wallet from server
+    MyWallet.getWallet();
+    errorcallback && errorcallback(e);
+  };
+  try {
+    var method = 'update';
+    var data = JSON.stringify(MyWallet.wallet, null, 2);
+    var crypted = WalletCrypto.encryptWallet( data
+                                              , WalletStore.getPassword()
+                                              , WalletStore.getPbkdf2Iterations()
+                                              , MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0 );
+
+    if (crypted.length == 0) {
+      throw 'Error encrypting the JSON output';
+    }
+
+    //Now Decrypt the it again to double check for any possible corruption
+    WalletCrypto.decryptWallet(crypted, WalletStore.getPassword(), function(obj) {
+      try {
+        var old_checksum = WalletStore.getPayloadChecksum();
+        WalletStore.sendEvent('on_backup_wallet_start');
+        WalletStore.setEncryptedWalletData(crypted);
+
+        var new_checksum = WalletStore.getPayloadChecksum();
+
+        var data =  {
+          length: crypted.length,
+          payload: crypted,
+          checksum: new_checksum,
+          old_checksum : old_checksum,
+          method : method,
+          format : 'plain',
+          language : WalletStore.getLanguage()
+        };
+
+        if (WalletStore.isSyncPubKeys()) {
+          // why is this needed?
+          data.active = MyWallet.wallet.activeAddresses.join('|');
+        }
+
+        MyWallet.securePost("wallet", data, function(data) {
+          checkWalletChecksum(new_checksum,
+                              function() {
+                                // WalletStore.tagLegacyAddressesAsSaved();
+
+                                if (successcallback != null)
+                                  successcallback();
+
+                                WalletStore.setIsSynchronizedWithServer(true);
+                                WalletStore.enableLogout();
+                                WalletStore.resetLogoutTimeout();
+                                WalletStore.sendEvent('on_backup_wallet_success');
+                              },
+                              function() {
+                                _errorcallback('Checksum Did Not Match Expected Value');
+                                WalletStore.enableLogout();
+                              });
+        }, function(e) {
+          _errorcallback(e.responseText);
+          WalletStore.enableLogout();
+        });
+      } catch (e) {
+        _errorcallback(e);
+        WalletStore.enableLogout();
+      };
+    },
+                               function(e) {
+                                 console.log(e);
+                                 throw("Decryption failed");
+                               });
+  } catch (e) {
+    _errorcallback(e);
+    WalletStore.enableLogout();
+  }
+
+};
+MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500);
+////////////////////////////////////////////////////////////////////////////////
 
 //Can call multiple times in a row and it will backup only once after a certain delay of activity
 // used on mywallet and frontend

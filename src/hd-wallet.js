@@ -8,6 +8,7 @@ var Helpers = require('./helpers');
 var HDAccount = require('./hd-account');
 var WalletCrypto = require('./wallet-crypto');
 var BIP39 = require('bip39');
+var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 ////////////////////////////////////////////////////////////////////////////////
 // Address class
 function HDWallet(object){
@@ -60,10 +61,13 @@ Object.defineProperties(HDWallet.prototype, {
     configurable: false,
     get: function() { return this._default_account_idx;},
     set: function(value) {
-      if(this.isValidAccountIndex(value))
+      if(this.isValidAccountIndex(value)){
         this._default_account_idx = value;
-      else
+        MyWallet.syncWallet();
+      }
+      else{
         throw 'Error: unvalid default index account';
+      };
     }
   },
   "defaultAccount": {
@@ -222,6 +226,7 @@ HDWallet.prototype.toJSON = function(){
 
 HDWallet.prototype.verifyMnemonic = function(){
   this._mnemonic_verified = true;
+  MyWallet.syncWallet();
   return this;
 };
 
@@ -266,6 +271,7 @@ HDWallet.prototype.decrypt = function(cipher){
 
 HDWallet.prototype.addPaidToElement = function(txHash, element){
   this._paidTo[txHash] = element;
+  MyWallet.syncWallet();
   return this;
 };
 HDWallet.prototype.getPaidToElement = function(txHash){
@@ -281,6 +287,5 @@ HDWallet.prototype.forEachPaidTo = function(f) {
 ////////////////////////////////////////////////////////////////////////////////
 // checkers
 HDWallet.prototype.isValidAccountIndex = function(index){
-
   return Helpers.isNumber(index) && index >= 0 && index < this._accounts.length;
 };

@@ -6,6 +6,7 @@ var Base58       = require('bs58');
 var Bitcoin      = require('bitcoinjs-lib');
 var WalletCrypto = require('./wallet-crypto');
 var Helpers      = require('./helpers');
+var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 ////////////////////////////////////////////////////////////////////////////////
 // Address class
 function Address(object){
@@ -40,10 +41,12 @@ Object.defineProperties(Address.prototype, {
     configurable: false,
     get: function() { return this._label;},
     set: function(str) {
-      if(Helpers.isValidLabel(str))
+      if(Helpers.isValidLabel(str)) {
         this._label = str;
+        MyWallet.syncWallet();
+      }
       else
-        throw 'Error: address.label must be an alphanumeric string';
+        { throw 'Error: address.label must be an alphanumeric string'; }
     }
   },
   "created_time": {
@@ -76,10 +79,12 @@ Object.defineProperties(Address.prototype, {
     configurable: false,
     get: function() { return this._tag === 2;},
     set: function(value) {
-      if(Helpers.isBoolean(value))
+      if(Helpers.isBoolean(value)) {
         if (value) {this._tag = 2;} else {this._tag = 0;}
+        MyWallet.syncWallet();
+      }
       else
-        throw 'Error: address.archived must be a boolean';
+        { throw 'Error: address.archived must be a boolean';};
     }
   },
   "active": {

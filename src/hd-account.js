@@ -7,7 +7,7 @@ var assert  = require('assert');
 var Helpers = require('./helpers');
 var WalletCrypto = require('./wallet-crypto');
 var KeyRing  = require('./keyring');
-
+var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 ////////////////////////////////////////////////////////////////////////////////
 // HDAccount Class
 
@@ -46,10 +46,12 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function() { return this._label;},
     set: function(str) {
-      if(Helpers.isValidLabel(str))
+      if(Helpers.isValidLabel(str)){
         this._label = str;
-      else
+        MyWallet.syncWallet();
+      }else{
         throw 'Error: account.label must be an alphanumeric string';
+      };
     }
   },
   "balance": {
@@ -75,10 +77,13 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function() { return this._archived;},
     set: function(value) {
-      if(Helpers.isBoolean(value))
+      if(Helpers.isBoolean(value)){
         this._archived = value;
-      else
+        MyWallet.syncWallet();
+      }
+      else{
         throw 'Error: account.archived must be a boolean';
+      }
     }
   },
   "active": {
@@ -236,6 +241,7 @@ HDAccount.prototype.setLabelForReceivingAddress = function(index, label) {
   assert(Helpers.isValidLabel(label), "Error: address label must be alphanumeric");
   this._address_labels[index] = label;
   this.incrementReceiveIndexIfLast(index);
+  MyWallet.syncWallet();
   return this;
 };
 
