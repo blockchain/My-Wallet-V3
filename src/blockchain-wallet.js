@@ -474,6 +474,16 @@ Wallet.prototype.changePbkdf2Iterations = function(newIterations, password){
   return true;
 };
 
+Wallet.prototype.getSecondPasswordCipher = function(secondPassword, encoding){
+  assert(secondPassword, 'Error: second password required');
+  return WalletCrypto.cipherFunction(
+    secondPassword,
+    this.sharedKey,
+    this.pbkdf2_iterations,
+    encoding || 'dec'
+  );
+};
+
 // example of serialization
 // var x = Blockchain.Wallet.new();
 // x.newLegacyAddress();
