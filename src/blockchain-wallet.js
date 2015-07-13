@@ -474,14 +474,13 @@ Wallet.prototype.changePbkdf2Iterations = function(newIterations, password){
   return true;
 };
 
-Wallet.prototype.getSecondPasswordCipher = function(secondPassword, encoding){
-  assert(secondPassword, 'Error: second password required');
-  return WalletCrypto.cipherFunction(
-    secondPassword,
-    this.sharedKey,
-    this.pbkdf2_iterations,
-    encoding || 'dec'
-  );
+Wallet.prototype.getPrivateKeyForAddress = function(address, secondPassword) {
+  assert(address, 'Error: address must be defined');
+  if (secondPassword) {
+    return WalletCrypto.decryptSecretWithSecondPassword(
+      address.priv, secondPassword, this.sharedKey, this.pbkdf2_iterations
+    );
+  } else { return address.priv; }
 };
 
 // example of serialization
