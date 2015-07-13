@@ -272,6 +272,14 @@ Wallet.prototype.newLegacyAddress = function(label, pw){
   return ad;
 };
 
+Wallet.prototype.deleteLegacyAddress = function(a){
+  assert(a, "Error: address needed");
+  if (typeof this._addresses === 'object') {
+    delete this._addresses[a.address];
+  }
+  return false;
+};
+
 // Wallet.prototype.setDefaultPbkdf2Iterations = function(){
 //   this._pbkdf2_iterations = 5000;
 //   MyWallet.syncWallet();
