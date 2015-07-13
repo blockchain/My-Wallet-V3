@@ -448,13 +448,13 @@ Wallet.prototype.getNote = function(txHash){
 
 Wallet.prototype.getMnemonic = function(password){
   var seedHex = this.isDoubleEncrypted ?
-          WalletCrypto.decryptSecretWithSecondPassword(
-                  this.hdwallet.seedHex
-                , password
-                , this.sharedKey
-                , this.pbkdf2_iterations
-            ) :
-          this.hdwallet.seedHex;
+    WalletCrypto.decryptSecretWithSecondPassword(
+      this.hdwallet.seedHex
+      , password
+      , this.sharedKey
+      , this.pbkdf2_iterations
+    ) :
+    this.hdwallet.seedHex;
   return BIP39.entropyToMnemonic(seedHex);
 };
 
