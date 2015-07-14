@@ -25,7 +25,7 @@ function HDAccount(object){
   this._network  = obj.network || Bitcoin.networks.bitcoin;
 
   this._address_labels = [];
-  obj.address_labels.map(function(e){self.setLabelForReceivingAddress(e.index,e.label);});
+  obj.address_labels.map(function(e){self._address_labels[e.index] = e.label;});
 
   // computed properties
   this._keyRing       = new KeyRing(obj.xpub, obj.cache);
