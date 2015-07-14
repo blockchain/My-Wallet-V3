@@ -56,7 +56,10 @@ function Wallet(object) {
   };
 
   // address book list
-  this._address_book = obj.address_book || {};
+  // address book in json is [{address: "address1", label: "label1"} , ... ]
+  // address book in memory is {address1: "label1", address2: "label2"}
+  this._address_book = obj.address_book ?
+    obj.address_book.reduce(function(o,a){o[a.address] = a.label; return o;}, {}) : {};
 
   // tx_notes dictionary
   this._tx_notes = obj.tx_notes || {};
@@ -197,6 +200,17 @@ Object.defineProperties(Wallet.prototype, {
                .map(function(k){return k.balance;})
                  .reduce(Helpers.add, 0);
     }
+  },
+  "addressBook":{
+    configurable: false,
+    get: function() {
+      var that = this;
+      return Object.keys(this._address_book)
+               .map(function(a){
+                      return {address: a, label: that.getAddressBookLabel(a)};
+                    }
+                );
+    }
   }
 });
 
@@ -213,7 +227,7 @@ Wallet.prototype.toJSON = function(){
       html5_notifications      : this._html5_notifications,
       logout_time              : this._logout_time
     },
-    address_book      : this._address_book,
+    address_book      : this.addressBook,
     tx_notes          : this._tx_notes,
     // tx_tags           : this._tx_tags,
     tx_names          : this._tx_names,
