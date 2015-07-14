@@ -43,6 +43,9 @@ Helpers.isBoolean = function (value){
 Helpers.isValidLabel = function (text){
   return Helpers.isString(text);
 };
+Helpers.isInRange = function (val, min, max){
+  return min <= val && val < max;
+};
 Helpers.add = function (x,y){
   return x + y;
 };

@@ -205,6 +205,18 @@ Object.defineProperties(Wallet.prototype, {
                     }
                 );
     }
+  },
+  "logoutTime":{
+    configurable: false,
+    get: function() { return this._logout_time; },
+    set: function(t) {
+      if (Helpers.isNumber(t) && Helpers.isInRange(t, 60000, 86400001)) {
+        this._logout_time = t;
+        MyWallet.syncWallet();
+      } else {
+        throw "Error: wallet.logoutTime must be a number in range 60000,86400001";
+      }
+    }
   }
 });
 
