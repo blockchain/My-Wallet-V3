@@ -377,7 +377,7 @@ Wallet.reviver = function(k,v){
 };
 
 Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
-  // this should be rethinked.
+  // this should be rethought
   //     1) include failure.
   //     2) not necessary to encrypt while looking for funds in further accounts.
   //     3) progress notification to frontend. (we don't know how many accounts we will find)

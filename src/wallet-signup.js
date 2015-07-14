@@ -17,7 +17,6 @@ function insertWallet(guid, sharedKey, password, extra, successcallback, errorca
   assert(errorcallback, "Success callback missing");
   assert(guid, "GUID missing");
   assert(sharedKey, "Shared Key missing");
-  console.log("syncing new wallet...");
 
   try {
     // var data = MyWallet.makeCustomWalletJSON(null, guid, sharedKey);
