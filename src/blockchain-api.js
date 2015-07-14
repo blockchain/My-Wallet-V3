@@ -55,21 +55,21 @@ function get_history(success, error, tx_filter, offset, n) {
   offset = offset || 0;
   n = n || 0;
 
-  var allAddresses = WalletStore.getLegacyActiveAddresses();
-  var myHDWallet = WalletStore.getHDWallet();
-  if (myHDWallet != null) {
-    for (var i in myHDWallet.getAccounts()) {
-      var account = myHDWallet.getAccount(i);
+  var allAddresses = MyWallet.wallet.activeAddresses;
+  if (MyWallet.wallet.isUpgradedToHD) {
+     var myHDWallet = MyWallet.wallet.hdwallet;
+    for (var account of myHDWallet.accounts) {
       var accountExtendedPublicKey = account.extendedPublicKey;
       allAddresses.push(accountExtendedPublicKey);
     }
   }
-  var paidTo = WalletStore.getPaidToDictionary();
-  for (var tx_hash in paidTo) {
-    if (paidTo[tx_hash].redeemedAt == null) {
-      allAddresses.push(paidTo[tx_hash].address);
-    }
-  }
+  // TODO: fix paidToDictionary with new model
+  // var paidTo = WalletStore.getPaidToDictionary();
+  // for (var tx_hash in paidTo) {
+  //   if (paidTo[tx_hash].redeemedAt == null) {
+  //     allAddresses.push(paidTo[tx_hash].address);
+  //   }
+  // }
 
   var data = {
     active : allAddresses.join('|'),
@@ -215,6 +215,7 @@ function async_get_history_with_addresses(addresses, success, error, tx_filter, 
 };
 
 //Get the balances of multi addresses (Used for archived)
+// TODO: FIX THIS related to sharedcoin
 function get_balances(addresses, success, error) {
   $.ajax({
     type: "POST",
@@ -224,7 +225,7 @@ function get_balances(addresses, success, error) {
     data : {active : addresses.join('|'), simple : true, api_code : WalletStore.getAPICode(), format : 'json'},
     success: function(obj) {
       for (var key in obj) {
-
+        // if (MyWallet.wallet.containsLegacyAddress(key))
         if (WalletStore.legacyAddressExists(key))
           WalletStore.setLegacyAddressBalance(key, obj[key].final_balance);
       }
@@ -236,7 +237,7 @@ function get_balances(addresses, success, error) {
     }
   });
 };
-
+// TODO: FIX THIS RELATED TO REDEEM CODES
 //Get the balance of an array of addresses
 function get_balance(addresses, success, error) {
   get_balances(addresses, function(obj){
@@ -418,10 +419,10 @@ function push_tx(tx, note, success, error) {
   //Appear that there are conditions where the ajax call to pushtx may not respond in a timely fashion
   var checkTxExistsInterval = setInterval(function() {
     get_rejection_reason(
-      tx_hash, 
+      tx_hash,
       function(e) {
         console.log(e);
-      }, 
+      },
       function() {
         if (did_push) {
           did_push();
@@ -430,7 +431,7 @@ function push_tx(tx, note, success, error) {
 
         clearInterval(checkTxExistsInterval);
         checkTxExistsInterval = null;
-      }, 
+      },
       function(e) {
         console.log(e);
       }

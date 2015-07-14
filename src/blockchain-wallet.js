@@ -101,12 +101,6 @@ Object.defineProperties(Wallet.prototype, {
   "pbkdf2_iterations": {
     configurable: false,
     get: function() { return this._pbkdf2_iterations;}
-    // set: function(value) {
-    //   if(Helpers.isNumber(value))
-    //     this._pbkdf2_iterations = value;
-    //   else
-    //     throw 'Error: wallet.pbkdf2_iterations must be a number';
-    // }
   },
   "totalSent": {
     configurable: false,
@@ -290,6 +284,7 @@ Wallet.prototype.deleteLegacyAddress = function(a){
   assert(a, "Error: address needed");
   if (typeof this._addresses === 'object') {
     delete this._addresses[a.address];
+    MyWallet.syncWallet();
   }
   return false;
 };

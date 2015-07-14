@@ -81,103 +81,7 @@ MyWallet.securePost = function(url, data, success, error) {
   });
 };
 
-function hashPassword(password, iterations) {
-  //N rounds of SHA 256
-  var round_data = CryptoJS.SHA256(password);
-  for (var i = 1; i < iterations; ++i) {
-    round_data = CryptoJS.SHA256(round_data);
-  }
-  return round_data.toString();
-};
-
-/**
- * Set the number of PBKDF2 iterations used for encrypting the wallet and also the private keys if the second password is enabled.
- * @param {number} pbkdf2_iterations The number of PBKDF2 iterations.
- * @param {function()} success Success callback function.
- * @param {function(?Object)} error Error callback function.
- * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
- */
-// used on iOS, frontend and MyWallet
-MyWallet.setPbkdf2Iterations = function(pbkdf2_iterations, success, error, getPassword) {
-  var previous_pbkdf2_iterations = WalletStore.getPbkdf2Iterations(pbkdf2_iterations);
-  WalletStore.setPbkdf2Iterations(pbkdf2_iterations);
-
-  if(pbkdf2_iterations == previous_pbkdf2_iterations) {
-    success();
-    return;
-  }
-
-  var panic = function(e) {
-    console.log('Panic ' + e);
-
-    error(e);
-
-    // If we caught an exception here the wallet could be in a inconsistent state
-    // We probably haven't synced it, so no harm done
-    // But for now panic!
-    window.location.reload();
-  };
-
-  var setPbkdf2IterationsAndBackupWallet = function() {
-    WalletStore.setPbkdf2Iterations(pbkdf2_iterations);
-    success();
-    MyWallet.backupWalletDelayed('update', function() {
-    }, function(e) {
-      panic(e);
-    });
-  };
-
-  try {
-    // If double encryption is enabled we need to re-encrypt all private keys
-    if(WalletStore.getDoubleEncryption()) {
-      getPassword(
-        function(pw, correct_password, wrong_password) {
-          if (MyWallet.validateSecondPassword(pw)) {
-            correct_password();
-            WalletStore.mapToLegacyAddressesPrivateKeys(WalletCrypto.reencrypt(pw, WalletStore.getSharedKey(), previous_pbkdf2_iterations, pbkdf2_iterations));
-
-            // Re-encrypt all HD account keys
-            for (var i in MyWallet.getAccounts()) {
-              var account = WalletStore.getHDWallet().getAccount(i);
-              account.extendedPrivateKey = WalletCrypto.reencrypt(pw, WalletStore.getSharedKey(), previous_pbkdf2_iterations, pbkdf2_iterations)(account.extendedPrivateKey);
-
-              if (!account.extendedPrivateKey) throw 'Error re-encrypting account private key';
-            }
-
-            // Re-encrypt the HD seed
-            if (WalletStore.didUpgradeToHd()) {
-              MyWallet.wallet.hdwallet.seedHex = WalletCrypto.reencrypt(pw, WalletStore.getSharedKey(), previous_pbkdf2_iterations, pbkdf2_iterations)(MyWallet.wallet.hdwallet.seedHex);
-
-              if (!MyWallet.wallet.hdwallet.seedHex) throw 'Error re-encrypting wallet seed';
-            }
-
-            // Re-encrypt the BIP 39 password
-            if (WalletStore.didUpgradeToHd()) {
-              if(WalletStore.getHDWallet().getBip39Password() != "") {
-                WalletStore.getHDWallet().setBip39Password(WalletCrypto.reencrypt(pw, WalletStore.getSharedKey(), previous_pbkdf2_iterations, pbkdf2_iterations)(WalletStore.getHDWallet().getBip39Password()));
-              }
-
-              if (!WalletStore.getHDWallet().getBip39Password()) throw 'Error re-encrypting wallet bip 39 password';
-            }
-
-            // Generate a new password hash
-            WalletStore.setDPasswordHash(hashPassword(WalletStore.getSharedKey() + pw, pbkdf2_iterations));
-            setPbkdf2IterationsAndBackupWallet();
-          }
-          else {
-            wrong_password();
-          }
-        });
-    }
-    else {
-      setPbkdf2IterationsAndBackupWallet();
-    }
-  } catch (e) {
-    panic(e);
-  }
-};
-
-// used only locally: wallet.js
+// used only locally: wallet.js : checkAllKeys (see what happens with this sanity check)
 MyWallet.B58LegacyDecode = function(input) {
   var alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
   var base = BigInteger.valueOf(58);
@@ -202,180 +106,6 @@ MyWallet.B58LegacyDecode = function(input) {
   return bytes;
 };
 
-/**
- * @param {function()} success callback function
- * @param {function()} error callback function
- */
-// used on frontend
-MyWallet.unsetSecondPassword = function(success, error, getPassword) {
-  var hasCalledPasswordCallback = false;
-  var sharedKey = WalletStore.getSharedKey();
-  var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
-
-  var panic = function(e) {
-    console.log('Panic ' + e);
-
-    //If we caught an exception here the wallet could be in a inconsistent state
-    //We probably haven't synced it, so no harm done
-    //But for now panic!
-    window.location.reload();
-  };
-  var decrypt = function(pw) {
-    var dec = function(data) {
-      return WalletCrypto.decryptSecretWithSecondPassword(data, pw, sharedKey, pbkdf2_iterations);
-    };
-    return dec;
-  };
-
-  try {
-    getPassword(function(pw, correct_password, wrong_password) {
-      if (MyWallet.validateSecondPassword(pw)) {
-        if (hasCalledPasswordCallback) {
-          // TODO should throw an error
-          return;
-        }
-        hasCalledPasswordCallback = true;
-
-        correct_password();
-
-        WalletStore.mapToLegacyAddressesPrivateKeys(decrypt(pw));
-
-        for (var i in MyWallet.getAccounts()) {
-          var account = WalletStore.getHDWallet().getAccount(i);
-          account.extendedPrivateKey = WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, pw, sharedKey, pbkdf2_iterations);
-        }
-
-        if (WalletStore.didUpgradeToHd()) {
-          MyWallet.wallet.hdwallet.seedHex = WalletCrypto.decryptSecretWithSecondPassword(MyWallet.wallet.hdwallet.seedHex, pw, sharedKey, pbkdf2_iterations);
-          if(WalletStore.getHDWallet().getBip39Password() != "") {
-            WalletStore.getHDWallet().setBip39Password(WalletCrypto.decryptSecretWithSecondPassword(WalletStore.getHDWallet().getBip39Password(), pw, sharedKey, pbkdf2_iterations));
-          }
-        }
-
-        WalletStore.setDoubleEncryption(false);
-
-        MyWallet.checkAllKeys(null);
-
-        MyWallet.backupWallet('update', function() {
-          success();
-        }, function(e) {
-          error(e);
-          panic(e);
-        });
-      } else {
-        wrong_password();
-      }
-    });
-  } catch (e) {
-    console.log(e);
-    panic(e);
-    // error(e);
-  }
-};
-
-
-/**
- * @param {string} password Second password
- * @param {function()} success callback function
- * @param {function()} error callback function
- */
- // used on frontend
-MyWallet.setSecondPassword = function(password, success, error) {
-  var panic = function(e) {
-    console.log('Panic ');
-    console.log(e);
-
-    //If we caught an exception here the wallet could be in a inconsistent state
-    //We probably haven't synced it, so no harm done
-    //But for now panic!
-    window.location.reload();
-  };
-
-  var sharedKey = WalletStore.getSharedKey();
-  var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
-
-  var encrypt = function(pw) {
-    var enc = function(data) {
-      return WalletCrypto.encryptSecretWithSecondPassword(data, pw, sharedKey, pbkdf2_iterations);
-    };
-    return enc;
-  };
-
-  try {
-    WalletStore.setDoubleEncryption(true);
-
-    WalletStore.mapToLegacyAddressesPrivateKeys(encrypt(password, WalletStore.getSharedKey(), pbkdf2_iterations));
-
-    for (var i in MyWallet.getAccounts()) {
-      var account = WalletStore.getHDWallet().getAccount(i);
-      account.extendedPrivateKey = WalletCrypto.encryptSecretWithSecondPassword(account.extendedPrivateKey, password, sharedKey, pbkdf2_iterations);
-    }
-
-    if (WalletStore.didUpgradeToHd()) {
-      MyWallet.wallet.hdwallet.seedHex = WalletCrypto.encryptSecretWithSecondPassword(MyWallet.wallet.hdwallet.seedHex, password, sharedKey, pbkdf2_iterations);
-      if(WalletStore.getHDWallet().getBip39Password() != "") {
-        WalletStore.getHDWallet().setBip39Password(WalletCrypto.encryptSecretWithSecondPassword(WalletStore.getHDWallet().getBip39Password(), password, sharedKey, pbkdf2_iterations));
-      }
-    }
-
-    WalletStore.setDPasswordHash(hashPassword(sharedKey + password, pbkdf2_iterations));
-    if (!MyWallet.validateSecondPassword(password)) {
-      throw "Invalid Second Password";
-    }
-
-    try {
-      MyWallet.checkAllKeys(password);
-
-      MyWallet.backupWallet('update', function() {
-        success();
-      }, function(e) {
-        panic(e);
-        error(e);
-      });
-    } catch(e) {
-      panic(e);
-      error(e);
-    }
-  } catch(e) {
-    panic(e);
-    error(e);
-  }
-};
-
-
-
-/**
- * Add watch only address, backup wallet and refreshes balances.
- * @param {string} addressString bitcoin address
- */
-// used on frontend
-MyWallet.addWatchOnlyLegacyAddress = function(addressString) {
-  var address = Bitcoin.Address.fromBase58Check(addressString);
-
-  if (address.toString() != addressString) {
-    throw 'Inconsistency between addresses';
-  }
-
-  try {
-    if (WalletStore.addLegacyAddress(addressString)) {
-      WalletStore.sendEvent("msg", {type: "success", message: 'Successfully Added Address ' + address});
-
-      try {
-        ws.send('{"op":"addr_sub", "addr":"'+addressString+'"}');
-      } catch (e) { }
-
-      //Backup
-      MyWallet.backupWallet('update', function() {
-        MyWallet.get_history();
-      });
-    } else {
-      throw 'Wallet Full Or Addresses Exists';
-    }
-  } catch (e) {
-    WalletStore.sendEvent("msg", {type: "error", message: e});
-  }
-};
-
 // Temporary workaround instead instead of modding bitcoinjs to do it TODO: not efficient
 // used only on wallet.js and wallet-store.js
 MyWallet.getCompressedAddressString = function(key) {
@@ -386,114 +116,9 @@ MyWallet.getUnCompressedAddressString = function(key) {
   return new ECKey(key.d, false).pub.getAddress().toString();
 };
 
-/**
- * Import Private Key, backup wallet and refresh balances
- * @param {string} privateKeyString private Key
- * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
- * @param {function(function(string, function, function))} getBIP38Password Get the BIP38 password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getBIP38Password function if the right or wrong password was entered.
- * @param {function()} success callback function
- * @param {function()} alreadyImportedCallback callback function in case the key already exists in the wallet
- * @param {function()} error callback function
- */
-// used on frontend and iOS
-MyWallet.importPrivateKey = function(privateKeyString, getPassword, getBIP38Password, success, alreadyImportedCallback, error) {
-  function reallyInsertKey(key, compressed, pw) {
-    try {
-      if (WalletStore.legacyAddressExists(key.pub.getAddress().toString()) &&
-          !WalletStore.isWatchOnlyLegacyAddress(key.pub.getAddress().toString())) {
-        alreadyImportedCallback();
-        return;
-      }
-
-      var address = MyWallet.addPrivateKey(key, {compressed : compressed, app_name : APP_NAME, app_version : APP_VERSION}, pw);
-
-      if (!address) {
-        throw 'Unable to add private key for bitcoin address ' + address;
-      }
-
-      MyWallet.backupWallet('update', function() {
-        MyWallet.get_history();
-      });
-
-      success(address);
-    } catch (e) {
-      error(e);
-    }
-  }
-
-  var format;
-  try {
-    format = MyWallet.detectPrivateKeyFormat(privateKeyString);
-  }
-  catch (e) {
-    error(e);
-    return;
-  }
-
-  if (format == 'bip38') {
-    getBIP38Password(function(_password, correct_password, wrong_password) {
-      WalletStore.disableLogout();
-      ImportExport.parseBIP38toECKey(
-        privateKeyString,
-        _password,
-        function(key, isCompPoint) {
-          WalletStore.enableLogout();
-          correct_password();
-          if(WalletStore.getDoubleEncryption()) {
-            getPassword(function(pw, correct_password, wrong_password) {
-              if (MyWallet.validateSecondPassword(pw)) {
-                correct_password();
-                reallyInsertKey(key, isCompPoint, pw);
-              } else {
-                wrong_password();
-                error('Second Password incorrect');
-              }
-            });
-          } else {
-            reallyInsertKey(key, isCompPoint, null);
-          }
-        },
-        function() {
-          WalletStore.disableLogout();
-          wrong_password();
-        },
-        function(e) {
-          WalletStore.enableLogout();
-          error(e);
-        }
-      );
-    });
-
-    return;
-  }
-
-  var key;
-  try {
-    key = MyWallet.privateKeyStringToKey(privateKeyString, format);
-  }
-  catch (e) {
-    error(e);
-    return;
-  }
-
-  if(WalletStore.getDoubleEncryption()) {
-    getPassword(function(pw, correct_password, wrong_password) {
-      if (MyWallet.validateSecondPassword(pw)) {
-        correct_password();
-        reallyInsertKey(key, (format == 'compsipa'), pw);
-      } else {
-        wrong_password();
-        error('Second Password incorrect');
-      }
-    });
-  } else {
-    reallyInsertKey(key, (format == 'compsipa'), null);
-  }
-};
-
-//opts = {compressed, app_name, app_version, created_time}
-// TODO: this can be moved to walletstore
-// used only on sharedcoin.js and wallet.js
+////////////////////////////////////////////////////////////////////////////////
+// TODO :: WALLET SPENDER FIX
+// only used on the Spender (for paytoEmail/Mobile, need a fix)
 MyWallet.addPrivateKey = function(key, opts, second_password) {
   var sharedKey = WalletStore.getSharedKey();
   var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
@@ -552,6 +177,7 @@ MyWallet.addPrivateKey = function(key, opts, second_password) {
 
   return addr;
 };
+
 // used on sharedcoin.js, wallet-spender.js and wallet.js
 MyWallet.generateNewKey = function(_password) {
   var key = Bitcoin.ECKey.makeRandom(true);
@@ -587,6 +213,9 @@ MyWallet.generateNewMiniPrivateKey = function() {
     }
   }
 };
+// TODO :: END WALLET SPENDER FIX
+////////////////////////////////////////////////////////////////////////////////
+
 // used locally
 function wsSuccess(ws) {
   var last_on_change = null;
@@ -608,10 +237,7 @@ function wsSuccess(ws) {
       }
 
     } else if (obj.op == 'utx') {
-      WalletStore.setIsAccountRecommendedFeesValid(false);
-
       var tx = TransactionFromJSON(obj.x);
-
       var tx_processed = MyWallet.processTransaction(tx);
       var tx_account = tx_processed.to.account;
 
@@ -621,11 +247,11 @@ function wsSuccess(ws) {
         if (transactions[key].txIndex == tx.txIndex) return;
       }
 
-      WalletStore.addToFinalBalance(tx_processed.result);
+      MyWallet.wallet.finalBalance += tx_processed.result;
 
-      var account = MyWallet.getAccount(tx_account.index);
 
       if (tx_account) {
+        var account = MyWallet.wallet.hdwallet.accounts[tx_account.index];
         account.balance += tx_processed.result;
 
         // Increase receive address index if this was an incoming transaction using the highest index:
@@ -634,18 +260,15 @@ function wsSuccess(ws) {
           for(i in tx.out) {
             addresses.push(tx.out[i].addr);
           }
-          account.incrementReceiveIndexIfLastIndexIsIncluded(addresses)
+          // TODO: FIX THIS INDEX INCREMENT
+          // account.incrementReceiveIndexIfLastIndexIsIncluded(addresses)
         }
       }
 
-      WalletStore.incNTransactions();
-
+      MyWallet.wallet.numberTx += 1;
       tx.setConfirmations(0);
-
       WalletStore.pushTransaction(tx);
-
       playSound('beep');
-
       WalletStore.sendEvent('on_tx');
 
     }  else if (obj.op == 'block') {
@@ -660,12 +283,9 @@ function wsSuccess(ws) {
           }
         }
       }
-
       WalletStore.setLatestBlock(BlockFromJSON(obj.x));
-
       WalletStore.sendEvent('on_block');
     }
-
   };
 
   ws.onopen = function() {
@@ -673,16 +293,16 @@ function wsSuccess(ws) {
 
     var msg = '{"op":"blocks_sub"}';
 
-    if (WalletStore.getGuid() != null)
-      msg += '{"op":"wallet_sub","guid":"'+WalletStore.getGuid()+'"}';
+    if (MyWallet.wallet.guid != null)
+      msg += '{"op":"wallet_sub","guid":"'+MyWallet.wallet.guid+'"}';
 
     try {
-      var addrs = WalletStore.getLegacyActiveAddresses();
-      for (var key in addrs) {
-        msg += '{"op":"addr_sub", "addr":"'+ addrs[key] +'"}'; //Subscribe to transactions updates through websockets
+      var addrs = MyWallet.wallet.activeAddresses;
+      for (var a of addrs) {
+        msg += '{"op":"addr_sub", "addr":"'+ a +'"}'; //Subscribe to transactions updates through websockets
       }
 
-      if (WalletStore.getHDWallet() != null)
+      if (MyWallet.wallet.isUpgradedToHD)
         MyWallet.listenToHDWalletAccounts();
 
     } catch (e) {
@@ -697,160 +317,7 @@ function wsSuccess(ws) {
 
   };
 }
-// used once locally (wallet.js)
-MyWallet.pkBytesToSipa = function(bytes, addr) {
-  var bytesBigInt = new BigInteger.fromBuffer(bytes);
-  var eckey = new ECKey(bytesBigInt, false);
 
-  bytes = bytesBigInt.toByteArray();
-
-  while (bytes.length < 32) bytes.unshift(0);
-
-  bytes.unshift(0x80); // prepend 0x80 byte
-
-  if (MyWallet.getUnCompressedAddressString(eckey) == addr) {
-  } else if (MyWallet.getCompressedAddressString(eckey) == addr) {
-    bytes.push(0x01);    // append 0x01 byte for compressed format
-  } else {
-    throw 'Private Key does not match bitcoin address' + addr;
-  }
-
-  var checksum = Crypto.SHA256(Crypto.SHA256(bytes, { asBytes: true }), { asBytes: true });
-
-  bytes = bytes.concat(checksum.slice(0, 4));
-
-  var privWif = Base58.encode(new Buffer(bytes));
-
-  return privWif;
-};
-// next 4 functions used only in makeWalletJson
-function noConvert(x) { return x; }
-function base58ToBase58(x) { return WalletCrypto.decryptSecretWithSecondPasswordIfNeeded(x); }
-function base58ToBase64(x) { var bytes = MyWallet.decodePK(x); return Crypto.util.bytesToBase64(bytes); }
-function base58ToHex(x) { var bytes = MyWallet.decodePK(x); return Crypto.util.bytesToHex(bytes); }
-// used only locally in makeWalletJson
-MyWallet.base58ToSipa = function(x, addr) {
-  return MyWallet.pkBytesToSipa(MyWallet.decodePK(x), addr);
-};
-
-/**
- * @param {number} accountIdx index of HD wallet account
- * @return {string} account label
- */
-// used on frontend, iOS and MyWallet
-MyWallet.getLabelForAccount = function(accountIdx) {
-  return WalletStore.getHDWallet().getAccount(accountIdx).label;
-};
-
-/**
- * @param {number} accountIdx index of HD wallet account
- * @param {number} receive address index for the label
- * @return {string} receive address
- */
- // used on frontend
-MyWallet.getReceiveAddressAtIndexForAccount= function(accountIdx, receiveIdx) {
-  return WalletStore.getHDWallet().getAccount(accountIdx).getReceiveAddressAtIndex(receiveIdx);
-};
-
-/**
- * @param {number} accountIdx index of HD wallet account
- * @return {array} of dictionaries with {address: label}
- */
-// used on frontend
-MyWallet.getLabeledReceivingAddressesForAccount = function(accountIdx) {
-  return WalletStore.getHDWallet().getAccount(accountIdx).getLabeledReceivingAddresses();
-}
-
-/**
- * Validates proposed label for account
- * @param {string} label account label
- * @return {boolean} success or not
- */
-// used only locally wallet.js
-MyWallet.validateAccountLabel = function(label) {
-  if (! MyWallet.isAlphaNumericSpace(label))
-    return false;
-
-  if (!label || label == "" || label.length > 17)
-    return false;
-
-  return true;
-};
-
-/**
- * Set label for account and backup wallet.
- * @param {number} accountIdx index of HD wallet account
- * @param {string} label account label
- * @return {boolean} success or not
- */
-// used on iOS, frontend and MyWallet
-MyWallet.setLabelForAccount = function(accountIdx, label) {
-  if (!this.validateAccountLabel(label))
-    return false;
-
-  WalletStore.getHDWallet().getAccount(accountIdx).label = label;
-  MyWallet.backupWalletDelayed();
-  return true;
-};
-
-/**
- * @param {number} accountIdx index of HD wallet account
- * @return {boolean} is account archived
- */
-// used only in frontend
-MyWallet.isArchivedForAccount = function(accountIdx) {
-  return WalletStore.getHDWallet().getAccount(accountIdx).archived;
-};
-
-/**
- * @param {number} accountIdx index of HD wallet account
- * @return {number} balance of account in satoshis
- */
- // used in frontend and iOS
-MyWallet.getBalanceForAccount = function(accountIdx) {
-  var wallet = WalletStore.getHDWallet();
-  var balance = wallet? wallet.getAccount(accountIdx).balance : null;
-  return balance;
-};
-
-/**
- * @param {number} accountIdx index of HD wallet account
- * @return {string} next unused address
- */
- // used in frontend and iOS
-MyWallet.getReceivingAddressForAccount = function(accountIdx) {
-  if (WalletStore.getHDWallet()){
-    return WalletStore.getHDWallet().getAccount(accountIdx).getReceiveAddress();
-  } else{
-    return "";
-  };
-};
-// used in frontend
-MyWallet.getReceivingAddressIndexForAccount = function(accountIdx) {
-  return WalletStore.getHDWallet().getAccount(accountIdx).receiveIndex;
-};
-
-/**
- * @param {number} accountIdx index of HD wallet account
- * @param {number} addressIdx index of address of HD wallet account
- * @param {string} label label
- * @return {string} success or not
- */
- // used only on the frontend
-MyWallet.setLabelForAccountAddress = function(accountIdx, addressIdx, label, success, error) {
-  if (label != "" && ! MyWallet.isAlphaNumericSpace(label)) {
-    error();
-  } else {
-    var account = WalletStore.getHDWallet().getAccount(accountIdx);
-    account.setLabelForAddress(addressIdx, label);
-
-    // Bump receive address count if this was the last index:
-    account.incrementReceiveIndexIfLastIndex(addressIdx);
-
-    MyWallet.backupWalletDelayed();
-    success && success();
-  }
-};
 // used in walletstore and locally wallet.js
 MyWallet.processTransaction = function(tx) {
 
@@ -1062,6 +529,7 @@ MyWallet.calculateTransactionResult = function(transaction) {
 
   return result;
 };
+
 // used on wallet-spender and locally
 MyWallet.getBaseFee = function() {
   var network = Bitcoin.networks.bitcoin;
@@ -1233,7 +701,7 @@ MyWallet.fetchRawTransactionsAndBalanceForAddresses = function(addresses, succes
  // used on the frontend
 MyWallet.fetchMoreTransactionsForLegacyAddresses = function(success, error, didFetchOldestTransaction) {
   function getRawTransactionsForLegacyAddresses(txOffset, numTx, success, error) {
-    var allAddresses = WalletStore.getLegacyActiveAddresses();
+    var allAddresses = MyWallet.wallet.activeAddresses;
 
     BlockchainAPI.async_get_history_with_addresses(allAddresses, function(data) {
       if (success) success(data.txs);
@@ -1267,129 +735,14 @@ MyWallet.fetchMoreTransactionsForLegacyAddresses = function(success, error, didF
     console.log('error ' + e);
   });
 };
-// used on the frontend
-MyWallet.archiveAccount = function(idx) {
-  var account = WalletStore.getHDWallet().getAccount(idx);
-  account.archived = true;
-  MyWallet.backupWalletDelayed();
-};
-
-/**
- * @param {number} accountIdx index of account
- * @param {?function(number)} successcallback success callback function with account balance
- */
- // used on the frontend
-MyWallet.unarchiveAccount = function(idx, successcallback) {
-  var archivedAccount = WalletStore.getHDWallet().getAccount(idx);
-
-  var account = HDAccount.fromExtKey(archivedAccount.extendedPublicKey, archivedAccount.label, idx);
-
-  account.generateCache();
-
-  account.extendedPrivateKey = archivedAccount.extendedPrivateKey;
-  account.extendedPublicKey = archivedAccount.extendedPublicKey;
-
-  WalletStore.getHDWallet().replaceAccount(idx, account);
-
-
-  MyWallet.fetchMoreTransactionsForAccount(idx,function(txs, balance) {
-    account.balance = balance;
-
-    MyWallet.listenToHDWalletAccount(account.extendedPrivateKey);
-
-    if (successcallback) {
-      successcallback(txs);
-    }
-  }, function(error) {
-    console.log("Failed to fetch transactions");
-  }, function() {});
-
-  MyWallet.backupWalletDelayed();
-};
-
-/**
- * @return {Array} Array of HD accounts
- */
- // used locally and iOS
-MyWallet.getAccounts = function() {
-  if (!WalletStore.didUpgradeToHd()) {
-    return [];
-  }
-  return WalletStore.getHDWallet().getAccounts();
-};
-
-/**
- * @param {number} idx of account
- * @return {Object} Account at index
- */
- // only used in the frontend
-MyWallet.getAccount = function(idx) {
-  return WalletStore.getHDWallet().getAccount(idx);
-};
-
-/**
- * @return {Number} Number of HD accounts
- */
- // used in frontend, iOS and locally
-MyWallet.getAccountsCount = function() {
-  if (!WalletStore.didUpgradeToHd()) {
-    return 0;
-  }
-  return WalletStore.getHDWallet().getAccountsCount();
-};
 
 /**
  * @param {string} mnemonic mnemonic
  * @return {boolean} is valid mnemonic
  */
- // used only in the frontend
+ // should be moved to helpers
 MyWallet.isValidateBIP39Mnemonic = function(mnemonic) {
   return BIP39.validateMnemonic(mnemonic);
-};
-
-/**
- * Recover HD wallet from mnemonic by recreating all accounts and querying the balance of all accounts and addresses
- * @param {string} passphrase seed in words
- * @param {?string} bip39Password
- * @param {function()} getPassword
- * @param {function()=} successCallback success callback function
- * @param {function()=} errorCallback error callback function
- */
- // only used on the frontend
-MyWallet.recoverMyWalletHDWalletFromMnemonic = function(passphrase, bip39Password, getPassword, successCallback, errorCallback) {
-  if(bip39Password == undefined || bip39Password == null) {
-    bip39Password = "";
-  }
-
-  function recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, secondPassword, successCallback, errorCallback) {
-    HDWallet.recoverHDWalletFromMnemonic(passphrase, bip39Password, secondPassword, function(hdWallet) {
-      WalletStore.setHDWallet(hdWallet);
-
-      if (successCallback)
-        successCallback();
-
-      MyWallet.backupWalletDelayed('update', function() {
-        MyWallet.get_history();
-      });
-    }, function() {
-      if (errorCallback)
-        errorCallback();
-    });
-  }
-
-  if (WalletStore.getDoubleEncryption()) {
-    getPassword(function(pw, correct_password, wrong_password) {
-      if (MyWallet.validateSecondPassword(pw)) {
-        correct_password();
-        recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, pw, successCallback, errorCallback);
-      } else {
-        wrong_password();
-        errorCallback();
-      }
-    });
-  } else {
-    recoverMyWalletHDWalletFromMnemonic(passphrase, bip39Password, null, successCallback, errorCallback);
-  }
 };
 
 // used only locally (wallet.js)
@@ -1401,164 +754,19 @@ MyWallet.listenToHDWalletAccount = function(accountExtendedPublicKey) {
 };
 // used only once locally
 MyWallet.listenToHDWalletAccounts = function() {
-  for (var i in MyWallet.getAccounts()) {
-    var account = WalletStore.getHDWallet().getAccount(i);
-    if(!account.archived) {
-      var accountExtendedPublicKey = account.extendedPublicKey;
-      MyWallet.listenToHDWalletAccount(accountExtendedPublicKey);
-    }
-  }
-};
-// used locally (wallet.js)
-MyWallet.buildHDWallet = function(seedHexString, accountsArrayPayload, bip39Password, secondPassword, successCallback, errorCallback) {
-  assert.notEqual(seedHexString, undefined, "Seed hex string required");
-  assert.notEqual(seedHexString, null, "Seed hex string required");
-  assert(accountsArrayPayload, "Accounts payload missing");
-
-  var _success = function(hdWallet) {
-    WalletStore.setHDWallet(hdWallet);
-    successCallback && successCallback(hdWallet);
+  if (Blockchain.MyWallet.wallet.isUpgradedToHD) {
+    var listen = function(a) { MyWallet.listenToHDWalletAccount(a.extendedPublicKey); }
+    MyWallet.wallet.hdwallet.activeAccounts.forEach(listen);
   };
-
-  HDWallet.buildHDWallet(seedHexString, accountsArrayPayload, bip39Password, secondPassword, _success, errorCallback);
-};
-// used locally once
-MyWallet.generateHDWalletPassphrase = function() {
-  return BIP39.generateMnemonic();
-};
-// used locally once
-MyWallet.generateHDWalletSeedHex = function() {
-  var passPhrase = MyWallet.generateHDWalletPassphrase();
-  return BIP39.mnemonicToEntropy(passPhrase);
-};
-// @if !PRODUCTION
-// [NOT USED]
-MyWallet.deleteHDWallet = function(successCallback, errorCallback) {
-  if(WalletStore.getHDWallet == undefined || WalletStore.getHDWallet() == null) {
-    if (successCallback)
-      successCallback();
-    return;
-  }
-  WalletStore.setHDWallet(null);
-  MyWallet.backupWallet('update', function() {
-    if (successCallback)
-      successCallback();
-  }, function() {
-    if (errorCallback)
-      errorCallback();
-  });
-};
-// @endif
-/**
- * Upgrade legacy wallet to HD wallet.
- * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
- * @param {?function()=} success Success callback function.
- * @param {?function()=} error Error callback function.
- */
- // used on iOS and frontend
-MyWallet.upgradeToHDWallet = function(firstAccountName, getPassword, success, error) {
-  if (WalletStore.didUpgradeToHd()) {
-    success && success();
-    return;
-  }
-
-  var _success = function() {
-    MyWallet.backupWalletDelayed('update');
-
-    success && success();
-  };
-
-  var _error = function () {
-    error && error();
-  };
-
-  MyWallet.initializeHDWallet(null, "", firstAccountName, getPassword, _success, _error);
 };
 
-/**
- * Initialize HD wallet and create "My Bitcoin Wallet" account.
- * @param {?string} passphrase HD passphrase to generate the seed. If null, a seed will be generated.
- * @param {?string} bip39Password Password to protect the seed when generating seed from mnemonic.
- * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
- * @param {function()} success Success callback function.
- * @param {function()} error Error callback function.
- */
- // used on MyWallet
-MyWallet.initializeHDWallet = function(passphrase, bip39Password, firstAccountName, getPassword, success, error)  {
-  function initializeHDWallet(passphrase, bip39Password, second_password, success, error) {
-    WalletStore.setDidUpgradeToHd(true);
-    var seedHexString;
-
-    if (passphrase) {
-      seedHexString = BIP39.mnemonicToEntropy(passphrase);
-    }
-    else {
-      seedHexString = MyWallet.generateHDWalletSeedHex();
-    }
-
-    var _success = function () {
-      if(firstAccountName == undefined) {
-        firstAccountName = "My Bitcoin Wallet";
-      }
-      var account = WalletStore.getHDWallet().createAccount(firstAccountName, second_password);
-
-      account.balance = 0;
-
-      MyWallet.listenToHDWalletAccount(account.extendedPublicKey);
-
-      success();
-    };
-
-    MyWallet.buildHDWallet(seedHexString, [], bip39Password, second_password, _success, error);
-  }
-
-  if (WalletStore.getDoubleEncryption()) {
-    getPassword(function(pw, correct_password, wrong_password) {
-      if (MyWallet.validateSecondPassword(pw)) {
-        correct_password();
-        initializeHDWallet(passphrase, bip39Password, pw, success, error);
-      } else {
-        wrong_password();
-        error();
-      }
-    });
-
-  } else {
-    initializeHDWallet(passphrase, bip39Password, null,  success, error);
-  }
-};
-
-/**
- * @param {function(function(string, function, function))} getPassword Get the second password: takes one argument, the callback function, which is called with the password and two callback functions to inform the getPassword function if the right or wrong password was entered.
- * @param {function(string)} success Callback with the passphrase
- * @param {function(string)} error Callback with reason for failure
- */
- // used on the frontend
-MyWallet.getHDWalletPassphraseString = function(getPassword, successCallback, errorCallback) {
-  if (WalletStore.getDoubleEncryption()) {
-    getPassword(function(pw, correct_password, incorrect_password) {
-      if (MyWallet.validateSecondPassword(pw)) {
-        correct_password();
-        var seed = WalletCrypto.decryptSecretWithSecondPassword(MyWallet.wallet.hdwallet.seedHex, pw, WalletStore.getSharedKey(), WalletStore.getPbkdf2Iterations());
-        successCallback(MyWallet.wallet.getMnemonic());
-      } else {
-        incorrect_password();
-        errorCallback();
-      }
-    });
-  } else {
-    var seed = MyWallet.wallet.hdwallet.seedHex;
-    successCallback(
-      MyWallet.wallet.getMnemonic()
-    );
-  }
-};
 
 /**
  * @param {string} candidate candidate address
  * @return {boolean} is valid address
  */
- // used on wallet-store, frontend and iOS
+ // TODO: This should be a helper
+ // used on wallet-store, frontend and iOS,
 MyWallet.isValidAddress = function(candidate) {
   try {
     Bitcoin.Address.fromBase58Check(candidate);
@@ -1573,6 +781,7 @@ MyWallet.isValidAddress = function(candidate) {
  * @return {boolean} is valid PrivateKey
  */
  // used on the frontend
+ // TODO: this should be a helper
 MyWallet.isValidPrivateKey = function(candidate) {
   try {
     var format = MyWallet.detectPrivateKeyFormat(candidate);
@@ -1583,154 +792,22 @@ MyWallet.isValidPrivateKey = function(candidate) {
     return false;
   }
 };
-// used locally
-MyWallet.makeWalletJSON = function(format) {
-  return MyWallet.makeCustomWalletJSON(format, WalletStore.getGuid(), WalletStore.getSharedKey());
-};
-// used on signup.js and locally
-MyWallet.makeCustomWalletJSON = function(format, guid, sharedKey) {
 
-  var encode_func = noConvert;
-
-  if (format == 'base64')
-    encode_func = base58ToBase64;
-  else if (format == 'hex')
-    encode_func = base58ToHex;
-  else if (format == 'sipa')
-    encode_func = MyWallet.base58ToSipa;
-  else if (format == 'base58')
-    encode_func = base58ToBase58;
-
-  var out = '{\n  "guid" : "'+guid+'",\n  "sharedKey" : "'+sharedKey+'",\n';
-
-  if (WalletStore.getDoubleEncryption() && WalletStore.getDPasswordHash() != null && encode_func == noConvert) {
-    out += '  "double_encryption" : '+WalletStore.getDoubleEncryption()+',\n  "dpasswordhash" : "'+WalletStore.getDPasswordHash()+'",\n';
-  }
-
-  if (WalletStore.getWalletOptions()) {
-    out += '  "options" : ' + JSON.stringify(WalletStore.getWalletOptions())+',\n';
-  }
-
-  out += '  "keys" : [\n';
-
-  var atLeastOne = false;
-
-  //TODO: this probably needs to be a small addressesToJSON
-  // This functions should be divided in small converters and then composed
-  var addresses = WalletStore.getAddresses();
-  for (var key in addresses) {
-    var addr = $.extend({}, addresses[key]);
-
-    if (addr.tag == 1) {
-      delete addr.tag;
-    }
-
-    if (addr.priv != null) {
-      addr.priv = encode_func(addr.priv, addr.addr);
-    }
-
-    //Delete null values
-    for (var i in addr) {
-      if (addr[i] === null || addr[i] === undefined) {
-        delete addr[i];
-      }
-    }
-
-    //balance property should not be saved
-    delete addr.balance;
-
-    out += '    ' + JSON.stringify(addr) + ',\n';
-
-    atLeastOne = true;
-  }
-
-  if (atLeastOne) {
-    out = out.substring(0, out.length-2);
-  }
-
-  out += "\n  ]";
-
-
-  if (nKeys(WalletStore.getAddressBook()) > 0) {
-    out += ',\n  "address_book" : [\n';
-
-    for (var key in WalletStore.getAddressBook()) {
-      out += '    {"addr" : "'+ key +'",\n';
-      out += '     "label" : "'+ WalletStore.getAddressBookLabel(key) + '"},\n';
-    }
-
-    //Remove the extra comma
-    out = out.substring(0, out.length-2);
-
-    out += "\n  ]";
-  }
-
-  if (nKeys(WalletStore.getNotes()) > 0) {
-    out += ',\n  "tx_notes" : ' + JSON.stringify(WalletStore.getNotes());
-  }
-
-  if (nKeys(WalletStore.getAllTags()) > 0) {
-    out += ',\n  "tx_tags" : ' + JSON.stringify(WalletStore.getAllTags());
-  }
-
-  if (WalletStore.getTagNames() != null) {
-    out += ',\n  "tag_names" : ' + JSON.stringify(WalletStore.getTagNames());
-  }
-
-  if (WalletStore.getHDWallet() != null) {
-
-    out += ',\n  "hd_wallets" : [\n';
-
-    out += '    {\n';
-    out += '      "seed_hex" : "'+ MyWallet.wallet.hdwallet.seedHex +'",\n';
-    out += '      "passphrase" : "'+ WalletStore.getHDWallet().getBip39Password() +'",\n';
-    out += '      "mnemonic_verified" : '+ WalletStore.isMnemonicVerified() +',\n';
-    out += '      "default_account_idx" : '+ WalletStore.getDefaultAccountIndex() +',\n';
-    if (WalletStore.getPaidToDictionary() != null) {
-      out += '      "paidTo" : ' + JSON.stringify(WalletStore.getPaidToDictionary()) +',\n';
-    }
-
-    out += '      "accounts" : [\n';
-
-    for (var i in MyWallet.getAccounts()) {
-      var account = WalletStore.getHDWallet().getAccount(i);
-
-      var accountJsonData = account.getAccountJsonData();
-      out += '        ' + JSON.stringify(accountJsonData);
-      if (i < MyWallet.getAccountsCount() - 1) {
-        out += ",\n";
-      }
-    }
-    out += "\n      ]";
-    out += '\n    }';
-
-    out += "\n  ]";
-  }
-
-  out += '\n}';
-
-  return out;
-};
 // used on MyWallet
 MyWallet.get_history_with_addresses = function(addresses, success, error) {
   BlockchainAPI.get_history_with_addresses(addresses, function(data) {
     if (success) success(data);
   }, function() {
     if (error) error();
-
   }, 0, 0, 30);
 };
 // used on myWallet and iOS
 MyWallet.get_history = function(success, error) {
   BlockchainAPI.get_history(function(data) {
-
     parseMultiAddressJSON(data, false, false);
-
     success && success();
-
   }, function() {
     error && error();
-
   }, 0, 0, 30);
 };
 // used on wallet-store and locally (wallet.js)
@@ -1806,8 +883,6 @@ function parseMultiAddressJSON(obj, cached, checkCompleted) {
     };
   };
   obj.addresses.forEach(updateAccountAndAddressesInfo);
-
-  WalletStore.setIsAccountRecommendedFeesValid(false);
   for (var i = 0; i < obj.txs.length; ++i) {
     var tx = TransactionFromJSON(obj.txs[i]);
     WalletStore.pushTransaction(tx);
@@ -1825,9 +900,7 @@ function didDecryptWallet(success) {
 
   //We need to check if the wallet has changed
   MyWallet.getWallet();
-
   WalletStore.resetLogoutTimeout();
-
   success();
 }
 
@@ -1910,16 +983,14 @@ MyWallet.getWallet = function(success, error) {
 // copy of internalRestoreWallet
 
 function decryptAndInitializeWallet(success, error, decrypt_success, build_hd_success) {
-  // assert(success, 'Success callback required');
-  // assert(error, 'Error callback required');
-
+  assert(success, 'Success callback required');
+  assert(error, 'Error callback required');
   var encryptedWalletData = WalletStore.getEncryptedWalletData();
 
   if (encryptedWalletData == null || encryptedWalletData.length == 0) {
     error('No Wallet Data To Decrypt');
     return;
   }
-
   WalletCrypto.decryptWallet(
     encryptedWalletData,
     WalletStore.getPassword(),
@@ -1927,87 +998,23 @@ function decryptAndInitializeWallet(success, error, decrypt_success, build_hd_su
       decrypt_success && decrypt_success();
       MyWallet.wallet = new Wallet(obj);
 
-      // WalletStore.setSharedKey(obj.sharedKey);
-      // var sharedKey = WalletStore.getSharedKey();
-
       // this sanity check should be done on the load
       // if (!sharedKey || sharedKey.length == 0 || sharedKey.length != 36) {
       //   throw 'Shared Key is invalid';
       // }
 
-      // I should see what happens with pbkdf2 iterations
+      // TODO: pbkdf2 iterations should be stored correctly on wallet wrapper
       if (rootContainer) {
         WalletStore.setPbkdf2Iterations(rootContainer.pbkdf2_iterations);
       }
-
-      // if (obj.double_encryption && obj.dpasswordhash) {
-      //   WalletStore.setDoubleEncryption(obj.double_encryption);
-      //   WalletStore.setDPasswordHash(obj.dpasswordhash);
-      // }
-
-      // if (obj.options) {
-      //   $.extend(WalletStore.getWalletOptions(), obj.options);
-      // }
-
-      // WalletStore.newLegacyAddressesFromJSON(obj.keys);
-
-      // WalletStore.newAddressBookFromJSON(obj.address_book);
-
-      // if (obj.hd_wallets && obj.hd_wallets.length > 0) {
-      //   WalletStore.setDidUpgradeToHd(true);
-      // };
-      //   if (!WalletStore.isHaveBuildHDWallet()) {
-      //     // We're not passing a bip39 or second password
-      //     MyWallet.buildHDWallet(
-      //       defaultHDWallet.seed_hex,
-      //       defaultHDWallet.accounts,
-      //       defaultHDWallet.passphrase || "",
-      //       undefined,
-      //       build_hd_success,
-      //       function() {console.log("Error");}
-      //     );
-
-      //     WalletStore.setHaveSetServerTime(true);
-      //   }
-
-      //   if (defaultHDWallet.mnemonic_verified) {
-      //     WalletStore.setMnemonicVerified(defaultHDWallet.mnemonic_verified);
-      //   } else {
-      //     WalletStore.setMnemonicVerified(false);
-      //   }
-
-      //   WalletStore.setDefaultAccountIndex(defaultHDWallet.default_account_idx);
-
-      //   if (defaultHDWallet.paidTo != null) {
-      //     WalletStore.setPaidTo(defaultHDWallet.paidTo);
-      //     MyWallet.checkForRecentlyRedeemed(defaultHDWallet.paidTo);
-      //   }
-
-      // } else {
-      //   WalletStore.setDidUpgradeToHd(false);
-      //   WalletStore.sendEvent('hd_wallets_does_not_exist');
-      // }
-
-      // if (obj.tx_notes) {
-      //   for (var tx_hash in obj.tx_notes) {
-      //     var note = obj.tx_notes[tx_hash];
-      //     WalletStore.initializeNote(tx_hash, note);
-      //   }
-      // }
-
-      // WalletStore.setTags(obj.tx_tags);
-      // WalletStore.setTagNames(obj.tag_names);
-
       //If we don't have a checksum then the wallet is probably brand new - so we can generate our own
       if (WalletStore.getPayloadChecksum() == null || WalletStore.getPayloadChecksum().length == 0) {
         WalletStore.setPayloadChecksum(WalletStore.generatePayloadChecksum());
       }
-
       if (MyWallet.wallet.isUpgradedToHD === false) {
         WalletStore.sendEvent('hd_wallets_does_not_exist');
       };
       setIsInitialized();
-
       success();
     },
     error
@@ -2070,13 +1077,6 @@ MyWallet.resendTwoFactorSms = function(user_guid, success, error) {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-// modified version of fetchWalletJSON for the new model
-// Jaume: FrontEndBranch: wallet-hd-refactored
-// copy of fetchWalletJson
-
 MyWallet.login = function ( user_guid
                           , inputedPassword
                           , twoFACode
@@ -2134,7 +1134,6 @@ MyWallet.login = function ( user_guid
 
         if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
         } else {
-          WalletStore.setDidSetGuid();
           needs_two_factor_code(obj.auth_type);
           return;
         }
@@ -2218,9 +1217,6 @@ MyWallet.login = function ( user_guid
     if (obj.language && WalletStore.getLanguage() != obj.language) {
      WalletStore.setLanguage(obj.language);
     }
-
-    WalletStore.setDidSetGuid();
-
     MyWallet.initializeWallet(inputedPassword, success, other_error, decrypt_success, build_hd_success);
   }
 
@@ -2230,17 +1226,12 @@ MyWallet.login = function ( user_guid
     tryToFetchWalletWith2FA(user_guid, twoFACode, didFetchWalletJSON)
   }
 };
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
 // used locally
 MyWallet.pollForSessionGUID = function(successCallback) {
 
   if (WalletStore.isPolling()) return;
-
   WalletStore.setIsPolling(true);
 
   $.ajax({
@@ -2258,7 +1249,6 @@ MyWallet.pollForSessionGUID = function(successCallback) {
       if (obj.guid) {
 
         WalletStore.setIsPolling(false);
-
         WalletStore.sendEvent("msg", {type: "success", message: 'Authorization Successful'});
         successCallback()
       } else {
@@ -2283,8 +1273,8 @@ MyWallet.pollForSessionGUID = function(successCallback) {
 // copy of restoreWallet
 
 MyWallet.initializeWallet = function(pw, success, other_error, decrypt_success, build_hd_success) {
-  // assert(success, 'Success callback required');
-  // assert(other_error, 'Error callback required');
+  assert(success, 'Success callback required');
+  assert(other_error, 'Error callback required');
   if (isInitialized || WalletStore.isRestoringWallet()) {
     return;
   }
@@ -2298,17 +1288,13 @@ MyWallet.initializeWallet = function(pw, success, other_error, decrypt_success, 
   }
 
   WalletStore.setRestoringWallet(true);
-
-  // jaume: this should be stored in the encryptedWallet object
   WalletStore.unsafeSetPassword(pw);
-
   var encryptedWalletData = WalletStore.getEncryptedWalletData();
 
   decryptAndInitializeWallet(
     function() {
       WalletStore.setRestoringWallet(false);
-      // didDecryptWallet(success);
-      success();
+      didDecryptWallet(success);
     }
     , _error
     , decrypt_success
@@ -2327,11 +1313,9 @@ MyWallet.getIsInitialized = function() {
 // used once
 function setIsInitialized() {
   if (isInitialized) return;
-
   webSocketConnect(wsSuccess);
-
   isInitialized = true;
-}
+};
 
 // used on iOS
 MyWallet.connectWebSocket = function() {
@@ -2430,124 +1414,6 @@ function syncWallet (successcallback, errorcallback) {
 };
 MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500);
 ////////////////////////////////////////////////////////////////////////////////
-
-//Can call multiple times in a row and it will backup only once after a certain delay of activity
-// used on mywallet and frontend
-MyWallet.backupWalletDelayed = function(method, success, error, extra) {
-  var sharedKey = WalletStore.getSharedKey();
-  if (!sharedKey || sharedKey.length == 0 || sharedKey.length != 36) {
-    throw 'Cannot backup wallet now. Shared key is not set';
-  }
-
-  WalletStore.disableLogout();
-  WalletStore.setIsSynchronizedWithServer(false);
-  WalletStore.clearArchTimer();
-
-  var at = setTimeout(
-    function (){
-      MyWallet.backupWallet(method, success, error, extra);
-    }
-    , 3000);
-  WalletStore.setArchTimer(at);
-};
-
-//Save the javascript wallet to the remote server
-// used on frontend, iOS and mywallet
-MyWallet.backupWallet = function(method, successcallback, errorcallback) {
-
-  var sharedKey = WalletStore.getSharedKey();
-  if (!sharedKey || sharedKey.length == 0 || sharedKey.length != 36) {
-    throw 'Cannot backup wallet now. Shared key is not set';
-  }
-
-  WalletStore.disableLogout();
-  WalletStore.clearArchTimer();
-
-  var _errorcallback = function(e) {
-    WalletStore.sendEvent('on_backup_wallet_error');
-
-    WalletStore.sendEvent("msg", {type: "error", message: 'Error Saving Wallet: ' + e});
-
-    // Re-fetch the wallet from server
-    MyWallet.getWallet();
-
-    errorcallback && errorcallback(e);
-  };
-
-  try {
-    if (method == null) {
-      method = 'update';
-    }
-    var data = MyWallet.makeWalletJSON();
-    //Everything looks ok, Encrypt the JSON output
-    var crypted = WalletCrypto.encryptWallet( data
-                                              , WalletStore.getPassword()
-                                              , WalletStore.getPbkdf2Iterations()
-                                              , WalletStore.didUpgradeToHd() ?  3.0 : 2.0 );
-
-    if (crypted.length == 0) {
-      throw 'Error encrypting the JSON output';
-    }
-
-    //Now Decrypt the it again to double check for any possible corruption
-    WalletCrypto.decryptWallet(crypted, WalletStore.getPassword(), function(obj) {
-      try {
-        var old_checksum = WalletStore.getPayloadChecksum();
-        WalletStore.sendEvent('on_backup_wallet_start');
-
-        WalletStore.setEncryptedWalletData(crypted);
-
-        var new_checksum = WalletStore.getPayloadChecksum();
-
-        var data =  {
-          length: crypted.length,
-          payload: crypted,
-          checksum: new_checksum,
-          old_checksum : old_checksum,
-          method : method,
-          format : 'plain',
-          language : WalletStore.getLanguage()
-        };
-
-        if (WalletStore.isSyncPubKeys()) {
-          data.active = WalletStore.getLegacyActiveAddresses().join('|');
-        }
-
-        MyWallet.securePost("wallet", data, function(data) {
-          checkWalletChecksum(new_checksum,
-                              function() {
-                                WalletStore.tagLegacyAddressesAsSaved();
-
-                                if (successcallback != null)
-                                  successcallback();
-
-                                WalletStore.setIsSynchronizedWithServer(true);
-                                WalletStore.enableLogout();
-                                WalletStore.resetLogoutTimeout();
-                                WalletStore.sendEvent('on_backup_wallet_success');
-                              },
-                              function() {
-                                _errorcallback('Checksum Did Not Match Expected Value');
-                                WalletStore.enableLogout();
-                              });
-        }, function(e) {
-          _errorcallback(e.responseText);
-          WalletStore.enableLogout();
-        });
-      } catch (e) {
-        _errorcallback(e);
-        WalletStore.enableLogout();
-      };
-    },
-                               function(e) {
-                                 console.log(e);
-                                 throw("Decryption failed");
-                               });
-  } catch (e) {
-    _errorcallback(e);
-    WalletStore.enableLogout();
-  }
-};
 // used mainly on blockchain API
 MyWallet.handleNTPResponse = function(obj, clientTime) {
   //Calculate serverTimeOffset using NTP alog
@@ -2566,7 +1432,6 @@ MyWallet.handleNTPResponse = function(obj, clientTime) {
       WalletStore.setHaveSetServerTime();
       MyStore.put('server_time_offset', ''+WalletStore.getServerTimeOffset());
     }
-
     console.log('Server Time offset ' + WalletStore.getServerTimeOffset() + 'ms - This offset ' + thisOffset);
   }
 };
@@ -2598,143 +1463,62 @@ MyWallet.signMessage = function(address, message) {
 };
 
 /**
- * @param {string} input second password
- * @return {boolean} whether input matches set second password
- */
- // used in the frontend
-MyWallet.isCorrectSecondPassword = function(input) {
-  if (! WalletStore.getDoubleEncryption()) {
-    throw 'No second password set';
-  }
-
-  var thash = CryptoJS.SHA256(WalletStore.getSharedKey() + input);
-
-  var password_hash = hashPassword(thash, WalletStore.getPbkdf2Iterations()-1);  //-1 because we have hashed once in the previous line
-
-  if (password_hash == WalletStore.getDPasswordHash()) {
-    return true;
-  }
-
-  return false;
-};
-
-/**
- * @param {string} input second password
- * @return {boolean} whether input matches second password
- */
- // used on mywallet and iOS
-MyWallet.validateSecondPassword = function(input) {
-  var thash = CryptoJS.SHA256(WalletStore.getSharedKey() + input);
-
-  var password_hash = hashPassword(thash, WalletStore.getPbkdf2Iterations()-1);  //-1 because we have hashed once in the previous line
-
-  if (password_hash == WalletStore.getDPasswordHash()) {
-    return true;
-  }
-
-  //Try 10 rounds
-  if (WalletStore.getPbkdf2Iterations() != 10) {
-    var iter_10_hash = hashPassword(thash, 10-1);  //-1 because we have hashed once in the previous line
-
-    if (iter_10_hash == WalletStore.getDPasswordHash()) {
-      // dpassword = input;
-      WalletStore.setDPasswordHash(password_hash);
-      return true;
-    }
-  }
-
-  /*
-   //disable old crypto stuff
-   //Otherwise try SHA256 + salt
-   if (Crypto.util.bytesToHex(thash) == dpasswordhash) {
-   dpasswordhash = password_hash;
-   return true;
-   }
-
-   //Legacy as I made a bit of a mistake creating a SHA256 hash without the salt included
-   var leghash = Crypto.SHA256(input);
-
-   if (leghash == dpasswordhash) {
-   dpasswordhash = password_hash;
-   return true;
-   }
-   //*/
-
-  return false;
-};
-
-/**
  * Check the integrity of all keys in the wallet
  * @param {string?} second_password Second password to decrypt private keys if set
  */
- // used locally (wallet.js)
-MyWallet.checkAllKeys = function(second_password) {
-
-  var sharedKey = WalletStore.getSharedKey();
-  var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
-
-  // TODO: this probably can be abstracted too in WalletStore
-  var addresses = WalletStore.getAddresses();
-
-  for (var key in addresses) {
-    var addr = addresses[key];
-
-    if (addr.address == null) {
-      console.log('Null Address Found in wallet ' + key);
-      throw 'Null Address Found in wallet ' + key;
-    }
-
-    //Will throw an exception if the checksum does not validate
-    if (addr.address.toString() == null) {
-      console.log('Error decoding wallet address ' + addr.address);
-      throw 'Error decoding wallet address ' + addr.address;
-    }
-
-    if (addr.priv != null) {
-      var decryptedpk;
-
-      if(addr.priv == null || second_password == null) {
-        decryptedpk = addr.priv;
-      } else {
-        decryptedpk = WalletCrypto.decryptSecretWithSecondPassword(addr.priv, second_password, sharedKey, pbkdf2_iterations);
-      }
-
-      var decodedpk = MyWallet.B58LegacyDecode(decryptedpk);
-
-      var privatekey = new ECKey(new BigInteger.fromBuffer(decodedpk), false);
-
-      var actual_addr = MyWallet.getUnCompressedAddressString(privatekey);
-      if (actual_addr != addr.address && MyWallet.getCompressedAddressString(privatekey) != addr.address) {
-        console.log('Private key does not match bitcoin address ' + addr.address + " != " + actual_addr);
-        throw 'Private key does not match bitcoin address ' + addr.address + " != " + actual_addr;
-      }
-
-      if (second_password != null) {
-        addr.priv = WalletCrypto.encryptSecretWithSecondPassword(decryptedpk, second_password, sharedKey, pbkdf2_iterations);
-      }
-    }
-  }
-
-  for (var i in MyWallet.getAccounts()) {
-    var account = WalletStore.getHDWallet().getAccount(i);
-
-    var decryptedpk;
-    if(account.extendedPrivateKey == null || second_password == null) {
-      decryptedpk = account.extendedPrivateKey;
-    } else {
-      decryptedpk = WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password, sharedKey, pbkdf2_iterations);
-    }
-
-    try {
-      var hdWalletAccount = HDAccount.fromExtKey(decryptedpk);
-    } catch (e) {
-      console.log('Invalid extended private key');
-      throw 'Invalid extended private key';
-    }
-  }
-
-  WalletStore.sendEvent("msg", {type: "success", message: 'wallet-success ' + 'Wallet verified.'});
-};
+ // used locally (wallet.js) - TODO: write a better sanity check
+// MyWallet.checkAllKeys = function(second_password) {
+//   var sharedKey = WalletStore.getSharedKey();
+//   var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
+//   // TODO: this probably can be abstracted too in WalletStore
+//   var addresses = WalletStore.getAddresses();
+//   for (var key in addresses) {
+//     var addr = addresses[key];
+//     if (addr.address == null) {
+//       console.log('Null Address Found in wallet ' + key);
+//       throw 'Null Address Found in wallet ' + key;
+//     }
+//     //Will throw an exception if the checksum does not validate
+//     if (addr.address.toString() == null) {
+//       console.log('Error decoding wallet address ' + addr.address);
+//       throw 'Error decoding wallet address ' + addr.address;
+//     }
+//     if (addr.priv != null) {
+//       var decryptedpk;
+//       if(addr.priv == null || second_password == null) {
+//         decryptedpk = addr.priv;
+//       } else {
+//         decryptedpk = WalletCrypto.decryptSecretWithSecondPassword(addr.priv, second_password, sharedKey, pbkdf2_iterations);
+//       }
+//       var decodedpk = MyWallet.B58LegacyDecode(decryptedpk);
+//       var privatekey = new ECKey(new BigInteger.fromBuffer(decodedpk), false);
+//       var actual_addr = MyWallet.getUnCompressedAddressString(privatekey);
+//       if (actual_addr != addr.address && MyWallet.getCompressedAddressString(privatekey) != addr.address) {
+//         console.log('Private key does not match bitcoin address ' + addr.address + " != " + actual_addr);
+//         throw 'Private key does not match bitcoin address ' + addr.address + " != " + actual_addr;
+//       }
+//       if (second_password != null) {
+//         addr.priv = WalletCrypto.encryptSecretWithSecondPassword(decryptedpk, second_password, sharedKey, pbkdf2_iterations);
+//       }
+//     }
+//   }
+//   for (var i in MyWallet.getAccounts()) {
+//     var account = WalletStore.getHDWallet().getAccount(i);
+//     var decryptedpk;
+//     if(account.extendedPrivateKey == null || second_password == null) {
+//       decryptedpk = account.extendedPrivateKey;
+//     } else {
+//       decryptedpk = WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, second_password, sharedKey, pbkdf2_iterations);
+//     }
+//     try {
+//       var hdWalletAccount = HDAccount.fromExtKey(decryptedpk);
+//     } catch (e) {
+//       console.log('Invalid extended private key');
+//       throw 'Invalid extended private key';
+//     }
+//   }
+//   WalletStore.sendEvent("msg", {type: "success", message: 'wallet-success ' + 'Wallet verified.'});
+// };
 
 /**
  * @param {string} inputedEmail user email
@@ -2792,16 +1576,16 @@ MyWallet.logout = function(force) {
   }
 };
 // used once
+// TODO : should be a helper
 function parseMiniKey(miniKey) {
   var check = Bitcoin.crypto.sha256(miniKey + "?");
-
   if (check[0] !== 0x00) {
     throw 'Invalid mini key';
   }
-
   return Bitcoin.crypto.sha256(miniKey);
 }
 // used locally and iOS
+// should be a helper
 MyWallet.detectPrivateKeyFormat = function(key) {
   // 51 characters base58, always starts with a '5'
   if (/^5[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/.test(key))
@@ -2839,10 +1623,11 @@ MyWallet.detectPrivateKeyFormat = function(key) {
 
   console.error('Unknown Key Format ' + key);
 };
-
+// should be a helper
 function buffertoByteArray(value) {
   return BigInteger.fromBuffer(value).toByteArray();
 }
+// should be a helper
 // used locally and wallet-spender.js
 MyWallet.privateKeyStringToKey = function(value, format) {
   var key_bytes = null;
@@ -2877,6 +1662,7 @@ MyWallet.privateKeyStringToKey = function(value, format) {
   return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format == 'compsipa'));
 };
 // used once
+// should be a helper
 function parseValueBitcoin(valueString) {
   var valueString = valueString.toString();
   // TODO: Detect other number formats (e.g. comma as decimal separator)
@@ -2890,8 +1676,6 @@ function parseValueBitcoin(valueString) {
   value = value.add(BigInteger.valueOf(parseInt(fractionalPart)));
   return value;
 }
-
-//user precision (e.g. BTC or mBTC) to satoshi big int
 // used iOS and mywallet
 MyWallet.precisionToSatoshiBN = function(x) {
   return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, sShift(symbol_btc)).toString()));
