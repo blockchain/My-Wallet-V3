@@ -30,9 +30,9 @@ MyWallet.wallet = undefined;
 // used on MyWallet
 MyWallet.securePost = function(url, data, success, error) {
   var clone = $.extend({}, data);
-  var sharedKey = MyWallet.wallet.sharedKey;
 
   if (!data.sharedKey) {
+    var sharedKey = MyWallet.wallet ? MyWallet.wallet.sharedKey : undefined;
     if (!sharedKey || sharedKey.length == 0 || sharedKey.length != 36) {
       throw 'Shared key is invalid';
     }
@@ -1116,11 +1116,11 @@ MyWallet.fetchMoreTransactionsForAccount = function(accountIdx, success, error, 
       , 0, txOffset, numTx);
   }
 
-  console.log("calling fetchMoreTransactionsForAccount on wallet.js");
   var account = MyWallet.wallet.hdwallet.accounts[accountIdx];
+  var numTxFetch = account ? account.numTxFetched : 0;
   getRawTransactionsForAccount(
       accountIdx
-    , account.numTxFetched
+    , numTxFetch
     , WalletStore.getNumOldTxsToFetchAtATime()
     , function(data) {
         var pTx = data.txs.map(MyWallet.processTransaction.compose(TransactionFromJSON));
@@ -2747,11 +2747,12 @@ MyWallet.checkAllKeys = function(second_password) {
  // used on mywallet, iOS and frontend
 MyWallet.createNewWallet = function(inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, success, error) {
   WalletSignup.generateNewWallet(inputedPassword, inputedEmail, firstAccountName, function(createdGuid, createdSharedKey, createdPassword) {
-    MyStore.clear();
+
     if (languageCode)
       WalletStore.setLanguage(languageCode);
 
     WalletStore.setSharedKey(createdSharedKey);
+    WalletStore.unsafeSetPassword(createdPassword);
 
     success(createdGuid, createdSharedKey, createdPassword);
   }, function (e) {

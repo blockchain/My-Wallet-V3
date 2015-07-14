@@ -232,8 +232,8 @@ Wallet.prototype.toJSON = function(){
     // tx_tags           : this._tx_tags,
     tx_names          : this._tx_names,
     keys              : this.keys,
-    hd_wallets        : this._hd_wallets,
-    paidTo            : this._paidTo
+    paidTo            : this._paidTo,
+    hd_wallets        : this._hd_wallets
   };
   return wallet;
 };
@@ -425,6 +425,30 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
   return newHDwallet;
 };
 
+// creating a new wallet object
+Wallet.new = function(guid, sharedKey, firstAccountLabel, success){
+  var object = {
+    guid              : guid,
+    sharedKey         : sharedKey,
+    double_encryption : false,
+    options: {
+      pbkdf2_iterations  : 5000,
+      fee_policy         : 0,
+      html5_notifications: false,
+      logout_time        : 600000
+    }
+  };
+  var newWallet   = new Wallet(object);
+  var newHDwallet = HDWallet.new();
+  newWallet._hd_wallets.push(newHDwallet);
+  var label = firstAccountLabel ? firstAccountLabel : "My Bitcoin Wallet";
+  newWallet.newAccount(label, null, newWallet._hd_wallets.length-1);
+  MyWallet.wallet = newWallet;
+  // MyWallet.syncWallet();
+  success(newWallet);
+};
+
+// adding and hd wallet to an existing wallet
 Wallet.prototype.newHDWallet = function(firstAccountLabel, pw){
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
   var newHDwallet = HDWallet.new(encoder);

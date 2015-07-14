@@ -8,6 +8,7 @@ var MyWallet = require('./wallet');
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var BlockchainAPI = require('./blockchain-api');
+var Wallet = require('./blockchain-wallet');
 
 
 // Save the javascript wallet to the remote server
@@ -16,21 +17,23 @@ function insertWallet(guid, sharedKey, password, extra, successcallback, errorca
   assert(errorcallback, "Success callback missing");
   assert(guid, "GUID missing");
   assert(sharedKey, "Shared Key missing");
+  console.log("syncing new wallet...");
 
   try {
-    var data = MyWallet.makeCustomWalletJSON(null, guid, sharedKey);
-    
+    // var data = MyWallet.makeCustomWalletJSON(null, guid, sharedKey);
+    var data = JSON.stringify(MyWallet.wallet, null, 2);
+
     //Everything looks ok, Encrypt the JSON output
-    var crypted = WalletCrypto.encryptWallet(data, password, WalletStore.getDefaultPbkdf2Iterations(),  WalletStore.didUpgradeToHd() ?  3.0 : 2.0);
-    
+    var crypted = WalletCrypto.encryptWallet(data, password, WalletStore.getDefaultPbkdf2Iterations(),  MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0);
+
     if (crypted.length == 0) {
       throw 'Error encrypting the JSON output';
     }
-    
+
     //Now Decrypt the it again to double check for any possible corruption
     WalletCrypto.decryptWallet(
-      crypted, 
-      password, 
+      crypted,
+      password,
       function success() { // success callback for decryptWallet
 
         //SHA256 new_checksum verified by server in case of corruption during transit
@@ -50,11 +53,11 @@ function insertWallet(guid, sharedKey, password, extra, successcallback, errorca
 
         $.extend(post_data, extra);
         MyWallet.securePost(
-          'wallet', 
+          'wallet',
           post_data,
           function(data) {
             successcallback(data);
-          }, 
+          },
           function(e) {
             errorcallback(e.responseText);
           }
@@ -108,22 +111,17 @@ function generateNewWallet(password, email, firstAccountName, success, error) {
     }
 
     // Upgrade to HD immediately:
-    MyWallet.initializeHDWallet(
-      null, 
-      "", 
-      firstAccountName,
-      function() {}, 
-      function() {
-        insertWallet(guid, sharedKey, password, {email : email}, function(message){
-          success(guid, sharedKey, password);
-        }, function(e) {
-          error(e);
-        });
-      }, 
-      function(e) {
+
+    var saveWallet = function() {
+      insertWallet(guid, sharedKey, password, {email : email}, function(message){
+        success(guid, sharedKey, password);
+      }, function(e) {
         error(e);
-      }
-    );
+      });
+    };
+
+    Wallet.new(guid, sharedKey, firstAccountName, saveWallet);
+
   }, error);
 };
 
