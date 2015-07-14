@@ -463,12 +463,7 @@ Wallet.prototype.getNote = function(txHash){
 Wallet.prototype.getMnemonic = function(password){
   var seedHex = this.isDoubleEncrypted ?
     WalletCrypto.decryptSecretWithSecondPassword(
-      this.hdwallet.seedHex
-      , password
-      , this.sharedKey
-      , this.pbkdf2_iterations
-    ) :
-    this.hdwallet.seedHex;
+      this.hdwallet.seedHex, password, this.sharedKey, this.pbkdf2_iterations) : this.hdwallet.seedHex;
   return BIP39.entropyToMnemonic(seedHex);
 };
 
@@ -490,11 +485,10 @@ Wallet.prototype.changePbkdf2Iterations = function(newIterations, password){
 
 Wallet.prototype.getPrivateKeyForAddress = function(address, secondPassword) {
   assert(address, 'Error: address must be defined');
-  if (secondPassword) {
-    return WalletCrypto.decryptSecretWithSecondPassword(
-      address.priv, secondPassword, this.sharedKey, this.pbkdf2_iterations
-    );
-  } else { return address.priv; }
+  var pk = this.isDoubleEncrypted ?
+    WalletCrypto.decryptSecretWithSecondPassword(
+      address.priv, secondPassword, this.sharedKey, this.pbkdf2_iterations) : address.priv;
+  return pk;
 };
 
 // example of serialization
