@@ -314,7 +314,7 @@ var WalletStore = (function() {
       return MyWallet.wallet._logout_time;
     },
     setLogoutTime: function(logout_time) {
-      wallet_options._logout_time = logout_time;
+      MyWallet.wallet.logoutTime = logout_time;
       this.resetLogoutTimeout();
     },
     resetLogoutTimeout: function() {
