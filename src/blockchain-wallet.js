@@ -252,7 +252,7 @@ Wallet.prototype.importLegacyAddress = function(addr, label, secPass, bipPass){
     if (this.containsLegacyAddress(ad)) { defer.reject('presentInWallet'); };
     if (this.double_encryption) {
       assert(secPass, "Error: second password needed");
-      ad.encrypt(secPass, this.sharedKey, this.pbkdf2_iterations);
+      ad.encrypt(secPass, this.sharedKey, this.pbkdf2_iterations).persist();
     };
     this._addresses[ad.address] = ad;
     defer.resolve(ad);
@@ -283,7 +283,7 @@ Wallet.prototype.newLegacyAddress = function(label, pw){
   var ad = Address.new(label);
   if (this.double_encryption) {
     assert(pw, "Error: second password needed");
-    ad.encrypt(pw, this.sharedKey, this.pbkdf2_iterations);
+    ad.encrypt(pw, this.sharedKey, this.pbkdf2_iterations).persist();
   };
   this._addresses[ad.address] = ad;
   MyWallet.syncWallet();
@@ -320,16 +320,24 @@ Wallet.prototype.encrypt = function(pw, success, error){
       var f = function(element) {element.encrypt(g);};
       this.keys.forEach(f);
       this._hd_wallets.forEach(f);
-      this._dpasswordhash = WalletCrypto.hashNTimes(this._sharedKey + pw, this._pbkdf2_iterations);
-      this._double_encryption = true;
     };
   }
-  catch (e){ error && error(e);};
+  catch (e){
+    console.log("wallet encryption failure");
+    error && error(e);
+    return false;
+  };
+  // if encryption finished well, then save
+  this._dpasswordhash = WalletCrypto.hashNTimes(this._sharedKey + pw, this._pbkdf2_iterations);
+  this._double_encryption = true;
+  var p = function(element) {element.persist();};
+  this.keys.forEach(p);
+  this._hd_wallets.forEach(p);
   MyWallet.syncWallet();
-  success && success(this)
-  // return this;
+  success && success(this);
+  return this;
 };
-// this functions should return Either Wallet MessageError instead of using callbacks
+
 Wallet.prototype.decrypt = function(pw, success, error){
   try {
     if (this.isDoubleEncrypted) {
@@ -337,14 +345,22 @@ Wallet.prototype.decrypt = function(pw, success, error){
       var f = function(element) {element.decrypt(g);};
       this.keys.forEach(f);
       this._hd_wallets.forEach(f);
-      this._dpasswordhash = undefined;
-      this._double_encryption = false;
     };
   }
-  catch (e){ error && error(e);};
+  catch (e){
+    console.log("wallet decryption failure");
+    error && error(e);
+    return false;
+  };
+  // if encryption finished well, then save
+  this._dpasswordhash     = undefined;
+  this._double_encryption = false;
+  var p = function(element) {element.persist();};
+  this.keys.forEach(p);
+  this._hd_wallets.forEach(p);
   MyWallet.syncWallet();
   success && success(this)
-  // return this;
+  return this;
 };
 
 // example wallet. This should be the new constructor (ask server data)
@@ -506,17 +522,20 @@ Wallet.prototype.changePbkdf2Iterations = function(newIterations, password){
     }
     else { // no double encrypted wallet
       this._pbkdf2_iterations = newIterations;
+      MyWallet.syncWallet();
     };
   };
-  MyWallet.syncWallet();
   return true;
 };
 
 Wallet.prototype.getPrivateKeyForAddress = function(address, secondPassword) {
   assert(address, 'Error: address must be defined');
-  var pk = this.isDoubleEncrypted ?
-    WalletCrypto.decryptSecretWithSecondPassword(
-      address.priv, secondPassword, this.sharedKey, this.pbkdf2_iterations) : address.priv;
+  var pk = null;
+  if (!address.isWatchOnly) {
+    pk = this.isDoubleEncrypted ?
+      WalletCrypto.decryptSecretWithSecondPassword(
+        address.priv, secondPassword, this.sharedKey, this.pbkdf2_iterations) : address.priv;
+  };
   return pk;
 };
 

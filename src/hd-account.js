@@ -259,7 +259,7 @@ HDAccount.prototype.encrypt = function(cipher){
   if(!this._xpriv) return this;
   var xpriv = cipher? cipher(this._xpriv) : this._xpriv;
   if (!xpriv) { throw 'Error Encoding account extended private key'; };
-  this._xpriv = xpriv;
+  this._temporal_xpriv = xpriv;
   return this;
 };
 
@@ -267,7 +267,14 @@ HDAccount.prototype.decrypt = function(cipher){
   if(!this._xpriv) return this;
   var xpriv = cipher? cipher(this._xpriv) : this._xpriv;
   if (!xpriv) { throw 'Error Decoding account extended private key'; };
-  this._xpriv = xpriv;
+  this._temporal_xpriv = xpriv;
+  return this;
+};
+
+HDAccount.prototype.persist = function(){
+  if (!this._temporal_xpriv) return this;
+  this._xpriv = this._temporal_xpriv;
+  delete this._temporal_xpriv;
   return this;
 };
 

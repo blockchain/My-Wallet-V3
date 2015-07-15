@@ -162,18 +162,25 @@ Address.prototype.toJSON = function(){
 };
 
 Address.prototype.encrypt = function(cipher){
-  var wo = this.isWatchOnly;
-  var priv = wo? null : cipher(this._priv);
-  if (!priv && !wo) { throw 'Error Encoding key'; };
-  this._priv = priv;
+  if (!this._priv) return this;
+  var priv = cipher ? cipher(this._priv) : this._priv;
+  if (!priv) { throw 'Error Encoding key'; };
+  this._temporal_priv = priv;
   return this;
 };
 
 Address.prototype.decrypt = function(cipher){
-  var wo = this.isWatchOnly;
-  var priv = wo? null : cipher(this._priv);
-  if (!priv && !wo) { throw 'Error Decoding key'; };
-  this._priv = priv;
+  if (!this._priv) return this;
+  var priv = cipher ? cipher(this._priv) : this._priv;
+  if (!priv) { throw 'Error Decoding key'; };
+  this._temporal_priv = priv;
+  return this;
+};
+
+Address.prototype.persist = function(){
+  if (!this._temporal_priv) return this;
+  this._priv = this._temporal_priv;
+  delete this._temporal_priv;
   return this;
 };
 

@@ -176,7 +176,9 @@ HDWallet.restore = function(seedHex, bip39Password, cipher){
     accounts            : []
   };
   var newHDwallet = new HDWallet(hdwallet);
-  if (cipher) {newHDwallet.encrypt(cipher)};
+  if (cipher) {
+    newHDwallet.encrypt(cipher).persist();
+  };
   return newHDwallet;
 };
 
@@ -202,7 +204,7 @@ HDWallet.prototype.newAccount = function(label, cipher){
   var network   = Bitcoin.networks.bitcoin;
   var masterkey = Bitcoin.HDNode.fromSeedBuffer(masterhex, network);
   var account   = HDAccount.fromWalletMasterKey(masterkey, accIndex, label);
-  account.encrypt(enc);
+  account.encrypt(enc).persist();
   this._accounts.push(account);
   return this;
 };
@@ -249,8 +251,8 @@ HDWallet.prototype.activeAccount = function(xpub){
 HDWallet.prototype.encrypt = function(cipher){
   function f(acc) {acc.encrypt(cipher);};
   this._accounts.forEach(f);
-  this._seedHex = cipher(this._seedHex);
-  this._bip39Password = this._bip39Password === ""
+  this._temporal_seedHex = cipher(this._seedHex);
+  this._temporal_bip39Password = this._bip39Password === ""
    ? this._bip39Password
    : cipher(this._bip39Password);
   return this;
@@ -259,10 +261,20 @@ HDWallet.prototype.encrypt = function(cipher){
 HDWallet.prototype.decrypt = function(cipher){
   function f(acc) {acc.decrypt(cipher);};
   this._accounts.forEach(f);
-  this._seedHex = cipher(this._seedHex);
-  this._bip39Password = this._bip39Password === ""
+  this._temporal_seedHex = cipher(this._seedHex);
+  this._temporal_bip39Password = this._bip39Password === ""
    ? this._bip39Password
    : cipher(this._bip39Password);
+  return this;
+};
+
+HDWallet.prototype.persist = function(){
+  this._seedHex = this._temporal_seedHex;
+  this._bip39Password = this._temporal_bip39Password;
+  delete this._temporal_seedHex;
+  delete this._temporal_bip39Password;
+  function f(acc) {acc.persist();};
+  this._accounts.forEach(f);
   return this;
 };
 ////////////////////////////////////////////////////////////////////////////////
