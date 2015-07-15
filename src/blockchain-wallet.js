@@ -256,23 +256,21 @@ Wallet.prototype.importLegacyAddress = function(addr, label, secPass, bipPass){
     };
     this._addresses[ad.address] = ad;
     defer.resolve(ad);
+    MyWallet.syncWallet();
   }).bind(this)
 
   if (MyWallet.detectPrivateKeyFormat(addr) === 'bip38') {
-
     if (bipPass === '') defer.reject('needsBip38');
-
     else ImportExport.parseBIP38toECKey(
       addr, bipPass,
       function (key) { importAddress(key); },
       function () { defer.reject('wrongBipPass'); },
       function () { defer.reject('importError'); }
-    )
-
+    );
   } else {
     importAddress(addr);
   }
-  MyWallet.syncWallet();
+
   return defer.promise;
 };
 

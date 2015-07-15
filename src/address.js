@@ -162,15 +162,17 @@ Address.prototype.toJSON = function(){
 };
 
 Address.prototype.encrypt = function(cipher){
-  var priv = cipher(this._priv);
-  if (!priv) { throw 'Error Encoding key'; };
+  var wo = this.isWatchOnly;
+  var priv = wo? null : cipher(this._priv);
+  if (!priv && !wo) { throw 'Error Encoding key'; };
   this._priv = priv;
   return this;
 };
 
 Address.prototype.decrypt = function(cipher){
-  var priv = cipher(this._priv);
-  if (!priv) { throw 'Error Decoding key'; };
+  var wo = this.isWatchOnly;
+  var priv = wo? null : cipher(this._priv);
+  if (!priv && !wo) { throw 'Error Decoding key'; };
   this._priv = priv;
   return this;
 };
