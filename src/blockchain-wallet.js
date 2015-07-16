@@ -425,19 +425,21 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
     );
   };
   //////////////////////////////////////////////////////////////////////////////
-  // accounts retoration
+  // accounts restoration
   var lookAhead     = true;
   var emptyAccounts = 0;
   var accountIndex  = 1;
   var historyError  = false;
+
+  function ifUsed(used) {
+    if (used) { emptyAccounts ++;};
+    if (emptyAccounts === 10 ){ lookAhead = false; this.hdwallet._accounts.splice(-10);};
+  };
+  function ifError() { historyError = true; lookAhead = false;};
+
   while (lookAhead) {
     accountIndex++;
     account = this.newAccount("Account " + accountIndex.toString(), pw, 0);
-    function ifUsed(used) {
-      if (used) { emptyAccounts ++;};
-      if (emptyAccounts === 10 ){ lookAhead = false; this.hdwallet._accounts.splice(-10);};
-    };
-    function ifError() { historyError = true; lookAhead = false;};
     isAccountUsed(account, ifUsed.bind(this), ifError);
   };
 
