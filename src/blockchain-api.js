@@ -57,11 +57,9 @@ function get_history(success, error, tx_filter, offset, n) {
 
   var allAddresses = MyWallet.wallet.activeAddresses;
   if (MyWallet.wallet.isUpgradedToHD) {
-     var myHDWallet = MyWallet.wallet.hdwallet;
-    for (var account of myHDWallet.accounts) {
-      var accountExtendedPublicKey = account.extendedPublicKey;
-      allAddresses.push(accountExtendedPublicKey);
-    }
+    MyWallet.wallet.hdwallet.accounts.forEach(
+      function(account){ allAddresses.push(account.extendedPublicKey);}
+    );
   }
   // TODO: fix paidToDictionary with new model
   // var paidTo = WalletStore.getPaidToDictionary();

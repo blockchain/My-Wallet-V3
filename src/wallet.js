@@ -297,10 +297,9 @@ function wsSuccess(ws) {
       msg += '{"op":"wallet_sub","guid":"'+MyWallet.wallet.guid+'"}';
 
     try {
-      var addrs = MyWallet.wallet.activeAddresses;
-      for (var a of addrs) {
-        msg += '{"op":"addr_sub", "addr":"'+ a +'"}'; //Subscribe to transactions updates through websockets
-      }
+      MyWallet.wallet.activeAddresses.forEach(
+        function(address) { msg += '{"op":"addr_sub", "addr":"'+ address +'"}'; }
+      );
 
       if (MyWallet.wallet.isUpgradedToHD)
         MyWallet.listenToHDWalletAccounts();
