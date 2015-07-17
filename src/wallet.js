@@ -27,6 +27,22 @@ var Helpers = require('./helpers');
 var isInitialized = false;
 MyWallet.wallet = undefined;
 
+// TODO: Remove once beta period is over
+MyWallet.whitelistWallet = function(options, endpoint, success, error) {
+  assert(options.guid, 'Error: need guid to whitelist');
+  assert(endpoint, 'Error: must specify whitelist endpoint');
+  $.ajax({
+    type: 'POST',
+    timeout: 60000,
+    url: 'https://alpha.blockchain.info' + endpoint,
+    dataType: 'json',
+    contentType: 'application/json',
+    data: JSON.stringify(options)
+  })
+  .done(function(res){ success && success(res); })
+  .fail(function(err){ error && error(err); });
+};
+
 // used on MyWallet
 MyWallet.securePost = function(url, data, success, error) {
   var clone = $.extend({}, data);
