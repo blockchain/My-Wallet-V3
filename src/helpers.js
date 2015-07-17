@@ -60,15 +60,16 @@ Helpers.memoize = function (f){
 };
 // Return an async version of f that it will run after miliseconds
 // no matter how many times you call the new function, it will run only once
-Helpers.asyncOnce = function (f, miliseconds){
+Helpers.asyncOnce = function (f, milliseconds, before){
   var timer = null;
   return function() {
+    before && before()
     if (timer) {
       clearTimeout(timer);
       timer = null;
     };
     var myArgs = arguments;
-    timer = setTimeout(function(){f.apply(this, myArgs);}, miliseconds);
+    timer = setTimeout(function(){f.apply(this, myArgs);}, milliseconds);
   };
 };
 

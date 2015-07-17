@@ -1380,6 +1380,8 @@ function syncWallet (successcallback, errorcallback) {
                               function() {
                                 // WalletStore.tagLegacyAddressesAsSaved();
 
+                                WalletStore.setIsSynchronizedWithServer(true)
+
                                 if (successcallback != null)
                                   successcallback();
 
@@ -1411,7 +1413,9 @@ function syncWallet (successcallback, errorcallback) {
   }
 
 };
-MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500);
+MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function(){
+  WalletStore.setIsSynchronizedWithServer(false)
+});
 ////////////////////////////////////////////////////////////////////////////////
 // used mainly on blockchain API
 MyWallet.handleNTPResponse = function(obj, clientTime) {
