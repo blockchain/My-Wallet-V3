@@ -260,8 +260,9 @@ function wsSuccess(ws) {
           for(i in tx.out) {
             addresses.push(tx.out[i].addr);
           }
-          // TODO: FIX THIS INDEX INCREMENT
-          // account.incrementReceiveIndexIfLastIndexIsIncluded(addresses)
+          if (addresses.some(function(a){return a === account.receiveAddress})){
+            account.incrementReceiveIndex();
+          };
         }
       }
 
