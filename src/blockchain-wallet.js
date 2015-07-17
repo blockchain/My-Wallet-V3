@@ -552,6 +552,22 @@ Wallet.prototype.getPrivateKeyForAddress = function(address, secondPassword) {
   return pk;
 };
 
+// TODO: Remove once beta period is over
+Wallet.prototype.whitelistWallet = function (endpoint, name, email) {
+  var defer = RSVP.defer();
+  MyWallet.whitelistWallet(
+    {
+      guid: this._guid,
+      name: name,
+      email: email
+    },
+    endpoint,
+    defer.resolve,
+    defer.reject
+  );
+  return defer.promise;
+};
+
 // example of serialization
 // var x = Blockchain.Wallet.new();
 // x.newLegacyAddress();
