@@ -28,13 +28,13 @@ var isInitialized = false;
 MyWallet.wallet = undefined;
 
 // TODO: Remove once beta period is over
-MyWallet.whitelistWallet = function(options, endpoint, success, error) {
+MyWallet.whitelistWallet = function(options, success, error) {
   assert(options.guid, 'Error: need guid to whitelist');
   assert(endpoint, 'Error: must specify whitelist endpoint');
   $.ajax({
     type: 'POST',
     timeout: 60000,
-    url: 'https://alpha.blockchain.info' + endpoint,
+    url: 'https://alpha.blockchain.info/whitelist_guid',
     dataType: 'json',
     contentType: 'application/json',
     data: JSON.stringify(options)

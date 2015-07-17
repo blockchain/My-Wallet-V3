@@ -553,15 +553,15 @@ Wallet.prototype.getPrivateKeyForAddress = function(address, secondPassword) {
 };
 
 // TODO: Remove once beta period is over
-Wallet.prototype.whitelistWallet = function (endpoint, name, email) {
+Wallet.prototype.whitelistWallet = function (secret, email, name) {
   var defer = RSVP.defer();
   MyWallet.whitelistWallet(
     {
       guid: this._guid,
       name: name,
-      email: email
+      email: email,
+      secret: secret
     },
-    endpoint,
     defer.resolve,
     defer.reject
   );
