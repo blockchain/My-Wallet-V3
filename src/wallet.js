@@ -1029,7 +1029,7 @@ function decryptAndInitializeWallet(success, error, decrypt_success, build_hd_su
 MyWallet.makePairingCode = function(success, error) {
   try {
     MyWallet.securePost('wallet', { method : 'pairing-encryption-password' }, function(encryption_phrase) {
-      success('1|' + WalletStore.getGuid() + '|' + WalletCrypto.encrypt(WalletStore.getSharedKey() + '|' + CryptoJS.enc.Utf8.parse(WalletStore.getPassword()).toString(), encryption_phrase, 10));
+      success('1|' + MyWallet.wallet.guid + '|' + WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + CryptoJS.enc.Utf8.parse(WalletStore.getPassword()).toString(), encryption_phrase, 10));
     }, function(e) {
       error(e);
     });
@@ -1059,7 +1059,7 @@ MyWallet.resendTwoFactorSms = function(user_guid, success, error) {
       resend_code : 1,
       ct : (new Date()).getTime(),
       api_code : WalletStore.getAPICode(),
-      shared_key: WalletStore.getSharedKey()
+      shared_key: MyWallet.wallet.sharedKey
     },
     timeout: 60000,
     success: function(obj) {
