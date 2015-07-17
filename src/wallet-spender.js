@@ -149,8 +149,8 @@ var Spender = function(note, successCallback, errorCallback, listener, secondPas
     toAccount: function(toIndex) {
 
       assert(toIndex !== undefined || toIndex !== null, "to account index required");
-      var toAccount = WalletStore.getHDWallet().getAccount(toIndex);
-      var toAddress = toAccount.getReceiveAddress();
+      var toAccount = MyWallet.wallet.hdwallet.accounts[toIndex]
+      var toAddress = toAccount.receiveAddress;
       spend.toAddress(toAddress);
     },
     /**
