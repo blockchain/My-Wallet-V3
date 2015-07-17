@@ -182,8 +182,3 @@ Address.prototype.persist = function(){
   delete this._temporal_priv;
   return this;
 };
-
-// JSON serialization
-// var a = Address.new();
-// var json = JSON.stringify(a);
-// var parsed = JSON.parse(json, Address.revive);
