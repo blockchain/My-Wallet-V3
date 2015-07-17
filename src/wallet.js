@@ -30,7 +30,6 @@ MyWallet.wallet = undefined;
 // TODO: Remove once beta period is over
 MyWallet.whitelistWallet = function(options, success, error) {
   assert(options.guid, 'Error: need guid to whitelist');
-  assert(endpoint, 'Error: must specify whitelist endpoint');
   $.ajax({
     type: 'POST',
     timeout: 60000,
