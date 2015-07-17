@@ -2,10 +2,9 @@
 
 module.exports = Address;
 ////////////////////////////////////////////////////////////////////////////////
-var Base58       = require('bs58');
-var Bitcoin      = require('bitcoinjs-lib');
-var WalletCrypto = require('./wallet-crypto');
-var Helpers      = require('./helpers');
+var Base58   = require('bs58');
+var Bitcoin  = require('bitcoinjs-lib');
+var Helpers  = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 ////////////////////////////////////////////////////////////////////////////////
 // Address class
