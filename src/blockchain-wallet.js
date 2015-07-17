@@ -507,6 +507,17 @@ Wallet.prototype.getNote = function(txHash){
   return this._tx_notes[txHash];
 };
 
+Wallet.prototype.setNote = function(txHash, text){
+  assert(text, 'Error: note must have message text')
+  this._tx_notes[txHash] = text;
+  MyWallet.syncWallet();
+};
+
+Wallet.prototype.deleteNote = function(txHash){
+  delete this._tx_notes[txHash];
+  MyWallet.syncWallet();
+};
+
 Wallet.prototype.getMnemonic = function(password){
   var seedHex = this.isDoubleEncrypted ?
     WalletCrypto.decryptSecretWithSecondPassword(
