@@ -213,7 +213,6 @@ function async_get_history_with_addresses(addresses, success, error, tx_filter, 
 };
 
 //Get the balances of multi addresses (Used for archived)
-// TODO: FIX THIS related to sharedcoin
 function get_balances(addresses, success, error) {
   $.ajax({
     type: "POST",
@@ -223,9 +222,8 @@ function get_balances(addresses, success, error) {
     data : {active : addresses.join('|'), simple : true, api_code : WalletStore.getAPICode(), format : 'json'},
     success: function(obj) {
       for (var key in obj) {
-        // if (MyWallet.wallet.containsLegacyAddress(key))
-        if (WalletStore.legacyAddressExists(key))
-          WalletStore.setLegacyAddressBalance(key, obj[key].final_balance);
+        if (MyWallet.wallet.containsLegacyAddress(key))
+          MyWallet.wallet.key(key).balance = obj[key].final_balance;
       }
 
       success(obj);
@@ -235,6 +233,7 @@ function get_balances(addresses, success, error) {
     }
   });
 };
+
 // TODO: FIX THIS RELATED TO REDEEM CODES
 //Get the balance of an array of addresses
 function get_balance(addresses, success, error) {
