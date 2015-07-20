@@ -9,16 +9,16 @@ module.exports = {
   BlockchainAPI: require('./blockchain-api'),
   BlockchainSettingsAPI: require('./blockchain-settings-api'),
   // only for debugging
-  Helpers: require('./helpers'),
-  Payload: require('./payload'),
-  Wallet: require('./blockchain-wallet'),
-  Address: require('./address'),
-  HDAccount: require('./hd-account'),
-  HDWallet: require('./hd-wallet'),
-  KeyChain: require('./keychain'),
-  KeyRing: require('./keyring'),
-  Bitcoin: require('bitcoinjs-lib'),
-  Base58: require('bs58'),
-  BigInteger: require('bigi'),
-  BIP39: require('bip39')
+  // Helpers: require('./helpers'),
+  // Payload: require('./payload'),
+  // Wallet: require('./blockchain-wallet'),
+  // Address: require('./address'),
+  // HDAccount: require('./hd-account'),
+  // HDWallet: require('./hd-wallet'),
+  // KeyChain: require('./keychain'),
+  // KeyRing: require('./keyring'),
+  // Bitcoin: require('bitcoinjs-lib'),
+  // Base58: require('bs58'),
+  // BigInteger: require('bigi'),
+  // BIP39: require('bip39')
 };
