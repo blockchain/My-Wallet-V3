@@ -59,19 +59,19 @@ module.exports = function(karma) {
       // 'tests/**/*.coffee',
       // Or specify individual test files:
       'tests/mocks/*.coffee',
-      //'tests/wallet_spender_spec.js.coffee',     //(FAIL)
-      'tests/blockchain_api_spec.js.coffee',       //(OK)
-      // 'tests/claim_redeem_spec.js.coffee',      //(requires refactor)
-      'tests/legacy_addresses_spec.js.coffee',     //(OK)
-      // 'tests/tags_spec.js.coffee',              //(requires implement tags)
-      // 'tests/transaction_spec.js.coffee',       //(FAIL)
-      'tests/transaction_spend_spec.js.coffee',    //(OK)
-      // 'tests/my_wallet_spec.js.coffee',         //(FAIL)      // This seems to leave some global state around, see below:
-      // 'tests/wallet_spec.js.coffee',            //(FAIL)      // Throws an error unless my_wallet_spec runs first (bad...)
-      'tests/bip38_spec.js.coffee',                //(OK)
-      // 'tests/hd_account_spec.js.coffee',        //(FAIL)
-      // 'tests/hdwallet_spec.js.coffee'           //(FAIL)
-      'tests/address_spec.js.coffee',
+      // //'tests/wallet_spender_spec.js.coffee',     //(FAIL)
+      // 'tests/blockchain_api_spec.js.coffee',       //(OK)
+      // // 'tests/claim_redeem_spec.js.coffee',      //(requires refactor)
+      // 'tests/legacy_addresses_spec.js.coffee',     //(OK)
+      // // 'tests/tags_spec.js.coffee',              //(requires implement tags)
+      // // 'tests/transaction_spec.js.coffee',       //(FAIL)
+      // 'tests/transaction_spend_spec.js.coffee',    //(OK)
+      // // 'tests/my_wallet_spec.js.coffee',         //(FAIL)      // This seems to leave some global state around, see below:
+      // // 'tests/wallet_spec.js.coffee',            //(FAIL)      // Throws an error unless my_wallet_spec runs first (bad...)
+      // 'tests/bip38_spec.js.coffee',                //(OK)
+      // // 'tests/hd_account_spec.js.coffee',        //(FAIL)
+      // // 'tests/hdwallet_spec.js.coffee'           //(FAIL)
+      // 'tests/address_spec.js.coffee',
       'tests/keychain_spec.js.coffee'
     ]
   });
