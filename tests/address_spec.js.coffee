@@ -17,7 +17,8 @@ describe "Address", ->
 
   beforeEach ->
     a = new Address(object)
-    spyOn(MyWallet, "syncWallet")
+    spyOn(MyWallet, "syncWallet").and.callFake () ->
+      console.log("syncWallet mock called!")
 
   describe "Constructor", ->
 
