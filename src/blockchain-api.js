@@ -27,7 +27,7 @@ function retryAjax(ajaxParams) {
   }
 
   ajaxParams.complete = function (jqXHR, textStatus) {
-    if ($.inArray(textStatus, ['timeout', 'abort', 'error']) > -1) {
+    if (['timeout', 'abort', 'error'].some(function(e){return e === textStatus})) {
       this.tryCount++;
       if (this.tryCount <= this.retryLimit) {
 
