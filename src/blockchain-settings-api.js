@@ -122,7 +122,7 @@ function setTwoFactorYubiKey(code, success, error) {
     'update-yubikey',
     code,
     function() {
-      updateAuthType(3, success, error);
+      updateAuthType(1, success, error);
     },
     function() {
       error("Failed to configure Yubikey");
