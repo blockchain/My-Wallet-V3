@@ -66,7 +66,7 @@ var WalletStore = (function() {
   var disable_logout = false;
   var mixer_fee = 0.5;
   var latest_block = null;
-  var api_code = "0";
+  var api_code = "1770d5d9-bcea-4d28-ad21-6cbd5be018a8";
   var real_auth_type = 0; //The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
   var encrypted_wallet_data; //Encrypted wallet data (Base64, AES 256)
   var payload_checksum; //SHA256 hash of the current wallet.aes.json
