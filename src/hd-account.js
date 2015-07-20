@@ -80,6 +80,9 @@ Object.defineProperties(HDAccount.prototype, {
       if(Helpers.isBoolean(value)){
         this._archived = value;
         MyWallet.syncWallet();
+        if(!value) { // Unarchive
+          MyWallet.get_history();
+        }
       }
       else{
         throw 'Error: account.archived must be a boolean';
