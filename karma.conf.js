@@ -72,7 +72,8 @@ module.exports = function(karma) {
       // // 'tests/hd_account_spec.js.coffee',        //(FAIL)
       // // 'tests/hdwallet_spec.js.coffee'           //(FAIL)
       // 'tests/address_spec.js.coffee',
-      'tests/keychain_spec.js.coffee'
+      'tests/keychain_spec.js.coffee',
+      'tests/keyring_spec.js.coffee'
     ]
   });
 };
