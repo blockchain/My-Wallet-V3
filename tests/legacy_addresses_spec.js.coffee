@@ -1,4 +1,0 @@
-# importPrivateKey
-# sendFromLegacyAddressToAccount
-# sweepLegacyAddressToAccount
-# sendFromLegacyAddressToAddress
