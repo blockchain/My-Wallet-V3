@@ -257,6 +257,7 @@ Wallet.prototype.importLegacyAddress = function(addr, label, secPass, bipPass){
     this._addresses[ad.address] = ad;
     defer.resolve(ad);
     MyWallet.syncWallet();
+    MyWallet.get_history();
   }).bind(this)
 
   if (MyWallet.detectPrivateKeyFormat(addr) === 'bip38') {
