@@ -79,7 +79,12 @@ Object.defineProperties(Address.prototype, {
     get: function() { return this._tag === 2;},
     set: function(value) {
       if(Helpers.isBoolean(value)) {
-        if (value) {this._tag = 2;} else {this._tag = 0;}
+        if (value) { // Archive:
+          this._tag = 2;
+        } else { // Unarchive:
+          this._tag = 0;
+          MyWallet.get_history();
+        }
         MyWallet.syncWallet();
       }
       else
