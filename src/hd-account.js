@@ -149,10 +149,6 @@ Object.defineProperties(HDAccount.prototype, {
 ////////////////////////////////////////////////////////////////////////////////
 // CONSTRUCTORS
 
-HDAccount.exampleReadOnly = function(){
-  return HDAccount.fromExtPublicKey("xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9Gf9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ", undefined, "Example account");
-};
-
 /* BIP 44 defines the following 5 levels in BIP32 path:
  * m / purpose' / coin_type' / account' / change / address_index
  * Apostrophe in the path indicates that BIP32 hardened derivation is used.
@@ -221,6 +217,11 @@ HDAccount.prototype.toJSON = function(){
 
   return hdaccount;
 };
+
+HDAccount.reviver = function(k,v){
+  if (k === '') return new HDAccount(v);
+  return v;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
