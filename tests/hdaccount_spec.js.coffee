@@ -57,7 +57,25 @@ describe "HDAccount", ->
                   
         expect(a.label).toEqual("label")
         expect(a._xpriv).toEqual("accountZeroBase58")
-        expect(a._xpub).toEqual("accountZeroNeuteredBase58")      
+        expect(a._xpub).toEqual("accountZeroNeuteredBase58")    
+      
+
+
+      it "should create an HDAccount from Wallet master key", ->
+      
+        masterkey =
+          deriveHardened: (i) ->
+            deriveHardened: (j) ->
+              deriveHardened: (k) ->
+                toBase58: () ->
+                  "m/" + i + "/" + j + "/" + k
+                neutered: () ->
+                  toBase58: () ->
+          
+        a = HDAccount.fromWalletMasterKey(masterkey, 0, "label")
+      
+        expect(a._xpriv).toEqual("m/44/0/0")
+        expect(a.label).toEqual("label")
 
     it "should transform an Object to an HDAccount", ->
       stubs = { './wallet': MyWallet}
@@ -75,20 +93,7 @@ describe "HDAccount", ->
       expect(account.receiveAddress).toBeDefined()
       expect(account.changeAddress).toBeDefined()
 
-
-
-    it "should create an HDAccount from Wallet master key", ->
-      # SJORS?: I dont know how to mock:
-      #   var accountZero = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(index);
-      #   I want to avoid making derivations on the test
-
-      # masterkey =
-      #   "deriveHardened": (i) -> {masterkey.deriveHardened}
-      # spyOn(observer, "final").and.callFake((index) -> "deriveHardened" + index)
-      # spyOn(observer, "deriveHardened").and.callFake (index) -> {"deriveHardened": observer.deriveHardened(index) }
-      # console.log(observer.deriveHardened(2))
-      pending()
-
+    
   describe "JSON serializer", ->
     it 'should hold: fromJSON . toJSON = id', ->
       json1     = JSON.stringify(account, null, 2)
