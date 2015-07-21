@@ -187,7 +187,7 @@ MyWallet.addPrivateKey = function(key, opts, second_password) {
       ws.send('{"op":"addr_sub", "addr":"'+addr+'"}');
     } catch (e) { }
   } else {
-    throw 'Unable to add generated private key.';
+    throw 'Could not add key. This key already exists in your wallet.';
   }
 
   return addr;

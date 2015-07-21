@@ -51,7 +51,7 @@ function update_IP_lock(ips, success, error) {
 };
 
 function update_IP_lock_on(enabled, success, error) {
-  updateKV('Updating IP Lock', 'update-ip-lock-on', enabled ? 1 : 0, success, error);
+  updateKV('Updating IP Lock', 'update-ip-lock-on', enabled ? true : false, success, error);
 };
 
 function change_language(language, success, error) {
@@ -93,7 +93,7 @@ function changeMobileNumber(val, success, error) {
 };
 
 function toggleSave2FA(val, success, error) {
-  updateKV('Updating Save 2FA', 'update-never-save-auth-type', val, success, error);
+  updateKV('Updating Save 2FA', 'update-never-save-auth-type', val ? true : false, success, error);
 };
 
 function updateAuthType(val, success, error) {

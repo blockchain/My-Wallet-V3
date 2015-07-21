@@ -1,11 +1,18 @@
 module.exports = function(karma) {
 
-  karma.set({
+  var configuration = {
     basePath : './',
 
     frameworks: ['jasmine', 'browserify'],
 
     browsers : ['Chrome'], //'PhantomJS'],
+
+    customLaunchers: {
+      Chrome_travis_ci: {
+        base: 'Chrome',
+        flags: ['--no-sandbox']
+      }
+    },
 
     browserNoActivityTimeout: 60000,
 
@@ -73,5 +80,11 @@ module.exports = function(karma) {
       'tests/hdaccount_spec.js.coffee',
       'tests/hdwallet_spec.js.coffee'
     ]
-  });
+  };
+
+  if(process.env.TRAVIS) {
+    configuration.browsers = ['Chrome_travis_ci'];
+  }
+
+  karma.set(configuration);
 };

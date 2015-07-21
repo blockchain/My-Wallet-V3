@@ -1,4 +1,4 @@
-# MyWallet
+# MyWallet [![Build Status](https://travis-ci.org/blockchain/My-Wallet-HD.png?branch=master)](https://travis-ci.org/blockchain/My-Wallet-HD)
 
 JavaScript Model for Blockchain.info wallet.
 
@@ -122,3 +122,9 @@ If package.json contains a version like "1.2.*", the latest version is 1.2.3, bu
 
 1. Add the tagged version and the commit hash to dependency-whitelist.json.
 2. Run `grunt dist`
+
+## Security
+
+Security issues can be reported to us in the following venues:
+ * Email: security@blockchain.info
+ * Bug Bounty: https://www.crowdcurity.com/blockchain-info
