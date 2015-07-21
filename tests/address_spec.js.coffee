@@ -108,7 +108,7 @@ describe "Address", ->
 
   describe ".decrypt", ->
 
-    it 'should fail when encryption fails', ->
+    it 'should fail when decryption fails', ->
       wrongEnc = () -> a.decrypt(() -> null)
       expect(wrongEnc).toThrow()
       expect(MyWallet.syncWallet).not.toHaveBeenCalled()
@@ -134,7 +134,7 @@ describe "Address", ->
 
   describe ".persist", ->
 
-    it 'should do nothing temporary is empty', ->
+    it 'should do nothing if temporary is empty', ->
       originalKey = a.priv
       a.persist()
       expect(a.priv).toEqual(originalKey)
