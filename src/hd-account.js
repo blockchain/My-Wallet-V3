@@ -164,7 +164,7 @@ HDAccount.fromAccountMasterKey = function(accountZero, index, label){
   assert(accountZero, "Account MasterKey must be given to create an account.");
   var account    = new HDAccount();
   account._index = Helpers.isNumber(index) ? index : null;
-  account.label  = label;
+  account._label  = label;
   account._xpriv = accountZero.toBase58();
   account._xpub  = accountZero.neutered().toBase58();
   account._keyRing.init(account._xpub, null);
