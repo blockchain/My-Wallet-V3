@@ -293,7 +293,7 @@ describe "BIP38", ->
       expect(computedWIF).toEqual(expectedWIF)
       expect(computedCompression).toEqual(expectedCompression)
 
-    it "(testvector3) No compression, no EC multiply, Test 3, should work", ->
+    xit "(testvector3) No compression, no EC multiply, Test 3, should work", ->
 
       spyOn(observer, "success")
       spyOn(observer, "wrong_password")
