@@ -1,4 +1,5 @@
 module.exports = {
+  Buffer: require('buffer').Buffer,
   $: require('jquery'),
   CryptoJS: require('crypto-js'),
   MyWallet: require('./wallet'),
