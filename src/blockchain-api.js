@@ -130,9 +130,7 @@ function get_history_with_addresses(addresses, success, error, tx_filter, offset
     ct : clientTime,
     n : n,
     language : WalletStore.getLanguage(),
-    api_code : WalletStore.getAPICode(),
-    symbol_btc : symbol_btc.code,
-    symbol_local : symbol_local.code
+    api_code : WalletStore.getAPICode()
   };
 
   retryAjax({
@@ -179,9 +177,7 @@ function async_get_history_with_addresses(addresses, success, error, tx_filter, 
     ct : clientTime,
     n : n,
     language : WalletStore.getLanguage(),
-    api_code : WalletStore.getAPICode(),
-    symbol_btc : symbol_btc.code,
-    symbol_local : symbol_local.code
+    api_code : WalletStore.getAPICode()
   };
 
   retryAjax({
