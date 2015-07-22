@@ -468,10 +468,9 @@ Wallet.new = function(guid, sharedKey, firstAccountLabel, success){
   var newWallet   = new Wallet(object);
   var newHDwallet = HDWallet.new();
   newWallet._hd_wallets.push(newHDwallet);
-  var label = firstAccountLabel ? firstAccountLabel : "My Bitcoin Wallet";
-  newWallet.newAccount(label, null, newWallet._hd_wallets.length-1);
+  var label = firstAccountLabel ||  "My Bitcoin Wallet";
+  newHDwallet.newAccount(label);
   MyWallet.wallet = newWallet;
-  // MyWallet.syncWallet();
   success(newWallet);
 };
 
