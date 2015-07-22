@@ -488,7 +488,7 @@ Wallet.prototype.newHDWallet = function(firstAccountLabel, pw, success){
   return newHDwallet;
 };
 
-Wallet.prototype.newAccount = function(label, pw, hdwalletIndex){
+Wallet.prototype.newAccount = function(label, pw, hdwalletIndex, success){
   if (!this.isUpgradedToHD) { return false; };
   var index = Helpers.isNumber(hdwalletIndex) ? hdwalletIndex : 0;
   var cipher = undefined;
@@ -498,6 +498,9 @@ Wallet.prototype.newAccount = function(label, pw, hdwalletIndex){
   var newAccount = this._hd_wallets[index].newAccount(label, cipher).lastAccount;
   MyWallet.listenToHDWalletAccount(newAccount.extendedPublicKey);
   MyWallet.syncWallet();
+
+  typeof(success) === 'function' && success();
+
   return newAccount;
 };
 
