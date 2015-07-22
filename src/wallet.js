@@ -237,7 +237,15 @@ function wsSuccess(ws) {
 
   ws.onmessage = function(message) {
 
-    var obj = $.parseJSON(message.data);
+    var obj = null;
+
+    try {
+      obj = $.parseJSON(message.data);
+    }
+    catch (e) {
+      console.log('Websocket error: could not parse message data as JSON: ' + message);
+      return;
+    }
 
     var transactions = WalletStore.getTransactions();
 
