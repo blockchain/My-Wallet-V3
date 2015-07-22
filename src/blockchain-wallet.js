@@ -475,13 +475,16 @@ Wallet.new = function(guid, sharedKey, firstAccountLabel, success){
 };
 
 // adding and hd wallet to an existing wallet
-Wallet.prototype.newHDWallet = function(firstAccountLabel, pw){
+Wallet.prototype.newHDWallet = function(firstAccountLabel, pw, success){
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
   var newHDwallet = HDWallet.new(encoder);
   this._hd_wallets.push(newHDwallet);
   var label = firstAccountLabel ? firstAccountLabel : "My Bitcoin Wallet";
   this.newAccount(label, pw, this._hd_wallets.length-1);
   MyWallet.syncWallet();
+
+  typeof(success) === 'function' && success();
+
   return newHDwallet;
 };
 
