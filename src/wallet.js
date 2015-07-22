@@ -1091,8 +1091,7 @@ MyWallet.resendTwoFactorSms = function(user_guid, success, error) {
       format : 'json',
       resend_code : true,
       ct : (new Date()).getTime(),
-      api_code : WalletStore.getAPICode(),
-      shared_key: MyWallet.wallet.sharedKey
+      api_code : WalletStore.getAPICode()
     },
     timeout: 60000,
     success: function(obj) {
