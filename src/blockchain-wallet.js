@@ -249,13 +249,18 @@ Wallet.prototype.toJSON = function(){
 
 Wallet.prototype.importLegacyAddress = function(addr, label, secPass, bipPass){
   var defer = RSVP.defer();
+  console.log(addr);
+  console.log("label: " + label);
+  console.log("secPAss: " + secPass);
+  console.log("bip:Pass: " + bipPass);
 
   var importAddress = (function(key) {
     var ad = Address.import(key, label);
     if (this.containsLegacyAddress(ad)) { defer.reject('presentInWallet'); };
-    if (this.double_encryption) {
+    if (this.isDoubleEncrypted) {
       assert(secPass, "Error: second password needed");
-      ad.encrypt(secPass, this.sharedKey, this.pbkdf2_iterations).persist();
+      var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, "enc");
+      ad.encrypt(cipher).persist();
     };
     this._addresses[ad.address] = ad;
     defer.resolve(ad);
