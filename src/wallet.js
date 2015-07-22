@@ -522,6 +522,10 @@ MyWallet.processTransaction = function(tx) {
   transaction.block_height = tx.blockHeight;
 
   transaction.result = MyWallet.calculateTransactionResult(transaction);
+  
+  // Check if fee is frugal (incomplete):
+  transaction.frugal = transaction.fee < 10000
+  
   return transaction;
 };
 // used once on this file

@@ -1476,6 +1476,29 @@ describe "Transaction", ->
         MyWallet.processTransaction(defaultSampleTx)
         expect(MyWallet.getConfirmationsForTx).toHaveBeenCalled()
 
+    describe "fee", ->
+      it "default sample transactions should have 0.0001 BTC fee", ->
+        rawTx = defaultSampleTx
+        
+        expect(MyWallet.processTransaction(rawTx).fee).toEqual(10000)
+        
+      it "should flag frugal fee", ->
+        rawTx = defaultSampleTx
+        rawTx.confirmations = 0
+        
+        # Reduce the previous output by 0.0001 BTC so as to make it frugal
+        rawTx.inputs[0].prev_out.value -= 10000
+  
+        processedTx = MyWallet.processTransaction(rawTx)
+        expect(processedTx.frugal).toBe(true)
+        
+      it "should not flag an 0.0001(0000) BTC fee as frugal", ->
+        rawTx = defaultSampleTx
+        rawTx.confirmations = 0
+        rawTx.fee = 10000 
+        processedTx = MyWallet.processTransaction(rawTx)
+        expect(processedTx.frugal).toBe(false)
+
   describe "getConfirmationsForTx()", ->
     ##########################################################################
     it "a tx with null confirmations should return 0 and tx.setConfirmations(0) should be called.", ->
