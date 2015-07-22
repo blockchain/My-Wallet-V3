@@ -144,15 +144,6 @@ function getMasterHex (seedHex, bip39Password, cipher){
 ////////////////////////////////////////////////////////////////////////////////
 // Constructors
 
-HDWallet.example = function(){
-
-  var object = {
-    seedHex : "f56bf734c9bb4e8d08dd645e9d6adc68",
-    bip39Password : ""
-  };
-  return new HDWallet(object);
-};
-
 // we need 3 actions
 // new hdwallet
 // load hdwallet
@@ -223,6 +214,12 @@ HDWallet.prototype.toJSON = function(){
   };
   return hdwallet;
 };
+
+HDWallet.reviver = function(k,v){
+  if (k === '') return new HDWallet(v);
+  return v;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // methods
 
@@ -235,7 +232,7 @@ HDWallet.prototype.verifyMnemonic = function(){
 HDWallet.prototype.account = function(xpub){
   var f = this._accounts
             .filter(function(a){return a.extendedPublicKey === xpub})
-  var r = f === [] ? null : f[0];
+  var r = f.length === 0 ? null : f[0];
   return r;
 };
 
@@ -269,6 +266,8 @@ HDWallet.prototype.decrypt = function(cipher){
 };
 
 HDWallet.prototype.persist = function(){
+  if (this._temporal_seedHex === undefined || this._temporal_bip39Password === undefined)
+    {return this;};
   this._seedHex = this._temporal_seedHex;
   this._bip39Password = this._temporal_bip39Password;
   delete this._temporal_seedHex;
