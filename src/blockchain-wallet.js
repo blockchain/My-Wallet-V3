@@ -546,11 +546,12 @@ Wallet.prototype.getPrivateKeyForAddress = function(address, secondPassword) {
 };
 
 // TODO: Remove once beta period is over
-Wallet.prototype.whitelistWallet = function (secret, email, name) {
+Wallet.prototype.whitelistWallet = function (secret, subdomain, email, name) {
   var defer = RSVP.defer();
   MyWallet.whitelistWallet(
     {
       guid: this._guid,
+      subdomain: subdomain,
       name: name,
       email: email,
       secret: secret

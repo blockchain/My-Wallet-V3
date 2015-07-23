@@ -30,10 +30,14 @@ MyWallet.wallet = undefined;
 // TODO: Remove once beta period is over
 MyWallet.whitelistWallet = function(options, success, error) {
   assert(options.guid, 'Error: need guid to whitelist');
+  assert(['alpha', 'staging', 'dev'].some(function(sd) {
+    return sd === options.subdomain;
+  }), 'Error: must specify alpha, staging, or dev as subdomain');
+
   $.ajax({
     type: 'POST',
     timeout: 60000,
-    url: 'https://alpha.blockchain.info/whitelist_guid',
+    url: 'https://' + options.subdomain + '.blockchain.info/whitelist_guid',
     dataType: 'json',
     contentType: 'application/json',
     data: JSON.stringify(options)
