@@ -522,10 +522,10 @@ MyWallet.processTransaction = function(tx) {
   transaction.block_height = tx.blockHeight;
 
   transaction.result = MyWallet.calculateTransactionResult(transaction);
-  
+
   // Check if fee is frugal (incomplete):
   transaction.frugal = transaction.fee < 10000
-  
+
   return transaction;
 };
 // used once on this file
@@ -1694,7 +1694,7 @@ MyWallet.privateKeyStringToKey = function(value, format) {
   if (key_bytes.length != 32 && key_bytes.length != 33)
     throw 'Result not 32 or 33 bytes in length';
 
-  return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format == 'compsipa'));
+  return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format !== 'sipa'));
 };
 // used once
 // should be a helper

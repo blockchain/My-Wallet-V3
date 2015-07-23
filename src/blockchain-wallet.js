@@ -249,10 +249,6 @@ Wallet.prototype.toJSON = function(){
 
 Wallet.prototype.importLegacyAddress = function(addr, label, secPass, bipPass){
   var defer = RSVP.defer();
-  console.log(addr);
-  console.log("label: " + label);
-  console.log("secPAss: " + secPass);
-  console.log("bip:Pass: " + bipPass);
 
   var importAddress = (function(key) {
     var ad = Address.import(key, label);
@@ -268,17 +264,29 @@ Wallet.prototype.importLegacyAddress = function(addr, label, secPass, bipPass){
     MyWallet.get_history();
   }).bind(this)
 
-  if (MyWallet.detectPrivateKeyFormat(addr) === 'bip38') {
-    if (bipPass === '') defer.reject('needsBip38');
-    else ImportExport.parseBIP38toECKey(
-      addr, bipPass,
-      function (key) { importAddress(key); },
-      function () { defer.reject('wrongBipPass'); },
-      function () { defer.reject('importError'); }
-    );
-  } else {
-    importAddress(addr);
-  }
+  // if read only address
+  if (Helpers.isBitcoinAddress(addr)) { importAddress(addr); };
+
+  // otherwise
+  var format = MyWallet.detectPrivateKeyFormat(addr);
+  switch (true) {
+    case format === 'bip38':
+      if (bipPass === '') defer.reject('needsBip38');
+      else ImportExport.parseBIP38toECKey(
+        addr, bipPass,
+        function (key) { importAddress(key); },
+        function () { defer.reject('wrongBipPass'); },
+        function () { defer.reject('importError'); }
+      );
+      break;
+    case ["base58","base64","hex","mini","sipa","compsipa"].some(function(e) {return e === format;}):
+      var k = MyWallet.privateKeyStringToKey(addr, format);
+      importAddress(k);
+      break;
+    default:
+      defer.reject('importError');
+      break;
+  };
 
   return defer.promise;
 };
