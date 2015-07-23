@@ -8,7 +8,7 @@ describe "Transaction", ->
 
   beforeEach ->
     data =
-      from: "17k7jQsewpru3uxMkaUMxahyvACVc7fjjb"
+      from: "1DiJVG3oD3yeqW26qcVaghwTjvMaVoeghX"
       privateKey: 'AWrnMsqe2AJYmrzKsN8qRosHRiCSKag3fcmvUA9wdJDj'
       to: "1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h"
       amount: 50000
@@ -108,12 +108,13 @@ describe "Transaction", ->
       privateKeyBase58 = data.privateKey
       format = MyWallet.detectPrivateKeyFormat(privateKeyBase58)
       key = MyWallet.privateKeyStringToKey(privateKeyBase58, format)
+      key.pub.compressed = false;
       privateKeys = [key]
 
       tx.addPrivateKeys(privateKeys)
       tx = tx.sign()
 
-      expectedHex = '0100000001594c66729d5068b7d816760fc304accd760629ee75a371529049a94cffa50861000000008a47304402205ac37e79a6fcd45c896612c5402de75dcce32841481f205a25b2bd106a61964602207447c87298393b4ed4b256a2cc576e971ba6d20785f4399321b71f3dc645d3f7014104a7392f5628776b530aa5fbb41ac10c327ccd2cf64622a81671038ecda25084af786fd54d43689241694d1d65e6bde98756fa01dfd2f5a90d5318ab3fb7bad8c1ffffffff03204e0000000000001976a914078d35591e340799ee96968936e8b2ea8ce504a688ac10270000000000001976a914a0e6ca5444e4d8b7c80f70237f332320387f18c788acf2540000000000001976a91449f842901a0c81fb9c0c0f8c61027d2b085a2a9088ac00000000'
+      expectedHex = '0100000001594c66729d5068b7d816760fc304accd760629ee75a371529049a94cffa50861000000008a4730440220354fd8f420d1f3ffc802af13d451f853d26f343b10225e92a17d3e831edb81960220074d8dac3c497a0481e2041df4f3cd7a82e32415c11b2054b246187f3ff733a8014104a7392f5628776b530aa5fbb41ac10c327ccd2cf64622a81671038ecda25084af786fd54d43689241694d1d65e6bde98756fa01dfd2f5a90d5318ab3fb7bad8c1ffffffff03204e0000000000001976a914078d35591e340799ee96968936e8b2ea8ce504a688ac10270000000000001976a914a0e6ca5444e4d8b7c80f70237f332320387f18c788acf2540000000000001976a9148b71295471e921703a938aa9e01433deb07c1aa588ac00000000'
       expect(tx.toHex()).toEqual(expectedHex)
 
   describe "provide Transaction with private keys", ->
@@ -132,6 +133,7 @@ describe "Transaction", ->
       privateKeyBase58 = data.privateKey
       format = MyWallet.detectPrivateKeyFormat(privateKeyBase58)
       key = MyWallet.privateKeyStringToKey(privateKeyBase58, format)
+      key.pub.compressed = false;
       privateKeys = [key]
 
       transaction.addPrivateKeys(privateKeys)
@@ -155,10 +157,11 @@ describe "Transaction", ->
       privateKeyBase58 = data.privateKey
       format = MyWallet.detectPrivateKeyFormat(privateKeyBase58)
       key = MyWallet.privateKeyStringToKey(privateKeyBase58, format)
+      key.pub.compressed = false;
       privateKeys = [key]
 
       transaction.addPrivateKeys(privateKeys)
       tx = transaction.sign()
 
-      expectedHex = '0100000001594c66729d5068b7d816760fc304accd760629ee75a371529049a94cffa50861000000008b483045022100fbf264a827a86968fc299bc2dd62886c8828ad363faa15bed8b3d8fc6da68c9402203b33724d03066d4c631d0122f53e87b4cc687e6eece557424712debc4d003c31014104a7392f5628776b530aa5fbb41ac10c327ccd2cf64622a81671038ecda25084af786fd54d43689241694d1d65e6bde98756fa01dfd2f5a90d5318ab3fb7bad8c1ffffffff0250c30000000000001976a914078d35591e340799ee96968936e8b2ea8ce504a688acd2060000000000001976a91449f842901a0c81fb9c0c0f8c61027d2b085a2a9088ac00000000'
+      expectedHex = '0100000001594c66729d5068b7d816760fc304accd760629ee75a371529049a94cffa50861000000008a4730440220187d6b567d29fe10bea29aa36158edb3fcd9bed5e835b93b9f30d630aea1c7740220612be05b0d87b0a170f7ead7f9688d7172c704f63deb74705779cf8ac26ec3b9014104a7392f5628776b530aa5fbb41ac10c327ccd2cf64622a81671038ecda25084af786fd54d43689241694d1d65e6bde98756fa01dfd2f5a90d5318ab3fb7bad8c1ffffffff0250c30000000000001976a914078d35591e340799ee96968936e8b2ea8ce504a688acd2060000000000001976a9148b71295471e921703a938aa9e01433deb07c1aa588ac00000000'
       expect(tx.toHex()).toEqual(expectedHex)
