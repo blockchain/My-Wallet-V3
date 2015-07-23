@@ -268,6 +268,9 @@ var Spender = function(note, successCallback, errorCallback, listener, secondPas
           if (MyWallet.getCompressedAddressString(key) === neededPrivateKeyAddress) {
             key = new Bitcoin.ECKey(key.d, true);
           }
+          else if (MyWallet.getUnCompressedAddressString(key) === neededPrivateKeyAddress) {
+            key = new Bitcoin.ECKey(key.d, false);
+          }
           return key;
         }
         return tx.addressesOfNeededPrivateKeys.map(getKeyForAddress);
