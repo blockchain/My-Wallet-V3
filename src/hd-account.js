@@ -281,8 +281,3 @@ HDAccount.prototype.persist = function(){
   delete this._temporal_xpriv;
   return this;
 };
-
-// var x = Blockchain.HDAccount.example();
-// delete x._cache
-// var j = JSON.stringify(x, null, 2);
-// var xx = Blockchain.HDAccount.fromJSON(j);

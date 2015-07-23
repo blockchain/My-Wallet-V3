@@ -380,39 +380,10 @@ Wallet.prototype.decrypt = function(pw, success, error){
   return this;
 };
 
-// example wallet. This should be the new constructor (ask server data)
-Wallet.example = function(){
-  var object = {
-    guid              : "37f008fe-4456-43b8-8862-d2ac67053f52",
-    sharedKey         : "f5c0e85d-b379-4588-ad2b-052360b6e6ec",
-    double_encryption : true,
-    dpasswordhash     : "9f334a27ba54e317ae351177c5cdb1ec5d1463e7a03ee0da6fb7ae6aada72682",
-    options: {
-      fee_policy        :  0,
-      pbkdf2_iterations : 5000
-    }
-  };
-  return new Wallet(object);
-};
-
 Wallet.reviver = function(k,v){
-
-  function reviveHDAccount(o) { return new HDAccount(o);};
-  function reviveHDWallet(o)  { return new HDWallet(o);};
-  function reviveAddress(o,a) { o[a.address] = new Address(a); return o;};
-
-  if (k === '')
-    return new Wallet(v);
-  if (k === 'keys')
-    return v.reduce(reviveAddress, {})
-  if (k === 'hd_wallets')
-    return v.map(reviveHDWallet);
-  if (k === 'accounts')
-    return v.map(reviveHDAccount);
-
-  // default
+  if (k === '') return new Wallet(v);
   return v;
-};
+}
 
 Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
   // this should be rethought
@@ -589,15 +560,3 @@ Wallet.prototype.whitelistWallet = function (secret, email, name) {
   );
   return defer.promise;
 };
-
-// example of serialization
-// var x = Blockchain.Wallet.new();
-// x.newLegacyAddress();
-// x.newLegacyAddress();
-// x.newLegacyAddress();
-// var j = JSON.stringify(x,null,2);
-// var t = JSON.parse(j,Blockchain.Wallet.reviver);
-
-// loading old wallet to new model
-// var o = Blockchain.MyWallet.makeWalletJSON();
-// var n = JSON.parse(o,Blockchain.Wallet.reviver);
