@@ -1,5 +1,6 @@
 proxyquire = require('proxyquireify')(require)
 MyWallet = undefined
+Address = undefined
 Wallet   = undefined
 
 describe "HDWallet", ->
@@ -277,11 +278,20 @@ describe "HDWallet", ->
       it ".importLegacyAddress", ->
         pending()
 
-      it ".newLegacyAddress", ->
+      it ".newLegacyAddress without second password", ->
+        # todo: I should mock Address.new
+        wallet.newLegacyAddress("label")
+        newAdd = wallet.keys[1]
+        expect(newAdd.priv).toBeDefined()
+        expect(MyWallet.syncWallet).toHaveBeenCalled()
+
+      it ".newLegacyAddress with second password", ->
         pending()
 
       it ".deleteLegacyAddress", ->
-        pending()
+        wallet.deleteLegacyAddress(wallet.keys[0])
+        expect(wallet.keys.length).toEqual(0)
+        expect(MyWallet.syncWallet).toHaveBeenCalled()
 
       it ".validateSecondPassword", ->
         pending()
