@@ -219,11 +219,114 @@ describe "HDWallet", ->
         wallet.numberTx = 101
         expect(wallet.numberTx).toEqual(101)
 
-      # check for
-      # addresses
-      # active addresses
-      # activekey
-      # ...
+      it "addresses", ->
+        expect(wallet.addresses).toEqual(['1ASqDXsKYqcx7dkKZ74bKBBggpd5HDtjCv'])
+
+      it "activeAddresses", ->
+        wallet.keys[0]._tag = 2;
+        expect(wallet.activeAddresses).toEqual([])
+
+      it "keys", ->
+        ad = '1ASqDXsKYqcx7dkKZ74bKBBggpd5HDtjCv'
+        expect(wallet.keys[0].address).toEqual(ad)
+
+      it "key", ->
+        ad = '1ASqDXsKYqcx7dkKZ74bKBBggpd5HDtjCv'
+        expect(wallet.key(ad).address).toEqual(ad)
+
+      it "activeKeys", ->
+        wallet.keys[0]._tag = 2;
+        ad = '1ASqDXsKYqcx7dkKZ74bKBBggpd5HDtjCv'
+        expect(wallet.activeKeys.length).toEqual(0)
+
+      it "activeKey", ->
+        wallet.keys[0]._tag = 2;
+        ad = '1ASqDXsKYqcx7dkKZ74bKBBggpd5HDtjCv'
+        expect(wallet.activeKey(ad)).toEqual(null)
+
+      it "hdwallet", ->
+        expect(wallet.hdwallet).toBeDefined()
+
+      it "isUpgradedToHD", ->
+        expect(wallet.isUpgradedToHD).toBeTruthy()
+
+      it "balanceActiveLegacy with active", ->
+        wallet.keys[0].balance = 101
+        expect(wallet.balanceActiveLegacy).toEqual(101)
+
+      it "balanceActiveLegacy without active", ->
+        wallet.keys[0].balance = 101
+        wallet.keys[0]._tag = 2;
+        expect(wallet.balanceActiveLegacy).toEqual(0)
+
+    describe "Method", ->
+
+      it ".containsLegacyAddress should find address or key", ->
+        adr = '1ASqDXsKYqcx7dkKZ74bKBBggpd5HDtjCv'
+        key = wallet.keys[0]
+        find1 = wallet.containsLegacyAddress(adr)
+        find2 = wallet.containsLegacyAddress(key)
+        expect(find1).toBeTruthy()
+        expect(find2).toBeTruthy()
+
+      it ".containsLegacyAddress should not find address or key", ->
+        adr = '1ASqDXsKYqcx7dkKZ74bKBBggpd5HDtjCXXX'
+        find1 = wallet.containsLegacyAddress(adr)
+        expect(find1).toBeFalsy()
+
+      it ".importLegacyAddress", ->
+        pending()
+
+      it ".newLegacyAddress", ->
+        pending()
+
+      it ".deleteLegacyAddress", ->
+        pending()
+
+      it ".validateSecondPassword", ->
+        pending()
+
+      it ".encrypt", ->
+        pending()
+
+      it ".decrypt", ->
+        pending()
+
+      it ".restoreHDWallet", ->
+        pending()
+
+      it ".new", ->
+        pending()
+
+      it ".newHDWallet", ->
+        pending()
+
+      it ".newAccount", ->
+        pending()
+
+      it ".getPaidTo", ->
+        pending()
+
+      it ".getAddressBookLabel", ->
+        pending()
+
+      it ".getNote", ->
+        pending()
+
+      it ".setNote", ->
+        pending()
+
+      it ".deleteNote", ->
+        pending()
+
+      it ".getMnemonic", ->
+        pending()
+
+      it ".changePbkdf2Iterations", ->
+        pending()
+
+      it ".getPrivateKeyForAddress", ->
+        pending()
 
     describe "JSON serialization", ->
 
