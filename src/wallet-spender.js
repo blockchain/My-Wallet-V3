@@ -30,6 +30,7 @@ var Spender = function(note, successCallback, errorCallback, listener, secondPas
     listener = {};
   }
 
+  var maxSatoshi = 2100000000000000;
   var payment = {
     note:              note,
     fromAddress:       null,
@@ -134,6 +135,7 @@ var Spender = function(note, successCallback, errorCallback, listener, secondPas
 
       assert(toAddresses, "to address required");
       assert(amounts, "amounts required");
+      assert(amounts.reduce(Helpers.add,0) <= maxSatoshi, "max bitcoin number 21 Million");
       // we must assert amount = sum (amounts)
       payment.toAddress = toAddresses;
       payment.amount = amounts;
@@ -237,6 +239,7 @@ var Spender = function(note, successCallback, errorCallback, listener, secondPas
 
       assert(fromAddress, "fromAddress required");
       assert(typeof(amount) === "number", "amount required");
+      assert(amount <= maxSatoshi, "max bitcoin number 21 Million");
       assert(typeof(feeAmount) === "number", "fee required");
       payment.fromAddress = fromAddress ? fromAddress : MyWallet.wallet.activeAddresses;
       payment.changeAddress = fromAddress || MyWallet.wallet.activeAddresses[0];
@@ -315,6 +318,7 @@ var Spender = function(note, successCallback, errorCallback, listener, secondPas
 
       assert(fromIndex !== undefined || fromIndex !== null, "from account index required");
       assert(typeof(amount) === "number", "amount required");
+      assert(amount <= maxSatoshi, "max bitcoin number 21 Million");
       assert(typeof(feeAmount) === "number", "fee required");
       payment.fromAccountIndex = fromIndex;
       payment.fromAccount = MyWallet.wallet.hdwallet.accounts[fromIndex];
