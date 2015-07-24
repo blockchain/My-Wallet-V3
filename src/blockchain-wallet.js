@@ -446,7 +446,7 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
 };
 
 // creating a new wallet object
-Wallet.new = function(guid, sharedKey, firstAccountLabel, success){
+Wallet.new = function(mnemonic, guid, sharedKey, firstAccountLabel, success){
   var object = {
     guid              : guid,
     sharedKey         : sharedKey,
@@ -459,7 +459,7 @@ Wallet.new = function(guid, sharedKey, firstAccountLabel, success){
     }
   };
   var newWallet   = new Wallet(object);
-  var newHDwallet = HDWallet.new();
+  var newHDwallet = HDWallet.new(mnemonic);
   newWallet._hd_wallets.push(newHDwallet);
   var label = firstAccountLabel ||  "My Bitcoin Wallet";
   newHDwallet.newAccount(label);
@@ -470,7 +470,8 @@ Wallet.new = function(guid, sharedKey, firstAccountLabel, success){
 // adding and hd wallet to an existing wallet
 Wallet.prototype.newHDWallet = function(firstAccountLabel, pw, success, error){
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
-  var newHDwallet = HDWallet.new(encoder);
+  var mnemonic = BIP39.generateMnemonic();
+  var newHDwallet = HDWallet.new(mnemonic, encoder);
   this._hd_wallets.push(newHDwallet);
   var label = firstAccountLabel ? firstAccountLabel : "My Bitcoin Wallet";
   var account = this.newAccount(label, pw, this._hd_wallets.length-1, true);

@@ -1563,14 +1563,15 @@ MyWallet.signMessage = function(address, message) {
  */
  // used on mywallet, iOS and frontend
 MyWallet.createNewWallet = function(inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, success, error) {
-  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, firstAccountName, function(createdGuid, createdSharedKey, createdPassword) {
+  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, firstAccountName, function(seed, guid, sharedKey, createdPassword) {
 
     if (languageCode)
       WalletStore.setLanguage(languageCode);
 
+    WalletStore.setSharedKey(sharedKey);
     WalletStore.unsafeSetPassword(createdPassword);
 
-    success(createdGuid, createdSharedKey, createdPassword);
+    success(guid, sharedKey, createdPassword);
   }, function (e) {
     error(e);
   });

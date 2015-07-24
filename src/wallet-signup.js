@@ -9,7 +9,8 @@ var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var BlockchainAPI = require('./blockchain-api');
 var Wallet = require('./blockchain-wallet');
-
+var uuid = require('uuid');
+var BIP39 = require('bip39');
 
 // Save the javascript wallet to the remote server
 function insertWallet(guid, sharedKey, password, extra, successcallback, errorcallback) {
@@ -70,61 +71,58 @@ function insertWallet(guid, sharedKey, password, extra, successcallback, errorca
   } catch (e) {
     errorcallback(e);
   }
-}
+};
 
-function generateUUIDs(n, success, error) {
-  $.ajax({
-    type: "GET",
-    timeout: 60000,
-    url: BlockchainAPI.getRootURL() + 'uuid-generator',
-    data: { format : 'json', n : n, api_code : WalletStore.getAPICode()},
-    success: function(data) {
-      if (data.uuids && data.uuids.length == n) {
-        success(data.uuids);
-      } else {
-        error('Unknown Error');
-      }
-    },
-    error: function(data) {
-      error(data.responseText);
-    }
-  });
+function generateUUIDandSharedKey(seedHexString) {
+  assert(seedHexString.length == 128, "Expected a 256 bit seed as a hex string")
+  var seed = CryptoJS.enc.Hex.parse(seedHexString);
+  var doubleHash = CryptoJS.SHA256(CryptoJS.SHA256(seed));
+  
+  var doubleHashBuffer = Buffer(WalletCrypto.wordToByteArray(doubleHash.words));
+      
+  var guidBuffer = new Buffer(16);  
+  var sharedKeyBuffer = new Buffer(16);  
+  
+  doubleHashBuffer.copy(guidBuffer,0,0,16);
+  doubleHashBuffer.copy(sharedKeyBuffer,0,16,32);
+    
+  return {guid: uuid.unparse(guidBuffer), sharedKey: uuid.unparse(sharedKeyBuffer)}
 };
 
 function generateNewWallet(password, email, firstAccountName, success, error) {
-  this.generateUUIDs(2, function(uuids) {
-    var guid = uuids[0];
-    var sharedKey = uuids[1];
+  
+  var mnemonic = BIP39.generateMnemonic();
+  var seed = BIP39.mnemonicToSeedHex(mnemonic);
+  
+  assert(seed != undefined && seed != null && seed != "", "HD seed required");
+  
+  var keys = this.generateUUIDandSharedKey(seed);
+  
+  if (password.length > 255) {
+    throw 'Passwords must be shorter than 256 characters';
+  }  
 
-    if (password.length > 255) {
-      throw 'Passwords must be shorter than 256 characters';
-    }
+  //User reported this browser generated an invalid private key
+  if(navigator.userAgent.match(/MeeGo/i)) {
+    throw 'MeeGo browser currently not supported.';
+  }
 
-    //User reported this browser generated an invalid private key
-    if(navigator.userAgent.match(/MeeGo/i)) {
-      throw 'MeeGo browser currently not supported.';
-    }
+  var outerThis = this;
 
-    if (guid.length != 36 || sharedKey.length != 36) {
-      throw 'Error generating wallet identifier';
-    }
+  var saveWallet = function() {
+    outerThis.insertWallet(keys.guid, keys.sharedKey, password, {email : email}, function(message){
+      success(seed, keys.guid, keys.sharedKey, password);
+    }, function(e) {
+      error(e);
+    });    
+  }
 
-    // Upgrade to HD immediately:
+  Wallet.new(mnemonic, keys.guid, keys.sharedKey, firstAccountName, saveWallet);
 
-    var saveWallet = function() {
-      insertWallet(guid, sharedKey, password, {email : email}, function(message){
-        success(guid, sharedKey, password);
-      }, function(e) {
-        error(e);
-      });
-    };
-
-    Wallet.new(guid, sharedKey, firstAccountName, saveWallet);
-
-  }, error);
 };
 
 module.exports = {
-  generateUUIDs: generateUUIDs,
-  generateNewWallet: generateNewWallet
+  generateUUIDandSharedKey: generateUUIDandSharedKey,
+  generateNewWallet: generateNewWallet,
+  insertWallet: insertWallet // Exported for tests
 };

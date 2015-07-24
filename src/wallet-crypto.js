@@ -286,6 +286,18 @@ function hashNTimes(password, iterations) {
   return round_data.toString();
 };
 
+// http://stackoverflow.com/a/11893415
+function wordToByteArray(wordArray) {
+    var byteArray = [], word, i, j;
+    for (i = 0; i < wordArray.length; ++i) {
+        word = wordArray[i];
+        for (j = 3; j >= 0; --j) {
+            byteArray.push((word >> 8 * j) & 0xFF);
+        }
+    }
+    return byteArray;
+}
+
 module.exports = {
   decryptSecretWithSecondPassword: decryptSecretWithSecondPassword,
   encryptSecretWithSecondPassword: encryptSecretWithSecondPassword,
@@ -298,4 +310,5 @@ module.exports = {
   stretchPassword: stretchPassword,
   hashNTimes: hashNTimes,
   cipherFunction: cipherFunction,
+  wordToByteArray: wordToByteArray
 };
