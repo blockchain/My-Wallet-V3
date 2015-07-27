@@ -1,8 +1,8 @@
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
-
 var Helpers = {};
+Math.log2 = function(x) { return Math.log(x) / Math.LN2;};
 
 Helpers.isString = function (str){
   return typeof str == 'string' || str instanceof String;
@@ -89,5 +89,61 @@ Function.prototype.compose = function(g) {
          return fn.call(this, g.apply(this, arguments));
    };
 };
+
+////////////////////////////////////////////////////////////////////////////////
+// password scorer
+Helpers.scorePassword = function (password){
+
+  if (!Helpers.isString(password)) {return 0};
+
+  var patternsList = [
+     [0.25, /^[\d\s]+$/]
+    ,[0.25, /^[a-z\s]+\d$/]
+    ,[0.25, /^[A-Z\s]+\d$/]
+    ,[0.5, /^[a-zA-Z\s]+\d$/]
+    ,[0.5, /^[a-z\s]+\d+$/]
+    ,[0.25, /^[a-z\s]+$/]
+    ,[0.25, /^[A-Z\s]+$/]
+    ,[0.25, /^[A-Z][a-z\s]+$/]
+    ,[0.25, /^[A-Z][a-z\s]+\d$/]
+    ,[0.5, /^[A-Z][a-z\s]+\d+$/]
+    ,[0.25, /^[a-z\s]+[._!\- @*#]$/]
+    ,[0.25, /^[A-Z\s]+[._!\- @*#]$/]
+    ,[0.5, /^[a-zA-Z\s]+[._!\- @*#]$/]
+    ,[0.25, /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]+$/]
+    ,[1, /^.*$/]
+  ];
+
+  var hasDigits = function(str) { return /[0-9]/.test(str);};
+  var hasLowerCase = function(str) { return /[a-z]/.test(str);};
+  var hasUpperCase = function(str) { return /[A-Z]/.test(str);};
+  var hasPunctuation = function(str) { return /[-!$%^&*()_+|~=`{}\[\]:";'<>?@,.\/]/.test(str);};
+
+  var base = function(str) {
+    var tuples = [[10,hasDigits(str)],[26,hasLowerCase(str)],[26,hasUpperCase(str)],[31,hasPunctuation(str)]]
+    var bases = tuples.filter(function(t){return t[1]}).map(function(t){return t[0]});
+    var b = bases.reduce(Helpers.add, 0);
+    var ret = b === 0 ? 1 : b;
+    return ret;
+  };
+
+  var entropy = function (str) {
+    return Math.log2(Math.pow(base(password),password.length));
+  };
+
+  var quality = function (str) {
+    var pats = patternsList.filter(function(p){return p[1].test(str);}).map(function(p){return p[0]});
+    return Math.min.apply(Math, pats);
+  };
+
+  var entropyWeighted = function(str) {
+    return quality(str)*entropy(str);
+  };
+
+  return entropyWeighted(password);
+
+};
+////////////////////////////////////////////////////////////////////////////////
+
 
 module.exports = Helpers;
