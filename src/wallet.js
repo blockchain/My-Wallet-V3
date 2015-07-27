@@ -1113,6 +1113,7 @@ MyWallet.resendTwoFactorSms = function(user_guid, success, error) {
 
 ////////////////////////////////////////////////////////////////////////////////
 MyWallet.login = function ( user_guid
+                          , shared_key
                           , inputedPassword
                           , twoFACode
                           , success
@@ -1126,14 +1127,18 @@ MyWallet.login = function ( user_guid
 
   assert(success, 'Success callback required');
   assert(other_error, 'Error callback required');
-  assert(twoFACode !== undefined, '2FA code must null or set');
+  assert(twoFACode !== undefined, '2FA code must be null or set');
 
-  // WalletStore.setGuid(user_guid);
-  var clientTime=(new Date()).getTime();
-  var data = {format : 'json', resend_code : null, ct : clientTime};
+  var clientTime = (new Date()).getTime();
+  var data = { format : 'json', resend_code : null, ct : clientTime };
 
-  // this is IOS
-  data.api_code = WalletStore.getAPICode();
+  if (WalletStore.getAPICode()) {
+    data.api_code = WalletStore.getAPICode();
+  }
+
+  if (shared_key) {
+    data.sharedKey = shared_key;
+  }
 
   var tryToFetchWalletJSON = function(guid, successCallback) {
     $.ajax({
