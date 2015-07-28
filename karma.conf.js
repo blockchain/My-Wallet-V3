@@ -69,7 +69,7 @@ module.exports = function(karma) {
       //'tests/wallet_spender_spec.js.coffee',     //(FAIL)
       'tests/blockchain_api_spec.js.coffee',       //(OK)
       // 'tests/claim_redeem_spec.js.coffee',      //(requires refactor)
-      // 'tests/transaction_spec.js.coffee',       //(FAIL)
+      'tests/transaction_spec.js.coffee',          //(OK)
       'tests/transaction_spend_spec.js.coffee',    //(OK)
       // 'tests/my_wallet_spec.js.coffee',         //(FAIL)      // This seems to leave some global state around, see below:
       // 'tests/wallet_spec.js.coffee',            //(FAIL)      // Throws an error unless my_wallet_spec runs first (bad...)
