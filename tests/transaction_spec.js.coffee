@@ -90,8 +90,8 @@ describe "Transaction", ->
         active: true
       }
     ]
-    
-    MyWallet.wallet = 
+
+    MyWallet.wallet =
       activeKey: (key) ->
         return [
           "1gvtg5mEEpTNVYDtEx6n4J7oyVpZGU13h"
@@ -99,11 +99,12 @@ describe "Transaction", ->
           "1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF"
           "14msrp3yc4JRZEu49u7zYeAkKer4ETH6ag"
         ].indexOf(key) > -1
+      isUpgradedToHD: true
       hdwallet:
         accounts: hdAccounts
       getPaidTo: () -> {}
       getNote: () -> ""
-    
+
     spyOn(WalletStore, "getLatestBlock").and.returnValue(true)
 
     # Terminology:
@@ -327,7 +328,7 @@ describe "Transaction", ->
           result = MyWallet.processTransaction(tx)
           expect(result["from"]).toEqual(transaction["from"])
           expect(result["to"]).toEqual(transaction["to"])
-          
+
 
       ##########################################################################
       it "should be recognized if there's no change", ->
@@ -1472,28 +1473,28 @@ describe "Transaction", ->
     describe "fee", ->
       it "default sample transactions should have 0.0001 BTC fee", ->
         rawTx = defaultSampleTx
-        
+
         expect(MyWallet.processTransaction(rawTx).fee).toEqual(10000)
-        
+
       it "should flag frugal fee", ->
         rawTx = defaultSampleTx
         rawTx.confirmations = 0
-        
+
         # Reduce the previous output by 0.0001 BTC so as to make it frugal
         rawTx.inputs[0].prev_out.value -= 10000
-  
+
         processedTx = MyWallet.processTransaction(rawTx)
         expect(processedTx.frugal).toBe(true)
-        
+
       it "should not flag an 0.0001(0000) BTC fee as frugal", ->
         rawTx = defaultSampleTx
         rawTx.confirmations = 0
-        rawTx.fee = 10000 
+        rawTx.fee = 10000
         processedTx = MyWallet.processTransaction(rawTx)
         expect(processedTx.frugal).toBe(false)
-    
+
     describe "double spend", ->
-        
+
       it "should be recognised when receiving" ,->
         rawTx = defaultSampleTx
         rawTx.double_spend = true

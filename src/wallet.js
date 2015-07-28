@@ -377,25 +377,27 @@ MyWallet.processTransaction = function(tx) {
       transaction.from.legacyAddresses.push({address: output.addr, amount: output.value});
       transaction.fee += output.value;
     } else {
-      for (var j in MyWallet.wallet.hdwallet.accounts) {
-        var account = MyWallet.wallet.hdwallet.accounts[j];
-        if (account.active && output.xpub != null && account.extendedPublicKey === output.xpub.m) {
-          amountFromAccount += output.value;
+      if (MyWallet.wallet.isUpgradedToHD) {
+        for (var j in MyWallet.wallet.hdwallet.accounts) {
+          var account = MyWallet.wallet.hdwallet.accounts[j];
+          if (account.active && output.xpub != null && account.extendedPublicKey === output.xpub.m) {
+            amountFromAccount += output.value;
 
-          if (! isOrigin) {
-            isOrigin = true;
-            fromAccountIndex = parseInt(j);
+            if (! isOrigin) {
+              isOrigin = true;
+              fromAccountIndex = parseInt(j);
 
-            transaction.fee += output.value;
-          } else {
-            if ( output.value > legacyAddressWithLargestOutputAmount ) {
-              legacyAddressWithLargestOutput = output.addr;
-              legacyAddressWithLargestOutputAmount = output.value;
+              transaction.fee += output.value;
+            } else {
+              if ( output.value > legacyAddressWithLargestOutputAmount ) {
+                legacyAddressWithLargestOutput = output.addr;
+                legacyAddressWithLargestOutputAmount = output.value;
+              }
+              amountFromLegacyAddresses += output.value;
+              transaction.fee += output.value;
             }
-            amountFromLegacyAddresses += output.value;
-            transaction.fee += output.value;
+            break;
           }
-          break;
         }
       }
 
@@ -459,31 +461,32 @@ MyWallet.processTransaction = function(tx) {
       transaction.intraWallet = false;
     }else {
       var toAccountSet = false;
-      for (var j in MyWallet.wallet.hdwallet.accounts) {
-        var account = MyWallet.wallet.hdwallet.accounts[j];
-        if (account.active && output.xpub != null && account.extendedPublicKey == output.xpub.m) {
-          if (! toAccountSet) {
-            if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
-              transaction.from.account.amount -= output.value;
+      if (MyWallet.wallet.isUpgradedToHD) {
+        for (var j in MyWallet.wallet.hdwallet.accounts) {
+          var account = MyWallet.wallet.hdwallet.accounts[j];
+          if (account.active && output.xpub != null && account.extendedPublicKey == output.xpub.m) {
+            if (! toAccountSet) {
+              if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
+                transaction.from.account.amount -= output.value;
+              } else {
+                transaction.to.account = {index: parseInt(j), amount: output.value};
+              }
+              toAccountSet = true;
+              transaction.fee -= output.value;
             } else {
-              transaction.to.account = {index: parseInt(j), amount: output.value};
+              if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
+                transaction.from.account.amount -= output.value;
+              } else if ((transaction.from.account != null || transaction.from.legacyAddresses != null)) {
+                  if (transaction.to.externalAddresses == null)
+                      transaction.to.externalAddresses = [];
+                  transaction.to.externalAddresses.push({address: output.addr, amount: output.value});
+              }
+              transaction.fee -= output.value;
             }
-            toAccountSet = true;
-            transaction.fee -= output.value;
-          } else {
-            if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
-              transaction.from.account.amount -= output.value;
-            } else if ((transaction.from.account != null || transaction.from.legacyAddresses != null)) {
-                if (transaction.to.externalAddresses == null)
-                    transaction.to.externalAddresses = [];
-                transaction.to.externalAddresses.push({address: output.addr, amount: output.value});
-            }
-            transaction.fee -= output.value;
+            break;
           }
-          break;
         }
       }
-
       if (! toAccountSet) {
         if ((transaction.from.account != null || transaction.from.legacyAddresses != null)) {
           if (transaction.to.externalAddresses == null)
@@ -529,7 +532,7 @@ MyWallet.processTransaction = function(tx) {
 
   // Check if fee is frugal (incomplete):
   transaction.frugal = transaction.fee < 10000
-  
+
   transaction.double_spend = tx.double_spend == null ? false : tx.double_spend
 
   return transaction;
