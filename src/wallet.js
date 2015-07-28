@@ -582,7 +582,7 @@ MyWallet.fetchMoreTransactionsForAccounts = function(success, error, didFetchOld
         MyWallet.wallet.hdwallet.activeXpubs
       , function(data) { success && success(data.txs);}
       , function()     { error && error();}
-      , 0, txOffset, numTx
+      , null, txOffset, numTx
     );
   }
   getRawTransactionsForAccounts(
@@ -614,7 +614,7 @@ MyWallet.fetchMoreTransactionsForAccount = function(accountIdx, success, error, 
         [xpub]
       , function(data) {success && success(data);}
       , function()     {error   && error();}
-      , 0, txOffset, numTx);
+      , null, txOffset, numTx);
   }
 
   var account = MyWallet.wallet.hdwallet.accounts[accountIdx];
@@ -723,7 +723,7 @@ MyWallet.fetchRawTransactionsAndBalanceForAddresses = function(addresses, succes
   }, function() {
     if (error) error();
 
-  }, 0, 0);
+  }, null, 0);
 };
 
 /**
@@ -741,7 +741,7 @@ MyWallet.fetchMoreTransactionsForLegacyAddresses = function(success, error, didF
     }, function() {
       if (error) error();
 
-    }, 0, txOffset, numTx);
+    }, null, txOffset, numTx);
   }
 
   getRawTransactionsForLegacyAddresses(WalletStore.getLegacyAddressesNumTxFetched(), WalletStore.getNumOldTxsToFetchAtATime(), function(data) {
@@ -832,7 +832,7 @@ MyWallet.get_history_with_addresses = function(addresses, success, error) {
     if (success) success(data);
   }, function() {
     if (error) error();
-  }, 0, 0, 30);
+  }, null, 0, 30);
 };
 // used on myWallet and iOS
 MyWallet.get_history = function(success, error) {
@@ -968,7 +968,7 @@ MyWallet.getHistoryAndParseMultiAddressJSON = function(_success) {
     success && success();
   }, function() {
     error && error();
-  }, 0, 0, 30);
+  }, null, 0, 30);
 };
 
 // used once

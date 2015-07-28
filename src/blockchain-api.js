@@ -51,7 +51,6 @@ function retryAjax(ajaxParams) {
 function get_history(success, error, tx_filter, offset, n) {
   var clientTime = (new Date()).getTime();
 
-  tx_filter = tx_filter || 0;
   offset = offset || 0;
   n = n || 0;
 
@@ -72,7 +71,6 @@ function get_history(success, error, tx_filter, offset, n) {
   var data = {
     active : allAddresses.join('|'),
     format : 'json',
-    filter : tx_filter,
     offset : offset,
     no_compact : true,
     ct : clientTime,
@@ -81,6 +79,10 @@ function get_history(success, error, tx_filter, offset, n) {
     api_code : WalletStore.getAPICode(),
     no_buttons: true
   };
+  
+  if (tx_filter != undefined && tx_filter != null) {
+    data.filter = tx_filter;
+  }
 
   retryAjax({
     type: "POST",
@@ -96,7 +98,7 @@ function get_history(success, error, tx_filter, offset, n) {
       MyWallet.handleNTPResponse(obj, clientTime);
 
       //Cache results to show next login
-      if (offset == 0 && tx_filter == 0) {
+      if (offset == 0 && (tx_filter == 0 || tx_filter == null) ) {
         MyStore.put('multiaddr', JSON.stringify(obj));
       }
 
@@ -166,14 +168,12 @@ function get_history_with_addresses(addresses, success, error, tx_filter, offset
 function async_get_history_with_addresses(addresses, success, error, tx_filter, offset, n) {
   var clientTime=(new Date()).getTime();
 
-  if (!tx_filter) tx_filter = 0;
   if (!offset) offset = 0;
   if (!n) n = 0;
 
   var data = {
     active : addresses.join('|'),
     format : 'json',
-    filter : tx_filter,
     offset : offset,
     no_compact : true,
     ct : clientTime,
@@ -181,6 +181,10 @@ function async_get_history_with_addresses(addresses, success, error, tx_filter, 
     language : WalletStore.getLanguage(),
     api_code : WalletStore.getAPICode()
   };
+  
+  if (tx_filter != undefined && tx_filter != null) {
+    data.filter = tx_filter;
+  }
 
   retryAjax({
     type: "POST",
