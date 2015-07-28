@@ -117,14 +117,12 @@ function get_history(success, error, tx_filter, offset, n) {
 function get_history_with_addresses(addresses, success, error, tx_filter, offset, n) {
   var clientTime=(new Date()).getTime();
 
-  if (!tx_filter) tx_filter = 0;
   if (!offset) offset = 0;
   if (!n) n = 0;
 
   var data = {
     active : addresses.join('|'),
     format : 'json',
-    filter : tx_filter,
     offset : offset,
     no_compact : true,
     ct : clientTime,
@@ -132,6 +130,10 @@ function get_history_with_addresses(addresses, success, error, tx_filter, offset
     language : WalletStore.getLanguage(),
     api_code : WalletStore.getAPICode()
   };
+  
+  if (tx_filter != undefined && tx_filter != null) {
+    data.filter = tx_filter;
+  }
 
   retryAjax({
     type: "POST",

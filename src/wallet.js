@@ -529,6 +529,8 @@ MyWallet.processTransaction = function(tx) {
 
   // Check if fee is frugal (incomplete):
   transaction.frugal = transaction.fee < 10000
+  
+  transaction.double_spend = tx.double_spend == null ? false : tx.double_spend
 
   return transaction;
 };

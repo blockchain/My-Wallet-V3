@@ -1491,6 +1491,14 @@ describe "Transaction", ->
         rawTx.fee = 10000 
         processedTx = MyWallet.processTransaction(rawTx)
         expect(processedTx.frugal).toBe(false)
+    
+    describe "double spend", ->
+        
+      it "should be recognised when receiving" ,->
+        rawTx = defaultSampleTx
+        rawTx.double_spend = true
+        processedTx = MyWallet.processTransaction(rawTx)
+        expect(processedTx.double_spend).toBe(true)
 
   describe "getConfirmationsForTx()", ->
     ##########################################################################
