@@ -62,14 +62,22 @@ Helpers.memoize = function (f){
 // no matter how many times you call the new function, it will run only once
 Helpers.asyncOnce = function (f, milliseconds, before){
   var timer = null;
+  var oldArguments = new Array();
   return function() {
     before && before()
     if (timer) {
       clearTimeout(timer);
       timer = null;
     };
-    var myArgs = arguments;
-    timer = setTimeout(function(){f.apply(this, myArgs);}, milliseconds);
+    var myArgs = new Array();
+    // this is needed because arguments is not an "Array" instance
+    for (var i = 0; i < arguments.length; i++) { myArgs[i] = arguments[i];};
+    var myArgs = Helpers.zipLong(Helpers.maybeCompose, myArgs, oldArguments);
+    oldArguments = myArgs;
+    timer = setTimeout(function(){
+                         f.apply(this, myArgs);
+                         oldArguments = new Array();
+                       }, milliseconds);
   };
 };
 
@@ -81,6 +89,27 @@ Helpers.merge = function (o, p) {
     o[prop] = p[prop];
   }
   return o;
+};
+
+Helpers.zipLong = function (f, xs, ys) {
+
+  if (!(f instanceof Function && xs instanceof Array && ys instanceof Array)){
+    return null;
+  } else{
+    var zs = xs.length > ys.length ? xs : ys;
+    return zs.map(function(v,i){return f(xs[i],ys[i]);});
+  };
+};
+
+Helpers.maybeCompose = function (f, g) {
+  if (f instanceof Function && g instanceof Function){
+    return f.compose(g);
+  } else{
+    if (f instanceof Function) {return f};
+    if (g instanceof Function) {return g};
+    //otherwise
+    return f;
+  };
 };
 
 Function.prototype.compose = function(g) {

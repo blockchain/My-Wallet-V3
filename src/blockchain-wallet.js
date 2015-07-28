@@ -330,13 +330,18 @@ Wallet.prototype.validateSecondPassword = function(inputString) {
   return password_hash === this._dpasswordhash;
 };
 
-Wallet.prototype.encrypt = function(pw, success, error){
+Wallet.prototype.encrypt = function(pw, success, error, encrypting, syncing){
+  encrypting && encrypting();
   try {
     if (!this.isDoubleEncrypted) {
       var g = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
       var f = function(element) {element.encrypt(g);};
       this.keys.forEach(f);
       this._hd_wallets.forEach(f);
+    }
+    else {
+      // already encrypted
+      return this;
     };
   }
   catch (e){
@@ -350,18 +355,24 @@ Wallet.prototype.encrypt = function(pw, success, error){
   var p = function(element) {element.persist();};
   this.keys.forEach(p);
   this._hd_wallets.forEach(p);
-  MyWallet.syncWallet();
-  success && success(this);
+  syncing && syncing();
+  if (success) { MyWallet.syncWallet(success.bind(undefined, this));}
+  else {MyWallet.syncWallet();};
   return this;
 };
 
-Wallet.prototype.decrypt = function(pw, success, error){
+Wallet.prototype.decrypt = function(pw, success, error, decrypting, syncing){
+  decrypting && decrypting();
   try {
     if (this.isDoubleEncrypted) {
       var g = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "dec");
       var f = function(element) {element.decrypt(g);};
       this.keys.forEach(f);
       this._hd_wallets.forEach(f);
+    }
+    else {
+      // already decrypted
+      return this;
     };
   }
   catch (e){
@@ -375,8 +386,9 @@ Wallet.prototype.decrypt = function(pw, success, error){
   var p = function(element) {element.persist();};
   this.keys.forEach(p);
   this._hd_wallets.forEach(p);
-  MyWallet.syncWallet();
-  success && success(this)
+  syncing && syncing();
+  if (success) { MyWallet.syncWallet(success.bind(undefined, this));}
+  else {MyWallet.syncWallet();};
   return this;
 };
 
