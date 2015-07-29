@@ -146,18 +146,22 @@ Helpers.scorePassword = function (password){
   var hasDigits = function(str) { return /[0-9]/.test(str);};
   var hasLowerCase = function(str) { return /[a-z]/.test(str);};
   var hasUpperCase = function(str) { return /[A-Z]/.test(str);};
-  var hasPunctuation = function(str) { return /[-!$%^&*()_+|~=`{}\[\]:";'<>?@,.\/]/.test(str);};
+  var hasSymbol    = function(str) { return /[^0-9a-zA-z]/.test(str);};
+  var computeSet   = function(str) {
+    var maxChar = Math.max.apply(Math,str.split("").map(function(c){return c.charCodeAt(0);}));
+    return maxChar + 256 - maxChar % 256;
+  };
 
   var base = function(str) {
-    var tuples = [[10,hasDigits(str)],[26,hasLowerCase(str)],[26,hasUpperCase(str)],[31,hasPunctuation(str)]]
+    var tuples = [[10,hasDigits(str)],[26,hasLowerCase(str)],[26,hasUpperCase(str)]];
     var bases = tuples.filter(function(t){return t[1]}).map(function(t){return t[0]});
-    var b = bases.reduce(Helpers.add, 0);
-    var ret = b === 0 ? 1 : b;
+    var setSize = hasSymbol(str) ? computeSet(str) : bases.reduce(Helpers.add, 0);
+    var ret = setSize === 0 ? 1 : setSize;
     return ret;
   };
 
   var entropy = function (str) {
-    return Math.log2(Math.pow(base(password),password.length));
+    return Math.log2(Math.pow(base(str),str.length));
   };
 
   var quality = function (str) {
