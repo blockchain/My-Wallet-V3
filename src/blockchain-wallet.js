@@ -39,7 +39,6 @@ function Wallet(object) {
   //options
   this._pbkdf2_iterations        = obj.options.pbkdf2_iterations;
   this._fee_policy               = obj.options.fee_policy;
-  this._enable_multiple_accounts = obj.options.enable_multiple_accounts;
   this._html5_notifications      = obj.options.html5_notifications;
   this._logout_time              = obj.options.logout_time;
 
@@ -187,10 +186,6 @@ Object.defineProperties(Wallet.prototype, {
       return !(this._hd_wallets == null || this._hd_wallets.length === 0);
     }
   },
-  "isMultipleAccount":{
-    configurable: false,
-    get: function() {return this._enable_multiple_accounts;}
-  },
   "balanceActiveLegacy":{
     configurable: false,
     get: function() {
@@ -232,7 +227,6 @@ Wallet.prototype.toJSON = function(){
     options           : {
       pbkdf2_iterations        : this.pbkdf2_iterations,
       fee_policy               : this.fee_policy,
-      // enable_multiple_accounts : this.isMultipleAccount,
       html5_notifications      : this._html5_notifications,
       logout_time              : this._logout_time
     },
