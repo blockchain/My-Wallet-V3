@@ -86,7 +86,7 @@ function generateUUIDandSharedKey(seedHexString) {
   doubleHashBuffer.copy(guidBuffer,0,0,16);
   doubleHashBuffer.copy(sharedKeyBuffer,0,16,32);
     
-  return {guid: uuid.unparse(guidBuffer), sharedKey: uuid.unparse(sharedKeyBuffer)}
+  return {guid: uuid.v4({random: guidBuffer}), sharedKey: uuid.v4({random: sharedKeyBuffer})}
 };
 
 function generateNewWallet(password, email, firstAccountName, success, error) {
