@@ -29,7 +29,6 @@ describe "Spender", ->
   getPass    = undefined
 
   beforeEach ->
-    # window.formatBTC = (str) -> str
     obs =
       success: () -> return
       error: () -> return

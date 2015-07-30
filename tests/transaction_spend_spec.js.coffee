@@ -43,8 +43,6 @@ describe "Transaction", ->
     spyOn(observer, 'error')
     spyOn(observer, 'listener')
 
-    window.formatBTC = (str) -> str
-
     window.BlockchainAPI =
       get_unspent: () ->
       push_tx: () ->

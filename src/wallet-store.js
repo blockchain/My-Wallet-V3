@@ -57,7 +57,6 @@ var WalletStore = (function() {
     'BRL': 'Brazil Real',
     'RUB': 'Russian Ruble'
   };
-  var demo_guid = 'abcaa314-6f67-6705-b384-5d47fbe9d7cc';
   var password; //Password
   var guid; //Wallet identifier
   var language = 'en';
@@ -74,7 +73,6 @@ var WalletStore = (function() {
   var sharedKey; //Shared key used to prove that the wallet has succesfully been decrypted, meaning you can't overwrite a wallet backup even if you have the guid
   var isPolling = false;
   var legacyAddressesNumTxFetched = 0;
-  var default_pbkdf2_iterations = 5000;
   var isRestoringWallet = false;
   var counter = 0;
   var logout_timeout; //setTimeout return value for the automatic logout
@@ -130,14 +128,6 @@ var WalletStore = (function() {
     isLogoutDisabled: function() {
       return disable_logout;
     },
-    getMixerFee: function() {
-      return mixer_fee;
-    },
-    setMixerFee: function(fee) {
-      if (fee != null) {
-        mixer_fee = fee;
-      }
-    },
     getLatestBlock: function() {
       return latest_block;
     },
@@ -184,9 +174,6 @@ var WalletStore = (function() {
     setGuid: function(stringValue) {
       guid = stringValue;
     },
-    isDemoWallet: function() {
-      return guid === demo_guid;
-    },
     generatePayloadChecksum: function() {
       return CryptoJS.SHA256(encrypted_wallet_data).toString();
     },
@@ -209,18 +196,6 @@ var WalletStore = (function() {
     setPayloadChecksum: function(value) {
       payload_checksum = value;
     },
-    getSharedcoinEndpoint: function() {
-      return sharedcoin_endpoint;
-    },
-    setSharedcoinEndpoint: function(value) {
-      sharedcoin_endpoint = value;
-    },
-    getSharedKey: function() {
-      return sharedKey;
-    },
-    setSharedKey: function(value) {
-      sharedKey = value;
-    },
     isPolling: function () {
       return isPolling;
     },
@@ -232,9 +207,6 @@ var WalletStore = (function() {
     },
     addLegacyAddressesNumTxFetched: function (number){
       legacyAddressesNumTxFetched += number;
-    },
-    getDefaultPbkdf2Iterations: function() {
-      return default_pbkdf2_iterations;
     },
     isRestoringWallet: function() {
       return isRestoringWallet;

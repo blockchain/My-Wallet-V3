@@ -42,6 +42,10 @@ if (!window.console) {
     window.console[names[i]] = function() {};
   }
 }
+//The current 'shift' value - BTC = 1, mBTC = 3, uBTC = 6
+function sShift(symbol) {
+  return (satoshi / symbol.conversion).toString().length-1;
+}
 
 var ws;
 var reconnectInterval;
@@ -153,80 +157,3 @@ function formatSatoshi(value, shift, no_comma) {
 function convert(x, conversion) {
   return (x / conversion).toFixed(2).toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
 }
-
-//Convenience format satoshi as BTC value string
-function formatBTC(x) {
-  return formatSymbol(x, symbol_btc);
-}
-
-//The current 'shift' value - BTC = 1, mBTC = 3, uBTC = 6
-function sShift(symbol) {
-  return (satoshi / symbol.conversion).toString().length-1;
-}
-
-function formatSymbol(x, symbol, html) {
-  var str;
-
-  if (symbol !== symbol_btc) {
-    str = convert(x, symbol.conversion);
-  } else {
-    str = formatSatoshi(x, sShift(symbol));
-  }
-
-  if (html) str = str.replace(/([1-9]\d*\.\d{2}?)(.*)/, "$1<span style=\"font-size:85%;\">$2</span>");
-
-  if (symbol.symbolAppearsAfter)
-    str += ' ' +symbol.symbol;
-  else
-    str = symbol.symbol + ' ' + str;
-
-  return str;
-}
-
-var _sounds = {};
-function playSound(id) {
-  try {
-    if (!_sounds[id])
-      _sounds[id] = new Audio('/'+resource+id+'.wav');
-
-    _sounds[id].play();
-  } catch (e) { }
-};
-
-var MyStore = new function() {
-  this.put = function(key, value) {
-    try {
-      localStorage.setItem(key, value);
-    } catch(e) {
-      console.log(e);
-    }
-  };
-
-  this.get = function(key, callback) {
-    try {
-      var result = localStorage.getItem(key);
-    } catch(e) {
-      console.log(e);
-    }
-    if (callback)
-      callback(result);
-    else
-      return result;
-  };
-
-  this.remove = function(key) {
-    try {
-      localStorage.removeItem(key);
-    } catch(e) {
-      console.log(e);
-    }
-  };
-
-  this.clear = function() {
-    try {
-      localStorage.clear();
-    } catch(e) {
-      console.log(e);
-    }
-  };
-};

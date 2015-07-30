@@ -72,7 +72,7 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
     }
   }
 
-  assert(accum >= subTotal, 'Insufficient funds. Value Needed ' +  formatBTC(subTotal) + '. Available amount ' + formatBTC(accum));
+  assert(accum >= subTotal, 'Insufficient funds. Value Needed ' +  subTotal + '. Available amount ' + accum);
 
   this.transaction = transaction;
 };

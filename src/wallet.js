@@ -139,8 +139,8 @@ MyWallet.getUnCompressedAddressString = function(key) {
 // TODO :: WALLET SPENDER FIX
 // only used on the Spender (for paytoEmail/Mobile, need a fix)
 MyWallet.addPrivateKey = function(key, opts, second_password) {
-  var sharedKey = WalletStore.getSharedKey();
-  var pbkdf2_iterations = WalletStore.getPbkdf2Iterations();
+  var sharedKey = MyWallet.wallet.sharedKey;
+  var pbkdf2_iterations = MyWallet.wallet.pbkdf2_iterations;
 
   if (WalletStore.walletIsFull()) {
     throw 'Wallet is full.';
@@ -867,8 +867,6 @@ function parseMultiAddressJSON(obj, cached, checkCompleted) {
   var transactions = WalletStore.getTransactions();
   if (!cached) {
 
-    WalletStore.setMixerFee(obj.mixer_fee);
-
     if (obj.info) {
       if (obj.info.symbol_local)
         setLocalSymbol(obj.info.symbol_local);
@@ -884,8 +882,6 @@ function parseMultiAddressJSON(obj, cached, checkCompleted) {
   if (obj.disable_mixer) {
     //$('#shared-addresses,#send-shared').hide();
   }
-
-  WalletStore.setSharedcoinEndpoint(obj.sharedcoin_endpoint);
 
   transactions.length = 0;
 
@@ -1585,7 +1581,6 @@ MyWallet.createNewWallet = function(inputedEmail, inputedPassword, firstAccountN
     if (languageCode)
       WalletStore.setLanguage(languageCode);
 
-    WalletStore.setSharedKey(createdSharedKey);
     WalletStore.unsafeSetPassword(createdPassword);
 
     success(createdGuid, createdSharedKey, createdPassword);
@@ -1607,10 +1602,6 @@ MyWallet.logout = function(force) {
     return;
 
   WalletStore.sendEvent('logging_out');
-
-  if (WalletStore.isDemoWallet()) {
-    window.location = BlockchainAPI.getRootURL() + 'wallet/logout';
-  } else {
     $.ajax({
       type: "GET",
       timeout: 60000,
@@ -1623,7 +1614,6 @@ MyWallet.logout = function(force) {
         window.location.reload();
       }
     });
-  }
 };
 // used once
 // TODO : should be a helper

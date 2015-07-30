@@ -198,6 +198,10 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function() { return this._address_book;}
   },
+  "defaultPbkdf2Iterations":{
+    configurable: false,
+    get: function(){return 5000;}
+  },
   "logoutTime":{
     configurable: false,
     get: function() { return this._logout_time; },

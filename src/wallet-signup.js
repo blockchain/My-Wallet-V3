@@ -23,7 +23,7 @@ function insertWallet(guid, sharedKey, password, extra, successcallback, errorca
     var data = JSON.stringify(MyWallet.wallet, null, 2);
 
     //Everything looks ok, Encrypt the JSON output
-    var crypted = WalletCrypto.encryptWallet(data, password, WalletStore.getDefaultPbkdf2Iterations(),  MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0);
+    var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.wallet.defaultPbkdf2Iterations,  MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0);
 
     if (crypted.length == 0) {
       throw 'Error encrypting the JSON output';
