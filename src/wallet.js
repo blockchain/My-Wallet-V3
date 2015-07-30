@@ -1108,13 +1108,13 @@ MyWallet.resendTwoFactorSms = function(user_guid, success, error) {
 MyWallet.recoverResetPasswordAndLogin = function ( 
                             mnemonic
                           , newPassword
-                          , success
+                          , successCallback
                           , other_error) {
 
   assert(mnemonic, 'Mnemonic required');
   assert(MyWallet.isValidateBIP39Mnemonic(mnemonic), "Invalid mnemonic");
   assert(newPassword, 'New password required');
-  assert(success, 'Success callback required');
+  assert(successCallback, 'Success callback required');
   assert(other_error, 'Error callback required');
   
   var seed = BIP39.mnemonicToSeedHex(mnemonic);
@@ -1137,16 +1137,19 @@ MyWallet.recoverResetPasswordAndLogin = function (
     var json = $.parseJSON(obj.payload);
     var oldPassword = WalletCrypto.decryptPasswordWithSeed(json.encryptedPassword, seed, json.pbkdf2_iterations);
         
+    var success = function() {
+      // Change password
+      WalletStore.changePassword(newPassword, function() {
+        successCallback(uuidAndSharedKey.guid);
+      }, function() { 
+        console.log("Couldn't change password.");
+        other_error("Couldn't reset password.");
+      });
+    };
     // Finish regular login    
     MyWallet.initializeWallet(oldPassword, success, other_error);
     
-    // Change password
-    WalletStore.changePassword(newPassword, function() {
-      success(uuidAndSharedKey.guid);
-    }, function() { 
-      console.log("Couldn't change password.");
-      other_error("Couldn't reset password.");
-    });
+
   };
   
   MyWallet.tryToFetchWalletJSON(uuidAndSharedKey.guid, uuidAndSharedKey.sharedKey, null, null, didFetchWalletJSON, other_error);
