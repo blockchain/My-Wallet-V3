@@ -4,6 +4,7 @@ var assert = require('assert');
 var $ = require('jquery');
 var CryptoJS = require('crypto-js');
 var sjcl = require('sjcl');
+var uuid = require('uuid');
 
 var SUPPORTED_ENCRYPTION_VERSION = 3.0;
 
@@ -318,6 +319,22 @@ function decryptPasswordWithSeed(encryptedPassword, seedHexString, pbkdf2_iterat
   return decryptAes(encryptedPassword, seed, pbkdf2_iterations);
 }
 
+function seedToUUIDandSharedKey(seedHexString) {
+  assert(seedHexString.length == 128, "Expected a 256 bit seed as a hex string")
+  var seed = CryptoJS.enc.Hex.parse(seedHexString);
+  var doubleHash = CryptoJS.SHA256(CryptoJS.SHA256(seed));
+  
+  var doubleHashBuffer = Buffer(wordToByteArray(doubleHash.words));
+      
+  var guidBuffer = new Buffer(16);  
+  var sharedKeyBuffer = new Buffer(16);  
+  
+  doubleHashBuffer.copy(guidBuffer,0,0,16);
+  doubleHashBuffer.copy(sharedKeyBuffer,0,16,32);
+    
+  return {guid: uuid.v4({random: guidBuffer}), sharedKey: uuid.v4({random: sharedKeyBuffer})}
+};
+
 module.exports = {
   decryptSecretWithSecondPassword: decryptSecretWithSecondPassword,
   encryptSecretWithSecondPassword: encryptSecretWithSecondPassword,
@@ -332,5 +349,6 @@ module.exports = {
   cipherFunction: cipherFunction,
   wordToByteArray: wordToByteArray,
   encryptPasswordWithSeed: encryptPasswordWithSeed,
-  decryptPasswordWithSeed: decryptPasswordWithSeed
+  decryptPasswordWithSeed: decryptPasswordWithSeed,
+  seedToUUIDandSharedKey: seedToUUIDandSharedKey
 };
