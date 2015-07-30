@@ -79,7 +79,7 @@ function get_history(success, error, tx_filter, offset, n) {
     api_code : WalletStore.getAPICode(),
     no_buttons: true
   };
-  
+
   if (tx_filter != undefined && tx_filter != null) {
     data.filter = tx_filter;
   }
@@ -94,14 +94,7 @@ function get_history(success, error, tx_filter, offset, n) {
       if (obj.error != null) {
         WalletStore.sendEvent("msg", {type: "error", message: obj.error});
       }
-
       MyWallet.handleNTPResponse(obj, clientTime);
-
-      //Cache results to show next login
-      if (offset == 0 && (tx_filter == 0 || tx_filter == null) ) {
-        MyStore.put('multiaddr', JSON.stringify(obj));
-      }
-
       success && success(obj);
     },
     error : function(data) {
@@ -132,7 +125,7 @@ function get_history_with_addresses(addresses, success, error, tx_filter, offset
     language : WalletStore.getLanguage(),
     api_code : WalletStore.getAPICode()
   };
-  
+
   if (tx_filter != undefined && tx_filter != null) {
     data.filter = tx_filter;
   }
@@ -181,7 +174,7 @@ function async_get_history_with_addresses(addresses, success, error, tx_filter, 
     language : WalletStore.getLanguage(),
     api_code : WalletStore.getAPICode()
   };
-  
+
   if (tx_filter != undefined && tx_filter != null) {
     data.filter = tx_filter;
   }
@@ -209,7 +202,7 @@ function async_get_history_with_addresses(addresses, success, error, tx_filter, 
       else
         WalletStore.sendEvent("msg", {type: "error", message: 'Error Restoring Wallet'});
 
-      error();
+      error && error();
     }
   });
 };
@@ -485,7 +478,7 @@ function push_tx(tx, note, success, error) {
   });
 };
 
-function get_unspent(fromAddresses, success, error, confirmations, do_not_use_unspent_cache) {
+function get_unspent(fromAddresses, success, error, confirmations) {
   retryAjax({
     type: "POST",
     dataType: 'json',
@@ -497,39 +490,12 @@ function get_unspent(fromAddresses, success, error, confirmations, do_not_use_un
         error(obj.error);
         return;
       }
-
       if (obj.notice != null) {
         WalletStore.sendEvent("msg", {type: "success", message: obj.notice});
       }
-
-      //Save the unspent cache
-      MyStore.put('unspent', JSON.stringify(obj));
-
-      success(obj);
+      success && success(obj);
     },
-    error: function (data) {
-      //Try and look for unspent outputs in the cache
-      if (do_not_use_unspent_cache) {
-        error(data);
-      } else {
-        MyStore.get('unspent', function(cache) {
-          try {
-            if (cache != null) {
-              var obj = $.parseJSON(cache);
-
-              success(obj);
-            } else {
-              if (data.responseText)
-                throw data.responseText;
-              else
-                throw 'Error Contacting Server. No unspent outputs available in cache.';
-            }
-          } catch (e) {
-            error(e);
-          }
-        });
-      }
-    }
+    error: function (data) { error && error(data); }
   });
 };
 

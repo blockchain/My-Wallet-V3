@@ -944,18 +944,9 @@ function didDecryptWallet(success) {
  * @param {function()=} success Success callback function.
  */
  // used in the frontend and iOS
-MyWallet.getHistoryAndParseMultiAddressJSON = function(_success) {
+MyWallet.getHistoryAndParseMultiAddressJSON = function(_success, _error) {
   var success = function() {
     _success && _success();
-  };
-
-  var error = function() {
-    MyStore.get('multiaddr', function(multiaddrjson) {
-      if (multiaddrjson != null) {
-        parseMultiAddressJSON($.parseJSON(multiaddrjson), true, false);
-        _success && _success();
-      }
-    });
   };
 
   var addresses = this.wallet.activeAddresses;
@@ -965,9 +956,7 @@ MyWallet.getHistoryAndParseMultiAddressJSON = function(_success) {
   BlockchainAPI.async_get_history_with_addresses(addresses, function(data) {
     parseMultiAddressJSON(data, false, false);
     success && success();
-  }, function() {
-    error && error();
-  }, null, 0, 30);
+  }, _error, null, 0, 30);
 };
 
 // used once
@@ -1476,7 +1465,6 @@ MyWallet.handleNTPResponse = function(obj, clientTime) {
     } else {
       WalletStore.setServerTimeOffset(thisOffset);
       WalletStore.setHaveSetServerTime();
-      MyStore.put('server_time_offset', ''+WalletStore.getServerTimeOffset());
     }
     console.log('Server Time offset ' + WalletStore.getServerTimeOffset() + 'ms - This offset ' + thisOffset);
   }

@@ -94,14 +94,9 @@ var WalletStore = (function() {
       return MyWallet.wallet.pbkdf2_iterations;
     },
     getLanguage: function() {
-      if (language != null) {
-        return language;
-      } else {
-        return MyStore.get('language');
-      }
+      return language;
     },
     setLanguage: function(lan) {
-      MyStore.put('language', lan);
       language = lan;
     },
     getLanguages: function() {
