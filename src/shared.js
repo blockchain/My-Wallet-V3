@@ -32,6 +32,17 @@ function setBTCSymbol(new_symbol) {
   }
 }
 
+// used iOS
+var _sounds = {};
+function playSound(id) {
+  try {
+    if (!_sounds[id])
+      _sounds[id] = new Audio('/'+resource+id+'.wav');
+
+    _sounds[id].play();
+  } catch (e) { }
+};
+
 //Ignore Console
 if (!window.console) {
   var names = ["log", "debug", "info", "warn", "error", "assert", "dir", "dirxml",
