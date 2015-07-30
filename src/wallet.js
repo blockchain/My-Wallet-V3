@@ -1105,6 +1105,54 @@ MyWallet.resendTwoFactorSms = function(user_guid, success, error) {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+MyWallet.recoverResetPasswordAndLogin = function ( 
+                            mnemonic
+                          , newPassword
+                          , success
+                          , other_error) {
+
+  assert(mnemonic, 'Mnemonic required');
+  assert(MyWallet.isValidateBIP39Mnemonic(mnemonic), "Invalid mnemonic");
+  assert(newPassword, 'New password required');
+  assert(success, 'Success callback required');
+  assert(other_error, 'Error callback required');
+  
+  var seed = BIP39.mnemonicToSeedHex(mnemonic);
+
+  var uuidAndSharedKey = WalletCrypto.seedToUUIDandSharedKey(seed);
+    
+  var didFetchWalletJSON = function(obj) {
+    
+    if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
+     WalletStore.setEncryptedWalletData(obj.payload);
+    }
+
+    war_checksum = obj.war_checksum;
+
+    if (obj.language && WalletStore.getLanguage() != obj.language) {
+     WalletStore.setLanguage(obj.language);
+    }
+    
+    // Decrypt password    
+    var json = $.parseJSON(obj.payload);
+    var oldPassword = WalletCrypto.decryptPasswordWithSeed(json.encryptedPassword, seed, json.pbkdf2_iterations);
+        
+    // Finish regular login    
+    MyWallet.initializeWallet(oldPassword, success, other_error);
+    
+    // Change password
+    WalletStore.changePassword(newPassword, function() {
+      success();
+    }, function() { 
+      console.log("Couldn't change password.");
+      other_error("Couldn't reset password.");
+    });
+  };
+  
+  MyWallet.tryToFetchWalletJSON(uuidAndSharedKey.guid, uuidAndSharedKey.sharedKey, null, null, didFetchWalletJSON, other_error);
+  
+}
+
 MyWallet.login = function ( user_guid
                           , shared_key
                           , inputedPassword
@@ -1122,124 +1170,9 @@ MyWallet.login = function ( user_guid
   assert(other_error, 'Error callback required');
   assert(twoFACode !== undefined, '2FA code must be null or set');
 
-  var clientTime = (new Date()).getTime();
-  var data = { format : 'json', resend_code : null, ct : clientTime };
-
-  if (WalletStore.getAPICode()) {
-    data.api_code = WalletStore.getAPICode();
-  }
-
-  if (shared_key) {
-    data.sharedKey = shared_key;
-  }
-
-  var tryToFetchWalletJSON = function(guid, successCallback) {
-    $.ajax({
-      type: "GET",
-      dataType: 'json',
-      url: BlockchainAPI.getRootURL() + 'wallet/' + guid,
-      // contentType: "application/json; charset=utf-8",
-      xhrFields: {
-        withCredentials: true
-      },
-      crossDomain: true,
-      data : data,
-      timeout: 60000,
-      success: function(obj) {
-
-        fetch_success && fetch_success();
-
-        // Even if Two Factor is enabled, some settings need to be saved here,
-        // because they won't be part of the 2FA response.
-
-        MyWallet.handleNTPResponse(obj, clientTime);
-
-        if (!obj.guid) {
-          WalletStore.sendEvent("msg", {type: "error", message: 'Server returned null guid.'});
-          other_error('Server returned null guid.');
-          return;
-        }
-
-        // I should create a new class to store the encrypted wallet over wallet
-        WalletStore.setGuid(obj.guid);
-        WalletStore.setRealAuthType(obj.real_auth_type);
-        WalletStore.setSyncPubKeys(obj.sync_pubkeys);
-
-        if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
-        } else {
-          needs_two_factor_code(obj.auth_type);
-          return;
-        }
-
-        successCallback(obj)
-
-      },
-      error : function(e) {
-        if(e.responseJSON && e.responseJSON.initial_error && !e.responseJSON.authorization_required) {
-          other_error(e.responseJSON.initial_error);
-          return;
-        }
-
-        WalletStore.sendEvent('did_fail_set_guid');
-
-        var obj = $.parseJSON(e.responseText);
-
-        if (obj.authorization_required && typeof(authorization_required) === "function") {
-          authorization_required(function() {
-            MyWallet.pollForSessionGUID(function() {
-              tryToFetchWalletJSON(guid, successCallback);
-            });
-          });
-        }
-
-        if (obj.initial_error) {
-          WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
-        }
-      }
-    });
-  }
-
-  var tryToFetchWalletWith2FA = function (guid, two_factor_auth_key, successCallback) {
-    if (two_factor_auth_key == null) {
-      other_error('Two Factor Authentication code this null');
-      return;
-    }
-    if (two_factor_auth_key.length == 0 || two_factor_auth_key.length > 255) {
-     other_error('You must enter a Two Factor Authentication code');
-     return;
-    }
-
-    $.ajax({
-      timeout: 60000,
-      type: "POST",
-      // contentType: "application/json; charset=utf-8",
-      xhrFields: {
-       withCredentials: true
-      },
-      crossDomain: true,
-      url: BlockchainAPI.getRootURL() + "wallet",
-      data :  { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : WalletStore.getAPICode()},
-      success: function(data) {
-       if (data == null || data.length == 0) {
-         other_error('Server Return Empty Wallet Data');
-         return;
-       }
-
-       if (data != 'Not modified') {
-         WalletStore.setEncryptedWalletData(data);
-       }
-
-       successCallback(data);
-
-      },
-      error : function (response) {
-       WalletStore.setRestoringWallet(false);
-       wrong_two_factor_code(response.responseText);
-      }
-    });
-  }
-
   var didFetchWalletJSON = function(obj) {
+    
+    fetch_success && fetch_success();
 
     if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
      WalletStore.setEncryptedWalletData(obj.payload);
@@ -1254,14 +1187,142 @@ MyWallet.login = function ( user_guid
   }
 
   if(twoFACode == null) {
-    tryToFetchWalletJSON(user_guid, didFetchWalletJSON)
+    MyWallet.tryToFetchWalletJSON(user_guid, shared_key, needs_two_factor_code, authorization_required, didFetchWalletJSON, other_error);
   } else {
-    tryToFetchWalletWith2FA(user_guid, twoFACode, didFetchWalletJSON)
+    MyWallet.tryToFetchWalletWith2FA(user_guid, shared_key, twoFACode, wrong_two_factor_code, authorization_required, didFetchWalletJSON, other_error);
   }
 };
 ////////////////////////////////////////////////////////////////////////////////
 
 // used locally
+MyWallet.tryToFetchWalletJSON = function(guid, shared_key, needs_two_factor_code, authorization_required, successCallback, other_error) {
+  var clientTime = (new Date()).getTime();
+  var data = { format : 'json', resend_code : null, ct : clientTime };
+
+  if (WalletStore.getAPICode()) {
+    data.api_code = WalletStore.getAPICode();
+  }
+
+  if (shared_key) {
+    data.sharedKey = shared_key;
+  }
+  
+  $.ajax({
+    type: "GET",
+    dataType: 'json',
+    url: BlockchainAPI.getRootURL() + 'wallet/' + guid,
+    // contentType: "application/json; charset=utf-8",
+    xhrFields: {
+      withCredentials: true
+    },
+    crossDomain: true,
+    data : data,
+    timeout: 60000,
+    success: function(obj) {
+
+
+      // Even if Two Factor is enabled, some settings need to be saved here,
+      // because they won't be part of the 2FA response.
+
+      MyWallet.handleNTPResponse(obj, clientTime);
+
+      if (!obj.guid) {
+        WalletStore.sendEvent("msg", {type: "error", message: 'Server returned null guid.'});
+        other_error('Server returned null guid.');
+        return;
+      }
+
+      // I should create a new class to store the encrypted wallet over wallet
+      WalletStore.setGuid(obj.guid);
+      WalletStore.setRealAuthType(obj.real_auth_type);
+      WalletStore.setSyncPubKeys(obj.sync_pubkeys);
+
+      if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
+      } else {
+        needs_two_factor_code(obj.auth_type);
+        return;
+      }
+
+      successCallback(obj)
+
+    },
+    error : function(e) {
+      if(e.responseJSON && e.responseJSON.initial_error && !e.responseJSON.authorization_required) {
+        other_error(e.responseJSON.initial_error);
+        return;
+      }
+
+      WalletStore.sendEvent('did_fail_set_guid');
+
+      var obj = $.parseJSON(e.responseText);
+
+      if (obj.authorization_required && typeof(authorization_required) === "function") {
+        authorization_required(function() {
+          MyWallet.pollForSessionGUID(function() {
+            tryToFetchWalletJSON(guid, successCallback);
+          });
+        });
+      }
+
+      if (obj.initial_error) {
+        WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
+      }
+    }
+  });
+};
+
+MyWallet.tryToFetchWalletWith2FA = function(guid, shared_key, two_factor_auth_key,  wrong_two_factor_code, authorization_required, successCallback, other_error) {
+  var clientTime = (new Date()).getTime();
+  var data = { format : 'json', resend_code : null, ct : clientTime };
+
+  if (WalletStore.getAPICode()) {
+    data.api_code = WalletStore.getAPICode();
+  }
+
+  if (shared_key) {
+    data.sharedKey = shared_key;
+  }
+  
+  if (two_factor_auth_key == null) {
+    other_error('Two Factor Authentication code this null');
+    return;
+  }
+  if (two_factor_auth_key.length == 0 || two_factor_auth_key.length > 255) {
+   other_error('You must enter a Two Factor Authentication code');
+   return;
+  }
+
+  $.ajax({
+    timeout: 60000,
+    type: "POST",
+    // contentType: "application/json; charset=utf-8",
+    xhrFields: {
+     withCredentials: true
+    },
+    crossDomain: true,
+    url: BlockchainAPI.getRootURL() + "wallet",
+    data :  { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : WalletStore.getAPICode()},
+    success: function(data) {
+     if (data == null || data.length == 0) {
+       other_error('Server Return Empty Wallet Data');
+       return;
+     }
+
+     if (data != 'Not modified') {
+       WalletStore.setEncryptedWalletData(data);
+     }
+
+     successCallback(data);
+
+    },
+    error : function (response) {
+     WalletStore.setRestoringWallet(false);
+     wrong_two_factor_code(response.responseText);
+    }
+  });
+};
+  
+
 MyWallet.pollForSessionGUID = function(successCallback) {
 
   if (WalletStore.isPolling()) return;
