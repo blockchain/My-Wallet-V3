@@ -1142,7 +1142,7 @@ MyWallet.recoverResetPasswordAndLogin = function (
     
     // Change password
     WalletStore.changePassword(newPassword, function() {
-      success();
+      success(uuidAndSharedKey.guid);
     }, function() { 
       console.log("Couldn't change password.");
       other_error("Couldn't reset password.");
