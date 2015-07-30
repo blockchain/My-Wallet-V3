@@ -1,5 +1,21 @@
+'use strict';
+
+var Buffer = require('buffer').Buffer
+
+// This fixes a bug with Safari < 8 and the Browserify Buffer shim used in Crypto-browserify/randombytes
+// See: https://github.com/feross/buffer/issues/63
+if (navigator && navigator.vendor &&
+    navigator.vendor.indexOf('Apple') > -1) {
+  var versionStart = navigator.userAgent.toLowerCase().indexOf('applewebkit') + 12;
+  var version = navigator.userAgent.substr(versionStart, 1);
+
+  if (version && typeof(parseInt(version)) === 'number' && parseInt(version) < 6) {
+    Buffer.TYPED_ARRAY_SUPPORT = true;
+  }
+}
+
 module.exports = {
-  Buffer: require('buffer').Buffer,
+  Buffer: Buffer,
   $: require('jquery'),
   CryptoJS: require('crypto-js'),
   MyWallet: require('./wallet'),
