@@ -3,6 +3,7 @@
 var CryptoJS = require('crypto-js');
 var MyWallet = require('./wallet');
 var WalletCrypto = require('./wallet-crypto');
+var BIP39 = require('bip39');
 var hasProp = {}.hasOwnProperty;
 
 var WalletStore = (function() {
@@ -58,6 +59,7 @@ var WalletStore = (function() {
     'RUB': 'Russian Ruble'
   };
   var password; //Password
+  var encryptedPassword; //Password encrypted using the HD seed
   var guid; //Wallet identifier
   var language = 'en';
   var transactions = [];
@@ -269,13 +271,30 @@ var WalletStore = (function() {
     },
     changePassword: function(new_password, success, error){
       password = new_password;
+
+      this.updateEncryptedPasswordIfNeeded(password);
+
       MyWallet.syncWallet(success, error);
+    },
+    updateEncryptedPasswordIfNeeded: function(password) {
+      // Todo: support encrypting password with seed is 2nd password is enabled
+      if(MyWallet.wallet.isUpgradedToHD && !MyWallet.wallet.isDoubleEncrypted && WalletStore.getEncryptedPassword() != undefined && WalletStore.getEncryptedPassword() != null) {
+        var seed = BIP39.mnemonicToSeedHex(BIP39.entropyToMnemonic(MyWallet.wallet.hdwallet.seedHex));
+        var encryptedPwd = WalletCrypto.encryptPasswordWithSeed(password, seed, WalletStore.getPbkdf2Iterations());
+        WalletStore.setEncryptedPassword(encryptedPwd);
+      }
     },
     unsafeSetPassword: function(newPassword){
       password = newPassword;
     },
     getPassword: function(){
       return password;
+    },
+    getEncryptedPassword: function(){
+      return encryptedPassword;
+    },
+    setEncryptedPassword:  function(value){
+      encryptedPassword = value;
     },
     getLogoutTime: function() {
       return MyWallet.wallet._logout_time;

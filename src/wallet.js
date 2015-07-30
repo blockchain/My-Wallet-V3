@@ -278,7 +278,7 @@ function wsSuccess(ws) {
 
 
       if (tx_account) {
-        var account = MyWallet.wallet.hdwallet.accounts[tx_account.index];
+        var account = MyWallet.wallet.error_restoring_wallet.accounts[tx_account.index];
         account.balance += tx_processed.result;
 
         // Increase receive address index if this was an incoming transaction using the highest index:
@@ -1032,6 +1032,9 @@ function decryptAndInitializeWallet(success, error, decrypt_success, build_hd_su
       // TODO: pbkdf2 iterations should be stored correctly on wallet wrapper
       if (rootContainer) {
         WalletStore.setPbkdf2Iterations(rootContainer.pbkdf2_iterations);
+        if(rootContainer.encryptedPassword != undefined) {
+          WalletStore.setEncryptedPassword(rootContainer.encryptedPassword);
+        }
       }
       //If we don't have a checksum then the wallet is probably brand new - so we can generate our own
       if (WalletStore.getPayloadChecksum() == null || WalletStore.getPayloadChecksum().length == 0) {
@@ -1376,7 +1379,8 @@ function syncWallet (successcallback, errorcallback) {
     var crypted = WalletCrypto.encryptWallet( data
                                               , WalletStore.getPassword()
                                               , WalletStore.getPbkdf2Iterations()
-                                              , MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0 );
+                                              , MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0 
+                                              , WalletStore.getEncryptedPassword());
 
     if (crypted.length == 0) {
       throw 'Error encrypting the JSON output';

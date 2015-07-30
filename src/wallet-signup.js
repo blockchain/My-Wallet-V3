@@ -24,7 +24,7 @@ function insertWallet(guid, sharedKey, password, extra, successcallback, errorca
     var data = JSON.stringify(MyWallet.wallet, null, 2);
 
     //Everything looks ok, Encrypt the JSON output
-    var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.wallet.defaultPbkdf2Iterations,  MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0);
+    var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.wallet.defaultPbkdf2Iterations,  MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0, WalletStore.getEncryptedPassword());
 
     if (crypted.length == 0) {
       throw 'Error encrypting the JSON output';
@@ -77,30 +77,30 @@ function generateUUIDandSharedKey(seedHexString) {
   assert(seedHexString.length == 128, "Expected a 256 bit seed as a hex string")
   var seed = CryptoJS.enc.Hex.parse(seedHexString);
   var doubleHash = CryptoJS.SHA256(CryptoJS.SHA256(seed));
-  
+
   var doubleHashBuffer = Buffer(WalletCrypto.wordToByteArray(doubleHash.words));
-      
-  var guidBuffer = new Buffer(16);  
-  var sharedKeyBuffer = new Buffer(16);  
-  
+
+  var guidBuffer = new Buffer(16);
+  var sharedKeyBuffer = new Buffer(16);
+
   doubleHashBuffer.copy(guidBuffer,0,0,16);
   doubleHashBuffer.copy(sharedKeyBuffer,0,16,32);
-    
+
   return {guid: uuid.v4({random: guidBuffer}), sharedKey: uuid.v4({random: sharedKeyBuffer})}
 };
 
 function generateNewWallet(password, email, firstAccountName, success, error) {
-  
+
   var mnemonic = BIP39.generateMnemonic();
   var seed = BIP39.mnemonicToSeedHex(mnemonic);
-  
+
   assert(seed != undefined && seed != null && seed != "", "HD seed required");
-  
+
   var keys = this.generateUUIDandSharedKey(seed);
-  
+
   if (password.length > 255) {
     throw 'Passwords must be shorter than 256 characters';
-  }  
+  }
 
   //User reported this browser generated an invalid private key
   if(navigator.userAgent.match(/MeeGo/i)) {
@@ -114,8 +114,11 @@ function generateNewWallet(password, email, firstAccountName, success, error) {
       success(seed, keys.guid, keys.sharedKey, password);
     }, function(e) {
       error(e);
-    });    
+    });
   }
+
+  var encryptedPassword = WalletCrypto.encryptPasswordWithSeed(password, seed, WalletStore.getDefaultPbkdf2Iterations());
+  WalletStore.setEncryptedPassword(encryptedPassword);
 
   Wallet.new(mnemonic, keys.guid, keys.sharedKey, firstAccountName, saveWallet);
 

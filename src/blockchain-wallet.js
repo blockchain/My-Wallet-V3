@@ -541,6 +541,7 @@ Wallet.prototype.changePbkdf2Iterations = function(newIterations, password){
     }
     else { // no double encrypted wallet
       this._pbkdf2_iterations = newIterations;
+      WalletStore.updateEncryptedPasswordIfNeeded(WalletStore.getPassword());
       MyWallet.syncWallet();
     };
   };

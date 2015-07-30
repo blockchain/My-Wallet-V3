@@ -169,17 +169,23 @@ function decryptAes(data, password, pbkdf2_iterations, options) {
   return decoded;
 }
 
-function encryptWallet(data, password, pbkdf2_iterations, version) {
+function encryptWallet(data, password, pbkdf2_iterations, version, encryptedPassword)  {
   assert(data, "data missing");
   assert(password, "password missing");
   assert(pbkdf2_iterations, "pbkdf2_iterations missing");
   assert(version, "version missing");
-
-  return JSON.stringify({
+  
+  var payload = {
     pbkdf2_iterations: pbkdf2_iterations,
     version: version,
-    payload: encrypt(data, password, pbkdf2_iterations)
-  });
+    payload: encrypt(data, password, pbkdf2_iterations),
+  };
+  
+  if(encryptedPassword != undefined && encryptedPassword != null) {
+    payload.encryptedPassword = encryptedPassword;
+  }
+
+  return JSON.stringify(payload);
 }
 
 function decryptWallet(data, password, success, error) {
@@ -298,6 +304,20 @@ function wordToByteArray(wordArray) {
     return byteArray;
 }
 
+function encryptPasswordWithSeed(password, seedHexString, pbkdf2_iterations) {
+  assert(seedHexString.length == 128, "Expected a 256 bit seed as a hex string")
+  var seed = CryptoJS.enc.Hex.parse(seedHexString);
+  
+  return encrypt(password, seed, pbkdf2_iterations);
+}
+
+function decryptPasswordWithSeed(encryptedPassword, seedHexString, pbkdf2_iterations) {
+  assert(seedHexString.length == 128, "Expected a 256 bit seed as a hex string")
+  var seed = CryptoJS.enc.Hex.parse(seedHexString);
+  
+  return decryptAes(encryptedPassword, seed, pbkdf2_iterations);
+}
+
 module.exports = {
   decryptSecretWithSecondPassword: decryptSecretWithSecondPassword,
   encryptSecretWithSecondPassword: encryptSecretWithSecondPassword,
@@ -310,5 +330,7 @@ module.exports = {
   stretchPassword: stretchPassword,
   hashNTimes: hashNTimes,
   cipherFunction: cipherFunction,
-  wordToByteArray: wordToByteArray
+  wordToByteArray: wordToByteArray,
+  encryptPasswordWithSeed: encryptPasswordWithSeed,
+  decryptPasswordWithSeed: decryptPasswordWithSeed
 };
