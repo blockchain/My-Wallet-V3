@@ -77,7 +77,7 @@ MyWallet.securePost = function(url, data, success, error) {
   }
 
   if (!data.guid)
-    clone.guid = WalletStore.getGuid();
+    clone.guid = MyWallet.wallet.guid;
 
   clone.format =  data.format ? data.format : 'plain';
   clone.api_code = WalletStore.getAPICode();
@@ -1369,8 +1369,6 @@ MyWallet.connectWebSocket = function() {
 ////////////////////////////////////////////////////////////////////////////////
 // This should replace backup functions
 function syncWallet (successcallback, errorcallback) {
-  // console.log("sync...");
-  // this is the wallet object --> Mywallet.wallet
   if (!MyWallet.wallet || !MyWallet.wallet.sharedKey
       || MyWallet.wallet.sharedKey.length === 0
       || MyWallet.wallet.sharedKey.length !== 36)
@@ -1383,6 +1381,8 @@ function syncWallet (successcallback, errorcallback) {
     WalletStore.sendEvent("msg", {type: "error", message: 'Error Saving Wallet: ' + e});
     // Re-fetch the wallet from server
     MyWallet.getWallet();
+    // try to save again:
+    // syncWallet(successcallback, errorcallback);
     errorcallback && errorcallback(e);
   };
   try {
@@ -1403,9 +1403,7 @@ function syncWallet (successcallback, errorcallback) {
         var old_checksum = WalletStore.getPayloadChecksum();
         WalletStore.sendEvent('on_backup_wallet_start');
         WalletStore.setEncryptedWalletData(crypted);
-
         var new_checksum = WalletStore.getPayloadChecksum();
-
         var data =  {
           length: crypted.length,
           payload: crypted,
@@ -1421,29 +1419,32 @@ function syncWallet (successcallback, errorcallback) {
           data.active = MyWallet.wallet.activeAddresses.join('|');
         }
 
-        MyWallet.securePost("wallet", data, function(data) {
-          checkWalletChecksum(new_checksum,
-                              function() {
-                                // WalletStore.tagLegacyAddressesAsSaved();
+        MyWallet.securePost(
+            "wallet"
+          , data
+          , function(data) {
+              checkWalletChecksum(
+                  new_checksum
+                , function() {
+                    WalletStore.setIsSynchronizedWithServer(true);
+                    WalletStore.enableLogout();
+                    WalletStore.resetLogoutTimeout();
+                    WalletStore.sendEvent('on_backup_wallet_success');
+                    console.log("Wallet saved");
+                    successcallback && successcallback();
+                    }
+                , function() {
+                    _errorcallback('Checksum Did Not Match Expected Value');
+                    WalletStore.enableLogout();
+                  }
+              );
+            }
+          , function(e) {
+            WalletStore.enableLogout();
+            _errorcallback(e.responseText);
+          }
+        );
 
-                                WalletStore.setIsSynchronizedWithServer(true)
-
-                                if (successcallback != null)
-                                  successcallback();
-
-                                WalletStore.setIsSynchronizedWithServer(true);
-                                WalletStore.enableLogout();
-                                WalletStore.resetLogoutTimeout();
-                                WalletStore.sendEvent('on_backup_wallet_success');
-                              },
-                              function() {
-                                _errorcallback('Checksum Did Not Match Expected Value');
-                                WalletStore.enableLogout();
-                              });
-        }, function(e) {
-          _errorcallback(e.responseText);
-          WalletStore.enableLogout();
-        });
       } catch (e) {
         _errorcallback(e);
         WalletStore.enableLogout();
