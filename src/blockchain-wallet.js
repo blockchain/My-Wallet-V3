@@ -395,6 +395,14 @@ Wallet.reviver = function(k,v){
   return v;
 }
 
+function isAccountNonUsed(account, success, error) {
+  MyWallet.get_history_with_addresses(
+      [account.extendedPublicKey]
+    , function(obj){success(obj.addresses[0].account_index === 0 && obj.addresses[0].change_index === 0);}
+    , function(){error("get_history_error")}
+  );
+};
+
 Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
   // this should be rethought
   //     1) include failure.
@@ -414,31 +422,22 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
   var account       = null;
   account = this.newAccount("Account 1", pw, 0);
   MyWallet.get_history_with_addresses([account.extendedPublicKey]);
-  //////////////////////////////////////////////////////////////////////////////
-    function isAccountUsed(account, success, error) {
-    MyWallet.get_history_with_addresses(
-        [account.extendedPublicKey]
-      , function(obj){success(obj.addresses[0].account_index === 0 && obj.addresses[0].change_index === 0);}
-      , function(){error("get_history_error")}
-    );
-  };
-  //////////////////////////////////////////////////////////////////////////////
   // accounts restoration
   var lookAhead     = true;
   var emptyAccounts = 0;
   var accountIndex  = 1;
   var historyError  = false;
 
-  function ifUsed(used) {
-    if (used) { emptyAccounts ++;};
+  function proceed(nonused) {
+    if (nonused) { emptyAccounts ++;};
     if (emptyAccounts === 10 ){ lookAhead = false; this.hdwallet._accounts.splice(-10);};
   };
-  function ifError() { historyError = true; lookAhead = false;};
+  function fail() { historyError = true; lookAhead = false;};
 
   while (lookAhead) {
     accountIndex++;
     account = this.newAccount("Account " + accountIndex.toString(), pw, 0);
-    isAccountUsed(account, ifUsed.bind(this), ifError);
+    isAccountNonUsed(account, proceed.bind(this), fail);
   };
 
   if (historyError) {return false};
@@ -474,14 +473,20 @@ Wallet.prototype.newHDWallet = function(firstAccountLabel, pw, success, error){
   var newHDwallet = HDWallet.new(encoder);
   this._hd_wallets.push(newHDwallet);
   var label = firstAccountLabel ? firstAccountLabel : "My Bitcoin Wallet";
-  this.newAccount(label, pw, this._hd_wallets.length-1);
+  var account = this.newAccount(label, pw, this._hd_wallets.length-1, true);
+  function proceed(nonused) {
+    console.log("is account nonused: " + nonused);
+    if (!nonused) {
+      error && error();
+    };
+  };
+  isAccountNonUsed(account, proceed, error);
   MyWallet.syncWallet(success, error);
   typeof(success) === 'function' && success();
-
   return newHDwallet;
 };
 
-Wallet.prototype.newAccount = function(label, pw, hdwalletIndex, success){
+Wallet.prototype.newAccount = function(label, pw, hdwalletIndex, success, nosave){
   if (!this.isUpgradedToHD) { return false; };
   var index = Helpers.isNumber(hdwalletIndex) ? hdwalletIndex : 0;
   var cipher = undefined;
@@ -490,10 +495,8 @@ Wallet.prototype.newAccount = function(label, pw, hdwalletIndex, success){
   };
   var newAccount = this._hd_wallets[index].newAccount(label, cipher).lastAccount;
   MyWallet.listenToHDWalletAccount(newAccount.extendedPublicKey);
-  MyWallet.syncWallet();
-
+  if(!(nosave === true)) MyWallet.syncWallet();
   typeof(success) === 'function' && success();
-
   return newAccount;
 };
 
