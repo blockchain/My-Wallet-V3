@@ -1415,7 +1415,6 @@ function syncWallet (successcallback, errorcallback) {
                     WalletStore.enableLogout();
                     WalletStore.resetLogoutTimeout();
                     WalletStore.sendEvent('on_backup_wallet_success');
-                    console.log("Wallet saved");
                     successcallback && successcallback();
                     }
                 , function() {
