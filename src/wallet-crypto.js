@@ -347,7 +347,7 @@ function encryptMetaData(obj, keyBase64) {
   var payload = JSON.stringify(obj);
   var key = CryptoJS.enc.Base64.parse(keyBase64);
 
-  var iv = CryptoJS.lib.WordArray.random(256/8)
+  var iv = CryptoJS.lib.WordArray.random(256/8);
 
   var encryptedPayload = CryptoJS.AES.encrypt(payload, key, {iv: iv});
 
