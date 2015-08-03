@@ -340,6 +340,44 @@ function generateMetaDataKey() {
   return key.toString(CryptoJS.enc.Base64);
 };
 
+function encryptMetaData(obj, keyBase64) {
+  assert(obj, "object array or dictionary missing");
+  assert(keyBase64, "Base64 encoded key missing");
+
+  var payload = JSON.stringify(obj);
+  var key = CryptoJS.enc.Base64.parse(keyBase64);
+
+  var iv = CryptoJS.lib.WordArray.random(256/8)
+
+  var encryptedPayload = Blockchain.CryptoJS.AES.encrypt(payload, key, {iv: iv});
+
+  return {
+    version: 1,
+    iv: iv.toString(CryptoJS.enc.Base64),
+    payload: encryptedPayload.ciphertext.toString(CryptoJS.enc.Base64)
+  };
+}
+
+function decryptMetaData(obj, keyBase64) {
+  assert(obj, "dictionary missing");
+  assert(obj.iv, "Base 64 encoded IV missing")
+  assert(obj.payload, "Base 64 encoded payload missing")
+  assert(keyBase64, "Base64 encoded key missing");
+
+  var key = CryptoJS.enc.Base64.parse(keyBase64);
+  var encryptedPayload = CryptoJS.enc.Base64.parse(obj.payload);
+  var iv = CryptoJS.enc.Base64.parse(obj.iv);
+
+  var decryptedPayload = CryptoJS.AES.decrypt(
+    { ciphertext: encryptedPayload, salt: ''},
+    key,
+    {iv: iv}
+  );
+
+  var payloadString = decryptedPayload.toString(CryptoJS.enc.Utf8);
+  return JSON.parse(payloadString);
+}
+
 module.exports = {
   decryptSecretWithSecondPassword: decryptSecretWithSecondPassword,
   encryptSecretWithSecondPassword: encryptSecretWithSecondPassword,
@@ -356,5 +394,7 @@ module.exports = {
   encryptPasswordWithSeed: encryptPasswordWithSeed,
   decryptPasswordWithSeed: decryptPasswordWithSeed,
   seedToUUIDandSharedKey: seedToUUIDandSharedKey,
-  generateMetaDataKey : generateMetaDataKey
+  generateMetaDataKey : generateMetaDataKey,
+  encryptMetaData,
+  decryptMetaData
 };
