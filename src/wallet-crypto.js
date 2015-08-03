@@ -175,13 +175,13 @@ function encryptWallet(data, password, pbkdf2_iterations, version, encryptedPass
   assert(password, "password missing");
   assert(pbkdf2_iterations, "pbkdf2_iterations missing");
   assert(version, "version missing");
-  
+
   var payload = {
     pbkdf2_iterations: pbkdf2_iterations,
     version: version,
     payload: encrypt(data, password, pbkdf2_iterations),
   };
-  
+
   if(encryptedPassword != undefined && encryptedPassword != null) {
     payload.encryptedPassword = encryptedPassword;
   }
@@ -308,14 +308,14 @@ function wordToByteArray(wordArray) {
 function encryptPasswordWithSeed(password, seedHexString, pbkdf2_iterations) {
   assert(seedHexString.length == 128, "Expected a 256 bit seed as a hex string")
   var seed = CryptoJS.enc.Hex.parse(seedHexString);
-  
+
   return encrypt(password, seed, pbkdf2_iterations);
 }
 
 function decryptPasswordWithSeed(encryptedPassword, seedHexString, pbkdf2_iterations) {
   assert(seedHexString.length == 128, "Expected a 256 bit seed as a hex string")
   var seed = CryptoJS.enc.Hex.parse(seedHexString);
-  
+
   return decryptAes(encryptedPassword, seed, pbkdf2_iterations);
 }
 
@@ -323,16 +323,21 @@ function seedToUUIDandSharedKey(seedHexString) {
   assert(seedHexString.length == 128, "Expected a 256 bit seed as a hex string")
   var seed = CryptoJS.enc.Hex.parse(seedHexString);
   var doubleHash = CryptoJS.SHA256(CryptoJS.SHA256(seed));
-  
+
   var doubleHashBuffer = Buffer(wordToByteArray(doubleHash.words));
-      
-  var guidBuffer = new Buffer(16);  
-  var sharedKeyBuffer = new Buffer(16);  
-  
+
+  var guidBuffer = new Buffer(16);
+  var sharedKeyBuffer = new Buffer(16);
+
   doubleHashBuffer.copy(guidBuffer,0,0,16);
   doubleHashBuffer.copy(sharedKeyBuffer,0,16,32);
-    
+
   return {guid: uuid.v4({random: guidBuffer}), sharedKey: uuid.v4({random: sharedKeyBuffer})}
+};
+
+function generateMetaDataKey() {
+  var key = CryptoJS.lib.WordArray.random(256/8);
+  return key.toString(CryptoJS.enc.Base64);
 };
 
 module.exports = {
@@ -350,5 +355,6 @@ module.exports = {
   wordToByteArray: wordToByteArray,
   encryptPasswordWithSeed: encryptPasswordWithSeed,
   decryptPasswordWithSeed: decryptPasswordWithSeed,
-  seedToUUIDandSharedKey: seedToUUIDandSharedKey
+  seedToUUIDandSharedKey: seedToUUIDandSharedKey,
+  generateMetaDataKey : generateMetaDataKey
 };

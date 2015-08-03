@@ -34,6 +34,7 @@ function Wallet(object) {
 
   this._guid              = obj.guid;
   this._sharedKey         = obj.sharedKey;
+  this._metaDataKey       = obj.metaDataKey;
   this._double_encryption = obj.double_encryption || false;
   this._dpasswordhash     = obj.dpasswordhash;
   //options
@@ -88,6 +89,10 @@ Object.defineProperties(Wallet.prototype, {
   "sharedKey": {
     configurable: false,
     get: function() { return this._sharedKey;}
+  },
+  "metaDataKey": {
+    configurable: false,
+    get: function() { return this._metaDataKey;}
   },
   "isDoubleEncrypted": {
     configurable: false,
@@ -242,6 +247,11 @@ Wallet.prototype.toJSON = function(){
     paidTo            : this._paidTo,
     hd_wallets        : this._hd_wallets
   };
+
+  if(this._metaDataKey != undefined && this._metaDataKey != null) {
+    wallet.metaDataKey = this._metaDataKey;
+  }
+
   return wallet;
 };
 
@@ -450,6 +460,7 @@ Wallet.new = function(mnemonic, guid, sharedKey, firstAccountLabel, success){
   var object = {
     guid              : guid,
     sharedKey         : sharedKey,
+    metaDataKey       : WalletCrypto.generateMetaDataKey(),
     double_encryption : false,
     options: {
       pbkdf2_iterations  : 5000,
