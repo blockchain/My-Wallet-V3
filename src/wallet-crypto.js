@@ -394,7 +394,7 @@ module.exports = {
   encryptPasswordWithSeed: encryptPasswordWithSeed,
   decryptPasswordWithSeed: decryptPasswordWithSeed,
   seedToUUIDandSharedKey: seedToUUIDandSharedKey,
-  generateMetaDataKey : generateMetaDataKey,
-  encryptMetaData,
-  decryptMetaData
+  generateMetaDataKey: generateMetaDataKey,
+  encryptMetaData: encryptMetaData,
+  decryptMetaData: decryptMetaData
 };
