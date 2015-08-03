@@ -349,7 +349,7 @@ function encryptMetaData(obj, keyBase64) {
 
   var iv = CryptoJS.lib.WordArray.random(256/8)
 
-  var encryptedPayload = Blockchain.CryptoJS.AES.encrypt(payload, key, {iv: iv});
+  var encryptedPayload = CryptoJS.AES.encrypt(payload, key, {iv: iv});
 
   return {
     version: 1,
