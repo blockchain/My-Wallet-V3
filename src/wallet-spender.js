@@ -142,7 +142,7 @@ var Spender = function(note, successCallback, errorCallback, listener, secondPas
     if (payment.isSweep) {
       payment.amount = payment.coins.map(getValue).reduce(Helpers.add,0) - payment.feeAmount;
     };
-    console.log(estimatedFee(payment.coins, payment.amounts, payment.toAddress));
+    // console.log(estimatedFee(payment.coins, payment.amounts, payment.toAddress));
     // create the transaction (the coins are choosen here)
     var tx = new Transaction( payment.coins, payment.toAddress, payment.amount,
                               payment.feeAmount, payment.changeAddress, listener);
