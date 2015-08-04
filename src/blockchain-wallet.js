@@ -482,7 +482,7 @@ Wallet.prototype.newHDWallet = function(firstAccountLabel, pw, success, error){
   };
   isAccountNonUsed(account, proceed, error);
   MyWallet.syncWallet(success, error);
-  typeof(success) === 'function' && success();
+  // typeof(success) === 'function' && success();
   return newHDwallet;
 };
 
