@@ -55,7 +55,57 @@ var Spender = function(note, successCallback, errorCallback, listener, secondPas
   };
 
 ////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+  var sortUnspentOutputs = function(unspentOutputs) {
+    var unspent = [];
+    for (var key in unspentOutputs) {
+      var output = unspentOutputs[key];
+      if (!output.pending) {
+        unspent.push(output);
+      }
+    }
+    unspent.sort(function(o1, o2){
+      return o2.value - o1.value;
+    });
+    return unspent;
+  };
 
+  var estimatedInputs = function(unspentCoins, amounts){
+    if (!Array.isArray(amounts)) {amounts = [amounts];}
+    var amount = amounts.reduce(Helpers.add,0);
+    var sortedCoins = sortUnspentOutputs(unspentOutputs);
+    var accum = 0;
+    for (var i = 0; i < sortedCoins.length; i++) {
+      var coin = sortedCoins[i];
+      accum += coin.value;
+      if (accum >= amount) {
+        return i + 1;
+      }else{
+        throw "not enough coins";
+      };
+    };
+  };
+
+  var estimatedSize = function(nInpunts, nOutputs) {
+    return (nOutputs*148 + nInputs *34 + 10);
+  };
+
+  var estimatedFee = function(unspentCoins, amounts, toAddresses) {
+    if (!Array.isArray(toAddresses)) {toAddresses = [toAddresses];}
+    if (!Array.isArray(amounts)) {amounts = [amounts];}
+    var network  = Bitcoin.networks.bitcoin;
+    var feePerKb = network.feePerKb;
+    var nouts = toAddress.length + 1; // assumed 1 change output (not accurate)
+    var nins  = estimatedInputs(unspentCoins, amounts);
+    var size  = estimatedSize(nins, nouts);
+    var thousands = size / 1000;
+    var remainder = size % 1000;
+    var fee = feePerKb * thousands;
+    if(remainder > 0)   { fee += feePerKb;};
+    return fee;
+  };
+  //////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////
   var getUnspentOutputs = function(addressList, success, error) {
     var processCoins = function (obj) {
       var processCoin = function(utxo) {
@@ -92,7 +142,7 @@ var Spender = function(note, successCallback, errorCallback, listener, secondPas
     if (payment.isSweep) {
       payment.amount = payment.coins.map(getValue).reduce(Helpers.add,0) - payment.feeAmount;
     };
-
+    console.log(estimatedFee(payment.coins, payment.amounts, payment.toAddress));
     // create the transaction (the coins are choosen here)
     var tx = new Transaction( payment.coins, payment.toAddress, payment.amount,
                               payment.feeAmount, payment.changeAddress, listener);
