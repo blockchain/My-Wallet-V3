@@ -25,6 +25,7 @@ module.exports = {
   ImportExport: require('./import-export'),
   BlockchainAPI: require('./blockchain-api'),
   BlockchainSettingsAPI: require('./blockchain-settings-api'),
+  MetaData: require('./meta-data'),
   // only for debugging
   Helpers: require('./helpers')
   // Payload: require('./payload'),
