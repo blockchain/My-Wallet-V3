@@ -9,7 +9,7 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
   if (!Array.isArray(toAddresses)) {toAddresses = [toAddresses];}
   if (!Array.isArray(amounts)) {amounts = [amounts];}
   var network = Bitcoin.networks.bitcoin;
-  var defaultFee = network.feePerKb;
+  // var defaultFee = network.feePerKb;
 
   this.amount = amounts.reduce(function(a, b) {return a + b;},0);
   this.listener = listener;
@@ -18,9 +18,7 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
   this.addressesOfNeededPrivateKeys = [];
   this.pathsOfNeededPrivateKeys = [];
 
-  if(typeof(fee)!="number") {
-    fee = defaultFee;
-  }
+  var forcedFee = (typeof(fee) == "number") ? fee : null;
 
   assert(toAddresses.length == amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
   assert(this.amount > network.dustThreshold, this.amount + ' must be above dust threshold (' + network.dustThreshold + ' Satoshis)');
@@ -36,10 +34,15 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
   var accum = 0;
   var subTotal = 0;
 
+  var nIns = 0;
+  var nOuts = toAddresses.length + 1; // assumed one change output
+  var estimatedFee = 0;
+
   for (var i = 0; i < unspent.length; i++) {
     var output = unspent[i];
-
     transaction.addInput(output.hash, output.index);
+    nIns += 1;
+    estimatedFee = forcedFee !== null ? forcedFee : guessFee(nIns, nOuts);
 
     // Generate address from output script and add to private list so we can check if the private keys match the inputs later
 
@@ -58,7 +61,7 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
     }
 
     accum += output.value;
-    subTotal = this.amount + fee;
+    subTotal = this.amount + estimatedFee;
     if (accum >= subTotal) {
       var change = accum - subTotal;
 
@@ -73,7 +76,6 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
   }
 
   assert(accum >= subTotal, 'Insufficient funds. Value Needed ' +  subTotal + '. Available amount ' + accum);
-
   this.transaction = transaction;
 };
 
@@ -143,6 +145,7 @@ Transaction.prototype.sign = function() {
   return transaction;
 };
 
+
 function sortUnspentOutputs(unspentOutputs) {
   var unspent = [];
 
@@ -158,6 +161,21 @@ function sortUnspentOutputs(unspentOutputs) {
   });
 
   return unspent;
+}
+
+function guessSize (nInputs, nOutputs) {
+  return (nInputs*148 + nOutputs*34 + 10);
+}
+
+function guessFee (nInputs, nOutputs) {
+  var network  = Bitcoin.networks.bitcoin;
+  var feePerKb = network.feePerKb;
+  var size  = guessSize(nInputs, nOutputs);
+  var thousands = Math.floor(size/1000);
+  var remainder = size % 1000;
+  var fee = feePerKb * thousands;
+  if(remainder > 0) { fee += feePerKb;};
+  return fee;
 }
 
 module.exports = Transaction;
