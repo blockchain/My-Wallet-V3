@@ -17,7 +17,7 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
   this.privateKeys = null;
   this.addressesOfNeededPrivateKeys = [];
   this.pathsOfNeededPrivateKeys = [];
-
+  this.fee = 0; // final used fee
   var forcedFee = (typeof(fee) == "number") ? fee : null;
 
   assert(toAddresses.length == amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
@@ -36,13 +36,12 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
 
   var nIns = 0;
   var nOuts = toAddresses.length + 1; // assumed one change output
-  var estimatedFee = 0;
 
   for (var i = 0; i < unspent.length; i++) {
     var output = unspent[i];
     transaction.addInput(output.hash, output.index);
     nIns += 1;
-    estimatedFee = forcedFee !== null ? forcedFee : guessFee(nIns, nOuts);
+    this.fee = forcedFee !== null ? forcedFee : guessFee(nIns, nOuts);
 
     // Generate address from output script and add to private list so we can check if the private keys match the inputs later
 
@@ -61,7 +60,7 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
     }
 
     accum += output.value;
-    subTotal = this.amount + estimatedFee;
+    subTotal = this.amount + this.fee;
     if (accum >= subTotal) {
       var change = accum - subTotal;
 
