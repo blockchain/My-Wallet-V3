@@ -1,8 +1,9 @@
 'use strict';
 
-var assert = require('assert');
-var Bitcoin = require('bitcoinjs-lib');
+var assert      = require('assert');
+var Bitcoin     = require('bitcoinjs-lib');
 var randomBytes = require('randombytes');
+var Helpers     = require('./helpers');
 
 var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAddress, listener) {
 
@@ -41,7 +42,7 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
     var output = unspent[i];
     transaction.addInput(output.hash, output.index);
     nIns += 1;
-    this.fee = forcedFee !== null ? forcedFee : guessFee(nIns, nOuts);
+    this.fee = Helpers.isNumber(forcedFee) ? forcedFee : Helpers.guessFee(nIns, nOuts);
 
     // Generate address from output script and add to private list so we can check if the private keys match the inputs later
 
@@ -160,21 +161,6 @@ function sortUnspentOutputs(unspentOutputs) {
   });
 
   return unspent;
-}
-
-function guessSize (nInputs, nOutputs) {
-  return (nInputs*148 + nOutputs*34 + 10);
-}
-
-function guessFee (nInputs, nOutputs) {
-  var network  = Bitcoin.networks.bitcoin;
-  var feePerKb = network.feePerKb;
-  var size  = guessSize(nInputs, nOutputs);
-  var thousands = Math.floor(size/1000);
-  var remainder = size % 1000;
-  var fee = feePerKb * thousands;
-  if(remainder > 0) { fee += feePerKb;};
-  return fee;
 }
 
 module.exports = Transaction;

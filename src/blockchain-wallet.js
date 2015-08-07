@@ -310,6 +310,7 @@ Wallet.prototype.deleteLegacyAddress = function(a){
   if (typeof this._addresses === 'object') {
     delete this._addresses[a.address];
     MyWallet.syncWallet();
+    return true;
   }
   return false;
 };

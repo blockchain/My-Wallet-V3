@@ -3,9 +3,7 @@
 var assert        = require('assert');
 var Bitcoin       = require('bitcoinjs-lib');
 var RSVP          = require('rsvp');
-var Base58        = require('bs58');
 var MyWallet      = require('./wallet');
-var WalletStore   = require('./wallet-store');
 var WalletCrypto  = require('./wallet-crypto');
 var HDAccount     = require('./hd-account');
 var Transaction   = require('./transaction');
@@ -26,6 +24,7 @@ var NewSpender = function(secondPassword, note, listener) {
   var sharedKey         = MyWallet.wallet.sharedKey;
   var pbkdf2_iterations = MyWallet.wallet.pbkdf2_iterations;
   var isSweep           = false;
+  var addressPair       = {};    // uncompressed Addr -> compressed Addr
   var coins             = null;  // promise of unspentCoins
   var toAddresses       = null;  // array of addresses to pay
   var amounts           = null;  // array of amounts   to pay
@@ -50,25 +49,20 @@ var NewSpender = function(secondPassword, note, listener) {
 
       assert(fromAddress, "fromAddress required");
       if (!Array.isArray(fromAddress)) {fromAddress = [fromAddress];}
-
-      coins         = getUnspentCoins(fromAddress);
-      changeAddress = fromAddress[0] || MyWallet.wallet.activeAddresses[0];
-
+      coins          = getUnspentCoins(fromAddress);
+      changeAddress  = fromAddress[0] || MyWallet.wallet.activeAddresses[0];
       getPrivateKeys = function (tx) {
-        var getKeyForAddress = function (neededPrivateKeyAddress) {
-          var k = MyWallet.wallet.key(neededPrivateKeyAddress).priv;
+        var getKeyForAddress = function (addr) {
+          var searchAddr = addressPair[addr] === undefined ? addr : addressPair[addr];
+          var k = MyWallet.wallet.key(searchAddr).priv;
           var privateKeyBase58 = secondPassword == null ? k : WalletCrypto
             .decryptSecretWithSecondPassword(k, secondPassword, sharedKey, pbkdf2_iterations);
-          // TODO If getPrivateKey returns null, it's a watch only address
-          // - ask for private key or show error or try again without watch only addresses
           var format = MyWallet.detectPrivateKeyFormat(privateKeyBase58);
           var key = MyWallet.privateKeyStringToKey(privateKeyBase58, format);
-          // If the address we looked for is not the public key address of the
-          // private key we found, try the compressed address
-          if (MyWallet.getCompressedAddressString(key) === neededPrivateKeyAddress) {
+          if (MyWallet.getCompressedAddressString(key) === addr) {
             key = new Bitcoin.ECKey(key.d, true);
           }
-          else if (MyWallet.getUnCompressedAddressString(key) === neededPrivateKeyAddress) {
+          else if (MyWallet.getUnCompressedAddressString(key) === addr) {
             key = new Bitcoin.ECKey(key.d, false);
           }
           return key;
@@ -85,21 +79,42 @@ var NewSpender = function(secondPassword, note, listener) {
     },
     ////////////////////////////////////////////////////////////////////////////
     fromPrivateKey: function(privateKey) {
-      console.log("redeem key");
-      // transform privateKey -> [comp address, uncom addr]
-      // if address is not in wallet, import and archive as compressed
-      // move to sweep(address)
-      return prepareTo;
+      assert(privateKey, "privateKey required");
+      var format = MyWallet.detectPrivateKeyFormat(privateKey);
+      var key    = MyWallet.privateKeyStringToKey(privateKey, format);
+
+      key.pub.compressed = false;
+      var extraAddress = key.pub.getAddress().toString();
+      key.pub.compressed = true;
+      var addr = key.pub.getAddress().toString();
+      var cWIF = key.toWIF();
+
+      if(MyWallet.wallet.addresses.some(function(a){return a !== addr})){
+        var addrPromise = MyWallet.wallet.importLegacyAddress(cWIF, "Redeemed code.", secondPassword);
+        addrPromise.then(function(A){A.archived = true;})
+      }
+      addressPair[extraAddress] = addr;
+      return prepareFrom.addressSweep([addr, extraAddress]);
     },
     ////////////////////////////////////////////////////////////////////////////
     fromAccount: function(fromIndex){
-      console.log("fromAccount");
-      // check parameteres
-      // obtain account
-      // - obtain change address
-      // obtain coins Promise
-      // set getPrivateKeys function tx -> [keys]
-      // return spend
+      assert(fromIndex !== undefined || fromIndex !== null, "from account index required");
+      var fromAccount = MyWallet.wallet.hdwallet.accounts[fromIndex];
+      changeAddress   = fromAccount.changeAddress;
+      coins           = getUnspentCoins([fromAccount.extendedPublicKey]);
+      getPrivateKeys  = function (tx) {
+        var extendedPrivateKey = fromAccount.extendedPrivateKey === null || secondPassword === null
+          ? fromAccount.extendedPrivateKey
+          : WalletCrypto.decryptSecretWithSecondPassword( fromAccount.extendedPrivateKey
+                                                        , secondPassword
+                                                        , sharedKey
+                                                        , pbkdf2_iterations);
+        var getKeyForPath = function (neededPrivateKeyPath) {
+          var keyring = new KeyRing(extendedPrivateKey);
+          return keyring.privateKeyFromPath(neededPrivateKeyPath);
+        };
+        return tx.pathsOfNeededPrivateKeys.map(getKeyForPath);
+      };
       return prepareTo;
     }
   };
@@ -108,32 +123,34 @@ var NewSpender = function(secondPassword, note, listener) {
   // TO
   var prepareTo = {
     ////////////////////////////////////////////////////////////////////////////
-    // toaddress and amount can be arrays or not
-    // if fee is ignored, it is computed per kb
     toAddress: function(toAddress, amount, fee) {
 
       assert(toAddress, "toAddress required");
-      assert(amount   , "amounts required");
+      assert(amount || isSweep, "amounts required");
       if (!Array.isArray(toAddress)) {toAddress = [toAddress];}
       if (!Array.isArray(amount)) {amount = [amount];}
-      assert(amount.reduce(Helpers.add,0) <= MAX_SATOSHI, "max bitcoin amount of 21 Million");
-      amounts     = amount;
+      if (!isSweep) {
+        assert(amount.reduce(Helpers.add,0) <= MAX_SATOSHI, "max bitcoin amount of 21 Million");
+        amounts     = amount;
+      };
       toAddresses = toAddress;
       forcedFee   = fee;
       self.tx = coins.then(buildTransaction);
       return self;
     },
     ////////////////////////////////////////////////////////////////////////////
-    toAccount: function(toIndex) {
-      console.log("toAccount");
+    toAccount: function(toIndex, amount, fee) {
+      assert(toIndex !== undefined || toIndex !== null, "to account index required");
+      var account = MyWallet.wallet.hdwallet.accounts[toIndex];
+      return prepareTo.toAddress(account.receiveAddress, amount, fee);
     },
     ////////////////////////////////////////////////////////////////////////////
     toEmail: function(email) {
-      console.log("toEmail");
+      // TODO
     },
     ////////////////////////////////////////////////////////////////////////////
     toMobile: function(mobile) {
-      console.log("toMobile");
+      // TODO
     }
   };
 
@@ -154,7 +171,6 @@ var NewSpender = function(secondPassword, note, listener) {
         utxo.index = utxo.tx_output_n;
       };
       obj.unspent_outputs.forEach(processCoin);
-      console.log("obtained coins: " + obj.unspent_outputs);
       defer.resolve(obj.unspent_outputs);
     }
     var errorCoins = function(e) {
@@ -166,7 +182,21 @@ var NewSpender = function(secondPassword, note, listener) {
   ////////////////////////////////////////////////////////////////////////////////
   // buildTransaction :: [coins] -> Transaction
   function buildTransaction(coins){
+    var getValue = function(coin) {return coin.value;};
+    var isSmall = function(value) {return value < 500000;};
+    if (isSweep) {
+      var estimatedFee = Helpers.isNumber(forcedFee) ?
+        forcedFee : Helpers.guessFee(coins.length, 2);
+      amounts = coins.map(getValue).reduce(Helpers.add,0) - estimatedFee;
+    };
+
     var tx = new Transaction(coins, toAddresses, amounts, forcedFee, changeAddress, listener);
+
+    // cancel the transaction if public note and small output
+    var anySmall = tx.transaction.outs.map(getValue).some(isSmall);
+    if(anySmall && note !== undefined && note !== null)
+      {throw "There is an output too small to publish a note";}
+
     return tx;
   };
   ////////////////////////////////////////////////////////////////////////////////
@@ -191,12 +221,3 @@ var NewSpender = function(secondPassword, note, listener) {
 };
 
 module.exports = NewSpender;
-
-// xpub6DHN1xpggNEUfaV926XgSfRSgRtDx9nE3gEpndGZPwaAjiJzDqQfGGf5vDNZzvQe2ycq5EiUdhcJGzQ3xKL2W6eGCzs8Z2prKqoqxtu1rZC
-// var a = new Blockchain.Test("hola", undefined, undefined);
-// var b = a.fromAddress("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX");
-// var c = b.toAddress("1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF", 10000);
-// var p = c.publish();
-// var algo = new Blockchain.Test("hola", undefined, undefined).fromAddress("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX").toAddress("1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF", 10000).publish();
-// see suggested fee
-// c.tx.then(function(t){console.log(t.fee)});

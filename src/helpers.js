@@ -119,6 +119,21 @@ Function.prototype.compose = function(g) {
    };
 };
 
+Helpers.guessSize = function (nInputs, nOutputs) {
+  return (nInputs*148 + nOutputs*34 + 10);
+};
+
+Helpers.guessFee = function (nInputs, nOutputs) {
+  var network  = Bitcoin.networks.bitcoin;
+  var feePerKb = network.feePerKb;
+  var size  = Helpers.guessSize(nInputs, nOutputs);
+  var thousands = Math.floor(size/1000);
+  var remainder = size % 1000;
+  var fee = feePerKb * thousands;
+  if(remainder > 0) { fee += feePerKb;};
+  return fee;
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 // password scorer
 Helpers.scorePassword = function (password){
