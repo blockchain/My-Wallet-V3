@@ -235,7 +235,6 @@ var Spender = function(note, successCallback, errorCallback, listener, secondPas
      */
     fromAddress: function(fromAddress, amount, feeAmount) {
 
-      assert(fromAddress, "fromAddress required");
       assert(typeof(amount) === "number", "amount required");
       assert(amount <= maxSatoshi, "max bitcoin number 21 Million");
       assert(typeof(feeAmount) === "number", "fee required");
@@ -245,7 +244,7 @@ var Spender = function(note, successCallback, errorCallback, listener, secondPas
       payment.feeAmount = feeAmount;
 
       promises.coins = new RSVP.Promise(function(success, error) {
-        var addressList = [payment.fromAddress];
+        var addressList = Array.isArray(payment.fromAddress) ? payment.fromAddress : [payment.fromAddress];
         if (payment.extraAddress !== null && payment.extraAddress !== undefined) {
           addressList.push(payment.extraAddress);
         };
