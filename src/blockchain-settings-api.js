@@ -200,6 +200,16 @@ function verifyMobile(code, success, error) {
   });
 };
 
+function getActivityLogs(success, error) {
+  MyWallet.securePost("wallet", {method : 'list-logs', format : 'json'}, function(data) {
+    typeof(success) === "function" && success(data);
+  }, function(data) {
+    var response = data.responseText || 'Error Downloading Activity Logs';
+    WalletStore.sendEvent("msg", {type: "error", message: response});
+    typeof(error) === "function" &&  error();
+  });
+};
+
 module.exports = {
   get_account_info: get_account_info,
   update_API_access: update_API_access,
@@ -223,5 +233,6 @@ module.exports = {
   confirmTwoFactorGoogleAuthenticator: confirmTwoFactorGoogleAuthenticator,
   resendEmailConfirmation: resendEmailConfirmation,
   verifyEmail: verifyEmail,
-  verifyMobile: verifyMobile
+  verifyMobile: verifyMobile,
+  getActivityLogs: getActivityLogs
 };
