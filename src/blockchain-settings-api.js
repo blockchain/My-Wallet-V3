@@ -92,6 +92,14 @@ function changeMobileNumber(val, success, error) {
   updateKV('Updating Cell Number', 'update-sms', val, success, error);
 };
 
+// Logging levels:
+// 0 - Logging disabled
+// 1 - Log actions with hashed IP addresses
+// 2 - Log actions with IP addresses and user agents
+function updateLoggingLevel(val, success, error) {
+  updateKV('Updating Logging Level', 'update-logging-level', val, success, error);
+};
+
 function toggleSave2FA(val, success, error) {
   updateKV('Updating Save 2FA', 'update-never-save-auth-type', val ? true : false, success, error);
 };
@@ -192,6 +200,16 @@ function verifyMobile(code, success, error) {
   });
 };
 
+function getActivityLogs(success, error) {
+  MyWallet.securePost("wallet", {method : 'list-logs', format : 'json'}, function(data) {
+    typeof(success) === "function" && success(data);
+  }, function(data) {
+    var response = data.responseText || 'Error Downloading Activity Logs';
+    WalletStore.sendEvent("msg", {type: "error", message: response});
+    typeof(error) === "function" &&  error();
+  });
+};
+
 module.exports = {
   get_account_info: get_account_info,
   update_API_access: update_API_access,
@@ -205,6 +223,7 @@ module.exports = {
   update_password_hint2: update_password_hint2,
   change_email: change_email,
   changeMobileNumber: changeMobileNumber,
+  updateLoggingLevel: updateLoggingLevel,
   toggleSave2FA: toggleSave2FA,
   unsetTwoFactor: unsetTwoFactor,
   setTwoFactorSMS: setTwoFactorSMS,
@@ -214,5 +233,6 @@ module.exports = {
   confirmTwoFactorGoogleAuthenticator: confirmTwoFactorGoogleAuthenticator,
   resendEmailConfirmation: resendEmailConfirmation,
   verifyEmail: verifyEmail,
-  verifyMobile: verifyMobile
+  verifyMobile: verifyMobile,
+  getActivityLogs: getActivityLogs
 };
