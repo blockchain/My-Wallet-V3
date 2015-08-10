@@ -15,7 +15,7 @@ var KeyRing       = require('./keyring');
 //// Spender Class
 ////////////////////////////////////////////////////////////////////////////////
 
-var NewSpender = function(secondPassword, note, listener) {
+var Spender = function(secondPassword, note, listener) {
 
   var self = this;
   var MAX_SATOSHI       = 2100000000000000;
@@ -220,4 +220,4 @@ var NewSpender = function(secondPassword, note, listener) {
 ////////////////////////////////////////////////////////////////////////////////
 };
 
-module.exports = NewSpender;
+module.exports = Spender;
