@@ -11,7 +11,7 @@ describe "HDWallet", ->
     'double_encryption': false
     'options':
       'pbkdf2_iterations': 5000
-      'fee_policy': 0
+      'fee_per_kb': 10000
       'html5_notifications': false
       'logout_time': 600000
     'address_book': []
@@ -99,9 +99,10 @@ describe "HDWallet", ->
         wallet.dpasswordhash = "not allowed"
         expect(wallet.dpasswordhash).not.toEqual("not allowed")
 
-      it "fee_policy is read only", ->
-        wallet.fee_policy = "not allowed"
-        expect(wallet.fee_policy).not.toEqual("not allowed")
+      it "fee_per_kb  should throw exception if is non-number set", ->
+        wrongSet = () -> wallet.fee_per_kb  = "failure"
+        expect(wrongSet).toThrow()
+        expect(MyWallet.syncWallet).not.toHaveBeenCalled()
 
       it "pbkdf2_iterations is read only", ->
         wallet.pbkdf2_iterations = "not allowed"

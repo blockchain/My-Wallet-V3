@@ -186,7 +186,7 @@ var Spender = function(secondPassword, note, listener) {
     var isSmall = function(value) {return value < 500000;};
     if (isSweep) {
       var estimatedFee = Helpers.isNumber(forcedFee) ?
-        forcedFee : Helpers.guessFee(coins.length, 2);
+        forcedFee : Helpers.guessFee(coins.length, 2, MyWallet.wallet.fee_per_kb);
       amounts = coins.map(getValue).reduce(Helpers.add,0) - estimatedFee;
     };
 
