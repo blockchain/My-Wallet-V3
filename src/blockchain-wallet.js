@@ -101,10 +101,12 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function() { return this._fee_per_kb;},
     set: function(value) {
-      if(Helpers.isNumber(value))
+      if(Helpers.isNumber(value)) {
         this._fee_per_kb = value;
-      else
+        MyWallet.syncWallet();
+      } else {
         throw 'Error: wallet.fee_per_kb must be a number';
+      }
     }
   },
   "pbkdf2_iterations": {
