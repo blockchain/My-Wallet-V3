@@ -1562,7 +1562,7 @@ MyWallet.signMessage = function(address, message) {
  * @param {function(string)} error callback function with error message
  */
  // used on mywallet, iOS and frontend
-MyWallet.createNewWallet = function(inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, success, error) {
+MyWallet.createNewWallet = function(inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, success, error, isHD) {
   WalletSignup.generateNewWallet(inputedPassword, inputedEmail, firstAccountName, function(createdGuid, createdSharedKey, createdPassword) {
 
     if (languageCode)
@@ -1573,7 +1573,7 @@ MyWallet.createNewWallet = function(inputedEmail, inputedPassword, firstAccountN
     success(createdGuid, createdSharedKey, createdPassword);
   }, function (e) {
     error(e);
-  });
+  }, isHD);
 };
 // used 3 times
 function nKeys(obj) {
