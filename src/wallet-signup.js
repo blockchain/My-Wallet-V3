@@ -9,7 +9,7 @@ var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var BlockchainAPI = require('./blockchain-api');
 var Wallet = require('./blockchain-wallet');
-
+var Helpers = require('./helpers');
 
 // Save the javascript wallet to the remote server
 function insertWallet(guid, sharedKey, password, extra, successcallback, errorcallback) {
@@ -91,7 +91,8 @@ function generateUUIDs(n, success, error) {
   });
 };
 
-function generateNewWallet(password, email, firstAccountName, success, error) {
+function generateNewWallet(password, email, firstAccountName, success, error, isHD) {
+  isHD = Helpers.isBoolean(isHD) ? isHD : true;
   this.generateUUIDs(2, function(uuids) {
     var guid = uuids[0];
     var sharedKey = uuids[1];
@@ -119,7 +120,7 @@ function generateNewWallet(password, email, firstAccountName, success, error) {
       });
     };
 
-    Wallet.new(guid, sharedKey, firstAccountName, saveWallet);
+    Wallet.new(guid, sharedKey, firstAccountName, saveWallet, isHD);
 
   }, error);
 };
