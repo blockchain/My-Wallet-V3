@@ -446,7 +446,8 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
 };
 
 // creating a new wallet object
-Wallet.new = function(guid, sharedKey, firstAccountLabel, success){
+Wallet.new = function(guid, sharedKey, firstAccountLabel, success, isHD){
+  isHD = Helpers.isBoolean(isHD) ? isHD : true;
   var object = {
     guid              : guid,
     sharedKey         : sharedKey,
@@ -458,13 +459,18 @@ Wallet.new = function(guid, sharedKey, firstAccountLabel, success){
       logout_time        : 600000
     }
   };
-  var newWallet   = new Wallet(object);
-  var newHDwallet = HDWallet.new();
-  newWallet._hd_wallets.push(newHDwallet);
+  MyWallet.wallet = new Wallet(object);
   var label = firstAccountLabel ||  "My Bitcoin Wallet";
-  newHDwallet.newAccount(label);
-  MyWallet.wallet = newWallet;
-  success(newWallet);
+  if (isHD) {
+    // hd wallet
+    var newHDwallet = HDWallet.new();
+    MyWallet.wallet._hd_wallets.push(newHDwallet);
+    newHDwallet.newAccount(label);
+  } else {
+    // legacy wallet (generate address)
+    MyWallet.wallet.newLegacyAddress(label);
+  };
+  success(MyWallet.wallet);
 };
 
 // adding and hd wallet to an existing wallet
