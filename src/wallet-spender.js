@@ -15,12 +15,12 @@ var KeyRing       = require('./keyring');
 //// Spender Class
 ////////////////////////////////////////////////////////////////////////////////
 
-var Spender = function(secondPassword, note, listener) {
+var Spender = function(listener) {
 
   var self = this;
   var MAX_SATOSHI       = 2100000000000000;
-  var note              = note;
-  var secondPassword    = secondPassword;
+  var note              = null;
+  var secondPassword    = null;
   var sharedKey         = MyWallet.wallet.sharedKey;
   var pbkdf2_iterations = MyWallet.wallet.pbkdf2_iterations;
   var isSweep           = false;
@@ -37,7 +37,9 @@ var Spender = function(secondPassword, note, listener) {
 
   //////////////////////////////////////////////////////////////////////////////
   // prublic methods:
-  this.publish = function(){
+  this.publish = function(secPass, publicNote){
+    secondPassword = secPass;
+    note           = publicNote;
     return this.tx.then(signTransaction).then(publishTransaction);
   };
   //////////////////////////////////////////////////////////////////////////////
@@ -47,7 +49,8 @@ var Spender = function(secondPassword, note, listener) {
     ////////////////////////////////////////////////////////////////////////////
     fromAddress: function(fromAddress) {
 
-      assert(fromAddress, "fromAddress required");
+      fromAddress = fromAddress === null || fromAddress == undefined ?
+        MyWallet.wallet.activeAddresses[0] : fromAddress;
       if (!Array.isArray(fromAddress)) {fromAddress = [fromAddress];}
       coins          = getUnspentCoins(fromAddress);
       changeAddress  = fromAddress[0] || MyWallet.wallet.activeAddresses[0];
@@ -183,25 +186,22 @@ var Spender = function(secondPassword, note, listener) {
   // buildTransaction :: [coins] -> Transaction
   function buildTransaction(coins){
     var getValue = function(coin) {return coin.value;};
-    var isSmall = function(value) {return value < 500000;};
     if (isSweep) {
       var estimatedFee = Helpers.isNumber(forcedFee) ?
         forcedFee : Helpers.guessFee(coins.length, 2, MyWallet.wallet.fee_per_kb);
       amounts = coins.map(getValue).reduce(Helpers.add,0) - estimatedFee;
     };
-
     var tx = new Transaction(coins, toAddresses, amounts, forcedFee, changeAddress, listener);
-
-    // cancel the transaction if public note and small output
-    var anySmall = tx.transaction.outs.map(getValue).some(isSmall);
-    if(anySmall && note !== undefined && note !== null)
-      {throw "There is an output too small to publish a note";}
-
     return tx;
   };
   ////////////////////////////////////////////////////////////////////////////////
   // publishTransaction :: Transaction -> Transaction
   function signTransaction(transaction) {
+    var getValue = function(coin) {return coin.value;};
+    var isSmall = function(value) {return value < 500000;};
+    var anySmall = transaction.transaction.outs.map(getValue).some(isSmall);
+    if(anySmall && note !== undefined && note !== null)
+      {throw "There is an output too small to publish a note";}
     var keys = getPrivateKeys(transaction);
     transaction.addPrivateKeys(keys);
     transaction.randomizeOutputs();
