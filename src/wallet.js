@@ -1105,7 +1105,7 @@ MyWallet.resendTwoFactorSms = function(user_guid, success, error) {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-MyWallet.recoverResetPasswordAndLogin = function ( 
+MyWallet.recoverResetPasswordAndLogin = function (
                             mnemonic
                           , newPassword
                           , successCallback
@@ -1116,13 +1116,13 @@ MyWallet.recoverResetPasswordAndLogin = function (
   assert(newPassword, 'New password required');
   assert(successCallback, 'Success callback required');
   assert(other_error, 'Error callback required');
-  
+
   var seed = BIP39.mnemonicToSeedHex(mnemonic);
 
   var uuidAndSharedKey = WalletCrypto.seedToUUIDandSharedKey(seed);
-    
+
   var didFetchWalletJSON = function(obj) {
-    
+
     if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
      WalletStore.setEncryptedWalletData(obj.payload);
     }
@@ -1132,28 +1132,28 @@ MyWallet.recoverResetPasswordAndLogin = function (
     if (obj.language && WalletStore.getLanguage() != obj.language) {
      WalletStore.setLanguage(obj.language);
     }
-    
-    // Decrypt password    
+
+    // Decrypt password
     var json = $.parseJSON(obj.payload);
     var oldPassword = WalletCrypto.decryptPasswordWithSeed(json.encryptedPassword, seed, json.pbkdf2_iterations);
-        
+
     var success = function() {
       // Change password
       WalletStore.changePassword(newPassword, function() {
         successCallback(uuidAndSharedKey.guid);
-      }, function() { 
+      }, function() {
         console.log("Couldn't change password.");
         other_error("Couldn't reset password.");
       });
     };
-    // Finish regular login    
+    // Finish regular login
     MyWallet.initializeWallet(oldPassword, success, other_error);
-    
+
 
   };
-  
+
   MyWallet.tryToFetchWalletJSON(uuidAndSharedKey.guid, uuidAndSharedKey.sharedKey, null, null, didFetchWalletJSON, other_error);
-  
+
 }
 
 MyWallet.login = function ( user_guid
@@ -1174,7 +1174,7 @@ MyWallet.login = function ( user_guid
   assert(twoFACode !== undefined, '2FA code must be null or set');
 
   var didFetchWalletJSON = function(obj) {
-    
+
     fetch_success && fetch_success();
 
     if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
@@ -1209,7 +1209,7 @@ MyWallet.tryToFetchWalletJSON = function(guid, shared_key, needs_two_factor_code
   if (shared_key) {
     data.sharedKey = shared_key;
   }
-  
+
   $.ajax({
     type: "GET",
     dataType: 'json',
@@ -1285,7 +1285,7 @@ MyWallet.tryToFetchWalletWith2FA = function(guid, shared_key, two_factor_auth_ke
   if (shared_key) {
     data.sharedKey = shared_key;
   }
-  
+
   if (two_factor_auth_key == null) {
     other_error('Two Factor Authentication code this null');
     return;
@@ -1324,7 +1324,7 @@ MyWallet.tryToFetchWalletWith2FA = function(guid, shared_key, two_factor_auth_ke
     }
   });
 };
-  
+
 
 MyWallet.pollForSessionGUID = function(successCallback) {
 
@@ -1443,7 +1443,7 @@ function syncWallet (successcallback, errorcallback) {
     var crypted = WalletCrypto.encryptWallet( data
                                               , WalletStore.getPassword()
                                               , WalletStore.getPbkdf2Iterations()
-                                              , MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0 
+                                              , MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0
                                               , WalletStore.getEncryptedPassword());
 
     if (crypted.length == 0) {
@@ -1636,7 +1636,6 @@ MyWallet.createNewWallet = function(inputedEmail, inputedPassword, firstAccountN
     if (languageCode)
       WalletStore.setLanguage(languageCode);
 
-    WalletStore.setSharedKey(sharedKey);
     WalletStore.unsafeSetPassword(createdPassword);
 
     success(guid, sharedKey, createdPassword);

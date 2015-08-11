@@ -100,7 +100,8 @@ function generateNewWallet(password, email, firstAccountName, success, error) {
     });
   }
 
-  var encryptedPassword = WalletCrypto.encryptPasswordWithSeed(password, seed, WalletStore.getDefaultPbkdf2Iterations());
+  // MyWallet.wallet.defaultPbkdf2Iterations is not available, hard coding 5000 for now:
+  var encryptedPassword = WalletCrypto.encryptPasswordWithSeed(password, seed, 5000);
   WalletStore.setEncryptedPassword(encryptedPassword);
 
   Wallet.new(mnemonic, keys.guid, keys.sharedKey, firstAccountName, saveWallet);
