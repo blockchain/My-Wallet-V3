@@ -79,7 +79,7 @@ function generateNewWallet(password, email, firstAccountName, success, error) {
 
   assert(seed != undefined && seed != null && seed != "", "HD seed required");
 
-  var keys = WalletCrypto.seedToUUIDandSharedKey(seed);
+  var keys = WalletCrypto.seedToKeys(seed);
 
   if (password.length > 255) {
     throw 'Passwords must be shorter than 256 characters';
@@ -102,9 +102,17 @@ function generateNewWallet(password, email, firstAccountName, success, error) {
 
   // MyWallet.wallet.defaultPbkdf2Iterations is not available, hard coding 5000 for now:
   var encryptedPassword = WalletCrypto.encryptPasswordWithSeed(password, seed, 5000);
+
   WalletStore.setEncryptedPassword(encryptedPassword);
 
-  Wallet.new(mnemonic, keys.guid, keys.sharedKey, firstAccountName, saveWallet);
+  Wallet.new(
+    mnemonic,
+    keys.guid,
+    keys.sharedKey,
+    keys.metaDataKey,
+    firstAccountName,
+    saveWallet
+  );
 
 };
 

@@ -313,31 +313,34 @@ function encryptPasswordWithSeed(password, seedHexString, pbkdf2_iterations) {
 }
 
 function decryptPasswordWithSeed(encryptedPassword, seedHexString, pbkdf2_iterations) {
-  assert(seedHexString.length == 128, "Expected a 256 bit seed as a hex string")
+  assert(seedHexString.length == 128, "Expected a 512 bit seed as a hex string")
   var seed = CryptoJS.enc.Hex.parse(seedHexString);
 
   return decryptAes(encryptedPassword, seed, pbkdf2_iterations);
 }
 
-function seedToUUIDandSharedKey(seedHexString) {
-  assert(seedHexString.length == 128, "Expected a 256 bit seed as a hex string")
+function seedToKeys(seedHexString) {
+  assert(seedHexString.length == 128, "Expected a 512 bit seed as a hex string")
   var seed = CryptoJS.enc.Hex.parse(seedHexString);
-  var doubleHash = CryptoJS.SHA256(CryptoJS.SHA256(seed));
+  var doubleHash = CryptoJS.SHA512(CryptoJS.SHA512(seed));
 
   var doubleHashBuffer = Buffer(wordToByteArray(doubleHash.words));
 
   var guidBuffer = new Buffer(16);
   var sharedKeyBuffer = new Buffer(16);
+  var metaDataKeyBuffer = new Buffer(16);
+  var unusedBuffer = new Buffer(16);
 
   doubleHashBuffer.copy(guidBuffer,0,0,16);
   doubleHashBuffer.copy(sharedKeyBuffer,0,16,32);
+  doubleHashBuffer.copy(metaDataKeyBuffer,0,32,48);
+  doubleHashBuffer.copy(unusedBuffer,0,48,64);
 
-  return {guid: uuid.v4({random: guidBuffer}), sharedKey: uuid.v4({random: sharedKeyBuffer})}
-};
-
-function generateMetaDataKey() {
-  var key = CryptoJS.lib.WordArray.random(256/8);
-  return key.toString(CryptoJS.enc.Base64);
+  return {
+    guid: uuid.v4({random: guidBuffer}),
+    sharedKey: uuid.v4({random: sharedKeyBuffer}),
+    metaDataKey: metaDataKeyBuffer.toString('base64')
+  };
 };
 
 function encryptMetaData(obj, keyBase64) {
@@ -393,8 +396,7 @@ module.exports = {
   wordToByteArray: wordToByteArray,
   encryptPasswordWithSeed: encryptPasswordWithSeed,
   decryptPasswordWithSeed: decryptPasswordWithSeed,
-  seedToUUIDandSharedKey: seedToUUIDandSharedKey,
-  generateMetaDataKey: generateMetaDataKey,
+  seedToKeys: seedToKeys,
   encryptMetaData: encryptMetaData,
   decryptMetaData: decryptMetaData
 };

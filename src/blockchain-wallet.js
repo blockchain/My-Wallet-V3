@@ -456,11 +456,12 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
 };
 
 // creating a new wallet object
-Wallet.new = function(mnemonic, guid, sharedKey, firstAccountLabel, success){
+Wallet.new = function(mnemonic, guid, sharedKey, metaDataKey, firstAccountLabel, success){
+
   var object = {
     guid              : guid,
     sharedKey         : sharedKey,
-    metaDataKey       : WalletCrypto.generateMetaDataKey(),
+    metaDataKey       : metaDataKey,
     double_encryption : false,
     options: {
       pbkdf2_iterations  : 5000,

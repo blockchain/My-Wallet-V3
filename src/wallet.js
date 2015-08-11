@@ -1119,7 +1119,7 @@ MyWallet.recoverResetPasswordAndLogin = function (
 
   var seed = BIP39.mnemonicToSeedHex(mnemonic);
 
-  var uuidAndSharedKey = WalletCrypto.seedToUUIDandSharedKey(seed);
+  var keys = WalletCrypto.seedToKeys(seed);
 
   var didFetchWalletJSON = function(obj) {
 
@@ -1140,7 +1140,7 @@ MyWallet.recoverResetPasswordAndLogin = function (
     var success = function() {
       // Change password
       WalletStore.changePassword(newPassword, function() {
-        successCallback(uuidAndSharedKey.guid);
+        successCallback(keys.guid);
       }, function() {
         console.log("Couldn't change password.");
         other_error("Couldn't reset password.");
@@ -1152,7 +1152,7 @@ MyWallet.recoverResetPasswordAndLogin = function (
 
   };
 
-  MyWallet.tryToFetchWalletJSON(uuidAndSharedKey.guid, uuidAndSharedKey.sharedKey, null, null, didFetchWalletJSON, other_error);
+  MyWallet.tryToFetchWalletJSON(keys.guid, keys.sharedKey, null, null, didFetchWalletJSON, other_error);
 
 }
 
