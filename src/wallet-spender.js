@@ -50,7 +50,7 @@ var Spender = function(listener) {
     fromAddress: function(fromAddress) {
 
       fromAddress = fromAddress === null || fromAddress == undefined ?
-        MyWallet.wallet.activeAddresses[0] : fromAddress;
+        MyWallet.wallet.activeAddresses : fromAddress;
       if (!Array.isArray(fromAddress)) {fromAddress = [fromAddress];}
       coins          = getUnspentCoins(fromAddress);
       changeAddress  = fromAddress[0] || MyWallet.wallet.activeAddresses[0];
