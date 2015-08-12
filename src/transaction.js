@@ -1,15 +1,16 @@
 'use strict';
 
-var assert = require('assert');
-var Bitcoin = require('bitcoinjs-lib');
+var assert      = require('assert');
+var Bitcoin     = require('bitcoinjs-lib');
 var randomBytes = require('randombytes');
+var Helpers     = require('./helpers');
+var MyWallet    = require('./wallet');
 
 var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAddress, listener) {
 
   if (!Array.isArray(toAddresses)) {toAddresses = [toAddresses];}
   if (!Array.isArray(amounts)) {amounts = [amounts];}
   var network = Bitcoin.networks.bitcoin;
-  // var defaultFee = network.feePerKb;
 
   this.amount = amounts.reduce(function(a, b) {return a + b;},0);
   this.listener = listener;
@@ -17,7 +18,7 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
   this.privateKeys = null;
   this.addressesOfNeededPrivateKeys = [];
   this.pathsOfNeededPrivateKeys = [];
-
+  this.fee = 0; // final used fee
   var forcedFee = (typeof(fee) == "number") ? fee : null;
 
   assert(toAddresses.length == amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
@@ -36,13 +37,12 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
 
   var nIns = 0;
   var nOuts = toAddresses.length + 1; // assumed one change output
-  var estimatedFee = 0;
 
   for (var i = 0; i < unspent.length; i++) {
     var output = unspent[i];
     transaction.addInput(output.hash, output.index);
     nIns += 1;
-    estimatedFee = forcedFee !== null ? forcedFee : guessFee(nIns, nOuts);
+    this.fee = Helpers.isNumber(forcedFee) ? forcedFee : Helpers.guessFee(nIns, nOuts, MyWallet.wallet.fee_per_kb);
 
     // Generate address from output script and add to private list so we can check if the private keys match the inputs later
 
@@ -61,7 +61,7 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
     }
 
     accum += output.value;
-    subTotal = this.amount + estimatedFee;
+    subTotal = this.amount + this.fee;
     if (accum >= subTotal) {
       var change = accum - subTotal;
 
@@ -161,21 +161,6 @@ function sortUnspentOutputs(unspentOutputs) {
   });
 
   return unspent;
-}
-
-function guessSize (nInputs, nOutputs) {
-  return (nInputs*148 + nOutputs*34 + 10);
-}
-
-function guessFee (nInputs, nOutputs) {
-  var network  = Bitcoin.networks.bitcoin;
-  var feePerKb = network.feePerKb;
-  var size  = guessSize(nInputs, nOutputs);
-  var thousands = Math.floor(size/1000);
-  var remainder = size % 1000;
-  var fee = feePerKb * thousands;
-  if(remainder > 0) { fee += feePerKb;};
-  return fee;
 }
 
 module.exports = Transaction;

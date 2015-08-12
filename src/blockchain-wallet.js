@@ -38,7 +38,7 @@ function Wallet(object) {
   this._dpasswordhash     = obj.dpasswordhash;
   //options
   this._pbkdf2_iterations        = obj.options.pbkdf2_iterations;
-  this._fee_policy               = obj.options.fee_policy;
+  this._fee_per_kb               = obj.options.fee_per_kb || 10000;
   this._html5_notifications      = obj.options.html5_notifications;
   this._logout_time              = obj.options.logout_time;
 
@@ -97,9 +97,17 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function() { return this._dpasswordhash;}
   },
-  "fee_policy": {
+  "fee_per_kb": {
     configurable: false,
-    get: function() { return this._fee_policy;}
+    get: function() { return this._fee_per_kb;},
+    set: function(value) {
+      if(Helpers.isNumber(value)) {
+        this._fee_per_kb = value;
+        MyWallet.syncWallet();
+      } else {
+        throw 'Error: wallet.fee_per_kb must be a number';
+      }
+    }
   },
   "pbkdf2_iterations": {
     configurable: false,
@@ -230,7 +238,7 @@ Wallet.prototype.toJSON = function(){
     dpasswordhash     : this.dpasswordhash,
     options           : {
       pbkdf2_iterations        : this.pbkdf2_iterations,
-      fee_policy               : this.fee_policy,
+      fee_per_kb               : this.fee_per_kb,
       html5_notifications      : this._html5_notifications,
       logout_time              : this._logout_time
     },
@@ -310,6 +318,7 @@ Wallet.prototype.deleteLegacyAddress = function(a){
   if (typeof this._addresses === 'object') {
     delete this._addresses[a.address];
     MyWallet.syncWallet();
+    return true;
   }
   return false;
 };
@@ -454,8 +463,8 @@ Wallet.new = function(guid, sharedKey, firstAccountLabel, success, isHD){
     double_encryption : false,
     options: {
       pbkdf2_iterations  : 5000,
-      fee_policy         : 0,
       html5_notifications: false,
+      fee_per_kb         : 10000,
       logout_time        : 600000
     }
   };

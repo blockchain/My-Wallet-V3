@@ -17,7 +17,7 @@ root.decryptedWalletPayload = {
 	"sharedKey" : "87654321-4321-4321-4321-ba0987654321",
 	"options" : {
     "pbkdf2_iterations":1,
-    "fee_policy":0,
+    "fee_per_kb":10000,
     "html5_notifications":false,
     "logout_time":600000,
     "tx_display":0,
@@ -64,7 +64,7 @@ root.decryptedWalletWithSecondPasswordPayload = {
 	"sharedKey" : "87654321-4321-4321-4321-ba0987654321",
 	"options" : {
     "pbkdf2_iterations":1,
-    "fee_policy":0,
+    "fee_per_kb":10000,
     "html5_notifications":false,
     "logout_time":600000,
     "tx_display":0,
