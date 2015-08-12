@@ -11,7 +11,6 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
   if (!Array.isArray(toAddresses)) {toAddresses = [toAddresses];}
   if (!Array.isArray(amounts)) {amounts = [amounts];}
   var network = Bitcoin.networks.bitcoin;
-  // var defaultFee = network.feePerKb;
 
   this.amount = amounts.reduce(function(a, b) {return a + b;},0);
   this.listener = listener;

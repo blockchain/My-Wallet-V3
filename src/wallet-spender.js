@@ -49,7 +49,7 @@ var Spender = function(listener) {
     ////////////////////////////////////////////////////////////////////////////
     fromAddress: function(fromAddress) {
 
-      fromAddress = fromAddress === null || fromAddress == undefined ?
+      fromAddress = fromAddress === null || fromAddress === undefined || fromAddress === '' ?
         MyWallet.wallet.activeAddresses : fromAddress;
       if (!Array.isArray(fromAddress)) {fromAddress = [fromAddress];}
       coins          = getUnspentCoins(fromAddress);
