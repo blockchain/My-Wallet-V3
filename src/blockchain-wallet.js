@@ -482,7 +482,8 @@ Wallet.new = function(guid, sharedKey, firstAccountLabel, success, isHD){
     newHDwallet.newAccount(label);
   } else {
     // legacy wallet (generate address)
-    MyWallet.wallet.newLegacyAddress(label);
+    var ad = Address.new(label);
+    MyWallet.wallet._addresses[ad.address] = ad;
   };
   success(MyWallet.wallet);
 };

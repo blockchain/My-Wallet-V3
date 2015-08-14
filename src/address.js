@@ -137,8 +137,8 @@ Address.import = function(key, label){
 
   //initialization
   var address = new Address(object);
-  address.label    = label;
-  address.archived = false;
+  address._label = label;
+  address._tag   = 0; // non-archived
   return address;
 };
 
