@@ -856,12 +856,6 @@ MyWallet.getConfirmationsForTx = function(latest_block, tx) {
   }
 };
 
-// Must allow the following characters:
-// + : needed for sent to phone number labels
-// used in walletstore
-MyWallet.isAlphaNumericSpace = function (input) {
-  return xregexp.XRegExp("^\\p{L}[\\p{L}@ \\-,._']*$").test(input) || /^[\w\-+,._  ]+$/.test(input);
-};
 // used 3 times
 function parseMultiAddressJSON(obj, cached, checkCompleted) {
   var transactions = WalletStore.getTransactions();
