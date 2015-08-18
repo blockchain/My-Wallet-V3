@@ -115,6 +115,17 @@ module.exports = (grunt) ->
         dest: 'build'
         ext: '.processed.js'
 
+    git_changelog:
+      default:
+        options:
+          file: 'Changelog.md',
+          app_name : 'Blockchain HD',
+          # logo : 'https://raw.githubusercontent.com/blockchain/My-Wallet-HD-Frontend/changelog/assets/icons/png/logo.png',
+          intro : 'Recent changes'
+          grep_commits: '^fix|^feat|^docs|^refactor|^chore|BREAKING'
+          tag: '0.8.2'
+          repo_url: 'https://github.com/blockchain/My-Wallet-HD-Frontend'
+
 
   grunt.loadNpmTasks 'grunt-browserify'
   grunt.loadNpmTasks 'grunt-contrib-clean'
@@ -127,7 +138,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-shell'
   grunt.loadNpmTasks 'grunt-shrinkwrap'
   grunt.loadNpmTasks 'grunt-text-replace'
-
+  grunt.loadNpmTasks('git-changelog')
 
   grunt.registerTask "default", [
     "build"
@@ -156,6 +167,7 @@ module.exports = (grunt) ->
     "browserify:production"
     "concat:mywallet"
     "uglify:mywallet"
+    "git_changelog"
   ]
 
   # Skip dependency check, e.g. for staging:
