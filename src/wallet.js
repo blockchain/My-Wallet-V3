@@ -1247,7 +1247,13 @@ MyWallet.login = function ( user_guid
   if(twoFACode == null) {
     tryToFetchWalletJSON(user_guid, didFetchWalletJSON)
   } else {
-    tryToFetchWalletWith2FA(user_guid, twoFACode, didFetchWalletJSON)
+    // If 2FA is enabled and we already fetched the wallet before, don't fetch
+    // it again
+    if(user_guid === WalletStore.getGuid() && WalletStore.getEncryptedWalletData()) {
+      MyWallet.initializeWallet(inputedPassword, success, other_error, decrypt_success, build_hd_success);
+    } else {
+      tryToFetchWalletWith2FA(user_guid, twoFACode, didFetchWalletJSON)
+    }
   }
 };
 ////////////////////////////////////////////////////////////////////////////////
