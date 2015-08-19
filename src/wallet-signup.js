@@ -109,6 +109,7 @@ function generateNewWallet(password, email, firstAccountName, success, error) {
     mnemonic,
     keys.guid,
     keys.sharedKey,
+    keys.metaDataSharedKey,
     keys.metaDataKey,
     firstAccountName,
     saveWallet

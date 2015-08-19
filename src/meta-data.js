@@ -65,7 +65,7 @@ function updateEndpoint(name, obj, successCallback, errorCallback) {
     url: endpoint + name,
     dataType: 'json',
     headers: {
-      'X-Blockchain-Shared-Key': MyWallet.wallet.sharedKey
+      'X-Blockchain-Shared-Key': MyWallet.wallet.metaDataSharedKey
     },
     data : encryptedPayload,
     success: function() {
@@ -84,7 +84,7 @@ function fetchEndpoint(name, successCallback, errorCallback) {
     url: endpoint + name,
     dataType: 'json',
     headers: {
-      'X-Blockchain-Shared-Key': MyWallet.wallet.sharedKey
+      'X-Blockchain-Shared-Key': MyWallet.wallet.metaDataSharedKey
     },
     success: function(response) {
       var obj = WalletCrypto.decryptMetaData(response, MyWallet.wallet.metaDataKey);

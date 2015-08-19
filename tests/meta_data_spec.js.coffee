@@ -1,6 +1,6 @@
 proxyquire = require('proxyquireify')(require)
 
-sharedKey = "1234"
+metaDataSharedKey = "1234"
 
 jsonObject = {version: 1, iv: "tc/+ZZYqawtMyWcvnn2ss1H9Vti8kDOLvPh/nb/JNy8=", payload: "qNrWtmU4CfWTy1UM7L+dtA=="}
 didYouKnows = [1,2,3]
@@ -31,7 +31,7 @@ stubs =
   './wallet':
     wallet:
       metaDataKey: "YiVGNZY/Wi2bS7LQyCpOSF3FHwWQe/pcsVi4wmPjing="
-      sharedKey: sharedKey
+      metaDataSharedKey: metaDataSharedKey
 
 obs = undefined
 
@@ -67,7 +67,7 @@ describe "MetaData", ->
       expect($.ajax.calls.argsFor(0)[0].data).toBe jsonObject
 
     it "should identify using shared key", ->
-      expect($.ajax.calls.argsFor(0)[0].headers).toEqual({ 'X-Blockchain-Shared-Key': sharedKey })
+      expect($.ajax.calls.argsFor(0)[0].headers).toEqual({ 'X-Blockchain-Shared-Key': metaDataSharedKey })
 
   describe "fetchEndpoint()", ->
     beforeEach ->
@@ -91,7 +91,7 @@ describe "MetaData", ->
     it "should identify using shared key", ->
       MetaData._fetchEndpoint("alerts")
 
-      expect($.ajax.calls.argsFor(0)[0].headers).toEqual({ 'X-Blockchain-Shared-Key': sharedKey })
+      expect($.ajax.calls.argsFor(0)[0].headers).toEqual({ 'X-Blockchain-Shared-Key': metaDataSharedKey })
 
   describe "getSeenDidYouKnows()", ->
     it "should fetch from server if not done so already", ->

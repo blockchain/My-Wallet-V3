@@ -319,27 +319,38 @@ function decryptPasswordWithSeed(encryptedPassword, seedHexString, pbkdf2_iterat
   return decryptAes(encryptedPassword, seed, pbkdf2_iterations);
 }
 
+function hashedSeedAtIndex(seedHexString, i, bytes) {
+  assert(seedHexString.length == 128, "Expected a 512 bit seed as a hex string");
+
+  assert(!isNaN(i), "i should be a number");
+  assert(i === parseInt(i, 10), "i should be an integer");
+  assert(i < 256, "i should be < 256");
+
+  assert(!isNaN(bytes), "bytes should be a number");
+  assert(i === parseInt(i, 10), "bytes should be an integer");
+  assert(i < 256 / 8, "max 256 bits");
+
+  var paddedSeedHexString = seedHexString + ("00" + i.toString()).slice(-2)
+
+  var seed = CryptoJS.enc.Hex.parse(paddedSeedHexString);
+  var doubleHash = CryptoJS.SHA256(CryptoJS.SHA256(seed));
+
+  var desiredBytes = new Buffer(bytes);
+  var buffer = Buffer(wordToByteArray(doubleHash.words));
+
+  buffer.copy(desiredBytes,0,0,bytes);
+
+  return desiredBytes;
+};
+
 function seedToKeys(seedHexString) {
   assert(seedHexString.length == 128, "Expected a 512 bit seed as a hex string")
-  var seed = CryptoJS.enc.Hex.parse(seedHexString);
-  var doubleHash = CryptoJS.SHA512(CryptoJS.SHA512(seed));
-
-  var doubleHashBuffer = Buffer(wordToByteArray(doubleHash.words));
-
-  var guidBuffer = new Buffer(16);
-  var sharedKeyBuffer = new Buffer(16);
-  var metaDataKeyBuffer = new Buffer(16);
-  var unusedBuffer = new Buffer(16);
-
-  doubleHashBuffer.copy(guidBuffer,0,0,16);
-  doubleHashBuffer.copy(sharedKeyBuffer,0,16,32);
-  doubleHashBuffer.copy(metaDataKeyBuffer,0,32,48);
-  doubleHashBuffer.copy(unusedBuffer,0,48,64);
 
   return {
-    guid: uuid.v4({random: guidBuffer}),
-    sharedKey: uuid.v4({random: sharedKeyBuffer}),
-    metaDataKey: metaDataKeyBuffer.toString('base64')
+    guid: uuid.v4({random: hashedSeedAtIndex(seedHexString,0,16)}),
+    sharedKey: uuid.v4({random: hashedSeedAtIndex(seedHexString,1,16)}),
+    metaDataSharedKey: uuid.v4({random: hashedSeedAtIndex(seedHexString,2,16)}),
+    metaDataKey: hashedSeedAtIndex(seedHexString,3,16).toString('base64')
   };
 };
 

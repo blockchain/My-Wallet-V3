@@ -35,6 +35,7 @@ function Wallet(object) {
   this._guid              = obj.guid;
   this._sharedKey         = obj.sharedKey;
   this._metaDataKey       = obj.metaDataKey;
+  this._metaDataSharedKey = obj.metaDataSharedKey;
   this._double_encryption = obj.double_encryption || false;
   this._dpasswordhash     = obj.dpasswordhash;
   //options
@@ -89,6 +90,10 @@ Object.defineProperties(Wallet.prototype, {
   "sharedKey": {
     configurable: false,
     get: function() { return this._sharedKey;}
+  },
+  "metaDataSharedKey": {
+    configurable: false,
+    get: function() { return this._metaDataSharedKey;}
   },
   "metaDataKey": {
     configurable: false,
@@ -250,6 +255,7 @@ Wallet.prototype.toJSON = function(){
 
   if(this._metaDataKey != undefined && this._metaDataKey != null) {
     wallet.metaDataKey = this._metaDataKey;
+    wallet.metaDataSharedKey = this._metaDataSharedKey;
   }
 
   return wallet;
@@ -456,11 +462,12 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
 };
 
 // creating a new wallet object
-Wallet.new = function(mnemonic, guid, sharedKey, metaDataKey, firstAccountLabel, success){
+Wallet.new = function(mnemonic, guid, sharedKey, metaDataSharedKey, metaDataKey, firstAccountLabel, success){
 
   var object = {
     guid              : guid,
     sharedKey         : sharedKey,
+    metaDataSharedKey : metaDataSharedKey,
     metaDataKey       : metaDataKey,
     double_encryption : false,
     options: {

@@ -28,18 +28,23 @@ describe "WalletCrypto", ->
     # Mnemonic: trash analyst join silver omit napkin aspect sweet bachelor have know hello
     # 512 bit seed Hex:
     seed =  "8eadcb94ece1db0b056b3b006b21e0e36548eee1a2f9b4572e5c2d764b6e6668060a3230f37c4e910ea7990c3a87553dc835a7a174decd2e0e4f810c8a7bea11"
-    # sha512(sha512(seedHex)) = 0a9c34d88194b5493b50093b3446793853443a6759e9d4b21ebe7ad9ff99409bc7a4da74627891f40f0313c455b4058812c4b11838609178c330b535a51313e4
-    # GUID is the first quarter, shared key the second quarter, meta data key the 3rd.
-    # Note that v4 of the GUID standard modifies two bits.
+    # sha256(sha256(seedHex + i))
+    # i = 0x00 : GUID
+    # i = 0x01 : Shared key
+    # etc...
+    # Note that v4 of the UUID standard modifies two bits.
 
     it "should deterministically generate a GUID", ->
-      expect(WalletCrypto.seedToKeys(seed).guid).toEqual("0a9c34d8-8194-4549-bb50-093b34467938")
+      expect(WalletCrypto.seedToKeys(seed).guid).toEqual("0a081b50-c8be-4fe0-8135-f607c4404c78")
 
     it "should deterministically generate a shared key", ->
-      expect(WalletCrypto.seedToKeys(seed).sharedKey).toEqual("53443a67-59e9-44b2-9ebe-7ad9ff99409b")
+      expect(WalletCrypto.seedToKeys(seed).sharedKey).toEqual("1ea92b14-38f1-44e6-b780-69e05b1bd2d0")
+
+    it "should deterministically generate a meta data shared key", ->
+      expect(WalletCrypto.seedToKeys(seed).metaDataSharedKey).toEqual("76731873-41dc-409a-b83c-dcba51b8182d")
 
     it "should deterministically generate a meta data key", ->
-      expect(WalletCrypto.seedToKeys(seed).metaDataKey).toEqual("x6TadGJ4kfQPAxPEVbQFiA==")
+      expect(WalletCrypto.seedToKeys(seed).metaDataKey).toEqual("xba1xKmOAZeXqePlnFOQnA==")
 
   describe "encryptMetaData()", ->
     it "should be the same when decrypted", ->
