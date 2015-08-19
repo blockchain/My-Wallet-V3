@@ -6,6 +6,7 @@ var RSVP     = require('rsvp');
 var assert   = require('assert');
 var Helpers  = require('./helpers');
 var WalletStore = require('./wallet-store');
+var $ = require('jquery');
 // var MyWallet = require('./wallet'); this class should not change state of the wallet
 ////////////////////////////////////////////////////////////////////////////////
 // API class
@@ -14,52 +15,90 @@ function API(){
   this.ROOT_URL           = "https://blockchain.info/";
   this.AJAX_TIMEOUT       = 60000;
   this.AJAX_RETRY_DEFAULT = 2;
+  this.API_CODE           = "1770d5d9-bcea-4d28-ad21-6cbd5be018a8";
 }
 
-API.prototype.do = function(){
-  console.log("doing something...");
+// encodeFormData :: Object -> url encoded params
+API.prototype.encodeFormData = function (data) {
+  if (!data) return "";
+  var encoded = Object.keys(data).map(function(k) {
+      return encodeURIComponent(k) + '=' + encodeURIComponent(data[k])
+  }).join('&');
+  return encoded;
 };
 
-API.prototype.getBalances = function(addresses){
-
+// request :: String -> String -> Object -> boolean -> Promise Response
+API.prototype.request = function(action, method, data, jsonResponse) {
+  var defer = RSVP.defer();
+  data = data || {};
+  var baseData = {api_code : this.API_CODE};
+  if (jsonResponse) {baseData.format = 'json'};
+  var data = Helpers.merge(data, baseData);
   var request = new XMLHttpRequest();
-
-  request.open("POST", this.ROOT_URL + "multiaddr", true);
-  // request.setRequestHeader("Content-Type", "application/json");
+  request.open(action, this.ROOT_URL + method + '?'  + this.encodeFormData(data), true);
+  request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
   request.onload = function (e) {
     if (request.readyState === 4) {
       if (request.status === 200) {
-        console.log("hola");
-        console.log(request.responseText);
+        var response = jsonResponse? JSON.parse(request.responseText) : request.responseText;
+        defer.resolve(response);
       } else {
-        console.error(request.statusText);
+        defer.reject(request.statusText);
       }
     }
   };
   request.onerror = function (e) {
-    console.error(request.statusText);
+    defer.reject(request.statusText);
   };
-  request.send(JSON.stringify({active : addresses.join('|'), simple : true, api_code : 0, format : 'json'}));
+  request.send(null);
+  return defer.promise;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Definition of API
+API.prototype.getBalances = function(addresses){
+  var data = {
+      active : addresses.join('|')
+    , simple: true
+  };
+  return this.request("POST", "multiaddr", data, true);
+};
+
+API.prototype.getFiatAtTime = function(time, value, currencyCode){
+  var data = {
+      value : value
+    , currency: currencyCode
+    , time: time
+    , textual: false
+    , nosavecurrency: true
+  };
+  return this.request("GET", "frombtc", data, false);
+};
+
+API.prototype.getTicker = function(){
+  return this.request("GET", "ticker", null, true);
+};
+
+API.prototype.getRejectionReason = function(hexhash){
+  var data = {format: 'plain'};
+  return this.request("GET", "q/rejected/" + hexhash, data, false);
+};
+
+API.prototype.getUnspent = function(fromAddresses, confirmations){
+  var data = {
+      active : fromAddresses.join('|')
+    , confirmations : confirmations ? confirmations : 0
+  };
+  return this.request("POST", "unspent", data, true);
 };
 
 
-// function get_balances(addresses, success, error) {
-//   $.ajax({
-//     type: "POST",
-//     url: getRootURL() + 'multiaddr',
-//     dataType: 'json',
-//     timeout: AJAX_TIMEOUT,
-//     data : {active : addresses.join('|'), simple : true, api_code : WalletStore.getAPICode(), format : 'json'},
-//     success: function(obj) {
-//       for (var key in obj) {
-//         if (MyWallet.wallet.containsLegacyAddress(key))
-//           MyWallet.wallet.key(key).balance = obj[key].final_balance;
-//       }
 
-//       success(obj);
-//     },
-//     error : function(e) {
-//       error(e.responseText);
-//     }
-//   });
-// };
+// things to do:
+// - create a method in blockchain-wallet that ask for the balances and updates the balance wallet
+      //     success: function(obj) {
+      //       for (var key in obj) {
+      //         if (MyWallet.wallet.containsLegacyAddress(key))
+      //           MyWallet.wallet.key(key).balance = obj[key].final_balance;
+      //       }
+
