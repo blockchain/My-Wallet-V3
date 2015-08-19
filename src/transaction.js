@@ -74,8 +74,6 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
       break;
     }
   }
-
-  assert(accum >= subTotal, 'Insufficient funds. Value Needed ' +  subTotal / 100000000 + 'BTC' +'. Available amount ' + accum / 100000000 + 'BTC');
   this.transaction = transaction;
 };
 
