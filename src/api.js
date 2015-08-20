@@ -28,11 +28,10 @@ API.prototype.encodeFormData = function (data) {
 };
 
 // request :: String -> String -> Object -> boolean -> Promise Response
-API.prototype.request = function(action, method, data, jsonResponse) {
+API.prototype.request = function(action, method, data) {
   var defer = RSVP.defer();
   data = data || {};
   var baseData = {api_code : this.API_CODE};
-  if (jsonResponse) {baseData.format = 'json'};
   var data = Helpers.merge(data, baseData);
   var request = new XMLHttpRequest();
   request.open(action, this.ROOT_URL + method + '?'  + this.encodeFormData(data), true);
@@ -40,7 +39,7 @@ API.prototype.request = function(action, method, data, jsonResponse) {
   request.onload = function (e) {
     if (request.readyState === 4) {
       if (request.status === 200) {
-        var response = jsonResponse? JSON.parse(request.responseText) : request.responseText;
+        var response = data.format === 'json'? JSON.parse(request.responseText) : request.responseText;
         defer.resolve(response);
       } else {
         defer.reject(request.statusText);
@@ -48,7 +47,7 @@ API.prototype.request = function(action, method, data, jsonResponse) {
     }
   };
   request.onerror = function (e) {
-    defer.reject(request.statusText);
+      defer.reject(request.statusText);
   };
   request.send(null);
   return defer.promise;
@@ -60,8 +59,9 @@ API.prototype.getBalances = function(addresses){
   var data = {
       active : addresses.join('|')
     , simple: true
+    , format: 'json'
   };
-  return this.request("POST", "multiaddr", data, true);
+  return this.request("POST", "multiaddr", data);
 };
 
 API.prototype.getFiatAtTime = function(time, value, currencyCode){
@@ -72,24 +72,43 @@ API.prototype.getFiatAtTime = function(time, value, currencyCode){
     , textual: false
     , nosavecurrency: true
   };
-  return this.request("GET", "frombtc", data, false);
+  return this.request("GET", "frombtc", data);
 };
 
 API.prototype.getTicker = function(){
-  return this.request("GET", "ticker", null, true);
+  var data = { format: 'json' };
+  return this.request("GET", "ticker", data);
 };
 
 API.prototype.getRejectionReason = function(hexhash){
   var data = {format: 'plain'};
-  return this.request("GET", "q/rejected/" + hexhash, data, false);
+  return this.request("GET", "q/rejected/" + hexhash, data);
 };
+
+
+API.prototype.retry = function(f, n) {
+  var self = this;
+  var i = n === null || n === undefined ? this.AJAX_RETRY_DEFAULT : n;
+  console.log(i);
+  if (i > 1) {
+    return f().then(
+        undefined, // pass through success
+        function (err) { return self.retry(f, i - 1); }
+    );
+  } else {
+    return f();
+  };
+};
+
 
 API.prototype.getUnspent = function(fromAddresses, confirmations){
   var data = {
       active : fromAddresses.join('|')
     , confirmations : confirmations ? confirmations : 0
+    , format: 'json'
   };
-  return this.request("POST", "unspent", data, true);
+  return this.retry(this.request.bind(this, "POST", "unspent", data));
+  // return this.request("POST", "unspent", data);
 };
 
 
