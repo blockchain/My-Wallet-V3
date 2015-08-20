@@ -1,6 +1,8 @@
 proxyquire = require('proxyquireify')(require)
+uuid = require('uuid')
 
 WalletCrypto = proxyquire('../src/wallet-crypto', {})
+
 
 describe "WalletCrypto", ->
 
@@ -24,7 +26,25 @@ describe "WalletCrypto", ->
 
       expect(decrypted).toEqual("1234")
 
-  describe "seedToKeys", ->
+  describe "seedToMetaDataXpub", ->
+    seed = "8eadcb94ece1db0b056b3b006b21e0e36548eee1a2f9b4572e5c2d764b6e6668060a3230f37c4e910ea7990c3a87553dc835a7a174decd2e0e4f810c8a7bea11"
+
+    it "should generate m / 1'", ->
+      # m / 1' xpub:
+      xpub = "xpub68fAf6k8L3NNPu2q8ned7C6dwm7aT5Z9Z2FM7WmXHfRHRHdfEm1AoMetYgEovKYZSTMiQeXuayCvqsUDRv6WGZoJv8cTEAgG3spKRLhTCRY"
+      expect(WalletCrypto.seedToMetaDataXpub(seed)).toEqual(xpub)
+
+  describe "pubKeyToPseudoAddress", ->
+    it "should perform step 2 and 3", ->
+      # https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
+      pubKey = new Buffer("0450863AD64A87AE8A2FE83C1AF1A8403CB53F53E486D8511DAD8A04887E5B23522CD470243453A299FA9E77237716103ABC11A1DF38855ED6F2EE187E9C582BA6", "hex")
+
+      step3 = "010966776006953d5567439e5e39f86a0d273bee"
+
+      expect(WalletCrypto.pubKeyToPseudoAddress(pubKey).toString("hex")).toEqual(step3)
+
+
+  describe "metaDataXpubToKeys", ->
     # Mnemonic: trash analyst join silver omit napkin aspect sweet bachelor have know hello
     # 512 bit seed Hex:
     seed =  "8eadcb94ece1db0b056b3b006b21e0e36548eee1a2f9b4572e5c2d764b6e6668060a3230f37c4e910ea7990c3a87553dc835a7a174decd2e0e4f810c8a7bea11"
@@ -34,17 +54,16 @@ describe "WalletCrypto", ->
     # etc...
     # Note that v4 of the UUID standard modifies two bits.
 
-    it "should deterministically generate a GUID", ->
-      expect(WalletCrypto.seedToKeys(seed).guid).toEqual("0a081b50-c8be-4fe0-8135-f607c4404c78")
+    it "should deterministically generate e.g. a GUID", ->
 
-    it "should deterministically generate a shared key", ->
-      expect(WalletCrypto.seedToKeys(seed).sharedKey).toEqual("1ea92b14-38f1-44e6-b780-69e05b1bd2d0")
+      xpub = "xpub68fAf6k8L3NNPu2q8ned7C6dwm7aT5Z9Z2FM7WmXHfRHRHdfEm1AoMetYgEovKYZSTMiQeXuayCvqsUDRv6WGZoJv8cTEAgG3spKRLhTCRY"
 
-    it "should deterministically generate a meta data shared key", ->
-      expect(WalletCrypto.seedToKeys(seed).metaDataSharedKey).toEqual("76731873-41dc-409a-b83c-dcba51b8182d")
+      uuid = uuid.v4({
+        random: WalletCrypto.metaDataXpubToKey(xpub, 0, 16)
+      })
 
-    it "should deterministically generate a meta data key", ->
-      expect(WalletCrypto.seedToKeys(seed).metaDataKey).toEqual("xba1xKmOAZeXqePlnFOQnA==")
+      expect(uuid).toEqual("2aafd70c-3ef8-493a-96cb-bb379be61448")
+
 
   describe "encryptMetaData()", ->
     it "should be the same when decrypted", ->

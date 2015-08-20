@@ -32,10 +32,17 @@ function Wallet(object) {
   obj.keys       = obj.keys || [];
   obj.hd_wallets = obj.hd_wallets || [];
 
-  this._guid              = obj.guid;
-  this._sharedKey         = obj.sharedKey;
-  this._metaDataKey       = obj.metaDataKey;
-  this._metaDataSharedKey = obj.metaDataSharedKey;
+  if(obj.metaDataXpub) {
+    this._metaDataXpub      = obj.metaDataXpub;
+  }
+
+  // Version 3 wallets that were upgraded from version 2 or that were created
+  // before August 2015 have a non-deterministic GUID and shared key.
+  if(!obj.metaDataXpub || (obj.guid && obj.sharedKey)) {
+    this._guid              = obj.guid;
+    this._sharedKey         = obj.sharedKey;
+  }
+
   this._double_encryption = obj.double_encryption || false;
   this._dpasswordhash     = obj.dpasswordhash;
   //options
@@ -83,21 +90,45 @@ function Wallet(object) {
 }
 
 Object.defineProperties(Wallet.prototype, {
+  "metaDataXpub": {
+    configurable: false,
+    get: function() { return this._metaDataXpub;}
+  },
   "guid": {
     configurable: false,
-    get: function() { return this._guid;}
+    get: function() {
+      if(this._metaDataXpub && !this._guid) {
+        return WalletCrypto.xpubToGuid(this._metaDataXpub);
+      } else {
+        return this._guid;
+      }
+    }
   },
   "sharedKey": {
     configurable: false,
-    get: function() { return this._sharedKey;}
+    get: function() {
+      if(this._metaDataXpub && !this._sharedKey) {
+        return WalletCrypto.xpubToSharedKey(this._metaDataXpub);
+      } else {
+        return this._sharedKey;
+      }
+    }
   },
   "metaDataSharedKey": {
     configurable: false,
-    get: function() { return this._metaDataSharedKey;}
+    get: function() {
+      return WalletCrypto.xpubToMetaDataSharedKey(this._metaDataXpub);
+    }
   },
   "metaDataKey": {
     configurable: false,
-    get: function() { return this._metaDataKey;}
+    get: function() {
+      if(this._metaDataXpub) {
+        return WalletCrypto.xpubToMetaDataKey(this._metaDataXpub);
+      } else {
+        return null;
+      }
+    }
   },
   "isDoubleEncrypted": {
     configurable: false,
@@ -234,8 +265,6 @@ Wallet.prototype.toJSON = function(){
   };
 
   var wallet = {
-    guid              : this.guid,
-    sharedKey         : this.sharedKey,
     double_encryption : this.isDoubleEncrypted,
     dpasswordhash     : this.dpasswordhash,
     options           : {
@@ -253,9 +282,14 @@ Wallet.prototype.toJSON = function(){
     hd_wallets        : this._hd_wallets
   };
 
-  if(this._metaDataKey != undefined && this._metaDataKey != null) {
-    wallet.metaDataKey = this._metaDataKey;
-    wallet.metaDataSharedKey = this._metaDataSharedKey;
+  if(this._metaDataXpub != undefined && this._metaDataXpub != null) {
+    wallet.metaDataXpub = this._metaDataXpub;
+  }
+
+  // Only store GUID & shared key if they are not deterministic:
+  if(this._guid && this._sharedKey) {
+    wallet.guid = this.guid,
+    wallet.sharedKey = this.sharedKey
   }
 
   return wallet;
@@ -462,13 +496,10 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
 };
 
 // creating a new wallet object
-Wallet.new = function(mnemonic, guid, sharedKey, metaDataSharedKey, metaDataKey, firstAccountLabel, success){
+Wallet.new = function(mnemonic, metaDataXpub, firstAccountLabel, success){
 
   var object = {
-    guid              : guid,
-    sharedKey         : sharedKey,
-    metaDataSharedKey : metaDataSharedKey,
-    metaDataKey       : metaDataKey,
+    metaDataXpub      : metaDataXpub,
     double_encryption : false,
     options: {
       pbkdf2_iterations  : 5000,
@@ -491,6 +522,9 @@ Wallet.prototype.newHDWallet = function(firstAccountLabel, pw, success, error){
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
   var mnemonic = BIP39.generateMnemonic();
   var newHDwallet = HDWallet.new(mnemonic, encoder);
+
+  var seed = BIP39.mnemonicToSeedHex(mnemonic);
+  this._metaDataXpub = WalletCrypto.seedToMetaDataXpub(seed);
   this._hd_wallets.push(newHDwallet);
   var label = firstAccountLabel ? firstAccountLabel : "My Bitcoin Wallet";
   var account = this.newAccount(label, pw, this._hd_wallets.length-1, true);

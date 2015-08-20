@@ -21,6 +21,6 @@ describe "Signup", ->
 
   describe "generateNewWallet", ->
     it "should obtain a guid and shared key", ->
-      spyOn(WalletCrypto, "seedToKeys").and.returnValue({guid: "", sharedKey: "", metaDataKey: ""})
+      spyOn(WalletCrypto, "xpubToGuid").and.returnValue("")
       Signup.generateNewWallet("a", "password", "info@blockchain.com", "Account name", (()->),(()->))
-      expect(WalletCrypto.seedToKeys).toHaveBeenCalled()
+      expect(WalletCrypto.xpubToGuid).toHaveBeenCalled()

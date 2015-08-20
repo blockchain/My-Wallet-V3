@@ -79,7 +79,7 @@ function generateNewWallet(password, email, firstAccountName, success, error) {
 
   assert(seed != undefined && seed != null && seed != "", "HD seed required");
 
-  var keys = WalletCrypto.seedToKeys(seed);
+  var xpub = WalletCrypto.seedToMetaDataXpub(seed);
 
   if (password.length > 255) {
     throw 'Passwords must be shorter than 256 characters';
@@ -92,9 +92,9 @@ function generateNewWallet(password, email, firstAccountName, success, error) {
 
   var outerThis = this;
 
-  var saveWallet = function() {
-    outerThis.insertWallet(keys.guid, keys.sharedKey, password, {email : email}, function(message){
-      success(seed, keys.guid, keys.sharedKey, password);
+  var saveWallet = function(wallet) {
+    outerThis.insertWallet(wallet.guid, wallet.sharedKey, password, {email : email}, function(message){
+      success(seed, wallet.guid, wallet.sharedKey, password);
     }, function(e) {
       error(e);
     });
@@ -107,10 +107,7 @@ function generateNewWallet(password, email, firstAccountName, success, error) {
 
   Wallet.new(
     mnemonic,
-    keys.guid,
-    keys.sharedKey,
-    keys.metaDataSharedKey,
-    keys.metaDataKey,
+    xpub,
     firstAccountName,
     saveWallet
   );

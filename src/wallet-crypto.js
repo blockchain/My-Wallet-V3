@@ -5,6 +5,7 @@ var $ = require('jquery');
 var CryptoJS = require('crypto-js');
 var sjcl = require('sjcl');
 var uuid = require('uuid');
+var Bitcoin = require('bitcoinjs-lib');
 
 var SUPPORTED_ENCRYPTION_VERSION = 3.0;
 
@@ -319,8 +320,20 @@ function decryptPasswordWithSeed(encryptedPassword, seedHexString, pbkdf2_iterat
   return decryptAes(encryptedPassword, seed, pbkdf2_iterations);
 }
 
-function hashedSeedAtIndex(seedHexString, i, bytes) {
+function seedToMetaDataXpub(seedHexString) {
   assert(seedHexString.length == 128, "Expected a 512 bit seed as a hex string");
+  return Bitcoin.HDNode.fromSeedHex(seedHexString).deriveHardened(1).neutered().toBase58();
+}
+
+function pubKeyToPseudoAddress(pubKey) {
+  // https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
+  // This takes steps 2 (double sha256) and 3 (ripemd) of the above process:
+  return Bitcoin.crypto.ripemd160(Bitcoin.crypto.sha256(pubKey))
+}
+
+function metaDataXpubToKey(xpub, i, bytes) {
+  assert(xpub, "xpub required");
+  assert(xpub.slice(0,4) == "xpub", "Invalid xpub");
 
   assert(!isNaN(i), "i should be a number");
   assert(i === parseInt(i, 10), "i should be an integer");
@@ -330,29 +343,41 @@ function hashedSeedAtIndex(seedHexString, i, bytes) {
   assert(i === parseInt(i, 10), "bytes should be an integer");
   assert(i < 256 / 8, "max 256 bits");
 
-  var paddedSeedHexString = seedHexString + ("00" + i.toString()).slice(-2)
+  var node = Bitcoin.HDNode.fromBase58(xpub);
+  var childNode = node.derive(i);
 
-  var seed = CryptoJS.enc.Hex.parse(paddedSeedHexString);
-  var doubleHash = CryptoJS.SHA256(CryptoJS.SHA256(seed));
+  var pubKey = childNode.getPubKey()
+
+  var pseudoAddress = pubKeyToPseudoAddress(pubKey.toBuffer())
 
   var desiredBytes = new Buffer(bytes);
-  var buffer = Buffer(wordToByteArray(doubleHash.words));
 
-  buffer.copy(desiredBytes,0,0,bytes);
+  pseudoAddress.copy(desiredBytes,0,0,bytes);
 
   return desiredBytes;
-};
+}
 
-function seedToKeys(seedHexString) {
-  assert(seedHexString.length == 128, "Expected a 512 bit seed as a hex string")
+function xpubToGuid(xpub) {
+  return uuid.v4({
+    random: metaDataXpubToKey(xpub, 0, 16)
+  })
+}
 
-  return {
-    guid: uuid.v4({random: hashedSeedAtIndex(seedHexString,0,16)}),
-    sharedKey: uuid.v4({random: hashedSeedAtIndex(seedHexString,1,16)}),
-    metaDataSharedKey: uuid.v4({random: hashedSeedAtIndex(seedHexString,2,16)}),
-    metaDataKey: hashedSeedAtIndex(seedHexString,3,16).toString('base64')
-  };
-};
+function xpubToSharedKey(xpub) {
+  return uuid.v4({
+    random: metaDataXpubToKey(xpub, 1, 16)
+  })
+}
+
+function xpubToMetaDataSharedKey(xpub) {
+  return uuid.v4({
+    random: metaDataXpubToKey(xpub, 2, 16)
+  })
+}
+
+function xpubToMetaDataKey(xpub) {
+  return metaDataXpubToKey(xpub, 3, 16).toString('base64');
+}
 
 function encryptMetaData(obj, keyBase64) {
   assert(obj, "object array or dictionary missing");
@@ -407,7 +432,13 @@ module.exports = {
   wordToByteArray: wordToByteArray,
   encryptPasswordWithSeed: encryptPasswordWithSeed,
   decryptPasswordWithSeed: decryptPasswordWithSeed,
-  seedToKeys: seedToKeys,
+  seedToMetaDataXpub: seedToMetaDataXpub,
+  xpubToSharedKey: xpubToSharedKey,
+  xpubToMetaDataSharedKey: xpubToMetaDataSharedKey,
+  xpubToMetaDataKey: xpubToMetaDataKey,
+  xpubToGuid: xpubToGuid,
+  pubKeyToPseudoAddress: pubKeyToPseudoAddress, // For testing only
+  metaDataXpubToKey: metaDataXpubToKey,
   encryptMetaData: encryptMetaData,
-  decryptMetaData: decryptMetaData
+  decryptMetaData: decryptMetaData,
 };
