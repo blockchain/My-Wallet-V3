@@ -57,7 +57,6 @@ API.prototype.request = function(action, method, data) {
 API.prototype.retry = function(f, n) {
   var self = this;
   var i = n === null || n === undefined ? this.AJAX_RETRY_DEFAULT : n;
-  console.log(i);
   if (i > 1) {
     return f().then(
         undefined, // pass through success
@@ -109,7 +108,7 @@ API.prototype.getUnspent = function(fromAddresses, confirmations){
   return this.retry(this.request.bind(this, "POST", "unspent", data));
 };
 
-API.prototype.getHistory = function (addresses, tx_filter, offset, n) {
+API.prototype.getHistory = function (addresses, tx_filter, offset, n, async) {
 
   var clientTime = (new Date()).getTime();
   offset = offset || 0;
@@ -126,12 +125,19 @@ API.prototype.getHistory = function (addresses, tx_filter, offset, n) {
     , no_buttons : true
   };
 
-  if (tx_filter != undefined && tx_filter != null) {
+  if (tx_filter !== undefined && tx_filter !== null) {
     data.filter = tx_filter;
   }
+  if (async === true) { data.async = true; }
 
   return this.retry(this.request.bind(this, "POST", "multiaddr", data));
 };
+
+API.prototype.asyncGetHistory = function (addresses, tx_filter, offset, n) {
+  return getHistory(addressses, tx_filter, offset, n, true);
+};
+
+
 
 // things to do:
 // - create a method in blockchain-wallet that ask for the balances and updates the balance wallet
