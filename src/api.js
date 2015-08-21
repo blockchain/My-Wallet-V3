@@ -16,7 +16,7 @@ function API(){
   this.AJAX_TIMEOUT       = 60000;
   this.AJAX_RETRY_DEFAULT = 2;
   this.API_CODE           = "1770d5d9-bcea-4d28-ad21-6cbd5be018a8";
-  this.SERVER_TIME_OFFSET = 0;
+  this.SERVER_TIME_OFFSET = null;
 }
 
 // encodeFormData :: Object -> url encoded params
@@ -30,6 +30,8 @@ API.prototype.encodeFormData = function (data) {
 
 // request :: String -> String -> Object -> boolean -> Promise Response
 API.prototype.request = function(action, method, data) {
+  var self = this;
+  var clientTime = (new Date()).getTime();
   var defer = RSVP.defer();
   data = data || {};
   var baseData = {api_code : this.API_CODE};
@@ -40,6 +42,8 @@ API.prototype.request = function(action, method, data) {
   request.onload = function (e) {
     if (request.readyState === 4) {
       if (request.status === 200) {
+        console.log("vamos a resolver");
+        self.handleNTPResponse(request.responseText, clientTime);
         var response = data.format === 'json'? JSON.parse(request.responseText) : request.responseText;
         defer.resolve(response);
       } else {
@@ -65,6 +69,27 @@ API.prototype.retry = function(f, n) {
   } else {
     return f();
   };
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// sync clocks with network time protocol
+API.prototype.handleNTPResponse = function(obj, clientTime) {
+  //Calculate serverTimeOffset using NTP algo
+  var nowTime = (new Date()).getTime();
+  console.log(" a veure");
+  console.log(obj.clientTimeDiff);
+  console.log(obj.serverTime);
+  if (obj.clientTimeDiff && obj.serverTime) {
+    var serverClientResponseDiffTime = nowTime - obj.serverTime;
+    var responseTime = (obj.clientTimeDiff - nowTime + clientTime - serverClientResponseDiffTime) / 2;
+    var thisOffset = (serverClientResponseDiffTime - responseTime) / 2;
+    if (Helpers.isNumber(this.SERVER_TIME_OFFSET)) {
+      this.SERVER_TIME_OFFSET = (this.SERVER_TIME_OFFSET + thisOffset) / 2;
+    } else {
+      this.SERVER_TIME_OFFSET = thisOffset;
+    }
+    console.log('Server Time offset ' + this.SERVER_TIME_OFFSET + 'ms - This offset ' + thisOffset);
+  }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,16 +153,9 @@ API.prototype.getHistory = function (addresses, tx_filter, offset, n, async) {
   if (tx_filter !== undefined && tx_filter !== null) {
     data.filter = tx_filter;
   }
-  if (async === true) { data.async = true; }
 
   return this.retry(this.request.bind(this, "POST", "multiaddr", data));
 };
-
-API.prototype.asyncGetHistory = function (addresses, tx_filter, offset, n) {
-  return getHistory(addressses, tx_filter, offset, n, true);
-};
-
-
 
 // things to do:
 // - create a method in blockchain-wallet that ask for the balances and updates the balance wallet
