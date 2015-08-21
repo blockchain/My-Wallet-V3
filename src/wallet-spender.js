@@ -31,6 +31,7 @@ var Spender = function(listener) {
   var changeAddress     = null;  // change address
   var forcedFee         = null;
   var getPrivateKeys    = null;  // function :: tx -> [keys]
+  this.maxFee           = null;  // promise of maxFee
   this.tx               = null;  // tx proposal promise
 
   if(typeof(listener) == "undefined" || listener == null) { listener = {}; };
@@ -53,6 +54,7 @@ var Spender = function(listener) {
         MyWallet.wallet.activeAddresses : fromAddress;
       if (!Array.isArray(fromAddress)) {fromAddress = [fromAddress];}
       coins          = getUnspentCoins(fromAddress);
+      self.maxFee    = coins.then(computeMaxFee);
       changeAddress  = fromAddress[0] || MyWallet.wallet.activeAddresses[0];
       getPrivateKeys = function (tx) {
         var getKeyForAddress = function (addr) {
@@ -105,6 +107,7 @@ var Spender = function(listener) {
       var fromAccount = MyWallet.wallet.hdwallet.accounts[fromIndex];
       changeAddress   = fromAccount.changeAddress;
       coins           = getUnspentCoins([fromAccount.extendedPublicKey]);
+      self.maxFee     = coins.then(computeMaxFee);
       getPrivateKeys  = function (tx) {
         var extendedPrivateKey = fromAccount.extendedPrivateKey === null || secondPassword === null
           ? fromAccount.extendedPrivateKey
@@ -125,6 +128,7 @@ var Spender = function(listener) {
   //////////////////////////////////////////////////////////////////////////////
   // TO
   var prepareTo = {
+    getMaxFee: function() {return self.maxFee;},
     ////////////////////////////////////////////////////////////////////////////
     toAddress: function(toAddress, amount, fee) {
 
@@ -193,6 +197,11 @@ var Spender = function(listener) {
     };
     var tx = new Transaction(coins, toAddresses, amounts, forcedFee, changeAddress, listener);
     return tx;
+  };
+  ////////////////////////////////////////////////////////////////////////////////
+  // computeMaxFee :: [coins] -> Integer
+  function computeMaxFee(coins){
+    return Helpers.guessFee(coins.length, 2, MyWallet.wallet.fee_per_kb);
   };
   ////////////////////////////////////////////////////////////////////////////////
   // publishTransaction :: Transaction -> Transaction
