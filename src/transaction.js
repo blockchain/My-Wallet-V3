@@ -19,10 +19,12 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
   this.addressesOfNeededPrivateKeys = [];
   this.pathsOfNeededPrivateKeys = [];
   this.fee = 0; // final used fee
+  var BITCOIN_DUST = 5460;
   var forcedFee = (typeof(fee) == "number") ? fee : null;
 
+
   assert(toAddresses.length == amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
-  assert(this.amount > network.dustThreshold, this.amount + ' must be above dust threshold (' + network.dustThreshold + ' Satoshis)');
+  assert(this.amount > BITCOIN_DUST, this.amount + ' must be above dust threshold (' + BITCOIN_DUST + ' Satoshis)');
   assert(unspentOutputs && unspentOutputs.length > 0, 'No Free Outputs To Spend');
 
   var transaction = new Bitcoin.Transaction();
