@@ -499,6 +499,15 @@ MyWallet.processTransaction = function(tx) {
     }
   }
 
+
+  if (transaction.to.account == null &&
+      (transaction.to.legacyAddresses == null || transaction.to.legacyAddresses.length === 0) &&
+      transaction.to.externalAddresses == null &&
+      MyWallet.wallet.activeKey(output.addr)) {
+    var output = tx.out[0];
+    transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
+  }
+
   if (transaction.from.account == null && transaction.from.legacyAddresses == null) {
     var fromAmount = 0;
     if (transaction.to.account != null)
