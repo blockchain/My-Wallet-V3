@@ -839,12 +839,10 @@ MyWallet.get_history_with_addresses = function(addresses, success, error) {
 };
 // used on myWallet and iOS
 MyWallet.get_history = function(success, error) {
-  BlockchainAPI.get_history(function(data) {
-    parseMultiAddressJSON(data, false, false);
-    success && success();
-  }, function() {
-    error && error();
-  }, 0, 0, 30);
+  console.log("deprecated use of MyWallet.get_history()!!");
+  var p = MyWallet.wallet.updateHistory();
+  if (success) { p.then(success);};
+  if (error) {p.catch(error);};
 };
 // used on wallet-store and locally (wallet.js)
 MyWallet.getConfirmationsForTx = function(latest_block, tx) {
@@ -858,6 +856,7 @@ MyWallet.getConfirmationsForTx = function(latest_block, tx) {
 
 // used 3 times
 function parseMultiAddressJSON(obj, cached, checkCompleted) {
+  console.log("deprecated use of parseMultiAddressJSON");
   var transactions = WalletStore.getTransactions();
   if (!cached) {
 
@@ -938,19 +937,11 @@ function didDecryptWallet(success) {
  * @param {function()=} success Success callback function.
  */
  // used in the frontend and iOS
-MyWallet.getHistoryAndParseMultiAddressJSON = function(_success, _error) {
-  var success = function() {
-    _success && _success();
-  };
-
-  var addresses = this.wallet.activeAddresses;
-  if (this.wallet.isUpgradedToHD) {
-    addresses = this.wallet.hdwallet.activeXpubs.concat(this.wallet.activeAddresses);
-  }
-  BlockchainAPI.async_get_history_with_addresses(addresses, function(data) {
-    parseMultiAddressJSON(data, false, false);
-    success && success();
-  }, _error, null, 0, 30);
+MyWallet.getHistoryAndParseMultiAddressJSON = function(success, error) {
+  console.log("deprecated use of getHistoryAndParseMultiAddressJSON");
+  var p = MyWallet.wallet.updateHistory();
+  if (success) { p.then(success);};
+  if (error) { p.catch(error);};
 };
 
 // used once

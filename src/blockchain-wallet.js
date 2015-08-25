@@ -21,6 +21,7 @@ var Address = require('./address');
 var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 var ImportExport = require('./import-export');
+var API = require('./API');
 
 ////////////////////////////////////////////////////////////////////////////////
 // Wallet
@@ -228,6 +229,78 @@ Object.defineProperties(Wallet.prototype, {
     }
   }
 });
+
+////////////////////////////////////////////////////////////////////////////////
+// update-wallet-balances after multiaddr call
+Wallet.prototype._updateWalletInfo = function(obj) {
+
+  if (obj.info) {
+    if (obj.info.symbol_local)
+      setLocalSymbol(obj.info.symbol_local);
+    if (obj.info.symbol_btc)
+      setBTCSymbol(obj.info.symbol_btc);
+    if (obj.info.notice)
+      WalletStore.sendEvent("msg", {type: "error", message: obj.info.notice});
+  }
+
+  if (obj.wallet == null) {
+    this.totalSent     = 0;
+    this.totalReceived = 0;
+    this.finalBalance  = 0;
+    this.numberTx      = 0;
+    return true;
+  };
+
+  this.totalSent     = obj.wallet.total_sent;
+  this.totalReceived = obj.wallet.total_received;
+  this.finalBalance  = obj.wallet.final_balance;
+  this.numberTx      = obj.wallet.n_tx;
+
+  var updateAccountAndAddressesInfo = function (e) {
+    if (this.isUpgradedToHD) {
+      var account = this.hdwallet.activeAccount(e.address);
+      if (account){
+        account.balance      = e.final_balance;
+        account.n_tx         = e.n_tx;
+        account.receiveIndex = e.account_index;
+        account.changeIndex  = e.change_index;
+        if (account.getLabelForReceivingAddress(account.receiveIndex)) {
+          account.incrementReceiveIndex();
+        };
+      };
+    }
+    var address = this.activeKey(e.address);
+    if (address){ address.balance = e.final_balance; };
+  };
+
+  obj.addresses.forEach(updateAccountAndAddressesInfo.bind(this));
+
+  for (var i = 0; i < obj.txs.length; ++i) {
+    var tx = TransactionFromJSON(obj.txs[i]);
+    WalletStore.pushTransaction(tx);
+  }
+
+  if (obj.info.latest_block)
+    WalletStore.setLatestBlock(obj.info.latest_block);
+
+  WalletStore.sendEvent('did_multiaddr');
+
+  return true;
+};
+
+// equivalent to MyWallet.get_history(success, error) but returning a promise
+Wallet.prototype.updateHistory = function() {
+  var allAddresses = this.activeAddresses;
+  if (this.isUpgradedToHD) {
+    this.hdwallet.accounts.forEach(
+      function(account){ allAddresses.push(account.extendedPublicKey);}
+    );
+  }
+  // TODO: obtain paidTo addresses too
+  var promise = API.getHistory(allAddresses, 0 ,0, 30).then(this._updateWalletInfo.bind(this));
+  return promise;
+};
+////////////////////////////////////////////////////////////////////////////////
 
 Wallet.prototype.toJSON = function(){
 
