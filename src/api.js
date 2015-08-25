@@ -2,12 +2,13 @@
 
 module.exports = new API();
 ////////////////////////////////////////////////////////////////////////////////
-var RSVP     = require('rsvp');
-var assert   = require('assert');
-var Helpers  = require('./helpers');
+var RSVP        = require('rsvp');
+var assert      = require('assert');
+var Helpers     = require('./helpers');
 var WalletStore = require('./wallet-store');
-var $ = require('jquery');
-// var MyWallet = require('./wallet'); this class should not change state of the wallet
+var CryptoJS    = require('crypto-js');
+// var $           = require('jquery');
+// var MyWallet = require('./wallet');
 ////////////////////////////////////////////////////////////////////////////////
 // API class
 function API(){
@@ -29,7 +30,7 @@ API.prototype.encodeFormData = function (data) {
 };
 
 // request :: String -> String -> Object -> boolean -> Promise Response
-API.prototype.request = function(action, method, data) {
+API.prototype.request = function(action, method, data, withCredentials) {
   var self = this;
   var clientTime = (new Date()).getTime();
   var defer = RSVP.defer();
@@ -38,13 +39,13 @@ API.prototype.request = function(action, method, data) {
   var data = Helpers.merge(data, baseData);
   var request = new XMLHttpRequest();
   request.open(action, this.ROOT_URL + method + '?'  + this.encodeFormData(data), true);
+  request.withCredentials = withCredentials ? true : false;
   request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
   request.onload = function (e) {
     if (request.readyState === 4) {
       if (request.status === 200) {
-        console.log("vamos a resolver");
-        self.handleNTPResponse(request.responseText, clientTime);
         var response = data.format === 'json'? JSON.parse(request.responseText) : request.responseText;
+        self.handleNTPResponse(response, clientTime);
         defer.resolve(response);
       } else {
         defer.reject(request.statusText);
@@ -76,9 +77,6 @@ API.prototype.retry = function(f, n) {
 API.prototype.handleNTPResponse = function(obj, clientTime) {
   //Calculate serverTimeOffset using NTP algo
   var nowTime = (new Date()).getTime();
-  console.log(" a veure");
-  console.log(obj.clientTimeDiff);
-  console.log(obj.serverTime);
   if (obj.clientTimeDiff && obj.serverTime) {
     var serverClientResponseDiffTime = nowTime - obj.serverTime;
     var responseTime = (obj.clientTimeDiff - nowTime + clientTime - serverClientResponseDiffTime) / 2;
@@ -133,7 +131,7 @@ API.prototype.getUnspent = function(fromAddresses, confirmations){
   return this.retry(this.request.bind(this, "POST", "unspent", data));
 };
 
-API.prototype.getHistory = function (addresses, tx_filter, offset, n, async) {
+API.prototype.getHistory = function (addresses, tx_filter, offset, n) {
 
   var clientTime = (new Date()).getTime();
   offset = offset || 0;
@@ -156,6 +154,47 @@ API.prototype.getHistory = function (addresses, tx_filter, offset, n, async) {
 
   return this.retry(this.request.bind(this, "POST", "multiaddr", data));
 };
+
+API.prototype.securePost = function (url, data){
+  var clone = Helpers.merge({}, data);
+
+  if (!Helpers.isValidSharedKey(data.sharedKey)) throw 'Shared key is invalid'
+  if (!Helpers.isValidGUID(data.guid))           throw 'GUID is invalid'
+
+  //Rather than sending the shared key plain text
+  //send a hash using a totp scheme
+  var now = new Date().getTime();
+  var timestamp = parseInt((now - this.SERVER_TIME_OFFSET) / 10000);
+  var SKHashHex = CryptoJS.SHA256(data.sharedKey.toLowerCase() + timestamp).toString();
+  var i = 0;
+  var tSKUID = SKHashHex.substring(i, i+=8)+'-'+
+               SKHashHex.substring(i, i+=4)+'-'+
+               SKHashHex.substring(i, i+=4)+'-'+
+               SKHashHex.substring(i, i+=4)+'-'+
+               SKHashHex.substring(i, i+=12);
+  clone.sharedKey                 = tSKUID;
+  clone.sKTimestamp               = timestamp;
+  clone.sKDebugHexHash            = SKHashHex;
+  clone.sKDebugTimeOffset         = this.SERVER_TIME_OFFSET;
+  clone.sKDebugOriginalClientTime = now;
+  clone.sKDebugOriginalSharedKey  = data.sharedKey;
+  clone.format                    = data.format ? data.format : 'plain';
+
+  return this.retry(this.request.bind(this, "POST", url, clone, true));
+};
+
+// this one should be a method of wallet wrapper
+// API.prototype.checkWalletChecksum = function (payloadChecksum) {
+
+//   var data = {
+//       method : 'wallet.aes.json'
+//     , format : 'json'
+//     , checksum : payloadChecksum
+//     , sharedKey : MyWallet.wallet.sharedKey
+//     , guid : MyWallet.wallet.guid
+//   };
+//   return this.securePost("wallet", data);
+// };
 
 // things to do:
 // - create a method in blockchain-wallet that ask for the balances and updates the balance wallet

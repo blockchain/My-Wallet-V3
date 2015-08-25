@@ -49,6 +49,12 @@ Helpers.isInRange = function (val, min, max){
 Helpers.add = function (x,y){
   return x + y;
 };
+Helpers.isValidSharedKey = function (sharedKey){
+  return Helpers.isString(sharedKey) && sharedKey.length === 36;
+};
+Helpers.isValidGUID = function (guid){
+  return Helpers.isString(guid);
+};
 // Return a memoized version of function f
 Helpers.memoize = function (f){
   var cache = {};
