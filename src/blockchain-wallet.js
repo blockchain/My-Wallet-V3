@@ -234,6 +234,10 @@ Object.defineProperties(Wallet.prototype, {
 // update-wallet-balances after multiaddr call
 Wallet.prototype._updateWalletInfo = function(obj) {
 
+  // delete all transactions stored
+  var transactions = WalletStore.getTransactions();
+  transactions.length = 0;
+
   if (obj.info) {
     if (obj.info.symbol_local)
       setLocalSymbol(obj.info.symbol_local);
@@ -289,7 +293,7 @@ Wallet.prototype._updateWalletInfo = function(obj) {
 };
 
 // equivalent to MyWallet.get_history(success, error) but returning a promise
-Wallet.prototype.updateHistory = function() {
+Wallet.prototype.getHistory = function() {
   var allAddresses = this.activeAddresses;
   if (this.isUpgradedToHD) {
     this.hdwallet.accounts.forEach(
@@ -508,7 +512,6 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
   // first account creation
   var account       = null;
   account = this.newAccount("Account 1", pw, 0);
-  MyWallet.get_history_with_addresses([account.extendedPublicKey]);
   // accounts restoration
   var lookAhead     = true;
   var emptyAccounts = 0;

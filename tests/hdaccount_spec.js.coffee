@@ -4,7 +4,7 @@ HDAccount = undefined
 
 describe "HDAccount", ->
 
-    
+
   # account = HDAccount.fromExtPublicKey("xpub6DHN1xpggNEUkLDwwBGYDmYUaNmfE2mMGKZSiP7PB5wxbp34rhHAEBhMpsjHEwZWsHY2kPmPPD1w6gxGSBe3bXQzCn2WV8FRd7ZKpsiGHMq", undefined, "Example account");
 
   account = undefined
@@ -18,14 +18,12 @@ describe "HDAccount", ->
       'receiveAccount': 'xpub6FMWuMox3fJxEv2TSLN6jYQg6tHZBS7tKRSu7w4Q7F9K2UsSu4RxtwxfeHVhUv3csTSCRkKREpiVdr8EquBPXfBDZSMe84wmN9LzR3rwNZP'
       'changeAccount': 'xpub6FMWuMox3fJxGARtaDVY6e9st4Hk5j8Ui6r7XLnBPFXPXkajXNiAfiEqBakuDKYYeRf4ERtPm1TawBqKaBWj2dsHNJT4rSsugssTnaDsz2m'
 
-  
-  beforeEach ->    
-    MyWallet = 
+
+  beforeEach ->
+    MyWallet =
       syncWallet: () ->
-      get_history: () ->
-        
+
     spyOn(MyWallet, "syncWallet")
-    spyOn(MyWallet, "get_history")
     # account = new HDAccount(object)
 
   describe "Constructor", ->
@@ -35,7 +33,7 @@ describe "HDAccount", ->
         KeyChain = {}
         stubs = { './wallet': MyWallet, './keyring' : KeyRing, './keychain' : KeyChain}
         HDAccount = proxyquire('../src/hd-account', stubs)
-    
+
 
       it "should create an empty HDAccount with default options", ->
         account = new HDAccount()
@@ -44,25 +42,25 @@ describe "HDAccount", ->
         expect(account.active).toBeTruthy()
         expect(account.receiveIndex).toEqual(0)
         expect(account.changeIndex).toEqual(0)
-        
-      it "should create an HDAccount from AccountMasterKey", ->      
-        accountZero = 
+
+      it "should create an HDAccount from AccountMasterKey", ->
+        accountZero =
           toBase58: () -> "accountZeroBase58"
-          neutered: () -> 
+          neutered: () ->
             {
               toBase58: () -> "accountZeroNeuteredBase58"
             }
 
         a = HDAccount.fromAccountMasterKey(accountZero, 0, "label")
-                  
+
         expect(a.label).toEqual("label")
         expect(a._xpriv).toEqual("accountZeroBase58")
-        expect(a._xpub).toEqual("accountZeroNeuteredBase58")    
-      
+        expect(a._xpub).toEqual("accountZeroNeuteredBase58")
+
 
 
       it "should create an HDAccount from Wallet master key", ->
-      
+
         masterkey =
           deriveHardened: (i) ->
             deriveHardened: (j) ->
@@ -71,9 +69,9 @@ describe "HDAccount", ->
                   "m/" + i + "/" + j + "/" + k
                 neutered: () ->
                   toBase58: () ->
-          
+
         a = HDAccount.fromWalletMasterKey(masterkey, 0, "label")
-      
+
         expect(a._xpriv).toEqual("m/44/0/0")
         expect(a.label).toEqual("label")
 
@@ -93,19 +91,19 @@ describe "HDAccount", ->
       expect(account.receiveAddress).toBeDefined()
       expect(account.changeAddress).toBeDefined()
 
-    
+
   describe "JSON serializer", ->
     it 'should hold: fromJSON . toJSON = id', ->
       json1     = JSON.stringify(account, null, 2)
       racc = JSON.parse(json1, HDAccount.reviver)
       json2     = JSON.stringify(racc, null, 2)
       expect(json1).toEqual(json2)
-      
+
   describe "instance", ->
     beforeEach ->
       stubs = { './wallet': MyWallet}
       HDAccount = proxyquire('../src/hd-account', stubs)
-      
+
       account = new HDAccount(object)
 
     describe ".incrementReceiveIndex", ->
@@ -140,19 +138,12 @@ describe "HDAccount", ->
         expect(account.getLabelForReceivingAddress(100)).toEqual("my label")
 
     describe "Setter", ->
-      
+
       it "archived should archive the account and sync wallet", ->
         account.archived = true
         expect(account.archived).toBeTruthy()
         expect(account.active).not.toBeTruthy()
         expect(MyWallet.syncWallet).toHaveBeenCalled()
-
-      it "archived should unArchive the account, sync wallet and get history", ->
-        account.archived = false
-        expect(account.archived).not.toBeTruthy()
-        expect(account.active).toBeTruthy()
-        expect(MyWallet.syncWallet).toHaveBeenCalled()
-        expect(MyWallet.get_history).toHaveBeenCalled()
 
       it "archived should throw exception if is non-boolean set", ->
         wrongSet = () -> account.archived = "failure"
@@ -208,7 +199,7 @@ describe "HDAccount", ->
     describe ".encrypt", ->
       beforeEach ->
         account = new HDAccount(object)
-      
+
       it 'should fail and don\'t sync when encryption fails', ->
         wrongEnc = () -> account.encrypt(() -> null)
         expect(wrongEnc).toThrow()

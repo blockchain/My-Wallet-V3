@@ -23,6 +23,7 @@ var Transaction = require('./transaction');
 var BlockchainAPI = require('./blockchain-api');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
+var API = require('./API');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -589,6 +590,7 @@ MyWallet.getBaseFee = function() {
  // used only on the frontend
 MyWallet.fetchMoreTransactionsForAccounts = function(success, error, didFetchOldestTransaction) {
 
+  console.log("MyWallet.fetchMoreTransactionsForAccounts");
   function getRawTransactionsForAccounts(txOffset, numTx, success, error) {
     BlockchainAPI.async_get_history_with_addresses(
         MyWallet.wallet.hdwallet.activeXpubs
@@ -620,6 +622,7 @@ MyWallet.fetchMoreTransactionsForAccounts = function(success, error, didFetchOld
  */
  // used once locally and in the frontend
 MyWallet.fetchMoreTransactionsForAccount = function(accountIdx, success, error, didFetchOldestTransaction) {
+  console.log("MyWallet.fetchMoreTransactionsForAccount");
   function getRawTransactionsForAccount(accountIdx, txOffset, numTx, success, error) {
     var xpub = MyWallet.wallet.hdwallet.accounts[accountIdx].extendedPublicKey;
     BlockchainAPI.async_get_history_with_addresses(
@@ -649,51 +652,51 @@ MyWallet.fetchMoreTransactionsForAccount = function(accountIdx, success, error, 
 
 // Reads from and writes to global paidTo
 // used only once locally (wallet.js)
-MyWallet.checkForRecentlyRedeemed = function() {
-  var paidToAddressesToMonitor = [];
+// MyWallet.checkForRecentlyRedeemed = function() {
+//   var paidToAddressesToMonitor = [];
 
-  for (var tx_hash in WalletStore.getPaidToDictionary()) {
-    var localPaidTo = WalletStore.getPaidToDictionary()[tx_hash];
-    if (localPaidTo.redeemedAt == null) {
-      paidToAddressesToMonitor.push(localPaidTo.address);
-    }
-  }
+//   for (var tx_hash in WalletStore.getPaidToDictionary()) {
+//     var localPaidTo = WalletStore.getPaidToDictionary()[tx_hash];
+//     if (localPaidTo.redeemedAt == null) {
+//       paidToAddressesToMonitor.push(localPaidTo.address);
+//     }
+//   }
 
-  if(paidToAddressesToMonitor.length == 0)
-    return;
+//   if(paidToAddressesToMonitor.length == 0)
+//     return;
 
-  MyWallet.fetchRawTransactionsAndBalanceForAddresses(paidToAddressesToMonitor, function(transactions, balances) {
-    for(var i in balances) {
-      if(balances[i].final_balance == 0 && balances[i].n_tx > 0) {
+//   MyWallet.fetchRawTransactionsAndBalanceForAddresses(paidToAddressesToMonitor, function(transactions, balances) {
+//     for(var i in balances) {
+//       if(balances[i].final_balance == 0 && balances[i].n_tx > 0) {
 
-        var redeemedAt = null;
+//         var redeemedAt = null;
 
-        // Find corresponding transaction:
-        for(var j in transactions) {
-          for(var k in transactions[j].inputs) {
-            if(balances[i].address === transactions[j].inputs[k].prev_out.addr) {
-              // Set redeem time
-              redeemedAt = transactions[j].time;
-            }
-          }
-        }
+//         // Find corresponding transaction:
+//         for(var j in transactions) {
+//           for(var k in transactions[j].inputs) {
+//             if(balances[i].address === transactions[j].inputs[k].prev_out.addr) {
+//               // Set redeem time
+//               redeemedAt = transactions[j].time;
+//             }
+//           }
+//         }
 
-        // Mark as redeemed:
-        for(var tx_hash in WalletStore.getPaidToDictionary()) {
-          var paidToEntry = WalletStore.getPaidToDictionary()[tx_hash];
-          if(balances[i].address === paidToEntry.address) {
-            WalletStore.markPaidToEntryRedeemed(tx_hash, redeemedAt || 1);
-            MyWallet.backupWalletDelayed();
-            // If redeem time not known, set to default time.
-          }
-        }
+//         // Mark as redeemed:
+//         for(var tx_hash in WalletStore.getPaidToDictionary()) {
+//           var paidToEntry = WalletStore.getPaidToDictionary()[tx_hash];
+//           if(balances[i].address === paidToEntry.address) {
+//             WalletStore.markPaidToEntryRedeemed(tx_hash, redeemedAt || 1);
+//             MyWallet.backupWalletDelayed();
+//             // If redeem time not known, set to default time.
+//           }
+//         }
 
-      }
-    }
-  }, function() {
-    console.log("Could not check if email/sms btc have been redeemed.");
-  });
-};
+//       }
+//     }
+//   }, function() {
+//     console.log("Could not check if email/sms btc have been redeemed.");
+//   });
+// };
 
 
 /**
@@ -729,14 +732,15 @@ MyWallet.getBalanceForRedeemCode = function(privatekey, successCallback, errorCa
  * @param {function()} errorCallback callback function
  */
  // used only once locally
-MyWallet.fetchRawTransactionsAndBalanceForAddresses = function(addresses, success, error) {
-  BlockchainAPI.async_get_history_with_addresses(addresses, function(data) {
-    if (success) success( data.txs, data.addresses);
-  }, function() {
-    if (error) error();
-
-  }, null, 0);
-};
+// MyWallet.fetchRawTransactionsAndBalanceForAddresses = function(addresses, success, error) {
+//   console.log("deprecated use of fetchRawTransactionsAndBalanceForAddresses");
+//   var p = API.getHistory(addresses);
+//   if (success) {
+//     function continuation (data) { success( data.txs, data.addresses); }
+//     p.then(continuation);
+//   };
+//   if (error) {p.catch(error);};
+// };
 
 /**
  * @param {function():Array} successCallback success callback function with transaction array
@@ -745,6 +749,7 @@ MyWallet.fetchRawTransactionsAndBalanceForAddresses = function(addresses, succes
  */
  // used on the frontend
 MyWallet.fetchMoreTransactionsForLegacyAddresses = function(success, error, didFetchOldestTransaction) {
+  console.log("MyWallet.fetchMoreTransactionsForLegacyAddresses");
   function getRawTransactionsForLegacyAddresses(txOffset, numTx, success, error) {
     var allAddresses = MyWallet.wallet.activeAddresses;
 
@@ -838,7 +843,7 @@ MyWallet.isValidPrivateKey = function(candidate) {
   }
 };
 
-// used on MyWallet
+// only used to restore wallet in a sync way: need to write better that method
 MyWallet.get_history_with_addresses = function(addresses, success, error) {
   BlockchainAPI.get_history_with_addresses(addresses, function(data) {
     if (success) success(data);
@@ -846,10 +851,11 @@ MyWallet.get_history_with_addresses = function(addresses, success, error) {
     if (error) error();
   }, null, 0, 30);
 };
+
 // used on myWallet and iOS
 MyWallet.get_history = function(success, error) {
   console.log("deprecated use of MyWallet.get_history()!!");
-  var p = MyWallet.wallet.updateHistory();
+  var p = MyWallet.wallet.getHistory();
   if (success) { p.then(success);};
   if (error) {p.catch(error);};
 };
@@ -863,83 +869,6 @@ MyWallet.getConfirmationsForTx = function(latest_block, tx) {
   }
 };
 
-// used 3 times
-function parseMultiAddressJSON(obj, cached, checkCompleted) {
-  console.log("deprecated use of parseMultiAddressJSON");
-  var transactions = WalletStore.getTransactions();
-  if (!cached) {
-
-    if (obj.info) {
-      if (obj.info.symbol_local)
-        setLocalSymbol(obj.info.symbol_local);
-
-      if (obj.info.symbol_btc)
-        setBTCSymbol(obj.info.symbol_btc);
-
-      if (obj.info.notice)
-        WalletStore.sendEvent("msg", {type: "error", message: obj.info.notice});
-    }
-  }
-
-  if (obj.disable_mixer) {
-    //$('#shared-addresses,#send-shared').hide();
-  }
-
-  transactions.length = 0;
-
-  if (obj.wallet == null) {
-    MyWallet.wallet.totalSent     = 0;
-    MyWallet.wallet.totalReceived = 0;
-    MyWallet.wallet.finalBalance  = 0;
-    MyWallet.wallet.numberTx      = 0;
-    return;
-  };
-
-  MyWallet.wallet.totalSent     = obj.wallet.total_sent;
-  MyWallet.wallet.totalReceived = obj.wallet.total_received;
-  MyWallet.wallet.finalBalance  = obj.wallet.final_balance;
-  MyWallet.wallet.numberTx      = obj.wallet.n_tx;
-
-  function updateAccountAndAddressesInfo(e) {
-    if (MyWallet.wallet.isUpgradedToHD) {
-      var account = MyWallet.wallet.hdwallet.activeAccount(e.address);
-      if (account){
-        account.balance      = e.final_balance;
-        account.n_tx         = e.n_tx;
-        account.receiveIndex = e.account_index;
-        account.changeIndex  = e.change_index;
-        if (account.getLabelForReceivingAddress(account.receiveIndex)) {
-          account.incrementReceiveIndex();
-        };
-      };
-    }
-    var address = MyWallet.wallet.activeKey(e.address);
-    if (address){
-      address.balance = e.final_balance;
-    };
-  };
-  obj.addresses.forEach(updateAccountAndAddressesInfo);
-  for (var i = 0; i < obj.txs.length; ++i) {
-    var tx = TransactionFromJSON(obj.txs[i]);
-    WalletStore.pushTransaction(tx);
-  }
-
-  if (!cached) {
-    if (obj.info.latest_block)
-      WalletStore.setLatestBlock(obj.info.latest_block);
-  }
-
-  WalletStore.sendEvent('did_multiaddr');
-}
-// used two times
-function didDecryptWallet(success) {
-
-  //We need to check if the wallet has changed
-  MyWallet.getWallet();
-  WalletStore.resetLogoutTimeout();
-  success();
-}
-
 /**
  * Get the list of transactions from the http API.
  * Needs to be called by client in the success callback of fetchWalletJson and after MyWallet.initializeHDWallet
@@ -948,7 +877,7 @@ function didDecryptWallet(success) {
  // used in the frontend and iOS
 MyWallet.getHistoryAndParseMultiAddressJSON = function(success, error) {
   console.log("deprecated use of getHistoryAndParseMultiAddressJSON");
-  var p = MyWallet.wallet.updateHistory();
+  var p = MyWallet.wallet.getHistory();
   if (success) { p.then(success);};
   if (error) { p.catch(error);};
 };

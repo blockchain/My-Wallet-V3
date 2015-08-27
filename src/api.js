@@ -30,7 +30,7 @@ API.prototype.encodeFormData = function (data) {
 };
 
 // request :: String -> String -> Object -> boolean -> Promise Response
-API.prototype.request = function(action, method, data, withCredentials) {
+API.prototype.request = function(action, method, data, withCredentials, syncBool) {
   var self = this;
   var clientTime = (new Date()).getTime();
   var defer = RSVP.defer();
@@ -38,7 +38,8 @@ API.prototype.request = function(action, method, data, withCredentials) {
   var baseData = {api_code : this.API_CODE};
   var data = Helpers.merge(data, baseData);
   var request = new XMLHttpRequest();
-  request.open(action, this.ROOT_URL + method + '?'  + this.encodeFormData(data), true);
+  var asyncBool = syncBool ? false : true;
+  request.open(action, this.ROOT_URL + method + '?'  + this.encodeFormData(data), asyncBool);
   request.withCredentials = withCredentials ? true : false;
   request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
   request.onload = function (e) {
@@ -131,7 +132,7 @@ API.prototype.getUnspent = function(fromAddresses, confirmations){
   return this.retry(this.request.bind(this, "POST", "unspent", data));
 };
 
-API.prototype.getHistory = function (addresses, tx_filter, offset, n) {
+API.prototype.getHistory = function (addresses, tx_filter, offset, n, syncBool) {
 
   var clientTime = (new Date()).getTime();
   offset = offset || 0;
@@ -152,7 +153,7 @@ API.prototype.getHistory = function (addresses, tx_filter, offset, n) {
     data.filter = tx_filter;
   }
 
-  return this.retry(this.request.bind(this, "POST", "multiaddr", data));
+  return this.retry(this.request.bind(this, "POST", "multiaddr", data, null, syncBool));
 };
 
 API.prototype.securePost = function (url, data){
