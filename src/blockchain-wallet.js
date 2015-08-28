@@ -79,6 +79,7 @@ function Wallet(object) {
   this._totalReceived = 0;
   this._finalBalance  = 0;
   this._numberTx      = 0;
+  this._txPerScroll   = 10;
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -158,6 +159,10 @@ Object.defineProperties(Wallet.prototype, {
       else
         throw 'Error: wallet.numberTx must be a number';
     }
+  },
+  "txPerScroll": {
+    configurable: false,
+    get: function() { return this._txPerScroll;}
   },
   "addresses": {
     configurable: false,

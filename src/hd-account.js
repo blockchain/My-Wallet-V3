@@ -73,6 +73,15 @@ Object.defineProperties(HDAccount.prototype, {
         throw 'Error: account.n_tx must be a number';
     }
   },
+  "numTxFetched": {
+    get: function() { return this._numTxFetched;},
+    set: function(num) {
+      if(Helpers.isNumber(num))
+        this._numTxFetched = num;
+      else
+        throw 'Error: account.numTxFetched must be a number';
+    }
+  },
   "archived": {
     configurable: false,
     get: function() { return this._archived;},

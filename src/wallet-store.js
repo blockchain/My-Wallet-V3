@@ -81,7 +81,6 @@ var WalletStore = (function() {
   var isSynchronizedWithServer = true;
   var haveSetServerTime = false; //Whether or not we have synced with server time
   var serverTimeOffset = 0; //Difference between server and client time
-  var numOldTxsToFetchAtATime = 10;
   var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
 
   ////////////////////////////////////////////////////////////////////////////
@@ -252,9 +251,6 @@ var WalletStore = (function() {
     },
     setServerTimeOffset: function (offset){
       serverTimeOffset = offset;
-    },
-    getNumOldTxsToFetchAtATime: function (){
-      return numOldTxsToFetchAtATime;
     },
     addEventListener: function(func){
       event_listeners.push(func);

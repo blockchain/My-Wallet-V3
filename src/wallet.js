@@ -588,30 +588,20 @@ MyWallet.getBaseFee = function() {
  * @param {function()} didFetchOldestTransaction callback is called when all transanctions for the specified account has been fetched
  */
  // used only on the frontend
+
 MyWallet.fetchMoreTransactionsForAccounts = function(success, error, didFetchOldestTransaction) {
 
   console.log("MyWallet.fetchMoreTransactionsForAccounts");
-  function getRawTransactionsForAccounts(txOffset, numTx, success, error) {
-    BlockchainAPI.async_get_history_with_addresses(
-        MyWallet.wallet.hdwallet.activeXpubs
-      , function(data) { success && success(data.txs);}
-      , function()     { error && error();}
-      , null, txOffset, numTx
-    );
-  }
-  getRawTransactionsForAccounts(
-      MyWallet.wallet.hdwallet.numTxFetched
-    , WalletStore.getNumOldTxsToFetchAtATime()
-    , function(data) {
-        var pTx = data.map(MyWallet.processTransaction.compose(TransactionFromJSON));
-        MyWallet.wallet.hdwallet.numTxFetched += pTx.length;
-        if (pTx.length < WalletStore.getNumOldTxsToFetchAtATime()) {
-          didFetchOldestTransaction();
-        }
-        success(pTx);
-      }
-    , function(e) { error && error(e);}
-  );
+  var txListP = API.getHistory(  MyWallet.wallet.hdwallet.activeXpubs, null
+                           , MyWallet.wallet.hdwallet.numTxFetched
+                           , MyWallet.wallet.txPerScroll);
+  function process(data) {
+    var pTx = data.txs.map(MyWallet.processTransaction.compose(TransactionFromJSON));
+    MyWallet.wallet.hdwallet.numTxFetched += pTx.length;
+    if (pTx.length < MyWallet.wallet.txPerScroll) { didFetchOldestTransaction(); }
+    success && success(pTx);
+  };
+  txListP.then(process).catch(error);
 };
 
 /**
@@ -622,32 +612,19 @@ MyWallet.fetchMoreTransactionsForAccounts = function(success, error, didFetchOld
  */
  // used once locally and in the frontend
 MyWallet.fetchMoreTransactionsForAccount = function(accountIdx, success, error, didFetchOldestTransaction) {
-  console.log("MyWallet.fetchMoreTransactionsForAccount");
-  function getRawTransactionsForAccount(accountIdx, txOffset, numTx, success, error) {
-    var xpub = MyWallet.wallet.hdwallet.accounts[accountIdx].extendedPublicKey;
-    BlockchainAPI.async_get_history_with_addresses(
-        [xpub]
-      , function(data) {success && success(data);}
-      , function()     {error   && error();}
-      , null, txOffset, numTx);
-  }
+  console.log("deprecated use of MyWallet.fetchMoreTransactionsForAccount ");
 
-  var account = MyWallet.wallet.hdwallet.accounts[accountIdx];
+  var account    = MyWallet.wallet.hdwallet.accounts[accountIdx];
   var numTxFetch = account ? account.numTxFetched : 0;
-  getRawTransactionsForAccount(
-      accountIdx
-    , numTxFetch
-    , WalletStore.getNumOldTxsToFetchAtATime()
-    , function(data) {
-        var pTx = data.txs.map(MyWallet.processTransaction.compose(TransactionFromJSON));
-        account.numTxFetched += pTx.length;
-        if (pTx.length < WalletStore.getNumOldTxsToFetchAtATime()) {
-          didFetchOldestTransaction();
-        }
-        success && success(pTx, data.wallet.final_balance);
-    }
-    , function(e) {error && error(e);}
-  );
+  var xpub    = MyWallet.wallet.hdwallet.accounts[accountIdx].extendedPublicKey;
+  var txListP = API.getHistory([xpub], null, numTxFetch, MyWallet.wallet.txPerScroll);
+  function process(data) {
+    var pTx = data.txs.map(MyWallet.processTransaction.compose(TransactionFromJSON));
+    account.numTxFetched += pTx.length;
+    if (pTx.length < MyWallet.wallet.txPerScroll) { didFetchOldestTransaction(); }
+    success && success(pTx);
+  };
+  txListP.then(process).catch(error);
 };
 
 // Reads from and writes to global paidTo
@@ -749,7 +726,9 @@ MyWallet.getBalanceForRedeemCode = function(privatekey, successCallback, errorCa
  */
  // used on the frontend
 MyWallet.fetchMoreTransactionsForLegacyAddresses = function(success, error, didFetchOldestTransaction) {
-  console.log("MyWallet.fetchMoreTransactionsForLegacyAddresses");
+  console.log("deprecated use of MyWallet.fetchMoreTransactionsForLegacyAddresses");
+
+
   function getRawTransactionsForLegacyAddresses(txOffset, numTx, success, error) {
     var allAddresses = MyWallet.wallet.activeAddresses;
 
@@ -761,7 +740,7 @@ MyWallet.fetchMoreTransactionsForLegacyAddresses = function(success, error, didF
     }, null, txOffset, numTx);
   }
 
-  getRawTransactionsForLegacyAddresses(WalletStore.getLegacyAddressesNumTxFetched(), WalletStore.getNumOldTxsToFetchAtATime(), function(data) {
+  getRawTransactionsForLegacyAddresses(WalletStore.getLegacyAddressesNumTxFetched(), MyWallet.wallet.txPerScroll, function(data) {
     var processedTransactions = [];
 
     for (var i in data) {
@@ -775,7 +754,7 @@ MyWallet.fetchMoreTransactionsForLegacyAddresses = function(success, error, didF
 
     WalletStore.addLegacyAddressesNumTxFetched(processedTransactions.length);
 
-    if (processedTransactions.length < WalletStore.getNumOldTxsToFetchAtATime()) {
+    if (processedTransactions.length < MyWallet.wallet.txPerScroll) {
       didFetchOldestTransaction();
     }
 
@@ -868,6 +847,15 @@ MyWallet.getConfirmationsForTx = function(latest_block, tx) {
     return 0;
   }
 };
+
+// used two times
+function didDecryptWallet(success) {
+
+  //We need to check if the wallet has changed
+  MyWallet.getWallet();
+  WalletStore.resetLogoutTimeout();
+  success();
+}
 
 /**
  * Get the list of transactions from the http API.
