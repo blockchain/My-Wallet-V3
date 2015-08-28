@@ -1,8 +1,8 @@
 {
   "ignore" : ["grunt", "jasmine-core", "jquery", "istanbul", "esprima", "typeforce", "convert-hex", "convert-string"],
   "bigi" : {
-    "version": "1.4.0",
-    "commits" : ["7897bc32837379603559b5a17d904c3d2b9b97de"],
+    "version": "1.4.1",
+    "commits" : ["7d034a1b38ca90f68daa9de472dda2fb813836f1"],
     "repo" : "cryptocoinjs/bigi"
   },
   "bip39" : {
@@ -11,8 +11,8 @@
     "repo" : "weilu/bip39"
   },
   "bitcoinjs-lib" : {
-    "version": "1.5.7",
-    "commits" : ["d50d49bd29010fc1f9d2fef3038e8b1cbabc2abc"],
+    "version": "1.5.8",
+    "commits" : ["8a8eb76b192603243af02afaef5230cc857a2aba"],
     "repo" : "bitcoinjs/bitcoinjs-lib"
   },
   "bs58" : {
@@ -46,8 +46,8 @@
     "repo" : "dcousens/bs58check"
   },
   "ecurve" : {
-    "version" : "1.0.1",
-    "commits" : ["59cd2495f5a60436c20603a02c2dbc2c81e6f829"],
+    "version" : "1.0.2",
+    "commits" : ["49d55bcf45174467c267bc8c52cbb740652f5c6e"],
     "repo" : "cryptocoinjs/ecurve"
   },
   "convert-hex" : {
