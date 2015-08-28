@@ -46,8 +46,8 @@
     "repo" : "dcousens/bs58check"
   },
   "ecurve" : {
-    "version" : "1.0.1",
-    "commits" : ["59cd2495f5a60436c20603a02c2dbc2c81e6f829"],
+    "version" : "1.0.2",
+    "commits" : ["49d55bcf45174467c267bc8c52cbb740652f5c6e"],
     "repo" : "cryptocoinjs/ecurve"
   },
   "convert-hex" : {
