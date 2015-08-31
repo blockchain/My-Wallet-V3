@@ -491,53 +491,49 @@ Wallet.reviver = function(k,v){
   return v;
 }
 
-function isAccountNonUsed(account, success, error) {
-  MyWallet.get_history_with_addresses(
-      [account.extendedPublicKey]
-    , function(obj){success(obj.addresses[0].account_index === 0 && obj.addresses[0].change_index === 0);}
-    , function(){error("get_history_error")}
-  );
+function isAccountNonUsed (account) {
+  var isNonUsed = function(obj){
+    return obj.addresses[0].account_index === 0 && obj.addresses[0].change_index === 0;
+  };
+  return API.getHistory([account.extendedPublicKey], 0, 0, 30).then(isNonUsed);
 };
 
 Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
-  // this should be rethought
-  //     1) include failure.
-  //     2) not necessary to encrypt while looking for funds in further accounts.
-  //     3) progress notification to frontend. (we don't know how many accounts we will find)
-  // seedHex computation can fail
-  // get_history can fail
-  //////////////////////////////////////////////////////////////////////////////
   // wallet restoration
+  var self = this;
   var seedHex = BIP39.mnemonicToEntropy(mnemonic);
   var pass39  = Helpers.isString(bip39Password) ? bip39Password : "";
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
   var newHDwallet = HDWallet.restore(seedHex, pass39, encoder);
   this._hd_wallets[0] = newHDwallet;
-  //////////////////////////////////////////////////////////////////////////////
-  // first account creation
-  var account       = null;
-  account = this.newAccount("Account 1", pw, 0);
-  // accounts restoration
-  var lookAhead     = true;
-  var emptyAccounts = 0;
+  var account = this.newAccount("Account 1", pw, 0);
   var accountIndex  = 1;
-  var historyError  = false;
+  var AccountsGap = 10;
 
-  function proceed(nonused) {
-    if (nonused) { emptyAccounts ++;};
-    if (emptyAccounts === 10 ){ lookAhead = false; this.hdwallet._accounts.splice(-10);};
+  var untilNEmptyAccounts = function(n){
+    var go = function(nonused) {
+      if (nonused) { return untilNEmptyAccounts(n-1);}
+      else { return untilNEmptyAccounts(AccountsGap);};
+    };
+    if (n === 0) {
+      self.hdwallet._accounts.splice(-AccountsGap);
+      return true;
+    } else{
+      accountIndex++;
+      account = self.newAccount("Account " + accountIndex.toString(), pw, 0);
+      return isAccountNU(account).then(go);
+    };
   };
-  function fail() { historyError = true; lookAhead = false;};
 
-  while (lookAhead) {
-    accountIndex++;
-    account = this.newAccount("Account " + accountIndex.toString(), pw, 0);
-    isAccountNonUsed(account, proceed.bind(this), fail);
+  var saveAndReturn = function (){
+    MyWallet.syncWallet();
+    return newHDwallet;
   };
 
-  if (historyError) {return false};
-  MyWallet.syncWallet();
-  return newHDwallet;
+  // it returns a promise of the newHDWallet
+  return untilNEmptyAccounts(AccountsGap)
+    .then(saveAndReturn)
+    .catch(function(){error("get_history_error")});
 };
 
 // creating a new wallet object
@@ -576,13 +572,13 @@ Wallet.prototype.newHDWallet = function(firstAccountLabel, pw, success, error){
   this._hd_wallets.push(newHDwallet);
   var label = firstAccountLabel ? firstAccountLabel : "My Bitcoin Wallet";
   var account = this.newAccount(label, pw, this._hd_wallets.length-1, true);
-  function proceed(nonused) {
-    console.log("is account nonused: " + nonused);
-    if (!nonused) {
-      error && error();
-    };
-  };
-  isAccountNonUsed(account, proceed, error);
+  // function proceed(nonused) {
+  //   console.log("is account nonused: " + nonused);
+  //   if (!nonused) {
+  //     error && error();
+  //   };
+  // };
+  // isAccountNonUsed(account, proceed, error);
   MyWallet.syncWallet(success, error);
   // typeof(success) === 'function' && success();
   return newHDwallet;
