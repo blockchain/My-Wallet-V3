@@ -31,7 +31,7 @@ var Spender = function(listener) {
   var changeAddress     = null;  // change address
   var forcedFee         = null;
   var getPrivateKeys    = null;  // function :: tx -> [keys]
-  this.suggestedSweepFee= null;  // promise of suggestedSweepFee
+  this.suggestedSweep   = null;  // promise of [suggestedSweepAmount, suggestedSweepFee]
   this.tx               = null;  // tx proposal promise
 
   if(typeof(listener) == "undefined" || listener == null) { listener = {}; };
@@ -54,7 +54,7 @@ var Spender = function(listener) {
         MyWallet.wallet.activeAddresses : fromAddress;
       if (!Array.isArray(fromAddress)) {fromAddress = [fromAddress];}
       coins = getUnspentCoins(fromAddress);
-      self.suggestedSweepFee = coins.then(computeSuggestedSweepFee);
+      self.suggestedSweep = coins.then(computeSuggestedSweep);
       changeAddress  = fromAddress[0] || MyWallet.wallet.activeAddresses[0];
       getPrivateKeys = function (tx) {
         var getKeyForAddress = function (addr) {
@@ -107,7 +107,7 @@ var Spender = function(listener) {
       var fromAccount = MyWallet.wallet.hdwallet.accounts[fromIndex];
       changeAddress   = fromAccount.changeAddress;
       coins           = getUnspentCoins([fromAccount.extendedPublicKey]);
-      self.suggestedSweepFee     = coins.then(computeSuggestedSweepFee);
+      self.suggestedSweep     = coins.then(computeSuggestedSweep);
       getPrivateKeys  = function (tx) {
         var extendedPrivateKey = fromAccount.extendedPrivateKey === null || secondPassword === null
           ? fromAccount.extendedPrivateKey
@@ -128,7 +128,7 @@ var Spender = function(listener) {
   //////////////////////////////////////////////////////////////////////////////
   // TO
   var prepareTo = {
-    getSuggestedSweepFee: function() {return self.suggestedSweepFee;},
+    getSuggestedSweep: function() {return self.suggestedSweep;},
     ////////////////////////////////////////////////////////////////////////////
     toAddress: function(toAddress, amount, fee) {
 
@@ -198,10 +198,22 @@ var Spender = function(listener) {
     var tx = new Transaction(coins, toAddresses, amounts, forcedFee, changeAddress, listener);
     return tx;
   };
+  // ////////////////////////////////////////////////////////////////////////////////
+  // // computeSuggestedSweepFee :: [coins] -> Integer
+  // function computeSuggestedSweepFee(coins){
+  //   return Helpers.guessFee(coins.length, 2, MyWallet.wallet.fee_per_kb);
+  // };
   ////////////////////////////////////////////////////////////////////////////////
-  // computeSuggestedSweepFee :: [coins] -> Integer
-  function computeSuggestedSweepFee(coins){
-    return Helpers.guessFee(coins.length, 2, MyWallet.wallet.fee_per_kb);
+  // computeSuggestedSweep :: [coins] -> [Integer, Integer] = [maxSpendeableAmount - fee, fee]
+  function computeSuggestedSweep(coins){
+    var getValue = function(coin) {return coin.value;};
+    var sortedCoinValues = coins.map(getValue).sort(function(a, b){return b-a});
+    var accumulatedValues = sortedCoinValues
+      .map(function(element,index,array){
+        var fee = Helpers.guessFee(index+1, 2, MyWallet.wallet.fee_per_kb);
+        return [array.slice(0,index+1).reduce(Helpers.add,0) - fee, fee];  //[total-fee, fee]
+      }).sort(function(a,b){return b[0]-a[0]});
+    return accumulatedValues[0];
   };
   ////////////////////////////////////////////////////////////////////////////////
   // publishTransaction :: Transaction -> Transaction
