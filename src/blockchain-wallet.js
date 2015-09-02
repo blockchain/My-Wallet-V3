@@ -166,6 +166,12 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function(){return this.activeKeys.map(function(k){return k.address;});}
   },
+  "spendableActiveAddresses": {
+    configurable: false,
+    get: function(){return this.activeKeys
+                        .filter(function(k){return !k.isWatchOnly;})
+                          .map(function(k){return k.address;});}
+  },
   "key": {
     configurable: false,
     value: function(addr) {return this._addresses[addr];}
@@ -205,6 +211,15 @@ Object.defineProperties(Wallet.prototype, {
       return this.activeKeys
                .map(function(k){return k.balance;})
                  .reduce(Helpers.add, 0);
+    }
+  },
+  "balanceSpendableActiveLegacy":{
+    configurable: false,
+    get: function() {
+      return this.activeKeys
+               .filter(function(k){return !k.isWatchOnly;})
+                 .map(function(k){return k.balance;})
+                   .reduce(Helpers.add, 0);
     }
   },
   "addressBook":{

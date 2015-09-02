@@ -51,11 +51,11 @@ var Spender = function(listener) {
     fromAddress: function(fromAddress) {
 
       fromAddress = fromAddress === null || fromAddress === undefined || fromAddress === '' ?
-        MyWallet.wallet.activeAddresses : fromAddress;
+        MyWallet.wallet.spendableActiveAddresses : fromAddress;
       if (!Array.isArray(fromAddress)) {fromAddress = [fromAddress];}
       coins = getUnspentCoins(fromAddress);
       self.suggestedSweep = coins.then(computeSuggestedSweep);
-      changeAddress  = fromAddress[0] || MyWallet.wallet.activeAddresses[0];
+      changeAddress  = fromAddress[0] || MyWallet.wallet.spendableActiveAddresses[0];
       getPrivateKeys = function (tx) {
         var getKeyForAddress = function (addr) {
           var searchAddr = addressPair[addr] === undefined ? addr : addressPair[addr];
