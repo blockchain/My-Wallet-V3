@@ -91,8 +91,8 @@
     "repo" : "brix/crypto-js"
   },
   "rsvp" : {
-    "version" : "3.0.21",
-    "commits" : ["6e611877a216778ee8b734082a5fabca93f6d887"],
+    "version" : "3.1.0",
+    "commits" : ["fcd59034548508a2126b9a3cd1c7132288a7b04f"],
     "repo" : "tildeio/rsvp.js"
   },
   "pbkdf2" : {
