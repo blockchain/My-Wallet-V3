@@ -121,6 +121,7 @@ Spender.sign = function(secondPassword) {
     tx.transaction = build(tx);
     tx.transaction.addPrivateKeys(getPrivateKeys(tx));
     tx.transaction.randomizeOutputs();
+    tx.transaction = tx.transaction.sign();
     return q(tx);
   };
 };
