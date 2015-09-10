@@ -539,6 +539,7 @@ function get_unspent(fromAddresses, success, error, confirmations) {
 module.exports = {
   getRootURL: getRootURL,
   get_history: get_history,
+  mock_async_get_balance_history: mock_async_get_balance_history,
   get_history_with_addresses: get_history_with_addresses,
   async_get_history_with_addresses: async_get_history_with_addresses,
   get_balances: get_balances,
