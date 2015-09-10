@@ -116,7 +116,7 @@ function mock_async_get_balance_history(success, error) {
   var today = new Date();
   var twentynine_days_ago = new Date();
   twentynine_days_ago.setDate(twentynine_days_ago.getDate() - 29);
-  var thirty_days_range = (today - twentynine_days_ago);
+  var thirty_days_range = (today.getTime() - twentynine_days_ago.getTime());
 
   // Generate between 0 and 30 history entries
   var entries_to_generate = Math.floor(Math.random() * 30);
@@ -124,7 +124,7 @@ function mock_async_get_balance_history(success, error) {
   // Generate the requested number of history entries
   for (var i = 0; i < entries_to_generate; i++) {
     // Generate timestamp within last 30 days
-    var timestamp = Math.floor(Math.random() * thirty_days_range) + twentynine_days_ago;
+    var timestamp = Math.floor(Math.random() * thirty_days_range) + twentynine_days_ago.getTime();
     // Generate random Bitcoin balance between 0BTC and 10BTC
     var btcAmount = (Math.random() * 10);
 
