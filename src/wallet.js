@@ -974,7 +974,7 @@ MyWallet.getBalanceHistory = function(_success, _error) {
     // Do this here for now. If this gets more complicated,
     // it should probably be moved to a new method
     MyWallet.wallet.balanceHistory = data;
-    WalletStore.sendEvent('did_balance_history');
+    WalletStore.sendEvent('did_load_balance_history');
 
     success && success();
   }, _error);
