@@ -109,6 +109,43 @@ function get_history(success, error, tx_filter, offset, n) {
   });
 };
 
+function mock_async_get_balance_history(success, error) {
+  var history = [];
+
+  // Get the unix timestamp range for the last 30 days
+  var today = new Date();
+  var twentynine_days_ago = new Date();
+  twentynine_days_ago.setDate(twentynine_days_ago.getDate() - 29);
+  var thirty_days_range = (today - twentynine_days_ago);
+
+  // Generate between 0 and 30 history entries
+  var entries_to_generate = Math.floor(Math.random() * 30);
+
+  // Generate the requested number of history entries
+  for (var i = 0; i < entries_to_generate; i++) {
+    // Generate timestamp within last 30 days
+    var timestamp = Math.floor(Math.random() * thirty_days_range) + twentynine_days_ago;
+    // Generate random Bitcoin balance between 0BTC and 10BTC
+    var btcAmount = (Math.random() * 10);
+
+    history.push({'timestamp': timestamp, 'balance': btcAmount});
+  };
+
+  // Toss a loaded coin to see if the request succeeds or fails
+  var coinToss = Math.random();
+
+  // Let's say we have an 85% chance of success
+  if (coinToss > 0.15) {
+    // The request succeeded
+    success && success(history);
+  } else {
+    // The request failed
+    WalletStore.sendEvent("msg", {type: "error", message: 'Error Downloading Balance History'});
+
+    error();
+  }
+};
+
 function get_history_with_addresses(addresses, success, error, tx_filter, offset, n) {
   var clientTime=(new Date()).getTime();
 
