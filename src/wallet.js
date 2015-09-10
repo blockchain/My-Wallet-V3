@@ -973,7 +973,7 @@ MyWallet.getBalanceHistory = function(_success, _error) {
   BlockchainAPI.mock_async_get_balance_history(function(data) {
     // Do this here for now. If this gets more complicated,
     // it should probably be moved to a new method
-    MyWallet.wallet.balanceHistory = data;
+    MyWallet.wallet.hdwallet.balanceHistory = data;
     WalletStore.sendEvent('did_load_balance_history');
 
     success && success();
