@@ -125,8 +125,8 @@ function mock_async_get_balance_history(success, error) {
   for (var i = 0; i < entries_to_generate; i++) {
     // Generate timestamp within last 30 days
     var timestamp = Math.floor(Math.random() * thirty_days_range) + twentynine_days_ago.getTime();
-    // Generate random Bitcoin balance between 0BTC and 10BTC
-    var btcAmount = (Math.random() * 10);
+    // Generate random Bitcoin balance between 0BTC and 10BTC, converted to Satoshi
+    var btcAmount = Math.floor(Math.random() * 10 * 100000000);
 
     history.push({'timestamp': timestamp, 'balance': btcAmount});
   };
