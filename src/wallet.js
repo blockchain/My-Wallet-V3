@@ -241,7 +241,6 @@ function wsSuccess(ws) {
   var last_on_change = null;
 
   ws.onmessage = function(message) {
-
     var obj = null;
 
     try {
@@ -293,6 +292,10 @@ function wsSuccess(ws) {
           };
         }
       }
+
+      if (tx_processed.to.legacyAddresses || tx_processed.from.legacyAddresses){
+        MyWallet.get_history();
+      };
 
       MyWallet.wallet.numberTx += 1;
       tx.setConfirmations(0);
