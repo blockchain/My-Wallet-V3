@@ -284,7 +284,7 @@ function getFiatAtTime(time, value, currencyCode, successCallback, errorCallback
     data: {value : value, currency: currencyCode, time: time, textual: false, nosavecurrency: true, api_code : WalletStore.getAPICode()},
     timeout: AJAX_TIMEOUT,
     success: function(data) {
-      successCallback(data);
+      successCallback(parseFloat(data));
     },
     error : function(e) {
       errorCallback(e);
