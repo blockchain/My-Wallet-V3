@@ -1,4 +1,4 @@
-# MyWallet [![Build Status](https://travis-ci.org/blockchain/My-Wallet-HD.png?branch=master)](https://travis-ci.org/blockchain/My-Wallet-HD)
+# MyWallet [![Build Status](https://travis-ci.org/blockchain/My-Wallet-V3.png?branch=master)](https://travis-ci.org/blockchain/My-Wallet-V3)
 
 JavaScript Model for Blockchain.info wallet.
 

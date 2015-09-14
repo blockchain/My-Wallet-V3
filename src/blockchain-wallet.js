@@ -322,14 +322,14 @@ Wallet.prototype.containsLegacyAddress = function(address) {
   return this._addresses.hasOwnProperty(address);
 }
 
-Wallet.prototype.newLegacyAddress = function(label, pw){
+Wallet.prototype.newLegacyAddress = function(label, pw, success, error){
   var ad = Address.new(label);
   if (this.double_encryption) {
     assert(pw, "Error: second password needed");
     ad.encrypt(pw, this.sharedKey, this.pbkdf2_iterations).persist();
   };
   this._addresses[ad.address] = ad;
-  MyWallet.syncWallet();
+  MyWallet.syncWallet(success, error);
   return ad;
 };
 
