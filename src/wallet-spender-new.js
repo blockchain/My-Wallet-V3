@@ -1,44 +1,41 @@
 'use strict';
 
-var assert        = require('assert');
 var Bitcoin       = require('bitcoinjs-lib');
 var q             = require('q');
 var MyWallet      = require('./wallet');
 var WalletCrypto  = require('./wallet-crypto');
-var HDAccount     = require('./hd-account');
-var Address       = require('./address');
 var Transaction   = require('./transaction');
 var BlockchainAPI = require('./blockchain-api');
 var Helpers       = require('./helpers');
 var KeyRing       = require('./keyring');
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Spender Class
+//// Payment Class
 ////////////////////////////////////////////////////////////////////////////////
 
-function Spender() {
-  this.tx = null;
+function Payment() {
+  this.payment = null;
   // type definitions
-  // tx.from           :: [bitcoin address || xpub]
-  // tx.change         :: [bitcoin address]
-  // tx.wifKeys        :: [WIF]
-  // tx.fromAccountIdx :: Integer
-  // tx.sweepAmount    :: Integer
-  // tx.sweepFee       :: Integer
-  // tx.forcedFee      :: Integer
-  // tx.coins          :: [coins]
-  // tx.to             :: [bitcoin address]
-  // tx.amounts        :: [Integer]
-  // tx.transaction    :: Transaction
-  // tx.listener       :: {Functions}
+  // payment.from           :: [bitcoin address || xpub]
+  // payment.change         :: [bitcoin address]
+  // payment.wifKeys        :: [WIF]
+  // payment.fromAccountIdx :: Integer
+  // payment.sweepAmount    :: Integer
+  // payment.sweepFee       :: Integer
+  // payment.forcedFee      :: Integer
+  // payment.coins          :: [coins]
+  // payment.to             :: [bitcoin address]
+  // payment.amounts        :: [Integer]
+  // payment.transaction    :: Transaction
+  // payment.listener       :: {Functions}
   return this;
 }
 
-Spender.emptyTx = function() {
+Payment.empty = function() {
   return q({});
 };
 
-Spender.to = function(destinations) {
+Payment.to = function(destinations) {
   var formatDest = null;
   switch (true) {
     // single bitcoin address
@@ -60,36 +57,36 @@ Spender.to = function(destinations) {
       formatDest = destinations;
     default:
   } // fi switch
-  return function(tx) {
-    tx.to = formatDest;
-    return q(tx);
+  return function(payment) {
+    payment.to = formatDest;
+    return q(payment);
   };
 };
 
-Spender.listener = function(listener) {
-  return function(tx) {
-    tx.listener = listener
-    return q(tx);
+Payment.listener = function(listener) {
+  return function(payment) {
+    payment.listener = listener
+    return q(payment);
   };
 };
 
-Spender.sweep = function(amount) {
-  return function(tx) {
-    tx.amounts = tx.sweepAmount ? [tx.sweepAmount] : undefined;
-    tx.forcedFee = tx.sweepFee;
-    return q(tx);
+Payment.sweep = function(amount) {
+  return function(payment) {
+    payment.amounts = payment.sweepAmount ? [payment.sweepAmount] : undefined;
+    payment.forcedFee = payment.sweepFee;
+    return q(payment);
   };
 };
 
-Spender.fee = function(amount) {
+Payment.fee = function(amount) {
   var forcedFee = Helpers.isNumber(amount) ? amount : null;
-  return function(tx) {
-    tx.forcedFee = forcedFee;
-    return q(tx);
+  return function(payment) {
+    payment.forcedFee = forcedFee;
+    return q(payment);
   };
 };
 
-Spender.amount = function(amounts) {
+Payment.amount = function(amounts) {
   var formatAmo = null;
   switch (true) {
     // single output
@@ -103,13 +100,13 @@ Spender.amount = function(amounts) {
       formatDest = amounts;
     default:
   } // fi switch
-  return function(tx) {
-    tx.amounts = formatAmo;
-    return q(tx);
+  return function(payment) {
+    payment.amounts = formatAmo;
+    return q(payment);
   };
 };
 
-Spender.from = function(origin) {
+Payment.from = function(origin) {
   var addresses  = null;
   var change     = null;
   var pkFormat   = MyWallet.detectPrivateKeyFormat(origin);
@@ -160,58 +157,59 @@ Spender.from = function(origin) {
       break;
     default:
   } // fi switch
-  return function(tx) {
-    tx.from           = addresses;
-    tx.change         = change;
-    tx.wifKeys        = wifs;
-    tx.fromAccountIdx = fromAccId;
+  return function(payment) {
+    payment.from           = addresses;
+    payment.change         = change;
+    payment.wifKeys        = wifs;
+    payment.fromAccountIdx = fromAccId;
     return getUnspentCoins(addresses).then(
       function(coins) {
         var sweep = computeSuggestedSweep(coins);
-        tx.sweepAmount = sweep[0];
-        tx.sweepFee    = sweep[1];
-        tx.coins       = coins;
-        return tx;
+        payment.sweepAmount = sweep[0];
+        payment.sweepFee    = sweep[1];
+        payment.coins       = coins;
+        return payment;
       }
     );
   };
 };
 
-Spender.sign = function(password) {
-  function build (tx) {
-    return new Transaction(tx.coins, tx.to, tx.amounts, tx.forcedFee, tx.change, tx.listener);
+Payment.sign = function(password) {
+  function build (payment) {
+    return new Transaction(payment.coins, payment.to, payment.amounts,
+                           payment.forcedFee, payment.change, payment.listener);
   };
   function importWIF (WIF) {
     MyWallet.wallet.importLegacyAddress(WIF, "Redeemed code.", password)
       .then(function(A){A.archived = true;});
   };
-  return function(tx) {
-    if (Array.isArray(tx.wifKeys)) tx.wifKeys.forEach(importWIF);
-    tx.transaction = build(tx);
-    tx.transaction.addPrivateKeys(getPrivateKeys(password, tx));
-    tx.transaction.randomizeOutputs();
-    tx.transaction = tx.transaction.sign();
-    return q(tx);
+  return function(payment) {
+    if (Array.isArray(payment.wifKeys)) payment.wifKeys.forEach(importWIF);
+    payment.transaction = build(payment);
+    payment.transaction.addPrivateKeys(getPrivateKeys(password, payment));
+    payment.transaction.randomizeOutputs();
+    payment.transaction = payment.transaction.sign();
+    return q(payment);
   };
 };
 
-Spender.publish = function() {
-  return function(tx) {
+Payment.publish = function() {
+  return function(payment) {
     var defer = q.defer();
     var success = function(tx_hash) {
       console.log("published");
-      tx.id = tx_hash;
-      defer.resolve(tx);
+      payment.txid = tx_hash;
+      defer.resolve(payment);
     };
     var error = function(e) {
       defer.reject(e.message || e.responseText);
     };
-    BlockchainAPI.push_tx(tx.transaction, undefined, success, error);
+    BlockchainAPI.push_tx(payment.transaction, undefined, success, error);
     return defer.promise;
   };
 };
 
-module.exports = Spender;
+module.exports = Payment;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Helper functions
@@ -278,17 +276,17 @@ function getKeyForPath(extendedPrivateKey, neededPrivateKeyPath) {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// getPrivateKeys :: password -> tx -> [private key]
-function getPrivateKeys(password, tx) {
-  var transaction = tx.transaction;
+// getPrivateKeys :: password -> payment -> [private key]
+function getPrivateKeys(password, payment) {
+  var transaction = payment.transaction;
   var privateKeys = [];
   // if from Account
-  if (Helpers.isNumber(tx.fromAccountIdx)) {
-    var xpriv = getXPRIV(password, tx.fromAccountIdx);
+  if (Helpers.isNumber(payment.fromAccountIdx)) {
+    var xpriv = getXPRIV(password, payment.fromAccountIdx);
     privateKeys = transaction.pathsOfNeededPrivateKeys.map(getKeyForPath.bind(this, xpriv));
   };
   // if from Addresses
-  if (tx.from && tx.from.every(Helpers.isBitcoinAddress)) {
+  if (payment.from && payment.from.every(Helpers.isBitcoinAddress)) {
     privateKeys = transaction.addressesOfNeededPrivateKeys.map(getKeyForAddress.bind(this, password));
   };
   return privateKeys;
@@ -307,38 +305,39 @@ function computeSuggestedSweep(coins){
   return accumulatedValues[0];
 };
 
-// var Spender = Blockchain.Spencer;
+// var Payment = Blockchain.Payment;
 //
-// Spender.emptyTx()
-//   .then(Spender.to('asdf'))
-//   .then(Spender.from('hjkl'))
-//   .then(Spender.amount(10000))
-//   .then(Spender.to('qwerty'))
+// Payment.empty()
+//   .then(Payment.to('asdf'))
+//   .then(Payment.from('hjkl'))
+//   .then(Payment.amount(10000))
+//   .then(Payment.to('qwerty'))
 //   .then(function(tx) {
 //     console.log(tx);
 //     return tx;
 //   })
-//   .then(Spender.from('zxcv'))
-//   .then(Spender.amount(5000))
+//   .then(Payment.from('zxcv'))
+//   .then(Payment.amount(5000))
   // .then(function(tx) {
   //   console.log(tx);
   // });
 
-// var Spender = Blockchain.Spencer;
-// var x = Spender.emptyTx()
-//           .then(Spender.from(undefined))
-//           .then(Spender.sweep())
-//           .then(Spender.to("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX"))
-//           .then(Spender.sign("hola"))
+// var Payment = Blockchain.Payment;
+// var x = Payment.empty()
+//           .then(Payment.from(undefined))
+//           .then(Payment.sweep())
+//           .then(Payment.to("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX"))
+//           .then(Payment.sign("hola"))
 //           .then(function(tx){console.log( "resultat: " +  JSON.stringify(tx, null, 2));})
 //           .catch(function(e){console.log( "error: " + e);});
 
 
-// var Spender = Blockchain.Spencer;
-// var x = Spender.emptyTx()
-//           .then(Spender.from(undefined))
-//           .then(Spender.amount(12345))
-//           .then(Spender.to("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX"))
-//           .then(Spender.sign("hola"))
+// var Payment = Blockchain.Payment;
+// var x = Payment.empty()
+//           .then(Payment.from(undefined))
+//           .then(Payment.amount(11000))
+//           .then(Payment.to("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX"))
+//           .then(Payment.sign("hola"))
+//           .then(Payment.publish())
 //           .then(function(tx){console.log( "resultat: " +  JSON.stringify(tx, null, 2));})
 //           .catch(function(e){console.log( "error: " + e);});
