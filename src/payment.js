@@ -182,7 +182,7 @@ Payment.from = function(origin) {
     // single bitcoin address
     case Helpers.isBitcoinAddress(origin):
       addresses = [origin];
-      change    = addresses;
+      change    = origin;
       break;
     // single account index
     case Helpers.isNumber(origin) &&
