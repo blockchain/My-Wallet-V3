@@ -157,7 +157,7 @@ Payment.amount = function(amounts) {
     case Array.isArray(amounts) &&
          amounts.length > 0 &&
          amounts.every(Helpers.isNumber):
-      formatDest = amounts;
+      formatAmo = amounts;
     default:
   } // fi switch
   return function(payment) {
