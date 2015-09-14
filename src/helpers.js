@@ -58,6 +58,10 @@ Helpers.memoize = function (f){
     else return cache[key] = f.apply(this, arguments);
   };
 };
+
+Helpers.toArrayFormat = function (x) {
+  return Array.isArray(x) ? x : [x];
+};
 // Return an async version of f that it will run after miliseconds
 // no matter how many times you call the new function, it will run only once
 Helpers.asyncOnce = function (f, milliseconds, before){

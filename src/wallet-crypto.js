@@ -297,5 +297,5 @@ module.exports = {
   decryptPasswordWithProcessedPin: decryptPasswordWithProcessedPin,
   stretchPassword: stretchPassword,
   hashNTimes: hashNTimes,
-  cipherFunction: cipherFunction,
+  cipherFunction: cipherFunction
 };
