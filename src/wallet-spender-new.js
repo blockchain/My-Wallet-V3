@@ -14,7 +14,7 @@ var KeyRing       = require('./keyring');
 ////////////////////////////////////////////////////////////////////////////////
 
 function Payment() {
-  this.payment = null;
+  this.payment = Payment.empty();
   // type definitions
   // payment.from           :: [bitcoin address || xpub]
   // payment.change         :: [bitcoin address]
@@ -28,9 +28,50 @@ function Payment() {
   // payment.amounts        :: [Integer]
   // payment.transaction    :: Transaction
   // payment.listener       :: {Functions}
-  return this;
 }
+////////////////////////////////////////////////////////////////////////////////
+// Payment instance methods (can be chained)
+Payment.prototype.to = function(destinations) {
+  this.payment = this.payment.then(Payment.to(destinations));
+  return this;
+};
 
+Payment.prototype.from = function(origin) {
+  this.payment = this.payment.then(Payment.from(origin));
+  return this;
+};
+
+Payment.prototype.amount = function(amounts) {
+  this.payment = this.payment.then(Payment.amount(amounts));
+  return this;
+};
+
+Payment.prototype.listener = function(listener) {
+  this.payment = this.payment.then(Payment.listener(listener));
+  return this;
+};
+
+Payment.prototype.sweep = function() {
+  this.payment = this.payment.then(Payment.sweep());
+  return this;
+};
+
+Payment.prototype.fee = function(fee) {
+  this.payment = this.payment.then(Payment.fee(fee));
+  return this;
+};
+
+Payment.prototype.sign = function(password) {
+  this.payment = this.payment.then(Payment.sign(password));
+  return this;
+};
+
+Payment.prototype.publish = function() {
+  this.payment = this.payment.then(Payment.publish());
+  return this;
+};
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 Payment.empty = function() {
   return q({});
 };
@@ -208,12 +249,12 @@ Payment.publish = function() {
     return defer.promise;
   };
 };
-
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 module.exports = Payment;
-
+////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 // Helper functions
-
 
 //////////////////////////////////////////////////////////////////////////////
 // getUnspentCoins :: [address] -> Promise [coins]
@@ -305,39 +346,26 @@ function computeSuggestedSweep(coins){
   return accumulatedValues[0];
 };
 
+// example (syntax 1)
+
 // var Payment = Blockchain.Payment;
-//
 // Payment.empty()
-//   .then(Payment.to('asdf'))
-//   .then(Payment.from('hjkl'))
-//   .then(Payment.amount(10000))
-//   .then(Payment.to('qwerty'))
-//   .then(function(tx) {
-//     console.log(tx);
-//     return tx;
-//   })
-//   .then(Payment.from('zxcv'))
-//   .then(Payment.amount(5000))
-  // .then(function(tx) {
-  //   console.log(tx);
-  // });
+//   .then(Payment.from(undefined))
+//   .then(Payment.amount(11000))
+//   .then(Payment.to("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX"))
+//   .then(Payment.sign("hola"))
+//   .then(Payment.publish())
+//   .then(function(p){console.log( "result: " +  JSON.stringify(p, null, 2));})
+//   .catch(function(e){console.log( "error: " + e);});
 
-// var Payment = Blockchain.Payment;
-// var x = Payment.empty()
-//           .then(Payment.from(undefined))
-//           .then(Payment.sweep())
-//           .then(Payment.to("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX"))
-//           .then(Payment.sign("hola"))
-//           .then(function(tx){console.log( "resultat: " +  JSON.stringify(tx, null, 2));})
-//           .catch(function(e){console.log( "error: " + e);});
+// example (syntax 2)
 
-
-// var Payment = Blockchain.Payment;
-// var x = Payment.empty()
-//           .then(Payment.from(undefined))
-//           .then(Payment.amount(11000))
-//           .then(Payment.to("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX"))
-//           .then(Payment.sign("hola"))
-//           .then(Payment.publish())
-//           .then(function(tx){console.log( "resultat: " +  JSON.stringify(tx, null, 2));})
+// var payment = new Payment();
+// payment
+//   .from(undefined)
+//   .amount(10000)
+//   .to("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX")
+//   .sign("hola")
+//   .publish()
+//   .payment.then(function(p){console.log( "result: " +  JSON.stringify(p, null, 2));})
 //           .catch(function(e){console.log( "error: " + e);});
