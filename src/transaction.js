@@ -8,9 +8,11 @@ var MyWallet    = require('./wallet');
 
 var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAddress, listener) {
 
-  if (!Array.isArray(toAddresses)) {toAddresses = [toAddresses];}
-  if (!Array.isArray(amounts)) {amounts = [amounts];}
+  if (!Array.isArray(toAddresses) && toAddresses != null) {toAddresses = [toAddresses];}
+  if (!Array.isArray(amounts) && amounts != null) {amounts = [amounts];}
   var network = Bitcoin.networks.bitcoin;
+  assert(toAddresses, 'Missing destination address');
+  assert(amounts,     'Missing amount to pay');
 
   this.amount = amounts.reduce(function(a, b) {return a + b;},0);
   this.listener = listener;
@@ -22,10 +24,9 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
   var BITCOIN_DUST = 5460;
   var forcedFee = (typeof(fee) == "number") ? fee : null;
 
-
   assert(toAddresses.length == amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
   assert(this.amount > BITCOIN_DUST, this.amount + ' must be above dust threshold (' + BITCOIN_DUST + ' Satoshis)');
-  assert(unspentOutputs && unspentOutputs.length > 0, 'No Free Outputs To Spend');
+  assert(unspentOutputs && unspentOutputs.length > 0, 'Missing coins to spend');
 
   var transaction = new Bitcoin.Transaction();
   // add all outputs

@@ -60,13 +60,13 @@ describe "Transaction", ->
   describe "create new Transaction", ->
     it "should fail without unspent outputs", ->
 
-      # expect(test).toThrowError(AssertionError, 'No Free Outputs To Spend')
+      # expect(test).toThrowError(AssertionError, 'Missing coins to spend')
 
       try
         new Transaction(null, data.to, data.amount, data.fee, data.from, null)
       catch e
         expect(e.name).toBe('AssertionError')
-        expect(e.message).toBe('No Free Outputs To Spend')
+        expect(e.message).toBe('Missing coins to spend')
 
     it "should fail without amount lower than dust threshold", ->
 
