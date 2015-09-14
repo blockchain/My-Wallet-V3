@@ -236,9 +236,11 @@ Payment.from = function(origin) {
 
 Payment.build = function() {
   return function(payment) {
-    payment.transaction = new Transaction(payment.coins, payment.to,
-                                          payment.amounts, payment.forcedFee,
-                                          payment.change, payment.listener);
+    try {
+      payment.transaction = new Transaction(payment.coins, payment.to,
+                                            payment.amounts, payment.forcedFee,
+                                            payment.change, payment.listener);
+    } catch (err) {}
     return q(payment);
   };
 };
