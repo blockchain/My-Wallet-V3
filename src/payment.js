@@ -27,6 +27,7 @@ function Payment() {
   // payment.to             :: [bitcoin address]
   // payment.amounts        :: [Integer]
   // payment.transaction    :: Transaction
+  // payment.note           :: String
   // payment.listener       :: {Functions}
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -58,6 +59,16 @@ Payment.prototype.sweep = function() {
 
 Payment.prototype.fee = function(fee) {
   this.payment = this.payment.then(Payment.fee(fee));
+  return this;
+};
+
+Payment.prototype.note = function(note) {
+  this.payment = this.payment.then(Payment.note(note));
+  return this;
+};
+
+Payment.prototype.build = function() {
+  this.payment = this.payment.then(Payment.build());
   return this;
 };
 
@@ -115,6 +126,14 @@ Payment.sweep = function(amount) {
   return function(payment) {
     payment.amounts = payment.sweepAmount ? [payment.sweepAmount] : undefined;
     payment.forcedFee = payment.sweepFee;
+    return q(payment);
+  };
+};
+
+Payment.note = function(note) {
+  var publicNote = Helpers.isString(note) ? note : null;
+  return function(payment) {
+    payment.note = publicNote;
     return q(payment);
   };
 };
@@ -215,18 +234,23 @@ Payment.from = function(origin) {
   };
 };
 
-Payment.sign = function(password) {
-  function build (payment) {
-    return new Transaction(payment.coins, payment.to, payment.amounts,
-                           payment.forcedFee, payment.change, payment.listener);
-  };
-  function importWIF (WIF) {
-    MyWallet.wallet.importLegacyAddress(WIF, "Redeemed code.", password)
-      .then(function(A){A.archived = true;});
-  };
+Payment.build = function() {
   return function(payment) {
+    payment.transaction = new Transaction(payment.coins, payment.to,
+                                          payment.amounts, payment.forcedFee,
+                                          payment.change, payment.listener);
+    return q(payment);
+  };
+};
+
+Payment.sign = function(password) {
+  return function(payment) {
+    function importWIF (WIF) {
+      MyWallet.wallet.importLegacyAddress(WIF, "Redeemed code.", password)
+        .then(function(A){A.archived = true;});
+    };
     if (Array.isArray(payment.wifKeys)) payment.wifKeys.forEach(importWIF);
-    payment.transaction = build(payment);
+    if (!payment.transaction) throw "You cannot sign a non-build transaction."
     payment.transaction.addPrivateKeys(getPrivateKeys(password, payment));
     payment.transaction.randomizeOutputs();
     payment.transaction = payment.transaction.sign();
@@ -237,6 +261,7 @@ Payment.sign = function(password) {
 Payment.publish = function() {
   return function(payment) {
     var defer = q.defer();
+
     var success = function(tx_hash) {
       console.log("published");
       payment.txid = tx_hash;
@@ -245,7 +270,14 @@ Payment.publish = function() {
     var error = function(e) {
       defer.reject(e.message || e.responseText);
     };
-    BlockchainAPI.push_tx(payment.transaction, undefined, success, error);
+
+    var getValue = function(coin) {return coin.value;};
+    var isSmall = function(value) {return value < 500000;};
+    var anySmall = payment.transaction.outs.map(getValue).some(isSmall);
+    if(anySmall && payment.note !== undefined && payment.note !== null)
+      {throw "There is an output too small to publish a note";}
+
+    BlockchainAPI.push_tx(payment.transaction, payment.note, success, error);
     return defer.promise;
   };
 };
