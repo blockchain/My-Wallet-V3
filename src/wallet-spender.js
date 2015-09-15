@@ -94,7 +94,7 @@ var Spender = function(listener) {
       var addr = key.pub.getAddress().toString();
       var cWIF = key.toWIF();
 
-      if(MyWallet.wallet.addresses.some(function(a){return a !== addr})){
+      if(!MyWallet.wallet.addresses.some(function(a){return a === addr})){
         var addrPromise = MyWallet.wallet.importLegacyAddress(cWIF, "Redeemed code.", secondPassword);
         addrPromise.then(function(A){A.archived = true;})
       }
