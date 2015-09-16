@@ -326,7 +326,8 @@ Wallet.prototype.newLegacyAddress = function(label, pw, success, error){
   var ad = Address.new(label);
   if (this.isDoubleEncrypted) {
     assert(pw, "Error: second password needed");
-    ad.encrypt(pw, this.sharedKey, this.pbkdf2_iterations).persist();
+    var cipher = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
+    ad.encrypt(cipher).persist();
   };
   this._addresses[ad.address] = ad;
   MyWallet.syncWallet(success, error);
