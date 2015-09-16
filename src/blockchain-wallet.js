@@ -324,7 +324,7 @@ Wallet.prototype.containsLegacyAddress = function(address) {
 
 Wallet.prototype.newLegacyAddress = function(label, pw, success, error){
   var ad = Address.new(label);
-  if (this.double_encryption) {
+  if (this.isDoubleEncrypted) {
     assert(pw, "Error: second password needed");
     ad.encrypt(pw, this.sharedKey, this.pbkdf2_iterations).persist();
   };
