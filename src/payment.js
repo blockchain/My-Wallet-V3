@@ -218,19 +218,31 @@ Payment.from = function(origin) {
     default:
   } // fi switch
   return function(payment) {
+    var defer = q.defer();
     payment.from           = addresses;
     payment.change         = change;
     payment.wifKeys        = wifs;
     payment.fromAccountIdx = fromAccId;
-    return getUnspentCoins(addresses).then(
+
+    getUnspentCoins(addresses).then(
       function(coins) {
         var sweep = computeSuggestedSweep(coins);
         payment.sweepAmount = sweep[0];
         payment.sweepFee    = sweep[1];
         payment.coins       = coins;
-        return payment;
+        defer.resolve(payment);
+      }
+    ).catch(
+      // this could fail for network issues or no-balance
+      function(error) {
+        console.log(error);
+        payment.sweepAmount = 0;
+        payment.sweepFee    = 0;
+        payment.coins       = [];
+        defer.resolve(payment);
       }
     );
+    return defer.promise;
   };
 };
 
@@ -240,7 +252,9 @@ Payment.build = function() {
       payment.transaction = new Transaction(payment.coins, payment.to,
                                             payment.amounts, payment.forcedFee,
                                             payment.change, payment.listener);
-    } catch (err) {}
+    } catch (err) {
+      console.log("Error Building: " + err);
+    }
     return q(payment);
   };
 };
@@ -377,6 +391,8 @@ function computeSuggestedSweep(coins){
       var fee = Helpers.guessFee(index+1, 2, MyWallet.wallet.fee_per_kb);
       return [array.slice(0,index+1).reduce(Helpers.add,0) - fee, fee];  //[total-fee, fee]
     }).sort(function(a,b){return b[0]-a[0]});
+  // dont return negative max spendable
+  if (accumulatedValues[0][0] < 0) { accumulatedValues[0][0] = 0; }
   return accumulatedValues[0];
 };
 
@@ -394,12 +410,18 @@ function computeSuggestedSweep(coins){
 
 // example (syntax 2)
 
-// var payment = new Payment();
+// 1PHHtxKAgbpwvK3JfwDT1Q5WbGmGrqm8gf
+//
+// 1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN
+//
+//
+// var payment = new Blockchain.Payment();
 // payment
-//   .from(undefined)
+//   .from("1PHHtxKAgbpwvK3JfwDT1Q5WbGmGrqm8gf")
+//   .from("1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN")
 //   .amount(10000)
-//   .to("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX")
+//   .to("1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF")
+//   .build()
 //   .sign("hola")
-//   .publish()
 //   .payment.then(function(p){console.log( "result: " +  JSON.stringify(p, null, 2));})
 //           .catch(function(e){console.log( "error: " + e);});
