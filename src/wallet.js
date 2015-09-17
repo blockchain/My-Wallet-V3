@@ -1366,6 +1366,18 @@ MyWallet.connectWebSocket = function() {
 ////////////////////////////////////////////////////////////////////////////////
 // This should replace backup functions
 function syncWallet (successcallback, errorcallback) {
+
+  // var panic = function(e) {
+  //     console.log('Panic ' + e);
+  //     window.location.reload();
+  //     // kick out of the wallet in a inconsistent state to prevent save
+  // };
+  //
+  // if (MyWallet.wallet.isEncryptionConsistent === false) {
+  //   throw 'The wallet must not be saved: not fully enc/decrypted';
+  //   // panic("The wallet was not fully enc/decrypted");
+  // }
+
   if (!MyWallet.wallet || !MyWallet.wallet.sharedKey
       || MyWallet.wallet.sharedKey.length === 0
       || MyWallet.wallet.sharedKey.length !== 36)

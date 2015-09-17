@@ -106,6 +106,22 @@ Object.defineProperties(HDWallet.prototype, {
       return balances.reduce(Helpers.add, 0);
     }
   },
+  "isEncrypted": {
+    configurable: false,
+    get: function() {
+      var isSeedEnc = Helpers.isBase64(this._seedHex) && !Helpers.isSeedHex(this._seedHex);
+      return isSeedEnc && this._accounts.map(function(a){return a.isEncrypted;})
+                                          .reduce(Helpers.and, true);
+    }
+  },
+  "isUnEncrypted": {
+    configurable: false,
+    get: function() {
+      var isSeedUnEnc = Helpers.isSeedHex(this._seedHex);
+      return isSeedUnEnc && this._accounts.map(function(a){return a.isUnEncrypted;})
+                             .reduce(Helpers.and, true);
+    }
+  },
   "lastAccount":{
     configurable: false,
     get: function() {

@@ -24,12 +24,28 @@ Helpers.isBitcoinPrivateKey = function(candidate) {
   }
   catch (e) { return false; };
 };
+Helpers.isBase58Key = function(k) {
+  return Helpers.isString(k) &&
+         (/^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{44}$/.test(k) ||
+         /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{43}$/.test(k))
+};
+Helpers.isXprivKey = function(k) {
+  return Helpers.isString(k) && k.substring(0, 4) === "xprv";
+};
+Helpers.isXpubKey = function(k) {
+  return Helpers.isString(k) && k.substring(0, 4) === "xpub";
+};
 Helpers.isAlphaNum = function (str){
-  return /^[\-+,._\w\d\s]+$/.test(str);
+  return Helpers.isString(str) && /^[\-+,._\w\d\s]+$/.test(str);
 };
 Helpers.isHex = function (str){
-// "F12a3" === "F12a3".match(/^[A-Fa-f0-9]+/)[0];
-  return /^[A-Fa-f0-9]+$/.test(str);
+  return Helpers.isString(str) && /^[A-Fa-f0-9]+$/.test(str);
+};
+Helpers.isSeedHex = function (str){
+  return Helpers.isString(str) && /^[A-Fa-f0-9]{32}$/.test(str);
+};
+Helpers.isBase64 = function (str){
+  return Helpers.isString(str) && /^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789=+\/]+$/.test(str);
 };
 Helpers.isNumber = function (num){
   return typeof num == 'number' && !isNaN(num);
@@ -48,6 +64,9 @@ Helpers.isInRange = function (val, min, max){
 };
 Helpers.add = function (x,y){
   return x + y;
+};
+Helpers.and = function (x,y){
+  return x && y;
 };
 // Return a memoized version of function f
 Helpers.memoize = function (f){

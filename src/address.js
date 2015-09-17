@@ -74,6 +74,14 @@ Object.defineProperties(Address.prototype, {
     configurable: false,
     get: function() { return this._priv == null;}
   },
+  "isEncrypted": {
+    configurable: false,
+    get: function() { return Helpers.isBase64(this._priv) && !Helpers.isBase58Key(this._priv);}
+  },
+  "isUnEncrypted": {
+    configurable: false,
+    get: function() { return Helpers.isBase58Key(this._priv);}
+  },
   "archived": {
     configurable: false,
     get: function() { return this._tag === 2;},
