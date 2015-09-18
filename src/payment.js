@@ -13,8 +13,8 @@ var KeyRing       = require('./keyring');
 //// Payment Class
 ////////////////////////////////////////////////////////////////////////////////
 
-function Payment() {
-  this.payment = Payment.empty();
+function Payment(payment) {
+  this.payment = Payment.return(payment);
   // type definitions
   // payment.from           :: [bitcoin address || xpub]
   // payment.change         :: [bitcoin address]
@@ -47,6 +47,21 @@ Payment.prototype.amount = function(amounts) {
   return this;
 };
 
+Payment.prototype.then = function(myFunction) {
+  this.payment = this.payment.then(myFunction);
+  return this;
+};
+
+Payment.prototype.catch = function(errorHandler) {
+  this.payment = this.payment.catch(errorHandler);
+  return this;
+};
+
+Payment.prototype.sideEffect = function(myFunction) {
+  this.payment = this.payment.then(Payment.sideEffect(myFunction));
+  return this;
+};
+
 Payment.prototype.listener = function(listener) {
   this.payment = this.payment.then(Payment.listener(listener));
   return this;
@@ -72,6 +87,11 @@ Payment.prototype.build = function() {
   return this;
 };
 
+Payment.prototype.buildbeta = function() {
+  this.payment = this.payment.then(Payment.buildbeta());
+  return this;
+};
+
 Payment.prototype.sign = function(password) {
   this.payment = this.payment.then(Payment.sign(password));
   return this;
@@ -83,8 +103,17 @@ Payment.prototype.publish = function() {
 };
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-Payment.empty = function() {
-  return q({});
+Payment.return = function(payment) {
+  var p = payment ? payment : {}
+  return q(p);
+};
+
+// myFunction :: payment -> ()
+Payment.sideEffect = function(myFunction) {
+  return function(payment) {
+    myFunction(payment);
+    return q(payment);
+  };
 };
 
 Payment.to = function(destinations) {
@@ -108,6 +137,7 @@ Payment.to = function(destinations) {
          destinations.every(Helpers.isBitcoinAddress):
       formatDest = destinations;
     default:
+      console.log("No destination set.")
   } // fi switch
   return function(payment) {
     payment.to = formatDest;
@@ -159,6 +189,7 @@ Payment.amount = function(amounts) {
          amounts.every(Helpers.isNumber):
       formatAmo = amounts;
     default:
+      console.log("No amounts set.")
   } // fi switch
   return function(payment) {
     payment.amounts = formatAmo;
@@ -216,6 +247,7 @@ Payment.from = function(origin) {
       // L53fCHmQhbNp1B4JipfBtfeHZH7cAibzG9oK19XfiFzxHgAkz6JK
       break;
     default:
+      console.log("No origin set.")
   } // fi switch
   return function(payment) {
     var defer = q.defer();
@@ -247,6 +279,7 @@ Payment.from = function(origin) {
 };
 
 Payment.build = function() {
+
   return function(payment) {
     try {
       payment.transaction = new Transaction(payment.coins, payment.to,
@@ -256,6 +289,23 @@ Payment.build = function() {
       console.log("Error Building: " + err);
     }
     return q(payment);
+  };
+};
+
+Payment.buildbeta = function() {
+  // I should check for all the payment needed fields and reject with the wrong payment
+  // then the frontend can show the error and recreate the payment with the same state
+  return function(payment) {
+    var defer = q.defer();
+    try {
+      payment.transaction = new Transaction(payment.coins, payment.to,
+                                              payment.amounts, payment.forcedFee,
+                                              payment.change, payment.listener);
+      defer.resolve(payment);
+    } catch (e) {
+      defer.reject({"error": e, "payment": payment});
+    }
+    return defer.promise;
   };
 };
 
@@ -396,22 +446,10 @@ function computeSuggestedSweep(coins){
   return accumulatedValues[0];
 };
 
-// example (syntax 1)
 
-// var Payment = Blockchain.Payment;
-// Payment.empty()
-//   .then(Payment.from(undefined))
-//   .then(Payment.amount(11000))
-//   .then(Payment.to("1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX"))
-//   .then(Payment.sign("hola"))
-//   .then(Payment.publish())
-//   .then(function(p){console.log( "result: " +  JSON.stringify(p, null, 2));})
-//   .catch(function(e){console.log( "error: " + e);});
-
-// example (syntax 2)
+// example of usage
 
 // 1PHHtxKAgbpwvK3JfwDT1Q5WbGmGrqm8gf
-//
 // 1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN
 //
 //
@@ -425,3 +463,38 @@ function computeSuggestedSweep(coins){
 //   .sign("hola")
 //   .payment.then(function(p){console.log( "result: " +  JSON.stringify(p, null, 2));})
 //           .catch(function(e){console.log( "error: " + e);});
+
+//
+// var error = function(e) {console.log("error: " + e);}
+// var success = function(p) {console.log("final: "); console.log(p); return p;}
+// var op1Fail = function(p) {throw "I failed!!";}
+// var op2Good = function(p) {console.log("op"); console.log(p); p.op2 = true; return p;}
+// var op3Good = function(p) {console.log("op"); console.log(p);p.op3 = true; return p;}
+// var print   = function(p) {console.log("from: "+ p.from);}
+//
+// var payment = new Blockchain.Payment();
+// payment
+//   .from("1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN")
+//   .then(op2Good)
+//   .amount(10000)
+//   .sideEffect(print)
+//   .then(op3Good)
+//   .then(op1Fail)
+//   .then(success)
+//   .catch(error)
+//
+// var error        = function(e) {console.log("error: " + JSON.stringify(e, null, 2));}
+// var buildFailure = function(e) {console.log(e.error); return e.payment;}
+// var success      = function(p) {console.log("final: "); console.log(p); return p;}
+// var print        = function(p) {console.log("from: "+ p.from);}
+//
+// var payment = new Blockchain.Payment();
+// payment
+//   .from("1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN")
+//   // .amount(10000)
+//   .to("1PHHtxKAgbpwvK3JfwDT1Q5WbGmGrqm8gf")
+//   .sideEffect(print)
+//   .buildbeta()
+//   .catch(buildFailure)
+//   .then(success)
+//   .catch(error)
