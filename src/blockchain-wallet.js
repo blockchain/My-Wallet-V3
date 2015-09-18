@@ -211,6 +211,24 @@ Object.defineProperties(Wallet.prototype, {
       return !(this._hd_wallets == null || this._hd_wallets.length === 0);
     }
   },
+  "isEncryptionConsistent":{
+    configurable: false,
+    get: function() {
+      var operation = undefined;
+      if (this.isDoubleEncrypted) {
+        operation = function(k){return k.isEncrypted;}
+      }
+      else { // no double encryption activated
+        operation = function(k){return k.isUnEncrypted;}
+      }
+      var A = this.keys.filter(function(k){return !k.isWatchOnly;})
+                       .map(operation)
+                       .reduce(Helpers.and, true);
+      var W = this._hd_wallets.map(operation)
+                              .reduce(Helpers.and, true);
+      return A && W;
+    }
+  },
   "balanceActiveLegacy":{
     configurable: false,
     get: function() {
@@ -404,14 +422,15 @@ Wallet.prototype.containsLegacyAddress = function(address) {
   return this._addresses.hasOwnProperty(address);
 }
 
-Wallet.prototype.newLegacyAddress = function(label, pw){
+Wallet.prototype.newLegacyAddress = function(label, pw, success, error){
   var ad = Address.new(label);
-  if (this.double_encryption) {
+  if (this.isDoubleEncrypted) {
     assert(pw, "Error: second password needed");
-    ad.encrypt(pw, this.sharedKey, this.pbkdf2_iterations).persist();
+    var cipher = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
+    ad.encrypt(cipher).persist();
   };
   this._addresses[ad.address] = ad;
-  MyWallet.syncWallet();
+  MyWallet.syncWallet(success, error);
   return ad;
 };
 

@@ -1,0 +1,500 @@
+'use strict';
+
+var Bitcoin       = require('bitcoinjs-lib');
+var q             = require('q');
+var MyWallet      = require('./wallet');
+var WalletCrypto  = require('./wallet-crypto');
+var Transaction   = require('./transaction');
+var BlockchainAPI = require('./blockchain-api');
+var Helpers       = require('./helpers');
+var KeyRing       = require('./keyring');
+
+////////////////////////////////////////////////////////////////////////////////
+//// Payment Class
+////////////////////////////////////////////////////////////////////////////////
+
+function Payment(payment) {
+  this.payment = Payment.return(payment);
+  // type definitions
+  // payment.from           :: [bitcoin address || xpub]
+  // payment.change         :: [bitcoin address]
+  // payment.wifKeys        :: [WIF]
+  // payment.fromAccountIdx :: Integer
+  // payment.sweepAmount    :: Integer
+  // payment.sweepFee       :: Integer
+  // payment.forcedFee      :: Integer
+  // payment.coins          :: [coins]
+  // payment.to             :: [bitcoin address]
+  // payment.amounts        :: [Integer]
+  // payment.transaction    :: Transaction
+  // payment.note           :: String
+  // payment.listener       :: {Functions}
+}
+////////////////////////////////////////////////////////////////////////////////
+// Payment instance methods (can be chained)
+Payment.prototype.to = function(destinations) {
+  this.payment = this.payment.then(Payment.to(destinations));
+  return this;
+};
+
+Payment.prototype.from = function(origin) {
+  this.payment = this.payment.then(Payment.from(origin));
+  return this;
+};
+
+Payment.prototype.amount = function(amounts) {
+  this.payment = this.payment.then(Payment.amount(amounts));
+  return this;
+};
+
+Payment.prototype.then = function(myFunction) {
+  this.payment = this.payment.then(myFunction);
+  return this;
+};
+
+Payment.prototype.catch = function(errorHandler) {
+  this.payment = this.payment.catch(errorHandler);
+  return this;
+};
+
+Payment.prototype.sideEffect = function(myFunction) {
+  this.payment = this.payment.then(Payment.sideEffect(myFunction));
+  return this;
+};
+
+Payment.prototype.listener = function(listener) {
+  this.payment = this.payment.then(Payment.listener(listener));
+  return this;
+};
+
+Payment.prototype.sweep = function() {
+  this.payment = this.payment.then(Payment.sweep());
+  return this;
+};
+
+Payment.prototype.fee = function(fee) {
+  this.payment = this.payment.then(Payment.fee(fee));
+  return this;
+};
+
+Payment.prototype.note = function(note) {
+  this.payment = this.payment.then(Payment.note(note));
+  return this;
+};
+
+Payment.prototype.build = function() {
+  this.payment = this.payment.then(Payment.build());
+  return this;
+};
+
+Payment.prototype.buildbeta = function() {
+  this.payment = this.payment.then(Payment.buildbeta());
+  return this;
+};
+
+Payment.prototype.sign = function(password) {
+  this.payment = this.payment.then(Payment.sign(password));
+  return this;
+};
+
+Payment.prototype.publish = function() {
+  this.payment = this.payment.then(Payment.publish());
+  return this;
+};
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+Payment.return = function(payment) {
+  var p = payment ? payment : {}
+  return q(p);
+};
+
+// myFunction :: payment -> ()
+Payment.sideEffect = function(myFunction) {
+  return function(payment) {
+    myFunction(payment);
+    return q(payment);
+  };
+};
+
+Payment.to = function(destinations) {
+  var formatDest = null;
+  switch (true) {
+    // single bitcoin address
+    case Helpers.isBitcoinAddress(destinations):
+      formatDest = Helpers.toArrayFormat(destinations);
+      break;
+    // single account index
+    case Helpers.isNumber(destinations) &&
+         (0 <= destinations) &&
+         MyWallet.wallet.isUpgradedToHD &&
+         (destinations < MyWallet.wallet.hdwallet.accounts.length):
+      var account = MyWallet.wallet.hdwallet.accounts[destinations];
+      formatDest   = Helpers.toArrayFormat(account.receiveAddress);
+      break;
+    // multiple bitcoin addresses
+    case Array.isArray(destinations) &&
+         destinations.length > 0 &&
+         destinations.every(Helpers.isBitcoinAddress):
+      formatDest = destinations;
+    default:
+      console.log("No destination set.")
+  } // fi switch
+  return function(payment) {
+    payment.to = formatDest;
+    return q(payment);
+  };
+};
+
+Payment.listener = function(listener) {
+  return function(payment) {
+    payment.listener = listener
+    return q(payment);
+  };
+};
+
+Payment.sweep = function(amount) {
+  return function(payment) {
+    payment.amounts = payment.sweepAmount ? [payment.sweepAmount] : undefined;
+    payment.forcedFee = payment.sweepFee;
+    return q(payment);
+  };
+};
+
+Payment.note = function(note) {
+  var publicNote = Helpers.isString(note) ? note : null;
+  return function(payment) {
+    payment.note = publicNote;
+    return q(payment);
+  };
+};
+
+Payment.fee = function(amount) {
+  var forcedFee = Helpers.isNumber(amount) ? amount : null;
+  return function(payment) {
+    payment.forcedFee = forcedFee;
+    return q(payment);
+  };
+};
+
+Payment.amount = function(amounts) {
+  var formatAmo = null;
+  switch (true) {
+    // single output
+    case Helpers.isNumber(amounts):
+      formatAmo = Helpers.toArrayFormat(amounts);
+      break;
+    // multiple outputs
+    case Array.isArray(amounts) &&
+         amounts.length > 0 &&
+         amounts.every(Helpers.isNumber):
+      formatAmo = amounts;
+    default:
+      console.log("No amounts set.")
+  } // fi switch
+  return function(payment) {
+    payment.amounts = formatAmo;
+    return q(payment);
+  };
+};
+
+Payment.from = function(origin) {
+  var addresses  = null;
+  var change     = null;
+  var pkFormat   = MyWallet.detectPrivateKeyFormat(origin);
+  var wifs       = []; // only used fromPrivateKey
+  var fromAccId  = null;
+
+  switch (true) {
+    // no origin => assume origin = all the legacy addresses (non - watchOnly)
+    case origin === null || origin === undefined || origin === '':
+      addresses = MyWallet.wallet.spendableActiveAddresses;
+      change    = addresses[0];
+      break;
+    // single bitcoin address
+    case Helpers.isBitcoinAddress(origin):
+      addresses = [origin];
+      change    = origin;
+      break;
+    // single account index
+    case Helpers.isNumber(origin) &&
+         (0 <= origin) &&
+         (origin < MyWallet.wallet.hdwallet.accounts.length):
+      var fromAccount = MyWallet.wallet.hdwallet.accounts[origin];
+      addresses = [fromAccount.extendedPublicKey];
+      change    = fromAccount.changeAddress;
+      fromAccId = origin;
+      break;
+    // multiple legacy addresses
+    case Array.isArray(origin) &&
+         origin.length > 0 &&
+         origin.every(Helpers.isBitcoinAddress):
+      addresses = origin;
+      change    = addresses[0];
+      break;
+    // from PrivateKey
+    case (pkFormat !== null):
+      var key    = MyWallet.privateKeyStringToKey(origin, pkFormat);
+      key.pub.compressed = false;
+      var addrUncomp = key.pub.getAddress().toString();
+      var uWIF = key.toWIF();
+      key.pub.compressed = true;
+      var addrComp = key.pub.getAddress().toString();
+      var cWIF = key.toWIF();
+      wifs      = [cWIF, uWIF];
+      addresses = [addrComp, addrUncomp];
+      change    = addrComp;
+      // 5Kb8kLf9zgWQnogidDA76MzPL6TsZZY36hWXMssSzNydYXYB9KF
+      // L53fCHmQhbNp1B4JipfBtfeHZH7cAibzG9oK19XfiFzxHgAkz6JK
+      break;
+    default:
+      console.log("No origin set.")
+  } // fi switch
+  return function(payment) {
+    var defer = q.defer();
+    payment.from           = addresses;
+    payment.change         = change;
+    payment.wifKeys        = wifs;
+    payment.fromAccountIdx = fromAccId;
+
+    getUnspentCoins(addresses).then(
+      function(coins) {
+        var sweep = computeSuggestedSweep(coins);
+        payment.sweepAmount = sweep[0];
+        payment.sweepFee    = sweep[1];
+        payment.coins       = coins;
+        defer.resolve(payment);
+      }
+    ).catch(
+      // this could fail for network issues or no-balance
+      function(error) {
+        console.log(error);
+        payment.sweepAmount = 0;
+        payment.sweepFee    = 0;
+        payment.coins       = [];
+        defer.resolve(payment);
+      }
+    );
+    return defer.promise;
+  };
+};
+
+Payment.build = function() {
+
+  return function(payment) {
+    try {
+      payment.transaction = new Transaction(payment.coins, payment.to,
+                                            payment.amounts, payment.forcedFee,
+                                            payment.change, payment.listener);
+    } catch (err) {
+      console.log("Error Building: " + err);
+    }
+    return q(payment);
+  };
+};
+
+Payment.buildbeta = function() {
+  // I should check for all the payment needed fields and reject with the wrong payment
+  // then the frontend can show the error and recreate the payment with the same state
+  return function(payment) {
+    var defer = q.defer();
+    try {
+      payment.transaction = new Transaction(payment.coins, payment.to,
+                                              payment.amounts, payment.forcedFee,
+                                              payment.change, payment.listener);
+      defer.resolve(payment);
+    } catch (e) {
+      defer.reject({"error": e, "payment": payment});
+    }
+    return defer.promise;
+  };
+};
+
+Payment.sign = function(password) {
+  return function(payment) {
+    function importWIF (WIF) {
+      MyWallet.wallet.importLegacyAddress(WIF, "Redeemed code.", password)
+        .then(function(A){A.archived = true;});
+    };
+    if (Array.isArray(payment.wifKeys)) payment.wifKeys.forEach(importWIF);
+    if (!payment.transaction) throw "You cannot sign a non-build transaction."
+    payment.transaction.addPrivateKeys(getPrivateKeys(password, payment));
+    payment.transaction.randomizeOutputs();
+    payment.transaction = payment.transaction.sign();
+    return q(payment);
+  };
+};
+
+Payment.publish = function() {
+  return function(payment) {
+    var defer = q.defer();
+
+    var success = function(tx_hash) {
+      console.log("published");
+      payment.txid = tx_hash;
+      defer.resolve(payment);
+    };
+    var error = function(e) {
+      defer.reject(e.message || e.responseText);
+    };
+
+    var getValue = function(coin) {return coin.value;};
+    var isSmall = function(value) {return value < 500000;};
+    var anySmall = payment.transaction.outs.map(getValue).some(isSmall);
+    if(anySmall && payment.note !== undefined && payment.note !== null)
+      {throw "There is an output too small to publish a note";}
+
+    BlockchainAPI.push_tx(payment.transaction, payment.note, success, error);
+    return defer.promise;
+  };
+};
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+module.exports = Payment;
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+// Helper functions
+
+//////////////////////////////////////////////////////////////////////////////
+// getUnspentCoins :: [address] -> Promise [coins]
+function getUnspentCoins(addressList) {
+  var defer = q.defer();
+  var processCoins = function (obj) {
+    var processCoin = function(utxo) {
+      var txBuffer = new Buffer(utxo.tx_hash, "hex");
+      Array.prototype.reverse.call(txBuffer);
+      utxo.hash = txBuffer.toString("hex");
+      utxo.index = utxo.tx_output_n;
+    };
+    obj.unspent_outputs.forEach(processCoin);
+    defer.resolve(obj.unspent_outputs);
+  }
+  var errorCoins = function(e) {
+    defer.reject(e.message || e.responseText);
+  }
+  BlockchainAPI.get_unspent(addressList, processCoins, errorCoins, 0, true);
+  return defer.promise;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// obtain private key for an address
+// from Address
+function getKeyForAddress(password, addr) {
+  var k = MyWallet.wallet.key(addr).priv;
+  var privateKeyBase58 = password == null ? k :
+    WalletCrypto.decryptSecretWithSecondPassword( k
+                                                , password
+                                                , MyWallet.wallet.sharedKey
+                                                , MyWallet.wallet.pbkdf2_iterations);
+  var format = MyWallet.detectPrivateKeyFormat(privateKeyBase58);
+  var key    = MyWallet.privateKeyStringToKey(privateKeyBase58, format);
+  if (MyWallet.getCompressedAddressString(key) === addr) {
+    key = new Bitcoin.ECKey(key.d, true);
+  }
+  else if (MyWallet.getUnCompressedAddressString(key) === addr) {
+    key = new Bitcoin.ECKey(key.d, false);
+  };
+  return key;
+}
+////////////////////////////////////////////////////////////////////////////////
+// getXPRIV :: password -> index -> xpriv
+function getXPRIV(password, accountIndex) {
+  var fromAccount = MyWallet.wallet.hdwallet.accounts[accountIndex];
+  var xpriv = fromAccount.extendedPrivateKey == null || password == null
+    ? fromAccount.extendedPrivateKey
+    : WalletCrypto.decryptSecretWithSecondPassword( fromAccount.extendedPrivateKey
+                                                  , password
+                                                  , MyWallet.wallet.sharedKey
+                                                  , MyWallet.wallet.pbkdf2_iterations);
+  return xpriv;
+};
+////////////////////////////////////////////////////////////////////////////////
+// getKeyForPath :: xpriv -> path -> [private key]
+function getKeyForPath(extendedPrivateKey, neededPrivateKeyPath) {
+  var keyring = new KeyRing(extendedPrivateKey);
+  return keyring.privateKeyFromPath(neededPrivateKeyPath);
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// getPrivateKeys :: password -> payment -> [private key]
+function getPrivateKeys(password, payment) {
+  var transaction = payment.transaction;
+  var privateKeys = [];
+  // if from Account
+  if (Helpers.isNumber(payment.fromAccountIdx)) {
+    var xpriv = getXPRIV(password, payment.fromAccountIdx);
+    privateKeys = transaction.pathsOfNeededPrivateKeys.map(getKeyForPath.bind(this, xpriv));
+  };
+  // if from Addresses
+  if (payment.from && payment.from.every(Helpers.isBitcoinAddress)) {
+    privateKeys = transaction.addressesOfNeededPrivateKeys.map(getKeyForAddress.bind(this, password));
+  };
+  return privateKeys;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// computeSuggestedSweep :: [coins] -> [maxSpendeableAmount - fee, fee]
+function computeSuggestedSweep(coins){
+  var getValue = function(coin) {return coin.value;};
+  var sortedCoinValues = coins.map(getValue).sort(function(a, b){return b-a});
+  var accumulatedValues = sortedCoinValues
+    .map(function(element,index,array){
+      var fee = Helpers.guessFee(index+1, 2, MyWallet.wallet.fee_per_kb);
+      return [array.slice(0,index+1).reduce(Helpers.add,0) - fee, fee];  //[total-fee, fee]
+    }).sort(function(a,b){return b[0]-a[0]});
+  // dont return negative max spendable
+  if (accumulatedValues[0][0] < 0) { accumulatedValues[0][0] = 0; }
+  return accumulatedValues[0];
+};
+
+
+// example of usage
+
+// 1PHHtxKAgbpwvK3JfwDT1Q5WbGmGrqm8gf
+// 1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN
+//
+//
+// var payment = new Blockchain.Payment();
+// payment
+//   .from("1PHHtxKAgbpwvK3JfwDT1Q5WbGmGrqm8gf")
+//   .from("1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN")
+//   .amount(10000)
+//   .to("1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF")
+//   .build()
+//   .sign("hola")
+//   .payment.then(function(p){console.log( "result: " +  JSON.stringify(p, null, 2));})
+//           .catch(function(e){console.log( "error: " + e);});
+
+//
+// var error = function(e) {console.log("error: " + e);}
+// var success = function(p) {console.log("final: "); console.log(p); return p;}
+// var op1Fail = function(p) {throw "I failed!!";}
+// var op2Good = function(p) {console.log("op"); console.log(p); p.op2 = true; return p;}
+// var op3Good = function(p) {console.log("op"); console.log(p);p.op3 = true; return p;}
+// var print   = function(p) {console.log("from: "+ p.from);}
+//
+// var payment = new Blockchain.Payment();
+// payment
+//   .from("1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN")
+//   .then(op2Good)
+//   .amount(10000)
+//   .sideEffect(print)
+//   .then(op3Good)
+//   .then(op1Fail)
+//   .then(success)
+//   .catch(error)
+//
+// var error        = function(e) {console.log("error: " + JSON.stringify(e, null, 2));}
+// var buildFailure = function(e) {console.log(e.error); return e.payment;}
+// var success      = function(p) {console.log("final: "); console.log(p); return p;}
+// var print        = function(p) {console.log("from: "+ p.from);}
+//
+// var payment = new Blockchain.Payment();
+// payment
+//   .from("1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN")
+//   // .amount(10000)
+//   .to("1PHHtxKAgbpwvK3JfwDT1Q5WbGmGrqm8gf")
+//   .sideEffect(print)
+//   .buildbeta()
+//   .catch(buildFailure)
+//   .then(success)
+//   .catch(error)

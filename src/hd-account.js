@@ -153,6 +153,14 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function() { return this._keyRing.change.getAddress(this._changeIndex);}
   },
+  "isEncrypted": {
+    configurable: false,
+    get: function() { return Helpers.isBase64(this._xpriv) && !Helpers.isXprivKey(this._xpriv);}
+  },
+  "isUnEncrypted": {
+    configurable: false,
+    get: function() { return Helpers.isXprivKey(this._xpriv);}
+  },
   "index": {
     configurable: false,
     get: function() { return this._index;}

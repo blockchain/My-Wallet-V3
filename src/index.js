@@ -22,6 +22,7 @@ module.exports = {
   WalletStore: require('./wallet-store'),
   WalletCrypto: require('./wallet-crypto'),
   Spender: require('./wallet-spender'),
+  Payment: require('./payment'),
   ImportExport: require('./import-export'),
   BlockchainAPI: require('./blockchain-api'),
   BlockchainSettingsAPI: require('./blockchain-settings-api'),
