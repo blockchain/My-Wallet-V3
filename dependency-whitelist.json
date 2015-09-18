@@ -95,6 +95,11 @@
     "commits" : ["fcd59034548508a2126b9a3cd1c7132288a7b04f"],
     "repo" : "tildeio/rsvp.js"
   },
+  "q" : {
+    "version" : "1.4.1",
+    "commits" : ["d373079d3620152e3d60e82f27265a09ee0e81bd"],
+    "repo" : "kriskowal/q"
+  },
   "pbkdf2" : {
     "version" : "3.0.4",
     "commits" : ["c9b595c784154e433995faf6cd81813aef29c713"],
