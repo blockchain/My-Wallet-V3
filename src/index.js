@@ -28,10 +28,7 @@ module.exports = {
   // only for debugging
   Helpers: require('./helpers'),
   API: require('./API'),
-  Lazy: require('./lazy'),
-  UTIL: require('util'),
-  S: require('./jaume'),
-  Spencer: require('./hask')
+  Lazy: require('./lazy')
   // Wallet: require('./blockchain-wallet'),
   // Address: require('./address'),
   // HDAccount: require('./hd-account'),
