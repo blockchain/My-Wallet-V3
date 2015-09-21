@@ -1607,6 +1607,24 @@ function nKeys(obj) {
   }
   return size;
 };
+
+// used on frontend
+MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error) {
+  var walletSuccess = function(guid, sharedKey, password) {
+    WalletStore.unsafeSetPassword(password);
+    MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password);
+    success({
+      guid: guid,
+      sharedKey: sharedKey,
+      password: password
+    });
+  };
+
+  WalletSignup.generateNewWallet(
+    inputedPassword, inputedEmail, null, walletSuccess, error
+  );
+};
+
 // used frontend and mywallet
 MyWallet.logout = function(force) {
   if (!force && WalletStore.isLogoutDisabled())
