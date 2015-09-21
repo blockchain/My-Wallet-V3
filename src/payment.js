@@ -188,6 +188,7 @@ Payment.amount = function(amounts) {
          amounts.length > 0 &&
          amounts.every(Helpers.isNumber):
       formatAmo = amounts;
+      break;
     default:
       console.log("No amounts set.")
   } // fi switch
