@@ -1613,11 +1613,13 @@ MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryM
   var walletSuccess = function(guid, sharedKey, password) {
     WalletStore.unsafeSetPassword(password);
     MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password);
-    success({
-      guid: guid,
-      sharedKey: sharedKey,
-      password: password
-    });
+    MyWallet.syncWallet(function() {
+      success({
+        guid: guid,
+        sharedKey: sharedKey,
+        password: password
+      });
+    }, error);
   };
 
   WalletSignup.generateNewWallet(
