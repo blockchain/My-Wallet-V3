@@ -286,6 +286,7 @@ Payment.build = function() {
       payment.transaction = new Transaction(payment.coins, payment.to,
                                             payment.amounts, payment.forcedFee,
                                             payment.change, payment.listener);
+      payment.fee = payment.transaction.fee;
     } catch (err) {
       console.log("Error Building: " + err);
     }
@@ -300,8 +301,9 @@ Payment.buildbeta = function() {
     var defer = q.defer();
     try {
       payment.transaction = new Transaction(payment.coins, payment.to,
-                                              payment.amounts, payment.forcedFee,
-                                              payment.change, payment.listener);
+                                            payment.amounts, payment.forcedFee,
+                                            payment.change, payment.listener);
+      payment.fee = payment.transaction.fee;
       defer.resolve(payment);
     } catch (e) {
       defer.reject({"error": e, "payment": payment});
