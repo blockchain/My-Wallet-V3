@@ -81,6 +81,10 @@ Helpers.memoize = function (f){
 Helpers.toArrayFormat = function (x) {
   return Array.isArray(x) ? x : [x];
 };
+
+Helpers.isEmptyArray = function (x) {
+  return Array.isArray(x) && x.length === 0;
+};
 // Return an async version of f that it will run after miliseconds
 // no matter how many times you call the new function, it will run only once
 Helpers.asyncOnce = function (f, milliseconds, before){
