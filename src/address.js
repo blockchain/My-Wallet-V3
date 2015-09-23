@@ -40,8 +40,8 @@ Object.defineProperties(Address.prototype, {
     configurable: false,
     get: function() { return this._label;},
     set: function(str) {
-      if(Helpers.isValidLabel(str)) {
-        this._label = str;
+      if(Helpers.isValidLabel(str) || str == null) {
+        this._label = str === ""? undefined : str;
         MyWallet.syncWallet();
       }
       else
