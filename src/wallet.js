@@ -965,6 +965,21 @@ MyWallet.getHistoryAndParseMultiAddressJSON = function(_success, _error) {
   }, _error, null, 0, 30);
 };
 
+MyWallet.getBalanceHistory = function(_success, _error) {
+  var success = function() {
+    _success && _success();
+  };
+
+  BlockchainAPI.mock_async_get_balance_history(function(data) {
+    // Do this here for now. If this gets more complicated,
+    // it should probably be moved to a new method
+    MyWallet.wallet.hdwallet.balanceHistory = data;
+    WalletStore.sendEvent('did_load_balance_history');
+
+    success && success();
+  }, _error);
+}
+
 // used once
 function checkWalletChecksum(payload_checksum, success, error) {
   var data = {method : 'wallet.aes.json', format : 'json', checksum : payload_checksum};
