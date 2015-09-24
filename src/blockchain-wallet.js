@@ -368,7 +368,7 @@ Wallet.prototype.toJSON = function(){
     tx_names          : this._tx_names,
     keys              : this.keys,
     paidTo            : this._paidTo,
-    hd_wallets        : this._hd_wallets
+    hd_wallets        : Helpers.isEmptyArray(this._hd_wallets) ? undefined : this._hd_wallets
   };
   return wallet;
 };
