@@ -6,6 +6,7 @@ var MyWallet      = require('./wallet');
 var WalletCrypto  = require('./wallet-crypto');
 var Transaction   = require('./transaction');
 var BlockchainAPI = require('./blockchain-api');
+var API           = require('./api');
 var Helpers       = require('./helpers');
 var KeyRing       = require('./keyring');
 
@@ -357,7 +358,7 @@ module.exports = Payment;
 //////////////////////////////////////////////////////////////////////////////
 // getUnspentCoins :: [address] -> Promise [coins]
 function getUnspentCoins(addressList) {
-  var defer = q.defer();
+
   var processCoins = function (obj) {
     var processCoin = function(utxo) {
       var txBuffer = new Buffer(utxo.tx_hash, "hex");
@@ -366,13 +367,10 @@ function getUnspentCoins(addressList) {
       utxo.index = utxo.tx_output_n;
     };
     obj.unspent_outputs.forEach(processCoin);
-    defer.resolve(obj.unspent_outputs);
+    return obj.unspent_outputs;
   }
-  var errorCoins = function(e) {
-    defer.reject(e.message || e.responseText);
-  }
-  BlockchainAPI.get_unspent(addressList, processCoins, errorCoins, 0, true);
-  return defer.promise;
+
+  return API.getUnspent(addressList, 0).then(processCoins);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -487,14 +485,16 @@ function computeSuggestedSweep(coins){
 // var buildFailure = function(e) {console.log(e.error); return e.payment;}
 // var success      = function(p) {console.log("final: "); console.log(p); return p;}
 // var print        = function(p) {console.log("from: "+ p.from);}
-//
+// //
 // var payment = new Blockchain.Payment();
 // payment
 //   .from("1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN")
-//   // .amount(10000)
+//   .amount(10000)
 //   .to("1PHHtxKAgbpwvK3JfwDT1Q5WbGmGrqm8gf")
 //   .sideEffect(print)
 //   .buildbeta()
 //   .catch(buildFailure)
+//   .sign("hola")
+//   .pusblih()
 //   .then(success)
 //   .catch(error)

@@ -2,12 +2,11 @@
 
 module.exports = new API();
 ////////////////////////////////////////////////////////////////////////////////
-var RSVP        = require('rsvp');
+var Q           = require('q')
 var assert      = require('assert');
 var Helpers     = require('./helpers');
 var WalletStore = require('./wallet-store');
 var CryptoJS    = require('crypto-js');
-// var $           = require('jquery');
 // var MyWallet = require('./wallet');
 ////////////////////////////////////////////////////////////////////////////////
 // API class
@@ -31,32 +30,47 @@ API.prototype.encodeFormData = function (data) {
 
 // request :: String -> String -> Object -> boolean -> Promise Response
 API.prototype.request = function(action, method, data, withCredentials, syncBool) {
+
   var self = this;
   var clientTime = (new Date()).getTime();
-  var defer = RSVP.defer();
-  data = data || {};
-  var baseData = {api_code : this.API_CODE};
-  var data = Helpers.merge(data, baseData);
+  var defer = Q.defer();
   var request = new XMLHttpRequest();
   var asyncBool = syncBool ? false : true;
-  request.open(action, this.ROOT_URL + method + '?'  + this.encodeFormData(data), asyncBool);
+  var isFormData = function (data){return data instanceof FormData};
+
+  var parseResponse = function (x) {return x;};
+  var handleResponse = function (x) {return x;};
+  var url = undefined;
+  var sendData = null;
+
+  if (isFormData(data)) {
+    url = this.ROOT_URL + method;
+    sendData = data;
+
+  } else {
+    url = this.ROOT_URL + method + '?'  + this.encodeFormData(data);
+    if(data.format === 'json') {parseResponse = function (x) {return JSON.parse(x);};}
+    handleResponse = function(a,b) { self.handleNTPResponse(a, b) };
+  }
+  request.open(action, url ,asyncBool);
+  if(sendData == null) request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
   request.withCredentials = withCredentials ? true : false;
-  request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
   request.onload = function (e) {
     if (request.readyState === 4) {
       if (request.status === 200) {
-        var response = data.format === 'json'? JSON.parse(request.responseText) : request.responseText;
-        self.handleNTPResponse(response, clientTime);
+        var response = parseResponse(request.responseText);
+        handleResponse(response, clientTime);
         defer.resolve(response);
       } else {
-        defer.reject(request.statusText);
+        defer.reject(request.responseText);
       }
     }
   };
   request.onerror = function (e) {
-      defer.reject(request.statusText);
+      defer.reject(request.responseText);
   };
-  request.send(null);
+  request.send(sendData);
   return defer.promise;
 };
 
@@ -98,6 +112,7 @@ API.prototype.getBalances = function(addresses){
       active : addresses.join('|')
     , simple: true
     , format: 'json'
+    , api_code : this.API_CODE
   };
   return this.retry(this.request.bind(this, "POST", "multiaddr", data));
 };
@@ -109,25 +124,22 @@ API.prototype.getFiatAtTime = function(time, value, currencyCode){
     , time: time
     , textual: false
     , nosavecurrency: true
+    , api_code : this.API_CODE
   };
   return this.retry(this.request.bind(this, "GET", "frombtc", data));
 };
 
 API.prototype.getTicker = function(){
-  var data = { format: 'json' };
+  var data = { format: 'json' , api_code : this.API_CODE};
   return this.retry(this.request.bind(this, "GET", "ticker", data));
-};
-
-API.prototype.getRejectionReason = function(hexhash){
-  var data = {format: 'plain'};
-  return this.retry(this.request.bind(this, "GET", "q/rejected/" + hexhash, data));
 };
 
 API.prototype.getUnspent = function(fromAddresses, confirmations){
   var data = {
       active : fromAddresses.join('|')
-    , confirmations : confirmations ? confirmations : 0
+    , confirmations : Helpers.isNumber(confirmations) ? confirmations : 0
     , format: 'json'
+    , api_code : this.API_CODE
   };
   return this.retry(this.request.bind(this, "POST", "unspent", data));
 };
@@ -147,6 +159,7 @@ API.prototype.getHistory = function (addresses, tx_filter, offset, n, syncBool) 
     , n : n
     , language : WalletStore.getLanguage()
     , no_buttons : true
+    , api_code : this.API_CODE
   };
 
   if (tx_filter !== undefined && tx_filter !== null) {
@@ -173,6 +186,7 @@ API.prototype.securePost = function (url, data){
                SKHashHex.substring(i, i+=4)+'-'+
                SKHashHex.substring(i, i+=4)+'-'+
                SKHashHex.substring(i, i+=12);
+  clone.api_code                  = this.API_CODE
   clone.sharedKey                 = tSKUID;
   clone.sKTimestamp               = timestamp;
   clone.sKDebugHexHash            = SKHashHex;
@@ -184,24 +198,32 @@ API.prototype.securePost = function (url, data){
   return this.retry(this.request.bind(this, "POST", url, clone, true));
 };
 
-// this one should be a method of wallet wrapper
-// API.prototype.checkWalletChecksum = function (payloadChecksum) {
+API.prototype.pushTx = function (tx, note){
+  assert(tx, "transaction required");
 
-//   var data = {
-//       method : 'wallet.aes.json'
-//     , format : 'json'
-//     , checksum : payloadChecksum
-//     , sharedKey : MyWallet.wallet.sharedKey
-//     , guid : MyWallet.wallet.guid
-//   };
-//   return this.securePost("wallet", data);
-// };
+  var txHex = tx.toHex();
+  var tx_hash = tx.getId();
+  var buffer = tx.toBuffer();
 
-// things to do:
-// - create a method in blockchain-wallet that ask for the balances and updates the balance wallet
-      //     success: function(obj) {
-      //       for (var key in obj) {
-      //         if (MyWallet.wallet.containsLegacyAddress(key))
-      //           MyWallet.wallet.key(key).balance = obj[key].final_balance;
-      //       }
+  var int8_array = new Int8Array(buffer);
+  int8_array.set(buffer);
+  var blob = new Blob([buffer], {type : 'application/octet-stream'});
+  if (blob.size != txHex.length/2)
+    throw 'Inconsistent Data Sizes (blob : ' + blob.size + ' s : ' + txHex.length/2 + ' buffer : ' + buffer.byteLength + ')';
+  var fd = new FormData();
 
+  fd.append('txbytes', blob);
+  if (note) { fd.append('note', note); }
+  fd.append('format', 'plain');
+  fd.append('hash', tx_hash);
+  fd.append('api_code', WalletStore.getAPICode());
+
+  var responseTXHASH = function (responseText) {
+    if (responseText.indexOf("Transaction Submitted") > -1)
+      { return tx_hash;}
+    else
+      { return responseText;}
+  }
+
+  return this.retry(this.request.bind(this, "POST", "pushtx", fd)).then(responseTXHASH);
+};
