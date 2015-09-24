@@ -136,6 +136,7 @@ Payment.to = function(destinations) {
          destinations.length > 0 &&
          destinations.every(Helpers.isBitcoinAddress):
       formatDest = destinations;
+      break;
     default:
       console.log("No destination set.")
   } // fi switch
