@@ -1699,7 +1699,7 @@ function buffertoByteArray(value) {
   return BigInteger.fromBuffer(value).toByteArray();
 }
 // should be a helper
-// used locally and wallet-spender.js
+// used locally and payment.js
 MyWallet.privateKeyStringToKey = function(value, format) {
   var key_bytes = null;
 

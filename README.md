@@ -46,7 +46,7 @@ Optional: set alias for modules you use
 ```javascript
 var MyWallet = Blockchain.MyWallet;
 var WalletStore = Blockchain.WalletStore;
-var Spender = Blockchain.Spender;
+var Payment = Blockchain.Payment;
 var BlockchainAPI = Blockchain.BlockchainAPI;
 ```
 
@@ -92,7 +92,7 @@ var guid = "my-wallet-guid-1234-bcde";
 var pass = "wallet-password";
 var twoFactorCode = null;
 
-MyWallet.fetchWalletJSON(guid, null, null, pass, twoFactorCode, 
+MyWallet.fetchWalletJSON(guid, null, null, pass, twoFactorCode,
     successFun, need2FAfun, wrong2FAfun, otherErrorFun);
 
 // Do stuff with the wallet
