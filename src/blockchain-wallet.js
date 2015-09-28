@@ -590,11 +590,13 @@ Wallet.prototype.changePbkdf2Iterations = function(newIterations, password){
   if (newIterations !== this._pbkdf2_iterations) {
     if (this.isDoubleEncrypted) {
       this.decrypt(password);
-      this._pbkdf2_iterations = newIterations;
+      this._pbkdf2_iterations = newIterations;         // sec pass iterations
+      WalletStore.setPbkdf2Iterations(newIterations);  // main pass iterations
       this.encrypt(password);
     }
     else { // no double encrypted wallet
-      this._pbkdf2_iterations = newIterations;
+      this._pbkdf2_iterations = newIterations;        // sec pass iterations
+      WalletStore.setPbkdf2Iterations(newIterations); // main pass iterations
       MyWallet.syncWallet();
     };
   };

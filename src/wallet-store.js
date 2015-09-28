@@ -83,15 +83,18 @@ var WalletStore = (function() {
   var serverTimeOffset = 0; //Difference between server and client time
   var numOldTxsToFetchAtATime = 10;
   var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
+  var pbkdf2_iterations = 5000; // pbkdf2_interations of the main password (to encrypt the full payload)
 
   ////////////////////////////////////////////////////////////////////////////
   return {
     setPbkdf2Iterations: function(iterations) {
-      MyWallet.wallet._pbkdf2_iterations = iterations;
+      // MyWallet.wallet._pbkdf2_iterations = iterations;
+      pbkdf2_iterations = iterations;
       return;
     },
     getPbkdf2Iterations: function() {
-      return MyWallet.wallet.pbkdf2_iterations;
+      return pbkdf2_iterations;
+      // return MyWallet.wallet.pbkdf2_iterations;
     },
     getLanguage: function() {
       return language;
