@@ -79,6 +79,7 @@ function Wallet(object) {
   this._totalReceived = 0;
   this._finalBalance  = 0;
   this._numberTx      = 0;
+  this._numberTxLegacyAddresses = 0;
   this._txPerScroll   = 10;
 }
 
@@ -158,6 +159,16 @@ Object.defineProperties(Wallet.prototype, {
         this._numberTx = value;
       else
         throw 'Error: wallet.numberTx must be a number';
+    }
+  },
+  "numberTxLegacyAddresses": {
+    configurable: false,
+    get: function() { return this._numberTxLegacyAddresses;},
+    set: function(value) {
+      if(Helpers.isNumber(value))
+        this._numberTx = value;
+      else
+        throw 'Error: wallet.numberTxLegacyAddresses must be a number';
     }
   },
   "txPerScroll": {
@@ -387,7 +398,7 @@ Wallet.prototype.importLegacyAddress = function(addr, label, secPass, bipPass){
     this._addresses[ad.address] = ad;
     defer.resolve(ad);
     MyWallet.syncWallet();
-    MyWallet.get_history();
+    this.getHistory();
   }).bind(this)
 
   // if read only address
@@ -555,7 +566,7 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
     } else{
       accountIndex++;
       account = self.newAccount("Account " + accountIndex.toString(), pw, 0);
-      return isAccountNU(account).then(go);
+      return isAccountNonUsed(account).then(go);
     };
   };
 
@@ -606,15 +617,7 @@ Wallet.prototype.newHDWallet = function(firstAccountLabel, pw, success, error){
   this._hd_wallets.push(newHDwallet);
   var label = firstAccountLabel ? firstAccountLabel : "My Bitcoin Wallet";
   var account = this.newAccount(label, pw, this._hd_wallets.length-1, true);
-  // function proceed(nonused) {
-  //   console.log("is account nonused: " + nonused);
-  //   if (!nonused) {
-  //     error && error();
-  //   };
-  // };
-  // isAccountNonUsed(account, proceed, error);
   MyWallet.syncWallet(success, error);
-  // typeof(success) === 'function' && success();
   return newHDwallet;
 };
 

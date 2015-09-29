@@ -72,7 +72,6 @@ var WalletStore = (function() {
   var sharedcoin_endpoint; //The URL to the sharedcoin node
   var sharedKey; //Shared key used to prove that the wallet has succesfully been decrypted, meaning you can't overwrite a wallet backup even if you have the guid
   var isPolling = false;
-  var legacyAddressesNumTxFetched = 0;
   var isRestoringWallet = false;
   var counter = 0;
   var logout_timeout; //setTimeout return value for the automatic logout
@@ -195,12 +194,6 @@ var WalletStore = (function() {
     },
     setIsPolling: function (bool) {
       isPolling = bool;
-    },
-    getLegacyAddressesNumTxFetched: function(){
-      return legacyAddressesNumTxFetched;
-    },
-    addLegacyAddressesNumTxFetched: function (number){
-      legacyAddressesNumTxFetched += number;
     },
     isRestoringWallet: function() {
       return isRestoringWallet;

@@ -55,6 +55,7 @@ API.prototype.request = function(action, method, data, withCredentials, syncBool
   request.open(action, url ,asyncBool);
   if(sendData == null) request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
   request.withCredentials = withCredentials ? true : false;
+  request.timeout = this.AJAX_TIMEOUT;
 
   request.onload = function (e) {
     if (request.readyState === 4) {
@@ -68,7 +69,10 @@ API.prototype.request = function(action, method, data, withCredentials, syncBool
     }
   };
   request.onerror = function (e) {
-      defer.reject(request.responseText);
+    defer.reject(request.responseText);
+  };
+  request.ontimeout = function() {
+    defer.reject("timeout request");
   };
   request.send(sendData);
   return defer.promise;
@@ -227,3 +231,38 @@ API.prototype.pushTx = function (tx, note){
 
   return this.retry(this.request.bind(this, "POST", "pushtx", fd)).then(responseTXHASH);
 };
+
+// OLD FUNCTIONS COPIED: Must rewrite this ones (email ,sms)
+// function sendViaEmail(email, tx, privateKey, successCallback, errorCallback) {
+//   try {
+//     MyWallet.securePost('send-via', {
+//       type : 'email',
+//       to : email,
+//       priv : privateKey,
+//       hash : tx.getHash().toString('hex')
+//     }, function(data) {
+//       successCallback(data);
+//     }, function(data) {
+//       errorCallback(data ? data.responseText : null);
+//     });
+//   } catch (e) {
+//     errorCallback(e);
+//   }
+// };
+//
+// function sendViaSMS(number, tx, privateKey, successCallback, errorCallback) {
+//   try {
+//     MyWallet.securePost('send-via', {
+//       type : 'sms',
+//       to : number,
+//       priv : privateKey,
+//       hash : tx.getHash().toString('hex')
+//     }, function() {
+//       successCallback();
+//     }, function(data) {
+//       errorCallback(data ? data.responseText : null);
+//     });
+//   } catch (e) {
+//     errorCallback(e);
+//   }
+// };

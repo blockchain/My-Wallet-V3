@@ -294,7 +294,7 @@ function wsSuccess(ws) {
       }
 
       if (tx_processed.to.legacyAddresses || tx_processed.from.legacyAddresses){
-        MyWallet.get_history();
+        MyWallet.wallet.getHistory();
       };
 
       MyWallet.wallet.numberTx += 1;
@@ -695,15 +695,16 @@ MyWallet.getBalanceForRedeemCode = function(privatekey, successCallback, errorCa
   var from_address_compressed = MyWallet.getCompressedAddressString(privateKeyToSweep);
   var from_address_uncompressed = MyWallet.getUnCompressedAddressString(privateKeyToSweep);
 
+  function totalBalance (data) {
+    return Object.keys(data)
+                 .map(function(a){ return data[a].final_balance;})
+                 .reduce(Helpers.add, 0);
+  };
 
-  BlockchainAPI.get_balance([from_address_compressed, from_address_uncompressed], function(value) {
-    if (successCallback)
-      successCallback(value);
-  }, function() {
-    WalletStore.sendEvent("msg", {type: "error", message: 'Error Getting Address Balance'});
-    if (errorCallback)
-      errorCallback();
-  });
+  API.getBalances([from_address_compressed, from_address_uncompressed])
+    .then(totalBalance)
+    .then(successCallback)
+    .catch(errorCallback);
 };
 
 /**
@@ -730,42 +731,25 @@ MyWallet.getBalanceForRedeemCode = function(privatekey, successCallback, errorCa
  // used on the frontend
 MyWallet.fetchMoreTransactionsForLegacyAddresses = function(success, error, didFetchOldestTransaction) {
   console.log("deprecated use of MyWallet.fetchMoreTransactionsForLegacyAddresses");
-
-
-  function getRawTransactionsForLegacyAddresses(txOffset, numTx, success, error) {
+  function getRawTransactionsForLegacyAddresses(txOffset, numTx) {
     var allAddresses = MyWallet.wallet.activeAddresses;
-
-    BlockchainAPI.async_get_history_with_addresses(allAddresses, function(data) {
-      if (success) success(data.txs);
-    }, function() {
-      if (error) error();
-
-    }, null, txOffset, numTx);
+    return API.getHistory(allAddresses, 0, 0, 30);
   }
+  var rawTxPromise = getRawTransactionsForLegacyAddresses(
+                  MyWallet.wallet.numberTxLegacyAddresses
+                , MyWallet.wallet.txPerScroll
+  );
 
-  getRawTransactionsForLegacyAddresses(WalletStore.getLegacyAddressesNumTxFetched(), MyWallet.wallet.txPerScroll, function(data) {
-    var processedTransactions = [];
+  function process (data) {
+    var pTx = data.txs.map(MyWallet.processTransaction.compose(TransactionFromJSON));
+    MyWallet.wallet.numberTxLegacyAddresses += pTx.length;
+    if (pTx.length < MyWallet.wallet.txPerScroll) { didFetchOldestTransaction(); }
+    console.log(pTx);
+    success && success(pTx);
+  };
 
-    for (var i in data) {
-      var tx = data[i];
-
-      var tx = TransactionFromJSON(data[i]);
-
-      var transaction = MyWallet.processTransaction(tx);
-      processedTransactions.push(transaction);
-    }
-
-    WalletStore.addLegacyAddressesNumTxFetched(processedTransactions.length);
-
-    if (processedTransactions.length < MyWallet.wallet.txPerScroll) {
-      didFetchOldestTransaction();
-    }
-
-    success(processedTransactions);
-
-  }, function(e) {
-    console.log('error ' + e);
-  });
+  function printError (e) { console.log('error ' + e); };
+  rawTxPromise.then(process).catch(printError);
 };
 
 /**
@@ -823,15 +807,6 @@ MyWallet.isValidPrivateKey = function(candidate) {
   } catch (e) {
     return false;
   }
-};
-
-// only used to restore wallet in a sync way: need to write better that method
-MyWallet.get_history_with_addresses = function(addresses, success, error) {
-  BlockchainAPI.get_history_with_addresses(addresses, function(data) {
-    if (success) success(data);
-  }, function() {
-    if (error) error();
-  }, null, 0, 30);
 };
 
 // used on myWallet and iOS
@@ -904,7 +879,7 @@ MyWallet.getWallet = function(success, error) {
     WalletStore.setEncryptedWalletData(obj.payload);
 
     decryptAndInitializeWallet(function() {
-      MyWallet.get_history();
+      MyWallet.wallet.getHistory();
 
       if (success) success();
     }, function() {

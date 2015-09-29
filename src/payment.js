@@ -347,7 +347,7 @@ Payment.publish = function() {
     if(anySmall && payment.note !== undefined && payment.note !== null)
       {throw "There is an output too small to publish a note";}
 
-    BlockchainAPI.push_tx(payment.transaction, payment.note, success, error);
+    API.pushTx(payment.transaction, payment.note).then(success).catch(error);
     return defer.promise;
   };
 };
@@ -488,16 +488,15 @@ function computeSuggestedSweep(coins){
 // var buildFailure = function(e) {console.log(e.error); return e.payment;}
 // var success      = function(p) {console.log("final: "); console.log(p); return p;}
 // var print        = function(p) {console.log("from: "+ p.from);}
-// //
-// var payment = new Blockchain.Payment();
+// // //
+// // var payment = new Blockchain.Payment();
 // payment
-//   .from("1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN")
-//   .amount(10000)
-//   .to("1PHHtxKAgbpwvK3JfwDT1Q5WbGmGrqm8gf")
-//   .sideEffect(print)
+//   .from("BB73jBjqxgGbVE9TswUcr4jdfx8PLrEhfsH4FTS5Xwj9")
+//   .sweep()
+//   .to("13kFBeNZMptwvP9LXEvRdG5W5WWPhc6eaG")
 //   .buildbeta()
 //   .catch(buildFailure)
-//   .sign("hola")
+//   .sign()
 //   .pusblih()
 //   .then(success)
 //   .catch(error)
