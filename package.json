@@ -42,6 +42,7 @@
     "xregexp": "2.0.*"
   },
   "devDependencies": {
+    "q": "^1.4.1",
     "browserify": "~8.1.1",
     "browserify-istanbul": "^0.2.1",
     "bs58check": "^1.0.5",
