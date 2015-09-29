@@ -72,7 +72,6 @@ var WalletStore = (function() {
   var sharedcoin_endpoint; //The URL to the sharedcoin node
   var sharedKey; //Shared key used to prove that the wallet has succesfully been decrypted, meaning you can't overwrite a wallet backup even if you have the guid
   var isPolling = false;
-  var legacyAddressesNumTxFetched = 0;
   var isRestoringWallet = false;
   var counter = 0;
   var logout_timeout; //setTimeout return value for the automatic logout
@@ -81,20 +80,16 @@ var WalletStore = (function() {
   var isSynchronizedWithServer = true;
   var haveSetServerTime = false; //Whether or not we have synced with server time
   var serverTimeOffset = 0; //Difference between server and client time
-  var numOldTxsToFetchAtATime = 10;
   var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
-  var pbkdf2_iterations = 5000; // pbkdf2_interations of the main password (to encrypt the full payload)
 
   ////////////////////////////////////////////////////////////////////////////
   return {
     setPbkdf2Iterations: function(iterations) {
-      // MyWallet.wallet._pbkdf2_iterations = iterations;
-      pbkdf2_iterations = iterations;
+      MyWallet.wallet._pbkdf2_iterations = iterations;
       return;
     },
     getPbkdf2Iterations: function() {
-      return pbkdf2_iterations;
-      // return MyWallet.wallet.pbkdf2_iterations;
+      return MyWallet.wallet.pbkdf2_iterations;
     },
     getLanguage: function() {
       return language;
@@ -200,12 +195,6 @@ var WalletStore = (function() {
     setIsPolling: function (bool) {
       isPolling = bool;
     },
-    getLegacyAddressesNumTxFetched: function(){
-      return legacyAddressesNumTxFetched;
-    },
-    addLegacyAddressesNumTxFetched: function (number){
-      legacyAddressesNumTxFetched += number;
-    },
     isRestoringWallet: function() {
       return isRestoringWallet;
     },
@@ -255,9 +244,6 @@ var WalletStore = (function() {
     },
     setServerTimeOffset: function (offset){
       serverTimeOffset = offset;
-    },
-    getNumOldTxsToFetchAtATime: function (){
-      return numOldTxsToFetchAtATime;
     },
     addEventListener: function(func){
       event_listeners.push(func);

@@ -18,7 +18,9 @@ describe "Address", ->
   beforeEach ->
     a = new Address(object)
     spyOn(MyWallet, "syncWallet")
-    spyOn(MyWallet, "get_history")
+    MyWallet.wallet = {}
+    MyWallet.wallet.getHistory = () ->
+    spyOn(MyWallet.wallet, "getHistory")
 
   describe "Constructor", ->
 
@@ -53,6 +55,7 @@ describe "Address", ->
       expect(a.archived).not.toBeTruthy()
       expect(a.active).toBeTruthy()
       expect(MyWallet.syncWallet).toHaveBeenCalled()
+      expect(MyWallet.wallet.getHistory).toHaveBeenCalled()
 
     it "archived should throw exception if is non-boolean set", ->
       wrongSet = () -> a.archived = "failure"

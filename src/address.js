@@ -91,7 +91,7 @@ Object.defineProperties(Address.prototype, {
           this._tag = 2;
         } else { // Unarchive:
           this._tag = 0;
-          MyWallet.get_history();
+          MyWallet.wallet.getHistory();
         }
         MyWallet.syncWallet();
       }
