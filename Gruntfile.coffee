@@ -70,7 +70,7 @@ module.exports = (grunt) ->
         #'src/sharedcoin.js'
         'src/transaction.js'
         'src/wallet-signup.js'
-        'src/wallet-spender.js'
+        'src/payment.js'
         #'src/wallet.js'
       ]
       options:

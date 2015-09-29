@@ -21,15 +21,13 @@ module.exports = {
   MyWallet: require('./wallet'),
   WalletStore: require('./wallet-store'),
   WalletCrypto: require('./wallet-crypto'),
-  Spender: require('./wallet-spender'),
   Payment: require('./payment'),
   ImportExport: require('./import-export'),
   BlockchainAPI: require('./blockchain-api'),
   BlockchainSettingsAPI: require('./blockchain-settings-api'),
   // only for debugging
   Helpers: require('./helpers'),
-  API: require('./API'),
-  Lazy: require('./lazy')
+  API: require('./api')
   // Wallet: require('./blockchain-wallet'),
   // Address: require('./address'),
   // HDAccount: require('./hd-account'),
