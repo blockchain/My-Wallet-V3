@@ -21,7 +21,7 @@ var Address = require('./address');
 var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 var ImportExport = require('./import-export');
-var API = require('./API');
+var API = require('./api');
 
 ////////////////////////////////////////////////////////////////////////////////
 // Wallet

@@ -23,7 +23,7 @@ var Transaction = require('./transaction');
 var BlockchainAPI = require('./blockchain-api');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
-var API = require('./API');
+var API = require('./api');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
