@@ -10,6 +10,8 @@ var APP_NAME = 'javascript_web';
 var IMPORTED_APP_NAME = 'external'; //Need some way to set this dynamically
 var IMPORTED_APP_VERSION = '0';
 
+function myprint (x) {console.log(x);};
+
 function setLocalSymbol(new_symbol) {
   if (!new_symbol) return;
 

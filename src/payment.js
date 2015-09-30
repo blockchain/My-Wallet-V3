@@ -119,24 +119,30 @@ Payment.sideEffect = function(myFunction) {
 
 Payment.to = function(destinations) {
   var formatDest = null;
+  var isValidIndex = function(i) {
+    return Helpers.isNumber(i) && (0 <= i) && MyWallet.wallet.isUpgradedToHD && (i < MyWallet.wallet.hdwallet.accounts.length);
+  };
+  var accountToAddress = function (i) {
+    if (Helpers.isNumber(i)) {
+      return MyWallet.wallet.hdwallet.accounts[i].receiveAddress;}
+    else {
+      return i;}
+  };
   switch (true) {
     // single bitcoin address
     case Helpers.isBitcoinAddress(destinations):
       formatDest = Helpers.toArrayFormat(destinations);
       break;
     // single account index
-    case Helpers.isNumber(destinations) &&
-         (0 <= destinations) &&
-         MyWallet.wallet.isUpgradedToHD &&
-         (destinations < MyWallet.wallet.hdwallet.accounts.length):
-      var account = MyWallet.wallet.hdwallet.accounts[destinations];
-      formatDest   = Helpers.toArrayFormat(account.receiveAddress);
+    case isValidIndex(destinations):
+      formatDest = Helpers.toArrayFormat(accountToAddress(destinations));
       break;
-    // multiple bitcoin addresses
+    // multiple bitcoin addresses or accounts
     case Array.isArray(destinations) &&
          destinations.length > 0 &&
-         destinations.every(Helpers.isBitcoinAddress):
-      formatDest = destinations;
+         destinations.every(Helpers.o(Helpers.isBitcoinAddress, isValidIndex)):
+      formatDest = destinations.map(accountToAddress);
+      break;
     default:
       console.log("No destination set.")
   } // fi switch
@@ -487,16 +493,17 @@ function computeSuggestedSweep(coins){
 // var error        = function(e) {console.log("error: " + JSON.stringify(e, null, 2));}
 // var buildFailure = function(e) {console.log(e.error); return e.payment;}
 // var success      = function(p) {console.log("final: "); console.log(p); return p;}
-// var print        = function(p) {console.log("from: "+ p.from);}
-// // //
-// // var payment = new Blockchain.Payment();
+// var print        = function(p) {console.log("promise: "); console.log(p);}
+//
+// var payment = new Blockchain.Payment();
 // payment
-//   .from("BB73jBjqxgGbVE9TswUcr4jdfx8PLrEhfsH4FTS5Xwj9")
-//   .sweep()
-//   .to("13kFBeNZMptwvP9LXEvRdG5W5WWPhc6eaG")
+//   .from(1)
+//   .amount([10000,20000,30000])
+//   .to(["13kFBeNZMptwvP9LXEvRdG5W5WWPhc6eaG", 0, 2])
+//   .sideEffect(print)
 //   .buildbeta()
 //   .catch(buildFailure)
 //   .sign()
-//   .pusblih()
+//   .publish()
 //   .then(success)
 //   .catch(error)
