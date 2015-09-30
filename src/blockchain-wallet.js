@@ -244,8 +244,9 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function() {
       return this.activeKeys
-               .map(function(k){return k.balance;})
-                 .reduce(Helpers.add, 0);
+                .filter(function(k){return !k.isWatchOnly;})
+                .map(function(k){return k.balance;})
+                .reduce(Helpers.add, 0);
     }
   },
   "balanceSpendableActiveLegacy":{
