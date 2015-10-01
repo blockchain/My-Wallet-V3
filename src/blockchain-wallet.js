@@ -244,18 +244,17 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function() {
       return this.activeKeys
-                .filter(function(k){return !k.isWatchOnly;})
-                .map(function(k){return k.balance;})
-                .reduce(Helpers.add, 0);
+                 .map(function(k){return k.balance;})
+                 .reduce(Helpers.add, 0);
     }
   },
   "balanceSpendableActiveLegacy":{
     configurable: false,
     get: function() {
       return this.activeKeys
-               .filter(function(k){return !k.isWatchOnly;})
+                 .filter(function(k){return !k.isWatchOnly;})
                  .map(function(k){return k.balance;})
-                   .reduce(Helpers.add, 0);
+                 .reduce(Helpers.add, 0);
     }
   },
   "addressBook":{
