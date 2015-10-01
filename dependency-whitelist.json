@@ -61,8 +61,8 @@
     "repo" : "walling/unorm"
   },
   "create-hash" : {
-    "version" : "1.1.1",
-    "commits" : ["45accafa2a45c4efa256b3d3e0645e3fa50bffd4"],
+    "version" : "1.1.2",
+    "commits" : ["426cefe8cae9feddda5af336d34e1d83bed13579"],
     "repo" : "crypto-browserify/createHash"
   },
   "ripemd160" : {
@@ -76,8 +76,8 @@
     "repo" : "crypto-browserify/sha.js"
   },
   "create-hmac" : {
-    "version" : "1.1.3",
-    "commits" : ["0db078774769487d9ede6951a56c4cffe3de1c14"],
+    "version" : "1.1.4",
+    "commits" : ["3c7dd3047b5ab3e3be44d802241d224f0c9e2325"],
     "repo" : "crypto-browserify/createHmac"
   },
   "randombytes" : {
