@@ -279,12 +279,12 @@ function sendViaSMS(number, tx, privateKey, successCallback, errorCallback) {
 function getFiatAtTime(time, value, currencyCode, successCallback, errorCallback) {
   $.ajax({
     type: "GET",
-    dataType: 'json',
+    dataType: 'text',
     url: getRootURL() +'frombtc',
     data: {value : value, currency: currencyCode, time: time, textual: false, nosavecurrency: true, api_code : WalletStore.getAPICode()},
     timeout: AJAX_TIMEOUT,
     success: function(data) {
-      successCallback(data);
+      successCallback(parseFloat(data.replace(/,/g, '')));
     },
     error : function(e) {
       errorCallback(e);
