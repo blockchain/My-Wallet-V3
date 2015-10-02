@@ -193,7 +193,7 @@ describe "Transaction", ->
             'legacyAddresses': null
             'externalAddresses': null
           'to':
-            'account': null
+            'accounts': []
             'legacyAddresses': null
             'externalAddresses': [
               'address': '1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg'
@@ -304,7 +304,7 @@ describe "Transaction", ->
               'legacyAddresses': null
               'externalAddresses': null
             'to':
-              'account': null
+              'accounts': []
               'legacyAddresses': null
               'externalAddresses':
                 'addressWithLargestOutput': '1FeerpCgswvGRLVKme759C96DUBtf7SvA2'
@@ -381,7 +381,7 @@ describe "Transaction", ->
             'legacyAddresses': null
             'externalAddresses': null
           'to':
-            'account': null
+            'accounts': []
             'legacyAddresses': null
             'externalAddresses': [
               'address': '1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg'
@@ -535,7 +535,7 @@ describe "Transaction", ->
                 }
             },
             "to": {
-                "account": null,
+                "accounts": [],
                 "legacyAddresses": null,
                 "externalAddresses": [{
                     "address": "1PZ5GCtYQesYMKEQMtkRQcutLXpkMCWCTM",
@@ -633,9 +633,12 @@ describe "Transaction", ->
               'addressWithLargestOutput': '1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg'
               'amount': 100000
           'to':
-            'account':
-              'index': 2
-              'amount': 100000
+            'accounts': [
+              {
+                'index': 2
+                'amount': 100000
+              }
+            ]
             'legacyAddresses': null
             'externalAddresses': null
             'email': null
@@ -660,6 +663,7 @@ describe "Transaction", ->
         expect(MyWallet.processTransaction(tx).to).toEqual(transaction.to)
 
       it "should have the correct amount", ->
+        console.log("Start test...")
         expect(MyWallet.processTransaction(tx).result).toEqual(transaction.result)
 
       it "should not be intra wallet", ->
@@ -741,9 +745,12 @@ describe "Transaction", ->
             'legacyAddresses': null
             'externalAddresses': null
           'to':
-            'account':
-              'index': 1
-              'amount': 100000
+            'accounts': [
+              {
+                'index': 1
+                'amount': 100000
+              }
+            ]
             'legacyAddresses': null
             'externalAddresses': null
             'email': null
@@ -766,6 +773,132 @@ describe "Transaction", ->
         expect(MyWallet.processTransaction(tx).from).toEqual(transaction.from)
 
       it "should recognize to account", ->
+        expect(MyWallet.processTransaction(tx).to).toEqual(transaction.to)
+
+      it "should have the correct amount", ->
+        expect(MyWallet.processTransaction(tx).result).toEqual(transaction.result)
+
+      it "should be intra wallet", ->
+       result = MyWallet.processTransaction(tx)
+       expect(result.intraWallet).toBe(true)
+
+    describe "from one account to two accounts", ->
+      tx = undefined
+      transaction = undefined
+      beforeEach ->
+        tx =
+          'hash': 'eb70c6df08de770782b351c84fb2a96ea100d37ff8edcad579c32c52213c26f7'
+          'size': 225
+          'txIndex': 72943968
+          'time': 1419596460
+          'inputs': [ {
+            'sequence': 4294967295
+            'prev_out':
+              'spent': true
+              'tx_index': 71279770
+              'type': 0
+              'addr': '1446x39AsPNKeGMKJfLFfboy7TynPNXMwe'
+              'value': 250000
+              'xpub':
+                'path': 'M/0/0'
+                'm': 'xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpN\
+                      sQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5'
+              'n': 0
+            'script': ''
+          } ]
+          'out': [
+            {
+              'spent': false
+              'tx_index': 72943968
+              'type': 0
+              'addr': '1MAd443Q6iLPHbyRmiTsqSdRgohiqCg6GL'
+              'value': 50000
+              'xpub':
+                'path': 'M/0/0'
+                'm': 'xpub6DWoQTdpQcaSm4q9pj9A5EZdCs3NcmM5x8aRoi3VAGXJUCkJhmREW\
+                      MCaAahs9nhMq7RnseKBV4uwkqCP8g43sEnMXRfFes2BxGagJqZfS5A'
+              'n': 0
+              'script': ''
+            }
+            {
+              'spent': false
+              'tx_index': 72943968
+              'type': 0
+              'addr': '1MAd443Q6iLPHbyRmiTsqSdRgohiqCg6GL'
+              'value': 50000
+              'xpub':
+                'path': 'M/0/0'
+                'm': 'xpub6DHN1xpggNEUbWgGJyMPRFGvYm6pizUnv4TQMAtgYBikkh75dyp9G\
+                      f9QcKETpWZkLjtB4zYr2eVaHQ4g3rhj46Aeu4FykMWSayrqmRmEMEZ'
+              'n': 0
+              'script': ''
+            }
+            {
+              'spent': true
+              'tx_index': 72943968
+              'type': 0
+              'addr': '1MaCbDwkC74tiEDSnchASxiAARHh94CVSG'
+              'value': 140000
+              'xpub':
+                'path': 'M/1/0'
+                'm': 'xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpN\
+                      sQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5'
+              'n': 1
+              'script': '76a914e1a9ead4802fa084d8c8de33c0acd0238fced51888ac'
+            }
+
+          ]
+          'result': -10000
+          'blockHeight': 335980
+          'balance': 1853945
+          'account_indexes': [
+            0
+            1
+            0
+          ]
+          'confirmations': 27
+
+        transaction =
+          'from':
+            'account':
+              'index': 0
+              'amount': 110000
+            'legacyAddresses': null
+            'externalAddresses': null
+          'to':
+            'accounts': [
+              {
+                'index': 1
+                'amount': 50000
+              },
+              {
+                'index': 2
+                'amount': 50000
+              },
+            ]
+
+            'legacyAddresses': null
+            'externalAddresses': null
+            'email': null
+            'mobile': null
+          'fee': 10000
+          'intraWallet': true
+          'hash': 'eb70c6df08de770782b351c84fb2a96ea100d37ff8edcad579c32c52213c26f7'
+          'confirmations': 27
+          'txTime': 1419596460
+          'publicNote': null
+          'note': null
+          'tags': []
+          'size': 225
+          'tx_index': 72943968
+          'block_height': 335980
+          'result': 100000
+
+      ##########################################################################
+      it "should recognize from account", ->
+        expect(MyWallet.processTransaction(tx).from).toEqual(transaction.from)
+
+      it "should recognize both to accounts", ->
         expect(MyWallet.processTransaction(tx).to).toEqual(transaction.to)
 
       it "should have the correct amount", ->
@@ -834,7 +967,7 @@ describe "Transaction", ->
           } ]
           'externalAddresses': null
         'to':
-          'account': null
+          'accounts': []
           'legacyAddresses': []
           'externalAddresses': [
             'address': '1FeerpCgswvGRLVKme759C96DUBtf7SvA2'
@@ -926,7 +1059,7 @@ describe "Transaction", ->
           } ]
           'externalAddresses': null
         'to':
-          'account': null
+          'accounts': []
           'legacyAddresses': [ {
             'address': '1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF'
             'amount': 30000
@@ -1021,9 +1154,12 @@ describe "Transaction", ->
           } ]
           'externalAddresses': null
         'to':
-          'account':
-            'index': 2
-            'amount': 60000
+          'accounts': [
+            {
+              'index': 2
+              'amount': 60000
+            }
+          ]
           'legacyAddresses': []
           'externalAddresses': null
           'email': null
@@ -1126,7 +1262,7 @@ describe "Transaction", ->
             'legacyAddresses': null
             'externalAddresses': null
           'to':
-            'account': null
+            'accounts': []
             'legacyAddresses': [ {
               'address': '1CCMvFa5Ric3CcnRWJzSaZYXmCtZzzDLiX'
               'amount': 50000
@@ -1221,7 +1357,7 @@ describe "Transaction", ->
               'addressWithLargestOutput': '18xLMRUADGRgty6gjmSZyeKZzALCXHY6AS'
               'amount': 40959
           'to':
-            'account': null
+            'accounts': []
             'legacyAddresses': [ {
               'address': '14msrp3yc4JRZEu49u7zYeAkKer4ETH6ag'
               'amount': 40959

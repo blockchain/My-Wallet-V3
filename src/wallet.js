@@ -266,7 +266,7 @@ function wsSuccess(ws) {
     } else if (obj.op == 'utx') {
       var tx = TransactionFromJSON(obj.x);
       var tx_processed = MyWallet.processTransaction(tx);
-      var tx_account = tx_processed.to.account;
+      var tx_account = tx_processed.to.accounts[0];
 
       //Check if this is a duplicate
       //Maybe should have a map_prev to check for possible double spends
@@ -354,7 +354,7 @@ MyWallet.processTransaction = function(tx) {
 
   var transaction = {
     from: {account: null, legacyAddresses: null, externalAddresses: null},
-    to: {account: null, legacyAddresses: null, externalAddresses: null, email: null, mobile: null},
+    to: {accounts: [], legacyAddresses: null, externalAddresses: null, email: null, mobile: null},
     fee: 0,
     intraWallet: null
   };
@@ -473,7 +473,7 @@ MyWallet.processTransaction = function(tx) {
               if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
                 transaction.from.account.amount -= output.value;
               } else {
-                transaction.to.account = {index: parseInt(j), amount: output.value};
+                transaction.to.accounts.push({index: parseInt(j), amount: output.value});
               }
               toAccountSet = true;
               transaction.fee -= output.value;
@@ -504,7 +504,7 @@ MyWallet.processTransaction = function(tx) {
   }
 
 
-  if (transaction.to.account == null &&
+  if (transaction.to.accounts.length == 0 &&
       (transaction.to.legacyAddresses == null || transaction.to.legacyAddresses.length === 0) &&
       transaction.to.externalAddresses == null &&
       MyWallet.wallet.activeKey(output.addr)) {
@@ -514,8 +514,9 @@ MyWallet.processTransaction = function(tx) {
 
   if (transaction.from.account == null && transaction.from.legacyAddresses == null) {
     var fromAmount = 0;
-    if (transaction.to.account != null)
-      fromAmount += transaction.to.account.amount;
+    for (var i in transaction.to.accounts) {
+      fromAmount += transaction.to.accounts[i].amount;
+    }
     for (var i in transaction.to.legacyAddresses) {
       var addressAmount = transaction.to.legacyAddresses[i];
       fromAmount += addressAmount.amount;
@@ -556,8 +557,14 @@ MyWallet.calculateTransactionResult = function(transaction) {
   var totalOurs = function(toOrFrom) {
     var result = 0;
 
-    if(toOrFrom.account) {
-      result = toOrFrom.account.amount;
+    if(toOrFrom.account || (toOrFrom.accounts && toOrFrom.accounts.length > 0)) {
+      if(toOrFrom.account) {
+        result = toOrFrom.account.amount;
+      } else if (toOrFrom.accounts) {
+        for(var i in toOrFrom.accounts) {
+          result += toOrFrom.accounts[i].amount;
+        }
+      }
     } else if (toOrFrom.legacyAddresses && toOrFrom.legacyAddresses.length > 0) {
       for(var i in toOrFrom.legacyAddresses) {
         var legacyAddress = toOrFrom.legacyAddresses[i];
