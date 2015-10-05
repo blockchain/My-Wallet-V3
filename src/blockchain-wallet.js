@@ -355,6 +355,21 @@ Wallet.prototype.getHistory = function() {
 };
 ////////////////////////////////////////////////////////////////////////////////
 
+Wallet.prototype.getBalancesForArchived = function() {
+  var archivedAddrs = this.addresses.filter(function (addr) {
+      return MyWallet.wallet.key(addr).archived === true;
+  });
+  var updateBalances = function(obj) {
+    for (var key in obj) {
+      if (this.containsLegacyAddress(key))
+        this.key(key).balance = obj[key].final_balance;
+    }
+    return obj;
+  }
+  var promise = API.getHistory(archivedAddrs, 0 ,0, 30).then(updateBalances.bind(this));
+  return promise;
+};
+////////////////////////////////////////////////////////////////////////////////
 Wallet.prototype.toJSON = function(){
 
   function addressBookToJSON (addressBook) {
