@@ -356,16 +356,19 @@ Wallet.prototype.getHistory = function() {
 ////////////////////////////////////////////////////////////////////////////////
 
 Wallet.prototype.getBalancesForArchived = function() {
+  var updateBalance = function(key){
+    if (this.containsLegacyAddress(key.address)) {
+      this.key(key.address).balance = key.final_balance;
+    }
+  };
+  var updateBalances = function(obj) {
+    console.log(obj.addresses);
+    obj.addresses.forEach(updateBalance.bind(this));
+    return obj;
+  };
   var archivedAddrs = this.addresses.filter(function (addr) {
       return MyWallet.wallet.key(addr).archived === true;
   });
-  var updateBalances = function(obj) {
-    for (var key in obj) {
-      if (this.containsLegacyAddress(key))
-        this.key(key).balance = obj[key].final_balance;
-    }
-    return obj;
-  }
   var promise = API.getHistory(archivedAddrs, 0 ,0, 30).then(updateBalances.bind(this));
   return promise;
 };
