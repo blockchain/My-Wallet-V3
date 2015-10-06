@@ -7,7 +7,7 @@ var CryptoJS = require('crypto-js');
 var MyWallet = require('./wallet');
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
-var BlockchainAPI = require('./blockchain-api');
+var API = require('./api');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
 
@@ -76,7 +76,7 @@ function generateUUIDs(n, success, error) {
   $.ajax({
     type: "GET",
     timeout: 60000,
-    url: BlockchainAPI.getRootURL() + 'uuid-generator',
+    url: API.ROOT_URL + 'uuid-generator',
     data: { format : 'json', n : n, api_code : WalletStore.getAPICode()},
     success: function(data) {
       if (data.uuids && data.uuids.length == n) {

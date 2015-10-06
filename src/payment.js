@@ -5,7 +5,6 @@ var q             = require('q');
 var MyWallet      = require('./wallet');
 var WalletCrypto  = require('./wallet-crypto');
 var Transaction   = require('./transaction');
-var BlockchainAPI = require('./blockchain-api');
 var API           = require('./api');
 var Helpers       = require('./helpers');
 var KeyRing       = require('./keyring');

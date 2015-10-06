@@ -23,7 +23,6 @@ module.exports = {
   WalletCrypto: require('./wallet-crypto'),
   Payment: require('./payment'),
   ImportExport: require('./import-export'),
-  BlockchainAPI: require('./blockchain-api'),
   BlockchainSettingsAPI: require('./blockchain-settings-api'),
   // only for debugging
   Helpers: require('./helpers'),

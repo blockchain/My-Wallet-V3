@@ -20,10 +20,9 @@ var ImportExport = require('./import-export');
 var HDWallet = require('./hd-wallet');
 var HDAccount = require('./hd-account');
 var Transaction = require('./transaction');
-var BlockchainAPI = require('./blockchain-api');
+var API = require('./api');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
-var API = require('./api');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -94,7 +93,7 @@ MyWallet.securePost = function(url, data, success, error) {
     xhrFields: {
       withCredentials: true
     },
-    url: BlockchainAPI.getRootURL() + url,
+    url: API.ROOT_URL + url,
     data : clone,
     success: success,
     error : error
@@ -972,7 +971,7 @@ MyWallet.resendTwoFactorSms = function(user_guid, success, error) {
   $.ajax({
     type: "GET",
     dataType: 'json',
-    url: BlockchainAPI.getRootURL() + 'wallet/'+user_guid,
+    url: API.ROOT_URL + 'wallet/'+user_guid,
     xhrFields: {
       withCredentials: true
     },
@@ -1030,7 +1029,7 @@ MyWallet.login = function ( user_guid
     $.ajax({
       type: "GET",
       dataType: 'json',
-      url: BlockchainAPI.getRootURL() + 'wallet/' + guid,
+      url: API.ROOT_URL + 'wallet/' + guid,
       // contentType: "application/json; charset=utf-8",
       xhrFields: {
         withCredentials: true
@@ -1110,7 +1109,7 @@ MyWallet.login = function ( user_guid
        withCredentials: true
       },
       crossDomain: true,
-      url: BlockchainAPI.getRootURL() + "wallet",
+      url: API.ROOT_URL + "wallet",
       data :  { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : WalletStore.getAPICode()},
       success: function(data) {
        if (data == null || data.length == 0) {
@@ -1175,7 +1174,7 @@ MyWallet.pollForSessionGUID = function(successCallback) {
     },
     crossDomain: true,
     type: "GET",
-    url: BlockchainAPI.getRootURL() + 'wallet/poll-for-session-guid',
+    url: API.ROOT_URL + 'wallet/poll-for-session-guid',
     success: function (obj) {
       var self = this;
       if (obj.guid) {
@@ -1526,7 +1525,7 @@ MyWallet.logout = function(force) {
     $.ajax({
       type: "GET",
       timeout: 60000,
-      url: BlockchainAPI.getRootURL() + 'wallet/logout',
+      url: API.ROOT_URL + 'wallet/logout',
       data : {format : 'plain', api_code : WalletStore.getAPICode()},
       success: function(data) {
         window.location.reload();
