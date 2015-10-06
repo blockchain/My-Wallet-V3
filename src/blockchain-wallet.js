@@ -411,6 +411,7 @@ Wallet.prototype.importLegacyAddress = function(addr, label, secPass, bipPass){
       ad.encrypt(cipher).persist();
     };
     this._addresses[ad.address] = ad;
+    ws.send('{"op":"addr_sub", "addr":"'+ad.address+'"}');
     defer.resolve(ad);
     MyWallet.syncWallet();
     this.getHistory();
