@@ -71,14 +71,19 @@
     "repo" : "crypto-browserify/ripemd160"
   },
   "sha.js" : {
-    "version" : "2.4.2",
-    "commits" : ["ee9184bb71cb672167b5f43f580ccb0cf9c22402"],
+    "version" : "2.4.4",
+    "commits" : ["8a30527c7e68d583785e8fd1aeebe004d8541bfc"],
     "repo" : "crypto-browserify/sha.js"
   },
   "create-hmac" : {
     "version" : "1.1.4",
     "commits" : ["3c7dd3047b5ab3e3be44d802241d224f0c9e2325"],
     "repo" : "crypto-browserify/createHmac"
+  },
+  "cipher-base" : {
+    "version" : "1.0.1",
+    "commits" : ["5f5eb4a23599806ef5f92aa25930ac0beeb35bd1"],
+    "repo" : "crypto-browserify/cipher-base"
   },
   "randombytes" : {
     "version" : "2.0.1",
