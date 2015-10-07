@@ -362,7 +362,6 @@ Wallet.prototype.getBalancesForArchived = function() {
     }
   };
   var updateBalances = function(obj) {
-    console.log(obj.addresses);
     obj.addresses.forEach(updateBalance.bind(this));
     return obj;
   };

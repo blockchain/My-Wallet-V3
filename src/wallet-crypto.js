@@ -1,7 +1,6 @@
 'use strict';
 
 var assert = require('assert');
-var $ = require('jquery');
 var CryptoJS = require('crypto-js');
 var sjcl = require('sjcl');
 
@@ -191,7 +190,7 @@ function decryptWallet(data, password, success, error) {
   var walletVersion = null;
   var jsonWrapper = null;
   try {
-    jsonWrapper = $.parseJSON(data);
+    jsonWrapper = JSON.parse(data);
     if (jsonWrapper) {
       assert(jsonWrapper.payload, 'v2 Wallet error: missing payload');
       assert(jsonWrapper.pbkdf2_iterations, 'v2 Wallet error: missing pbkdf2 iterations');
@@ -211,7 +210,7 @@ function decryptWallet(data, password, success, error) {
   else if (walletVersion >= 2) {
     try {
       decryptedWallet = decryptAes(jsonWrapper.payload, password, jsonWrapper.pbkdf2_iterations);
-      jsonWallet = $.parseJSON(decryptedWallet);
+      jsonWallet = JSON.parse(decryptedWallet);
 
 
     } catch (e) {
@@ -222,7 +221,7 @@ function decryptWallet(data, password, success, error) {
   } else {
     try {
       decryptedWallet = decrypt(data, password, 10);
-      jsonWallet = $.parseJSON(decryptedWallet);
+      jsonWallet = JSON.parse(decryptedWallet);
 
 
     } catch (e) {

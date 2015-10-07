@@ -1,7 +1,6 @@
 'use strict';
 
 var assert = require('assert');
-var $ = require('jquery');
 var CryptoJS = require('crypto-js');
 
 var MyWallet = require('./wallet');
@@ -50,7 +49,7 @@ function insertWallet(guid, sharedKey, password, extra, successcallback, errorca
           guid : guid
         };
 
-        $.extend(post_data, extra);
+        Helpers.merge(post_data, extra);
         MyWallet.securePost(
           'wallet',
           post_data,
@@ -73,22 +72,27 @@ function insertWallet(guid, sharedKey, password, extra, successcallback, errorca
 }
 
 function generateUUIDs(n, success, error) {
-  $.ajax({
-    type: "GET",
-    timeout: 60000,
-    url: API.ROOT_URL + 'uuid-generator',
-    data: { format : 'json', n : n, api_code : WalletStore.getAPICode()},
-    success: function(data) {
-      if (data.uuids && data.uuids.length == n) {
-        success(data.uuids);
-      } else {
-        error('Unknown Error');
-      }
-    },
-    error: function(data) {
-      error(data.responseText);
+
+  var succ = function(data) {
+    if (data.uuids && data.uuids.length == n) {
+      success(data.uuids);
+    } else {
+      error('Unknown Error');
     }
-  });
+  };
+  var err = function(data) {
+    error(data.responseText);
+  };
+
+  var data = {
+      format: 'json'
+    , n: n
+    , api_code : API.API_CODE
+  };
+
+  API.retry(API.request.bind(API, "GET", "uuid-generator", data))
+    .then(succ)
+    .catch(err);
 };
 
 function generateNewWallet(password, email, firstAccountName, success, error, isHD) {
