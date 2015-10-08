@@ -123,7 +123,7 @@ module.exports = (grunt) ->
           # logo : 'https://raw.githubusercontent.com/blockchain/My-Wallet-HD-Frontend/changelog/assets/icons/png/logo.png',
           intro : 'Recent changes'
           grep_commits: '^fix|^feat|^docs|^refactor|^chore|BREAKING'
-          tag: '0.8.2'
+          tag: '0.8.3'
           repo_url: 'https://github.com/blockchain/My-Wallet-HD-Frontend'
 
 
