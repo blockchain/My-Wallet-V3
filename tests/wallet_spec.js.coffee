@@ -19,14 +19,6 @@ describe "Wallet", ->
   callbacks = undefined
 
   beforeEach ->
-    WalletStore.setDoubleEncryption(false)
-    spyOn(MyWallet, "backupWallet").and.callFake (method, success, error) ->
-      success()
-    spyOn(MyWallet, "backupWalletDelayed").and.callFake (method, success, error) ->
-      success()
-
-    MyWallet.deleteHDWallet()
-
 
   describe "stretchPassword()", ->
     it "should stretch a password", ->
@@ -45,7 +37,7 @@ describe "Wallet", ->
               decrypted_password = WalletCrypto.decryptPasswordWithProcessedPin(data, password, pbkdf2_iterations)
 
               expect(decrypted_password).toBe('testtest12')
-
+  
   describe "decryptWallet()", ->
 
     it "should decrypt a legacy v1 wallet with CBC, ISO10126, 10 iterations", ->
@@ -136,7 +128,8 @@ describe "Wallet", ->
       expect(obj.success.calls.argsFor(0)[0].guid).toBe("cc90a34d-9eeb-49e7-95ef-9741b77de443")
 
     return
-
+  
+  ###
   describe "createNewWallet()", ->
     beforeEach ->
       callbacks =
@@ -348,6 +341,7 @@ describe "Wallet", ->
       expect(key.pub.compressed).toBe(true)
       format = MyWallet.detectPrivateKeyFormat(key.toWIF())
       expect(format).toBe('compsipa')
+  ###
 
   describe "pairing code", ->
     it "should decrypt", ->
