@@ -134,6 +134,15 @@ Helpers.merge = function (o, p) {
   return o;
 };
 
+// toFormData :: Object -> FormData
+Helpers.toFormData = function (item) {
+  var form_data = new FormData();
+  for ( var key in item ) {
+      form_data.append(key, item[key]);
+  }
+  return form_data;
+};
+
 Helpers.zipLong = function (f, xs, ys) {
 
   if (!(f instanceof Function && xs instanceof Array && ys instanceof Array)){
