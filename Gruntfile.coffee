@@ -8,8 +8,8 @@ module.exports = (grunt) ->
       dist: ["dist"]
       test: ["coverage"]
       testjs: ["tests/*js"]
-      shrinkwrap:
-        src: ["npm-shrinkwrap.json"]
+      shrinkwrap: ["npm-shrinkwrap.*"]
+      node_modules: ["node_modules"]
 
     concat:
       options:
@@ -96,8 +96,43 @@ module.exports = (grunt) ->
       npm_install_dependencies:
         command: () ->
            'cd build && npm install'
+           
+      tag:
+        command: (newVersion, message) ->
+          'git tag -a -s ' + newVersion + " -m " + message + ' && git push --tags'
+          
+      copy_changelog:
+        command: () ->
+          'cp Changelog.md ../My-Wallet-V3-Bower'
 
-    shrinkwrap: {}
+      copy_dist:
+        command: () ->
+          'cp dist/my-wallet.* ../My-Wallet-V3-Bower/dist'
+          
+      commit_and_push_dist:
+        command: (newVersion) ->
+          'cd ../My-Wallet-V3-Bower && git commit -a -m "Release ' + newVersion + '" && git push'
+      
+      tag_bower:
+        command: (newVersion, message) ->
+          'cd ../My-Wallet-V3-Bower && git tag -a -s ' + newVersion + " -m " + message + " && git push --tags"
+
+      untag:
+        command: (tag) ->
+          'git tag -d ' + tag + ' && git push origin :refs/tags/' + tag + ' && cd ../My-Wallet-V3-Bower && git tag -d ' + tag + ' && git push origin :refs/tags/' + tag
+      
+
+      npm_install:
+        command: () ->
+          'npm install'
+          
+      test_once:
+        command: () ->
+          './node_modules/karma/bin/karma start karma.conf.js --single-run'
+          
+      shrinkwrap:
+        command: () ->
+          'npm shrinkwrap'
 
     env:
       build:
@@ -123,7 +158,6 @@ module.exports = (grunt) ->
           # logo : 'https://raw.githubusercontent.com/blockchain/My-Wallet-HD-Frontend/changelog/assets/icons/png/logo.png',
           intro : 'Recent changes'
           grep_commits: '^fix|^feat|^docs|^refactor|^chore|BREAKING'
-          tag: '0.8.3'
           repo_url: 'https://github.com/blockchain/My-Wallet-HD-Frontend'
 
 
@@ -136,7 +170,6 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-contrib-jshint'
   grunt.loadNpmTasks 'grunt-preprocess'
   grunt.loadNpmTasks 'grunt-shell'
-  grunt.loadNpmTasks 'grunt-shrinkwrap'
   grunt.loadNpmTasks 'grunt-text-replace'
   grunt.loadNpmTasks('git-changelog')
 
@@ -158,7 +191,7 @@ module.exports = (grunt) ->
     "env:production"
     "clean:build"
     "clean:dist"
-    "shrinkwrap"
+    "shell:shrinkwrap"
     "shell:check_dependencies"
     "clean:shrinkwrap"
     "shell:npm_install_dependencies"
@@ -167,7 +200,6 @@ module.exports = (grunt) ->
     "browserify:production"
     "concat:mywallet"
     "uglify:mywallet"
-    "git_changelog"
   ]
 
   # Skip dependency check, e.g. for staging:
@@ -182,5 +214,31 @@ module.exports = (grunt) ->
     "concat:mywallet"
     "uglify:mywallet"
   ]
+  
+  # E.g. when shipping 3.0.1:
+  # grunt bower:3.0.1:"New stuff"
+  # Expects ../My-Wallet-V3-Bower to exist
+  grunt.registerTask "bower", "bower(version, message)", (newVersion, message) =>
+    grunt.fail.fatal("New tag version required") if !newVersion?
+    grunt.fail.fatal("Message required") if !message?
+            
+    grunt.task.run [
+     "clean"
+     "shell:npm_install"
+     "build"
+     "shell:test_once"
+     "dist"
+     "shell:tag:" + newVersion + ":\"" + message + "\""
+     "git_changelog"
+     "shell:copy_changelog"
+     "shell:copy_dist"
+     "shell:commit_and_push_dist:" + newVersion 
+     "shell:tag_bower:" + newVersion + ":\"" + message + "\""
+    ]
+    
+  grunt.registerTask "untag", "remove tag", (tag) =>
+    grunt.task.run [
+      "shell:untag:" + tag
+    ]
 
   return
