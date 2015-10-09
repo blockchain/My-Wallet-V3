@@ -128,8 +128,9 @@ Helpers.asyncOnce = function (f, milliseconds, before){
 Helpers.merge = function (o, p) {
   var prop = undefined;
   for(prop in p) {
-    if (o.hasOwnProperty[prop]) continue;
-    o[prop] = p[prop];
+    if (!o.hasOwnProperty(prop)) {
+      o[prop] = p[prop];
+    }
   }
   return o;
 };

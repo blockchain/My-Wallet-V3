@@ -49,7 +49,6 @@ MyWallet.whitelistWallet = function(options, success, error) {
 // used on MyWallet
 MyWallet.securePost = function(url, data, success, error) {
   var clone = Helpers.merge({}, data);
-
   if (!data.sharedKey) {
     var sharedKey = MyWallet.wallet ? MyWallet.wallet.sharedKey : undefined;
     if (!sharedKey || sharedKey.length == 0 || sharedKey.length != 36) {
@@ -84,17 +83,14 @@ MyWallet.securePost = function(url, data, success, error) {
 
   var parseResponse = function (x) {return x;};
   if(data.format === 'json') {parseResponse = function (x) {return JSON.parse(x);};}
+
   var request = new XMLHttpRequest();
   request.withCredentials = true;
   request.timeout = API.AJAX_TIMEOUT;
   request.open("POST", API.ROOT_URL + url ,true);
-  var params = null;
-  if (data.method === "wallet") {
-    params = Helpers.toFormData(clone);
-  } else {
-    params = API.encodeFormData(clone);
-    request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-  };
+  var params = API.encodeFormData(clone);
+  request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
   request.onload = function (e) {
     if (request.readyState === 4) {
       if (request.status === 200) {
@@ -104,12 +100,15 @@ MyWallet.securePost = function(url, data, success, error) {
       }
     }
   };
+
   request.onerror = function (e) {
     error(request.responseText);
   };
+
   request.ontimeout = function() {
     error("timeout request");
   };
+
   request.send(params);
 };
 
