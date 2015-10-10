@@ -7,7 +7,7 @@ var assert      = require('assert');
 var Helpers     = require('./helpers');
 var WalletStore = require('./wallet-store');
 var CryptoJS    = require('crypto-js');
-// var MyWallet = require('./wallet');
+var MyWallet    = require('./wallet');
 ////////////////////////////////////////////////////////////////////////////////
 // API class
 function API(){
@@ -37,25 +37,27 @@ API.prototype.request = function(action, method, data, withCredentials, syncBool
   var request = new XMLHttpRequest();
   var asyncBool = syncBool ? false : true;
   var isFormData = function (data){return data instanceof FormData};
-
   var parseResponse = function (x) {return x;};
   var handleResponse = function (x) {return x;};
   var url = undefined;
   var sendData = null;
 
-  if (isFormData(data)) {
+  if (action === 'POST') {
     url = this.ROOT_URL + method;
-    sendData = data;
-
-  } else {
+    sendData = isFormData(data) ? data : this.encodeFormData(data);
+  }
+  if (action === 'GET') {
     url = this.ROOT_URL + method + '?'  + this.encodeFormData(data);
-    if(data.format === 'json') {parseResponse = function (x) {return JSON.parse(x);};}
-    handleResponse = function(a,b) { self.handleNTPResponse(a, b) };
   }
   request.open(action, url ,asyncBool);
-  if(sendData == null) request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
   request.withCredentials = withCredentials ? true : false;
   request.timeout = this.AJAX_TIMEOUT;
+
+  if (!isFormData(data)) {
+    if(data.format === 'json') {parseResponse = function (x) {return JSON.parse(x);};}
+    handleResponse = function(a,b) { self.handleNTPResponse(a, b) };
+    request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+  }
 
   request.onload = function (e) {
     if (request.readyState === 4) {
@@ -174,29 +176,32 @@ API.prototype.getHistory = function (addresses, tx_filter, offset, n, syncBool) 
 };
 
 API.prototype.securePost = function (url, data){
+
   var clone = Helpers.merge({}, data);
+  if (!Helpers.isValidGUID(data.guid)) { clone.guid = MyWallet.wallet.guid; }
+  if (!data.sharedKey) {
+    var sharedKey = MyWallet.wallet ? MyWallet.wallet.sharedKey : undefined;
+    if (!Helpers.isValidSharedKey(sharedKey)) throw 'Shared key is invalid'
+    //Rather than sending the shared key plain text
+    //send a hash using a totp scheme
+    var now = new Date().getTime();
+    var timestamp = parseInt((now - this.SERVER_TIME_OFFSET) / 10000);
+    var SKHashHex = CryptoJS.SHA256(sharedKey.toLowerCase() + timestamp).toString();
+    var i = 0;
+    var tSKUID = SKHashHex.substring(i, i+=8)+'-'+
+                 SKHashHex.substring(i, i+=4)+'-'+
+                 SKHashHex.substring(i, i+=4)+'-'+
+                 SKHashHex.substring(i, i+=4)+'-'+
+                 SKHashHex.substring(i, i+=12);
 
-  if (!Helpers.isValidSharedKey(data.sharedKey)) throw 'Shared key is invalid'
-  if (!Helpers.isValidGUID(data.guid))           throw 'GUID is invalid'
-
-  //Rather than sending the shared key plain text
-  //send a hash using a totp scheme
-  var now = new Date().getTime();
-  var timestamp = parseInt((now - this.SERVER_TIME_OFFSET) / 10000);
-  var SKHashHex = CryptoJS.SHA256(data.sharedKey.toLowerCase() + timestamp).toString();
-  var i = 0;
-  var tSKUID = SKHashHex.substring(i, i+=8)+'-'+
-               SKHashHex.substring(i, i+=4)+'-'+
-               SKHashHex.substring(i, i+=4)+'-'+
-               SKHashHex.substring(i, i+=4)+'-'+
-               SKHashHex.substring(i, i+=12);
+    clone.sharedKey                 = tSKUID;
+    clone.sKTimestamp               = timestamp;
+    clone.sKDebugHexHash            = SKHashHex;
+    clone.sKDebugTimeOffset         = this.SERVER_TIME_OFFSET;
+    clone.sKDebugOriginalClientTime = now;
+    clone.sKDebugOriginalSharedKey  = sharedKey;
+  }
   clone.api_code                  = this.API_CODE
-  clone.sharedKey                 = tSKUID;
-  clone.sKTimestamp               = timestamp;
-  clone.sKDebugHexHash            = SKHashHex;
-  clone.sKDebugTimeOffset         = this.SERVER_TIME_OFFSET;
-  clone.sKDebugOriginalClientTime = now;
-  clone.sKDebugOriginalSharedKey  = data.sharedKey;
   clone.format                    = data.format ? data.format : 'plain';
 
   return this.retry(this.request.bind(this, "POST", url, clone, true));

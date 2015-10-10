@@ -34,82 +34,32 @@ MyWallet.whitelistWallet = function(options, success, error) {
     return sd === options.subdomain;
   }), 'Error: must specify alpha, staging, or dev as subdomain');
 
-  $.ajax({
-    type: 'POST',
-    timeout: 60000,
-    url: 'https://' + options.subdomain + '.blockchain.info/whitelist_guid',
-    dataType: 'json',
-    contentType: 'application/json',
-    data: JSON.stringify(options)
-  })
-  .done(function(res){ success && success(res); })
-  .fail(function(err){ error && error(err); });
+  var url = 'https://' + options.subdomain + '.blockchain.info/whitelist_guid';
+  var request = new XMLHttpRequest();
+  request.open('POST', url);
+  request.timeout = API.AJAX_TIMEOUT;
+  request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+  request.onload = function (e) {
+    if (request.readyState === 4) {
+      if (request.status === 200) {
+        success && success(JSON.parse(request.responseText));
+      } else {
+        error && error(request.responseText);
+      }
+    }
+  };
+  request.onerror = function (e) {
+    error && error(request.responseText);
+  };
+  request.ontimeout = function() {
+    error && error("timeout request");
+  };
+  request.send(API.encodeFormData(options));
 };
 
 // used on MyWallet
 MyWallet.securePost = function(url, data, success, error) {
-  var clone = Helpers.merge({}, data);
-  if (!data.sharedKey) {
-    var sharedKey = MyWallet.wallet ? MyWallet.wallet.sharedKey : undefined;
-    if (!sharedKey || sharedKey.length == 0 || sharedKey.length != 36) {
-      throw 'Shared key is invalid';
-    }
-
-    //Rather than sending the shared key plain text
-    //send a hash using a totp scheme
-    var now = new Date().getTime();
-    var timestamp = parseInt((now - WalletStore.getServerTimeOffset()) / 10000);
-
-    var SKHashHex = CryptoJS.SHA256(sharedKey.toLowerCase() + timestamp).toString();
-
-    var i = 0;
-    var tSKUID = SKHashHex.substring(i, i+=8)+'-'+SKHashHex.substring(i, i+=4)+'-'+SKHashHex.substring(i, i+=4)+'-'+SKHashHex.substring(i, i+=4)+'-'+SKHashHex.substring(i, i+=12);
-
-    clone.sharedKey = tSKUID;
-    clone.sKTimestamp = timestamp;
-
-    // Needed for debugging and as a fallback if totp scheme doesn't work on server
-    clone.sKDebugHexHash = SKHashHex;
-    clone.sKDebugTimeOffset = WalletStore.getServerTimeOffset();
-    clone.sKDebugOriginalClientTime = now;
-    clone.sKDebugOriginalSharedKey = sharedKey;
-  }
-
-  if (!data.guid)
-    clone.guid = MyWallet.wallet.guid;
-
-  clone.format =  data.format ? data.format : 'plain';
-  clone.api_code = WalletStore.getAPICode();
-
-  var parseResponse = function (x) {return x;};
-  if(data.format === 'json') {parseResponse = function (x) {return JSON.parse(x);};}
-
-  var request = new XMLHttpRequest();
-  request.withCredentials = true;
-  request.timeout = API.AJAX_TIMEOUT;
-  request.open("POST", API.ROOT_URL + url ,true);
-  var params = API.encodeFormData(clone);
-  request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-
-  request.onload = function (e) {
-    if (request.readyState === 4) {
-      if (request.status === 200) {
-        success(parseResponse(request.responseText));
-      } else {
-        error(request.responseText);
-      }
-    }
-  };
-
-  request.onerror = function (e) {
-    error(request.responseText);
-  };
-
-  request.ontimeout = function() {
-    error("timeout request");
-  };
-
-  request.send(params);
+  API.securePost(url, data).then(success).catch(error);
 };
 
 // used only locally: wallet.js : checkAllKeys (see what happens with this sanity check)
@@ -255,7 +205,7 @@ function wsSuccess(ws) {
     var obj = null;
 
     try {
-      obj = $.parseJSON(message.data);
+      obj = JSON.parse(message.data);
     }
     catch (e) {
       console.log('Websocket error: could not parse message data as JSON: ' + message);
@@ -980,32 +930,22 @@ MyWallet.makePairingCode = function(success, error) {
  */
 // used in the frontend
 MyWallet.resendTwoFactorSms = function(user_guid, success, error) {
-  $.ajax({
-    type: "GET",
-    dataType: 'json',
-    url: API.ROOT_URL + 'wallet/'+user_guid,
-    xhrFields: {
-      withCredentials: true
-    },
-    crossDomain: true,
-    data : {
-      format : 'json',
-      resend_code : true,
-      ct : (new Date()).getTime(),
-      api_code : WalletStore.getAPICode()
-    },
-    timeout: 60000,
-    success: function(obj) {
-      success();
-    },
-    error : function(e) {
-      if(e.responseJSON && e.responseJSON.initial_error) {
-        error(e.responseJSON.initial_error);
-      } else {
-        error();
-      }
+
+  var data = {
+    format : 'json',
+    resend_code : true,
+    ct : (new Date()).getTime(),
+    api_code : API.API_CODE
+  }
+  var s = function(obj) { success(); }
+  var e = function(e) {
+    if(e.responseJSON && e.responseJSON.initial_error) {
+      error(e.responseJSON.initial_error);
+    } else {
+      error();
     }
-  })
+  }
+  API.request("GET", 'wallet/'+user_guid, data, true, false).then(s).catch(e);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1027,83 +967,66 @@ MyWallet.login = function ( user_guid
   assert(twoFACode !== undefined, '2FA code must be null or set');
 
   var clientTime = (new Date()).getTime();
-  var data = { format : 'json', resend_code : null, ct : clientTime };
+  var data = { format : 'json', resend_code : null, ct : clientTime, api_code : API.API_CODE };
 
-  if (WalletStore.getAPICode()) {
-    data.api_code = WalletStore.getAPICode();
-  }
-
-  if (shared_key) {
-    data.sharedKey = shared_key;
-  }
+  if (shared_key) { data.sharedKey = shared_key; }
 
   var tryToFetchWalletJSON = function(guid, successCallback) {
-    $.ajax({
-      type: "GET",
-      dataType: 'json',
-      url: API.ROOT_URL + 'wallet/' + guid,
-      // contentType: "application/json; charset=utf-8",
-      xhrFields: {
-        withCredentials: true
-      },
-      crossDomain: true,
-      data : data,
-      timeout: 60000,
-      success: function(obj) {
 
-        fetch_success && fetch_success();
+    var success = function(obj) {
+      fetch_success && fetch_success();
+      // Even if Two Factor is enabled, some settings need to be saved here,
+      // because they won't be part of the 2FA response.
 
-        // Even if Two Factor is enabled, some settings need to be saved here,
-        // because they won't be part of the 2FA response.
-
-        MyWallet.handleNTPResponse(obj, clientTime);
-
-        if (!obj.guid) {
-          WalletStore.sendEvent("msg", {type: "error", message: 'Server returned null guid.'});
-          other_error('Server returned null guid.');
-          return;
-        }
-
-        // I should create a new class to store the encrypted wallet over wallet
-        WalletStore.setGuid(obj.guid);
-        WalletStore.setRealAuthType(obj.real_auth_type);
-        WalletStore.setSyncPubKeys(obj.sync_pubkeys);
-
-        if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
-        } else {
-          needs_two_factor_code(obj.auth_type);
-          return;
-        }
-
-        successCallback(obj)
-
-      },
-      error : function(e) {
-        if(e.responseJSON && e.responseJSON.initial_error && !e.responseJSON.authorization_required) {
-          other_error(e.responseJSON.initial_error);
-          return;
-        }
-
-        WalletStore.sendEvent('did_fail_set_guid');
-
-        var obj = $.parseJSON(e.responseText);
-
-        if (obj.authorization_required && typeof(authorization_required) === "function") {
-          authorization_required(function() {
-            MyWallet.pollForSessionGUID(function() {
-              tryToFetchWalletJSON(guid, successCallback);
-            });
-          });
-        }
-
-        if (obj.initial_error) {
-          WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
-        }
+      if (!obj.guid) {
+        WalletStore.sendEvent("msg", {type: "error", message: 'Server returned null guid.'});
+        other_error('Server returned null guid.');
+        return;
       }
-    });
+
+      // I should create a new class to store the encrypted wallet over wallet
+      WalletStore.setGuid(obj.guid);
+      WalletStore.setRealAuthType(obj.real_auth_type);
+      WalletStore.setSyncPubKeys(obj.sync_pubkeys);
+
+      if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
+      } else {
+        needs_two_factor_code(obj.auth_type);
+        return;
+      }
+
+      successCallback(obj)
+
+    }
+
+    var error = function(e) {
+      if(e.responseJSON && e.responseJSON.initial_error && !e.responseJSON.authorization_required) {
+        other_error(e.responseJSON.initial_error);
+        return;
+      }
+
+      WalletStore.sendEvent('did_fail_set_guid');
+
+      var obj = JSON.parse(e.responseText);
+
+      if (obj.authorization_required && typeof(authorization_required) === "function") {
+        authorization_required(function() {
+          MyWallet.pollForSessionGUID(function() {
+            tryToFetchWalletJSON(guid, successCallback);
+          });
+        });
+      }
+
+      if (obj.initial_error) {
+        WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
+      }
+    }
+
+    API.request("GET", 'wallet/' + guid, data, true, false).then(success).catch(error);
   }
 
   var tryToFetchWalletWith2FA = function (guid, two_factor_auth_key, successCallback) {
+
     if (two_factor_auth_key == null) {
       other_error('Two Factor Authentication code this null');
       return;
@@ -1112,35 +1035,22 @@ MyWallet.login = function ( user_guid
      other_error('You must enter a Two Factor Authentication code');
      return;
     }
+    var success = function(data) {
+     if (data == null || data.length == 0) {
+       other_error('Server Return Empty Wallet Data');
+       return;
+     }
+     if (data != 'Not modified') { WalletStore.setEncryptedWalletData(data); }
+     successCallback(data);
+    }
+    var error = function (response) {
+     WalletStore.setRestoringWallet(false);
+     wrong_two_factor_code(response.responseText);
+    }
 
-    $.ajax({
-      timeout: 60000,
-      type: "POST",
-      // contentType: "application/json; charset=utf-8",
-      xhrFields: {
-       withCredentials: true
-      },
-      crossDomain: true,
-      url: API.ROOT_URL + "wallet",
-      data :  { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : WalletStore.getAPICode()},
-      success: function(data) {
-       if (data == null || data.length == 0) {
-         other_error('Server Return Empty Wallet Data');
-         return;
-       }
+    var myData = { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : API.API_CODE};
 
-       if (data != 'Not modified') {
-         WalletStore.setEncryptedWalletData(data);
-       }
-
-       successCallback(data);
-
-      },
-      error : function (response) {
-       WalletStore.setRestoringWallet(false);
-       wrong_two_factor_code(response.responseText);
-      }
-    });
+    API.request("POST", 'wallet', myData, true, false).then(success).catch(error);
   }
 
   var didFetchWalletJSON = function(obj) {
@@ -1532,20 +1442,10 @@ MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryM
 MyWallet.logout = function(force) {
   if (!force && WalletStore.isLogoutDisabled())
     return;
-
+  var reload = function() { window.location.reload(); }
+  var data = {format : 'plain', api_code : API.API_CODE}
   WalletStore.sendEvent('logging_out');
-    $.ajax({
-      type: "GET",
-      timeout: 60000,
-      url: API.ROOT_URL + 'wallet/logout',
-      data : {format : 'plain', api_code : WalletStore.getAPICode()},
-      success: function(data) {
-        window.location.reload();
-      },
-      error : function() {
-        window.location.reload();
-      }
-    });
+  API.request("GET", 'wallet/logout', data, true, false).then(reload).catch(reload);
 };
 // used once
 // TODO : should be a helper
