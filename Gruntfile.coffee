@@ -154,11 +154,10 @@ module.exports = (grunt) ->
       default:
         options:
           file: 'Changelog.md',
-          app_name : 'Blockchain HD',
-          # logo : 'https://raw.githubusercontent.com/blockchain/My-Wallet-HD-Frontend/changelog/assets/icons/png/logo.png',
+          app_name : 'Blockchain Wallet V3',
           intro : 'Recent changes'
           grep_commits: '^fix|^feat|^docs|^refactor|^chore|BREAKING'
-          repo_url: 'https://github.com/blockchain/My-Wallet-HD-Frontend'
+          repo_url: 'https://github.com/blockchain/My-Wallet-V3'
 
 
   grunt.loadNpmTasks 'grunt-browserify'
