@@ -3,7 +3,6 @@
 var MyWallet = module.exports = {};
 
 var assert = require('assert');
-var $ = require('jquery');
 var CryptoJS = require('crypto-js');
 var xregexp = require('xregexp');
 var Bitcoin = require('bitcoinjs-lib');
@@ -1086,44 +1085,30 @@ MyWallet.pollForSessionGUID = function(successCallback) {
 
   if (WalletStore.isPolling()) return;
   WalletStore.setIsPolling(true);
-
-  $.ajax({
-    dataType: 'json',
-    // contentType: "application/json; charset=utf-8",
-    data: {format : 'plain'},
-    xhrFields: {
-      withCredentials: true
-    },
-    crossDomain: true,
-    type: "GET",
-    url: API.ROOT_URL + 'wallet/poll-for-session-guid',
-    success: function (obj) {
-      var self = this;
-      if (obj.guid) {
-
-        WalletStore.setIsPolling(false);
-        WalletStore.sendEvent("msg", {type: "success", message: 'Authorization Successful'});
-        successCallback()
-      } else {
-        if (WalletStore.getCounter() < 600) {
-          WalletStore.incrementCounter();
-          setTimeout(function() {
-            $.ajax(self);
-          }, 2000);
-        } else {
-          WalletStore.setIsPolling(false);
-        }
-      }
-    },
-    error : function() {
+  var data = {format : 'json'};
+  var success = function (obj) {
+    if (obj.guid) {
       WalletStore.setIsPolling(false);
+      WalletStore.sendEvent("msg", {type: "success", message: 'Authorization Successful'});
+      successCallback()
+    } else {
+      if (WalletStore.getCounter() < 600) {
+        WalletStore.incrementCounter();
+        setTimeout(function() {
+          API.request("GET", 'wallet/poll-for-session-guid', data, true, false).then(success).catch(error);
+        }, 2000);
+      } else {
+        WalletStore.setIsPolling(false);
+      }
     }
-  });
+  }
+  var error = function() {
+    WalletStore.setIsPolling(false);
+  }
+  API.request("GET", 'wallet/poll-for-session-guid', data, true, false).then(success).catch(error);
 };
 // used locally
 ////////////////////////////////////////////////////////////////////////////////
-// Jaume: FrontEndBranch: wallet-hd-refactored
-// copy of restoreWallet
 
 MyWallet.initializeWallet = function(pw, success, other_error, decrypt_success, build_hd_success) {
   assert(success, 'Success callback required');

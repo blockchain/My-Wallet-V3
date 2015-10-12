@@ -3,9 +3,8 @@ proxyquire = require('proxyquireify')(require)
 WalletStore = {}
 WalletCrypto = {}
 WalletSignup = {}
-$ = {}
 
-stubs = { './wallet-store': WalletStore, './wallet-crypto': WalletCrypto, './wallet-signup': WalletSignup, 'jquery': $ }
+stubs = { './wallet-store': WalletStore, './wallet-crypto': WalletCrypto, './wallet-signup': WalletSignup}
 
 MyWallet = proxyquire('../src/wallet', stubs)
 CryptoJS = require('crypto-js')
@@ -37,7 +36,7 @@ describe "Wallet", ->
               decrypted_password = WalletCrypto.decryptPasswordWithProcessedPin(data, password, pbkdf2_iterations)
 
               expect(decrypted_password).toBe('testtest12')
-  
+
   describe "decryptWallet()", ->
 
     it "should decrypt a legacy v1 wallet with CBC, ISO10126, 10 iterations", ->
@@ -128,7 +127,7 @@ describe "Wallet", ->
       expect(obj.success.calls.argsFor(0)[0].guid).toBe("cc90a34d-9eeb-49e7-95ef-9741b77de443")
 
     return
-  
+
   ###
   describe "createNewWallet()", ->
     beforeEach ->

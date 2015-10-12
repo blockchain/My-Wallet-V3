@@ -16,7 +16,6 @@ if (navigator && navigator.vendor &&
 
 module.exports = {
   Buffer: Buffer,
-  $: require('jquery'),
   CryptoJS: require('crypto-js'),
   MyWallet: require('./wallet'),
   WalletStore: require('./wallet-store'),

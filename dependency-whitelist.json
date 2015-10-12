@@ -1,5 +1,5 @@
 {
-  "ignore" : ["grunt", "jasmine-core", "jquery", "istanbul", "esprima", "typeforce", "convert-hex", "convert-string"],
+  "ignore" : ["grunt", "jasmine-core", "istanbul", "esprima", "typeforce", "convert-hex", "convert-string"],
   "bigi" : {
     "version": "1.4.1",
     "commits" : ["7d034a1b38ca90f68daa9de472dda2fb813836f1"],
