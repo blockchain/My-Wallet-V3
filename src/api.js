@@ -59,6 +59,7 @@ API.prototype.request = function(action, method, data, withCredentials, syncBool
     request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
   }
 
+
   request.onload = function (e) {
     if (request.readyState === 4) {
       if (request.status === 200) {
@@ -70,6 +71,17 @@ API.prototype.request = function(action, method, data, withCredentials, syncBool
       }
     }
   };
+
+  // this is used on iOS to enable and disable web socket while doing ajax calls
+  request.onloadstart = function (a){
+    WalletStore.sendEvent("msg", {type: "ajax-start", message: 'ajax call started'});
+  };
+
+  // this is used on iOS to enable and disable web socket while doing ajax calls
+  request.onloadend = function(a) {
+    WalletStore.sendEvent("msg", {type: "ajax-end", message: 'ajax call ended'});
+  };
+
   request.onerror = function (e) {
     defer.reject(request.responseText);
   };
