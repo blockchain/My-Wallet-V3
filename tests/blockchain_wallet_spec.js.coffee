@@ -2,6 +2,9 @@ proxyquire = require('proxyquireify')(require)
 MyWallet = undefined
 Address = undefined
 Wallet   = undefined
+Helpers = undefined
+WalletCrypto = undefined
+stubs = undefined
 
 describe "HDWallet", ->
   wallet = undefined
@@ -47,13 +50,39 @@ describe "HDWallet", ->
     MyWallet =
       syncWallet: () ->
       get_history: () ->
+      wallet: 
+        containsLegacyAddress: (address) ->
+          true
+        key: (address) ->
+          address
+        getPrivateKeyForAddress: (address) ->
+          "private " + address
+      detectPrivateKeyFormat: () ->
+        0
+      privateKeyStringToKey: (key) ->
+        key
+          
     spyOn(MyWallet, "syncWallet")
     spyOn(MyWallet, "get_history")
+        
+    Helpers = 
+      isBitcoinAddress: () -> true
+      
+    spyOn(Helpers, "isBitcoinAddress").and.callFake (address) ->
+      address[0] == "1"
+      
+    
+      
+    WalletCrypto = 
+      signMessage: (privateKey, message) ->
+        privateKey.split(" ")[1] + " - " + message
+        
+    
+    stubs = { './wallet': MyWallet, './helpers': Helpers, './wallet-crypto': WalletCrypto}
 
   describe "Constructor", ->
 
     beforeEach ->
-      stubs = { './wallet': MyWallet}
       Wallet = proxyquire('../src/blockchain-wallet', stubs)
 
     it "should create an empty Wallet with default options", ->
@@ -77,7 +106,6 @@ describe "HDWallet", ->
 
   describe "instance", ->
     beforeEach ->
-      stubs = { './wallet': MyWallet}
       Wallet = proxyquire('../src/blockchain-wallet', stubs)
       wallet = new Wallet(object)
 
@@ -346,3 +374,19 @@ describe "HDWallet", ->
         rwall = JSON.parse(json1, Wallet.reviver)
         json2     = JSON.stringify(rwall, null, 2)
         expect(json1).toEqual(json2)
+  
+    describe "signMessage()", ->
+      beforeEach ->
+        
+      address = "1abcd"
+      message = "Hello world"
+      signature = "1abcd - Hello world"
+  
+      it "should expect an address", ->
+        pending()
+    
+      it "should expect a message string", ->
+        pending()
+    
+      it "should return a signature string", ->
+        expect(wallet.signMessage(address, message)).toEqual(signature)

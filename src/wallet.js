@@ -1290,32 +1290,6 @@ MyWallet.handleNTPResponse = function(obj, clientTime) {
 };
 
 /**
- * @param {string} address bitcoin address
- * @param {string} message message
- * @return {string} message signature in base64
- */
- // [NOT USED]
-MyWallet.signMessage = function(address, message) {
-  var addr = WalletStore.getAddress(address);
-
-  if (!addr.priv)
-    throw 'Cannot sign a watch only address';
-
-  var decryptedpk = addr.priv;
-
-  // TODO: deal with second password
-  // var decryptedpk = MyWallet.decodePK(addr.priv);
-
-  var key = new ECKey(new BigInteger.fromBuffer(decryptedpk), false);
-  if (key.pub.getAddress().toString() != address) {
-    key = new ECKey(new BigInteger.fromBuffer(decryptedpk), true);
-  }
-
-  var signatureBuffer = Bitcoin.Message.sign(key, message, Bitcoin.networks.bitcoin);
-  return signatureBuffer.toString("base64", 0, signatureBuffer.length);
-};
-
-/**
  * Check the integrity of all keys in the wallet
  * @param {string?} second_password Second password to decrypt private keys if set
  */
@@ -1486,7 +1460,7 @@ function buffertoByteArray(value) {
 }
 // should be a helper
 // used locally and wallet-spender.js
-MyWallet.privateKeyStringToKey = function(value, format) {
+MyWallet.privateKeyStringToKey = function(value, format, compressed) {
   var key_bytes = null;
 
   if (format == 'base58') {
@@ -1516,7 +1490,14 @@ MyWallet.privateKeyStringToKey = function(value, format) {
   if (key_bytes.length != 32 && key_bytes.length != 33)
     throw 'Result not 32 or 33 bytes in length';
 
-  return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format !== 'sipa'));
+  var getCompressed;
+  if(compressed !== undefined && compressed !== null) {
+    getCompressed = !!compressed;
+  } else {
+    getCompressed = format !== 'sipa';
+  }
+
+  return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), getCompressed);
 };
 // used once
 // should be a helper

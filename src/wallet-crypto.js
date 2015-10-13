@@ -3,6 +3,8 @@
 var assert = require('assert');
 var CryptoJS = require('crypto-js');
 var sjcl = require('sjcl');
+var Bitcoin = require('bitcoinjs-lib');
+
 
 var SUPPORTED_ENCRYPTION_VERSION = 3.0;
 
@@ -285,6 +287,11 @@ function hashNTimes(password, iterations) {
   return round_data.toString();
 };
 
+function signMessage(ecKey, message) {
+  var signatureBuffer = Bitcoin.Message.sign(ecKey, message, Bitcoin.networks.bitcoin);
+  return signatureBuffer.toString("base64", 0, signatureBuffer.length);
+}
+
 module.exports = {
   decryptSecretWithSecondPassword: decryptSecretWithSecondPassword,
   encryptSecretWithSecondPassword: encryptSecretWithSecondPassword,
@@ -296,5 +303,6 @@ module.exports = {
   decryptPasswordWithProcessedPin: decryptPasswordWithProcessedPin,
   stretchPassword: stretchPassword,
   hashNTimes: hashNTimes,
-  cipherFunction: cipherFunction
+  cipherFunction: cipherFunction,
+  signMessage: signMessage
 };
