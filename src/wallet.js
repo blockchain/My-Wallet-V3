@@ -998,29 +998,25 @@ MyWallet.login = function ( user_guid
 
     }
 
+
     var error = function(e) {
-      if(e.responseJSON && e.responseJSON.initial_error && !e.responseJSON.authorization_required) {
-        other_error(e.responseJSON.initial_error);
-        return;
-      }
-
-      WalletStore.sendEvent('did_fail_set_guid');
-
-      var obj = JSON.parse(e.responseText);
-
-      if (obj.authorization_required && typeof(authorization_required) === "function") {
-        authorization_required(function() {
-          MyWallet.pollForSessionGUID(function() {
-            tryToFetchWalletJSON(guid, successCallback);
-          });
-        });
-      }
-
-      if (obj.initial_error) {
-        WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
-      }
+       var obj = JSON.parse(e);
+       if(obj && obj.initial_error && !obj.authorization_required) {
+         other_error(obj.initial_error);
+         return;
+       }
+       WalletStore.sendEvent('did_fail_set_guid');
+       if (obj.authorization_required && typeof(authorization_required) === "function") {
+         authorization_required(function() {
+           MyWallet.pollForSessionGUID(function() {
+             tryToFetchWalletJSON(guid, successCallback);
+           });
+         });
+       }
+       if (obj.initial_error) {
+         WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
+       }
     }
-
     API.request("GET", 'wallet/' + guid, data, true, false).then(success).catch(error);
   }
 
