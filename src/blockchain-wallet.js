@@ -117,6 +117,22 @@ Object.defineProperties(Wallet.prototype, {
       }
     }
   },
+  "metaDataSharedKey": {
+    configurable: false,
+    get: function() {
+      return WalletCrypto.xpubToMetaDataSharedKey(this._metaDataXpub);
+    }
+  },
+  "metaDataKey": {
+    configurable: false,
+    get: function() {
+      if(this._metaDataXpub) {
+        return WalletCrypto.xpubToMetaDataKey(this._metaDataXpub);
+      } else {
+        return null;
+      }
+    }
+  },
   "isDoubleEncrypted": {
     configurable: false,
     get: function() { return this._double_encryption;}

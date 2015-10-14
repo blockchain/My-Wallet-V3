@@ -63,3 +63,15 @@ describe "WalletCrypto", ->
       })
 
       expect(uuid).toEqual("2aafd70c-3ef8-493a-96cb-bb379be61448")
+
+
+  describe "encryptMetaData()", ->
+    it "should be the same when decrypted", ->
+      key = "YiVGNZY/Wi2bS7LQyCpOSF3FHwWQe/pcsVi4wmPjing="
+      data = {hello: "world"}
+
+      encrypted = WalletCrypto.encryptMetaData(data, key)
+      expect(encrypted.payload).toBeDefined()
+
+      decrypted = WalletCrypto.decryptMetaData(encrypted, key)
+      expect(decrypted).toEqual(data)
