@@ -9,6 +9,7 @@ var WalletCrypto = require('./wallet-crypto');
 var API = require('./api');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
+var BIP39 = require('bip39');
 
 // Save the javascript wallet to the remote server
 function insertWallet(guid, sharedKey, password, extra, successcallback, errorcallback) {
@@ -22,7 +23,7 @@ function insertWallet(guid, sharedKey, password, extra, successcallback, errorca
     var data = JSON.stringify(MyWallet.wallet, null, 2);
 
     //Everything looks ok, Encrypt the JSON output
-    var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.wallet.defaultPbkdf2Iterations,  MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0);
+    var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.wallet.defaultPbkdf2Iterations,  MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0, WalletStore.getEncryptedPassword());
 
     if (crypted.length == 0) {
       throw 'Error encrypting the JSON output';
@@ -71,65 +72,47 @@ function insertWallet(guid, sharedKey, password, extra, successcallback, errorca
   }
 }
 
-function generateUUIDs(n, success, error) {
+function generateNewWallet(password, email, firstAccountName, success, error) {
+  var mnemonic = BIP39.generateMnemonic();
+  var seed = BIP39.mnemonicToSeedHex(mnemonic);
 
-  var succ = function(data) {
-    if (data.uuids && data.uuids.length == n) {
-      success(data.uuids);
-    } else {
-      error('Unknown Error');
-    }
-  };
-  var err = function(data) {
-    error(data.responseText);
-  };
+  assert(seed != undefined && seed != null && seed != "", "HD seed required");
 
-  var data = {
-      format: 'json'
-    , n: n
-    , api_code : API.API_CODE
-  };
+  var xpub = WalletCrypto.seedToMetaDataXpub(seed);
 
-  API.retry(API.request.bind(API, "GET", "uuid-generator", data))
-    .then(succ)
-    .catch(err);
-};
+  if (password.length > 255) {
+    throw 'Passwords must be shorter than 256 characters';
+  }
 
-function generateNewWallet(password, email, firstAccountName, success, error, isHD) {
-  isHD = Helpers.isBoolean(isHD) ? isHD : true;
-  this.generateUUIDs(2, function(uuids) {
-    var guid = uuids[0];
-    var sharedKey = uuids[1];
+  //User reported this browser generated an invalid private key
+  if(navigator.userAgent.match(/MeeGo/i)) {
+    throw 'MeeGo browser currently not supported.';
+  }
 
-    if (password.length > 255) {
-      throw 'Passwords must be shorter than 256 characters';
-    }
+  var outerThis = this;
 
-    //User reported this browser generated an invalid private key
-    if(navigator.userAgent.match(/MeeGo/i)) {
-      throw 'MeeGo browser currently not supported.';
-    }
+  var saveWallet = function(wallet) {
+    outerThis.insertWallet(wallet.guid, wallet.sharedKey, password, {email : email}, function(message){
+      success(seed, wallet.guid, wallet.sharedKey, password);
+    }, function(e) {
+      error(e);
+    });
+  }
 
-    if (guid.length != 36 || sharedKey.length != 36) {
-      throw 'Error generating wallet identifier';
-    }
+  // MyWallet.wallet.defaultPbkdf2Iterations is not available, hard coding 5000 for now:
+  var encryptedPassword = WalletCrypto.encryptPasswordWithSeed(password, seed, 5000);
 
-    // Upgrade to HD immediately:
-
-    var saveWallet = function() {
-      insertWallet(guid, sharedKey, password, {email : email}, function(message){
-        success(guid, sharedKey, password);
-      }, function(e) {
-        error(e);
-      });
-    };
-
-    Wallet.new(guid, sharedKey, firstAccountName, saveWallet, isHD);
-
-  }, error);
+  WalletStore.setEncryptedPassword(encryptedPassword);
+  Wallet.new(
+    mnemonic,
+    xpub,
+    firstAccountName,
+    saveWallet,
+    true
+  );
 };
 
 module.exports = {
-  generateUUIDs: generateUUIDs,
-  generateNewWallet: generateNewWallet
+  generateNewWallet: generateNewWallet,
+  insertWallet: insertWallet // Exported for tests
 };

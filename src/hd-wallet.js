@@ -165,8 +165,7 @@ function getMasterHex (seedHex, bip39Password, cipher){
 // load hdwallet
 // restore hdwallet
 
-HDWallet.new = function(cipher){
-  var mnemonic = BIP39.generateMnemonic();
+HDWallet.new = function(mnemonic, cipher){
   var seedHex  = BIP39.mnemonicToEntropy(mnemonic);
   return HDWallet.restore(seedHex, '', cipher);
 };

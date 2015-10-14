@@ -3,6 +3,8 @@
 var assert = require('assert');
 var CryptoJS = require('crypto-js');
 var sjcl = require('sjcl');
+var uuid = require('uuid');
+var Bitcoin = require('bitcoinjs-lib');
 
 var SUPPORTED_ENCRYPTION_VERSION = 3.0;
 
@@ -168,17 +170,23 @@ function decryptAes(data, password, pbkdf2_iterations, options) {
   return decoded;
 }
 
-function encryptWallet(data, password, pbkdf2_iterations, version) {
+function encryptWallet(data, password, pbkdf2_iterations, version, encryptedPassword)  {
   assert(data, "data missing");
   assert(password, "password missing");
   assert(pbkdf2_iterations, "pbkdf2_iterations missing");
   assert(version, "version missing");
 
-  return JSON.stringify({
+  var payload = {
     pbkdf2_iterations: pbkdf2_iterations,
     version: version,
-    payload: encrypt(data, password, pbkdf2_iterations)
-  });
+    payload: encrypt(data, password, pbkdf2_iterations),
+  };
+
+  if(encryptedPassword != undefined && encryptedPassword != null) {
+    payload.encryptedPassword = encryptedPassword;
+  }
+
+  return JSON.stringify(payload);
 }
 
 function decryptWallet(data, password, success, error) {
@@ -285,6 +293,81 @@ function hashNTimes(password, iterations) {
   return round_data.toString();
 };
 
+// http://stackoverflow.com/a/11893415
+function wordToByteArray(wordArray) {
+    var byteArray = [], word, i, j;
+    for (i = 0; i < wordArray.length; ++i) {
+        word = wordArray[i];
+        for (j = 3; j >= 0; --j) {
+            byteArray.push((word >> 8 * j) & 0xFF);
+        }
+    }
+    return byteArray;
+}
+
+function encryptPasswordWithSeed(password, seedHexString, pbkdf2_iterations) {
+  assert(seedHexString.length == 128, "Expected a 256 bit seed as a hex string")
+  var seed = CryptoJS.enc.Hex.parse(seedHexString);
+
+  return encrypt(password, seed, pbkdf2_iterations);
+}
+
+function decryptPasswordWithSeed(encryptedPassword, seedHexString, pbkdf2_iterations) {
+  assert(seedHexString.length == 128, "Expected a 512 bit seed as a hex string")
+  var seed = CryptoJS.enc.Hex.parse(seedHexString);
+
+  return decryptAes(encryptedPassword, seed, pbkdf2_iterations);
+}
+
+function seedToMetaDataXpub(seedHexString) {
+  assert(seedHexString.length == 128, "Expected a 512 bit seed as a hex string");
+  return Bitcoin.HDNode.fromSeedHex(seedHexString).deriveHardened(1).neutered().toBase58();
+}
+
+function pubKeyToPseudoAddress(pubKey) {
+  // https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
+  // This takes steps 2 (double sha256) and 3 (ripemd) of the above process:
+  return Bitcoin.crypto.ripemd160(Bitcoin.crypto.sha256(pubKey))
+}
+
+function metaDataXpubToKey(xpub, i, bytes) {
+  assert(xpub, "xpub required");
+  assert(xpub.slice(0,4) == "xpub", "Invalid xpub");
+
+  assert(!isNaN(i), "i should be a number");
+  assert(i === parseInt(i, 10), "i should be an integer");
+  assert(i < 256, "i should be < 256");
+
+  assert(!isNaN(bytes), "bytes should be a number");
+  assert(i === parseInt(i, 10), "bytes should be an integer");
+  assert(i < 256 / 8, "max 256 bits");
+
+  var node = Bitcoin.HDNode.fromBase58(xpub);
+  var childNode = node.derive(i);
+
+  var pubKey = childNode.getPubKey()
+
+  var pseudoAddress = pubKeyToPseudoAddress(pubKey.toBuffer())
+
+  var desiredBytes = new Buffer(bytes);
+
+  pseudoAddress.copy(desiredBytes,0,0,bytes);
+
+  return desiredBytes;
+}
+
+function xpubToGuid(xpub) {
+  return uuid.v4({
+    random: metaDataXpubToKey(xpub, 0, 16)
+  })
+}
+
+function xpubToSharedKey(xpub) {
+  return uuid.v4({
+    random: metaDataXpubToKey(xpub, 1, 16)
+  })
+}
+
 module.exports = {
   decryptSecretWithSecondPassword: decryptSecretWithSecondPassword,
   encryptSecretWithSecondPassword: encryptSecretWithSecondPassword,
@@ -296,5 +379,13 @@ module.exports = {
   decryptPasswordWithProcessedPin: decryptPasswordWithProcessedPin,
   stretchPassword: stretchPassword,
   hashNTimes: hashNTimes,
-  cipherFunction: cipherFunction
+  cipherFunction: cipherFunction,
+  wordToByteArray: wordToByteArray,
+  encryptPasswordWithSeed: encryptPasswordWithSeed,
+  decryptPasswordWithSeed: decryptPasswordWithSeed,
+  seedToMetaDataXpub: seedToMetaDataXpub,
+  xpubToSharedKey: xpubToSharedKey,
+  xpubToGuid: xpubToGuid,
+  metaDataXpubToKey: metaDataXpubToKey,
+  pubKeyToPseudoAddress: pubKeyToPseudoAddress // For testing only
 };

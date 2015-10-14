@@ -33,8 +33,17 @@ function Wallet(object) {
   obj.keys       = obj.keys || [];
   obj.hd_wallets = obj.hd_wallets || [];
 
-  this._guid              = obj.guid;
-  this._sharedKey         = obj.sharedKey;
+  if(obj.metaDataXpub) {
+    this._metaDataXpub      = obj.metaDataXpub;
+  }
+
+  // Version 3 wallets that were upgraded from version 2 or that were created
+  // before August 2015 have a non-deterministic GUID and shared key.
+  if(!obj.metaDataXpub || (obj.guid && obj.sharedKey)) {
+    this._guid              = obj.guid;
+    this._sharedKey         = obj.sharedKey;
+  }
+
   this._double_encryption = obj.double_encryption || false;
   this._dpasswordhash     = obj.dpasswordhash;
   //options
@@ -84,13 +93,29 @@ function Wallet(object) {
 }
 
 Object.defineProperties(Wallet.prototype, {
+  "metaDataXpub": {
+    configurable: false,
+    get: function() { return this._metaDataXpub;}
+  },
   "guid": {
     configurable: false,
-    get: function() { return this._guid;}
+    get: function() {
+      if(this._metaDataXpub && !this._guid) {
+        return WalletCrypto.xpubToGuid(this._metaDataXpub);
+      } else {
+        return this._guid;
+      }
+    }
   },
   "sharedKey": {
     configurable: false,
-    get: function() { return this._sharedKey;}
+    get: function() {
+      if(this._metaDataXpub && !this._sharedKey) {
+        return WalletCrypto.xpubToSharedKey(this._metaDataXpub);
+      } else {
+        return this._sharedKey;
+      }
+    }
   },
   "isDoubleEncrypted": {
     configurable: false,
@@ -380,8 +405,6 @@ Wallet.prototype.toJSON = function(){
   };
 
   var wallet = {
-    guid              : this.guid,
-    sharedKey         : this.sharedKey,
     double_encryption : this.isDoubleEncrypted,
     dpasswordhash     : this.dpasswordhash,
     options           : {
@@ -398,6 +421,17 @@ Wallet.prototype.toJSON = function(){
     paidTo            : this._paidTo,
     hd_wallets        : Helpers.isEmptyArray(this._hd_wallets) ? undefined : this._hd_wallets
   };
+
+  if(this._metaDataXpub != undefined && this._metaDataXpub != null) {
+    wallet.metaDataXpub = this._metaDataXpub;
+  }
+
+  // Only store GUID & shared key if they are not deterministic:
+  if(this._guid && this._sharedKey) {
+    wallet.guid = this.guid,
+    wallet.sharedKey = this.sharedKey
+  }
+
   return wallet;
 };
 
@@ -600,11 +634,11 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
 };
 
 // creating a new wallet object
-Wallet.new = function(guid, sharedKey, firstAccountLabel, success, isHD){
+Wallet.new = function(mnemonic, metaDataXpub, firstAccountLabel, success, isHD){
   isHD = Helpers.isBoolean(isHD) ? isHD : true;
+
   var object = {
-    guid              : guid,
-    sharedKey         : sharedKey,
+    metaDataXpub      : metaDataXpub,
     double_encryption : false,
     options: {
       pbkdf2_iterations  : 5000,
@@ -613,11 +647,11 @@ Wallet.new = function(guid, sharedKey, firstAccountLabel, success, isHD){
       logout_time        : 600000
     }
   };
-  MyWallet.wallet = new Wallet(object);
+  MyWallet.wallet   = new Wallet(object);
   var label = firstAccountLabel ||  "My Bitcoin Wallet";
   if (isHD) {
     // hd wallet
-    var newHDwallet = HDWallet.new();
+    var newHDwallet = HDWallet.new(mnemonic);
     MyWallet.wallet._hd_wallets.push(newHDwallet);
     newHDwallet.newAccount(label);
   } else {
@@ -631,7 +665,11 @@ Wallet.new = function(guid, sharedKey, firstAccountLabel, success, isHD){
 // adding and hd wallet to an existing wallet
 Wallet.prototype.newHDWallet = function(firstAccountLabel, pw, success, error){
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
-  var newHDwallet = HDWallet.new(encoder);
+  var mnemonic = BIP39.generateMnemonic();
+  var newHDwallet = HDWallet.new(mnemonic, encoder);
+
+  var seed = BIP39.mnemonicToSeedHex(mnemonic);
+  this._metaDataXpub = WalletCrypto.seedToMetaDataXpub(seed);
   this._hd_wallets.push(newHDwallet);
   var label = firstAccountLabel ? firstAccountLabel : "My Bitcoin Wallet";
   var account = this.newAccount(label, pw, this._hd_wallets.length-1, true);
@@ -693,6 +731,7 @@ Wallet.prototype.changePbkdf2Iterations = function(newIterations, password){
     }
     else { // no double encrypted wallet
       this._pbkdf2_iterations = newIterations;
+      WalletStore.updateEncryptedPasswordIfNeeded(WalletStore.getPassword());
       MyWallet.syncWallet();
     };
   };
