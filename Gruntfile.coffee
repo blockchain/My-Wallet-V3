@@ -72,6 +72,7 @@ module.exports = (grunt) ->
         'src/wallet-signup.js'
         'src/payment.js'
         #'src/wallet.js'
+        'src/meta-data.js'
       ]
       options:
         globals:

@@ -90,6 +90,14 @@ describe "HDWallet", ->
         wallet.sharedKey = "not allowed"
         expect(wallet.sharedKey).not.toEqual("not allowed")
 
+      it "metaDataKey is read only", ->
+        wallet.metaDataKey = "not allowed"
+        expect(wallet.metaDataKey).not.toEqual("not allowed")
+
+      it "metaDataSharedKey is read only", ->
+        wallet.metaDataSharedKey = "not allowed"
+        expect(wallet.metaDataSharedKey).not.toEqual("not allowed")
+
       it "isDoubleEncrypted is read only", ->
         wallet.isDoubleEncrypted = "not allowed"
         expect(wallet.isDoubleEncrypted).not.toEqual("not allowed")
@@ -194,6 +202,12 @@ describe "HDWallet", ->
 
       it "should derive the sharedKey", ->
         expect(wallet.sharedKey).toEqual("4c6c6bd2-5fa2-4b5c-87e8-78aaf8507197")
+
+      it "should derive the meta data sharedKey", ->
+        expect(wallet.metaDataSharedKey).toEqual("882a1b96-f9d3-4d14-924b-738df3a06942")
+
+      it "should derive the meta data key", ->
+        expect(wallet.metaDataKey).toEqual("ENw4K4vpC1CUWi2SEwhrqw==")
 
       it "isDoubleEncrypted", ->
         expect(wallet.isDoubleEncrypted).toEqual(object.double_encryption)
