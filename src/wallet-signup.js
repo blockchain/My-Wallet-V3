@@ -57,7 +57,7 @@ function insertWallet(guid, sharedKey, password, extra, successcallback, errorca
             successcallback(data);
           },
           function(e) {
-            errorcallback(e.responseText);
+            errorcallback(e);
           }
         );
 
