@@ -726,3 +726,24 @@ Wallet.prototype.whitelistWallet = function (secret, subdomain, email, name) {
   );
   return defer.promise;
 };
+
+/**
+ * @param {string} address bitcoin address
+ * @param {string} message message
+ * @return {string} message signature in base64
+ */
+Wallet.prototype.signMessage = function(address, message, secondPassword) {
+  assert(Helpers.isBitcoinAddress(address), "Not a valid Bitcoin address");
+  assert(MyWallet.wallet.containsLegacyAddress(address), "Address not in wallet");
+  
+  var addr = MyWallet.wallet.key(address);
+  
+  var priv = MyWallet.wallet.getPrivateKeyForAddress(addr, secondPassword);
+  
+  var format = MyWallet.detectPrivateKeyFormat(priv);
+  
+  // Always use the uncompressed variant.
+  var ecKey  = MyWallet.privateKeyStringToKey(priv, format, false);
+    
+  return WalletCrypto.signMessage(ecKey, message)
+};
