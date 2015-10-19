@@ -81,7 +81,7 @@ function generateUUIDs(n, success, error) {
     }
   };
   var err = function(data) {
-    error(data.responseText);
+    error(data);
   };
 
   var data = {
