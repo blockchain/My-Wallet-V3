@@ -3,6 +3,7 @@
 module.exports = Address;
 ////////////////////////////////////////////////////////////////////////////////
 var Base58   = require('bs58');
+var RNG      = require('./rng');
 var Bitcoin  = require('bitcoinjs-lib');
 var Helpers  = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
@@ -151,7 +152,7 @@ Address.import = function(key, label){
 };
 
 Address.new = function(label){
-  var key = Bitcoin.ECKey.makeRandom(true);
+  var key = Bitcoin.ECKey.makeRandom(true, RNG.run.bind(RNG));
   return Address.import(key, label);
 };
 
