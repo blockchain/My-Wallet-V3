@@ -3,22 +3,17 @@
 module.exports = new RNG();
 ////////////////////////////////////////////////////////////////////////////////
 var randomBytes = require('randombytes');
-var Q           = require('q');
+// var Q           = require('q');
 var API         = require('./api');
 var Buffer      = require('buffer').Buffer;
-// var assert      = require('assert');
-// var Helpers     = require('./helpers');
-// var CryptoJS    = require('crypto-js');
+var assert      = require('assert');
 ////////////////////////////////////////////////////////////////////////////////
 // API class
 function RNG(){
-  // private members
   this.ACTION    = "GET";
   this.URL       = "https://api.blockchain.info/v2/randombytes";
-  this.TIMEOUT   = 60000;
   this.FORMAT    = 'hex';  // raw, hex, base64
   this.BYTES     = 32;
-  // this.API_CODE    = "1770d5d9-bcea-4d28-ad21-6cbd5be018a8";
   }
 
 function xor(a, b) {
@@ -37,45 +32,40 @@ function xor(a, b) {
   return new Buffer(res);
 }
 
-// run :: Int -> Func -> Buffer
+// run :: Int -> Fun -> Buffer
 RNG.prototype.run = function (sizeBytes, callback) {
-
-  var serverH = this.getServerEntropy(sizeBytes);
-  function combine(sH) {
-    var localH  = randomBytes(sizeBytes, callback);
-    return xor(sH, localH);
+  try {
+    console.log("running my rng");
+    var b = sizeBytes ? sizeBytes : this.BYTES;
+    var serverH = this.getServerEntropy(b);
+    var localH = randomBytes(b, callback);
+    assert(serverH.byteLength === localH.byteLength, 'Error: both entropies should be same of the length.');
+    var combinedH = xor(localH, serverH);
+    var zero = new Buffer(serverH.byteLength);
+    assert(Buffer.compare(combinedH, zero) !== 0, 'Error: zero array entropy not allowed.');
+  } catch (e) {
+    console.log("Error: RNG.run");
+    console.log(e);
+    throw "Error generating the entropy";
   }
-  return serverH.then(combine);
+  return combinedH;
 };
 
 // getServerEntropy :: int -> Buffer
 RNG.prototype.getServerEntropy = function (sizeBytes) {
 
-  var defer = Q.defer();
   var request = new XMLHttpRequest();
   var b = sizeBytes ? sizeBytes : this.BYTES;
   var data = { bytes: b, format: this.FORMAT };
   var url = this.URL +  '?' + API.encodeFormData(data);
-  request.open(this.ACTION, url , true);
-  request.timeout = this.TIMEOUT;
+  request.open(this.ACTION, url , false);
   request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-
-  request.onload = function (e) {
-    if (request.readyState === 4) {
-      if (request.status === 200) {
-        var B = new Buffer(request.responseText, this.FORMAT);
-        defer.resolve(B);
-      } else {
-        defer.reject(request.responseText);
-      }
-    }
-  };
-  request.onerror = function (e) {
-    defer.reject(request.responseText);
-  };
-  request.ontimeout = function() {
-    defer.reject("timeout request");
-  };
-  request.send();
-  return defer.promise;
+  request.send(null);
+  if (request.status === 200) {
+    var B = new Buffer(request.responseText, this.FORMAT);
+    return B;
+  }
+  else{
+    throw "network connection error";
+  }
 }
