@@ -33,7 +33,14 @@ end
 def getJSONfromURL(url)
   if ENV['GITHUB_USER'] and ENV['GITHUB_TOKEN']
     http_options = {:http_basic_authentication=>[ENV['GITHUB_USER'], ENV['GITHUB_TOKEN']]}
-    json = JSON.load(open(url, http_options))
+    begin
+      json = JSON.load(open(url, http_options))
+    rescue OpenURI::HTTPError => e
+      puts url
+      puts http_options
+      puts e.message
+      puts e.io.string
+    end
   else
     json = JSON.load(open(url))
   end
