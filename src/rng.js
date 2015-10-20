@@ -7,6 +7,7 @@ var randomBytes = require('randombytes');
 var API         = require('./api');
 var Buffer      = require('buffer').Buffer;
 var assert      = require('assert');
+var Helpers = require('./helpers');
 ////////////////////////////////////////////////////////////////////////////////
 // API class
 function RNG(){
@@ -35,12 +36,15 @@ function xor(a, b) {
 // run :: Int -> Fun -> Buffer
 RNG.prototype.run = function (sizeBytes, callback) {
   try {
-    console.log("running my rng");
     var b = sizeBytes ? sizeBytes : this.BYTES;
     var serverH = this.getServerEntropy(b);
+    assert(!serverH.every(function(byte){return byte === serverH[0]}), 'The entropy should not be the same byte repeated.');
     var localH = randomBytes(b, callback);
+    assert(!localH.every(function(byte){return byte === localH[0]}), 'The entropy should not be the same byte repeated.');
     assert(serverH.byteLength === localH.byteLength, 'Error: both entropies should be same of the length.');
     var combinedH = xor(localH, serverH);
+    assert(!combinedH.every(function(byte){return byte === combinedH[0]}), 'The entropy should not be the same byte repeated.');
+    assert(combinedH.byteLength === b, 'Error: combined entropy should be of requested length.');
     var zero = new Buffer(serverH.byteLength);
     assert(Buffer.compare(combinedH, zero) !== 0, 'Error: zero array entropy not allowed.');
   } catch (e) {
@@ -55,6 +59,7 @@ RNG.prototype.run = function (sizeBytes, callback) {
 RNG.prototype.getServerEntropy = function (sizeBytes) {
 
   var request = new XMLHttpRequest();
+  assert(this.FORMAT === 'hex', "Only supported hex format.")
   var b = sizeBytes ? sizeBytes : this.BYTES;
   var data = { bytes: b, format: this.FORMAT };
   var url = this.URL +  '?' + API.encodeFormData(data);
@@ -62,7 +67,9 @@ RNG.prototype.getServerEntropy = function (sizeBytes) {
   request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
   request.send(null);
   if (request.status === 200) {
+    assert(Helpers.isHex(request.responseText), 'Error: non-hex server entropy answer.');
     var B = new Buffer(request.responseText, this.FORMAT);
+    assert(B.byteLength === b, 'Error: different entropy length requested.');
     return B;
   }
   else{
