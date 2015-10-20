@@ -241,11 +241,11 @@ Payment.from = function(origin) {
     // from PrivateKey
     case (pkFormat !== null):
       var key    = MyWallet.privateKeyStringToKey(origin, pkFormat);
-      key.pub.compressed = false;
-      var addrUncomp = key.pub.getAddress().toString();
+      key.compressed = false;
+      var addrUncomp = key.getAddress().toString();
       var uWIF = key.toWIF();
-      key.pub.compressed = true;
-      var addrComp = key.pub.getAddress().toString();
+      key.compressed = true;
+      var addrComp = key.getAddress().toString();
       var cWIF = key.toWIF();
       wifs      = [cWIF, uWIF];
       addresses = [addrComp, addrUncomp];
@@ -394,10 +394,10 @@ function getKeyForAddress(password, addr) {
   var format = MyWallet.detectPrivateKeyFormat(privateKeyBase58);
   var key    = MyWallet.privateKeyStringToKey(privateKeyBase58, format);
   if (MyWallet.getCompressedAddressString(key) === addr) {
-    key = new Bitcoin.ECKey(key.d, true);
+    key = new Bitcoin.ECPair(key.d, true);
   }
   else if (MyWallet.getUnCompressedAddressString(key) === addr) {
-    key = new Bitcoin.ECKey(key.d, false);
+    key = new Bitcoin.ECPair(key.d, false);
   };
   return key;
 }

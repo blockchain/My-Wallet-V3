@@ -8,7 +8,7 @@ Helpers.isString = function (str){
   return typeof str == 'string' || str instanceof String;
 };
 Helpers.isKey = function (bitcoinKey){
-  return bitcoinKey instanceof Bitcoin.ECKey;
+  return bitcoinKey instanceof Bitcoin.ECPair;
 };
 Helpers.isBitcoinAddress = function(candidate) {
   try {
@@ -19,7 +19,7 @@ Helpers.isBitcoinAddress = function(candidate) {
 };
 Helpers.isBitcoinPrivateKey = function(candidate) {
   try {
-    Bitcoin.ECKey.fromWIF(candidate);
+    Bitcoin.ECPair.fromWIF(candidate);
     return true;
   }
   catch (e) { return false; };

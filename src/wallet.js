@@ -6,7 +6,7 @@ var assert = require('assert');
 var CryptoJS = require('crypto-js');
 var xregexp = require('xregexp');
 var Bitcoin = require('bitcoinjs-lib');
-var ECKey = Bitcoin.ECKey;
+var ECPair = Bitcoin.ECPair;
 var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
@@ -89,11 +89,11 @@ MyWallet.B58LegacyDecode = function(input) {
 // Temporary workaround instead instead of modding bitcoinjs to do it TODO: not efficient
 // used only on wallet.js and wallet-store.js
 MyWallet.getCompressedAddressString = function(key) {
-  return new ECKey(key.d, true).pub.getAddress().toString();
+  return new ECPair(key.d, true).getAddress().toString();
 };
 // used only on wallet.js
 MyWallet.getUnCompressedAddressString = function(key) {
-  return new ECKey(key.d, false).pub.getAddress().toString();
+  return new ECPair(key.d, false).getAddress().toString();
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -126,7 +126,7 @@ MyWallet.addPrivateKey = function(key, opts, second_password) {
 
   var decoded_base_58 = second_password == null ? base58 : WalletCrypto.decryptSecretWithSecondPassword(encoded, second_password, sharedKey, pbkdf2_iterations);
 
-  var decoded_key = new ECKey(new BigInteger.fromBuffer(decoded_base_58), opts.compressed);
+  var decoded_key = new ECPair(new BigInteger.fromBuffer(decoded_base_58), opts.compressed);
 
   if (addr != MyWallet.getUnCompressedAddressString(key) && addr != MyWallet.getCompressedAddressString(key)) {
     throw 'Decoded Key address does not match generated address';
@@ -160,7 +160,7 @@ MyWallet.addPrivateKey = function(key, opts, second_password) {
 
 // used on sharedcoin.js, wallet-spender.js and wallet.js
 MyWallet.generateNewKey = function(_password) {
-  var key = Bitcoin.ECKey.makeRandom(true);
+  var key = Bitcoin.ECPair.makeRandom(true);
 
   // key is uncompressed, so cannot passed in opts.compressed = true here
   if (MyWallet.addPrivateKey(key)) {
@@ -171,8 +171,8 @@ MyWallet.generateNewKey = function(_password) {
 MyWallet.generateNewMiniPrivateKey = function() {
   // Documentation: https://en.bitcoin.it/wiki/Mini_private_key_format
   while (true) {
-    //Use a normal ECKey to generate random bytes
-    var key = Bitcoin.ECKey.makeRandom(false);
+    //Use a normal ECPair to generate random bytes
+    var key = Bitcoin.ECPair.makeRandom(false);
 
     //Make Candidate Mini Key
     var minikey = 'S' + Base58.encode(key.d.toBuffer(32)).substr(0, 21);
@@ -186,10 +186,10 @@ MyWallet.generateNewMiniPrivateKey = function() {
       //SHA256
       var bytes = Bitcoin.crypto.sha256(minikey);
 
-      var eckey = new Bitcoin.ECKey(new BigInteger.fromBuffer(bytes), false);
+      var ECPair = new Bitcoin.ECPair(new BigInteger.fromBuffer(bytes), false);
 
-      if (MyWallet.addPrivateKey(eckey, {compressed: true}))
-        return {key : eckey, miniKey : minikey};
+      if (MyWallet.addPrivateKey(ECPair, {compressed: true}))
+        return {key : ECPair, miniKey : minikey};
     }
   }
 };
@@ -770,7 +770,7 @@ MyWallet.isValidPrivateKey = function(candidate) {
     var format = MyWallet.detectPrivateKeyFormat(candidate);
     if(format == "bip38") { return true }
     var key = MyWallet.privateKeyStringToKey(candidate, format);
-    return key.pub.getAddress().toString();
+    return key.getAddress().toString();
   } catch (e) {
     return false;
   }
@@ -1302,9 +1302,9 @@ MyWallet.signMessage = function(address, message) {
   // TODO: deal with second password
   // var decryptedpk = MyWallet.decodePK(addr.priv);
 
-  var key = new ECKey(new BigInteger.fromBuffer(decryptedpk), false);
-  if (key.pub.getAddress().toString() != address) {
-    key = new ECKey(new BigInteger.fromBuffer(decryptedpk), true);
+  var key = new ECPair(new BigInteger.fromBuffer(decryptedpk), false);
+  if (key.getAddress().toString() != address) {
+    key = new ECPair(new BigInteger.fromBuffer(decryptedpk), true);
   }
 
   var signatureBuffer = Bitcoin.Message.sign(key, message, Bitcoin.networks.bitcoin);
@@ -1340,7 +1340,7 @@ MyWallet.signMessage = function(address, message) {
 //         decryptedpk = WalletCrypto.decryptSecretWithSecondPassword(addr.priv, second_password, sharedKey, pbkdf2_iterations);
 //       }
 //       var decodedpk = MyWallet.B58LegacyDecode(decryptedpk);
-//       var privatekey = new ECKey(new BigInteger.fromBuffer(decodedpk), false);
+//       var privatekey = new ECPair(new BigInteger.fromBuffer(decodedpk), false);
 //       var actual_addr = MyWallet.getUnCompressedAddressString(privatekey);
 //       if (actual_addr != addr.address && MyWallet.getCompressedAddressString(privatekey) != addr.address) {
 //         console.log('Private key does not match bitcoin address ' + addr.address + " != " + actual_addr);
@@ -1509,10 +1509,11 @@ MyWallet.privateKeyStringToKey = function(value, format) {
     throw 'Unsupported Key Format';
   }
 
-  if (key_bytes.length != 32 && key_bytes.length != 33)
+  if (key_bytes.length != 32 && key_bytes.length != 33) {
     throw 'Result not 32 or 33 bytes in length';
+  }
 
-  return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format !== 'sipa'));
+  return new ECPair(new BigInteger.fromByteArrayUnsigned(key_bytes), (format !== 'sipa'));
 };
 // used once
 // should be a helper

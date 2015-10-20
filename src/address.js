@@ -131,12 +131,12 @@ Address.import = function(key, label){
       object.priv = null;
       break;
     case Helpers.isKey(key):
-      object.addr = key.pub.getAddress().toString();
+      object.addr = key.getAddress().toString();
       object.priv = Base58.encode(key.d.toBuffer(32));
       break;
     case Helpers.isBitcoinPrivateKey(key):
-      key = Bitcoin.ECKey.fromWIF(key)
-      object.addr = key.pub.getAddress().toString();
+      key = Bitcoin.ECPair.fromWIF(key)
+      object.addr = key.getAddress().toString();
       object.priv = Base58.encode(key.d.toBuffer(32));
       break;
     default:
@@ -151,7 +151,7 @@ Address.import = function(key, label){
 };
 
 Address.new = function(label){
-  var key = Bitcoin.ECKey.makeRandom(true);
+  var key = Bitcoin.ECPair.makeRandom(true);
   return Address.import(key, label);
 };
 

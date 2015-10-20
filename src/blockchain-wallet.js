@@ -6,7 +6,7 @@ module.exports = Wallet;
 // dependencies
 var assert = require('assert');
 var Bitcoin = require('bitcoinjs-lib');
-var ECKey = Bitcoin.ECKey;
+var ECPair = Bitcoin.ECPair;
 var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
@@ -427,7 +427,7 @@ Wallet.prototype.importLegacyAddress = function(addr, label, secPass, bipPass){
   switch (true) {
     case format === 'bip38':
       if (bipPass === '') defer.reject('needsBip38');
-      else ImportExport.parseBIP38toECKey(
+      else ImportExport.parseBIP38toECPair(
         addr, bipPass,
         function (key) { importAddress(key); },
         function () { defer.reject('wrongBipPass'); },

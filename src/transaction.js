@@ -89,7 +89,7 @@ Transaction.prototype.addPrivateKeys = function(privateKeys) {
   assert.equal(privateKeys.length, this.addressesOfInputs.length, 'Number of private keys needs to match inputs');
 
   for (var i = 0; i < privateKeys.length; i++) {
-    assert.equal(this.addressesOfInputs[i], privateKeys[i].pub.getAddress().toBase58Check(), 'Private key does not match bitcoin address ' + this.addressesOfInputs[i] + '!=' + privateKeys[i].pub.getAddress().toBase58Check());
+    assert.equal(this.addressesOfInputs[i], privateKeys[i].getAddress(), 'Private key does not match bitcoin address ' + this.addressesOfInputs[i] + '!=' + privateKeys[i].getAddress());
   }
 
   this.privateKeys = privateKeys;
@@ -127,7 +127,7 @@ Transaction.prototype.sign = function() {
   assert.equal(this.privateKeys.length, this.transaction.ins.length, 'Number of private keys needs to match inputs');
 
   for (var i = 0; i < this.privateKeys.length; i++) {
-    assert.equal(this.addressesOfInputs[i], this.privateKeys[i].pub.getAddress().toBase58Check(), 'Private key does not match bitcoin address ' + this.addressesOfInputs[i] + '!=' + this.privateKeys[i].pub.getAddress().toBase58Check());
+    assert.equal(this.addressesOfInputs[i], this.privateKeys[i].getAddress(), 'Private key does not match bitcoin address ' + this.addressesOfInputs[i] + '!=' + this.privateKeys[i].getAddress());
   }
 
   var listener = this.listener;

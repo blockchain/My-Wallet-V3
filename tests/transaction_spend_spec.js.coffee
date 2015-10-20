@@ -106,7 +106,7 @@ describe "Transaction", ->
       privateKeyBase58 = data.privateKey
       format = MyWallet.detectPrivateKeyFormat(privateKeyBase58)
       key = MyWallet.privateKeyStringToKey(privateKeyBase58, format)
-      key.pub.compressed = false;
+      key.compressed = false;
       privateKeys = [key]
 
       tx.addPrivateKeys(privateKeys)
@@ -131,7 +131,7 @@ describe "Transaction", ->
       privateKeyBase58 = data.privateKey
       format = MyWallet.detectPrivateKeyFormat(privateKeyBase58)
       key = MyWallet.privateKeyStringToKey(privateKeyBase58, format)
-      key.pub.compressed = false;
+      key.compressed = false;
       privateKeys = [key]
 
       transaction.addPrivateKeys(privateKeys)
@@ -155,7 +155,7 @@ describe "Transaction", ->
       privateKeyBase58 = data.privateKey
       format = MyWallet.detectPrivateKeyFormat(privateKeyBase58)
       key = MyWallet.privateKeyStringToKey(privateKeyBase58, format)
-      key.pub.compressed = false;
+      key.compressed = false;
       privateKeys = [key]
 
       transaction.addPrivateKeys(privateKeys)

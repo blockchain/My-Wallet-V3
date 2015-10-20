@@ -35,7 +35,7 @@ describe "HD Wallet", ->
     # Caching derive() on HDNode protoype doesn't do much good, because fromBase58()
     # for a new object is just as slow as derive() on an existing one.
 
-    # The slowness is caused by calls to "new ECKey" and "new ECPubKey", but these
+    # The slowness is caused by calls to "new ECPair" and "new ECPubKey", but these
     # can't be mocked because they are internal to the module.
 
     # The solution is to mock HDNode.fromBase58() as well.

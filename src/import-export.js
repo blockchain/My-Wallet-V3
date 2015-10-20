@@ -33,7 +33,7 @@ var ImportExport = new function() {
     return buffer;
   }
 
-  this.parseBIP38toECKey = function(base58Encrypted, passphrase, success, wrong_password, error) {
+  this.parseBIP38toECPair = function(base58Encrypted, passphrase, success, wrong_password, error) {
     var hex;
 
     // Unicode NFC normalization
@@ -91,9 +91,11 @@ var ImportExport = new function() {
     var AES_opts = { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.NoPadding };
 
     var verifyHashAndReturn = function() {
-      var tmpkey = new Bitcoin.ECKey(decrypted, isCompPoint);
+      var tmpkey = new Bitcoin.ECPair(decrypted, isCompPoint);
 
-      var base58Address = tmpkey.pub.getAddress().toBase58Check();
+      console.log(tmpkey.getAddress());
+
+      var base58Address = tmpkey.getAddress()
 
       checksum = hash256(base58Address);
 
@@ -135,9 +137,9 @@ var ImportExport = new function() {
           passfactor = hash256(prefactorB);
         }
 
-        var kp = new Bitcoin.ECKey(BigInteger.fromBuffer(passfactor));
+        var kp = new Bitcoin.ECPair(BigInteger.fromBuffer(passfactor));
 
-        var passpoint = kp.pub.toBuffer();
+        var passpoint = kp.toBuffer();
 
         var encryptedpart2 = Buffer(hex.slice(23, 23+16));
 
