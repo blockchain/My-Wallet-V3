@@ -1,37 +1,39 @@
 'use strict';
 
-module.exports = ProcessedTransaction;
+module.exports = Tx;
 ////////////////////////////////////////////////////////////////////////////////
 // var Base58   = require('bs58');
 // var Bitcoin  = require('bitcoinjs-lib');
 var Helpers  = require('./helpers');
+var MyWallet = require('./wallet');
 ////////////////////////////////////////////////////////////////////////////////
-// ProcessedTransaction class
-function ProcessedTransaction(object){
+function Tx(object){
   var obj = object || {};
   // original properties
-  this._hash             = obj.hash;
-  this._size             = obj.size;
-  this._txIndex          = objt.txIndex;
-  this._time             = obj.time;
-  this._inputs           = obj.inputs;
-  this._out              = obj.out;
-  this._blockIndex       = obj.blockIndex;
-  this._blockHeight      = obj.blockHeight;
-  this._balance          = obj.balance;
-  this._double_spend     = obj.double_spend;
-  this._note             = obj.note;
-  this._account_indexes  = [];    // should be filled later
-  this._confirmations    = null; // should be filled later
+  this.balance          = obj.balance;
+  this.block_height     = obj.block_height;
+  this.hash             = obj.hash;
+  this.inputs           = obj.inputs || [];
+  this.lock_time        = obj.lock_time;
+  this.out              = obj.out  || [];
+  this.relayed_by       = obj.relayed_by;
+  this.result           = obj.result;
+  this.size             = obj.size;
+  this.time             = obj.time;
+  this.tx_index         = obj.tx_index;
+  this.ver              = obj.ver;
+  this.vin_sz           = obj.vin_sz;
+  this.vout_sz          = obj.vout_sz;
+  this.double_spend     = obj.double_spend;
+  this.note             = obj.note;
+
   // computed properties
-  this._from = {account: null, legacyAddresses: null, externalAddresses: null};
-  this._to = to: {account: null, legacyAddresses: null, externalAddresses: null, email: null, mobile: null};
-  this._fee = 0;
-  this._intraWallet = null;
+  this._processed_ins    = this.inputs.map(process.compose(unpackInput));
+  this._processed_outs   = this.out.map(process);
+  this._confirmations    = null; // should be filled later
 }
 
-// public members
-Object.defineProperties(ProcessedTransaction.prototype, {
+Object.defineProperties(Tx.prototype, {
   "confirmations": {
     configurable: false,
     get: function() { return this._confirmations;},
@@ -39,16 +41,67 @@ Object.defineProperties(ProcessedTransaction.prototype, {
       if(Helpers.isNumber(num))
         this._confirmations = num;
       else
-        throw 'Error: ProcessedTransaction.confirmations must be a number';
+        throw 'Error: Tx.confirmations must be a number';
+    }
+  },
+  "processedInputs": {
+    configurable: false,
+    get: function() { return this._processed_ins.map(function(x){return x;});}
+  },
+  "processedOutputs": {
+    configurable: false,
+    get: function() { return this._processed_outs.map(function(x){return x;});}
+  },
+  "totalIn": {
+    configurable: false,
+    get: function() {
+      return this._processed_ins.map(function(x){return x.amount;})
+                                 .reduce(Helpers.add, 0);
+    }
+  },
+  "totalOut": {
+    configurable: false,
+    get: function() {
+      return this._processed_outs.map(function(x){return x.amount;})
+                                 .reduce(Helpers.add, 0);
+    }
+  },
+  "fee": {
+    configurable: false,
+    get: function() {
+      return this.totalIn - this.totalOut;
     }
   }
 });
 
-// ProcessedTransaction.factory = function(){
-// };
+function isAccount(x) {
+  if (x.xpub) { return true;}
+  else {return false;}
+};
 
-// this should be equivalent to old processTransaction
-ProcessedTransaction.prototype.import = function(wallet){
+function accountPath(x){
+  var accIdx = MyWallet.wallet.hdwallet.account(x.xpub.m).index;
+  return accIdx + x.xpub.path.substr(1);
+};
 
-  return this;
+function process(x) {
+  var ad = x.addr;
+  var am = x.value;
+  var tg = null;
+
+  switch (true) {
+    case MyWallet.wallet.containsLegacyAddress(ad):
+      tg = "legacy";
+      break;
+    case isAccount(x):
+      tg = accountPath(x);
+      break;
+    default:
+      tg = "external";
+  }
+  return {address: ad, amount: am, tag: tg};
+};
+
+function unpackInput(input) {
+  return input.prev_out;
 };
