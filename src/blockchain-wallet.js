@@ -248,6 +248,21 @@ Object.defineProperties(Wallet.prototype, {
                  .reduce(Helpers.add, 0);
     }
   },
+  "balanceActiveAccounts":{
+    configurable: false,
+    get: function() {
+      return this.hdwallet.accounts
+                 .filter(function(a){return !a.archived;})
+                 .map(function(a){return a.balance;})
+                 .reduce(Helpers.add, 0);
+    }
+  },
+  "balanceActive":{
+    configurable: false,
+    get: function() {
+      return this.balanceActiveLegacy + this.balanceActiveAccounts;
+    }
+  },
   "balanceSpendableActiveLegacy":{
     configurable: false,
     get: function() {
