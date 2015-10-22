@@ -559,6 +559,31 @@ MyWallet.getBaseFee = function() {
  */
  // used only on the frontend
 
+MyWallet.fetchMoreTransactionsForAll = function(success, error, didFetchOldestTransaction) {
+
+  console.log("MyWallet.fetchMoreTransactionsForAll");
+
+  var list = MyWallet.wallet.activeAddresses.concat(MyWallet.wallet.hdwallet.activeXpubs);
+  
+  var txListP = API.getHistory( list, null
+                           , MyWallet.wallet.hdwallet.numTxFetched
+                           , MyWallet.wallet.txPerScroll);
+  function process(data) {
+    var pTx = data.txs.map(MyWallet.processTransaction.compose(TransactionFromJSON));
+    MyWallet.wallet.hdwallet.numTxFetched += pTx.length;
+    if (pTx.length < MyWallet.wallet.txPerScroll) { didFetchOldestTransaction(); }
+    success && success(pTx);
+  };
+  txListP.then(process).catch(error);
+};
+
+/**
+ * @param {function(Array)} successCallback success callback function with transaction array
+ * @param {function()} errorCallback error callback function
+ * @param {function()} didFetchOldestTransaction callback is called when all transanctions for the specified account has been fetched
+ */
+ // used only on the frontend
+
 MyWallet.fetchMoreTransactionsForAccounts = function(success, error, didFetchOldestTransaction) {
 
   console.log("MyWallet.fetchMoreTransactionsForAccounts");
