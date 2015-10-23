@@ -71,12 +71,63 @@ Object.defineProperties(Tx.prototype, {
     get: function() {
       return this.totalIn - this.totalOut;
     }
+  },
+  "internalSpend": {
+    configurable: false,
+    get: function() {
+      return this._processed_ins.filter(function(i){ return i.type !== 'external';})
+                                .map(function(i){return i.amount})
+                                .reduce(Helpers.add, 0);
+    }
+  },
+  "internalReceive": {
+    configurable: false,
+    get: function() {
+      return this._processed_outs.filter(function(i){ return i.type !== 'external';})
+                                 .map(function(i){return i.amount})
+                                 .reduce(Helpers.add, 0);
+    }
+  },
+  "walletImpact": {
+    configurable: false,
+    get: function() {
+      return this.internalReceive - this.internalSpend;
+    }
+  },
+  "veredict": {
+    configurable: false,
+    get: function() {
+      var v = null;
+      var balance = this.walletImpact + this.fee
+      switch (true) {
+        case balance === 0:
+          v = "transfer"
+          break;
+        case balance < 0:
+          v = "sent"
+          break;
+        case balance > 0:
+          v = "received"
+          break;
+        default:
+          v = "complex"
+      }
+      return v;
+    }
   }
 });
 
 function isAccount(x) {
   if (x.xpub) { return true;}
   else {return false;}
+};
+
+function isLegacy(x) {
+  return MyWallet.wallet.containsLegacyAddress(x.addr);
+};
+
+function isInternal(x) {
+  return (isAccount(x) || isLegacy(x));
 };
 
 function accountPath(x){
@@ -87,19 +138,19 @@ function accountPath(x){
 function process(x) {
   var ad = x.addr;
   var am = x.value;
-  var tg = null;
+  var coinType = null;
 
   switch (true) {
-    case MyWallet.wallet.containsLegacyAddress(ad):
-      tg = "legacy";
+    case isLegacy(x):
+      coinType = "legacy";
       break;
     case isAccount(x):
-      tg = accountPath(x);
+      coinType = accountPath(x);
       break;
     default:
-      tg = "external";
+      coinType = "external";
   }
-  return {address: ad, amount: am, tag: tg};
+  return {address: ad, amount: am, type: coinType};
 };
 
 function unpackInput(input) {
