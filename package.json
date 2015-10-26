@@ -1,6 +1,6 @@
 {
-  "name": "My-Wallet-HD",
-  "version": "3.0.0",
+  "name": "blockchain-wallet-client",
+  "version": "3.1.2",
   "description": "Blockchain.info JavaScript Wallet",
   "homepage": "https://github.com/blockchain/My-Wallet-HD",
   "bugs": {
