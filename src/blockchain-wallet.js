@@ -263,6 +263,16 @@ Object.defineProperties(Wallet.prototype, {
       return this.balanceActiveLegacy + this.balanceActiveAccounts;
     }
   },
+  "balanceSpendableActive":{
+    configurable: false,
+    get: function() {
+      if (this.isUpgradedToHD) {
+        return this.balanceSpendableActiveLegacy + this.balanceActiveAccounts;
+      } else {
+        return this.balanceSpendableActiveLegacy;
+      }
+    }
+  },
   "balanceSpendableActiveLegacy":{
     configurable: false,
     get: function() {
@@ -370,7 +380,7 @@ Wallet.prototype.getHistory = function() {
 };
 ////////////////////////////////////////////////////////////////////////////////
 
-Wallet.prototype.getBalancesForArchived = function() {
+Wallet.prototype.getBalancesForArchived = function(error) {
   var updateBalance = function(key){
     if (this.containsLegacyAddress(key.address)) {
       this.key(key.address).balance = key.final_balance;
@@ -383,7 +393,7 @@ Wallet.prototype.getBalancesForArchived = function() {
   var archivedAddrs = this.addresses.filter(function (addr) {
       return MyWallet.wallet.key(addr).archived === true;
   });
-  var promise = API.getHistory(archivedAddrs, 0 ,0, 30).then(updateBalances.bind(this));
+  var promise = API.getHistory(archivedAddrs, 0 ,0, 30).then(updateBalances.bind(this)).catch(error);
   return promise;
 };
 ////////////////////////////////////////////////////////////////////////////////
