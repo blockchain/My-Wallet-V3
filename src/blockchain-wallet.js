@@ -263,6 +263,16 @@ Object.defineProperties(Wallet.prototype, {
       return this.balanceActiveLegacy + this.balanceActiveAccounts;
     }
   },
+  "balanceSpendableActive":{
+    configurable: false,
+    get: function() {
+      if (this.isUpgradedToHD) {
+        return this.balanceSpendableActiveLegacy + this.balanceActiveAccounts;
+      } else {
+        return this.balanceSpendableActiveLegacy;
+      }
+    }
+  },
   "balanceSpendableActiveLegacy":{
     configurable: false,
     get: function() {
