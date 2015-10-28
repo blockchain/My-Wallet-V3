@@ -564,7 +564,7 @@ MyWallet.fetchMoreTransactionsForAll = function(success, error, didFetchOldestTr
   console.log("MyWallet.fetchMoreTransactionsForAll");
 
   var list = MyWallet.wallet.activeAddresses.concat(MyWallet.wallet.hdwallet.activeXpubs);
-  
+
   var txListP = API.getHistory( list, null
                            , MyWallet.wallet.hdwallet.numTxFetched
                            , MyWallet.wallet.txPerScroll);
@@ -725,7 +725,7 @@ MyWallet.fetchMoreTransactionsForLegacyAddresses = function(success, error, didF
   console.log("deprecated use of MyWallet.fetchMoreTransactionsForLegacyAddresses");
   function getRawTransactionsForLegacyAddresses(txOffset, numTx) {
     var allAddresses = MyWallet.wallet.activeAddresses;
-    return API.getHistory(allAddresses, 0, 0, 30);
+    return API.getHistory(allAddresses, 0, 0, 50);
   }
   var rawTxPromise = getRawTransactionsForLegacyAddresses(
                   MyWallet.wallet.numberTxLegacyAddresses
