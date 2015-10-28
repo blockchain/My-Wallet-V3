@@ -32,7 +32,6 @@ function HDAccount(object){
   this._receiveIndex  = 0;
   this._changeIndex   = 0;
   this._n_tx          = 0;
-  this._numTxFetched  = 0;
   this._balance       = null;
   this._index         = Helpers.isNumber(obj.index) ? obj.index : null;
 }
@@ -71,15 +70,6 @@ Object.defineProperties(HDAccount.prototype, {
         this._n_tx = num;
       else
         throw 'Error: account.n_tx must be a number';
-    }
-  },
-  "numTxFetched": {
-    get: function() { return this._numTxFetched;},
-    set: function(num) {
-      if(Helpers.isNumber(num))
-        this._numTxFetched = num;
-      else
-        throw 'Error: account.numTxFetched must be a number';
     }
   },
   "archived": {

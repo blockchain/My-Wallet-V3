@@ -62,7 +62,6 @@ describe "HDWallet", ->
       expect(wallet._totalSent).toEqual(0)
       expect(wallet._totalReceived).toEqual(0)
       expect(wallet._finalBalance).toEqual(0)
-      expect(wallet._numberTx).toEqual(0)
 
     it "should transform an Object to a Wallet", ->
       Wallet = proxyquire('../src/blockchain-wallet', {})
@@ -123,8 +122,8 @@ describe "HDWallet", ->
         expect(wrongSet).toThrow()
         expect(MyWallet.syncWallet).not.toHaveBeenCalled()
 
-      it "numberTx should throw exception if is non-number set", ->
-        wrongSet = () -> wallet.numberTx = "failure"
+      it "numberTxTotal should throw exception if is non-number set", ->
+        wrongSet = () -> wallet.numberTxTotal = "failure"
         expect(wrongSet).toThrow()
         expect(MyWallet.syncWallet).not.toHaveBeenCalled()
 
@@ -217,9 +216,9 @@ describe "HDWallet", ->
         wallet.finalBalance = 101
         expect(wallet.finalBalance).toEqual(101)
 
-      it "numberTx", ->
-        wallet.numberTx = 101
-        expect(wallet.numberTx).toEqual(101)
+      it "numberTxTotal", ->
+        wallet.numberTxTotal = 101
+        expect(wallet.numberTxTotal).toEqual(101)
 
       it "addresses", ->
         expect(wallet.addresses).toEqual(['1ASqDXsKYqcx7dkKZ74bKBBggpd5HDtjCv'])

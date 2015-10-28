@@ -75,12 +75,12 @@ function Wallet(object) {
   this._tx_names = obj.tx_names || [];
 
   // fetched data from the server
-  this._totalSent     = 0;
-  this._totalReceived = 0;
-  this._finalBalance  = 0;
-  this._numberTx      = 0;
-  this._numberTxLegacyAddresses = 0;
-  this._txPerScroll   = 50;
+  this._totalSent       = 0;
+  this._totalReceived   = 0;
+  this._finalBalance    = 0;
+  this._numberTxTotal   = 0;
+  this._numberTxFetched = 0;
+  this._txPerScroll     = 50;
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -151,24 +151,24 @@ Object.defineProperties(Wallet.prototype, {
         throw 'Error: wallet.finalBalance must be a number';
     }
   },
-  "numberTx": {
+  "numberTxTotal": {
     configurable: false,
-    get: function() { return this._numberTx;},
+    get: function() { return this._numberTxTotal;},
     set: function(value) {
       if(Helpers.isNumber(value))
-        this._numberTx = value;
+        this._numberTxTotal = value;
       else
         throw 'Error: wallet.numberTx must be a number';
     }
   },
-  "numberTxLegacyAddresses": {
+  "numberTxFetched": {
     configurable: false,
-    get: function() { return this._numberTxLegacyAddresses;},
+    get: function() { return this._numberTxFetched;},
     set: function(value) {
       if(Helpers.isNumber(value))
-        this._numberTx = value;
+        this._numberTxFetched = value;
       else
-        throw 'Error: wallet.numberTxLegacyAddresses must be a number';
+        throw 'Error: wallet.numberTxFetched must be a number';
     }
   },
   "txPerScroll": {
@@ -322,17 +322,18 @@ Wallet.prototype._updateWalletInfo = function(obj) {
   }
 
   if (obj.wallet == null) {
-    this.totalSent     = 0;
-    this.totalReceived = 0;
-    this.finalBalance  = 0;
-    this.numberTx      = 0;
+    this.totalSent       = 0;
+    this.totalReceived   = 0;
+    this.finalBalance    = 0;
+    this.numberTxTotal   = 0;
+    this.numberTxFetched = 0;
     return true;
   };
 
   this.totalSent     = obj.wallet.total_sent;
   this.totalReceived = obj.wallet.total_received;
   this.finalBalance  = obj.wallet.final_balance;
-  this.numberTx      = obj.wallet.n_tx;
+  this.numberTxTotal = obj.wallet.n_tx;
 
   var updateAccountAndAddressesInfo = function (e) {
     if (this.isUpgradedToHD) {
@@ -353,6 +354,7 @@ Wallet.prototype._updateWalletInfo = function(obj) {
 
   obj.addresses.forEach(updateAccountAndAddressesInfo.bind(this));
 
+  this.numberTxFetched += obj.txs.length;
   for (var i = 0; i < obj.txs.length; ++i) {
     var tx = TransactionFromJSON(obj.txs[i]);
     WalletStore.pushTransaction(tx);
@@ -368,6 +370,7 @@ Wallet.prototype._updateWalletInfo = function(obj) {
 
 // equivalent to MyWallet.get_history(success, error) but returning a promise
 Wallet.prototype.getHistory = function() {
+  console.log("GETHISTORY!!");
   var allAddresses = this.activeAddresses;
   if (this.isUpgradedToHD) {
     this.hdwallet.accounts.forEach(
@@ -377,6 +380,18 @@ Wallet.prototype.getHistory = function() {
   // TODO: obtain paidTo addresses too
   var promise = API.getHistory(allAddresses, 0 ,0, 50).then(this._updateWalletInfo.bind(this));
   return promise;
+};
+
+Wallet.prototype.fetchMoreTransactions = function(didFetchOldestTransaction) {
+  var list = this.activeAddresses.concat(this.hdwallet.activeXpubs);
+  var txListP = API.getHistory(list, null, this.numberTxFetched, this.txPerScroll);
+  function process(data) {
+    var pTx = data.txs.map(MyWallet.processTransaction.compose(TransactionFromJSON));
+    this.numberTxFetched += pTx.length;
+    if (pTx.length < this.txPerScroll) { didFetchOldestTransaction(); }
+    return pTx;
+  };
+  return txListP.then(process.bind(this));
 };
 ////////////////////////////////////////////////////////////////////////////////
 

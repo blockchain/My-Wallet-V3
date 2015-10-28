@@ -257,7 +257,8 @@ function wsSuccess(ws) {
         MyWallet.wallet.getHistory();
       };
 
-      MyWallet.wallet.numberTx += 1;
+      MyWallet.wallet.numberTxTotal   += 1;
+      MyWallet.wallet.numberTxFetched += 1;
       tx.setConfirmations(0);
       WalletStore.pushTransaction(tx);
       playSound('beep');
@@ -561,20 +562,22 @@ MyWallet.getBaseFee = function() {
 
 MyWallet.fetchMoreTransactionsForAll = function(success, error, didFetchOldestTransaction) {
 
-  console.log("MyWallet.fetchMoreTransactionsForAll");
+  console.log("deprecated use of MyWallet.fetchMoreTransactionsForAll --> Wallet.prototype.fetchMoreTransactions");
+  // var list = MyWallet.wallet.activeAddresses.concat(MyWallet.wallet.hdwallet.activeXpubs);
+  // var txListP = API.getHistory( list, null
+  //                          , MyWallet.wallet.numberTxFetched
+  //                          , MyWallet.wallet.txPerScroll);
+  // function process(data) {
+  //   var pTx = data.txs.map(MyWallet.processTransaction.compose(TransactionFromJSON));
+  //   MyWallet.wallet.numberTxFetched += pTx.length;
+  //   if (pTx.length < MyWallet.wallet.txPerScroll) { didFetchOldestTransaction(); }
+  //   success && success(pTx);
+  // };
+  // txListP.then(process).catch(error);
 
-  var list = MyWallet.wallet.activeAddresses.concat(MyWallet.wallet.hdwallet.activeXpubs);
-
-  var txListP = API.getHistory( list, null
-                           , MyWallet.wallet.hdwallet.numTxFetched
-                           , MyWallet.wallet.txPerScroll);
-  function process(data) {
-    var pTx = data.txs.map(MyWallet.processTransaction.compose(TransactionFromJSON));
-    MyWallet.wallet.hdwallet.numTxFetched += pTx.length;
-    if (pTx.length < MyWallet.wallet.txPerScroll) { didFetchOldestTransaction(); }
-    success && success(pTx);
-  };
-  txListP.then(process).catch(error);
+  var p = MyWallet.wallet.fetchMoreTransactions(didFetchOldestTransaction);
+  if (success) { p.then(success);};
+  if (error)   { p.catch(error); };
 };
 
 /**
@@ -585,18 +588,8 @@ MyWallet.fetchMoreTransactionsForAll = function(success, error, didFetchOldestTr
  // used only on the frontend
 
 MyWallet.fetchMoreTransactionsForAccounts = function(success, error, didFetchOldestTransaction) {
-
   console.log("MyWallet.fetchMoreTransactionsForAccounts");
-  var txListP = API.getHistory(  MyWallet.wallet.hdwallet.activeXpubs, null
-                           , MyWallet.wallet.hdwallet.numTxFetched
-                           , MyWallet.wallet.txPerScroll);
-  function process(data) {
-    var pTx = data.txs.map(MyWallet.processTransaction.compose(TransactionFromJSON));
-    MyWallet.wallet.hdwallet.numTxFetched += pTx.length;
-    if (pTx.length < MyWallet.wallet.txPerScroll) { didFetchOldestTransaction(); }
-    success && success(pTx);
-  };
-  txListP.then(process).catch(error);
+  MyWallet.fetchMoreTransactionsForAll(success, error, didFetchOldestTransaction);
 };
 
 /**
@@ -608,18 +601,7 @@ MyWallet.fetchMoreTransactionsForAccounts = function(success, error, didFetchOld
  // used once locally and in the frontend
 MyWallet.fetchMoreTransactionsForAccount = function(accountIdx, success, error, didFetchOldestTransaction) {
   console.log("deprecated use of MyWallet.fetchMoreTransactionsForAccount ");
-
-  var account    = MyWallet.wallet.hdwallet.accounts[accountIdx];
-  var numTxFetch = account ? account.numTxFetched : 0;
-  var xpub    = MyWallet.wallet.hdwallet.accounts[accountIdx].extendedPublicKey;
-  var txListP = API.getHistory([xpub], null, numTxFetch, MyWallet.wallet.txPerScroll);
-  function process(data) {
-    var pTx = data.txs.map(MyWallet.processTransaction.compose(TransactionFromJSON));
-    account.numTxFetched += pTx.length;
-    if (pTx.length < MyWallet.wallet.txPerScroll) { didFetchOldestTransaction(); }
-    success && success(pTx);
-  };
-  txListP.then(process).catch(error);
+  MyWallet.fetchMoreTransactionsForAll(success, error, didFetchOldestTransaction);
 };
 
 // Reads from and writes to global paidTo
@@ -723,25 +705,7 @@ MyWallet.getBalanceForRedeemCode = function(privatekey, successCallback, errorCa
  // used on the frontend
 MyWallet.fetchMoreTransactionsForLegacyAddresses = function(success, error, didFetchOldestTransaction) {
   console.log("deprecated use of MyWallet.fetchMoreTransactionsForLegacyAddresses");
-  function getRawTransactionsForLegacyAddresses(txOffset, numTx) {
-    var allAddresses = MyWallet.wallet.activeAddresses;
-    return API.getHistory(allAddresses, 0, 0, 50);
-  }
-  var rawTxPromise = getRawTransactionsForLegacyAddresses(
-                  MyWallet.wallet.numberTxLegacyAddresses
-                , MyWallet.wallet.txPerScroll
-  );
-
-  function process (data) {
-    var pTx = data.txs.map(MyWallet.processTransaction.compose(TransactionFromJSON));
-    MyWallet.wallet.numberTxLegacyAddresses += pTx.length;
-    if (pTx.length < MyWallet.wallet.txPerScroll) { didFetchOldestTransaction(); }
-    console.log(pTx);
-    success && success(pTx);
-  };
-
-  function printError (e) { console.log('error ' + e); };
-  rawTxPromise.then(process).catch(printError);
+  MyWallet.fetchMoreTransactionsForAll(success, error, didFetchOldestTransaction);
 };
 
 /**
