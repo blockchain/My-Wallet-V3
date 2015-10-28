@@ -80,7 +80,7 @@ function Wallet(object) {
   this._finalBalance  = 0;
   this._numberTx      = 0;
   this._numberTxLegacyAddresses = 0;
-  this._txPerScroll   = 10;
+  this._txPerScroll   = 50;
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -365,7 +365,7 @@ Wallet.prototype.getHistory = function() {
     );
   }
   // TODO: obtain paidTo addresses too
-  var promise = API.getHistory(allAddresses, 0 ,0, 30).then(this._updateWalletInfo.bind(this));
+  var promise = API.getHistory(allAddresses, 0 ,0, 50).then(this._updateWalletInfo.bind(this));
   return promise;
 };
 ////////////////////////////////////////////////////////////////////////////////
@@ -383,7 +383,7 @@ Wallet.prototype.getBalancesForArchived = function() {
   var archivedAddrs = this.addresses.filter(function (addr) {
       return MyWallet.wallet.key(addr).archived === true;
   });
-  var promise = API.getHistory(archivedAddrs, 0 ,0, 30).then(updateBalances.bind(this));
+  var promise = API.getHistory(archivedAddrs, 0 ,0, 1).then(updateBalances.bind(this));
   return promise;
 };
 ////////////////////////////////////////////////////////////////////////////////
@@ -573,7 +573,7 @@ function isAccountNonUsed (account) {
   var isNonUsed = function(obj){
     return obj.addresses[0].account_index === 0 && obj.addresses[0].change_index === 0;
   };
-  return API.getHistory([account.extendedPublicKey], 0, 0, 30).then(isNonUsed);
+  return API.getHistory([account.extendedPublicKey], 0, 0, 50).then(isNonUsed);
 };
 
 Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
