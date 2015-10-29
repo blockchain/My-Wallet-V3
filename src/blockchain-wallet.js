@@ -22,6 +22,7 @@ var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 var ImportExport = require('./import-export');
 var API = require('./api');
+var Tx = require('./wallet-transaction');
 
 ////////////////////////////////////////////////////////////////////////////////
 // Wallet
@@ -370,7 +371,6 @@ Wallet.prototype._updateWalletInfo = function(obj) {
 
 // equivalent to MyWallet.get_history(success, error) but returning a promise
 Wallet.prototype.getHistory = function() {
-  console.log("GETHISTORY!!");
   var allAddresses = this.activeAddresses;
   if (this.isUpgradedToHD) {
     this.hdwallet.accounts.forEach(
@@ -383,7 +383,8 @@ Wallet.prototype.getHistory = function() {
 };
 
 Wallet.prototype.fetchMoreTransactions = function(didFetchOldestTransaction) {
-  var list = this.activeAddresses.concat(this.hdwallet.activeXpubs);
+  var xpubs = this.isUpgradedToHD ? this.hdwallet.activeXpubs : [];
+  var list = this.activeAddresses.concat(xpubs);
   var txListP = API.getHistory(list, null, this.numberTxFetched, this.txPerScroll);
   function process(data) {
     var pTx = data.txs.map(MyWallet.processTransaction.compose(TransactionFromJSON));
@@ -392,6 +393,13 @@ Wallet.prototype.fetchMoreTransactions = function(didFetchOldestTransaction) {
     return pTx;
   };
   return txListP.then(process.bind(this));
+};
+
+Wallet.prototype.ask100TxTest = function(){
+  var context = this.activeAddresses.concat(this.hdwallet.activeXpubs);
+  var txListP = API.getHistory(context, null, 0, 100);
+  function process(data) { return data.txs.map(Tx.factory);};
+  return txListP.then(process);
 };
 ////////////////////////////////////////////////////////////////////////////////
 
