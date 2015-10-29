@@ -386,20 +386,20 @@ Wallet.prototype.fetchMoreTransactions = function(didFetchOldestTransaction) {
   var xpubs = this.isUpgradedToHD ? this.hdwallet.activeXpubs : [];
   var list = this.activeAddresses.concat(xpubs);
   var txListP = API.getHistory(list, null, this.numberTxFetched, this.txPerScroll);
-  function process(data) {
+  function processTxs(data) {
     var pTx = data.txs.map(MyWallet.processTransaction.compose(TransactionFromJSON));
     this.numberTxFetched += pTx.length;
     if (pTx.length < this.txPerScroll) { didFetchOldestTransaction(); }
     return pTx;
   };
-  return txListP.then(process.bind(this));
+  return txListP.then(processTxs.bind(this));
 };
 
 Wallet.prototype.ask100TxTest = function(){
   var context = this.activeAddresses.concat(this.hdwallet.activeXpubs);
   var txListP = API.getHistory(context, null, 0, 100);
-  function process(data) { return data.txs.map(Tx.factory);};
-  return txListP.then(process);
+  function processTxs(data) { return data.txs.map(Tx.factory);};
+  return txListP.then(processTxs);
 };
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -27,8 +27,8 @@ function Tx(object){
   this.publicNote       = obj.note;
   this.note             = MyWallet.wallet.getNote(this.hash);
   // computed properties
-  this._processed_ins    = this.inputs.map(process.compose(unpackInput));
-  this._processed_outs   = this.out.map(process);
+  this._processed_ins    = this.inputs.map(tagCoin.compose(unpackInput));
+  this._processed_outs   = this.out.map(tagCoin);
 }
 
 Object.defineProperties(Tx.prototype, {
@@ -160,7 +160,7 @@ function accountPath(x){
   return accIdx + x.xpub.path.substr(1);
 };
 
-function process(x) {
+function tagCoin(x) {
   var ad = x.addr;
   var am = x.value;
   var coinType = null;
