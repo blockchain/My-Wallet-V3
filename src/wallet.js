@@ -1091,7 +1091,7 @@ function syncWallet (successcallback, errorcallback) {
     //Now Decrypt the it again to double check for any possible corruption
     WalletCrypto.decryptWallet(crypted, WalletStore.getPassword(), function(obj) {
       try {
-        var old_checksum = WalletStore.getPayloadChecksum();
+        var oldChecksum = WalletStore.getPayloadChecksum();
         WalletStore.sendEvent('on_backup_wallet_start');
         WalletStore.setEncryptedWalletData(crypted);
         var new_checksum = WalletStore.getPayloadChecksum();
@@ -1099,14 +1099,16 @@ function syncWallet (successcallback, errorcallback) {
           length: crypted.length,
           payload: crypted,
           checksum: new_checksum,
-          old_checksum : old_checksum,
           method : method,
           format : 'plain',
           language : WalletStore.getLanguage()
         };
 
+        if (Helpers.isHex(oldChecksum)) {
+          data.old_checksum = oldChecksum;
+        }
+
         if (WalletStore.isSyncPubKeys()) {
-          // why is this needed?
           data.active = MyWallet.wallet.activeAddresses.join('|');
         }
 
@@ -1151,6 +1153,7 @@ function syncWallet (successcallback, errorcallback) {
 
 };
 MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function(){
+  console.log("SAVE CALLED...");
   WalletStore.setIsSynchronizedWithServer(false)
 });
 ////////////////////////////////////////////////////////////////////////////////
@@ -1236,19 +1239,10 @@ function nKeys(obj) {
 MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error) {
   var walletSuccess = function(guid, sharedKey, password) {
     WalletStore.unsafeSetPassword(password);
-    MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password);
-    MyWallet.syncWallet(function() {
-      success({
-        guid: guid,
-        sharedKey: sharedKey,
-        password: password
-      });
-    }, error);
+    var runSuccess = function () {success({ guid: guid, sharedKey: sharedKey, password: password});}
+    MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password).then(runSuccess).catch(error);
   };
-
-  WalletSignup.generateNewWallet(
-    inputedPassword, inputedEmail, null, walletSuccess, error
-  );
+  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, null, walletSuccess, error);
 };
 
 // used frontend and mywallet
