@@ -132,10 +132,15 @@ describe "HDAccount", ->
     describe ".get/setLabelForReceivingAddress", ->
 
       it 'should set the label sync and get the label', ->
-        account.setLabelForReceivingAddress(100, "my label")
-        expect(account._address_labels[100]).toEqual("my label")
+        fail = (reason) ->
+          console.log(reason)
+
+        success = () ->
+
+        account.setLabelForReceivingAddress(10, "my label").then(success).catch(fail)
+        expect(account._address_labels[10]).toEqual("my label")
         expect(MyWallet.syncWallet).toHaveBeenCalled()
-        expect(account.getLabelForReceivingAddress(100)).toEqual("my label")
+        expect(account.getLabelForReceivingAddress(10)).toEqual("my label")
 
     describe "Setter", ->
 
@@ -269,4 +274,3 @@ describe "HDAccount", ->
         expect(account.extendedPrivateKey).toEqual(temp)
         expect(account._temporal_xpriv).not.toBeDefined()
         expect(MyWallet.syncWallet).not.toHaveBeenCalled()
-
