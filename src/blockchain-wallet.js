@@ -602,14 +602,15 @@ Wallet.reviver = function(k,v){
   return v;
 }
 
-function isAccountNonUsed (account) {
+function isAccountNonUsed (account, progress) {
   var isNonUsed = function(obj){
+    if (progress) { progress(obj);}
     return obj.addresses[0].account_index === 0 && obj.addresses[0].change_index === 0;
   };
   return API.getHistory([account.extendedPublicKey], 0, 0, 50).then(isNonUsed);
 };
 
-Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
+Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, progress){
   // wallet restoration
   var self = this;
   var seedHex = BIP39.mnemonicToEntropy(mnemonic);
@@ -632,7 +633,7 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
     } else{
       accountIndex++;
       account = self.newAccount("Account " + accountIndex.toString(), pw, 0, undefined, true);
-      return isAccountNonUsed(account).then(go);
+      return isAccountNonUsed(account, progress).then(go);
     };
   };
 

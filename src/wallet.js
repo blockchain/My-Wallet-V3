@@ -1236,11 +1236,11 @@ function nKeys(obj) {
 };
 
 // used on frontend
-MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error) {
+MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error, progress) {
   var walletSuccess = function(guid, sharedKey, password) {
     WalletStore.unsafeSetPassword(password);
     var runSuccess = function () {success({ guid: guid, sharedKey: sharedKey, password: password});}
-    MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password).then(runSuccess).catch(error);
+    MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password, undefined, progress).then(runSuccess).catch(error);
   };
   WalletSignup.generateNewWallet(inputedPassword, inputedEmail, null, walletSuccess, error);
 };
