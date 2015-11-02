@@ -17,7 +17,8 @@ function RNG(){
   this.BYTES     = 32;
   }
 
-function xor(a, b) {
+
+RNG.prototype.xor = function (a, b) {
   if (!Buffer.isBuffer(a)) a = new Buffer(a)
   if (!Buffer.isBuffer(b)) b = new Buffer(b)
   var res = []
@@ -42,7 +43,7 @@ RNG.prototype.run = function (sizeBytes, callback) {
     var localH = randomBytes(b, callback);
     assert(!localH.every(function(byte){return byte === localH[0]}), 'The entropy should not be the same byte repeated.');
     assert(serverH.byteLength === localH.byteLength, 'Error: both entropies should be same of the length.');
-    var combinedH = xor(localH, serverH);
+    var combinedH = this.xor(localH, serverH);
     assert(!combinedH.every(function(byte){return byte === combinedH[0]}), 'The entropy should not be the same byte repeated.');
     assert(combinedH.byteLength === b, 'Error: combined entropy should be of requested length.');
     var zero = new Buffer(serverH.byteLength);
