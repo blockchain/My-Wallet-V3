@@ -27,6 +27,7 @@ module.exports = {
   Helpers: require('./helpers'),
   API: require('./api'),
   RNG: require('./rng'),
+  Tx: require('./wallet-transaction'),
   // Wallet: require('./blockchain-wallet'),
   // Address: require('./address'),
   // HDAccount: require('./hd-account'),

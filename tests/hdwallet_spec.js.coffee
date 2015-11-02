@@ -38,7 +38,6 @@ describe "HDWallet", ->
 
     it "should create an empty HDWallet with default options", ->
       wallet = new HDWallet()
-      expect(wallet._numTxFetched).toEqual(0)
       expect(wallet._accounts.length).toEqual(0)
 
     it "should transform an Object to an HDAccount", ->
@@ -113,15 +112,6 @@ describe "HDWallet", ->
         wallet.defaultAccountIndex = 0
         expect(wallet.defaultAccountIndex).toEqual(0)
         expect(MyWallet.syncWallet).toHaveBeenCalled()
-
-      it "numTxFetched should throw exception if is non-number set", ->
-        wrongSet = () -> wallet.numTxFetched = "failure"
-        expect(wrongSet).toThrow()
-
-      it "numTxFetched should be set and dont sync wallet", ->
-        wallet.numTxFetched = 100
-        expect(wallet.numTxFetched).toEqual(100)
-        expect(MyWallet.syncWallet).not.toHaveBeenCalled()
 
     describe "Getter", ->
 

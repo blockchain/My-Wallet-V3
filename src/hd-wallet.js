@@ -30,9 +30,6 @@ function HDWallet(object){
   this._default_account_idx = obj.default_account_idx;
   this._accounts = obj.accounts ? obj.accounts.map(addAccount) : [];
   this._paidTo              = obj.paidTo;
-
-  //computed properties
-  this._numTxFetched = 0;
 }
 
 Object.defineProperties(HDWallet.prototype, {
@@ -43,16 +40,6 @@ Object.defineProperties(HDWallet.prototype, {
   "bip39Password": {
     configurable: false,
     get: function() { return this._bip39Password;}
-  },
-  "numTxFetched": {
-    configurable: false,
-    get: function() { return this._numTxFetched;},
-    set: function(num) {
-    if(Helpers.isNumber(num))
-        this._numTxFetched = num;
-      else
-        throw 'Error: hdwallet.numTxFetched must be a number';
-    }
   },
   "isMnemonicVerified": {
     configurable: false,
