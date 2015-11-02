@@ -257,6 +257,13 @@ HDAccount.prototype.setLabelForReceivingAddress = function(index, label) {
   return this;
 };
 
+HDAccount.prototype.removeLabelForReceivingAddress = function(index) {
+  assert(Helpers.isNumber(index), "Error: address index must be a number");
+  delete this._address_labels[index];
+  MyWallet.syncWallet();
+  return this;
+};
+
 HDAccount.prototype.getLabelForReceivingAddress = function(index) {
   assert(Helpers.isNumber(index), "Error: address index must be a number");
   return this._address_labels[index];
