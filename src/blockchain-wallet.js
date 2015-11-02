@@ -342,8 +342,11 @@ Wallet.prototype._updateWalletInfo = function(obj) {
       if (account){
         account.balance      = e.final_balance;
         account.n_tx         = e.n_tx;
-        account.receiveIndex = e.account_index;
+        account.lastUsedReceiveIndex = e.account_index;
+        account.receiveIndex = Math.max(account.lastUsedReceiveIndex, account.maxLabeledReceiveIndex);
+
         account.changeIndex  = e.change_index;
+
         if (account.getLabelForReceivingAddress(account.receiveIndex)) {
           account.incrementReceiveIndex();
         };
