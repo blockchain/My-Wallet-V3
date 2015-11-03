@@ -622,7 +622,8 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, progres
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
   var newHDwallet = HDWallet.restore(seedHex, pass39, encoder);
   this._hd_wallets[0] = newHDwallet;
-  var accountIndex  = 0;
+  var account = this.newAccount("Account 1", pw, 0, undefined, true);
+  var accountIndex  = 1;
   var AccountsGap = 10;
 
   var untilNEmptyAccounts = function(n){
@@ -635,7 +636,7 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, progres
       return true;
     } else{
       accountIndex++;
-      var account = self.newAccount("Account " + accountIndex.toString(), pw, 0, undefined, true);
+      account = self.newAccount("Account " + accountIndex.toString(), pw, 0, undefined, true);
       return isAccountNonUsed(account, progress).then(go);
     };
   };
