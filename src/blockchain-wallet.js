@@ -12,6 +12,7 @@ var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
 var BIP39 = require('bip39');
 var RSVP = require('rsvp');
+var q = require('q');
 
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
@@ -641,14 +642,12 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, progres
   };
 
   var saveAndReturn = function (){
-    MyWallet.syncWallet();
-    return newHDwallet;
+    return q.Promise(MyWallet.syncWallet);
   };
 
   // it returns a promise of the newHDWallet
   return untilNEmptyAccounts(AccountsGap)
     .then(saveAndReturn)
-    .catch(function(){error("get_history_error")});
 };
 
 // creating a new wallet object
