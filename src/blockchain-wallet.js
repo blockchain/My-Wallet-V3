@@ -623,6 +623,7 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, progres
   var newHDwallet = HDWallet.restore(seedHex, pass39, encoder);
   this._hd_wallets[0] = newHDwallet;
   var account = this.newAccount("Account 1", pw, 0, undefined, true);
+  API.getHistory([account.extendedPublicKey], 0, 0, 50).then(progress);
   var accountIndex  = 1;
   var AccountsGap = 10;
 
