@@ -1236,13 +1236,13 @@ function nKeys(obj) {
 };
 
 // used on frontend
-MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error, progress) {
+MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
   var walletSuccess = function(guid, sharedKey, password) {
     WalletStore.unsafeSetPassword(password);
     var runSuccess = function () {success({ guid: guid, sharedKey: sharedKey, password: password});}
-    MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password, undefined, progress).then(runSuccess).catch(error);
+    MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password, undefined, startedRestoreHDWallet, accountProgress).then(runSuccess).catch(error);
   };
-  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, null, walletSuccess, error);
+  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, null, walletSuccess, error, true, generateUUIDProgress, decryptWalletProgress);
 };
 
 // used frontend and mywallet

@@ -614,8 +614,9 @@ function isAccountNonUsed (account, progress) {
   return API.getHistory([account.extendedPublicKey], 0, 0, 50).then(isNonUsed);
 };
 
-Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, progress){
+Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, startedRestoreHDWallet, progress){
   // wallet restoration
+  startedRestoreHDWallet && startedRestoreHDWallet;
   var self = this;
   var seedHex = BIP39.mnemonicToEntropy(mnemonic);
   var pass39  = Helpers.isString(bip39Password) ? bip39Password : "";
