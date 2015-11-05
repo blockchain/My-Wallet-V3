@@ -225,7 +225,7 @@ function wsSuccess(ws) {
       }
 
       MyWallet.wallet.finalBalance += tx_processed.result;
-
+      MyWallet.wallet.getHistory();
 
       if (tx_account) {
         var account = MyWallet.wallet.hdwallet.accounts[tx_account.index];
