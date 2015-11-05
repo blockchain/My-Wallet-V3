@@ -23,7 +23,6 @@ module.exports = {
   Payment: require('./payment'),
   ImportExport: require('./import-export'),
   BlockchainSettingsAPI: require('./blockchain-settings-api'),
-  // only for debugging
   Helpers: require('./helpers'),
   API: require('./api'),
   Tx: require('./wallet-transaction')
