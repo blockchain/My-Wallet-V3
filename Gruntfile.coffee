@@ -232,8 +232,8 @@ module.exports = (grunt) ->
      "build"
      "shell:test_once"
      "dist"
-     "shell:tag:" + newVersion + ":\"" + message + "\""
      "git_changelog"
+     "shell:tag:" + newVersion + ":\"" + message + "\""
      "shell:copy_changelog"
      "shell:copy_dist"
      "shell:commit_and_push_dist:" + newVersion
