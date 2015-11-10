@@ -61,7 +61,7 @@ var WalletStore = (function() {
   var guid; //Wallet identifier
   var language = 'en';
   var transactions = [];
-  var pbkdf2_iterations = null;
+  var pbkdf2_iterations = 5000; // pbkdf2_interations of the main password (to encrypt the full payload)
   var disable_logout = false;
   var mixer_fee = 0.5;
   var latest_block = null;
@@ -85,11 +85,11 @@ var WalletStore = (function() {
   ////////////////////////////////////////////////////////////////////////////
   return {
     setPbkdf2Iterations: function(iterations) {
-      MyWallet.wallet._pbkdf2_iterations = iterations;
+      pbkdf2_iterations = iterations;
       return;
     },
     getPbkdf2Iterations: function() {
-      return MyWallet.wallet.pbkdf2_iterations;
+      return pbkdf2_iterations;
     },
     getLanguage: function() {
       return language;
