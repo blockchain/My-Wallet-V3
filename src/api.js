@@ -4,6 +4,7 @@ module.exports = new API();
 ////////////////////////////////////////////////////////////////////////////////
 var Q           = require('q')
 var assert      = require('assert');
+var request     = require('request-promise');
 var Helpers     = require('./helpers');
 var WalletStore = require('./wallet-store');
 var CryptoJS    = require('crypto-js');
@@ -29,67 +30,41 @@ API.prototype.encodeFormData = function (data) {
 };
 
 // request :: String -> String -> Object -> boolean -> Promise Response
-API.prototype.request = function(action, method, data, withCredentials, syncBool) {
-
-  var self = this;
-  var clientTime = (new Date()).getTime();
-  var defer = Q.defer();
-  var request = new XMLHttpRequest();
-  var asyncBool = syncBool ? false : true;
-  var isFormData = function (data){return data instanceof FormData};
-  var parseResponse = function (x) {return x;};
-  var handleResponse = function (x) {return x;};
-  var url = undefined;
+API.prototype.request = function(action, method, data, withCredentials) {
+  var url = this.ROOT_URL + method;
   var sendData = null;
 
-  if (action === 'POST') {
-    url = this.ROOT_URL + method;
-    sendData = isFormData(data) ? data : this.encodeFormData(data);
-  }
-  if (action === 'GET') {
-    url = this.ROOT_URL + method + '?'  + this.encodeFormData(data);
-  }
-  request.open(action, url ,asyncBool);
-  request.withCredentials = withCredentials ? true : false;
-  request.timeout = this.AJAX_TIMEOUT;
+  // this is used on iOS to enable and disable web socket while doing ajax calls
+  WalletStore.sendEvent("msg", {type: "ajax-start", message: 'ajax call started'});
 
-  if (!isFormData(data)) {
-    if(data.format === 'json') {parseResponse = function (x) {return JSON.parse(x);};}
-    handleResponse = function(a,b) { self.handleNTPResponse(a, b) };
-    request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-  }
-
-
-  request.onload = function (e) {
-    if (request.readyState === 4) {
-      if (request.status === 200) {
-        var response = parseResponse(request.responseText);
-        handleResponse(response, clientTime);
-        defer.resolve(response);
-      } else {
-        defer.reject(request.responseText);
-      }
-    }
+  var requestOptions = {
+    method    : action,
+    url       : url,
+    qs        : data,
+    timeout   : this.AJAX_TIMEOUT,
+    json      : true
   };
 
-  // this is used on iOS to enable and disable web socket while doing ajax calls
-  request.onloadstart = function (a){
-    WalletStore.sendEvent("msg", {type: "ajax-start", message: 'ajax call started'});
-  };
+  function handleResponse(data) {
+    loadEnded();
+    return data;
+  }
 
-  // this is used on iOS to enable and disable web socket while doing ajax calls
-  request.onloadend = function(a) {
+  function handleError(err) {
+    loadEnded();
+    console.log(0);
+    console.log(err);
+    console.log(1);
+    return err;
+  }
+
+  function loadEnded() {
+    // this is used on iOS to enable and disable web socket while doing ajax calls
     WalletStore.sendEvent("msg", {type: "ajax-end", message: 'ajax call ended'});
-  };
+  }
 
-  request.onerror = function (e) {
-    defer.reject(request.responseText);
-  };
-  request.ontimeout = function() {
-    defer.reject("timeout request");
-  };
-  request.send(sendData);
-  return defer.promise;
+  return request(requestOptions)
+    .then(handleResponse).catch(handleError);
 };
 
 API.prototype.retry = function(f, n) {

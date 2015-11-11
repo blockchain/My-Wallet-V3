@@ -22,6 +22,7 @@ var Transaction = require('./transaction');
 var API = require('./api');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
+var shared = require('./shared');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -132,8 +133,8 @@ MyWallet.addPrivateKey = function(key, opts, second_password) {
   if (WalletStore.addLegacyAddress(addr, encoded)) {
     addresses[addr].tag = 1; //Mark as unsynced
     addresses[addr].created_time = opts.created_time ? opts.created_time : 0; //Stamp With Creation time
-    addresses[addr].created_device_name = opts.app_name ? opts.app_name : APP_NAME; //Created Device
-    addresses[addr].created_device_version = opts.app_version ? opts.app_version : APP_VERSION; //Created App Version
+    addresses[addr].created_device_name = opts.app_name ? opts.app_name : shared.APP_NAME; //Created Device
+    addresses[addr].created_device_version = opts.app_version ? opts.app_version : shared.APP_VERSION; //Created App Version
 
     if (addresses[addr].priv != encoded)
       throw 'Address priv does not match encoded';
@@ -944,8 +945,6 @@ MyWallet.login = function ( user_guid
      WalletStore.setEncryptedWalletData(obj.payload);
     }
 
-    war_checksum = obj.war_checksum;
-
     if (obj.language && WalletStore.getLanguage() != obj.language) {
      WalletStore.setLanguage(obj.language);
     }
@@ -1037,13 +1036,13 @@ MyWallet.getIsInitialized = function() {
 // used once
 function setIsInitialized() {
   if (isInitialized) return;
-  webSocketConnect(wsSuccess);
+  // webSocketConnect(wsSuccess);
   isInitialized = true;
 };
 
 // used on iOS
 MyWallet.connectWebSocket = function() {
-  webSocketConnect(wsSuccess);
+  // webSocketConnect(wsSuccess);
 };
 ////////////////////////////////////////////////////////////////////////////////
 // This should replace backup functions

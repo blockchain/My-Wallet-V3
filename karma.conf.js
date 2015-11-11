@@ -62,7 +62,7 @@ module.exports = function(karma) {
     },
 
     files: [
-      'src/shared.js',
+      // 'src/shared.js',
       // 'tests/**/*.coffee',
       // Or specify individual test files:
       'tests/mocks/*.coffee',
