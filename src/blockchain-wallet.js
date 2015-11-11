@@ -714,6 +714,16 @@ Wallet.prototype.getAddressBookLabel = function(address){
   return this._address_book[address];
 };
 
+Wallet.prototype.addAddressBookEntry = function(address, label){
+  this._address_book[address] = label;
+  MyWallet.syncWallet();
+};
+
+Wallet.prototype.removeAddressBookEntry = function(address){
+  delete this._address_book[address];
+  MyWallet.syncWallet();
+};
+
 Wallet.prototype.getNote = function(txHash){
   return this._tx_notes[txHash];
 };
