@@ -201,18 +201,13 @@ API.prototype.pushTx = function (tx, note){
   var tx_hash = tx.getId();
   var buffer = tx.toBuffer();
 
-  var int8_array = new Int8Array(buffer);
-  int8_array.set(buffer);
-  var blob = new Blob([buffer], {type : 'application/octet-stream'});
-  if (blob.size != txHex.length/2)
-    throw 'Inconsistent Data Sizes (blob : ' + blob.size + ' s : ' + txHex.length/2 + ' buffer : ' + buffer.byteLength + ')';
-  var fd = new FormData();
+  var fd = {
+    'tx'      : buffer.toString('hex'),
+    'hash'    : tx_hash,
+    'api_code': WalletStore.getAPICode(),
+  };
 
-  fd.append('txbytes', blob);
-  if (note) { fd.append('note', note); }
-  fd.append('format', 'plain');
-  fd.append('hash', tx_hash);
-  fd.append('api_code', WalletStore.getAPICode());
+  if (note) { fd.note = note; }
 
   var responseTXHASH = function (responseText) {
     if (responseText.indexOf("Transaction Submitted") > -1)
@@ -221,7 +216,15 @@ API.prototype.pushTx = function (tx, note){
       { return responseText;}
   }
 
-  return this.retry(this.request.bind(this, "POST", "pushtx", fd)).then(responseTXHASH);
+  var requestOptions = {
+    method    : 'POST',
+    url       : this.ROOT_URL + '/pushtx',
+    timeout   : this.AJAX_TIMEOUT,
+    formData  : fd,
+    json      : true
+  };
+
+  return request(requestOptions).then(responseTXHASH);
 };
 
 // OLD FUNCTIONS COPIED: Must rewrite this ones (email ,sms)
