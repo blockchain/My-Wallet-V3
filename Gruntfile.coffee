@@ -17,7 +17,6 @@ module.exports = (grunt) ->
 
       mywallet:
         src: [
-          'build/shared.processed.js'
           'build/blockchain.js'
         ]
         dest: "dist/my-wallet.js"
@@ -49,7 +48,7 @@ module.exports = (grunt) ->
         browserifyOptions: { standalone: "Blockchain" }
 
       build:
-        src: ['src/index.js']
+        src: ['index.js']
         dest: 'build/blockchain.js'
 
       production:

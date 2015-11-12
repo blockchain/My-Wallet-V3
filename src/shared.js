@@ -15,9 +15,11 @@ module.exports = {
   APP_VERSION: '3.0',
   setLocalSymbol: setLocalSymbol,
   setBTCSymbol: setBTCSymbol,
+  playSound: playSound,
+  sShift: sShift,
+  webSocketConnect: webSocketConnect,
   TransactionFromJSON: TransactionFromJSON,
-  BlockFromJSON: BlockFromJSON,
-  formatSatoshi: formatSatoshi
+  BlockFromJSON: BlockFromJSON
 };
 
 function myprint (x) {console.log(x);};

@@ -215,7 +215,7 @@ function wsSuccess(ws) {
       }
 
     } else if (obj.op == 'utx') {
-      var tx = TransactionFromJSON(obj.x);
+      var tx = shared.TransactionFromJSON(obj.x);
       var tx_processed = MyWallet.processTransaction(tx);
       var tx_account = tx_processed.to.accounts[0];
 
@@ -252,7 +252,7 @@ function wsSuccess(ws) {
       MyWallet.wallet.numberTxFetched += 1;
       tx.setConfirmations(0);
       WalletStore.pushTransaction(tx);
-      playSound('beep');
+      shared.playSound('beep');
       WalletStore.sendEvent('on_tx');
 
     }  else if (obj.op == 'block') {
@@ -267,7 +267,7 @@ function wsSuccess(ws) {
           }
         }
       }
-      WalletStore.setLatestBlock(BlockFromJSON(obj.x));
+      WalletStore.setLatestBlock(shared.BlockFromJSON(obj.x));
       WalletStore.sendEvent('on_block');
     }
   };
@@ -1036,13 +1036,13 @@ MyWallet.getIsInitialized = function() {
 // used once
 function setIsInitialized() {
   if (isInitialized) return;
-  // webSocketConnect(wsSuccess);
+  shared.webSocketConnect(wsSuccess);
   isInitialized = true;
 };
 
 // used on iOS
 MyWallet.connectWebSocket = function() {
-  // webSocketConnect(wsSuccess);
+  shared.webSocketConnect(wsSuccess);
 };
 ////////////////////////////////////////////////////////////////////////////////
 // This should replace backup functions
@@ -1356,5 +1356,5 @@ function parseValueBitcoin(valueString) {
 }
 // used iOS and mywallet
 MyWallet.precisionToSatoshiBN = function(x) {
-  return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, sShift(symbol_btc)).toString()));
+  return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, shared.sShift(symbol_btc)).toString()));
 };
