@@ -931,7 +931,7 @@ MyWallet.login = function ( user_guid
     }
     var error = function (response) {
      WalletStore.setRestoringWallet(false);
-     wrong_two_factor_code(response.responseText);
+     wrong_two_factor_code(response);
     }
 
     var myData = { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : API.API_CODE};
