@@ -463,7 +463,7 @@ MyWallet.processTransaction = function(tx) {
     transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
   }
 
-  if (transaction.from.account == null && transaction.from.legacyAddresses == null) {
+  if (transaction.from.account == null && transaction.from.legacyAddresses == null && transaction.from.externalAddresses != null) {
     var fromAmount = 0;
     for (var i in transaction.to.accounts) {
       fromAmount += transaction.to.accounts[i].amount;
