@@ -149,6 +149,16 @@ Object.defineProperties(HDAccount.prototype, {
       return denseArray;
     }
   },
+  "labeledReceivingAddresses": {
+    configurable: false,
+    get: function() {
+      var denseArray = [];
+      var outerThis = this;
+      this._address_labels
+        .map(function(lab,i){denseArray.push(outerThis.receiveAddressAtIndex(i))});
+      return denseArray;
+    }
+  },
   "extendedPublicKey": {
      configurable: false,
      get: function() { return this._xpub;}

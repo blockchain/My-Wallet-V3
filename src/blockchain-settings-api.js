@@ -209,6 +209,66 @@ function getActivityLogs(success, error) {
   });
 };
 
+function enableEmailNotifications(success, error) {
+  MyWallet.securePost("wallet", {
+    method : 'update-notifications-type',
+    length: 1,
+    payload: 1
+  }, function(data) {
+    typeof(success) === "function" && success(data);
+  }, function(data) {
+    var response = data.responseText || 'Error Enabling Email Notifications';
+    WalletStore.sendEvent("msg", {type: "error", message: response});
+    typeof(error) === "function" &&  error();
+  });
+}
+
+function enableReceiveNotifications(success, error) {
+  MyWallet.securePost("wallet", {
+    method : 'update-notifications-on',
+    length: 1,
+    payload: 2
+  }, function(data) {
+    typeof(success) === "function" && success(data);
+  }, function(data) {
+    var response = data.responseText || 'Error Enabling Receive Notifications';
+    WalletStore.sendEvent("msg", {type: "error", message: response});
+    typeof(error) === "function" &&  error();
+  });
+}
+
+function enableEmailReceiveNotifications(success, error) {
+  assert(success, "Success callback required");
+  assert(error, "Error callback required");
+
+  enableEmailNotifications(
+    function() {
+      enableReceiveNotifications(
+        success,
+        error
+      )
+    },
+    error
+  );
+}
+
+function disableAllNotifications(success, error) {
+  assert(success, "Success callback required");
+  assert(error, "Error callback required");
+
+  MyWallet.securePost("wallet", {
+    method : 'update-notifications-type',
+    length: 1,
+    payload: 0
+  }, function(data) {
+    typeof(success) === "function" && success(data);
+  }, function(data) {
+    var response = data.responseText || 'Error Disabling Receive Notifications';
+    WalletStore.sendEvent("msg", {type: "error", message: response});
+    typeof(error) === "function" &&  error();
+  });
+}
+
 module.exports = {
   get_account_info: get_account_info,
   update_API_access: update_API_access,
@@ -233,5 +293,7 @@ module.exports = {
   resendEmailConfirmation: resendEmailConfirmation,
   verifyEmail: verifyEmail,
   verifyMobile: verifyMobile,
-  getActivityLogs: getActivityLogs
+  getActivityLogs: getActivityLogs,
+  enableEmailReceiveNotifications: enableEmailReceiveNotifications,
+  disableAllNotifications: disableAllNotifications
 };
