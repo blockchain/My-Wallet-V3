@@ -33,6 +33,7 @@ API.prototype.encodeFormData = function (data) {
 API.prototype.request = function(action, method, data, withCredentials) {
   var url = this.ROOT_URL + method;
   var sendData = null;
+  var clientTime = (new Date()).getTime();
 
   // this is used on iOS to enable and disable web socket while doing ajax calls
   WalletStore.sendEvent("msg", {type: "ajax-start", message: 'ajax call started'});
@@ -45,18 +46,21 @@ API.prototype.request = function(action, method, data, withCredentials) {
     json      : true
   };
 
-  function handleResponse(data) {
-    loadEnded();
-    return data;
+  if (method === 'wallet' && data.method === 'update') {
+    delete requestOptions.qs;
+    requestOptions.form = data;
   }
 
-  function handleError(err) {
+  var handleResponse = function (data) {
     loadEnded();
-    console.log(0);
-    console.log(err);
-    console.log(1);
-    return err;
-  }
+    this.handleNTPResponse(data, clientTime);
+    return data;
+  }.bind(this);
+
+  var handleError = function (err) {
+    loadEnded();
+    throw err;
+  }.bind(this);
 
   function loadEnded() {
     // this is used on iOS to enable and disable web socket while doing ajax calls
