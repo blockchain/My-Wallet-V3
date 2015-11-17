@@ -893,7 +893,7 @@ MyWallet.login = function ( user_guid
 
     var error = function(e) {
        console.log(e);
-       var obj = JSON.parse(e);
+       var obj = 'object' === typeof e ? e : JSON.parse(e);
        if(obj && obj.initial_error && !obj.authorization_required) {
          other_error(obj.initial_error);
          return;

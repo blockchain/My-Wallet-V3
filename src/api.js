@@ -59,7 +59,7 @@ API.prototype.request = function(action, method, data, withCredentials) {
 
   var handleError = function (err) {
     loadEnded();
-    throw err;
+    throw err.error;
   }.bind(this);
 
   function loadEnded() {
