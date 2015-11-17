@@ -892,6 +892,7 @@ MyWallet.login = function ( user_guid
     }
 
     var error = function(e) {
+       console.log(e);
        var obj = JSON.parse(e);
        if(obj && obj.initial_error && !obj.authorization_required) {
          other_error(obj.initial_error);
@@ -1248,7 +1249,11 @@ MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryM
 MyWallet.logout = function(force) {
   if (!force && WalletStore.isLogoutDisabled())
     return;
-  var reload = function() { window.location.reload(); }
+  var reload = function() {
+    try { window.location.reload(); } catch (e) {
+      console.log(e);
+    }
+  };
   var data = {format : 'plain', api_code : API.API_CODE}
   WalletStore.sendEvent('logging_out');
   API.request("GET", 'wallet/logout', data, true, false).then(reload).catch(reload);
