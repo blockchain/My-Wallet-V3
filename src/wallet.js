@@ -199,7 +199,7 @@ function socketConnect() {
     var obj = null;
 
     try {
-      obj = JSON.parse(message.data);
+      obj = JSON.parse(message);
     }
     catch (e) {
       console.log('Websocket error: could not parse message data as JSON: ' + message);
