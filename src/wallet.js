@@ -23,6 +23,8 @@ var API = require('./api');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
 var shared = require('./shared');
+var BlockchainSocket = require('./blockchain-socket');
+var ws = new BlockchainSocket();
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -188,10 +190,12 @@ MyWallet.generateNewMiniPrivateKey = function() {
 ////////////////////////////////////////////////////////////////////////////////
 
 // used locally
-function wsSuccess(ws) {
+function socketConnect() {
+  ws.connect(onOpen, onMessage, onClose);
+
   var last_on_change = null;
 
-  ws.onmessage = function(message) {
+  function onMessage(message) {
     var obj = null;
 
     try {
@@ -272,7 +276,7 @@ function wsSuccess(ws) {
     }
   };
 
-  ws.onopen = function() {
+  function onOpen() {
     WalletStore.sendEvent('ws_on_open');
 
     var msg = '{"op":"blocks_sub"}';
@@ -295,9 +299,8 @@ function wsSuccess(ws) {
     ws.send(msg);
   };
 
-  ws.onclose = function() {
+  function onClose() {
     WalletStore.sendEvent('ws_on_close');
-
   };
 }
 
@@ -1037,13 +1040,13 @@ MyWallet.getIsInitialized = function() {
 // used once
 function setIsInitialized() {
   if (isInitialized) return;
-  shared.webSocketConnect(wsSuccess);
+  socketConnect();
   isInitialized = true;
 };
 
 // used on iOS
 MyWallet.connectWebSocket = function() {
-  shared.webSocketConnect(wsSuccess);
+  socketConnect();
 };
 ////////////////////////////////////////////////////////////////////////////////
 // This should replace backup functions

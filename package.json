@@ -39,6 +39,7 @@
     "rsvp": "^3.1.0",
     "sjcl": "1.0.*",
     "unorm": "^1.4.1",
+    "ws": "^0.8.0",
     "xregexp": "2.0.*"
   },
   "devDependencies": {
