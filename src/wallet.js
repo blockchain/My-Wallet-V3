@@ -1109,12 +1109,18 @@ function syncWallet (successcallback, errorcallback) {
         }
 
         if (WalletStore.isSyncPubKeys()) {
+          // Include HD addresses unless in lame mode:
+          var hdAddresses = (
+            MyWallet.wallet.hdwallet != undefined &&
+            MyWallet.wallet.hdwallet.accounts != undefined
+          ) ? [].concat.apply([],
+            MyWallet.wallet.hdwallet.accounts.map(function(account) {
+              return account.labeledReceivingAddresses
+            })) : [];
           data.active = [].concat.apply([],
             [
               MyWallet.wallet.activeAddresses,
-              [].concat.apply([], MyWallet.wallet.hdwallet.accounts.map(function(account) {
-                return account.labeledReceivingAddresses
-              }))
+              hdAddresses
             ]
           ).join('|');
         }
