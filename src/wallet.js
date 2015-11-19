@@ -1109,7 +1109,14 @@ function syncWallet (successcallback, errorcallback) {
         }
 
         if (WalletStore.isSyncPubKeys()) {
-          data.active = MyWallet.wallet.activeAddresses.join('|');
+          data.active = [].concat.apply([],
+            [
+              MyWallet.wallet.activeAddresses,
+              [].concat.apply([], MyWallet.wallet.hdwallet.accounts.map(function(account) {
+                return account.labeledReceivingAddresses
+              }))
+            ]
+          ).join('|');
         }
 
         MyWallet.securePost(

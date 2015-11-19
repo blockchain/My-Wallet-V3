@@ -4,6 +4,7 @@ var assert = require('assert');
 
 var WalletStore = require('./wallet-store.js');
 var MyWallet = require('./wallet.js');
+var API = require('./api');
 
 function get_account_info(success, error) {
   MyWallet.securePost("wallet", {method : 'get-info', format : 'json'}, function(data) {
@@ -209,6 +210,66 @@ function getActivityLogs(success, error) {
   });
 };
 
+function enableEmailNotifications(success, error) {
+  API.securePost("wallet", {
+    method : 'update-notifications-type',
+    length: 1,
+    payload: 1
+  }).then(function(data) {
+    typeof(success) === "function" && success(data);
+  }).catch(function(data) {
+    var response = data.responseText || 'Error Enabling Email Notifications';
+    WalletStore.sendEvent("msg", {type: "error", message: response});
+    typeof(error) === "function" &&  error();
+  });
+}
+
+function enableReceiveNotifications(success, error) {
+  API.securePost("wallet", {
+    method : 'update-notifications-on',
+    length: 1,
+    payload: 2
+  }).then(function(data) {
+    typeof(success) === "function" && success(data);
+  }).catch(function(data) {
+    var response = data.responseText || 'Error Enabling Receive Notifications';
+    WalletStore.sendEvent("msg", {type: "error", message: response});
+    typeof(error) === "function" &&  error();
+  });
+}
+
+function enableEmailReceiveNotifications(success, error) {
+  assert(success, "Success callback required");
+  assert(error, "Error callback required");
+
+  enableEmailNotifications(
+    function() {
+      enableReceiveNotifications(
+        success,
+        error
+      )
+    },
+    error
+  );
+}
+
+function disableAllNotifications(success, error) {
+  assert(success, "Success callback required");
+  assert(error, "Error callback required");
+
+  API.securePost("wallet", {
+    method : 'update-notifications-type',
+    length: 1,
+    payload: 0
+  }).then(function(data) {
+    typeof(success) === "function" && success(data);
+  }).catch(function(data) {
+    var response = data.responseText || 'Error Disabling Receive Notifications';
+    WalletStore.sendEvent("msg", {type: "error", message: response});
+    typeof(error) === "function" &&  error();
+  });
+}
+
 module.exports = {
   get_account_info: get_account_info,
   update_API_access: update_API_access,
@@ -233,5 +294,7 @@ module.exports = {
   resendEmailConfirmation: resendEmailConfirmation,
   verifyEmail: verifyEmail,
   verifyMobile: verifyMobile,
-  getActivityLogs: getActivityLogs
+  getActivityLogs: getActivityLogs,
+  enableEmailReceiveNotifications: enableEmailReceiveNotifications,
+  disableAllNotifications: disableAllNotifications
 };

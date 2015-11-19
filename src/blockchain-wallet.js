@@ -24,6 +24,7 @@ var MyWallet = require('./wallet'); // This cyclic import should be avoided once
 var ImportExport = require('./import-export');
 var API = require('./api');
 var Tx = require('./wallet-transaction');
+var BlockchainSettingsAPI = require('./blockchain-settings-api');
 
 ////////////////////////////////////////////////////////////////////////////////
 // Wallet
@@ -651,6 +652,41 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, started
   return untilNEmptyAccounts(AccountsGap)
     .then(saveAndReturn)
 };
+
+// Enables email notifications for receiving bitcoins. Only for imported
+// and labeled HD addresses.
+Wallet.prototype.enableNotifications = function(success, error) {
+  assert(success, "Success callback required");
+  assert(error, "Error callback required");
+
+  BlockchainSettingsAPI.enableEmailReceiveNotifications(
+    function() {
+      WalletStore.setSyncPubKeys(true);
+      MyWallet.syncWallet();
+      success();
+    },
+    function() {
+      error();
+    }
+  )
+}
+
+Wallet.prototype.disableNotifications = function(success, error) {
+  assert(success, "Success callback required");
+  assert(error, "Error callback required");
+
+  BlockchainSettingsAPI.disableAllNotifications(
+    function() {
+      WalletStore.setSyncPubKeys(false);
+      MyWallet.syncWallet();
+      success();
+    },
+    function() {
+      error();
+    }
+  );
+
+}
 
 // creating a new wallet object
 Wallet.new = function(guid, sharedKey, firstAccountLabel, success, isHD){
