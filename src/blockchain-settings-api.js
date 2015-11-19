@@ -4,6 +4,7 @@ var assert = require('assert');
 
 var WalletStore = require('./wallet-store.js');
 var MyWallet = require('./wallet.js');
+var API = require('./api');
 
 function get_account_info(success, error) {
   MyWallet.securePost("wallet", {method : 'get-info', format : 'json'}, function(data) {
@@ -210,13 +211,13 @@ function getActivityLogs(success, error) {
 };
 
 function enableEmailNotifications(success, error) {
-  MyWallet.securePost("wallet", {
+  API.securePost("wallet", {
     method : 'update-notifications-type',
     length: 1,
     payload: 1
-  }, function(data) {
+  }).then(function(data) {
     typeof(success) === "function" && success(data);
-  }, function(data) {
+  }).catch(function(data) {
     var response = data.responseText || 'Error Enabling Email Notifications';
     WalletStore.sendEvent("msg", {type: "error", message: response});
     typeof(error) === "function" &&  error();
@@ -224,13 +225,13 @@ function enableEmailNotifications(success, error) {
 }
 
 function enableReceiveNotifications(success, error) {
-  MyWallet.securePost("wallet", {
+  API.securePost("wallet", {
     method : 'update-notifications-on',
     length: 1,
     payload: 2
-  }, function(data) {
+  }).then(function(data) {
     typeof(success) === "function" && success(data);
-  }, function(data) {
+  }).catch(function(data) {
     var response = data.responseText || 'Error Enabling Receive Notifications';
     WalletStore.sendEvent("msg", {type: "error", message: response});
     typeof(error) === "function" &&  error();
@@ -256,13 +257,13 @@ function disableAllNotifications(success, error) {
   assert(success, "Success callback required");
   assert(error, "Error callback required");
 
-  MyWallet.securePost("wallet", {
+  API.securePost("wallet", {
     method : 'update-notifications-type',
     length: 1,
     payload: 0
-  }, function(data) {
+  }).then(function(data) {
     typeof(success) === "function" && success(data);
-  }, function(data) {
+  }).catch(function(data) {
     var response = data.responseText || 'Error Disabling Receive Notifications';
     WalletStore.sendEvent("msg", {type: "error", message: response});
     typeof(error) === "function" &&  error();
