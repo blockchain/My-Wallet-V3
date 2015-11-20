@@ -459,7 +459,7 @@ Wallet.prototype.importLegacyAddress = function(addr, label, secPass, bipPass){
 
   var importAddress = (function(key) {
     var ad = Address.import(key, label);
-    if (this.containsLegacyAddress(ad)) { defer.reject('presentInWallet'); };
+    if (this.containsLegacyAddress(ad)) { defer.reject('presentInWallet'); return;};
     if (this.isDoubleEncrypted) {
       assert(secPass, "Error: second password needed");
       var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, "enc");
