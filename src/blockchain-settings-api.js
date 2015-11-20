@@ -72,17 +72,35 @@ function update_tor_ip_block(enabled, success, error) {
 };
 
 function update_password_hint1(value, success, error) {
-  if (value.split('').some(function(c){return c.charCodeAt(0) > 255;}))
-    error(101);
-  else
-    updateKV('Updating Main Password Hint', 'update-password-hint1', value, success, error);
+  switch (true) {
+    case value.split('').some(function(c){return c.charCodeAt(0) > 255;}):
+      error(101); // invalid charset
+      break;
+    case (WalletStore.getPassword() === value):
+      error(102); // password hint cannot be main wallet pass
+      break;
+    case (MyWallet.wallet.isDoubleEncrypted && MyWallet.wallet.validateSecondPassword(value)):
+      error(103); // password hint cannot be second passord
+      break;
+    default:
+      updateKV('Updating Main Password Hint', 'update-password-hint1', value, success, error);
+  };
 };
 
 function update_password_hint2(value, success, error) {
-  if (value.split('').some(function(c){return c.charCodeAt(0) > 255;}))
-    error(101);
-  else
-    updateKV('Updating Second Password Hint', 'update-password-hint2', value, success, error);
+  switch (true) {
+    case value.split('').some(function(c){return c.charCodeAt(0) > 255;}):
+      error(101); // invalid charset
+      break;
+    case (WalletStore.getPassword() === value):
+      error(102); // password hint cannot be main wallet pass
+      break;
+    case (MyWallet.wallet.isDoubleEncrypted && MyWallet.wallet.validateSecondPassword(value)):
+      error(103); // password hint cannot be second passord
+      break;
+    default:
+      updateKV('Updating Logging Level', 'update-password-hint2', value, success, error);
+  };
 };
 
 function change_email(email, success, error) {
