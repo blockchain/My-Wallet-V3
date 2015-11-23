@@ -119,23 +119,6 @@ Transaction.prototype.randomizeOutputs = function () {
 /**
  * BIP69: Sort outputs lexicographycally
  */
-Transaction.prototype.sortBIP69Outputs = function () {
-  function randomNumberBetweenZeroAnd(i) {
-    assert(i < Math.pow(2, 16), 'Cannot shuffle more outputs than one transaction can handle');
-
-    var randArray = randomBytes(2);
-    var rand = randArray[0] << 8 | randArray[1];
-
-    return rand%i;
-  }
-
-  function shuffle(o){
-    for(var j, x, i = o.length; i > 1; j = randomNumberBetweenZeroAnd(i), x = o[--i], o[i] = o[j], o[j] = x);
-    return o;
-  };
-
-  shuffle(this.transaction.outs);
-};
 
 Transaction.prototype.sortBIP69 = function (){
 
