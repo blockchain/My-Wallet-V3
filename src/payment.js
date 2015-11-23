@@ -327,7 +327,7 @@ Payment.sign = function(password) {
     if (Array.isArray(payment.wifKeys)) payment.wifKeys.forEach(importWIF);
     if (!payment.transaction) throw "You cannot sign a non-build transaction."
     payment.transaction.addPrivateKeys(getPrivateKeys(password, payment));
-    payment.transaction.randomizeOutputs();
+    payment.transaction.sortBIP69();
     payment.transaction = payment.transaction.sign();
     return q(payment);
   };

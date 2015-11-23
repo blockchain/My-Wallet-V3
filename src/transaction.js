@@ -113,10 +113,59 @@ Transaction.prototype.randomizeOutputs = function () {
     for(var j, x, i = o.length; i > 1; j = randomNumberBetweenZeroAnd(i), x = o[--i], o[i] = o[j], o[j] = x);
     return o;
   };
+  shuffle(this.transaction.outs);
+};
+
+/**
+ * BIP69: Sort outputs lexicographycally
+ */
+Transaction.prototype.sortBIP69Outputs = function () {
+  function randomNumberBetweenZeroAnd(i) {
+    assert(i < Math.pow(2, 16), 'Cannot shuffle more outputs than one transaction can handle');
+
+    var randArray = randomBytes(2);
+    var rand = randArray[0] << 8 | randArray[1];
+
+    return rand%i;
+  }
+
+  function shuffle(o){
+    for(var j, x, i = o.length; i > 1; j = randomNumberBetweenZeroAnd(i), x = o[--i], o[i] = o[j], o[j] = x);
+    return o;
+  };
 
   shuffle(this.transaction.outs);
 };
 
+Transaction.prototype.sortBIP69 = function (){
+
+  var compareNum = function(a, b) {
+      if (a == b) return 0;
+      return a < b ? -1 : 1;
+  };
+
+  var compareInputs = function(a, b) {
+    var x = a.hash.toString("hex");
+    var y = b.hash.toString("hex");
+    var comp1 = x.localeCompare(y);
+    if (comp1 === 0)
+      return compareNum(a.index, b.index);
+    else
+      return comp1;
+  };
+  var compareOutputs = function(a, b) {
+    var comp1 = compareNum(a.value, b.value);
+    if (comp1 === 0) {
+      var x = a.script.buffer.toString("hex");
+      var y = b.script.buffer.toString("hex");
+      return x.localeCompare(y);
+    }
+    else
+      { return comp1;}
+  };
+  this.transaction.ins.sort(compareInputs);
+  this.transaction.outs.sort(compareOutputs);
+};
 /**
  * Sign the transaction
  * @return {Object} Signed transaction
