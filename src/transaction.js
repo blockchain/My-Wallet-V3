@@ -128,9 +128,11 @@ Transaction.prototype.sortBIP69 = function (){
   };
 
   var compareInputs = function(a, b) {
-    var x = a.hash.toString("hex");
-    var y = b.hash.toString("hex");
+    var x = a.hash.reverse().toString("hex");
+    var y = b.hash.reverse().toString("hex");
     var comp1 = x.localeCompare(y);
+    a.hash.reverse();
+    b.hash.reverse();
     if (comp1 === 0)
       return compareNum(a.index, b.index);
     else
