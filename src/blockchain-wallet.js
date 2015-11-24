@@ -42,7 +42,7 @@ function Wallet(object) {
   this._dpasswordhash     = obj.dpasswordhash;
   //options
   this._pbkdf2_iterations        = obj.options.pbkdf2_iterations;
-  this._fee_per_kb               = obj.options.fee_per_kb == null ? 10000 : obj.options.fee_per_kb;
+  this._fee_per_kb               = obj.options.fee_per_kb === false ? 10000 : obj.options.fee_per_kb;
   this._html5_notifications      = obj.options.html5_notifications;
   this._logout_time              = obj.options.logout_time;
 
