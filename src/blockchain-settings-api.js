@@ -28,7 +28,7 @@ function updateKV(txt, method, value, success, error, extra) {
   extra = extra || '';
 
   MyWallet.securePost("wallet"+extra, { length : (value+'').length, payload : value+'', method : method }, function(data) {
-    WalletStore.sendEvent("msg", {type: "success", message: method + '-success' + data});
+    WalletStore.sendEvent("msg", {type: "success", message: method + '-success: ' + data});
 
     typeof(success) === "function" && success();
   }, function(data) {
