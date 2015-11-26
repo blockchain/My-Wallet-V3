@@ -32,7 +32,7 @@ function updateKV(txt, method, value, success, error, extra) {
 
     typeof(success) === "function" && success();
   }, function(data) {
-    WalletStore.sendEvent("msg", {type: "error", message: method + '-error' + data.responseText});
+    WalletStore.sendEvent("msg", {type: "error", message: method + '-error: ' + data});
 
     typeof(error) === "function" &&  error();
   });
