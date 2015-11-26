@@ -28,11 +28,11 @@ function updateKV(txt, method, value, success, error, extra) {
   extra = extra || '';
 
   MyWallet.securePost("wallet"+extra, { length : (value+'').length, payload : value+'', method : method }, function(data) {
-    WalletStore.sendEvent("msg", {type: "success", message: method + '-success' + data});
+    WalletStore.sendEvent("msg", {type: "success", message: method + '-success: ' + data});
 
     typeof(success) === "function" && success();
   }, function(data) {
-    WalletStore.sendEvent("msg", {type: "error", message: method + '-error' + data.responseText});
+    WalletStore.sendEvent("msg", {type: "error", message: method + '-error: ' + data});
 
     typeof(error) === "function" &&  error();
   });
@@ -213,7 +213,7 @@ function verifyMobile(code, success, error) {
     WalletStore.sendEvent("msg", {type: "success", message: data});
     typeof(success) === "function" && success(data);
   }, function(data) {
-    WalletStore.sendEvent("msg", {type: "error", message: data.responseText});
+    WalletStore.sendEvent("msg", {type: "error", message: data});
     typeof(error) === "function" &&  error();
   });
 };
