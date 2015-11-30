@@ -113,10 +113,44 @@ Transaction.prototype.randomizeOutputs = function () {
     for(var j, x, i = o.length; i > 1; j = randomNumberBetweenZeroAnd(i), x = o[--i], o[i] = o[j], o[j] = x);
     return o;
   };
-
   shuffle(this.transaction.outs);
 };
 
+/**
+ * BIP69: Sort outputs lexicographycally
+ */
+
+Transaction.prototype.sortBIP69 = function (){
+
+  var compareNum = function(a, b) {
+      if (a == b) return 0;
+      return a < b ? -1 : 1;
+  };
+
+  var compareInputs = function(a, b) {
+    var x = a.hash.reverse().toString("hex");
+    var y = b.hash.reverse().toString("hex");
+    var comp1 = x.localeCompare(y);
+    a.hash.reverse();
+    b.hash.reverse();
+    if (comp1 === 0)
+      return compareNum(a.index, b.index);
+    else
+      return comp1;
+  };
+  var compareOutputs = function(a, b) {
+    var comp1 = compareNum(a.value, b.value);
+    if (comp1 === 0) {
+      var x = a.script.buffer.toString("hex");
+      var y = b.script.buffer.toString("hex");
+      return x.localeCompare(y);
+    }
+    else
+      { return comp1;}
+  };
+  this.transaction.ins.sort(compareInputs);
+  this.transaction.outs.sort(compareOutputs);
+};
 /**
  * Sign the transaction
  * @return {Object} Signed transaction
