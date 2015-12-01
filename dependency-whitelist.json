@@ -105,6 +105,11 @@
     "commits" : ["d373079d3620152e3d60e82f27265a09ee0e81bd"],
     "repo" : "kriskowal/q"
   },
+  "hyperquest" : {
+    "version" : "1.2.0",
+    "commits" : ["6e659e313f9fd2d5627f6c647ba0d17098d4a79d"],
+    "repo" : "substack/hyperquest"
+  },
   "pbkdf2" : {
     "version" : "3.0.4",
     "commits" : ["c9b595c784154e433995faf6cd81813aef29c713"],

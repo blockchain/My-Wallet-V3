@@ -4,7 +4,6 @@ module.exports = new API();
 ////////////////////////////////////////////////////////////////////////////////
 var Q           = require('q')
 var assert      = require('assert');
-var request     = require('request-promise');
 var Helpers     = require('./helpers');
 var WalletStore = require('./wallet-store');
 var CryptoJS    = require('crypto-js');
@@ -32,32 +31,6 @@ API.prototype.encodeFormData = function (data) {
   return encoded;
 };
 
-// API.prototype.test = function() {
-//   var offset = 0;
-//   //1A3rxZt15LnDxMB9veByWR8ptMmFMRUqdM
-//   var addresses = ["1A3rxZt15LnDxMB9veByWR8ptMmFMRUqdM"];
-//   var tx_filter = undefined;
-//   var n = 30;
-//
-//   var clientTime = (new Date()).getTime();
-//   offset = offset || 0;
-//   n = n || 0;
-//
-//   var data = {
-//       active : addresses.join('|')
-//     , format: 'json'
-//     , offset: offset
-//     , no_compact: true
-//     , ct : clientTime
-//     , n : n
-//     , language : WalletStore.getLanguage()
-//     , no_buttons : true
-//     , api_code : this.API_CODE
-//   };
-//
-//   return this.requestJaume("POST", "multiaddr", data);
-//
-// }
 ////////////////////////////////////////////////////////////////////////////////
 API.prototype.request = function(action, method, data, withCred) {
 
@@ -89,29 +62,29 @@ API.prototype.request = function(action, method, data, withCred) {
   }
 
   function loadEnded() {
-      // this is used on iOS to enable and disable web socket while doing ajax calls
-      WalletStore.sendEvent("msg", {type: "ajax-end", message: 'ajax call ended'});
+    // this is used on iOS to enable and disable web socket while doing ajax calls
+    WalletStore.sendEvent("msg", {type: "ajax-end", message: 'ajax call ended'});
   }
 
   var handleResponse = function (res) {
     loadEnded();
-    // console.log(res);
     this.handleNTPResponse(res, clientTime);
-    defer.resolve(JSON.parse(res));
+    if (data.format === 'json') { res = JSON.parse(res); }
+    defer.resolve(res);
   }.bind(this);
 
   var handleError = function (err) {
     loadEnded();
     defer.reject(err);
   }.bind(this);
-
   //////////////////////////////////////////////////////////////////////////////
+
   var wc = withCred ? true : false;
   var requestOptions = {
     method    : action,
-    withCredentials: wc,
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded'}
+    withCredentials: wc
   };
+  requestOptions.headers = { 'Content-Type': 'application/x-www-form-urlencoded'}
   var body = this.encodeFormData(data);
   if (action === "GET") {url = url + '?'  + body;}
   var r = hyperquest(url, requestOptions);
@@ -138,50 +111,6 @@ API.prototype.request = function(action, method, data, withCred) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-
-// // request :: String -> String -> Object -> boolean -> Promise Response
-// API.prototype.request = function(action, method, data, withCredentials) {
-//   var url = this.ROOT_URL + method;
-//   var sendData = null;
-//   var clientTime = (new Date()).getTime();
-//
-//   // this is used on iOS to enable and disable web socket while doing ajax calls
-//   WalletStore.sendEvent("msg", {type: "ajax-start", message: 'ajax call started'});
-//
-//   var requestOptions = {
-//     method    : action,
-//     url       : url,
-//     qs        : data,
-//     timeout   : this.AJAX_TIMEOUT,
-//     json      : true
-//   };
-//
-//   if (method === 'wallet' && data.method === 'update') {
-//     delete requestOptions.qs;
-//     requestOptions.form = data;
-//   }
-//
-//   var handleResponse = function (data) {
-//     loadEnded();
-//     this.handleNTPResponse(data, clientTime);
-//     return data;
-//   }.bind(this);
-//
-//   var handleError = function (err) {
-//     loadEnded();
-//     throw err.error;
-//   }.bind(this);
-//
-//   function loadEnded() {
-//     // this is used on iOS to enable and disable web socket while doing ajax calls
-//     WalletStore.sendEvent("msg", {type: "ajax-end", message: 'ajax call ended'});
-//   }
-//
-//   return request(requestOptions)
-//     .then(handleResponse).catch(handleError);
-// };
-
 API.prototype.retry = function(f, n) {
   var self = this;
   var i = n === null || n === undefined ? this.AJAX_RETRY_DEFAULT : n;
@@ -310,6 +239,8 @@ API.prototype.securePost = function (url, data){
   return this.retry(this.request.bind(this, "POST", url, clone, true));
 };
 
+
+//01000000013e095250cb35129c7dee081b8c89b4bff69f72222a25c45ba9747a704a6d0bcd010000006b4830450221009b4f6619b1499ea19494aec34c36fdeac9146b9f87f010b7ebf1eb8a1b590c6e02202f5d9b0cfa4107d586b5b370494b9932eba1411468af06e431001932c12bf245012103cf91e6b06d1a2432721559a010ee67e98f8ef0421b15cca66dc9717ac1af8d1effffffff0210270000000000001976a91402549a8a872fbe54721a899e5ac2a87daac2358088acf0ba0400000000001976a9148ee77b3dd0e33783c11a6c28473d16e9b63dc38588ac00000000
 API.prototype.pushTx = function (tx, note){
   assert(tx, "transaction required");
 
@@ -317,18 +248,10 @@ API.prototype.pushTx = function (tx, note){
   var tx_hash = tx.getId();
   var buffer = tx.toBuffer();
 
-  var int8_array = new Int8Array(buffer);
-  int8_array.set(buffer);
-  var blob = new Blob([buffer], {type : 'application/octet-stream'});
-  if (blob.size != txHex.length/2)
-    throw 'Inconsistent Data Sizes (blob : ' + blob.size + ' s : ' + txHex.length/2 + ' buffer : ' + buffer.byteLength + ')';
-  var fd = new FormData();
-
-  fd.append('txbytes', blob);
-  if (note) { fd.append('note', note); }
-  fd.append('format', 'plain');
-  fd.append('hash', tx_hash);
-  fd.append('api_code', WalletStore.getAPICode());
+  var data = {
+      tx : txHex
+    , api_code : this.API_CODE
+  };
 
   var responseTXHASH = function (responseText) {
     if (responseText.indexOf("Transaction Submitted") > -1)
@@ -337,7 +260,7 @@ API.prototype.pushTx = function (tx, note){
       { return responseText;}
   }
 
-  return this.request("POST", "pushtx", fd).then(responseTXHASH);
+  return this.request("POST", "pushtx", data).then(responseTXHASH);
 };
 
 // OLD FUNCTIONS COPIED: Must rewrite this ones (email ,sms)
