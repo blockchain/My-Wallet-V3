@@ -9,6 +9,9 @@ var Helpers     = require('./helpers');
 var WalletStore = require('./wallet-store');
 var CryptoJS    = require('crypto-js');
 var MyWallet    = require('./wallet');
+var hyperquest  = require('hyperquest');
+var Buffer      = require('buffer').Buffer;
+
 ////////////////////////////////////////////////////////////////////////////////
 // API class
 function API(){
@@ -29,47 +32,155 @@ API.prototype.encodeFormData = function (data) {
   return encoded;
 };
 
-// request :: String -> String -> Object -> boolean -> Promise Response
-API.prototype.request = function(action, method, data, withCredentials) {
-  var url = this.ROOT_URL + method;
-  var sendData = null;
-  var clientTime = (new Date()).getTime();
+// API.prototype.test = function() {
+//   var offset = 0;
+//   //1A3rxZt15LnDxMB9veByWR8ptMmFMRUqdM
+//   var addresses = ["1A3rxZt15LnDxMB9veByWR8ptMmFMRUqdM"];
+//   var tx_filter = undefined;
+//   var n = 30;
+//
+//   var clientTime = (new Date()).getTime();
+//   offset = offset || 0;
+//   n = n || 0;
+//
+//   var data = {
+//       active : addresses.join('|')
+//     , format: 'json'
+//     , offset: offset
+//     , no_compact: true
+//     , ct : clientTime
+//     , n : n
+//     , language : WalletStore.getLanguage()
+//     , no_buttons : true
+//     , api_code : this.API_CODE
+//   };
+//
+//   return this.requestJaume("POST", "multiaddr", data);
+//
+// }
+////////////////////////////////////////////////////////////////////////////////
+API.prototype.request = function(action, method, data, withCred) {
 
+  var defer = Q.defer();
+  var url = this.ROOT_URL + method;
+  var clientTime = (new Date()).getTime();
   // this is used on iOS to enable and disable web socket while doing ajax calls
   WalletStore.sendEvent("msg", {type: "ajax-start", message: 'ajax call started'});
+  //////////////////////////////////////////////////////////////////////////////
+  // Helpers:
+  var readData = function(res, callback){
+    var buffer = new Buffer('');
+    res.on('data', function(chunk) {
+      buffer = Buffer.concat([buffer, chunk]);
+    });
 
-  var requestOptions = {
-    method    : action,
-    url       : url,
-    qs        : data,
-    timeout   : this.AJAX_TIMEOUT,
-    json      : true
-  };
-
-  if (method === 'wallet' && data.method === 'update') {
-    delete requestOptions.qs;
-    requestOptions.form = data;
+    res.on('end', function () {
+      var resString = buffer.toString('utf8');
+      callback(resString);
+    })
   }
 
-  var handleResponse = function (data) {
+  var timeout = function (req, ms) {
+    var t = setTimeout(function() {
+      req.emit('error', new Error('timeout: ' + ms + ' ms'));
+    }, ms);
+    req.on('response', function() { clearTimeout(t); });
+    return req;
+  }
+
+  function loadEnded() {
+      // this is used on iOS to enable and disable web socket while doing ajax calls
+      WalletStore.sendEvent("msg", {type: "ajax-end", message: 'ajax call ended'});
+  }
+
+  var handleResponse = function (res) {
     loadEnded();
-    this.handleNTPResponse(data, clientTime);
-    return data;
+    // console.log(res);
+    this.handleNTPResponse(res, clientTime);
+    defer.resolve(JSON.parse(res));
   }.bind(this);
 
   var handleError = function (err) {
     loadEnded();
-    throw err.error;
+    defer.reject(err);
   }.bind(this);
 
-  function loadEnded() {
-    // this is used on iOS to enable and disable web socket while doing ajax calls
-    WalletStore.sendEvent("msg", {type: "ajax-end", message: 'ajax call ended'});
-  }
+  //////////////////////////////////////////////////////////////////////////////
+  var wc = withCred ? true : false;
+  var requestOptions = {
+    method    : action,
+    withCredentials: wc,
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded'}
+  };
+  var body = this.encodeFormData(data);
+  if (action === "GET") {url = url + '?'  + body;}
+  var r = hyperquest(url, requestOptions);
+  if (action === "POST") { r.end(body); }
+  timeout(r, this.AJAX_TIMEOUT);
 
-  return request(requestOptions)
-    .then(handleResponse).catch(handleError);
-};
+  r.on('response', function(res) {
+    switch (true) {
+      case (res.statusCode === 200):
+        readData(r, handleResponse);
+        break;
+      case (res.statusCode === 500):
+        readData(r, handleError);
+        break;
+      default:
+        handleError('Bad statusCode in response: '+ res.statusCode)
+    }
+  });
+
+  r.on('error', function(err) { defer.reject("unknown error"); });
+
+  return defer.promise;
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+// // request :: String -> String -> Object -> boolean -> Promise Response
+// API.prototype.request = function(action, method, data, withCredentials) {
+//   var url = this.ROOT_URL + method;
+//   var sendData = null;
+//   var clientTime = (new Date()).getTime();
+//
+//   // this is used on iOS to enable and disable web socket while doing ajax calls
+//   WalletStore.sendEvent("msg", {type: "ajax-start", message: 'ajax call started'});
+//
+//   var requestOptions = {
+//     method    : action,
+//     url       : url,
+//     qs        : data,
+//     timeout   : this.AJAX_TIMEOUT,
+//     json      : true
+//   };
+//
+//   if (method === 'wallet' && data.method === 'update') {
+//     delete requestOptions.qs;
+//     requestOptions.form = data;
+//   }
+//
+//   var handleResponse = function (data) {
+//     loadEnded();
+//     this.handleNTPResponse(data, clientTime);
+//     return data;
+//   }.bind(this);
+//
+//   var handleError = function (err) {
+//     loadEnded();
+//     throw err.error;
+//   }.bind(this);
+//
+//   function loadEnded() {
+//     // this is used on iOS to enable and disable web socket while doing ajax calls
+//     WalletStore.sendEvent("msg", {type: "ajax-end", message: 'ajax call ended'});
+//   }
+//
+//   return request(requestOptions)
+//     .then(handleResponse).catch(handleError);
+// };
 
 API.prototype.retry = function(f, n) {
   var self = this;
@@ -114,7 +225,7 @@ API.prototype.getBalances = function(addresses){
   return this.retry(this.request.bind(this, "POST", "multiaddr", data));
 };
 
-API.prototype.getFiatAtTime = function(time, value, currencyCode){
+  API.prototype.getFiatAtTime = function(time, value, currencyCode){
   var data = {
       value : value
     , currency: currencyCode
@@ -128,6 +239,7 @@ API.prototype.getFiatAtTime = function(time, value, currencyCode){
 
 API.prototype.getTicker = function(){
   var data = { format: 'json' , api_code : this.API_CODE};
+  // return this.request("GET", "ticker", data);
   return this.retry(this.request.bind(this, "GET", "ticker", data));
 };
 
@@ -205,13 +317,18 @@ API.prototype.pushTx = function (tx, note){
   var tx_hash = tx.getId();
   var buffer = tx.toBuffer();
 
-  var fd = {
-    'tx'      : buffer.toString('hex'),
-    'hash'    : tx_hash,
-    'api_code': WalletStore.getAPICode(),
-  };
+  var int8_array = new Int8Array(buffer);
+  int8_array.set(buffer);
+  var blob = new Blob([buffer], {type : 'application/octet-stream'});
+  if (blob.size != txHex.length/2)
+    throw 'Inconsistent Data Sizes (blob : ' + blob.size + ' s : ' + txHex.length/2 + ' buffer : ' + buffer.byteLength + ')';
+  var fd = new FormData();
 
-  if (note) { fd.note = note; }
+  fd.append('txbytes', blob);
+  if (note) { fd.append('note', note); }
+  fd.append('format', 'plain');
+  fd.append('hash', tx_hash);
+  fd.append('api_code', WalletStore.getAPICode());
 
   var responseTXHASH = function (responseText) {
     if (responseText.indexOf("Transaction Submitted") > -1)
@@ -220,15 +337,7 @@ API.prototype.pushTx = function (tx, note){
       { return responseText;}
   }
 
-  var requestOptions = {
-    method    : 'POST',
-    url       : this.ROOT_URL + '/pushtx',
-    timeout   : this.AJAX_TIMEOUT,
-    formData  : fd,
-    json      : true
-  };
-
-  return request(requestOptions).then(responseTXHASH);
+  return this.request("POST", "pushtx", fd).then(responseTXHASH);
 };
 
 // OLD FUNCTIONS COPIED: Must rewrite this ones (email ,sms)
