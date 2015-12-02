@@ -9,6 +9,24 @@ function BlockchainSocket() {
   this.reconnectInterval;
 }
 
+// hack to browserify websocket library
+if (!(typeof window === 'undefined')) {
+  WebSocket.prototype.on = function (event, callback) {
+    this['on'+event] = callback;
+  };
+  WebSocket.prototype.once = function (event, callback) {
+      var self = this;
+    this['on'+event] = function () {
+      callback.apply(callback, arguments);
+      self['on'+event] = null;
+    };
+  };
+  WebSocket.prototype.off = function (event, callback) {
+    this['on'+event] = callback;
+  };
+}
+
+
 BlockchainSocket.prototype.connect = function (onOpen, onMessage, onClose) {
   var reconnect = function () {
     var connect = this.connectOnce.bind(this, onOpen, onMessage, onClose);

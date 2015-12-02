@@ -198,6 +198,9 @@ function socketConnect() {
   function onMessage(message) {
     var obj = null;
 
+    if (!(typeof window === 'undefined')) {
+      message = message.data;
+    }
     try {
       obj = JSON.parse(message);
     }
