@@ -154,6 +154,15 @@ Helpers.zipLong = function (f, xs, ys) {
   };
 };
 
+Helpers.zip3 = function (xs, ys, zs) {
+
+  if (!(xs instanceof Array && ys instanceof Array && zs instanceof Array)){
+    return null;
+  } else{
+    return xs.map(function(v,i){return [xs[i],ys[i],zs[i]];});
+  };
+};
+
 Helpers.maybeCompose = function (f, g) {
   if (f instanceof Function && g instanceof Function){
     return f.compose(g);

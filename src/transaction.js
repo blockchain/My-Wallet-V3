@@ -128,13 +128,13 @@ Transaction.prototype.sortBIP69 = function (){
   };
 
   var compareInputs = function(a, b) {
-    var x = a.hash.reverse().toString("hex");
-    var y = b.hash.reverse().toString("hex");
+    var x = a[0].hash.reverse().toString("hex");
+    var y = b[0].hash.reverse().toString("hex");
     var comp1 = x.localeCompare(y);
-    a.hash.reverse();
-    b.hash.reverse();
+    a[0].hash.reverse();
+    b[0].hash.reverse();
     if (comp1 === 0)
-      return compareNum(a.index, b.index);
+      return compareNum(a[0].index, b[0].index);
     else
       return comp1;
   };
@@ -148,7 +148,11 @@ Transaction.prototype.sortBIP69 = function (){
     else
       { return comp1;}
   };
-  this.transaction.ins.sort(compareInputs);
+  var mix = Helpers.zip3(this.transaction.ins, this.privateKeys, this.addressesOfInputs);
+  mix.sort(compareInputs);
+  this.transaction.ins   = mix.map(function(a){return a[0];});
+  this.privateKeys       = mix.map(function(a){return a[1];});
+  this.addressesOfInputs = mix.map(function(a){return a[2];});
   this.transaction.outs.sort(compareOutputs);
 };
 /**
