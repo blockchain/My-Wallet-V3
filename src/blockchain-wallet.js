@@ -25,6 +25,7 @@ var ImportExport = require('./import-export');
 var API = require('./api');
 var Tx = require('./wallet-transaction');
 var shared = require('./shared');
+var BlockchainSettingsAPI = require('./blockchain-settings-api');
 
 ////////////////////////////////////////////////////////////////////////////////
 // Wallet
@@ -42,7 +43,7 @@ function Wallet(object) {
   this._dpasswordhash     = obj.dpasswordhash;
   //options
   this._pbkdf2_iterations        = obj.options.pbkdf2_iterations;
-  this._fee_per_kb               = obj.options.fee_per_kb || 10000;
+  this._fee_per_kb               = obj.options.fee_per_kb == null ? 10000 : obj.options.fee_per_kb;
   this._html5_notifications      = obj.options.html5_notifications;
   this._logout_time              = obj.options.logout_time;
 
@@ -463,7 +464,7 @@ Wallet.prototype.importLegacyAddress = function(addr, label, secPass, bipPass){
 
   var importAddress = (function(key) {
     var ad = Address.import(key, label);
-    if (this.containsLegacyAddress(ad)) { defer.reject('presentInWallet'); };
+    if (this.containsLegacyAddress(ad)) { defer.reject('presentInWallet'); return;};
     if (this.isDoubleEncrypted) {
       assert(secPass, "Error: second password needed");
       var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, "enc");
@@ -657,6 +658,41 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, started
     .then(saveAndReturn)
 };
 
+// Enables email notifications for receiving bitcoins. Only for imported
+// and labeled HD addresses.
+Wallet.prototype.enableNotifications = function(success, error) {
+  assert(success, "Success callback required");
+  assert(error, "Error callback required");
+
+  BlockchainSettingsAPI.enableEmailReceiveNotifications(
+    function() {
+      WalletStore.setSyncPubKeys(true);
+      MyWallet.syncWallet();
+      success();
+    },
+    function() {
+      error();
+    }
+  )
+}
+
+Wallet.prototype.disableNotifications = function(success, error) {
+  assert(success, "Success callback required");
+  assert(error, "Error callback required");
+
+  BlockchainSettingsAPI.disableAllNotifications(
+    function() {
+      WalletStore.setSyncPubKeys(false);
+      MyWallet.syncWallet();
+      success();
+    },
+    function() {
+      error();
+    }
+  );
+
+}
+
 // creating a new wallet object
 Wallet.new = function(guid, sharedKey, firstAccountLabel, success, isHD){
   isHD = Helpers.isBoolean(isHD) ? isHD : true;
@@ -719,6 +755,16 @@ Wallet.prototype.getAddressBookLabel = function(address){
   return this._address_book[address];
 };
 
+Wallet.prototype.addAddressBookEntry = function(address, label){
+  this._address_book[address] = label;
+  MyWallet.syncWallet();
+};
+
+Wallet.prototype.removeAddressBookEntry = function(address){
+  delete this._address_book[address];
+  MyWallet.syncWallet();
+};
+
 Wallet.prototype.getNote = function(txHash){
   return this._tx_notes[txHash];
 };
@@ -746,11 +792,13 @@ Wallet.prototype.changePbkdf2Iterations = function(newIterations, password){
   if (newIterations !== this._pbkdf2_iterations) {
     if (this.isDoubleEncrypted) {
       this.decrypt(password);
-      this._pbkdf2_iterations = newIterations;
+      this._pbkdf2_iterations = newIterations;         // sec pass iterations
+      WalletStore.setPbkdf2Iterations(newIterations);  // main pass iterations
       this.encrypt(password);
     }
     else { // no double encrypted wallet
-      this._pbkdf2_iterations = newIterations;
+      this._pbkdf2_iterations = newIterations;        // sec pass iterations
+      WalletStore.setPbkdf2Iterations(newIterations); // main pass iterations
       MyWallet.syncWallet();
     };
   };

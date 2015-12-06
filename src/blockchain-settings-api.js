@@ -4,6 +4,7 @@ var assert = require('assert');
 
 var WalletStore = require('./wallet-store.js');
 var MyWallet = require('./wallet.js');
+var API = require('./api');
 
 function get_account_info(success, error) {
   MyWallet.securePost("wallet", {method : 'get-info', format : 'json'}, function(data) {
@@ -27,11 +28,11 @@ function updateKV(txt, method, value, success, error, extra) {
   extra = extra || '';
 
   MyWallet.securePost("wallet"+extra, { length : (value+'').length, payload : value+'', method : method }, function(data) {
-    WalletStore.sendEvent("msg", {type: "success", message: method + '-success' + data});
+    WalletStore.sendEvent("msg", {type: "success", message: method + '-success: ' + data});
 
     typeof(success) === "function" && success();
   }, function(data) {
-    WalletStore.sendEvent("msg", {type: "error", message: method + '-error' + data.responseText});
+    WalletStore.sendEvent("msg", {type: "error", message: method + '-error: ' + data});
 
     typeof(error) === "function" &&  error();
   });
@@ -71,17 +72,35 @@ function update_tor_ip_block(enabled, success, error) {
 };
 
 function update_password_hint1(value, success, error) {
-  if (value.split('').some(function(c){return c.charCodeAt(0) > 255;}))
-    error(101);
-  else
-    updateKV('Updating Main Password Hint', 'update-password-hint1', value, success, error);
+  switch (true) {
+    case value.split('').some(function(c){return c.charCodeAt(0) > 255;}):
+      error(101); // invalid charset
+      break;
+    case (WalletStore.getPassword() === value):
+      error(102); // password hint cannot be main wallet pass
+      break;
+    case (MyWallet.wallet.isDoubleEncrypted && MyWallet.wallet.validateSecondPassword(value)):
+      error(103); // password hint cannot be second passord
+      break;
+    default:
+      updateKV('Updating Main Password Hint', 'update-password-hint1', value, success, error);
+  };
 };
 
 function update_password_hint2(value, success, error) {
-  if (value.split('').some(function(c){return c.charCodeAt(0) > 255;}))
-    error(101);
-  else
-    updateKV('Updating Second Password Hint', 'update-password-hint2', value, success, error);
+  switch (true) {
+    case value.split('').some(function(c){return c.charCodeAt(0) > 255;}):
+      error(101); // invalid charset
+      break;
+    case (WalletStore.getPassword() === value):
+      error(102); // password hint cannot be main wallet pass
+      break;
+    case (MyWallet.wallet.isDoubleEncrypted && MyWallet.wallet.validateSecondPassword(value)):
+      error(103); // password hint cannot be second passord
+      break;
+    default:
+      updateKV('Updating Logging Level', 'update-password-hint2', value, success, error);
+  };
 };
 
 function change_email(email, success, error) {
@@ -194,7 +213,7 @@ function verifyMobile(code, success, error) {
     WalletStore.sendEvent("msg", {type: "success", message: data});
     typeof(success) === "function" && success(data);
   }, function(data) {
-    WalletStore.sendEvent("msg", {type: "error", message: data.responseText});
+    WalletStore.sendEvent("msg", {type: "error", message: data});
     typeof(error) === "function" &&  error();
   });
 };
@@ -208,6 +227,66 @@ function getActivityLogs(success, error) {
     typeof(error) === "function" &&  error();
   });
 };
+
+function enableEmailNotifications(success, error) {
+  API.securePost("wallet", {
+    method : 'update-notifications-type',
+    length: 1,
+    payload: 1
+  }).then(function(data) {
+    typeof(success) === "function" && success(data);
+  }).catch(function(data) {
+    var response = data.responseText || 'Error Enabling Email Notifications';
+    WalletStore.sendEvent("msg", {type: "error", message: response});
+    typeof(error) === "function" &&  error();
+  });
+}
+
+function enableReceiveNotifications(success, error) {
+  API.securePost("wallet", {
+    method : 'update-notifications-on',
+    length: 1,
+    payload: 2
+  }).then(function(data) {
+    typeof(success) === "function" && success(data);
+  }).catch(function(data) {
+    var response = data.responseText || 'Error Enabling Receive Notifications';
+    WalletStore.sendEvent("msg", {type: "error", message: response});
+    typeof(error) === "function" &&  error();
+  });
+}
+
+function enableEmailReceiveNotifications(success, error) {
+  assert(success, "Success callback required");
+  assert(error, "Error callback required");
+
+  enableEmailNotifications(
+    function() {
+      enableReceiveNotifications(
+        success,
+        error
+      )
+    },
+    error
+  );
+}
+
+function disableAllNotifications(success, error) {
+  assert(success, "Success callback required");
+  assert(error, "Error callback required");
+
+  API.securePost("wallet", {
+    method : 'update-notifications-type',
+    length: 1,
+    payload: 0
+  }).then(function(data) {
+    typeof(success) === "function" && success(data);
+  }).catch(function(data) {
+    var response = data.responseText || 'Error Disabling Receive Notifications';
+    WalletStore.sendEvent("msg", {type: "error", message: response});
+    typeof(error) === "function" &&  error();
+  });
+}
 
 module.exports = {
   get_account_info: get_account_info,
@@ -233,5 +312,7 @@ module.exports = {
   resendEmailConfirmation: resendEmailConfirmation,
   verifyEmail: verifyEmail,
   verifyMobile: verifyMobile,
-  getActivityLogs: getActivityLogs
+  getActivityLogs: getActivityLogs,
+  enableEmailReceiveNotifications: enableEmailReceiveNotifications,
+  disableAllNotifications: disableAllNotifications
 };

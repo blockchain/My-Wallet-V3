@@ -470,7 +470,7 @@ MyWallet.processTransaction = function(tx) {
     transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
   }
 
-  if (transaction.from.account == null && transaction.from.legacyAddresses == null) {
+  if (transaction.from.account == null && transaction.from.legacyAddresses == null && transaction.from.externalAddresses != null) {
     var fromAmount = 0;
     for (var i in transaction.to.accounts) {
       fromAmount += transaction.to.accounts[i].amount;
@@ -939,7 +939,7 @@ MyWallet.login = function ( user_guid
     }
     var error = function (response) {
      WalletStore.setRestoringWallet(false);
-     wrong_two_factor_code(response.responseText);
+     wrong_two_factor_code(response);
     }
 
     var myData = { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : API.API_CODE};
@@ -1115,7 +1115,20 @@ function syncWallet (successcallback, errorcallback) {
         }
 
         if (WalletStore.isSyncPubKeys()) {
-          data.active = MyWallet.wallet.activeAddresses.join('|');
+          // Include HD addresses unless in lame mode:
+          var hdAddresses = (
+            MyWallet.wallet.hdwallet != undefined &&
+            MyWallet.wallet.hdwallet.accounts != undefined
+          ) ? [].concat.apply([],
+            MyWallet.wallet.hdwallet.accounts.map(function(account) {
+              return account.labeledReceivingAddresses
+            })) : [];
+          data.active = [].concat.apply([],
+            [
+              MyWallet.wallet.activeAddresses,
+              hdAddresses
+            ]
+          ).join('|');
         }
 
         MyWallet.securePost(
