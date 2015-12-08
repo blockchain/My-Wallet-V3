@@ -24,10 +24,10 @@ var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
 var shared = require('./shared');
 var BlockchainSocket = require('./blockchain-socket');
-var ws = new BlockchainSocket();
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
+MyWallet.ws = new BlockchainSocket();
 
 // TODO: Remove once beta period is over
 MyWallet.whitelistWallet = function(options, success, error) {
@@ -143,7 +143,7 @@ MyWallet.addPrivateKey = function(key, opts, second_password) {
 
     //Subscribe to transaction updates through websockets
     try {
-      ws.send('{"op":"addr_sub", "addr":"'+addr+'"}');
+      MyWallet.ws.send('{"op":"addr_sub", "addr":"'+addr+'"}');
     } catch (e) { }
   } else {
     throw 'Could not add key. This key already exists in your wallet.';
@@ -191,7 +191,7 @@ MyWallet.generateNewMiniPrivateKey = function() {
 
 // used locally
 function socketConnect() {
-  ws.connect(onOpen, onMessage, onClose);
+  MyWallet.ws.connect(onOpen, onMessage, onClose);
 
   var last_on_change = null;
 
@@ -299,7 +299,7 @@ function socketConnect() {
       WalletStore.sendEvent("msg", {type: "error", message: 'error with websocket'});
     }
 
-    ws.send(msg);
+    MyWallet.ws.send(msg);
   };
 
   function onClose() {
@@ -641,7 +641,7 @@ MyWallet.isValidateBIP39Mnemonic = function(mnemonic) {
 MyWallet.listenToHDWalletAccount = function(accountExtendedPublicKey) {
   try {
     var msg = '{"op":"xpub_sub", "xpub":"'+ accountExtendedPublicKey +'"}';
-    ws.send(msg);
+    MyWallet.ws.send(msg);
   } catch (e) { }
 };
 // used only once locally
