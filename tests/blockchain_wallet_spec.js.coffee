@@ -6,8 +6,7 @@ Wallet   = undefined
 describe "HDWallet", ->
   wallet = undefined
   object =
-    'guid': 'c8d9fe67-2ba0-4c15-a2be-0d17981d3c0a'
-    'sharedKey': '981b98e8-03f5-48fa-b369-038e2a7fdc09'
+    'metaDataXpub' : 'xpub68fAf6k8L3NNPu2q8ned7C6dwm7aT5Z9Z2FM7WmXHfRHRHdfEm1AoMetYgEovKYZSTMiQeXuayCvqsUDRv6WGZoJv8cTEAgG3spKRLhTCRY'
     'double_encryption': false
     'options':
       'pbkdf2_iterations': 5000
@@ -189,11 +188,11 @@ describe "HDWallet", ->
 
     describe "Getter", ->
 
-      it "guid", ->
-        expect(wallet.guid).toEqual(object.guid)
+      it "should derive the guid", ->
+        expect(wallet.guid).toEqual("2aafd70c-3ef8-493a-96cb-bb379be61448")
 
-      it "sharedKey", ->
-        expect(wallet.sharedKey).toEqual(object.sharedKey)
+      it "should derive the sharedKey", ->
+        expect(wallet.sharedKey).toEqual("4c6c6bd2-5fa2-4b5c-87e8-78aaf8507197")
 
       it "isDoubleEncrypted", ->
         expect(wallet.isDoubleEncrypted).toEqual(object.double_encryption)
@@ -345,3 +344,16 @@ describe "HDWallet", ->
         rwall = JSON.parse(json1, Wallet.reviver)
         json2     = JSON.stringify(rwall, null, 2)
         expect(json1).toEqual(json2)
+
+  describe "upgraded from v2 and early v3", ->
+    beforeEach ->
+      object.guid = 'c8d9fe67-2ba0-4c15-a2be-0d17981d3c0a'
+      object.sharedKey = '981b98e8-03f5-48fa-b369-038e2a7fdc09'
+
+      stubs = { './wallet': MyWallet}
+      Wallet = proxyquire('../src/blockchain-wallet', stubs)
+      wallet = new Wallet(object)
+
+    it "should use non-deterministic guid", ->
+      expect(wallet.guid).toBe('c8d9fe67-2ba0-4c15-a2be-0d17981d3c0a')
+      expect(wallet.sharedKey).toBe('981b98e8-03f5-48fa-b369-038e2a7fdc09')

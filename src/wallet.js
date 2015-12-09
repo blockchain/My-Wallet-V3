@@ -228,7 +228,7 @@ function wsSuccess(ws) {
       MyWallet.wallet.getHistory();
 
       if (tx_account) {
-        var account = MyWallet.wallet.hdwallet.accounts[tx_account.index];
+        var account = MyWallet.wallet.error_restoring_wallet.accounts[tx_account.index];
         account.balance += tx_processed.result;
 
         // Increase receive address index if this was an incoming transaction using the highest index:
@@ -785,6 +785,9 @@ function decryptAndInitializeWallet(success, error, decrypt_success, build_hd_su
       // TODO: pbkdf2 iterations should be stored correctly on wallet wrapper
       if (rootContainer) {
         WalletStore.setPbkdf2Iterations(rootContainer.pbkdf2_iterations);
+        if(rootContainer.encryptedPassword != undefined) {
+          WalletStore.setEncryptedPassword(rootContainer.encryptedPassword);
+        }
       }
       //If we don't have a checksum then the wallet is probably brand new - so we can generate our own
       if (WalletStore.getPayloadChecksum() == null || WalletStore.getPayloadChecksum().length == 0) {
@@ -842,6 +845,97 @@ MyWallet.resendTwoFactorSms = function(user_guid, success, error) {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+MyWallet.recoverResetPasswordAndLogin = function (
+                            mnemonic
+                          , bip39pwd // Not implemented yet
+                          , email    // only used when recovering non-deterministic
+                          , newPassword
+                          , successCallback
+                          , other_error) {
+
+  assert(mnemonic, 'Mnemonic required');
+  assert(MyWallet.isValidateBIP39Mnemonic(mnemonic), "Invalid mnemonic");
+  assert(newPassword, 'New password required');
+  assert(successCallback, 'Success callback required');
+  assert(other_error, 'Error callback required');
+
+  var seed = BIP39.mnemonicToSeedHex(mnemonic);
+
+  var xpub = WalletCrypto.seedToMetaDataXpub(seed);
+
+  var guid = WalletCrypto.xpubToGuid(xpub);
+  var sharedKey = WalletCrypto.xpubToSharedKey(xpub);
+
+  var didFetchWalletJSON = function(obj) {
+
+
+    if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
+     WalletStore.setEncryptedWalletData(obj.payload);
+    }
+
+    war_checksum = obj.war_checksum;
+
+    if (obj.language && WalletStore.getLanguage() != obj.language) {
+     WalletStore.setLanguage(obj.language);
+    }
+
+    // Decrypt password
+    var json = JSON.parse(obj.payload);
+
+    var oldPassword = WalletCrypto.decryptPasswordWithSeed(
+      json.encryptedPassword,
+      seed,
+      json.pbkdf2_iterations
+    );
+
+    var success = function() {
+      WalletStore.changePassword(
+        newPassword,
+        function() {
+          successCallback(guid);
+        },
+        function(e) {
+          console.log("Couldn't change password.");
+          console.log(e);
+          other_error("Couldn't reset password.");
+        }
+      );
+
+    };
+
+    // Finish regular login
+    MyWallet.initializeWallet(oldPassword, success, other_error);
+
+
+  };
+
+  var failedToFetch = function() {
+    // The mnemonic is either from a non deterministic wallet or
+    // a non-blockchain wallet. Register a new one:
+    var walletSuccess = function() {
+      WalletStore.unsafeSetPassword(newPassword);
+      successCallback(guid);
+    };
+    WalletSignup.generateNewWallet(mnemonic, "", newPassword, email, null, walletSuccess, other_error);
+  };
+
+  // There's three ways this can fail, we treat them the same:
+  var needs_two_factor_code = failedToFetch;
+  var authorization_required = failedToFetch;
+  // This can have various reasons which are difficult to distinguish:
+  var error = failedToFetch;
+
+  MyWallet.tryToFetchWalletJSON(
+    guid,
+    sharedKey,
+    needs_two_factor_code,
+    authorization_required,
+    didFetchWalletJSON,
+    error
+  );
+
+}
+
 MyWallet.login = function ( user_guid
                           , shared_key
                           , inputedPassword
@@ -863,53 +957,6 @@ MyWallet.login = function ( user_guid
   var data = { format : 'json', resend_code : null, ct : clientTime, api_code : API.API_CODE };
 
   if (shared_key) { data.sharedKey = shared_key; }
-
-  var tryToFetchWalletJSON = function(guid, successCallback) {
-
-    var success = function(obj) {
-      fetch_success && fetch_success();
-      // Even if Two Factor is enabled, some settings need to be saved here,
-      // because they won't be part of the 2FA response.
-
-      if (!obj.guid) {
-        WalletStore.sendEvent("msg", {type: "error", message: 'Server returned null guid.'});
-        other_error('Server returned null guid.');
-        return;
-      }
-
-      // I should create a new class to store the encrypted wallet over wallet
-      WalletStore.setGuid(obj.guid);
-      WalletStore.setRealAuthType(obj.real_auth_type);
-      WalletStore.setSyncPubKeys(obj.sync_pubkeys);
-
-      if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
-      } else {
-        needs_two_factor_code(obj.auth_type);
-        return;
-      }
-      successCallback(obj)
-    }
-
-    var error = function(e) {
-       var obj = JSON.parse(e);
-       if(obj && obj.initial_error && !obj.authorization_required) {
-         other_error(obj.initial_error);
-         return;
-       }
-       WalletStore.sendEvent('did_fail_set_guid');
-       if (obj.authorization_required && typeof(authorization_required) === "function") {
-         authorization_required(function() {
-           MyWallet.pollForSessionGUID(function() {
-             tryToFetchWalletJSON(guid, successCallback);
-           });
-         });
-       }
-       if (obj.initial_error) {
-         WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
-       }
-    }
-    API.request("GET", 'wallet/' + guid, data, true, false).then(success).catch(error);
-  }
 
   var tryToFetchWalletWith2FA = function (guid, two_factor_auth_key, successCallback) {
 
@@ -939,6 +986,7 @@ MyWallet.login = function ( user_guid
   }
 
   var didFetchWalletJSON = function(obj) {
+    fetch_success && fetch_success();
 
     if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
      WalletStore.setEncryptedWalletData(obj.payload);
@@ -949,11 +997,12 @@ MyWallet.login = function ( user_guid
     if (obj.language && WalletStore.getLanguage() != obj.language) {
      WalletStore.setLanguage(obj.language);
     }
+
     MyWallet.initializeWallet(inputedPassword, success, other_error, decrypt_success, build_hd_success);
   }
 
   if(twoFACode == null) {
-    tryToFetchWalletJSON(user_guid, didFetchWalletJSON)
+    MyWallet.tryToFetchWalletJSON(user_guid, null, needs_two_factor_code, authorization_required, didFetchWalletJSON, other_error)
   } else {
     // If 2FA is enabled and we already fetched the wallet before, don't fetch
     // it again
@@ -966,7 +1015,72 @@ MyWallet.login = function ( user_guid
 };
 ////////////////////////////////////////////////////////////////////////////////
 
-// used locally
+
+MyWallet.tryToFetchWalletJSON = function(guid,
+                                         shared_key,
+                                         needs_two_factor_code,
+                                         authorization_required,
+                                         successCallback,
+                                         other_error) {
+
+  assert(successCallback, "successCallback required");
+  var success = function(obj) {
+    // Even if Two Factor is enabled, some settings need to be saved here,
+    // because they won't be part of the 2FA response.
+
+    if (!obj.guid) {
+      WalletStore.sendEvent("msg", {type: "error", message: 'Server returned null guid.'});
+      other_error('Server returned null guid.');
+      return;
+    }
+
+    // I should create a new class to store the encrypted wallet over wallet
+    WalletStore.setGuid(obj.guid);
+    WalletStore.setRealAuthType(obj.real_auth_type);
+    WalletStore.setSyncPubKeys(obj.sync_pubkeys);
+
+    if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
+    } else {
+      needs_two_factor_code(obj.auth_type);
+      return;
+    }
+
+    successCallback(obj)
+
+  }
+
+  var error = function(e) {
+  var obj = JSON.parse(e);
+
+   if(obj && obj.initial_error && !obj.authorization_required) {
+     other_error(obj.initial_error);
+     return;
+   }
+
+   WalletStore.sendEvent('did_fail_set_guid');
+
+   if (obj.authorization_required && typeof(authorization_required) === "function") {
+     authorization_required(function() {
+       MyWallet.pollForSessionGUID(function() {
+         MyWallet.tryToFetchWalletJSON(guid, null, needs_two_factor_code ,authorization_required, successCallback, other_error)
+       });
+     });
+   }
+
+   if (obj.initial_error) {
+     WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
+   }
+  }
+
+  var clientTime = (new Date()).getTime();
+  var data = { format : 'json', resend_code : null, ct : clientTime, api_code : API.API_CODE };
+
+  if (shared_key) { data.sharedKey = shared_key; }
+
+  API.request("GET", 'wallet/' + guid, data, true, false).then(success).catch(error);
+};
+
+
 MyWallet.pollForSessionGUID = function(successCallback) {
 
   if (WalletStore.isPolling()) return;
@@ -1082,7 +1196,8 @@ function syncWallet (successcallback, errorcallback) {
     var crypted = WalletCrypto.encryptWallet( data
                                               , WalletStore.getPassword()
                                               , WalletStore.getPbkdf2Iterations()
-                                              , MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0 );
+                                              , MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0
+                                              , WalletStore.getEncryptedPassword());
 
     if (crypted.length == 0) {
       throw 'Error encrypting the JSON output';
@@ -1226,18 +1341,19 @@ MyWallet.signMessage = function(address, message) {
  * @param {function(string)} error callback function with error message
  */
  // used on mywallet, iOS and frontend
-MyWallet.createNewWallet = function(inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, success, error, isHD) {
-  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, firstAccountName, function(createdGuid, createdSharedKey, createdPassword) {
 
+MyWallet.createNewWallet = function(inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, success, error) {
+  var mnemonic = BIP39.generateMnemonic();
+  WalletSignup.generateNewWallet(mnemonic, "", inputedPassword, inputedEmail, firstAccountName, function(createdGuid) {
     if (languageCode)
       WalletStore.setLanguage(languageCode);
 
-    WalletStore.unsafeSetPassword(createdPassword);
+    WalletStore.unsafeSetPassword(inputedPassword);
 
-    success(createdGuid, createdSharedKey, createdPassword);
+    success(createdGuid);
   }, function (e) {
     error(e);
-  }, isHD);
+  });
 };
 // used 3 times
 function nKeys(obj) {
@@ -1246,16 +1362,6 @@ function nKeys(obj) {
     size++;
   }
   return size;
-};
-
-// used on frontend
-MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
-  var walletSuccess = function(guid, sharedKey, password) {
-    WalletStore.unsafeSetPassword(password);
-    var runSuccess = function () {success({ guid: guid, sharedKey: sharedKey, password: password});}
-    MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password, undefined, startedRestoreHDWallet, accountProgress).then(runSuccess).catch(error);
-  };
-  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, null, walletSuccess, error, true, generateUUIDProgress, decryptWalletProgress);
 };
 
 // used frontend and mywallet
