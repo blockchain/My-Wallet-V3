@@ -13,8 +13,8 @@ var IMPORTED_APP_VERSION = '0';
 module.exports = {
   APP_NAME: 'javascript_web',
   APP_VERSION: '3.0',
-  symbol_btc: symbol_btc,
-  symbol_local: symbol_local,
+  getBTCSymbol: getBTCSymbol,
+  getLocalSymbol: getLocalSymbol,
   satoshi: satoshi,
   setLocalSymbol: setLocalSymbol,
   setBTCSymbol: setBTCSymbol,
@@ -38,6 +38,10 @@ function setLocalSymbol(new_symbol) {
   }
 }
 
+function getLocalSymbol() {
+  return symbol_local;
+}
+
 function setBTCSymbol(new_symbol) {
   if (!new_symbol) return;
 
@@ -49,6 +53,9 @@ function setBTCSymbol(new_symbol) {
   }
 }
 
+function getBTCSymbol() {
+  return symbol_btc;
+}
 // used iOS
 var _sounds = {};
 function playSound(id) {
