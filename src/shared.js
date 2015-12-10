@@ -13,6 +13,9 @@ var IMPORTED_APP_VERSION = '0';
 module.exports = {
   APP_NAME: 'javascript_web',
   APP_VERSION: '3.0',
+  symbol_btc: symbol_btc,
+  symbol_local: symbol_local,
+  satoshi: satoshi,
   setLocalSymbol: setLocalSymbol,
   setBTCSymbol: setBTCSymbol,
   playSound: playSound,
