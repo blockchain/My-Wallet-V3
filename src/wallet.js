@@ -1380,5 +1380,5 @@ function parseValueBitcoin(valueString) {
 }
 // used iOS and mywallet
 MyWallet.precisionToSatoshiBN = function(x) {
-  return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, shared.sShift(symbol_btc)).toString()));
+  return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, shared.sShift(shared.getBTCSymbol())).toString()));
 };
