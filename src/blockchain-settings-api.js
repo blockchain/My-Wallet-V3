@@ -188,6 +188,21 @@ function resendEmailConfirmation(email, success, error) {
 };
 
 /**
+ * Verify email with code.
+ * @param {string} code verfication code.
+ * @param {function(Object)} success Success callback function.
+ * @param {function()} error Error callback function.
+ */
+function verifyEmail(code, success, error) {
+  MyWallet.securePost("wallet", { payload:code, length : code.length, method : 'verify-email' }, function(data) {
+    WalletStore.sendEvent("msg", {type: "success", message: data});
+    typeof(success) === "function" && success(data);
+  }, function(data) {
+    typeof(error) === "function" &&  error();
+  });
+};
+
+/**
  * Verify mobile with code.
  * @param {string} code verfication code.
  * @param {function(Object)} success Success callback function.
@@ -295,6 +310,7 @@ module.exports = {
   setTwoFactorGoogleAuthenticator: setTwoFactorGoogleAuthenticator,
   confirmTwoFactorGoogleAuthenticator: confirmTwoFactorGoogleAuthenticator,
   resendEmailConfirmation: resendEmailConfirmation,
+  verifyEmail: verifyEmail,
   verifyMobile: verifyMobile,
   getActivityLogs: getActivityLogs,
   enableEmailReceiveNotifications: enableEmailReceiveNotifications,
