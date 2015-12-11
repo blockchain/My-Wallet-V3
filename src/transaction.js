@@ -5,6 +5,7 @@ var Bitcoin     = require('bitcoinjs-lib');
 var randomBytes = require('randombytes');
 var Helpers     = require('./helpers');
 var MyWallet    = require('./wallet');
+var Buffer      = require('buffer').Buffer;
 
 var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAddress, listener) {
 
