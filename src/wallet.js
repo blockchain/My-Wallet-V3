@@ -1152,7 +1152,7 @@ function syncWallet (successcallback, errorcallback) {
             }
           , function(e) {
             WalletStore.enableLogout();
-            _errorcallback(e.responseText);
+            _errorcallback(e);
           }
         );
 
