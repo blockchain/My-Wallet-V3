@@ -6,6 +6,7 @@ var Base58   = require('bs58');
 var Bitcoin  = require('bitcoinjs-lib');
 var Helpers  = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
+var shared   = require('./shared');
 ////////////////////////////////////////////////////////////////////////////////
 // Address class
 function Address(object){
@@ -15,11 +16,13 @@ function Address(object){
   this._priv  = obj.priv;
   this._label = obj.label;
   this._tag   = obj.tag || 0;  //default is non-archived
-  this._created_time           = obj.created_time;
-  this._created_device_name    = obj.created_device_name;
-  this._created_device_version = obj.created_device_version;
+  this._created_time            = obj.created_time;
+  this._created_device_name     = obj.created_device_name;
+  this._created_device_version  = obj.created_device_version;
   // non saved properties
-  this._balance                = null; // updated from the server
+  this._balance                 = null; // updated from the server
+  this._totalSent               = null;
+  this._totalReceived           = null;
 }
 
 // public members
@@ -68,6 +71,26 @@ Object.defineProperties(Address.prototype, {
         this._balance = num;
       else
         throw 'Error: address.balance must be a number';
+    }
+  },
+  "totalSent": {
+    configurable: false,
+    get: function() { return this._totalSent;},
+    set: function(num) {
+      if(Helpers.isNumber(num))
+        this._totalSent = num;
+      else
+        throw 'Error: address.totalSent must be a number';
+    }
+  },
+  "totalReceived": {
+    configurable: false,
+    get: function() { return this._totalReceived;},
+    set: function(num) {
+      if(Helpers.isNumber(num))
+        this._totalReceived = num;
+      else
+        throw 'Error: address.totalReceived must be a number';
     }
   },
   "isWatchOnly": {
@@ -121,8 +144,8 @@ Address.import = function(key, label){
     addr                   : null,
     priv                   : null,
     created_time           : Date.now(),
-    created_device_name    : APP_NAME,
-    created_device_version : APP_VERSION
+    created_device_name    : shared.APP_NAME,
+    created_device_version : shared.APP_VERSION
   };
 
   switch (true){

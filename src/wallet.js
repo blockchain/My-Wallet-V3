@@ -22,9 +22,12 @@ var Transaction = require('./transaction');
 var API = require('./api');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
+var shared = require('./shared');
+var BlockchainSocket = require('./blockchain-socket');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
+MyWallet.ws = new BlockchainSocket();
 
 // TODO: Remove once beta period is over
 MyWallet.whitelistWallet = function(options, success, error) {
@@ -132,15 +135,15 @@ MyWallet.addPrivateKey = function(key, opts, second_password) {
   if (WalletStore.addLegacyAddress(addr, encoded)) {
     addresses[addr].tag = 1; //Mark as unsynced
     addresses[addr].created_time = opts.created_time ? opts.created_time : 0; //Stamp With Creation time
-    addresses[addr].created_device_name = opts.app_name ? opts.app_name : APP_NAME; //Created Device
-    addresses[addr].created_device_version = opts.app_version ? opts.app_version : APP_VERSION; //Created App Version
+    addresses[addr].created_device_name = opts.app_name ? opts.app_name : shared.APP_NAME; //Created Device
+    addresses[addr].created_device_version = opts.app_version ? opts.app_version : shared.APP_VERSION; //Created App Version
 
     if (addresses[addr].priv != encoded)
       throw 'Address priv does not match encoded';
 
     //Subscribe to transaction updates through websockets
     try {
-      ws.send('{"op":"addr_sub", "addr":"'+addr+'"}');
+      MyWallet.ws.send('{"op":"addr_sub", "addr":"'+addr+'"}');
     } catch (e) { }
   } else {
     throw 'Could not add key. This key already exists in your wallet.';
@@ -187,14 +190,19 @@ MyWallet.generateNewMiniPrivateKey = function() {
 ////////////////////////////////////////////////////////////////////////////////
 
 // used locally
-function wsSuccess(ws) {
+function socketConnect() {
+  MyWallet.ws.connect(onOpen, onMessage, onClose);
+
   var last_on_change = null;
 
-  ws.onmessage = function(message) {
+  function onMessage(message) {
     var obj = null;
 
+    if (!(typeof window === 'undefined')) {
+      message = message.data;
+    }
     try {
-      obj = JSON.parse(message.data);
+      obj = JSON.parse(message);
     }
     catch (e) {
       console.log('Websocket error: could not parse message data as JSON: ' + message);
@@ -214,7 +222,7 @@ function wsSuccess(ws) {
       }
 
     } else if (obj.op == 'utx') {
-      var tx = TransactionFromJSON(obj.x);
+      var tx = shared.TransactionFromJSON(obj.x);
       var tx_processed = MyWallet.processTransaction(tx);
       var tx_account = tx_processed.to.accounts[0];
 
@@ -251,7 +259,7 @@ function wsSuccess(ws) {
       MyWallet.wallet.numberTxFetched += 1;
       tx.setConfirmations(0);
       WalletStore.pushTransaction(tx);
-      playSound('beep');
+      shared.playSound('beep');
       WalletStore.sendEvent('on_tx');
 
     }  else if (obj.op == 'block') {
@@ -266,12 +274,12 @@ function wsSuccess(ws) {
           }
         }
       }
-      WalletStore.setLatestBlock(BlockFromJSON(obj.x));
+      WalletStore.setLatestBlock(shared.BlockFromJSON(obj.x));
       WalletStore.sendEvent('on_block');
     }
   };
 
-  ws.onopen = function() {
+  function onOpen() {
     WalletStore.sendEvent('ws_on_open');
 
     var msg = '{"op":"blocks_sub"}';
@@ -291,12 +299,11 @@ function wsSuccess(ws) {
       WalletStore.sendEvent("msg", {type: "error", message: 'error with websocket'});
     }
 
-    ws.send(msg);
+    MyWallet.ws.send(msg);
   };
 
-  ws.onclose = function() {
+  function onClose() {
     WalletStore.sendEvent('ws_on_close');
-
   };
 }
 
@@ -634,7 +641,7 @@ MyWallet.isValidateBIP39Mnemonic = function(mnemonic) {
 MyWallet.listenToHDWalletAccount = function(accountExtendedPublicKey) {
   try {
     var msg = '{"op":"xpub_sub", "xpub":"'+ accountExtendedPublicKey +'"}';
-    ws.send(msg);
+    MyWallet.ws.send(msg);
   } catch (e) { }
 };
 // used only once locally
@@ -891,7 +898,8 @@ MyWallet.login = function ( user_guid
     }
 
     var error = function(e) {
-       var obj = JSON.parse(e);
+       console.log(e);
+       var obj = 'object' === typeof e ? e : JSON.parse(e);
        if(obj && obj.initial_error && !obj.authorization_required) {
          other_error(obj.initial_error);
          return;
@@ -943,8 +951,6 @@ MyWallet.login = function ( user_guid
     if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
      WalletStore.setEncryptedWalletData(obj.payload);
     }
-
-    war_checksum = obj.war_checksum;
 
     if (obj.language && WalletStore.getLanguage() != obj.language) {
      WalletStore.setLanguage(obj.language);
@@ -1037,13 +1043,13 @@ MyWallet.getIsInitialized = function() {
 // used once
 function setIsInitialized() {
   if (isInitialized) return;
-  webSocketConnect(wsSuccess);
+  socketConnect();
   isInitialized = true;
 };
 
 // used on iOS
 MyWallet.connectWebSocket = function() {
-  webSocketConnect(wsSuccess);
+  socketConnect();
 };
 ////////////////////////////////////////////////////////////////////////////////
 // This should replace backup functions
@@ -1146,7 +1152,7 @@ function syncWallet (successcallback, errorcallback) {
             }
           , function(e) {
             WalletStore.enableLogout();
-            _errorcallback(e.responseText);
+            _errorcallback(e);
           }
         );
 
@@ -1262,7 +1268,11 @@ MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryM
 MyWallet.logout = function(force) {
   if (!force && WalletStore.isLogoutDisabled())
     return;
-  var reload = function() { window.location.reload(); }
+  var reload = function() {
+    try { window.location.reload(); } catch (e) {
+      console.log(e);
+    }
+  };
   var data = {format : 'plain', api_code : API.API_CODE}
   WalletStore.sendEvent('logging_out');
   API.request("GET", 'wallet/logout', data, true, false).then(reload).catch(reload);
@@ -1370,5 +1380,5 @@ function parseValueBitcoin(valueString) {
 }
 // used iOS and mywallet
 MyWallet.precisionToSatoshiBN = function(x) {
-  return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, sShift(symbol_btc)).toString()));
+  return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, shared.sShift(shared.getBTCSymbol())).toString()));
 };

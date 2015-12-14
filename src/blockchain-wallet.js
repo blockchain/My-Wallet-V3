@@ -24,6 +24,7 @@ var MyWallet = require('./wallet'); // This cyclic import should be avoided once
 var ImportExport = require('./import-export');
 var API = require('./api');
 var Tx = require('./wallet-transaction');
+var shared = require('./shared');
 var BlockchainSettingsAPI = require('./blockchain-settings-api');
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -317,9 +318,9 @@ Wallet.prototype._updateWalletInfo = function(obj) {
 
   if (obj.info) {
     if (obj.info.symbol_local)
-      setLocalSymbol(obj.info.symbol_local);
+      shared.setLocalSymbol(obj.info.symbol_local);
     if (obj.info.symbol_btc)
-      setBTCSymbol(obj.info.symbol_btc);
+      shared.setBTCSymbol(obj.info.symbol_btc);
     if (obj.info.notice)
       WalletStore.sendEvent("msg", {type: "error", message: obj.info.notice});
   }
@@ -355,14 +356,18 @@ Wallet.prototype._updateWalletInfo = function(obj) {
       };
     }
     var address = this.activeKey(e.address);
-    if (address){ address.balance = e.final_balance; };
+    if (address){
+      address.balance       = e.final_balance;
+      address.totalReceived = e.total_received;
+      address.totalSent     = e.total_sent;
+    };
   };
 
   obj.addresses.forEach(updateAccountAndAddressesInfo.bind(this));
 
   this.numberTxFetched += obj.txs.length;
   for (var i = 0; i < obj.txs.length; ++i) {
-    var tx = TransactionFromJSON(obj.txs[i]);
+    var tx = shared.TransactionFromJSON(obj.txs[i]);
     WalletStore.pushTransaction(tx);
   }
 
@@ -392,7 +397,7 @@ Wallet.prototype.fetchMoreTransactions = function(didFetchOldestTransaction) {
   var list = this.activeAddresses.concat(xpubs);
   var txListP = API.getHistory(list, null, this.numberTxFetched, this.txPerScroll);
   function processTxs(data) {
-    var pTx = data.txs.map(MyWallet.processTransaction.compose(TransactionFromJSON));
+    var pTx = data.txs.map(MyWallet.processTransaction.compose(shared.TransactionFromJSON));
     this.numberTxFetched += pTx.length;
     if (pTx.length < this.txPerScroll) { didFetchOldestTransaction(); }
     return pTx;
@@ -466,7 +471,7 @@ Wallet.prototype.importLegacyAddress = function(addr, label, secPass, bipPass){
       ad.encrypt(cipher).persist();
     };
     this._addresses[ad.address] = ad;
-    ws.send('{"op":"addr_sub", "addr":"'+ad.address+'"}');
+    MyWallet.ws.send('{"op":"addr_sub", "addr":"'+ad.address+'"}');
     defer.resolve(ad);
     MyWallet.syncWallet();
     this.getHistory();

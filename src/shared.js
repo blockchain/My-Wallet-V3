@@ -10,6 +10,21 @@ var APP_NAME = 'javascript_web';
 var IMPORTED_APP_NAME = 'external'; //Need some way to set this dynamically
 var IMPORTED_APP_VERSION = '0';
 
+module.exports = {
+  APP_NAME: 'javascript_web',
+  APP_VERSION: '3.0',
+  getBTCSymbol: getBTCSymbol,
+  getLocalSymbol: getLocalSymbol,
+  satoshi: satoshi,
+  setLocalSymbol: setLocalSymbol,
+  setBTCSymbol: setBTCSymbol,
+  playSound: playSound,
+  sShift: sShift,
+  webSocketConnect: webSocketConnect,
+  TransactionFromJSON: TransactionFromJSON,
+  BlockFromJSON: BlockFromJSON
+};
+
 function myprint (x) {console.log(x);};
 
 function setLocalSymbol(new_symbol) {
@@ -23,6 +38,10 @@ function setLocalSymbol(new_symbol) {
   }
 }
 
+function getLocalSymbol() {
+  return symbol_local;
+}
+
 function setBTCSymbol(new_symbol) {
   if (!new_symbol) return;
 
@@ -34,6 +53,9 @@ function setBTCSymbol(new_symbol) {
   }
 }
 
+function getBTCSymbol() {
+  return symbol_btc;
+}
 // used iOS
 var _sounds = {};
 function playSound(id) {
@@ -46,14 +68,18 @@ function playSound(id) {
 };
 
 //Ignore Console
-if (!window.console) {
-  var names = ["log", "debug", "info", "warn", "error", "assert", "dir", "dirxml",
-               "group", "groupEnd", "time", "timeEnd", "count", "trace", "profile", "profileEnd"];
+try {
+  if (!window.console) {
+    var names = ["log", "debug", "info", "warn", "error", "assert", "dir", "dirxml",
+                 "group", "groupEnd", "time", "timeEnd", "count", "trace", "profile", "profileEnd"];
 
-  window.console = {};
-  for (var i = 0; i < names.length; ++i) {
-    window.console[names[i]] = function() {};
+    window.console = {};
+    for (var i = 0; i < names.length; ++i) {
+      window.console[names[i]] = function() {};
+    }
   }
+} catch (e) {
+  console.log(e);
 }
 //The current 'shift' value - BTC = 1, mBTC = 3, uBTC = 6
 function sShift(symbol) {
