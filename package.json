@@ -2,9 +2,9 @@
   "name": "blockchain-wallet-client",
   "version": "3.3.0",
   "description": "Blockchain.info JavaScript Wallet",
-  "homepage": "https://github.com/blockchain/My-Wallet-HD",
+  "homepage": "https://github.com/blockchain/my-wallet-v3",
   "bugs": {
-    "url": "https://github.com/blockchain/My-Wallet-HD/issues"
+    "url": "https://github.com/blockchain/my-wallet-v3/issues"
   },
   "license": "ISC",
   "author": {
@@ -18,10 +18,10 @@
     "Sjors Provoost",
     "Jaume Pernas"
   ],
-  "main": "wallet.js",
+  "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/blockchain/My-Wallet-HD.git"
+    "url": "https://github.com/blockchain/my-wallet-v3.git"
   },
   "scripts": {
     "postinstall": "cd node_modules/sjcl || cd ../sjcl && ./configure --with-sha1 && make",
