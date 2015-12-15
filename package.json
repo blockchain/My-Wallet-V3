@@ -24,7 +24,7 @@
     "url": "https://github.com/blockchain/My-Wallet-HD.git"
   },
   "scripts": {
-    "postinstall": "cd node_modules/sjcl && ./configure --with-sha1 && make",
+    "postinstall": "cd node_modules/sjcl || cd ../sjcl && ./configure --with-sha1 && make",
     "test": "./node_modules/karma/bin/karma start karma.conf.js"
   },
   "dependencies": {
