@@ -251,10 +251,6 @@ function socketConnect() {
         }
       }
 
-      if (tx_processed.to.legacyAddresses || tx_processed.from.legacyAddresses){
-        MyWallet.wallet.getHistory();
-      };
-
       MyWallet.wallet.numberTxTotal   += 1;
       MyWallet.wallet.numberTxFetched += 1;
       tx.setConfirmations(0);
