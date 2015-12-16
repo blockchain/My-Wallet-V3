@@ -12,6 +12,11 @@ var TransactionList = function (getContext, loadNumber) {
   this._context       = getContext();
   this._transactions  = [];
   this._txsFetched    = 0;
+  this._observers     = [];
+
+  this._notifyObservers = function () {
+    this._observers.forEach(function (obs) { obs(); });
+  };
 };
 
 Object.defineProperties(TransactionList.prototype, {
@@ -38,18 +43,30 @@ TransactionList.prototype.fetchTxs = function (amount) {
     , amount  = amount || this.loadNumber
     , txListP = API.getHistory(context, null, txIndex, amount);
   var processTxs = (function (data) {
-    var transactions    = refresh ? [] : this._transactions
-      , fetchedTxs      = data.txs.map(Tx.factory);
-    this._transactions  = transactions.concat(fetchedTxs);
-    if (refresh) { this._txsFetched = 0; }
-    return this._txsFetched += fetchedTxs.length;
+    if (refresh) { this._transactions = []; this._txsFetched = 0; }
+    this.pushTxs(data.txs);
+    return this._txsFetched += data.txs.length;
   }).bind(this);
   return txListP.then(processTxs);
+};
+
+TransactionList.prototype.pushTxs = function (txs) {
+  txs = Helpers.toArrayFormat(txs).map(Tx.factory);
+  this._transactions = this._transactions.concat(txs);
+  this._notifyObservers();
 };
 
 TransactionList.prototype.shiftTxs = function (txs) {
   txs = Helpers.toArrayFormat(txs).map(Tx.factory);
   this._transactions = txs.concat(this._transactions);
+  this._notifyObservers();
+};
+
+TransactionList.prototype.subscribe = function (callback) {
+  this._observers.push(callback);
+  return function () {
+    this._observers.splice(this._observers.indexOf(callback), 1);
+  }.bind(this);
 };
 
 module.exports = TransactionList;
