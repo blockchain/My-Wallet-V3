@@ -26,6 +26,7 @@ var shared = require('./shared');
 var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var KeyRing  = require('./keyring');
 var Analytics = require('./analytics');
+var TxList = require('./transaction-list');
 
 ////////////////////////////////////////////////////////////////////////////////
 // Wallet
@@ -85,6 +86,13 @@ function Wallet(object) {
   this._numberTxTotal   = 0;
   this._numberTxFetched = 0;
   this._txPerScroll     = 50;
+
+  var getWalletContext = function () {
+    var xpubs = this.hdwallet && this.hdwallet.activeXpubs;
+    return this.activeAddresses.concat(xpubs || []);
+  }.bind(this);
+
+  this._txList = new TxList(getWalletContext, this._txPerScroll);
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -154,6 +162,10 @@ Object.defineProperties(Wallet.prototype, {
       else
         throw 'Error: wallet.finalBalance must be a number';
     }
+  },
+  "txList": {
+    configurable: false,
+    get: function () { return this._txList; }
   },
   "numberTxTotal": {
     configurable: false,
