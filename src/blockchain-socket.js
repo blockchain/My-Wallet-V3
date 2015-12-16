@@ -40,6 +40,7 @@ BlockchainSocket.prototype.connectOnce = function (onOpen, onMessage, onClose) {
   this.socket.on('open', onOpen);
   this.socket.on('message', onMessage);
   this.socket.on('close', onClose);
+  if (MyWallet && MyWallet.wallet) { MyWallet.wallet.getHistory(); }
 };
 
 BlockchainSocket.prototype.send = function (message) {
