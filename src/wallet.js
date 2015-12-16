@@ -29,36 +29,6 @@ var isInitialized = false;
 MyWallet.wallet = undefined;
 MyWallet.ws = new BlockchainSocket();
 
-// TODO: Remove once beta period is over
-MyWallet.whitelistWallet = function(options, success, error) {
-  assert(options.guid, 'Error: need guid to whitelist');
-  assert(['alpha', 'staging', 'dev'].some(function(sd) {
-    return sd === options.subdomain;
-  }), 'Error: must specify alpha, staging, or dev as subdomain');
-
-  var url = 'https://' + options.subdomain + '.blockchain.info/whitelist_guid';
-  var request = new XMLHttpRequest();
-  request.open('POST', url);
-  request.timeout = API.AJAX_TIMEOUT;
-  request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-  request.onload = function (e) {
-    if (request.readyState === 4) {
-      if (request.status === 200) {
-        success && success(JSON.parse(request.responseText));
-      } else {
-        error && error(request.responseText);
-      }
-    }
-  };
-  request.onerror = function (e) {
-    error && error(request.responseText);
-  };
-  request.ontimeout = function() {
-    error && error("timeout request");
-  };
-  request.send(API.encodeFormData(options));
-};
-
 // used on MyWallet
 MyWallet.securePost = function(url, data, success, error) {
   API.securePost(url, data).then(success).catch(error);

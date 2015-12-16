@@ -14,7 +14,7 @@ var Buffer      = require('buffer').Buffer;
 // API class
 function API(){
   // private members
-  this.ROOT_URL           = "https://blockchain.info/";
+  this.ROOT_URL           = "http://local.blockchain.com:8080/";
   this.AJAX_TIMEOUT       = 60000;
   this.AJAX_RETRY_DEFAULT = 2;
   this.API_CODE           = "1770d5d9-bcea-4d28-ad21-6cbd5be018a8";
