@@ -16,7 +16,7 @@ function Tx(object){
   this.lock_time        = obj.lock_time;
   this.out              = obj.out  || [];
   this.relayed_by       = obj.relayed_by;
-  this.result           = obj.result;
+  this._result          = obj.result;
   this.size             = obj.size;
   this.time             = obj.time;
   this.tx_index         = obj.tx_index;
@@ -87,6 +87,14 @@ Object.defineProperties(Tx.prototype, {
                                  .reduce(Helpers.add, 0);
     }
   },
+  "result": {
+    configurable: false,
+    get: function() {
+      var r = this._result;
+      if(this._result == null) r = this.internalReceive - this.internalSpend;
+      return r;
+    }
+  },
   "amount": {
     configurable: false,
     get: function() {
@@ -119,7 +127,7 @@ Object.defineProperties(Tx.prototype, {
     configurable: false,
     get: function() {
       var v = null;
-      var impactNoFee = this.result + this.fee
+      var impactNoFee = this.result + this.fee;
       switch (true) {
         case impactNoFee === 0:
           v = "transfer"
