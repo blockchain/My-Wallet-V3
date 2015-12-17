@@ -6,6 +6,7 @@ function BlockchainSocket() {
   this.headers = { 'Origin': 'https://blockchain.info' };
   this.socket;
   this.reconnectInterval;
+  this.pingInterval;
 }
 
 // hack to browserify websocket library
@@ -31,8 +32,10 @@ BlockchainSocket.prototype.connect = function (onOpen, onMessage, onClose) {
     var connect = this.connectOnce.bind(this, onOpen, onMessage, onClose);
     if (!this.socket || this.socket.readyState === 3) connect();
   }.bind(this);
+  var pingSocket = function () { this.send('{"op":"ping_block"}'); }.bind(this);
   reconnect();
   this.reconnectInterval = setInterval(reconnect, 20000);
+  this.pingInterval = setInterval(pingSocket, 30013);
 };
 
 BlockchainSocket.prototype.connectOnce = function (onOpen, onMessage, onClose) {
@@ -40,7 +43,6 @@ BlockchainSocket.prototype.connectOnce = function (onOpen, onMessage, onClose) {
   this.socket.on('open', onOpen);
   this.socket.on('message', onMessage);
   this.socket.on('close', onClose);
-  if (MyWallet && MyWallet.wallet) { MyWallet.wallet.getHistory(); }
 };
 
 BlockchainSocket.prototype.send = function (message) {
