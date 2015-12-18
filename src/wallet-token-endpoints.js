@@ -5,7 +5,7 @@ var assert = require('assert');
 var API = require('./api');
 
 function verifyEmail(token, successCallback, errorCallback) {
-  const success = (res) => {
+  var success = function(res) {
     if(res && res.success != undefined) {
       if(res.success) {
         successCallback(res.guid);
@@ -17,7 +17,7 @@ function verifyEmail(token, successCallback, errorCallback) {
     }
   }
 
-  const error = (err) => {
+  var error = function (err) {
     errorCallback(err);
   }
 
@@ -26,5 +26,6 @@ function verifyEmail(token, successCallback, errorCallback) {
 }
 
 module.exports = {
-  verifyEmail: verifyEmail
+  verifyEmail: verifyEmail,
+  unsubscribe: unsubscribe
 };
