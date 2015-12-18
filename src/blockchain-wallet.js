@@ -629,7 +629,7 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, started
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
   var newHDwallet = HDWallet.restore(seedHex, pass39, encoder);
   this._hd_wallets[0] = newHDwallet;
-  var account = this.newAccount("Account 1", pw, 0, undefined, true);
+  var account = this.newAccount("My Bitcoin Wallet 1", pw, 0, undefined, true);
   API.getHistory([account.extendedPublicKey], 0, 0, 50).then(progress);
   var accountIndex  = 1;
   var AccountsGap = 10;
@@ -644,7 +644,7 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, started
       return true;
     } else{
       accountIndex++;
-      account = self.newAccount("Account " + accountIndex.toString(), pw, 0, undefined, true);
+      account = self.newAccount("My Bitcoin Wallet " + accountIndex.toString(), pw, 0, undefined, true);
       return isAccountNonUsed(account, progress).then(go);
     };
   };
