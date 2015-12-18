@@ -25,6 +25,28 @@ function verifyEmail(token, successCallback, errorCallback) {
   API.request("POST", 'wallet', myData, false).then(success).catch(error);
 }
 
+function unsubscribe(token, successCallback, errorCallback) {
+  var success = function (res) {
+    if(res && res.success != undefined) {
+      if(res.success) {
+        successCallback(res.guid);
+      } else {
+        errorCallback(res.error);
+      }
+    } else {
+      errorCallback("UNSUBSCRIBE_ENDPOINT_UNEXPECTED_RESPONSE");
+    }
+  }
+
+  var error = function (err) {
+    errorCallback(err);
+  }
+
+  var myData = { token: token,  method : 'unsubscribe', api_code : API.API_CODE};
+  API.request("POST", 'wallet', myData, false).then(success).catch(error);
+}
+
+
 module.exports = {
   verifyEmail: verifyEmail,
   unsubscribe: unsubscribe
