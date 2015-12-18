@@ -3,6 +3,7 @@
 var assert = require('assert');
 
 var API = require('./api');
+var Helpers = require('./helpers');
 
 function verifyEmail(token, successCallback, errorCallback) {
   var success = function(res) {
@@ -46,11 +47,17 @@ function unsubscribe(token, successCallback, errorCallback) {
   API.request("POST", 'wallet', myData, false).then(success).catch(error);
 }
 
-function authorizeApprove(token, successCallback, errorCallback) {
+function authorizeApprove(token, successCallback, differentBrowserCallback, differentBrowserApproved, errorCallback) {
+  assert(Helpers.isBoolean(differentBrowserApproved) || differentBrowserApproved == null, "differentBrowserApproved must be null, false or true");
+
   var success = function (res) {
-    if(res && res.success != undefined) {
+    if(res && res.success !== undefined) {
       if(res.success) {
         successCallback(res.guid);
+      } else if (res.success === null) {
+        differentBrowserCallback(res);
+      } else if (res.success === false && res["request-denied"]) {
+        successCallback();
       } else {
         errorCallback(res.error);
       }
@@ -64,6 +71,11 @@ function authorizeApprove(token, successCallback, errorCallback) {
   }
 
   var myData = { token: token,  method : 'authorize-approve', api_code : API.API_CODE};
+
+  if(differentBrowserApproved !== null) {
+    myData.confirm_approval = differentBrowserApproved;
+  }
+
   API.request("POST", 'wallet', myData, false).then(success).catch(error);
 }
 
