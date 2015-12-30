@@ -50,7 +50,7 @@ BlockchainSocket.prototype.connectOnce = function (onOpen, onMessage, onClose) {
 BlockchainSocket.prototype.send = function (message) {
   this.reconnect();
   var send = function() {this.socket.send(message); }.bind(this);
-  if (this.socket.readyState == 1) { send();}
+  if (this.socket.readyState === 1) { send();}
 };
 
 module.exports = BlockchainSocket;
