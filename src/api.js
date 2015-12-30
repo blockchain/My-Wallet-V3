@@ -88,7 +88,7 @@ API.prototype.request = function(action, method, data, withCred) {
   var body = this.encodeFormData(data);
   if (action === "GET") {url = url + '?'  + body;}
   var r = hyperquest(url, requestOptions);
-  if (action === "POST") { r.end(body); }
+  if (action === "POST") { r.end(body, 'utf8'); }
   timeout(r, this.AJAX_TIMEOUT);
 
   r.on('response', function(res) {
