@@ -105,10 +105,15 @@
     "commits" : ["d373079d3620152e3d60e82f27265a09ee0e81bd"],
     "repo" : "kriskowal/q"
   },
-  "hyperquest" : {
-    "version" : "1.2.0",
-    "commits" : ["6e659e313f9fd2d5627f6c647ba0d17098d4a79d"],
-    "repo" : "substack/hyperquest"
+  "es6-promise" : {
+    "version" : "3.0.2",
+    "commits" : ["7d90241d79d8a50e340abb3d964c47fe79a214ba"],
+    "repo" : "jakearchibald/es6-promise"
+  },
+  "isomorphic-fetch" : {
+    "version" : "2.2.0",
+    "commits" : ["43437dc5b381e391b73522d71cea23fc72675154"],
+    "repo" : "matthew-andrews/isomorphic-fetch"
   },
   "pbkdf2" : {
     "version" : "3.0.4",

@@ -1,5 +1,8 @@
 'use strict';
 
+require('es6-promise').polyfill();
+require('isomorphic-fetch');
+
 var Buffer = require('buffer').Buffer
 
 // This fixes a bug with Safari < 8 and the Browserify Buffer shim used in Crypto-browserify/randombytes
