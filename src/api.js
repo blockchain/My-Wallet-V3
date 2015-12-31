@@ -65,12 +65,20 @@ API.prototype.request = function(action, method, data, withCred) {
     return response;
   }.bind(this);
 
+  var handleError = function (err) {
+    var deferred = Q.defer();
+    if (err.response) err.response.text().then(deferred.reject);
+    else deferred.reject('Network Error');
+    return deferred.promise;
+  };
+
   WalletStore.sendEvent('msg', {type: 'ajax-start', message: 'ajax call started'});
 
   return fetch(url, options)
     .then(loadEnded)
     .then(checkStatus)
-    .then(handleResponse);
+    .then(handleResponse)
+    .catch(handleError);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
