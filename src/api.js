@@ -45,11 +45,6 @@ API.prototype.request = function(action, method, data, withCred) {
   if (action === 'GET') url += '?' + body;
   if (action === 'POST') options.body = body;
 
-  var loadEnded = function (response) {
-    WalletStore.sendEvent('msg', {type: 'ajax-end', message: 'ajax call ended'});
-    return response;
-  };
-
   var checkStatus = function (response) {
     if (response.status >= 200 && response.status < 300) {
       return data.format === 'json' ? response.json() : response.text();
@@ -72,10 +67,7 @@ API.prototype.request = function(action, method, data, withCred) {
     return deferred.promise;
   };
 
-  WalletStore.sendEvent('msg', {type: 'ajax-start', message: 'ajax call started'});
-
   return fetch(url, options)
-    .then(loadEnded)
     .then(checkStatus)
     .then(handleResponse)
     .catch(handleError);
