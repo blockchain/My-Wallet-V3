@@ -8,7 +8,6 @@ var Helpers     = require('./helpers');
 var WalletStore = require('./wallet-store');
 var CryptoJS    = require('crypto-js');
 var MyWallet    = require('./wallet');
-var hyperquest  = require('hyperquest');
 var Buffer      = require('buffer').Buffer;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -33,81 +32,40 @@ API.prototype.encodeFormData = function (data) {
 
 ////////////////////////////////////////////////////////////////////////////////
 API.prototype.request = function(action, method, data, withCred) {
+  var url   = this.ROOT_URL + method
+    , body  = this.encodeFormData(data)
+    , time  = (new Date()).getTime();
 
-  var defer = Q.defer();
-  var url = this.ROOT_URL + method;
-  var clientTime = (new Date()).getTime();
-  // this is used on iOS to enable and disable web socket while doing ajax calls
-  WalletStore.sendEvent("msg", {type: "ajax-start", message: 'ajax call started'});
-  //////////////////////////////////////////////////////////////////////////////
-  // Helpers:
-  var readData = function(res, callback){
-    var buffer = new Buffer('');
-    res.on('data', function(chunk) {
-      buffer = Buffer.concat([buffer, chunk]);
-    });
-
-    res.on('end', function () {
-      var resString = buffer.toString('utf8');
-      callback(resString);
-    })
-  }
-
-  var timeout = function (req, ms) {
-    var t = setTimeout(function() {
-      req.emit('error', new Error('timeout: ' + ms + ' ms'));
-    }, ms);
-    req.on('response', function() { clearTimeout(t); });
-    return req;
-  }
-
-  function loadEnded() {
-    // this is used on iOS to enable and disable web socket while doing ajax calls
-    WalletStore.sendEvent("msg", {type: "ajax-end", message: 'ajax call ended'});
-  }
-
-  var handleResponse = function (res) {
-    loadEnded();
-    this.handleNTPResponse(res, clientTime);
-    if (data.format === 'json') { res = JSON.parse(res); }
-    defer.resolve(res);
-  }.bind(this);
-
-  var handleError = function (err) {
-    loadEnded();
-    defer.reject(err);
-  }.bind(this);
-  //////////////////////////////////////////////////////////////////////////////
-
-  var wc = withCred ? true : false;
-  var requestOptions = {
-    method    : action,
-    withCredentials: wc
+  var options = {
+    method      : action,
+    headers     : { 'Content-Type': 'application/x-www-form-urlencoded' },
+    credentials : withCred ? 'same-origin' : false
   };
-  requestOptions.headers = { 'Content-Type': 'application/x-www-form-urlencoded'}
-  var body = this.encodeFormData(data);
-  if (action === "GET") {url = url + '?'  + body;}
-  var r = hyperquest(url, requestOptions);
-  if (action === "POST") { r.end(body, 'utf8'); }
-  timeout(r, this.AJAX_TIMEOUT);
 
-  r.on('response', function(res) {
-    switch (true) {
-      case (res.statusCode === 200):
-        readData(r, handleResponse);
-        break;
-      case (res.statusCode === 500):
-        readData(r, handleError);
-        break;
-      default:
-        handleError('Bad statusCode in response: '+ res.statusCode)
+  if (action === 'GET') url += '?' + body;
+  if (action === 'POST') options.body = body;
+
+  var handleNetworkError = function () {
+    return Q.reject({ initial_error: 'Connectivity error, failed to send network request' });
+  };
+
+  var checkStatus = function (response) {
+    if (response.status >= 200 && response.status < 300) {
+      return data.format === 'json' ? response.json() : response.text();
+    } else {
+      return response.text().then(Q.reject);
     }
-  });
+  };
 
-  r.on('error', function(err) { defer.reject("unknown error"); });
+  var handleResponse = function (response) {
+    this.handleNTPResponse(response, time);
+    return response;
+  }.bind(this);
 
-  return defer.promise;
-
+  return fetch(url, options)
+    .catch(handleNetworkError)
+    .then(checkStatus)
+    .then(handleResponse);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
