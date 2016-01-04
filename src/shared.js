@@ -79,7 +79,6 @@ try {
     }
   }
 } catch (e) {
-  console.log(e);
 }
 //The current 'shift' value - BTC = 1, mBTC = 3, uBTC = 6
 function sShift(symbol) {
