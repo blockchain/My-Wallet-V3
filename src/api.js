@@ -45,13 +45,15 @@ API.prototype.request = function(action, method, data, withCred) {
   if (action === 'GET') url += '?' + body;
   if (action === 'POST') options.body = body;
 
+  var handleNetworkError = function () {
+    return Q.reject({ initial_error: 'Connectivity error, failed to send network request' });
+  };
+
   var checkStatus = function (response) {
     if (response.status >= 200 && response.status < 300) {
       return data.format === 'json' ? response.json() : response.text();
     } else {
-      var error = new Error(response.statusText);
-      error.response = response;
-      throw error;
+      return response.text().then(Q.reject);
     }
   };
 
@@ -60,17 +62,10 @@ API.prototype.request = function(action, method, data, withCred) {
     return response;
   }.bind(this);
 
-  var handleError = function (err) {
-    var deferred = Q.defer();
-    if (err.response) err.response.text().then(deferred.reject);
-    else deferred.reject('Network Error');
-    return deferred.promise;
-  };
-
   return fetch(url, options)
+    .catch(handleNetworkError)
     .then(checkStatus)
-    .then(handleResponse)
-    .catch(handleError);
+    .then(handleResponse);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
