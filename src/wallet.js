@@ -889,11 +889,7 @@ MyWallet.requestTwoFactorReset = function(
     }
   }
   var e = function(e) {
-    if(e.responseJSON && e.responseJSON.initial_error) {
-      error(e.responseJSON.initial_error);
-    } else {
-      error();
-    }
+    error(e);
   }
   API.request("POST", 'wallet', data, true).then(s).catch(e);
 };
