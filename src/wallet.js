@@ -814,6 +814,39 @@ MyWallet.resendTwoFactorSms = function(user_guid, success, error) {
   API.request("GET", 'wallet/'+user_guid, data, true, false).then(s).catch(e);
 };
 
+/**
+ * Trigger an email with the users wallet guid(s)
+ * @param {string} user_email Registered mail address.
+ * @param {string} captcha Spam protection
+ * @param {function()} success Success callback function.
+ * @param {function()} error Error callback function.
+ */
+// used in the frontend
+MyWallet.recoverGuid = function(user_email, captcha, success, error) {
+
+  var data = {
+    method: 'recover-wallet',
+    email : user_email,
+    captcha: captcha,
+    ct : (new Date()).getTime(),
+    api_code : API.API_CODE
+  }
+  var s = function(obj) {
+    if(obj.success) {
+      success(obj.message);
+    } else {
+      error(obj.message);
+    }
+  }
+  var e = function(e) {
+    if(e.responseJSON && e.responseJSON.initial_error) {
+      error(e.responseJSON.initial_error);
+    } else {
+      error();
+    }
+  }
+  API.request("POST", 'wallet', data, true).then(s).catch(e);
+};
 ////////////////////////////////////////////////////////////////////////////////
 MyWallet.login = function ( user_guid
                           , shared_key
