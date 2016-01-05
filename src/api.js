@@ -39,7 +39,7 @@ API.prototype.request = function(action, method, data, withCred) {
   var options = {
     method      : action,
     headers     : { 'Content-Type': 'application/x-www-form-urlencoded' },
-    credentials : withCred ? 'same-origin' : false
+    credentials : withCred ? 'include' : false
   };
 
   if (action === 'GET') url += '?' + body;
