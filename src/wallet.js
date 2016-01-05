@@ -847,6 +847,57 @@ MyWallet.recoverGuid = function(user_email, captcha, success, error) {
   }
   API.request("POST", 'wallet', data, true).then(s).catch(e);
 };
+
+/**
+ * Trigger the 2FA reset process
+ * @param {string} user_guid User GUID.
+ * @param {string} user_email Registered email address.
+ * @param {string} user_new_email Optional new email address.
+ * @param {string} secret
+ * @param {string} message
+ * @param {string} captcha Spam protection
+ * @param {function()} success Success callback function.
+ * @param {function()} error Error callback function.
+ */
+// used in the frontend
+MyWallet.requestTwoFactorReset = function(
+  user_guid,
+  user_email,
+  user_new_email,
+  secret,
+  message,
+  captcha,
+  success,
+  error) {
+
+  var data = {
+    method: 'reset-two-factor-form',
+    guid: user_guid,
+    email: user_email,
+    contact_email: user_new_email,
+    secret_phrase: secret,
+    message: message,
+    kaptcha: captcha,
+    ct : (new Date()).getTime(),
+    api_code : API.API_CODE
+  }
+  var s = function(obj) {
+    if(obj.success) {
+      success(obj.message);
+    } else {
+      error(obj.message);
+    }
+  }
+  var e = function(e) {
+    if(e.responseJSON && e.responseJSON.initial_error) {
+      error(e.responseJSON.initial_error);
+    } else {
+      error();
+    }
+  }
+  API.request("POST", 'wallet', data, true).then(s).catch(e);
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 MyWallet.login = function ( user_guid
                           , shared_key
