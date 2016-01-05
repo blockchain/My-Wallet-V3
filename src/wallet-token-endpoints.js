@@ -79,9 +79,32 @@ function authorizeApprove(token, successCallback, differentBrowserCallback, diff
   API.request("POST", 'wallet', myData, false).then(success).catch(error);
 }
 
+function resetTwoFactor(token, successCallback, errorCallback) {
+  var success = function(res) {
+    if(res && res.success != undefined) {
+      if(res.success) {
+        // action can be: delete | approve | approve_new_email
+        successCallback(res);
+      } else {
+        errorCallback(res.message);
+      }
+    } else {
+      errorCallback("RESET_TWO_FACTOR_ENDPOINT_UNEXPECTED_RESPONSE");
+    }
+  }
+
+  var error = function (err) {
+    errorCallback(err);
+  }
+
+  var myData = { token: token,  method : 'reset-two-factor-token', api_code : API.API_CODE};
+  API.request("POST", 'wallet', myData, false).then(success).catch(error);
+}
+
 
 module.exports = {
   verifyEmail: verifyEmail,
   unsubscribe: unsubscribe,
-  authorizeApprove: authorizeApprove
+  authorizeApprove: authorizeApprove,
+  resetTwoFactor: resetTwoFactor
 };
