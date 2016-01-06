@@ -45,7 +45,8 @@ TransactionList.prototype.fetchTxs = function (amount) {
   var processTxs = (function (data) {
     if (refresh) { this._transactions = []; this._txsFetched = 0; }
     this.pushTxs(data.txs);
-    return this._txsFetched += data.txs.length;
+    this._txsFetched += data.txs.length;
+    return data.txs.length;
   }).bind(this);
   return txListP.then(processTxs);
 };

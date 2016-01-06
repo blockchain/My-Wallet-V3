@@ -187,12 +187,13 @@ function tagCoin(x) {
   var am = x.value;
   var coinType = null;
   var change = false;
-  var id = 'imported';
+  var id;
   var label = null;
 
   switch (true) {
     case isLegacy(x):
       coinType = "legacy";
+      id = 'imported';
       label = address(x).label;
       break;
     case isAccount(x):
