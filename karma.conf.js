@@ -78,7 +78,8 @@ module.exports = function(karma) {
       'tests/keyring_spec.js.coffee',
       'tests/hdaccount_spec.js.coffee',
       'tests/hdwallet_spec.js.coffee',
-      'tests/blockchain_wallet_spec.js.coffee'
+      'tests/blockchain_wallet_spec.js.coffee',
+      'tests/wallet_token_endpoints.js.coffee'
     ]
   };
 

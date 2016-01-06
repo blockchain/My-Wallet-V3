@@ -6,6 +6,10 @@ var API = require('./api');
 var Helpers = require('./helpers');
 
 function verifyEmail(token, successCallback, errorCallback) {
+  assert(token, "Token required");
+  assert(successCallback, "Success callback required");
+  assert(errorCallback, "Error callback required");
+
   var success = function(res) {
     if(res && res.success != undefined) {
       if(res.success) {
