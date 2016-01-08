@@ -8,11 +8,6 @@ function BlockchainSocket() {
   this.reconnectInterval;
   this.pingInterval;
   this.reconnect;
-
-  this.setURL = function (url) {
-    this.wsUrl = url;
-  }
-
 }
 
 // hack to browserify websocket library

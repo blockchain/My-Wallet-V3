@@ -21,10 +21,6 @@ function API(){
   this.SERVER_TIME_OFFSET = null;
 }
 
-API.prototype.setRootURL = function (url) {
-  this.ROOT_URL = url;
-}
-
 // encodeFormData :: Object -> url encoded params
 API.prototype.encodeFormData = function (data) {
   if (!data) return "";
