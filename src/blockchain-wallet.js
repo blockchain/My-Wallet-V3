@@ -26,6 +26,7 @@ var API = require('./api');
 var Tx = require('./wallet-transaction');
 var shared = require('./shared');
 var BlockchainSettingsAPI = require('./blockchain-settings-api');
+var KeyRing  = require('./keyring');
 
 ////////////////////////////////////////////////////////////////////////////////
 // Wallet
@@ -814,6 +815,17 @@ Wallet.prototype.getPrivateKeyForAddress = function(address, secondPassword) {
         address.priv, secondPassword, this.sharedKey, this.pbkdf2_iterations) : address.priv;
   };
   return pk;
+};
+
+Wallet.prototype._getPrivateKey = function(accountIndex, path, secondPassword) {
+  assert(this.hdwallet.isValidAccountIndex(accountIndex), "Error: account non-existent");
+  assert(Helpers.isString(path), "Error: path must be an string of the form 'M/0/27'");
+  var maybeXpriv = this.hdwallet.accounts[accountIndex].extendedPrivateKey;
+  var xpriv = this.isDoubleEncrypted ?
+    WalletCrypto.decryptSecretWithSecondPassword(
+      maybeXpriv , secondPassword, this.sharedKey, this.pbkdf2_iterations) : maybeXpriv;
+  var kr = new KeyRing(xpriv, null);
+  return kr.privateKeyFromPath(path).toWIF();
 };
 
 // TODO: Remove once beta period is over
