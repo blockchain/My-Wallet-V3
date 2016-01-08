@@ -5,20 +5,22 @@ var assert = require('assert');
 var API = require('./api');
 var Helpers = require('./helpers');
 
-function verifyEmail(token, successCallback, errorCallback) {
+function postTokenEndpoint(method, token, extraParams, successCallback, errorCallback) {
   assert(token, "Token required");
+  assert(extraParams, "Extra params dictionary required");
   assert(successCallback, "Success callback required");
   assert(errorCallback, "Error callback required");
 
   var success = function(res) {
-    if(res && res.success != undefined) {
+    console.log(res);
+    if(res && res.success !== undefined) {
       if(res.success) {
-        successCallback(res.guid);
+        successCallback(res);
       } else {
-        errorCallback(res.error);
+        errorCallback(res);
       }
     } else {
-      errorCallback("VERIFY_EMAIL_ENDPOINT_UNEXPECTED_RESPONSE");
+      errorCallback({error: 'TOKEN_ENDPOINT_UNEXPECTED_RESPONSE'});
     }
   }
 
@@ -26,89 +28,53 @@ function verifyEmail(token, successCallback, errorCallback) {
     errorCallback(err);
   }
 
-  var myData = { token: token,  method : 'verify-email-token', api_code : API.API_CODE};
-  API.request("POST", 'wallet', myData, false).then(success).catch(error);
+  var params = { token: token, method : method, api_code : API.API_CODE};
+
+  for(var k in extraParams) {
+    params[k] = extraParams[k];
+  }
+
+  API.request("POST", 'wallet', params, false).then(success).catch(error);
+}
+
+function verifyEmail(token, successCallback, errorCallback) {
+  this.postTokenEndpoint('verify-email-token', token, {}, successCallback, errorCallback)
 }
 
 function unsubscribe(token, successCallback, errorCallback) {
-  var success = function (res) {
-    if(res && res.success != undefined) {
-      if(res.success) {
-        successCallback(res.guid);
-      } else {
-        errorCallback(res.error);
-      }
-    } else {
-      errorCallback("UNSUBSCRIBE_ENDPOINT_UNEXPECTED_RESPONSE");
-    }
-  }
-
-  var error = function (err) {
-    errorCallback(err);
-  }
-
-  var myData = { token: token,  method : 'unsubscribe', api_code : API.API_CODE};
-  API.request("POST", 'wallet', myData, false).then(success).catch(error);
+  this.postTokenEndpoint('unsubscribe', token, {}, successCallback, errorCallback)
 }
 
 function authorizeApprove(token, successCallback, differentBrowserCallback, differentBrowserApproved, errorCallback) {
   assert(Helpers.isBoolean(differentBrowserApproved) || differentBrowserApproved == null, "differentBrowserApproved must be null, false or true");
 
-  var success = function (res) {
-    if(res && res.success !== undefined) {
-      if(res.success) {
-        successCallback(res.guid);
-      } else if (res.success === null) {
-        differentBrowserCallback(res);
-      } else if (res.success === false && res["request-denied"]) {
-        successCallback();
-      } else {
-        errorCallback(res.error);
-      }
+  var error = function (res) {
+    if (res.success === null) {
+      differentBrowserCallback(res);
+    } else if (res.success === false && res["request-denied"]) {
+      successCallback();
     } else {
-      errorCallback("AUTHORIZED_APPROVE_ENDPOINT_UNEXPECTED_RESPONSE");
+      errorCallback(res);
     }
   }
 
-  var error = function (err) {
-    errorCallback(err);
-  }
-
-  var myData = { token: token,  method : 'authorize-approve', api_code : API.API_CODE};
+  var extraParams = {}
 
   if(differentBrowserApproved !== null) {
-    myData.confirm_approval = differentBrowserApproved;
+    extraParams.confirm_approval = differentBrowserApproved;
   }
 
-  API.request("POST", 'wallet', myData, false).then(success).catch(error);
+  this.postTokenEndpoint('authorize-approve', token, extraParams, successCallback, error)
 }
 
 function resetTwoFactor(token, successCallback, errorCallback) {
-  var success = function(res) {
-    if(res && res.success != undefined) {
-      if(res.success) {
-        // action can be: delete | approve | approve_new_email
-        successCallback(res);
-      } else {
-        errorCallback(res.message);
-      }
-    } else {
-      errorCallback("RESET_TWO_FACTOR_ENDPOINT_UNEXPECTED_RESPONSE");
-    }
-  }
-
-  var error = function (err) {
-    errorCallback(err);
-  }
-
-  var myData = { token: token,  method : 'reset-two-factor-token', api_code : API.API_CODE};
-  API.request("POST", 'wallet', myData, false).then(success).catch(error);
+  this.postTokenEndpoint('reset-two-factor-token', token, {}, successCallback, errorCallback)
 }
-
 
 module.exports = {
   verifyEmail: verifyEmail,
   unsubscribe: unsubscribe,
   authorizeApprove: authorizeApprove,
-  resetTwoFactor: resetTwoFactor
+  resetTwoFactor: resetTwoFactor,
+  postTokenEndpoint: postTokenEndpoint // For tests
 };

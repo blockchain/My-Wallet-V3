@@ -25,8 +25,7 @@ WTE = proxyquire('../src/wallet-token-endpoints', {
    './helpers': Helpers
 })
 
-
-describe "verifyEmail", ->
+describe "postTokenEndpoint", ->
   callbacks =
     success: () ->
     error:   () ->
@@ -37,10 +36,39 @@ describe "verifyEmail", ->
 
   it "should require a token, success and error callbacks", ->
 
-    expect(() -> WTE.verifyEmail()).toThrow()
-    expect(() -> WTE.verifyEmail("token")).toThrow()
-    expect(() -> WTE.verifyEmail("token", callbacks.succes)).toThrow()
-    expect(() -> WTE.verifyEmail("token", callbacks.success, callbacks.error)).not.toThrow()
+    expect(() -> WTE.postTokenEndpoint("method")).toThrow()
+    expect(() -> WTE.postTokenEndpoint("method", "token")).toThrow()
+    expect(() -> WTE.postTokenEndpoint("method", "token", callbacks.succes)).toThrow()
+    expect(() -> WTE.postTokenEndpoint("method", "token", {}, callbacks.success, callbacks.error)).not.toThrow()
+
+  it "should submit a token", ->
+    spyOn(API, "request").and.callThrough()
+    WTE.postTokenEndpoint("method", "token", {}, callbacks.success, callbacks.error)
+    expect(API.request).toHaveBeenCalled()
+    expect(API.request.calls.argsFor(0)[2].token).toEqual('token')
+
+  it "should call success with the guid", ->
+    WTE.postTokenEndpoint("method", "token", {}, callbacks.success, callbacks.error)
+    expect(callbacks.success).toHaveBeenCalledWith({ success: true, guid: "1234"})
+
+  it "should errorCallback if server returns 500", ->
+    WTE.postTokenEndpoint("method", "token-fail-500", {}, callbacks.success, callbacks.error)
+    expect(callbacks.success).not.toHaveBeenCalled()
+    expect(callbacks.error).toHaveBeenCalled()
+
+  it "should errorCallback message if server returns 200 and {success: false}", ->
+    WTE.postTokenEndpoint("method", "token-fail-200", {}, callbacks.success, callbacks.error)
+    expect(callbacks.success).not.toHaveBeenCalled()
+    expect(callbacks.error).toHaveBeenCalledWith({ success: false, error: 'Invalid Token' })
+
+describe "verifyEmail", ->
+  callbacks =
+    success: () ->
+    error:   () ->
+
+  beforeEach ->
+    spyOn(callbacks, "success")
+    spyOn(callbacks, "error")
 
   it "should submit a token", ->
     spyOn(API, "request").and.callThrough()
@@ -48,16 +76,62 @@ describe "verifyEmail", ->
     expect(API.request).toHaveBeenCalled()
     expect(API.request.calls.argsFor(0)[2].token).toEqual('token')
 
-  it "should call success with the guid", ->
+  it "shoud call postTokenEndpoint with token", ->
+    spyOn(WTE, "postTokenEndpoint")
     WTE.verifyEmail("token", callbacks.success, callbacks.error)
-    expect(callbacks.success).toHaveBeenCalledWith("1234")
+    expect(WTE.postTokenEndpoint).toHaveBeenCalled()
+    expect(WTE.postTokenEndpoint.calls.argsFor(0)[1]).toEqual("token")
 
-  it "should errorCallback if server returns 500", ->
-    WTE.verifyEmail("token-fail-500", callbacks.success, callbacks.error)
-    expect(callbacks.success).not.toHaveBeenCalled()
-    expect(callbacks.error).toHaveBeenCalled()
+describe "unsubscribe", ->
+  callbacks =
+    success: () ->
+    error:   () ->
 
-  it "should errorCallback message if server returns 200 and {success: false}", ->
-    WTE.verifyEmail("token-fail-200", callbacks.success, callbacks.error)
-    expect(callbacks.success).not.toHaveBeenCalled()
-    expect(callbacks.error).toHaveBeenCalledWith("Invalid Token")
+  beforeEach ->
+    spyOn(callbacks, "success")
+    spyOn(callbacks, "error")
+
+  it "shoud call postTokenEndpoint with token", ->
+    spyOn(WTE, "postTokenEndpoint")
+    WTE.unsubscribe("token", callbacks.success, callbacks.error)
+    expect(WTE.postTokenEndpoint).toHaveBeenCalled()
+    expect(WTE.postTokenEndpoint.calls.argsFor(0)[1]).toEqual("token")
+
+describe "resetTwoFactor", ->
+  callbacks =
+    success: () ->
+    error:   () ->
+
+  beforeEach ->
+    spyOn(callbacks, "success")
+    spyOn(callbacks, "error")
+
+  it "shoud call postTokenEndpoint with token", ->
+    spyOn(WTE, "postTokenEndpoint")
+    WTE.resetTwoFactor("token", callbacks.success, callbacks.error)
+    expect(WTE.postTokenEndpoint).toHaveBeenCalled()
+    expect(WTE.postTokenEndpoint.calls.argsFor(0)[1]).toEqual("token")
+
+describe "authorizeApprove", ->
+  callbacks =
+    success: () ->
+    error:   () ->
+
+  beforeEach ->
+    spyOn(callbacks, "success")
+    spyOn(callbacks, "error")
+
+  it "shoud call postTokenEndpoint with token", ->
+    spyOn(WTE, "postTokenEndpoint")
+    WTE.authorizeApprove("token", callbacks.success, callbacks.error)
+    expect(WTE.postTokenEndpoint).toHaveBeenCalled()
+    expect(WTE.postTokenEndpoint.calls.argsFor(0)[1]).toEqual("token")
+
+  it "should successCallback if same browser", ->
+    pending()
+
+  it "should differentBrowserCallback", ->
+    pending()
+
+  it "should pass differentBrowserApproved along", ->
+    pending()
