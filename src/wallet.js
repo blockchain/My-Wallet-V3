@@ -11,6 +11,7 @@ var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
 var BIP39 = require('bip39');
+var Q = require('q')
 
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
@@ -822,7 +823,8 @@ MyWallet.resendTwoFactorSms = function(user_guid, success, error) {
  * @param {function()} error Error callback function.
  */
 // used in the frontend
-MyWallet.recoverGuid = function(user_email, captcha, success, error) {
+MyWallet.recoverGuid = function(user_email, captcha) {
+  var defer = Q.defer();
 
   var data = {
     method: 'recover-wallet',
@@ -833,19 +835,21 @@ MyWallet.recoverGuid = function(user_email, captcha, success, error) {
   }
   var s = function(obj) {
     if(obj.success) {
-      success(obj.message);
+      defer.resolve(obj.message);
     } else {
-      error(obj.message);
+      defer.reject(obj.message);
     }
   }
   var e = function(e) {
     if(e.responseJSON && e.responseJSON.initial_error) {
-      error(e.responseJSON.initial_error);
+      defer.reject(e.responseJSON.initial_error);
     } else {
-      error();
+      defer.reject();
     }
   }
   API.request("POST", 'wallet', data, true).then(s).catch(e);
+
+  return defer.promise;
 };
 
 /**
@@ -866,9 +870,9 @@ MyWallet.requestTwoFactorReset = function(
   user_new_email,
   secret,
   message,
-  captcha,
-  success,
-  error) {
+  captcha) {
+
+  var defer = Q.defer();
 
   var data = {
     method: 'reset-two-factor-form',
@@ -883,15 +887,17 @@ MyWallet.requestTwoFactorReset = function(
   }
   var s = function(obj) {
     if(obj.success) {
-      success(obj.message);
+      defer.resolve(obj.message);
     } else {
-      error(obj.message);
+      defer.reject(obj.message);
     }
   }
   var e = function(e) {
-    error(e);
+    defer.reject(e);
   }
   API.request("POST", 'wallet', data, true).then(s).catch(e);
+
+  return defer.promise;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

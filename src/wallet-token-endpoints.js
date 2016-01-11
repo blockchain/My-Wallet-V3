@@ -4,28 +4,28 @@ var assert = require('assert');
 
 var API = require('./api');
 var Helpers = require('./helpers');
+var Q = require('q')
 
-function postTokenEndpoint(method, token, extraParams, successCallback, errorCallback) {
+function postTokenEndpoint(method, token, extraParams) {
   assert(token, "Token required");
   assert(extraParams, "Extra params dictionary required");
-  assert(successCallback, "Success callback required");
-  assert(errorCallback, "Error callback required");
+
+  var defer = Q.defer();
 
   var success = function(res) {
-    console.log(res);
     if(res && res.success !== undefined) {
       if(res.success) {
-        successCallback(res);
+        defer.resolve(res);
       } else {
-        errorCallback(res);
+        defer.reject(res);
       }
     } else {
-      errorCallback({error: 'TOKEN_ENDPOINT_UNEXPECTED_RESPONSE'});
+      defer.reject({error: 'TOKEN_ENDPOINT_UNEXPECTED_RESPONSE'});
     }
   }
 
   var error = function (err) {
-    errorCallback(err);
+    defer.reject(err);
   }
 
   var params = { token: token, method : method, api_code : API.API_CODE};
@@ -35,26 +35,34 @@ function postTokenEndpoint(method, token, extraParams, successCallback, errorCal
   }
 
   API.request("POST", 'wallet', params, false).then(success).catch(error);
+
+  return defer.promise;
 }
 
-function verifyEmail(token, successCallback, errorCallback) {
-  this.postTokenEndpoint('verify-email-token', token, {}, successCallback, errorCallback)
+function verifyEmail(token) {
+  return this.postTokenEndpoint('verify-email-token', token, {})
 }
 
-function unsubscribe(token, successCallback, errorCallback) {
-  this.postTokenEndpoint('unsubscribe', token, {}, successCallback, errorCallback)
+function unsubscribe(token) {
+  return this.postTokenEndpoint('unsubscribe', token, {})
 }
 
-function authorizeApprove(token, successCallback, differentBrowserCallback, differentBrowserApproved, errorCallback) {
+function authorizeApprove(token, differentBrowserCallback, differentBrowserApproved) {
   assert(Helpers.isBoolean(differentBrowserApproved) || differentBrowserApproved == null, "differentBrowserApproved must be null, false or true");
+
+  var defer = Q.defer();
+
+  var success = function(res) {
+    defer.resolve(res);
+  }
 
   var error = function (res) {
     if (res.success === null) {
       differentBrowserCallback(res);
     } else if (res.success === false && res["request-denied"]) {
-      successCallback();
+      defer.resolve(res);
     } else {
-      errorCallback(res);
+      defer.reject(res);
     }
   }
 
@@ -64,11 +72,15 @@ function authorizeApprove(token, successCallback, differentBrowserCallback, diff
     extraParams.confirm_approval = differentBrowserApproved;
   }
 
-  this.postTokenEndpoint('authorize-approve', token, extraParams, successCallback, error)
+  this.postTokenEndpoint('authorize-approve', token, extraParams)
+    .then(success)
+    .catch(error)
+
+  return defer.promise;
 }
 
-function resetTwoFactor(token, successCallback, errorCallback) {
-  this.postTokenEndpoint('reset-two-factor-token', token, {}, successCallback, errorCallback)
+function resetTwoFactor(token) {
+  return this.postTokenEndpoint('reset-two-factor-token', token, {})
 }
 
 module.exports = {
