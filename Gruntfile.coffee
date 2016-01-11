@@ -159,7 +159,7 @@ module.exports = (grunt) ->
           file: 'Changelog.md',
           app_name : 'Blockchain Wallet V3',
           intro : 'Recent changes'
-          grep_commits: '^fix|^feat|^docs|^refactor|^chore|BREAKING'
+          grep_commits: '^fix|^feat|^docs|^refactor|^chore|^test|BREAKING'
           repo_url: 'https://github.com/blockchain/My-Wallet-V3'
 
 

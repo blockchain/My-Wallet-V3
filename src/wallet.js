@@ -11,6 +11,7 @@ var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
 var BIP39 = require('bip39');
+var Q = require('q')
 
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
@@ -28,36 +29,6 @@ var BlockchainSocket = require('./blockchain-socket');
 var isInitialized = false;
 MyWallet.wallet = undefined;
 MyWallet.ws = new BlockchainSocket();
-
-// TODO: Remove once beta period is over
-MyWallet.whitelistWallet = function(options, success, error) {
-  assert(options.guid, 'Error: need guid to whitelist');
-  assert(['alpha', 'staging', 'dev'].some(function(sd) {
-    return sd === options.subdomain;
-  }), 'Error: must specify alpha, staging, or dev as subdomain');
-
-  var url = 'https://' + options.subdomain + '.blockchain.info/whitelist_guid';
-  var request = new XMLHttpRequest();
-  request.open('POST', url);
-  request.timeout = API.AJAX_TIMEOUT;
-  request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-  request.onload = function (e) {
-    if (request.readyState === 4) {
-      if (request.status === 200) {
-        success && success(JSON.parse(request.responseText));
-      } else {
-        error && error(request.responseText);
-      }
-    }
-  };
-  request.onerror = function (e) {
-    error && error(request.responseText);
-  };
-  request.ontimeout = function() {
-    error && error("timeout request");
-  };
-  request.send(API.encodeFormData(options));
-};
 
 // used on MyWallet
 MyWallet.securePost = function(url, data, success, error) {
@@ -842,6 +813,91 @@ MyWallet.resendTwoFactorSms = function(user_guid, success, error) {
     }
   }
   API.request("GET", 'wallet/'+user_guid, data, true, false).then(s).catch(e);
+};
+
+/**
+ * Trigger an email with the users wallet guid(s)
+ * @param {string} user_email Registered mail address.
+ * @param {string} captcha Spam protection
+ * @param {function()} success Success callback function.
+ * @param {function()} error Error callback function.
+ */
+// used in the frontend
+MyWallet.recoverGuid = function(user_email, captcha) {
+  var defer = Q.defer();
+
+  var data = {
+    method: 'recover-wallet',
+    email : user_email,
+    captcha: captcha,
+    ct : (new Date()).getTime(),
+    api_code : API.API_CODE
+  }
+  var s = function(obj) {
+    if(obj.success) {
+      defer.resolve(obj.message);
+    } else {
+      defer.reject(obj.message);
+    }
+  }
+  var e = function(e) {
+    if(e.responseJSON && e.responseJSON.initial_error) {
+      defer.reject(e.responseJSON.initial_error);
+    } else {
+      defer.reject();
+    }
+  }
+  API.request("POST", 'wallet', data, true).then(s).catch(e);
+
+  return defer.promise;
+};
+
+/**
+ * Trigger the 2FA reset process
+ * @param {string} user_guid User GUID.
+ * @param {string} user_email Registered email address.
+ * @param {string} user_new_email Optional new email address.
+ * @param {string} secret
+ * @param {string} message
+ * @param {string} captcha Spam protection
+ * @param {function()} success Success callback function.
+ * @param {function()} error Error callback function.
+ */
+// used in the frontend
+MyWallet.requestTwoFactorReset = function(
+  user_guid,
+  user_email,
+  user_new_email,
+  secret,
+  message,
+  captcha) {
+
+  var defer = Q.defer();
+
+  var data = {
+    method: 'reset-two-factor-form',
+    guid: user_guid,
+    email: user_email,
+    contact_email: user_new_email,
+    secret_phrase: secret,
+    message: message,
+    kaptcha: captcha,
+    ct : (new Date()).getTime(),
+    api_code : API.API_CODE
+  }
+  var s = function(obj) {
+    if(obj.success) {
+      defer.resolve(obj.message);
+    } else {
+      defer.reject(obj.message);
+    }
+  }
+  var e = function(e) {
+    defer.reject(e);
+  }
+  API.request("POST", 'wallet', data, true).then(s).catch(e);
+
+  return defer.promise;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

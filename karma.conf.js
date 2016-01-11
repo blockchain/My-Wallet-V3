@@ -62,6 +62,7 @@ module.exports = function(karma) {
     },
 
     files: [
+      'tests/wallet_token_endpoints.js.coffee',
       // 'src/shared.js',
       // 'tests/**/*.coffee',
       // Or specify individual test files:
@@ -78,7 +79,7 @@ module.exports = function(karma) {
       'tests/keyring_spec.js.coffee',
       'tests/hdaccount_spec.js.coffee',
       'tests/hdwallet_spec.js.coffee',
-      'tests/blockchain_wallet_spec.js.coffee'
+      'tests/blockchain_wallet_spec.js.coffee',
     ]
   };
 

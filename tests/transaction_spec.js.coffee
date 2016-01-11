@@ -663,7 +663,6 @@ describe "Transaction", ->
         expect(MyWallet.processTransaction(tx).to).toEqual(transaction.to)
 
       it "should have the correct amount", ->
-        console.log("Start test...")
         expect(MyWallet.processTransaction(tx).result).toEqual(transaction.result)
 
       it "should not be intra wallet", ->

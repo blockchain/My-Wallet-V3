@@ -51,7 +51,17 @@ API.prototype.request = function(action, method, data, withCred) {
 
   var checkStatus = function (response) {
     if (response.status >= 200 && response.status < 300) {
-      return data.format === 'json' ? response.json() : response.text();
+      if(
+        response.headers.get('content-type') &&
+        response.headers.get('content-type').indexOf("application/json") > -1
+      ) {
+        return response.json();
+      } else if (data.format === 'json') {
+        return response.json()
+      } else {
+        return response.text();
+
+      }
     } else {
       return response.text().then(Q.reject);
     }

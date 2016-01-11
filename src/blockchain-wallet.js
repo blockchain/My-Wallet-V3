@@ -827,20 +827,3 @@ Wallet.prototype._getPrivateKey = function(accountIndex, path, secondPassword) {
   var kr = new KeyRing(xpriv, null);
   return kr.privateKeyFromPath(path).toWIF();
 };
-
-// TODO: Remove once beta period is over
-Wallet.prototype.whitelistWallet = function (secret, subdomain, email, name) {
-  var defer = RSVP.defer();
-  MyWallet.whitelistWallet(
-    {
-      guid: this._guid,
-      subdomain: subdomain,
-      name: name,
-      email: email,
-      secret: secret
-    },
-    defer.resolve,
-    defer.reject
-  );
-  return defer.promise;
-};
