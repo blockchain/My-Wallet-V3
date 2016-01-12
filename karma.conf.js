@@ -71,7 +71,6 @@ module.exports = function(karma) {
       // 'tests/claim_redeem_spec.js.coffee',      //(requires refactor)
       'tests/transaction_spec.js.coffee',          //(OK)
       'tests/transaction_spend_spec.js.coffee',    //(OK)
-      // 'tests/my_wallet_spec.js.coffee',         //(FAIL)      // This seems to leave some global state around, see below:
       'tests/wallet_spec.js.coffee',               //(PARTIAL)
       'tests/bip38_spec.js.coffee',                //(OK)
       'tests/address_spec.js.coffee',
@@ -80,6 +79,7 @@ module.exports = function(karma) {
       'tests/hdaccount_spec.js.coffee',
       'tests/hdwallet_spec.js.coffee',
       'tests/blockchain_wallet_spec.js.coffee',
+      'tests/wallet_network_spec.js.coffee'
     ]
   };
 

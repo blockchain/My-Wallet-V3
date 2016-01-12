@@ -6,9 +6,9 @@ var CryptoJS = require('crypto-js');
 var MyWallet = require('./wallet');
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
-var API = require('./api');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
+var WalletNetwork = require('./wallet-network')
 
 // Save the javascript wallet to the remote server
 function insertWallet(guid, sharedKey, password, extra, successcallback, errorcallback, decryptWalletProgress) {
@@ -73,34 +73,10 @@ function insertWallet(guid, sharedKey, password, extra, successcallback, errorca
   }
 }
 
-function generateUUIDs(n, success, error) {
-
-  var succ = function(data) {
-    if (data.uuids && data.uuids.length == n) {
-      success(data.uuids);
-    } else {
-      error('Unknown Error');
-    }
-  };
-  var err = function(data) {
-    error(data);
-  };
-
-  var data = {
-      format: 'json'
-    , n: n
-    , api_code : API.API_CODE
-  };
-
-  API.retry(API.request.bind(API, "GET", "uuid-generator", data))
-    .then(succ)
-    .catch(err);
-};
-
 function generateNewWallet(password, email, firstAccountName, success, error, isHD, generateUUIDProgress, decryptWalletProgress) {
   isHD = Helpers.isBoolean(isHD) ? isHD : true;
   generateUUIDProgress && generateUUIDProgress();
-  this.generateUUIDs(2, function(uuids) {
+  WalletNetwork.generateUUIDs(2).then(function(uuids) {
     var guid = uuids[0];
     var sharedKey = uuids[1];
 
@@ -129,10 +105,9 @@ function generateNewWallet(password, email, firstAccountName, success, error, is
 
     Wallet.new(guid, sharedKey, firstAccountName, saveWallet, isHD);
 
-  }, error);
+  }).catch(error);
 };
 
 module.exports = {
-  generateUUIDs: generateUUIDs,
   generateNewWallet: generateNewWallet
 };
