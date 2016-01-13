@@ -12,6 +12,7 @@ var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
 var BIP39 = require('bip39');
 var RSVP = require('rsvp');
+var q = require('q');
 
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
@@ -23,6 +24,9 @@ var MyWallet = require('./wallet'); // This cyclic import should be avoided once
 var ImportExport = require('./import-export');
 var API = require('./api');
 var Tx = require('./wallet-transaction');
+var shared = require('./shared');
+var BlockchainSettingsAPI = require('./blockchain-settings-api');
+var KeyRing  = require('./keyring');
 
 ////////////////////////////////////////////////////////////////////////////////
 // Wallet
@@ -40,7 +44,7 @@ function Wallet(object) {
   this._dpasswordhash     = obj.dpasswordhash;
   //options
   this._pbkdf2_iterations        = obj.options.pbkdf2_iterations;
-  this._fee_per_kb               = obj.options.fee_per_kb || 10000;
+  this._fee_per_kb               = obj.options.fee_per_kb == null ? 10000 : obj.options.fee_per_kb;
   this._html5_notifications      = obj.options.html5_notifications;
   this._logout_time              = obj.options.logout_time;
 
@@ -315,9 +319,9 @@ Wallet.prototype._updateWalletInfo = function(obj) {
 
   if (obj.info) {
     if (obj.info.symbol_local)
-      setLocalSymbol(obj.info.symbol_local);
+      shared.setLocalSymbol(obj.info.symbol_local);
     if (obj.info.symbol_btc)
-      setBTCSymbol(obj.info.symbol_btc);
+      shared.setBTCSymbol(obj.info.symbol_btc);
     if (obj.info.notice)
       WalletStore.sendEvent("msg", {type: "error", message: obj.info.notice});
   }
@@ -342,22 +346,29 @@ Wallet.prototype._updateWalletInfo = function(obj) {
       if (account){
         account.balance      = e.final_balance;
         account.n_tx         = e.n_tx;
-        account.receiveIndex = e.account_index;
+        account.lastUsedReceiveIndex = e.account_index;
+        account.receiveIndex = Math.max(account.lastUsedReceiveIndex, account.maxLabeledReceiveIndex);
+
         account.changeIndex  = e.change_index;
+
         if (account.getLabelForReceivingAddress(account.receiveIndex)) {
           account.incrementReceiveIndex();
         };
       };
     }
     var address = this.activeKey(e.address);
-    if (address){ address.balance = e.final_balance; };
+    if (address){
+      address.balance       = e.final_balance;
+      address.totalReceived = e.total_received;
+      address.totalSent     = e.total_sent;
+    };
   };
 
   obj.addresses.forEach(updateAccountAndAddressesInfo.bind(this));
 
   this.numberTxFetched += obj.txs.length;
   for (var i = 0; i < obj.txs.length; ++i) {
-    var tx = TransactionFromJSON(obj.txs[i]);
+    var tx = shared.TransactionFromJSON(obj.txs[i]);
     WalletStore.pushTransaction(tx);
   }
 
@@ -387,7 +398,7 @@ Wallet.prototype.fetchMoreTransactions = function(didFetchOldestTransaction) {
   var list = this.activeAddresses.concat(xpubs);
   var txListP = API.getHistory(list, null, this.numberTxFetched, this.txPerScroll);
   function processTxs(data) {
-    var pTx = data.txs.map(MyWallet.processTransaction.compose(TransactionFromJSON));
+    var pTx = data.txs.map(MyWallet.processTransaction.compose(shared.TransactionFromJSON));
     this.numberTxFetched += pTx.length;
     if (pTx.length < this.txPerScroll) { didFetchOldestTransaction(); }
     return pTx;
@@ -454,14 +465,14 @@ Wallet.prototype.importLegacyAddress = function(addr, label, secPass, bipPass){
 
   var importAddress = (function(key) {
     var ad = Address.import(key, label);
-    if (this.containsLegacyAddress(ad)) { defer.reject('presentInWallet'); };
+    if (this.containsLegacyAddress(ad)) { defer.reject('presentInWallet'); return;};
     if (this.isDoubleEncrypted) {
       assert(secPass, "Error: second password needed");
       var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, "enc");
       ad.encrypt(cipher).persist();
     };
     this._addresses[ad.address] = ad;
-    ws.send('{"op":"addr_sub", "addr":"'+ad.address+'"}');
+    MyWallet.ws.send('{"op":"addr_sub", "addr":"'+ad.address+'"}');
     defer.resolve(ad);
     MyWallet.syncWallet();
     this.getHistory();
@@ -602,22 +613,25 @@ Wallet.reviver = function(k,v){
   return v;
 }
 
-function isAccountNonUsed (account) {
+function isAccountNonUsed (account, progress) {
   var isNonUsed = function(obj){
+    if (progress) { progress(obj);}
     return obj.addresses[0].account_index === 0 && obj.addresses[0].change_index === 0;
   };
   return API.getHistory([account.extendedPublicKey], 0, 0, 50).then(isNonUsed);
 };
 
-Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
+Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, startedRestoreHDWallet, progress){
   // wallet restoration
+  startedRestoreHDWallet && startedRestoreHDWallet;
   var self = this;
   var seedHex = BIP39.mnemonicToEntropy(mnemonic);
   var pass39  = Helpers.isString(bip39Password) ? bip39Password : "";
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
   var newHDwallet = HDWallet.restore(seedHex, pass39, encoder);
   this._hd_wallets[0] = newHDwallet;
-  var account = this.newAccount("Account 1", pw, 0, undefined, true);
+  var account = this.newAccount("My Bitcoin Wallet 1", pw, 0, undefined, true);
+  API.getHistory([account.extendedPublicKey], 0, 0, 50).then(progress);
   var accountIndex  = 1;
   var AccountsGap = 10;
 
@@ -631,21 +645,54 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw){
       return true;
     } else{
       accountIndex++;
-      account = self.newAccount("Account " + accountIndex.toString(), pw, 0, undefined, true);
-      return isAccountNonUsed(account).then(go);
+      account = self.newAccount("My Bitcoin Wallet " + accountIndex.toString(), pw, 0, undefined, true);
+      return isAccountNonUsed(account, progress).then(go);
     };
   };
 
   var saveAndReturn = function (){
-    MyWallet.syncWallet();
-    return newHDwallet;
+    return q.Promise(MyWallet.syncWallet);
   };
 
   // it returns a promise of the newHDWallet
   return untilNEmptyAccounts(AccountsGap)
     .then(saveAndReturn)
-    .catch(function(){error("get_history_error")});
 };
+
+// Enables email notifications for receiving bitcoins. Only for imported
+// and labeled HD addresses.
+Wallet.prototype.enableNotifications = function(success, error) {
+  assert(success, "Success callback required");
+  assert(error, "Error callback required");
+
+  BlockchainSettingsAPI.enableEmailReceiveNotifications(
+    function() {
+      WalletStore.setSyncPubKeys(true);
+      MyWallet.syncWallet();
+      success();
+    },
+    function() {
+      error();
+    }
+  )
+}
+
+Wallet.prototype.disableNotifications = function(success, error) {
+  assert(success, "Success callback required");
+  assert(error, "Error callback required");
+
+  BlockchainSettingsAPI.disableAllNotifications(
+    function() {
+      WalletStore.setSyncPubKeys(false);
+      MyWallet.syncWallet();
+      success();
+    },
+    function() {
+      error();
+    }
+  );
+
+}
 
 // creating a new wallet object
 Wallet.new = function(guid, sharedKey, firstAccountLabel, success, isHD){
@@ -709,6 +756,16 @@ Wallet.prototype.getAddressBookLabel = function(address){
   return this._address_book[address];
 };
 
+Wallet.prototype.addAddressBookEntry = function(address, label){
+  this._address_book[address] = label;
+  MyWallet.syncWallet();
+};
+
+Wallet.prototype.removeAddressBookEntry = function(address){
+  delete this._address_book[address];
+  MyWallet.syncWallet();
+};
+
 Wallet.prototype.getNote = function(txHash){
   return this._tx_notes[txHash];
 };
@@ -736,11 +793,13 @@ Wallet.prototype.changePbkdf2Iterations = function(newIterations, password){
   if (newIterations !== this._pbkdf2_iterations) {
     if (this.isDoubleEncrypted) {
       this.decrypt(password);
-      this._pbkdf2_iterations = newIterations;
+      this._pbkdf2_iterations = newIterations;         // sec pass iterations
+      WalletStore.setPbkdf2Iterations(newIterations);  // main pass iterations
       this.encrypt(password);
     }
     else { // no double encrypted wallet
-      this._pbkdf2_iterations = newIterations;
+      this._pbkdf2_iterations = newIterations;        // sec pass iterations
+      WalletStore.setPbkdf2Iterations(newIterations); // main pass iterations
       MyWallet.syncWallet();
     };
   };
@@ -758,19 +817,13 @@ Wallet.prototype.getPrivateKeyForAddress = function(address, secondPassword) {
   return pk;
 };
 
-// TODO: Remove once beta period is over
-Wallet.prototype.whitelistWallet = function (secret, subdomain, email, name) {
-  var defer = RSVP.defer();
-  MyWallet.whitelistWallet(
-    {
-      guid: this._guid,
-      subdomain: subdomain,
-      name: name,
-      email: email,
-      secret: secret
-    },
-    defer.resolve,
-    defer.reject
-  );
-  return defer.promise;
+Wallet.prototype._getPrivateKey = function(accountIndex, path, secondPassword) {
+  assert(this.hdwallet.isValidAccountIndex(accountIndex), "Error: account non-existent");
+  assert(Helpers.isString(path), "Error: path must be an string of the form 'M/0/27'");
+  var maybeXpriv = this.hdwallet.accounts[accountIndex].extendedPrivateKey;
+  var xpriv = this.isDoubleEncrypted ?
+    WalletCrypto.decryptSecretWithSecondPassword(
+      maybeXpriv , secondPassword, this.sharedKey, this.pbkdf2_iterations) : maybeXpriv;
+  var kr = new KeyRing(xpriv, null);
+  return kr.privateKeyFromPath(path).toWIF();
 };

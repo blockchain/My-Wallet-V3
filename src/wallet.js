@@ -11,6 +11,7 @@ var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
 var BIP39 = require('bip39');
+var Q = require('q')
 
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
@@ -22,39 +23,12 @@ var Transaction = require('./transaction');
 var API = require('./api');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
+var shared = require('./shared');
+var BlockchainSocket = require('./blockchain-socket');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
-
-// TODO: Remove once beta period is over
-MyWallet.whitelistWallet = function(options, success, error) {
-  assert(options.guid, 'Error: need guid to whitelist');
-  assert(['alpha', 'staging', 'dev'].some(function(sd) {
-    return sd === options.subdomain;
-  }), 'Error: must specify alpha, staging, or dev as subdomain');
-
-  var url = 'https://' + options.subdomain + '.blockchain.info/whitelist_guid';
-  var request = new XMLHttpRequest();
-  request.open('POST', url);
-  request.timeout = API.AJAX_TIMEOUT;
-  request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-  request.onload = function (e) {
-    if (request.readyState === 4) {
-      if (request.status === 200) {
-        success && success(JSON.parse(request.responseText));
-      } else {
-        error && error(request.responseText);
-      }
-    }
-  };
-  request.onerror = function (e) {
-    error && error(request.responseText);
-  };
-  request.ontimeout = function() {
-    error && error("timeout request");
-  };
-  request.send(API.encodeFormData(options));
-};
+MyWallet.ws = new BlockchainSocket();
 
 // used on MyWallet
 MyWallet.securePost = function(url, data, success, error) {
@@ -132,15 +106,15 @@ MyWallet.addPrivateKey = function(key, opts, second_password) {
   if (WalletStore.addLegacyAddress(addr, encoded)) {
     addresses[addr].tag = 1; //Mark as unsynced
     addresses[addr].created_time = opts.created_time ? opts.created_time : 0; //Stamp With Creation time
-    addresses[addr].created_device_name = opts.app_name ? opts.app_name : APP_NAME; //Created Device
-    addresses[addr].created_device_version = opts.app_version ? opts.app_version : APP_VERSION; //Created App Version
+    addresses[addr].created_device_name = opts.app_name ? opts.app_name : shared.APP_NAME; //Created Device
+    addresses[addr].created_device_version = opts.app_version ? opts.app_version : shared.APP_VERSION; //Created App Version
 
     if (addresses[addr].priv != encoded)
       throw 'Address priv does not match encoded';
 
     //Subscribe to transaction updates through websockets
     try {
-      ws.send('{"op":"addr_sub", "addr":"'+addr+'"}');
+      MyWallet.ws.send('{"op":"addr_sub", "addr":"'+addr+'"}');
     } catch (e) { }
   } else {
     throw 'Could not add key. This key already exists in your wallet.';
@@ -187,14 +161,19 @@ MyWallet.generateNewMiniPrivateKey = function() {
 ////////////////////////////////////////////////////////////////////////////////
 
 // used locally
-function wsSuccess(ws) {
+function socketConnect() {
+  MyWallet.ws.connect(onOpen, onMessage, onClose);
+
   var last_on_change = null;
 
-  ws.onmessage = function(message) {
+  function onMessage(message) {
     var obj = null;
 
+    if (!(typeof window === 'undefined')) {
+      message = message.data;
+    }
     try {
-      obj = JSON.parse(message.data);
+      obj = JSON.parse(message);
     }
     catch (e) {
       console.log('Websocket error: could not parse message data as JSON: ' + message);
@@ -214,7 +193,7 @@ function wsSuccess(ws) {
       }
 
     } else if (obj.op == 'utx') {
-      var tx = TransactionFromJSON(obj.x);
+      var tx = shared.TransactionFromJSON(obj.x);
       var tx_processed = MyWallet.processTransaction(tx);
       var tx_account = tx_processed.to.accounts[0];
 
@@ -225,7 +204,7 @@ function wsSuccess(ws) {
       }
 
       MyWallet.wallet.finalBalance += tx_processed.result;
-
+      MyWallet.wallet.getHistory();
 
       if (tx_account) {
         var account = MyWallet.wallet.hdwallet.accounts[tx_account.index];
@@ -243,15 +222,11 @@ function wsSuccess(ws) {
         }
       }
 
-      if (tx_processed.to.legacyAddresses || tx_processed.from.legacyAddresses){
-        MyWallet.wallet.getHistory();
-      };
-
       MyWallet.wallet.numberTxTotal   += 1;
       MyWallet.wallet.numberTxFetched += 1;
       tx.setConfirmations(0);
       WalletStore.pushTransaction(tx);
-      playSound('beep');
+      shared.playSound('beep');
       WalletStore.sendEvent('on_tx');
 
     }  else if (obj.op == 'block') {
@@ -266,12 +241,12 @@ function wsSuccess(ws) {
           }
         }
       }
-      WalletStore.setLatestBlock(BlockFromJSON(obj.x));
+      WalletStore.setLatestBlock(shared.BlockFromJSON(obj.x));
       WalletStore.sendEvent('on_block');
     }
   };
 
-  ws.onopen = function() {
+  function onOpen() {
     WalletStore.sendEvent('ws_on_open');
 
     var msg = '{"op":"blocks_sub"}';
@@ -291,12 +266,11 @@ function wsSuccess(ws) {
       WalletStore.sendEvent("msg", {type: "error", message: 'error with websocket'});
     }
 
-    ws.send(msg);
+    MyWallet.ws.send(msg);
   };
 
-  ws.onclose = function() {
+  function onClose() {
     WalletStore.sendEvent('ws_on_close');
-
   };
 }
 
@@ -463,7 +437,7 @@ MyWallet.processTransaction = function(tx) {
     transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
   }
 
-  if (transaction.from.account == null && transaction.from.legacyAddresses == null) {
+  if (transaction.from.account == null && transaction.from.legacyAddresses == null && transaction.from.externalAddresses != null) {
     var fromAmount = 0;
     for (var i in transaction.to.accounts) {
       fromAmount += transaction.to.accounts[i].amount;
@@ -634,7 +608,7 @@ MyWallet.isValidateBIP39Mnemonic = function(mnemonic) {
 MyWallet.listenToHDWalletAccount = function(accountExtendedPublicKey) {
   try {
     var msg = '{"op":"xpub_sub", "xpub":"'+ accountExtendedPublicKey +'"}';
-    ws.send(msg);
+    MyWallet.ws.send(msg);
   } catch (e) { }
 };
 // used only once locally
@@ -841,6 +815,91 @@ MyWallet.resendTwoFactorSms = function(user_guid, success, error) {
   API.request("GET", 'wallet/'+user_guid, data, true, false).then(s).catch(e);
 };
 
+/**
+ * Trigger an email with the users wallet guid(s)
+ * @param {string} user_email Registered mail address.
+ * @param {string} captcha Spam protection
+ * @param {function()} success Success callback function.
+ * @param {function()} error Error callback function.
+ */
+// used in the frontend
+MyWallet.recoverGuid = function(user_email, captcha) {
+  var defer = Q.defer();
+
+  var data = {
+    method: 'recover-wallet',
+    email : user_email,
+    captcha: captcha,
+    ct : (new Date()).getTime(),
+    api_code : API.API_CODE
+  }
+  var s = function(obj) {
+    if(obj.success) {
+      defer.resolve(obj.message);
+    } else {
+      defer.reject(obj.message);
+    }
+  }
+  var e = function(e) {
+    if(e.responseJSON && e.responseJSON.initial_error) {
+      defer.reject(e.responseJSON.initial_error);
+    } else {
+      defer.reject();
+    }
+  }
+  API.request("POST", 'wallet', data, true).then(s).catch(e);
+
+  return defer.promise;
+};
+
+/**
+ * Trigger the 2FA reset process
+ * @param {string} user_guid User GUID.
+ * @param {string} user_email Registered email address.
+ * @param {string} user_new_email Optional new email address.
+ * @param {string} secret
+ * @param {string} message
+ * @param {string} captcha Spam protection
+ * @param {function()} success Success callback function.
+ * @param {function()} error Error callback function.
+ */
+// used in the frontend
+MyWallet.requestTwoFactorReset = function(
+  user_guid,
+  user_email,
+  user_new_email,
+  secret,
+  message,
+  captcha) {
+
+  var defer = Q.defer();
+
+  var data = {
+    method: 'reset-two-factor-form',
+    guid: user_guid,
+    email: user_email,
+    contact_email: user_new_email,
+    secret_phrase: secret,
+    message: message,
+    kaptcha: captcha,
+    ct : (new Date()).getTime(),
+    api_code : API.API_CODE
+  }
+  var s = function(obj) {
+    if(obj.success) {
+      defer.resolve(obj.message);
+    } else {
+      defer.reject(obj.message);
+    }
+  }
+  var e = function(e) {
+    defer.reject(e);
+  }
+  API.request("POST", 'wallet', data, true).then(s).catch(e);
+
+  return defer.promise;
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 MyWallet.login = function ( user_guid
                           , shared_key
@@ -891,7 +950,8 @@ MyWallet.login = function ( user_guid
     }
 
     var error = function(e) {
-       var obj = JSON.parse(e);
+       console.log(e);
+       var obj = 'object' === typeof e ? e : JSON.parse(e);
        if(obj && obj.initial_error && !obj.authorization_required) {
          other_error(obj.initial_error);
          return;
@@ -931,7 +991,7 @@ MyWallet.login = function ( user_guid
     }
     var error = function (response) {
      WalletStore.setRestoringWallet(false);
-     wrong_two_factor_code(response.responseText);
+     wrong_two_factor_code(response);
     }
 
     var myData = { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : API.API_CODE};
@@ -943,8 +1003,6 @@ MyWallet.login = function ( user_guid
     if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
      WalletStore.setEncryptedWalletData(obj.payload);
     }
-
-    war_checksum = obj.war_checksum;
 
     if (obj.language && WalletStore.getLanguage() != obj.language) {
      WalletStore.setLanguage(obj.language);
@@ -1037,13 +1095,13 @@ MyWallet.getIsInitialized = function() {
 // used once
 function setIsInitialized() {
   if (isInitialized) return;
-  webSocketConnect(wsSuccess);
+  socketConnect();
   isInitialized = true;
 };
 
 // used on iOS
 MyWallet.connectWebSocket = function() {
-  webSocketConnect(wsSuccess);
+  socketConnect();
 };
 ////////////////////////////////////////////////////////////////////////////////
 // This should replace backup functions
@@ -1109,7 +1167,20 @@ function syncWallet (successcallback, errorcallback) {
         }
 
         if (WalletStore.isSyncPubKeys()) {
-          data.active = MyWallet.wallet.activeAddresses.join('|');
+          // Include HD addresses unless in lame mode:
+          var hdAddresses = (
+            MyWallet.wallet.hdwallet != undefined &&
+            MyWallet.wallet.hdwallet.accounts != undefined
+          ) ? [].concat.apply([],
+            MyWallet.wallet.hdwallet.accounts.map(function(account) {
+              return account.labeledReceivingAddresses
+            })) : [];
+          data.active = [].concat.apply([],
+            [
+              MyWallet.wallet.activeAddresses,
+              hdAddresses
+            ]
+          ).join('|');
         }
 
         MyWallet.securePost(
@@ -1133,7 +1204,7 @@ function syncWallet (successcallback, errorcallback) {
             }
           , function(e) {
             WalletStore.enableLogout();
-            _errorcallback(e.responseText);
+            _errorcallback(e);
           }
         );
 
@@ -1236,20 +1307,24 @@ function nKeys(obj) {
 };
 
 // used on frontend
-MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error) {
+MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
   var walletSuccess = function(guid, sharedKey, password) {
     WalletStore.unsafeSetPassword(password);
     var runSuccess = function () {success({ guid: guid, sharedKey: sharedKey, password: password});}
-    MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password).then(runSuccess).catch(error);
+    MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password, undefined, startedRestoreHDWallet, accountProgress).then(runSuccess).catch(error);
   };
-  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, null, walletSuccess, error);
+  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, null, walletSuccess, error, true, generateUUIDProgress, decryptWalletProgress);
 };
 
 // used frontend and mywallet
 MyWallet.logout = function(force) {
   if (!force && WalletStore.isLogoutDisabled())
     return;
-  var reload = function() { window.location.reload(); }
+  var reload = function() {
+    try { window.location.reload(); } catch (e) {
+      console.log(e);
+    }
+  };
   var data = {format : 'plain', api_code : API.API_CODE}
   WalletStore.sendEvent('logging_out');
   API.request("GET", 'wallet/logout', data, true, false).then(reload).catch(reload);
@@ -1357,5 +1432,5 @@ function parseValueBitcoin(valueString) {
 }
 // used iOS and mywallet
 MyWallet.precisionToSatoshiBN = function(x) {
-  return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, sShift(symbol_btc)).toString()));
+  return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, shared.sShift(shared.getBTCSymbol())).toString()));
 };

@@ -1,10 +1,10 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.1.3",
+  "version": "3.5.0",
   "description": "Blockchain.info JavaScript Wallet",
-  "homepage": "https://github.com/blockchain/My-Wallet-HD",
+  "homepage": "https://github.com/blockchain/my-wallet-v3",
   "bugs": {
-    "url": "https://github.com/blockchain/My-Wallet-HD/issues"
+    "url": "https://github.com/blockchain/my-wallet-v3/issues"
   },
   "license": "ISC",
   "author": {
@@ -18,13 +18,13 @@
     "Sjors Provoost",
     "Jaume Pernas"
   ],
-  "main": "wallet.js",
+  "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/blockchain/My-Wallet-HD.git"
+    "url": "https://github.com/blockchain/my-wallet-v3.git"
   },
   "scripts": {
-    "postinstall": "cd node_modules/sjcl && ./configure --with-sha1 && make",
+    "postinstall": "cd node_modules/sjcl || cd ../sjcl && ./configure --with-sha1 && make",
     "test": "./node_modules/karma/bin/karma start karma.conf.js"
   },
   "dependencies": {
@@ -33,11 +33,14 @@
     "bitcoinjs-lib": "1.5.*",
     "bs58": "2.0.*",
     "crypto-js": "3.1.4",
+    "es6-promise": "^3.0.2",
+    "isomorphic-fetch": "^2.2.0",
     "q": "^1.4.1",
     "randombytes": "^2.0.1",
     "rsvp": "^3.1.0",
     "sjcl": "1.0.*",
     "unorm": "^1.4.1",
+    "ws": "^0.8.0",
     "xregexp": "2.0.*"
   },
   "devDependencies": {

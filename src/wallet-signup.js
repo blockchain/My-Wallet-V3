@@ -11,7 +11,7 @@ var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
 
 // Save the javascript wallet to the remote server
-function insertWallet(guid, sharedKey, password, extra, successcallback, errorcallback) {
+function insertWallet(guid, sharedKey, password, extra, successcallback, errorcallback, decryptWalletProgress) {
   assert(successcallback, "Success callback missing");
   assert(errorcallback, "Success callback missing");
   assert(guid, "GUID missing");
@@ -27,6 +27,8 @@ function insertWallet(guid, sharedKey, password, extra, successcallback, errorca
     if (crypted.length == 0) {
       throw 'Error encrypting the JSON output';
     }
+
+    decryptWalletProgress && decryptWalletProgress();
 
     //Now Decrypt the it again to double check for any possible corruption
     WalletCrypto.decryptWallet(
@@ -95,8 +97,9 @@ function generateUUIDs(n, success, error) {
     .catch(err);
 };
 
-function generateNewWallet(password, email, firstAccountName, success, error, isHD) {
+function generateNewWallet(password, email, firstAccountName, success, error, isHD, generateUUIDProgress, decryptWalletProgress) {
   isHD = Helpers.isBoolean(isHD) ? isHD : true;
+  generateUUIDProgress && generateUUIDProgress();
   this.generateUUIDs(2, function(uuids) {
     var guid = uuids[0];
     var sharedKey = uuids[1];
@@ -121,7 +124,7 @@ function generateNewWallet(password, email, firstAccountName, success, error, is
         success(guid, sharedKey, password);
       }, function(e) {
         error(e);
-      });
+      }, decryptWalletProgress);
     };
 
     Wallet.new(guid, sharedKey, firstAccountName, saveWallet, isHD);

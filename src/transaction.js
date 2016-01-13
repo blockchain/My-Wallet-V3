@@ -5,6 +5,7 @@ var Bitcoin     = require('bitcoinjs-lib');
 var randomBytes = require('randombytes');
 var Helpers     = require('./helpers');
 var MyWallet    = require('./wallet');
+var Buffer      = require('buffer').Buffer;
 
 var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAddress, listener) {
 
@@ -113,10 +114,32 @@ Transaction.prototype.randomizeOutputs = function () {
     for(var j, x, i = o.length; i > 1; j = randomNumberBetweenZeroAnd(i), x = o[--i], o[i] = o[j], o[j] = x);
     return o;
   };
-
   shuffle(this.transaction.outs);
 };
 
+/**
+ * BIP69: Sort outputs lexicographycally
+ */
+
+Transaction.prototype.sortBIP69 = function (){
+
+  var compareInputs = function(a, b) {
+    var hasha = new Buffer(a[0].hash);
+    var hashb = new Buffer(b[0].hash);
+    var x = [].reverse.call(hasha)
+    var y = [].reverse.call(hashb)
+    return x.compare(y) || a[0].index - b[0].index
+  };
+  var compareOutputs = function(a, b) {
+    return (a.value - b.value) || (a.script.buffer).compare(b.script.buffer)
+  };
+  var mix = Helpers.zip3(this.transaction.ins, this.privateKeys, this.addressesOfInputs);
+  mix.sort(compareInputs);
+  this.transaction.ins   = mix.map(function(a){return a[0];});
+  this.privateKeys       = mix.map(function(a){return a[1];});
+  this.addressesOfInputs = mix.map(function(a){return a[2];});
+  this.transaction.outs.sort(compareOutputs);
+};
 /**
  * Sign the transaction
  * @return {Object} Signed transaction

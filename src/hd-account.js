@@ -3,6 +3,7 @@
 module.exports = HDAccount;
 ////////////////////////////////////////////////////////////////////////////////
 var Bitcoin = require('bitcoinjs-lib');
+var Q       = require('q');
 var assert  = require('assert');
 var Helpers = require('./helpers');
 var WalletCrypto = require('./wallet-crypto');
@@ -30,6 +31,8 @@ function HDAccount(object){
   // computed properties
   this._keyRing       = new KeyRing(obj.xpub, obj.cache);
   this._receiveIndex  = 0;
+  // The highest receive index with transactions, as returned by the server:
+  this._lastUsedReceiveIndex = 0;
   this._changeIndex   = 0;
   this._n_tx          = 0;
   this._balance       = null;
@@ -104,6 +107,29 @@ Object.defineProperties(HDAccount.prototype, {
         throw 'Error: account.receiveIndex must be a number';
     }
   },
+  "lastUsedReceiveIndex": {
+    configurable: false,
+    get: function() { return this._lastUsedReceiveIndex;},
+    set: function(value) {
+      if(Helpers.isNumber(value))
+        this._lastUsedReceiveIndex = value;
+      else
+        throw 'Error: account.lastUsedReceiveIndex must be a number';
+    }
+  },
+  "maxLabeledReceiveIndex" : {
+    configurable: false,
+    get: function() {
+      var keys = Object.keys(this._address_labels).map(function(k) {
+        return parseInt(k);
+      });
+      if (keys.length == 0) {
+        return -1;
+      } else {
+        return Math.max.apply(null, keys);
+      }
+    }
+  },
   "changeIndex": {
     configurable: false,
     get: function() { return this._changeIndex;},
@@ -120,6 +146,16 @@ Object.defineProperties(HDAccount.prototype, {
       var denseArray = [];
       this._address_labels
         .map(function(lab,ind){denseArray.push({"index": ind, "label": lab})});
+      return denseArray;
+    }
+  },
+  "labeledReceivingAddresses": {
+    configurable: false,
+    get: function() {
+      var denseArray = [];
+      var outerThis = this;
+      this._address_labels
+        .map(function(lab,i){denseArray.push(outerThis.receiveAddressAtIndex(i))});
       return denseArray;
     }
   },
@@ -250,9 +286,29 @@ HDAccount.prototype.incrementReceiveIndexIfLast = function(index) {
 // address labels
 HDAccount.prototype.setLabelForReceivingAddress = function(index, label) {
   assert(Helpers.isNumber(index), "Error: address index must be a number");
-  assert(Helpers.isValidLabel(label), "Error: address label must be alphanumeric");
-  this._address_labels[index] = label;
-  this.incrementReceiveIndexIfLast(index);
+
+  var defer = Q.defer();
+
+  if(!Helpers.isValidLabel(label)) {
+    defer.reject("NOT_ALPHANUMERIC");
+    // Error: address label must be alphanumeric
+  } else if (index - this.lastUsedReceiveIndex >= 20) {
+    // Exceeds BIP 44 unused address gap limit
+    defer.reject("GAP");
+  } else {
+    this._address_labels[index] = label;
+    this.incrementReceiveIndexIfLast(index);
+    MyWallet.syncWallet();
+
+    defer.resolve();
+  }
+
+  return defer.promise;
+};
+
+HDAccount.prototype.removeLabelForReceivingAddress = function(index) {
+  assert(Helpers.isNumber(index), "Error: address index must be a number");
+  delete this._address_labels[index];
   MyWallet.syncWallet();
   return this;
 };

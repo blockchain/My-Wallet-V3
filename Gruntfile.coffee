@@ -17,7 +17,6 @@ module.exports = (grunt) ->
 
       mywallet:
         src: [
-          'build/shared.processed.js'
           'build/blockchain.js'
         ]
         dest: "dist/my-wallet.js"
@@ -49,7 +48,7 @@ module.exports = (grunt) ->
         browserifyOptions: { standalone: "Blockchain" }
 
       build:
-        src: ['src/index.js']
+        src: ['index.js']
         dest: 'build/blockchain.js'
 
       production:
@@ -96,11 +95,15 @@ module.exports = (grunt) ->
       npm_install_dependencies:
         command: () ->
            'cd build && npm install'
-           
+
       tag:
         command: (newVersion, message) ->
           'git tag -a -s ' + newVersion + " -m " + message + ' && git push --tags'
-          
+
+      pull_bower_repo:
+        command: () ->
+          'cd ../My-Wallet-V3-Bower && git pull'
+
       copy_changelog:
         command: () ->
           'cp Changelog.md ../My-Wallet-V3-Bower'
@@ -108,11 +111,11 @@ module.exports = (grunt) ->
       copy_dist:
         command: () ->
           'cp dist/my-wallet.* ../My-Wallet-V3-Bower/dist'
-          
+
       commit_and_push_dist:
         command: (newVersion) ->
           'cd ../My-Wallet-V3-Bower && git commit -a -m "Release ' + newVersion + '" && git push'
-      
+
       tag_bower:
         command: (newVersion, message) ->
           'cd ../My-Wallet-V3-Bower && git tag -a -s ' + newVersion + " -m " + message + " && git push --tags"
@@ -120,16 +123,16 @@ module.exports = (grunt) ->
       untag:
         command: (tag) ->
           'git tag -d ' + tag + ' && git push origin :refs/tags/' + tag + ' && cd ../My-Wallet-V3-Bower && git tag -d ' + tag + ' && git push origin :refs/tags/' + tag
-      
+
 
       npm_install:
         command: () ->
           'npm install'
-          
+
       test_once:
         command: () ->
           './node_modules/karma/bin/karma start karma.conf.js --single-run'
-          
+
       shrinkwrap:
         command: () ->
           'npm shrinkwrap'
@@ -156,7 +159,7 @@ module.exports = (grunt) ->
           file: 'Changelog.md',
           app_name : 'Blockchain Wallet V3',
           intro : 'Recent changes'
-          grep_commits: '^fix|^feat|^docs|^refactor|^chore|BREAKING'
+          grep_commits: '^fix|^feat|^docs|^refactor|^chore|^test|BREAKING'
           repo_url: 'https://github.com/blockchain/My-Wallet-V3'
 
 
@@ -213,28 +216,29 @@ module.exports = (grunt) ->
     "concat:mywallet"
     "uglify:mywallet"
   ]
-  
+
   # E.g. when shipping 3.0.1:
   # grunt bower:3.0.1:"New stuff"
   # Expects ../My-Wallet-V3-Bower to exist
   grunt.registerTask "bower", "bower(version, message)", (newVersion, message) =>
     grunt.fail.fatal("New tag version required") if !newVersion?
     grunt.fail.fatal("Message required") if !message?
-            
+
     grunt.task.run [
      "clean"
+     "shell:pull_bower_repo"
      "shell:npm_install"
      "build"
      "shell:test_once"
      "dist"
-     "shell:tag:" + newVersion + ":\"" + message + "\""
      "git_changelog"
+     "shell:tag:" + newVersion + ":\"" + message + "\""
      "shell:copy_changelog"
      "shell:copy_dist"
-     "shell:commit_and_push_dist:" + newVersion 
+     "shell:commit_and_push_dist:" + newVersion
      "shell:tag_bower:" + newVersion + ":\"" + message + "\""
     ]
-    
+
   grunt.registerTask "untag", "remove tag", (tag) =>
     grunt.task.run [
       "shell:untag:" + tag
