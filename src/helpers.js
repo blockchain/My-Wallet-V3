@@ -10,6 +10,9 @@ Helpers.isString = function (str){
 Helpers.isKey = function (bitcoinKey){
   return bitcoinKey instanceof Bitcoin.ECKey;
 };
+Helpers.isAddressInstance = function(address) {
+  return address instanceof Address;
+};
 Helpers.isBitcoinAddress = function(candidate) {
   try {
     Bitcoin.Address.fromBase58Check(candidate);

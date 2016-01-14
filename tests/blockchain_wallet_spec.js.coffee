@@ -47,14 +47,37 @@ describe "HDWallet", ->
     MyWallet =
       syncWallet: () ->
       get_history: () ->
+
+    Address =
+      new: (label) ->
+        addr = {
+          label: label
+          encrypt: () ->
+            {
+              persist: () ->
+            }
+        }
+        spyOn(addr, "encrypt").and.callThrough()
+        addr
+
+    Helpers =
+      isAddressInstance: (candidate) ->
+        candidate.label != undefined || typeof(candidate) == "object"
+
+
+    stubs = {
+      './wallet': MyWallet,
+      './address' : Address,
+      './helpers' : Helpers
+    }
+    Wallet = proxyquire('../src/blockchain-wallet', stubs)
+
     spyOn(MyWallet, "syncWallet")
     spyOn(MyWallet, "get_history")
 
-  describe "Constructor", ->
 
-    beforeEach ->
-      stubs = { './wallet': MyWallet}
-      Wallet = proxyquire('../src/blockchain-wallet', stubs)
+
+  describe "Constructor", ->
 
     it "should create an empty Wallet with default options", ->
       wallet = new Wallet()
@@ -76,8 +99,6 @@ describe "HDWallet", ->
 
   describe "instance", ->
     beforeEach ->
-      stubs = { './wallet': MyWallet}
-      Wallet = proxyquire('../src/blockchain-wallet', stubs)
       wallet = new Wallet(object)
 
     describe "Setter", ->
@@ -261,14 +282,13 @@ describe "HDWallet", ->
         expect(wallet.balanceActiveLegacy).toEqual(0)
 
     describe "Method", ->
-
-      it ".containsLegacyAddress should find address or key", ->
+      it ".containsLegacyAddress should find address", ->
         adr = '1ASqDXsKYqcx7dkKZ74bKBBggpd5HDtjCv'
+        expect(wallet.containsLegacyAddress(adr)).toBeTruthy()
+
+      it ".containsLegacyAddress should find key", ->
         key = wallet.keys[0]
-        find1 = wallet.containsLegacyAddress(adr)
-        find2 = wallet.containsLegacyAddress(key)
-        expect(find1).toBeTruthy()
-        expect(find2).toBeTruthy()
+        expect(wallet.containsLegacyAddress(key)).toBeTruthy()
 
       it ".containsLegacyAddress should not find address or key", ->
         adr = '1ASqDXsKYqcx7dkKZ74bKBBggpd5HDtjCXXX'
@@ -278,15 +298,33 @@ describe "HDWallet", ->
       it ".importLegacyAddress", ->
         pending()
 
-      it ".newLegacyAddress without second password", ->
-        # todo: I should mock Address.new
-        wallet.newLegacyAddress("label")
-        newAdd = wallet.keys[1]
-        expect(newAdd.priv).toBeDefined()
-        expect(MyWallet.syncWallet).toHaveBeenCalled()
+      describe ".newLegacyAddress", ->
 
-      it ".newLegacyAddress with second password", ->
-        pending()
+        describe "without second password", ->
+          it "should add the address and sync", ->
+            wallet.newLegacyAddress("label")
+            newAdd = wallet.keys[1]
+            expect(newAdd).toBeDefined()
+            expect(MyWallet.syncWallet).toHaveBeenCalled()
+
+        describe "with second password", ->
+          beforeEach ->
+            wallet._double_encryption = true
+
+          it "should require the 2nd pwd", ->
+            expect(() -> wallet.newLegacyAddress("label")).toThrow()
+
+          it "should call encrypt", ->
+            wallet.newLegacyAddress("label", "1234")
+            newAdd = wallet.keys[1]
+            expect(newAdd.encrypt).toHaveBeenCalled()
+
+          it "should add the address and sync", ->
+            wallet.newLegacyAddress("label", "1234")
+            newAdd = wallet.keys[1]
+            expect(newAdd).toBeDefined()
+            expect(MyWallet.syncWallet).toHaveBeenCalled()
+
 
       it ".deleteLegacyAddress", ->
         wallet.deleteLegacyAddress(wallet.keys[0])

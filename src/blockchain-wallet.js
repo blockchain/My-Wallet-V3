@@ -506,7 +506,7 @@ Wallet.prototype.importLegacyAddress = function(addr, label, secPass, bipPass){
 };
 
 Wallet.prototype.containsLegacyAddress = function(address) {
-  if (address instanceof Address) address = address.address;
+  if(Helpers.isAddressInstance(address)) address = address.address;
   return this._addresses.hasOwnProperty(address);
 }
 
