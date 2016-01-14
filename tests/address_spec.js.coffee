@@ -8,7 +8,8 @@ MyWallet = {
 
 Bitcoin = {
   ECKey: {
-    makeRandom: () ->
+    makeRandom: (compressed, rng) ->
+      pk = rng(32)
       {
         pub:
           getAddress: () ->
@@ -16,7 +17,7 @@ Bitcoin = {
               "random_address"
         d:
           toBuffer: () ->
-            "random_private_key_buffer"
+            pk + "_private_key_buffer"
       }
   }
 }
@@ -31,11 +32,19 @@ Helpers = {
   isBitcoinPrivateKey: () -> false
 }
 
+RNG = {
+  run: (input) ->
+    if RNG.shouldThrow
+      throw 'Connection failed'
+    "random"
+}
+
 stubs = {
   './wallet': MyWallet,
   'bitcoinjs-lib' : Bitcoin,
   './helpers' : Helpers,
-  'bs58' : Base58
+  'bs58' : Base58,
+  './rng' : RNG
 }
 
 Address    = proxyquire('../src/address', stubs)
@@ -80,19 +89,32 @@ describe "Address", ->
 
     describe "Address.new()", ->
       beforeEach ->
-        a = Address.new("My New Address")
+        spyOn(Bitcoin.ECKey, "makeRandom").and.callThrough()
+        spyOn(RNG, "run").and.callThrough()
 
       it "should return an address", ->
+        a = Address.new("My New Address")
         expect(a.label).toEqual("My New Address")
 
       it "should generate a random private key", ->
+        a = Address.new("My New Address")
         expect(a.priv).toBe("random_private_key_buffer_base58")
 
       it "should generate a random address", ->
+        a = Address.new("My New Address")
         expect(a.address).toBe("random_address")
 
       it "should call Bitcoin.ECKey.makeRandom with our RNG", ->
-        pending()
+        a = Address.new("My New Address")
+        expect(Bitcoin.ECKey.makeRandom).toHaveBeenCalled()
+        expect(RNG.run).toHaveBeenCalled()
+
+      it "should throw if RNG throws", ->
+        # E.g. because there was a network failure.
+        # This assumes BitcoinJS ECKey.makeRandom does not rescue a throw
+        # inside the RNG, which is the case in version 1.5.*
+        RNG.shouldThrow = true
+        expect(() -> Address.new("My New Address")).toThrow('Connection failed')
 
   describe "instance", ->
     beforeEach ->

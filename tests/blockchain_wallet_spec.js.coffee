@@ -45,11 +45,15 @@ describe "HDWallet", ->
 
   beforeEach ->
     MyWallet =
-      syncWallet: () ->
+      syncWallet: (success, error) ->
+        if success
+          success()
       get_history: () ->
 
     Address =
       new: (label) ->
+        if Address.shouldThrow
+          throw ""
         addr = {
           label: label
           encrypt: () ->
@@ -72,10 +76,8 @@ describe "HDWallet", ->
     }
     Wallet = proxyquire('../src/blockchain-wallet', stubs)
 
-    spyOn(MyWallet, "syncWallet")
-    spyOn(MyWallet, "get_history")
-
-
+    spyOn(MyWallet, "syncWallet").and.callThrough()
+    spyOn(MyWallet, "get_history").and.callThrough()
 
   describe "Constructor", ->
 
@@ -299,6 +301,13 @@ describe "HDWallet", ->
         pending()
 
       describe ".newLegacyAddress", ->
+        callbacks =
+          success: () ->
+          error: () ->
+
+        beforeEach ->
+          spyOn(callbacks, "success")
+          spyOn(callbacks, "error")
 
         describe "without second password", ->
           it "should add the address and sync", ->
@@ -306,6 +315,18 @@ describe "HDWallet", ->
             newAdd = wallet.keys[1]
             expect(newAdd).toBeDefined()
             expect(MyWallet.syncWallet).toHaveBeenCalled()
+
+          it "should successCallback", ->
+            wallet.newLegacyAddress("label", null, callbacks.success, callbacks.error)
+            expect(callbacks.success).toHaveBeenCalled()
+
+
+          it "should errorCallback if Address.new throws", ->
+            # E.g. when there is a network error RNG throws,
+            # which in turn causes Address.new to throw.
+            Address.shouldThrow = true
+            wallet.newLegacyAddress("label", null, callbacks.success, callbacks.error)
+            expect(callbacks.error).toHaveBeenCalled()
 
         describe "with second password", ->
           beforeEach ->

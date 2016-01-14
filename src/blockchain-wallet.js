@@ -517,7 +517,13 @@ Wallet.prototype.containsLegacyAddress = function(address) {
 }
 
 Wallet.prototype.newLegacyAddress = function(label, pw, success, error){
-  var ad = Address.new(label);
+  try {
+    // This method might throw if the RNG fails:
+    var ad = Address.new(label);
+  } catch (e) {
+    error(e);
+    return;
+  }
   if (this.isDoubleEncrypted) {
     assert(pw, "Error: second password needed");
     var cipher = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
