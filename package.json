@@ -35,7 +35,6 @@
     "crypto-js": "3.1.4",
     "es6-promise": "^3.0.2",
     "isomorphic-fetch": "^2.2.0",
-    "q": "^1.4.1",
     "randombytes": "^2.0.1",
     "sjcl": "1.0.*",
     "unorm": "^1.4.1",

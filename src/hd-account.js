@@ -3,7 +3,6 @@
 module.exports = HDAccount;
 ////////////////////////////////////////////////////////////////////////////////
 var Bitcoin = require('bitcoinjs-lib');
-var Q       = require('q');
 var assert  = require('assert');
 var Helpers = require('./helpers');
 var WalletCrypto = require('./wallet-crypto');
@@ -285,25 +284,20 @@ HDAccount.prototype.incrementReceiveIndexIfLast = function(index) {
 ////////////////////////////////////////////////////////////////////////////////
 // address labels
 HDAccount.prototype.setLabelForReceivingAddress = function(index, label) {
-  assert(Helpers.isNumber(index), "Error: address index must be a number");
-
-  var defer = Q.defer();
+  assert(Helpers.isNumber(index), 'Error: address index must be a number');
 
   if(!Helpers.isValidLabel(label)) {
-    defer.reject("NOT_ALPHANUMERIC");
+    return Promise.reject('NOT_ALPHANUMERIC');
     // Error: address label must be alphanumeric
   } else if (index - this.lastUsedReceiveIndex >= 20) {
     // Exceeds BIP 44 unused address gap limit
-    defer.reject("GAP");
+    return Promise.reject('GAP');
   } else {
     this._address_labels[index] = label;
     this.incrementReceiveIndexIfLast(index);
     MyWallet.syncWallet();
-
-    defer.resolve();
+    return Promise.resolve();
   }
-
-  return defer.promise;
 };
 
 HDAccount.prototype.removeLabelForReceivingAddress = function(index) {

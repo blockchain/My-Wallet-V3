@@ -11,7 +11,6 @@ var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
 var BIP39 = require('bip39');
-var q = require('q');
 
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
@@ -658,7 +657,7 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, started
   };
 
   var saveAndReturn = function (){
-    return q.Promise(MyWallet.syncWallet);
+    return new Promise(MyWallet.syncWallet);
   };
 
   // it returns a promise of the newHDWallet

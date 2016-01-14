@@ -1,33 +1,23 @@
 'use strict';
 
 var API = require('./api');
-var Q = require('q')
 
-function generateUUIDs(n) {
-  var defer = Q.defer();
-
-  var succ = function(data) {
-    if (data.uuids && data.uuids.length == n) {
-      defer.resolve(data.uuids);
-    } else {
-      defer.reject('Unknown Error');
-    }
-  };
-  var err = function(data) {
-    defer.reject(data);
-  };
+function generateUUIDs(count) {
 
   var data = {
-      format: 'json'
-    , n: n
-    , api_code : API.API_CODE
+    format: 'json',
+    n: count,
+    api_code: API.API_CODE
   };
 
-  API.retry(API.request.bind(API, "GET", "uuid-generator", data))
-    .then(succ)
-    .catch(err);
+  var extractUUIDs = function (data) {
+    if (!data.uuids || data.uuids.length != count)
+      throw 'Could not generate uuids';
+    return data.uuids;
+  };
 
-  return defer.promise;
+  return API.retry(API.request.bind(API, 'GET', 'uuid-generator', data))
+    .then(extractUUIDs);
 };
 
 /**
@@ -36,25 +26,22 @@ function generateUUIDs(n) {
  */
 // used in the frontend
 function resendTwoFactorSms(user_guid) {
-  var defer = Q.defer();
 
   var data = {
     format : 'json',
     resend_code : true,
-    ct : (new Date()).getTime(),
+    ct : Date.now(),
     api_code : API.API_CODE
-  }
-  var s = function(obj) { defer.resolve(); }
-  var e = function(e) {
-    if(e.responseJSON && e.responseJSON.initial_error) {
-      defer.reject(e.responseJSON.initial_error);
-    } else {
-      defer.reject();
-    }
-  }
-  API.request("GET", 'wallet/'+user_guid, data, true, false).then(s).catch(e);
+  };
 
-  return defer.promise;
+  var handleError = function (e) {
+    var errMsg = e.responseJSON && e.responseJSON.initial_error ?
+      e.responseJSON.initial_error : e || 'Could not resend two factor sms';
+    throw errMsg;
+  };
+
+  return API.request('GET', 'wallet/' + user_guid, data, true, false)
+    .catch(handleError);
 };
 
 /**
@@ -64,32 +51,28 @@ function resendTwoFactorSms(user_guid) {
  */
 // used in the frontend
 function recoverGuid(user_email, captcha) {
-  var defer = Q.defer();
 
   var data = {
     method: 'recover-wallet',
     email : user_email,
     captcha: captcha,
-    ct : (new Date()).getTime(),
+    ct : Date.now(),
     api_code : API.API_CODE
-  }
-  var s = function(obj) {
-    if(obj.success) {
-      defer.resolve(obj.message);
-    } else {
-      defer.reject(obj.message);
-    }
-  }
-  var e = function(e) {
-    if(e.responseJSON && e.responseJSON.initial_error) {
-      defer.reject(e.responseJSON.initial_error);
-    } else {
-      defer.reject();
-    }
-  }
-  API.request("POST", 'wallet', data, true).then(s).catch(e);
+  };
 
-  return defer.promise;
+  var handleResponse = function (obj) {
+    if (obj.success) return obj.message;
+    else throw obj.message;
+  };
+
+  var handleError = function (e) {
+    var errMsg = e.responseJSON && e.responseJSON.initial_error ?
+      e.responseJSON.initial_error : e || 'Could not send recovery email';
+    throw errMsg;
+  };
+
+  return API.request('POST', 'wallet', data, true)
+    .then(handleResponse).catch(handleError);
 };
 
 /**
@@ -110,8 +93,6 @@ function requestTwoFactorReset(
   message,
   captcha) {
 
-  var defer = Q.defer();
-
   var data = {
     method: 'reset-two-factor-form',
     guid: user_guid,
@@ -120,22 +101,17 @@ function requestTwoFactorReset(
     secret_phrase: secret,
     message: message,
     kaptcha: captcha,
-    ct : (new Date()).getTime(),
+    ct : Date.now(),
     api_code : API.API_CODE
-  }
-  var s = function(obj) {
-    if(obj.success) {
-      defer.resolve(obj.message);
-    } else {
-      defer.reject(obj.message);
-    }
-  }
-  var e = function(e) {
-    defer.reject(e);
-  }
-  API.request("POST", 'wallet', data, true).then(s).catch(e);
+  };
 
-  return defer.promise;
+  var handleResponse = function (obj) {
+    if (obj.success) return obj.message;
+    else throw obj.message;
+  };
+
+  return API.request('POST', 'wallet', data, true)
+    .then(handleResponse);
 };
 
 module.exports = {
@@ -143,4 +119,4 @@ module.exports = {
   resendTwoFactorSms: resendTwoFactorSms,
   recoverGuid: recoverGuid,
   requestTwoFactorReset: requestTwoFactorReset
-}
+};
