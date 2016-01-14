@@ -10,8 +10,8 @@ Helpers.isString = function (str){
 Helpers.isKey = function (bitcoinKey){
   return bitcoinKey instanceof Bitcoin.ECKey;
 };
-Helpers.isAddressInstance = function(address) {
-  return address instanceof Address;
+Helpers.isInstanceOf = function(object, theClass) {
+  return object instanceof theClass;
 };
 Helpers.isBitcoinAddress = function(candidate) {
   try {

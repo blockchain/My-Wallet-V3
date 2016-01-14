@@ -61,7 +61,7 @@ describe "HDWallet", ->
         addr
 
     Helpers =
-      isAddressInstance: (candidate) ->
+      isInstanceOf: (candidate, theClass) ->
         candidate.label != undefined || typeof(candidate) == "object"
 
 
