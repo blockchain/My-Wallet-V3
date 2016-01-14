@@ -33,7 +33,8 @@ module.exports = {
   API: require('./src/api'),
   Tx: require('./src/wallet-transaction'),
   Shared: require('./src/shared'),
-  WalletTokenEndpoints: require('./src/wallet-token-endpoints')
+  WalletTokenEndpoints: require('./src/wallet-token-endpoints'),
+  WalletNetwork: require('./src/wallet-network')
   // Wallet: require('./blockchain-wallet'),
   // Address: require('./address'),
   // HDAccount: require('./hd-account'),
