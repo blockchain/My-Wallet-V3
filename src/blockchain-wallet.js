@@ -11,7 +11,6 @@ var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
 var BIP39 = require('bip39');
-var RSVP = require('rsvp');
 var q = require('q');
 
 var WalletStore = require('./wallet-store');
@@ -460,49 +459,57 @@ Wallet.prototype.toJSON = function(){
   return wallet;
 };
 
-Wallet.prototype.importLegacyAddress = function(addr, label, secPass, bipPass){
-  var defer = RSVP.defer();
-
-  var importAddress = (function(key) {
+Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) {
+  var importAddress = function (key) {
     var ad = Address.import(key, label);
-    if (this.containsLegacyAddress(ad)) { defer.reject('presentInWallet'); return;};
+    if (this.containsLegacyAddress(ad)) {
+      throw 'presentInWallet';
+    }
     if (this.isDoubleEncrypted) {
-      assert(secPass, "Error: second password needed");
-      var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, "enc");
+      if (!secPass) {
+        throw 'Error: second password needed';
+      }
+      var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, 'enc');
       ad.encrypt(cipher).persist();
-    };
+    }
     this._addresses[ad.address] = ad;
-    MyWallet.ws.send('{"op":"addr_sub", "addr":"'+ad.address+'"}');
-    defer.resolve(ad);
+    MyWallet.ws.send('{"op":"addr_sub", "addr":"' + ad.address + '"}');
     MyWallet.syncWallet();
     this.getHistory();
-  }).bind(this)
+    return ad;
+  }.bind(this);
 
-  // if read only address
-  if (Helpers.isBitcoinAddress(addr)) { importAddress(addr); };
+  var attemptImport = function (resolve, reject) {
+    // Import read-only address
+    if (Helpers.isBitcoinAddress(addr)) {
+      return resolve(importAddress(addr));
+    }
 
-  // otherwise
-  var format = MyWallet.detectPrivateKeyFormat(addr);
-  switch (true) {
-    case format === 'bip38':
-      if (bipPass === '') defer.reject('needsBip38');
-      else ImportExport.parseBIP38toECKey(
+    // Import private key
+    var format    = MyWallet.detectPrivateKeyFormat(addr)
+      , okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
+
+    if (format === 'bip38') {
+      if (bipPass == undefined || bipPass === '') {
+        return reject('needsBip38');
+      }
+      ImportExport.parseBIP38toECKey(
         addr, bipPass,
-        function (key) { importAddress(key); },
-        function () { defer.reject('wrongBipPass'); },
-        function () { defer.reject('importError'); }
+        function (key) { resolve(importAddress(key)); },
+        function () { reject('wrongBipPass'); },
+        function () { reject('importError'); }
       );
-      break;
-    case ["base58","base64","hex","mini","sipa","compsipa"].some(function(e) {return e === format;}):
+    }
+    else if (okFormats.indexOf(format) > -1) {
       var k = MyWallet.privateKeyStringToKey(addr, format);
-      importAddress(k);
-      break;
-    default:
-      defer.reject('importError');
-      break;
+      resolve(importAddress(k));
+    }
+    else {
+      reject('importError');
+    }
   };
 
-  return defer.promise;
+  return new Promise(attemptImport);
 };
 
 Wallet.prototype.containsLegacyAddress = function(address) {
