@@ -1,6 +1,8 @@
 proxyquire = require('proxyquireify')(require)
 MyWallet = undefined
 HDWallet = undefined
+BIP39 = undefined
+RNG = undefined
 
 describe "HDWallet", ->
   wallet = undefined
@@ -22,9 +24,8 @@ describe "HDWallet", ->
 
   beforeEach ->
     MyWallet =
-      syncWallet: () ->
-      get_history: () ->
-
+        get_history: () ->
+        syncWallet: () ->
     spyOn(MyWallet, "syncWallet")
     spyOn(MyWallet, "get_history")
 
@@ -55,10 +56,10 @@ describe "HDWallet", ->
       expect(HDAccount.factory.calls.count()).toEqual(object.accounts.length)
 
   describe "instance", ->
+
     beforeEach ->
       stubs = { './wallet': MyWallet}
-      HDWallet = proxyquire('../src/hd-wallet', stubs)
-
+      HDWallet    = proxyquire('../src/hd-wallet', stubs)
       wallet = new HDWallet(object)
 
     describe "Setter", ->
@@ -112,6 +113,49 @@ describe "HDWallet", ->
         wallet.defaultAccountIndex = 0
         expect(wallet.defaultAccountIndex).toEqual(0)
         expect(MyWallet.syncWallet).toHaveBeenCalled()
+
+    describe "HDWallet.new()", ->
+
+      beforeEach ->
+        BIP39 = {
+            generateMnemonic: (str, rng, wlist) -> rng(32)
+          }
+        RNG = {
+          run: (input) ->
+            if RNG.shouldThrow
+              throw 'Connection failed'
+            "bicycle balcony prefer kid flower pole goose crouch century lady worry flavor"
+        }
+        stubs = {
+          './wallet': MyWallet,
+          'bip39': BIP39,
+          './rng' : RNG
+        }
+        HDWallet    = proxyquire('../src/hd-wallet', stubs)
+        spyOn(BIP39, "generateMnemonic").and.callThrough()
+        spyOn(RNG, "run").and.callThrough()
+
+      it "should return an hdwallet with a random non-encrypted seedHex", ->
+        hdw = HDWallet.new(null)
+        expect(hdw._seedHex).toEqual('15e23aa73d25994f1921a1256f93f72c');
+
+      it "should return an hdwallet with a random encrypted seedHex", ->
+        encoder = (msg) -> "encrypted-" + msg
+        hdw = HDWallet.new(encoder)
+        expect(hdw._seedHex).toEqual('encrypted-15e23aa73d25994f1921a1256f93f72c');
+
+      it "should call BIP39.generateMnemonic with our RNG", ->
+
+        hdw = HDWallet.new(null)
+        expect(BIP39.generateMnemonic).toHaveBeenCalled()
+        expect(RNG.run).toHaveBeenCalled()
+
+      it "should throw if RNG throws", ->
+        # E.g. because there was a network failure.
+        # This assumes BIP39.generateMnemonic does not rescue a throw
+        # inside the RNG
+        RNG.shouldThrow = true
+        expect(() -> HDWallet.new(null)).toThrow('Connection failed')
 
     describe "Getter", ->
 
