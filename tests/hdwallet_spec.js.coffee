@@ -118,13 +118,16 @@ describe "HDWallet", ->
 
       beforeEach ->
         BIP39 = {
-            generateMnemonic: (str, rng, wlist) -> rng(32)
+            generateMnemonic: (str, rng, wlist) ->
+              mnemonic = "bicycle balcony prefer kid flower pole goose crouch century lady worry flavor"
+              seed = rng(32)
+              if seed = "random" then mnemonic else "failure"
           }
         RNG = {
           run: (input) ->
             if RNG.shouldThrow
               throw 'Connection failed'
-            "bicycle balcony prefer kid flower pole goose crouch century lady worry flavor"
+            "random"
         }
         stubs = {
           './wallet': MyWallet,
