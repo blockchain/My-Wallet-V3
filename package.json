@@ -60,6 +60,7 @@
     "grunt-shell": "^1.1.2",
     "grunt-text-replace": "^0.4.0",
     "jasmine-core": "^2.2.0",
+    "jasmine-es6-promise-matchers": "^2.0.1",
     "karma": "~0.12.31",
     "karma-browserify": "^4.1.2",
     "karma-chrome-launcher": "^0.1.7",
