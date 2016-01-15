@@ -1,7 +1,6 @@
 'use strict';
 
 var Bitcoin       = require('bitcoinjs-lib');
-var q             = require('q');
 var MyWallet      = require('./wallet');
 var WalletCrypto  = require('./wallet-crypto');
 var Transaction   = require('./transaction');
@@ -105,14 +104,14 @@ Payment.prototype.publish = function() {
 ////////////////////////////////////////////////////////////////////////////////
 Payment.return = function(payment) {
   var p = payment ? payment : {}
-  return q(p);
+  return Promise.resolve(p);
 };
 
 // myFunction :: payment -> ()
 Payment.sideEffect = function(myFunction) {
   return function(payment) {
     myFunction(payment);
-    return q(payment);
+    return Promise.resolve(payment);
   };
 };
 
@@ -147,14 +146,14 @@ Payment.to = function(destinations) {
   } // fi switch
   return function(payment) {
     payment.to = formatDest;
-    return q(payment);
+    return Promise.resolve(payment);
   };
 };
 
 Payment.listener = function(listener) {
   return function(payment) {
     payment.listener = listener
-    return q(payment);
+    return Promise.resolve(payment);
   };
 };
 
@@ -162,7 +161,7 @@ Payment.sweep = function(amount) {
   return function(payment) {
     payment.amounts = payment.sweepAmount ? [payment.sweepAmount] : undefined;
     payment.forcedFee = payment.sweepFee;
-    return q(payment);
+    return Promise.resolve(payment);
   };
 };
 
@@ -170,7 +169,7 @@ Payment.note = function(note) {
   var publicNote = Helpers.isString(note) ? note : null;
   return function(payment) {
     payment.note = publicNote;
-    return q(payment);
+    return Promise.resolve(payment);
   };
 };
 
@@ -178,7 +177,7 @@ Payment.fee = function(amount) {
   var forcedFee = Helpers.isNumber(amount) ? amount : null;
   return function(payment) {
     payment.forcedFee = forcedFee;
-    return q(payment);
+    return Promise.resolve(payment);
   };
 };
 
@@ -200,7 +199,7 @@ Payment.amount = function(amounts) {
   } // fi switch
   return function(payment) {
     payment.amounts = formatAmo;
-    return q(payment);
+    return Promise.resolve(payment);
   };
 };
 
@@ -257,31 +256,29 @@ Payment.from = function(origin) {
       console.log("No origin set.")
   } // fi switch
   return function(payment) {
-    var defer = q.defer();
     payment.from           = addresses;
     payment.change         = change;
     payment.wifKeys        = wifs;
     payment.fromAccountIdx = fromAccId;
 
-    getUnspentCoins(addresses).then(
-      function(coins) {
+    return getUnspentCoins(addresses).then(
+      function (coins) {
         var sweep = computeSuggestedSweep(coins);
         payment.sweepAmount = sweep[0];
         payment.sweepFee    = sweep[1];
         payment.coins       = coins;
-        defer.resolve(payment);
+        return payment;
       }
     ).catch(
       // this could fail for network issues or no-balance
-      function(error) {
+      function (error) {
         console.log(error);
         payment.sweepAmount = 0;
         payment.sweepFee    = 0;
         payment.coins       = [];
-        defer.resolve(payment);
+        return payment;
       }
     );
-    return defer.promise;
   };
 };
 
@@ -296,25 +293,23 @@ Payment.build = function() {
     } catch (err) {
       console.log("Error Building: " + err);
     }
-    return q(payment);
+    return Promise.resolve(payment);
   };
 };
 
 Payment.buildbeta = function() {
   // I should check for all the payment needed fields and reject with the wrong payment
   // then the frontend can show the error and recreate the payment with the same state
-  return function(payment) {
-    var defer = q.defer();
+  return function (payment) {
     try {
       payment.transaction = new Transaction(payment.coins, payment.to,
                                             payment.amounts, payment.forcedFee,
                                             payment.change, payment.listener);
       payment.fee = payment.transaction.fee;
-      defer.resolve(payment);
+      return Promise.resolve(payment);
     } catch (e) {
-      defer.reject({"error": e, "payment": payment});
+      return Promise.reject({ error: e, payment: payment });
     }
-    return defer.promise;
   };
 };
 
@@ -329,21 +324,21 @@ Payment.sign = function(password) {
     payment.transaction.addPrivateKeys(getPrivateKeys(password, payment));
     payment.transaction.sortBIP69();
     payment.transaction = payment.transaction.sign();
-    return q(payment);
+    return Promise.resolve(payment);
   };
 };
 
 Payment.publish = function() {
-  return function(payment) {
-    var defer = q.defer();
+  return function (payment) {
 
-    var success = function(tx_hash) {
+    var success = function (tx_hash) {
       console.log("published");
       payment.txid = tx_hash;
-      defer.resolve(payment);
+      return payment;
     };
-    var error = function(e) {
-      defer.reject(e.message || e.responseText);
+
+    var handleError = function (e) {
+      throw e.message || e.responseText;
     };
 
     var getValue = function(coin) {return coin.value;};
@@ -352,8 +347,8 @@ Payment.publish = function() {
     if(anySmall && payment.note !== undefined && payment.note !== null)
       {throw "There is an output too small to publish a note";}
 
-    API.pushTx(payment.transaction, payment.note).then(success).catch(error);
-    return defer.promise;
+    return API.pushTx(payment.transaction, payment.note)
+      .then(success).catch(handleError);
   };
 };
 ////////////////////////////////////////////////////////////////////////////////

@@ -2,7 +2,6 @@
 
 module.exports = new API();
 ////////////////////////////////////////////////////////////////////////////////
-var Q           = require('q')
 var assert      = require('assert');
 var Helpers     = require('./helpers');
 var WalletStore = require('./wallet-store');
@@ -46,7 +45,7 @@ API.prototype.request = function(action, method, data, withCred) {
   if (action === 'POST') options.body = body;
 
   var handleNetworkError = function () {
-    return Q.reject({ initial_error: 'Connectivity error, failed to send network request' });
+    return Promise.reject({ initial_error: 'Connectivity error, failed to send network request' });
   };
 
   var checkStatus = function (response) {
@@ -63,7 +62,7 @@ API.prototype.request = function(action, method, data, withCred) {
 
       }
     } else {
-      return response.text().then(Q.reject);
+      return response.text().then(Promise.reject.bind(Promise));
     }
   };
 

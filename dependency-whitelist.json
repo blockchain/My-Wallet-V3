@@ -95,16 +95,6 @@
     "commits" : ["7ed8a08ceac45093aacbcc5aed11e28bcbb7c58e"],
     "repo" : "brix/crypto-js"
   },
-  "rsvp" : {
-    "version" : "3.1.0",
-    "commits" : ["fcd59034548508a2126b9a3cd1c7132288a7b04f"],
-    "repo" : "tildeio/rsvp.js"
-  },
-  "q" : {
-    "version" : "1.4.1",
-    "commits" : ["d373079d3620152e3d60e82f27265a09ee0e81bd"],
-    "repo" : "kriskowal/q"
-  },
   "es6-promise" : {
     "version" : "3.0.2",
     "commits" : ["7d90241d79d8a50e340abb3d964c47fe79a214ba"],
