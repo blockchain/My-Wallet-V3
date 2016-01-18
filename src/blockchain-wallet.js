@@ -707,7 +707,7 @@ Wallet.prototype.disableNotifications = function(success, error) {
 }
 
 // creating a new wallet object
-Wallet.new = function(guid, sharedKey, firstAccountLabel, success, isHD){
+Wallet.new = function(guid, sharedKey, firstAccountLabel, success, error, isHD){
   isHD = Helpers.isBoolean(isHD) ? isHD : true;
   var object = {
     guid              : guid,
@@ -722,23 +722,28 @@ Wallet.new = function(guid, sharedKey, firstAccountLabel, success, isHD){
   };
   MyWallet.wallet = new Wallet(object);
   var label = firstAccountLabel ||  "My Bitcoin Wallet";
-  if (isHD) {
-    // hd wallet
-    var newHDwallet = HDWallet.new();
-    MyWallet.wallet._hd_wallets.push(newHDwallet);
-    newHDwallet.newAccount(label);
-  } else {
-    // legacy wallet (generate address)
-    var ad = Address.new(label);
-    MyWallet.wallet._addresses[ad.address] = ad;
-  };
+  try {
+    // wallet or address generation could fail because of the RNG
+    if (isHD) {
+      // hd wallet
+      var newHDwallet = HDWallet.new();
+      MyWallet.wallet._hd_wallets.push(newHDwallet);
+      newHDwallet.newAccount(label);
+    } else {
+      // legacy wallet (generate address)
+      var ad = Address.new(label);
+      MyWallet.wallet._addresses[ad.address] = ad;
+    };
+  } catch (e) { error(e); return; }
   success(MyWallet.wallet);
 };
 
 // adding and hd wallet to an existing wallet
 Wallet.prototype.newHDWallet = function(firstAccountLabel, pw, success, error){
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
-  var newHDwallet = HDWallet.new(encoder);
+  try {
+    var newHDwallet = HDWallet.new(encoder);
+  } catch (e) { error(e); return; }
   this._hd_wallets.push(newHDwallet);
   var label = firstAccountLabel ? firstAccountLabel : "My Bitcoin Wallet";
   var account = this.newAccount(label, pw, this._hd_wallets.length-1, true);
