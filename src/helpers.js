@@ -16,7 +16,9 @@ Helpers.isInstanceOf = function(object, theClass) {
 Helpers.isBitcoinAddress = function(candidate) {
   try {
     Bitcoin.Address.fromBase58Check(candidate);
-    return true;
+    var first = candidate[0];
+    var noTestNet = (first === "1") || (first === "3")
+    return noTestNet;
   }
   catch (e) { return false; };
 };
