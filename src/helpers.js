@@ -15,10 +15,9 @@ Helpers.isInstanceOf = function(object, theClass) {
 };
 Helpers.isBitcoinAddress = function(candidate) {
   try {
-    Bitcoin.Address.fromBase58Check(candidate);
-    var first = candidate[0];
-    var noTestNet = (first === "1") || (first === "3")
-    return noTestNet;
+    var d = Bitcoin.Address.fromBase58Check(candidate);
+    var n = Bitcoin.networks.bitcoin;
+    return d.version === n.pubKeyHash || d.version === n.scriptHash
   }
   catch (e) { return false; };
 };
