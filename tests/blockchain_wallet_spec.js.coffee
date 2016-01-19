@@ -69,7 +69,9 @@ describe "HDWallet", ->
       new: (cipher) ->
         if HDWallet.shouldThrow
           throw ""
-        "hdwallet"
+        {
+          newAccount: () ->
+        }
 
     Helpers =
       isInstanceOf: (candidate, theClass) ->
@@ -316,6 +318,14 @@ describe "HDWallet", ->
           spyOn(cb, "success")
           spyOn(cb, "error")
 
+        it "should successCallback for non-hd", ->
+          Wallet.new("GUID","SHARED-KEY","ACC-LABEL", cb.success, cb.error, false)
+          expect(cb.success).toHaveBeenCalled()
+
+        it "should successCallback for hd", ->
+          Wallet.new("GUID","SHARED-KEY","ACC-LABEL", cb.success, cb.error, true)
+          expect(cb.success).toHaveBeenCalled()
+
         describe "(error control)", ->
           it "should errorCallback if non-HD and address generation fail", ->
             Address.shouldThrow = true
@@ -390,11 +400,24 @@ describe "HDWallet", ->
       it ".restoreHDWallet", ->
         pending()
 
-      it ".new", ->
-        pending()
+      describe ".newHDWallet", ->
+        cb =
+          success: () ->
+          error: () ->
 
-      it ".newHDWallet", ->
-        pending()
+        beforeEach ->
+          spyOn(cb, "success")
+          spyOn(cb, "error")
+          spyOn(wallet, "newAccount").and.callFake(()->)
+
+        it "should successCallback", ->
+          wallet.newHDWallet("ACC-LABEL", null, cb.success, cb.error)
+          expect(cb.success).toHaveBeenCalled()
+
+        it "should errorCallback if HDWallet.new fails", ->
+          spyOn(HDWallet, "new").and.callFake(() -> raise("RNG failed") )
+          wallet.newHDWallet("ACC-LABEL", null, cb.success, cb.error)
+          expect(cb.error).toHaveBeenCalled()
 
       it ".newAccount", ->
         pending()

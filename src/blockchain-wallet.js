@@ -738,7 +738,7 @@ Wallet.new = function(guid, sharedKey, firstAccountLabel, success, error, isHD){
   success(MyWallet.wallet);
 };
 
-// adding and hd wallet to an existing wallet
+// adding and hd wallet to an existing wallet, used by frontend and iOs
 Wallet.prototype.newHDWallet = function(firstAccountLabel, pw, success, error){
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
   try {
