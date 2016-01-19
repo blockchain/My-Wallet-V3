@@ -20,3 +20,4 @@ dist
 
 # Generated coverage reports
 coverage
+coverage-lcov

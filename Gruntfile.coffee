@@ -11,6 +11,14 @@ module.exports = (grunt) ->
       shrinkwrap: ["npm-shrinkwrap.*"]
       node_modules: ["node_modules"]
 
+    coveralls:
+      options:
+        debug: true
+        coverageDir: 'coverage-lcov'
+        dryRun: false
+        force: true
+        recursive: true
+
     concat:
       options:
         separator: ";"
@@ -174,6 +182,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-shell'
   grunt.loadNpmTasks 'grunt-text-replace'
   grunt.loadNpmTasks('git-changelog')
+  grunt.loadNpmTasks('grunt-karma-coveralls')
 
   grunt.registerTask "default", [
     "build"
