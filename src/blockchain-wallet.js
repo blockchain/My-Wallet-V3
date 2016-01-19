@@ -494,7 +494,10 @@ Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) 
       }
       ImportExport.parseBIP38toECKey(
         addr, bipPass,
-        function (key) { resolve(importAddress(key)); },
+        function (key) {
+          try       { resolve(importAddress(key));  }
+          catch (e) { reject(e);                    }
+        },
         function () { reject('wrongBipPass'); },
         function () { reject('importError'); }
       );
