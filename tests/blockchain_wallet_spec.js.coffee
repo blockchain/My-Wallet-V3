@@ -1,7 +1,8 @@
 proxyquire = require('proxyquireify')(require)
-MyWallet = undefined
-Address = undefined
-Wallet   = undefined
+MyWallet   = undefined
+Address    = undefined
+Wallet     = undefined
+HDWallet   = undefined
 
 describe "HDWallet", ->
   wallet = undefined
@@ -64,15 +65,21 @@ describe "HDWallet", ->
         spyOn(addr, "encrypt").and.callThrough()
         addr
 
+    HDWallet =
+      new: (cipher) ->
+        if HDWallet.shouldThrow
+          throw ""
+        "hdwallet"
+
     Helpers =
       isInstanceOf: (candidate, theClass) ->
         candidate.label != undefined || typeof(candidate) == "object"
 
-
     stubs = {
-      './wallet': MyWallet,
+      './wallet'  : MyWallet,
       './address' : Address,
-      './helpers' : Helpers
+      './helpers' : Helpers,
+      './hd-wallet': HDWallet
     }
     Wallet = proxyquire('../src/blockchain-wallet', stubs)
 
@@ -300,6 +307,26 @@ describe "HDWallet", ->
       it ".importLegacyAddress", ->
         pending()
 
+      describe ".new", ->
+        cb =
+          success: () ->
+          error: () ->
+
+        beforeEach ->
+          spyOn(cb, "success")
+          spyOn(cb, "error")
+
+        describe "(error control)", ->
+          it "should errorCallback if non-HD and address generation fail", ->
+            Address.shouldThrow = true
+            Wallet.new("GUID","SHARED-KEY","ACC-LABEL", cb.success, cb.error, false)
+            expect(cb.error).toHaveBeenCalled()
+
+          it "should errorCallback if HD and seed generation fail", ->
+            HDWallet.shouldThrow = true
+            Wallet.new("GUID","SHARED-KEY","ACC-LABEL", cb.success, cb.error, true)
+            expect(cb.error).toHaveBeenCalled()
+
       describe ".newLegacyAddress", ->
         callbacks =
           success: () ->
@@ -319,7 +346,6 @@ describe "HDWallet", ->
           it "should successCallback", ->
             wallet.newLegacyAddress("label", null, callbacks.success, callbacks.error)
             expect(callbacks.success).toHaveBeenCalled()
-
 
           it "should errorCallback if Address.new throws", ->
             # E.g. when there is a network error RNG throws,
