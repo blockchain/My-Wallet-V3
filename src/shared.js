@@ -91,7 +91,7 @@ function webSocketConnect(success) {
   try {
     function reallyConnect() {
       try {
-        var url = "wss://ws.blockchain.info/inv";
+        var url = "wss://blockchain.info/inv";
 
         console.log('Connect ' + url);
 
