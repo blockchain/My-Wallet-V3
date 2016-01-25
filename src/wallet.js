@@ -626,12 +626,7 @@ MyWallet.listenToHDWalletAccounts = function() {
  // TODO: This should be a helper
  // used on wallet-store, frontend and iOS,
 MyWallet.isValidAddress = function(candidate) {
-  try {
-    Bitcoin.Address.fromBase58Check(candidate);
-    return true;
-  } catch (e) {
-    return false;
-  }
+  return Helpers.isBitcoinAddress(candidate);
 };
 
 /**
