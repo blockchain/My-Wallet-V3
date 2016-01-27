@@ -25,7 +25,7 @@ function generateUUIDs(count) {
  * @param {string} user_guid User GUID.
  */
 // used in the frontend
-function resendTwoFactorSms(user_guid) {
+function resendTwoFactorSms(user_guid, success) {
 
   var data = {
     format : 'json',
@@ -34,6 +34,8 @@ function resendTwoFactorSms(user_guid) {
     api_code : API.API_CODE
   };
 
+  var successCallback = function(obj) { success(); }
+
   var handleError = function (e) {
     var errMsg = e.responseJSON && e.responseJSON.initial_error ?
       e.responseJSON.initial_error : e || 'Could not resend two factor sms';
@@ -41,6 +43,7 @@ function resendTwoFactorSms(user_guid) {
   };
 
   return API.request('GET', 'wallet/' + user_guid, data, true, false)
+    .then(successCallback)
     .catch(handleError);
 };
 
