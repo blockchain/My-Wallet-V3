@@ -36,7 +36,7 @@ function resendTwoFactorSms(user_guid, success) {
 
   var successCallback = function(obj) {
     success();
-    if (obj.success) return obj.message;}
+    if (obj.success) return obj.message;
   }
 
   var handleError = function (e) {
