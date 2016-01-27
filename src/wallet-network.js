@@ -34,9 +34,7 @@ function resendTwoFactorSms(user_guid, success) {
     api_code : API.API_CODE
   };
 
-  var successCallback = function(obj) {if (obj.success) {success();}
-    return obj.message;
-  }
+  var successCallback = function(obj) { success(); return obj.message;}
 
   var handleError = function (e) {
     var errMsg = e.responseJSON && e.responseJSON.initial_error ?
