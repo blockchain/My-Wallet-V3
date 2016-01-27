@@ -25,7 +25,7 @@ function generateUUIDs(count) {
  * @param {string} user_guid User GUID.
  */
 // used in the frontend
-function resendTwoFactorSms(user_guid, success) {
+function resendTwoFactorSms(user_guid, success, error) {
 
   var data = {
     format : 'json',
@@ -34,7 +34,7 @@ function resendTwoFactorSms(user_guid, success) {
     api_code : API.API_CODE
   };
 
-  var successCallback = function(obj) { success(); }
+  var successCallback = function(obj) { success(); return obj;}
 
   var handleError = function (e) {
     var errMsg = e.responseJSON && e.responseJSON.initial_error ?
