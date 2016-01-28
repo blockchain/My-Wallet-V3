@@ -19,7 +19,6 @@ var HDAccount = require('./hd-account');
 var Address = require('./address');
 var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
-var ImportExport = require('./import-export');
 var API = require('./api');
 var Tx = require('./wallet-transaction');
 var shared = require('./shared');
@@ -492,15 +491,9 @@ Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) 
       if (bipPass == undefined || bipPass === '') {
         return reject('needsBip38');
       }
-      ImportExport.parseBIP38toECKey(
-        addr, bipPass,
-        function (key) {
-          try       { resolve(importAddress(key));  }
-          catch (e) { reject(e);                    }
-        },
-        function () { reject('wrongBipPass'); },
-        function () { reject('importError'); }
-      );
+      try { var decryptedWIF = Address.decryptBip38(addr, bipPass); }
+      catch (e) { reject(e === 'Incorrect password' ? 'wrongBipPass' : 'importError'); }
+      resolve(importAddress(decryptedWIF));
     }
     else if (okFormats.indexOf(format) > -1) {
       var k = MyWallet.privateKeyStringToKey(addr, format);

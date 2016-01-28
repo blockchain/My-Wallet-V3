@@ -295,8 +295,31 @@ describe "HDWallet", ->
         find1 = wallet.containsLegacyAddress(adr)
         expect(find1).toBeFalsy()
 
-      it ".importLegacyAddress", ->
-        pending()
+      describe ".importLegacyAddress", ->
+        pubKey = '1ArMC289PNhsfn3RwwPoUXFmj1fX9bELt'
+        privKey = '5KDj3FLMG9b9G6UE5vTz4epVRdGygoy9tqtNvaucqYPjx7xQ38C'
+        # bip38Key = '6PRUEZXHwt6yYq9LopcSnU4HjYfZvv9rHnhkEXpE95MYjTXcBnEkEiz4V5'
+
+        beforeEach ->
+          spyOn(Address, "import").and.callThrough()
+
+        afterEach ->
+          expect(Address.import).toHaveBeenCalled()
+
+        describe "without second password", ->
+          it "should import a watch only address", () ->
+            wallet.importLegacyAddress(pubKey)
+            newAdd = wallet.keys[1]
+            expect(newAdd).toBeDefined()
+            expect(newAdd.isWatchOnly).toEqual(true)
+
+          it "should import a private key", () ->
+            wallet.importLegacyAddress(privKey)
+
+          # it "should import a bip38 key", () ->
+          #   wallet.importLegacyAddress(bip38Key, null, null, 'secret')
+          #   newAdd = wallet.keys[1]
+          #   expect(newAdd).toBeDefined()
 
       describe ".newLegacyAddress", ->
 
