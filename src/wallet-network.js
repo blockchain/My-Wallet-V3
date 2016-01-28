@@ -24,7 +24,7 @@ function generateUUIDs(count) {
  * Fetch information on wallet identfier with resend code set to true
  * @param {string} user_guid User GUID.
  */
-// used in the frontend
+// used in the frontend and in iOS
 function resendTwoFactorSms(user_guid) {
 
   var data = {
