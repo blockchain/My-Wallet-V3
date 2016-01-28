@@ -25,6 +25,7 @@ var Tx = require('./wallet-transaction');
 var shared = require('./shared');
 var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var KeyRing  = require('./keyring');
+var Analytics = require('./analytics');
 
 ////////////////////////////////////////////////////////////////////////////////
 // Wallet
@@ -739,7 +740,12 @@ Wallet.prototype.newHDWallet = function(firstAccountLabel, pw, success, error){
   this._hd_wallets.push(newHDwallet);
   var label = firstAccountLabel ? firstAccountLabel : "My Bitcoin Wallet";
   var account = this.newAccount(label, pw, this._hd_wallets.length-1, true);
-  MyWallet.syncWallet(success, error);
+  var guid = this.guid;
+  MyWallet.syncWallet(function(res) {
+    Analytics.walletUpgraded(guid);
+    success();
+  }, error);
+
   return newHDwallet;
 };
 

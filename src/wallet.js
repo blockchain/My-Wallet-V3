@@ -24,6 +24,7 @@ var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
 var shared = require('./shared');
 var BlockchainSocket = require('./blockchain-socket');
+var Analytics = require('./analytics');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -1174,6 +1175,11 @@ MyWallet.createNewWallet = function(inputedEmail, inputedPassword, firstAccountN
       WalletStore.setLanguage(languageCode);
 
     WalletStore.unsafeSetPassword(createdPassword);
+
+    var isHD = Helpers.isBoolean(isHD) ? isHD : true;
+    if (isHD) {
+      Analytics.walletCreated(createdGuid);
+    }
 
     success(createdGuid, createdSharedKey, createdPassword);
   }, function (e) {
