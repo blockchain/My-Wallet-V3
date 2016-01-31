@@ -41,10 +41,14 @@ BlockchainSocket.prototype.connect = function (onOpen, onMessage, onClose) {
 };
 
 BlockchainSocket.prototype.connectOnce = function (onOpen, onMessage, onClose) {
-  this.socket = new WebSocket(this.wsUrl, [], { headers: this.headers });
-  this.socket.on('open', onOpen);
-  this.socket.on('message', onMessage);
-  this.socket.on('close', onClose);
+  try {
+    this.socket = new WebSocket(this.wsUrl, [], { headers: this.headers });
+    this.socket.on('open', onOpen);
+    this.socket.on('message', onMessage);
+    this.socket.on('close', onClose);
+  } catch (e) {
+    console.log('Failed to connect to websocket');
+  }
 };
 
 BlockchainSocket.prototype.send = function (message) {
