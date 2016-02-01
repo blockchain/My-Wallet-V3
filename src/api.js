@@ -2,12 +2,12 @@
 
 module.exports = new API();
 ////////////////////////////////////////////////////////////////////////////////
-var assert      = require('assert');
-var Helpers     = require('./helpers');
-var WalletStore = require('./wallet-store');
-var CryptoJS    = require('crypto-js');
-var MyWallet    = require('./wallet');
-var Buffer      = require('buffer').Buffer;
+var assert        = require('assert');
+var Helpers       = require('./helpers');
+var WalletStore   = require('./wallet-store');
+var WalletCrypto  = require('./wallet-crypto');
+var MyWallet      = require('./wallet');
+var Buffer        = require('buffer').Buffer;
 
 ////////////////////////////////////////////////////////////////////////////////
 // API class
@@ -185,7 +185,7 @@ API.prototype.securePost = function (url, data){
     //send a hash using a totp scheme
     var now = new Date().getTime();
     var timestamp = parseInt((now - this.SERVER_TIME_OFFSET) / 10000);
-    var SKHashHex = CryptoJS.SHA256(sharedKey.toLowerCase() + timestamp).toString();
+    var SKHashHex = WalletCrypto.sha256(sharedKey.toLowerCase() + timestamp).toString('hex');
     var i = 0;
     var tSKUID = SKHashHex.substring(i, i+=8)+'-'+
                  SKHashHex.substring(i, i+=4)+'-'+

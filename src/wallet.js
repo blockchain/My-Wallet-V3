@@ -3,8 +3,6 @@
 var MyWallet = module.exports = {};
 
 var assert = require('assert');
-var CryptoJS = require('crypto-js');
-var xregexp = require('xregexp');
 var Bitcoin = require('bitcoinjs-lib');
 var ECKey = Bitcoin.ECKey;
 var BigInteger = require('bigi');
@@ -775,7 +773,7 @@ function decryptAndInitializeWallet(success, error, decrypt_success, build_hd_su
 MyWallet.makePairingCode = function(success, error) {
   try {
     MyWallet.securePost('wallet', { method : 'pairing-encryption-password' }, function(encryption_phrase) {
-      success('1|' + MyWallet.wallet.guid + '|' + WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + CryptoJS.enc.Utf8.parse(WalletStore.getPassword()).toString(), encryption_phrase, 10));
+      success('1|' + MyWallet.wallet.guid + '|' + WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + WalletStore.getPassword(), encryption_phrase, 10));
     }, function(e) {
       error(e);
     });

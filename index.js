@@ -22,7 +22,6 @@ try {
 
 module.exports = {
   Buffer: Buffer,
-  CryptoJS: require('crypto-js'),
   MyWallet: require('./src/wallet'),
   WalletStore: require('./src/wallet-store'),
   WalletCrypto: require('./src/wallet-crypto'),

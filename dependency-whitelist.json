@@ -25,11 +25,6 @@
     "commits" : ["fb1ba931a46d41a7c238717492b66201b2995840"],
     "repo" : "bitwiseshiftleft/sjcl"
   },
-  "xregexp" : {
-    "version": "2.0.0",
-    "commits" : ["fc69aaf7d9cd56ac06e0cda6cdf2e4625c7dcaf3"],
-    "repo" : "slevithan/XRegExp"
-  },
   "util" : {
     "version" : "0.10.3",
     "commits" : ["b5d10a26402c3b60ce496e675a13c58bbed47801"],
@@ -89,11 +84,6 @@
     "version" : "2.0.1",
     "commits" : ["849c4a44af3275dd1fa5ae221e5e87304b43e165"],
     "repo" : "crypto-browserify/randombytes"
-  },
-  "crypto-js" : {
-    "version" : "3.1.4",
-    "commits" : ["7ed8a08ceac45093aacbcc5aed11e28bcbb7c58e"],
-    "repo" : "brix/crypto-js"
   },
   "es6-promise" : {
     "version" : "3.0.2",
