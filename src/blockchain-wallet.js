@@ -88,8 +88,8 @@ function Wallet(object) {
   this._txPerScroll     = 50;
 
   var getWalletContext = function () {
-    var xpubs = this.hdwallet && this.hdwallet.activeXpubs;
-    return this.activeAddresses.concat(xpubs || []);
+    var xpubs = this.hdwallet && this.hdwallet.xpubs;
+    return this.addresses.concat(xpubs || []);
   }.bind(this);
 
   this._txList = new TxList(getWalletContext, this._txPerScroll);

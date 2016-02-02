@@ -27,6 +27,12 @@ Object.defineProperties(TransactionList.prototype, {
         });
     }
   },
+  'transaction': {
+    configurable: false,
+    value: function (hash) {
+      return this._transactions.filter(t => t.hash === hash)[0];
+    }
+  },
   'loadNumber': {
     configurable: false,
     get: function () { return this._loadNumber; }
