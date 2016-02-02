@@ -36,6 +36,11 @@ RNG.prototype.xor = function (a, b) {
 
 // run :: Int -> Fun -> Buffer
 RNG.prototype.run = function (sizeBytes, callback) {
+  if(!Buffer.prototype.every || typeof(Buffer.prototype.every) !== "function") {
+    // iOs workaround:
+    Buffer.prototype.every = Array.prototype.every;
+  }
+
   try {
     var b = sizeBytes ? sizeBytes : this.BYTES;
     var serverH = this.getServerEntropy(b);
