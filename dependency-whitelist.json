@@ -8,7 +8,7 @@
   "bip39" : {
     "version": "2.1.2",
     "commits" : ["3beea7b1212881f59a9306dc0893c95cc583b488"],
-    "repo" : "weilu/bip39"
+    "repo" : "bitcoinjs/bip39"
   },
   "bitcoinjs-lib" : {
     "version": "1.5.8",
@@ -76,28 +76,88 @@
     "repo" : "crypto-browserify/createHmac"
   },
   "cipher-base" : {
-    "version" : "1.0.1",
-    "commits" : ["5f5eb4a23599806ef5f92aa25930ac0beeb35bd1"],
+    "version" : "1.0.2",
+    "commits" : ["c295535e1eef90a587dba110c8799bfd68f75161"],
     "repo" : "crypto-browserify/cipher-base"
   },
   "randombytes" : {
-    "version" : "2.0.1",
-    "commits" : ["849c4a44af3275dd1fa5ae221e5e87304b43e165"],
+    "version" : "2.0.2",
+    "commits" : ["9e49a0c722df7755376cfed04aeca651526540e5"],
     "repo" : "crypto-browserify/randombytes"
   },
   "es6-promise" : {
     "version" : "3.0.2",
-    "commits" : ["7d90241d79d8a50e340abb3d964c47fe79a214ba"],
+    "commits" : ["6c49ef79609737bac2b496d508806a3d5e37303e"],
     "repo" : "jakearchibald/es6-promise"
   },
   "isomorphic-fetch" : {
-    "version" : "2.2.0",
+    "version" : "2.2.1",
     "commits" : ["43437dc5b381e391b73522d71cea23fc72675154"],
     "repo" : "matthew-andrews/isomorphic-fetch"
+  },
+  "node-fetch" : {
+    "version" : "1.3.3",
+    "commits" : ["fd3f89fcd94e5bcee31de4cbca4c15cd79999b07"],
+    "repo" : "bitinn/node-fetch"
+  },
+  "encoding" : {
+    "version" : "0.1.12",
+    "commits" : ["91ae950aaa854a119122c27cdbabd8c5585106f7"],
+    "repo" : "andris9/encoding"
+  },
+  "iconv-lite" : {
+    "version" : "0.4.13",
+    "commits" : ["f5ec51b1e7dd1477a3570824960641eebdc5fbc6"],
+    "repo" : "ashtuchkin/iconv-lite"
+  },
+  "whatwg-fetch" : {
+    "version" : "0.11.0",
+    "commits" : ["989a1e8132e9adb4c4e973875ad043ff7219fc5a"],
+    "repo" : "github/fetch"
   },
   "pbkdf2" : {
     "version" : "3.0.4",
     "commits" : ["c9b595c784154e433995faf6cd81813aef29c713"],
     "repo" : "crypto-browserify/pbkdf2"
+  },
+  "ws" : {
+    "version" : "0.8.1",
+    "commits" : ["74f567e0221a14071bb40eb1902e946524a11862"],
+    "repo" : "websockets/ws"
+  },
+  "options" : {
+    "version" : "0.0.6",
+    "commits" : ["ff53d0a092c897cb95964232a96fe17da65c11af"],
+    "repo" : "einaros/options.js"
+  },
+  "ultron" : {
+    "version" : "1.0.2",
+    "commits" : ["a10482ae98a09120821545456c90c6d60d540f7c"],
+    "repo" : "unshiftio/ultron"
+  },
+  "bufferutil" : {
+    "version" : "1.2.1",
+    "commits" : ["cb7163377b8032fb79ddd835a549c83488585859"],
+    "repo" : "websockets/bufferutil"
+  },
+  "utf-8" : {
+    "version" : "1.0.0",
+    "commits" : ["f2ba4f9207957ab81e500935915c65853bfd3fe4"],
+    "repo" : "nfroidure/UTF8.js"
+  },
+  "utf-8-validate" : {
+    "version" : "1.2.1",
+    "commits" : ["8067ecff68899b9a1bb31d6906c80e1d5e88bcc7"],
+    "repo" : "websockets/utf-8-validate"
+  },
+  "bindings" : {
+    "version" : "1.2.1",
+    "commits" : ["e404152ee27f8478ccbc7122ee051246e8e5ec02"],
+    "repo" : "TooTallNate/node-bindings"
+  },
+  "nan" : {
+    "version" : "2.2.0",
+    "commits" : ["eca212b486d2dcf009201291472911dd842df623"],
+    "repo" : "nodejs/nan"
   }
 }
