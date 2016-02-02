@@ -5,6 +5,7 @@ module.exports = Address;
 var Base58   = require('bs58');
 var RNG      = require('./rng');
 var Bitcoin  = require('bitcoinjs-lib');
+var Bip38    = require('bip38');
 var Helpers  = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 var shared   = require('./shared');
@@ -183,6 +184,24 @@ Address.reviver = function(k,v){
   if (k === '') return new Address(v);
   return v;
 }
+
+Address.decryptBip38 = function (key, passphrase) {
+  try       { var decryptedWIF = new Bip38().decrypt(key, passphrase);  }
+  catch (e) { throw 'Invalid private key format';                       }
+
+  var bs58Addr  = Bitcoin.ECKey.fromWIF(decryptedWIF).pub.getAddress().toBase58Check()
+    , checksum  = Bitcoin.crypto.hash256(bs58Addr)
+    , keyHex    = new Buffer(Base58.decode(key));
+
+  if (checksum[0] != keyHex[3] ||
+      checksum[1] != keyHex[4] ||
+      checksum[2] != keyHex[5] ||
+      checksum[3] != keyHex[6]) {
+    throw 'Incorrect password';
+  }
+
+  return decryptedWIF;
+};
 
 Address.prototype.toJSON = function(){
   var address = {
