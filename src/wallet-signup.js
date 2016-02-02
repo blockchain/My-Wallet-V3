@@ -103,7 +103,7 @@ function generateNewWallet(password, email, firstAccountName, success, error, is
       }, decryptWalletProgress);
     };
 
-    Wallet.new(guid, sharedKey, firstAccountName, saveWallet, isHD);
+    Wallet.new(guid, sharedKey, firstAccountName, saveWallet, error, isHD);
 
   }).catch(error);
 };

@@ -8,6 +8,7 @@ var Helpers = require('./helpers');
 var HDAccount = require('./hd-account');
 var WalletCrypto = require('./wallet-crypto');
 var BIP39 = require('bip39');
+var RNG = require('./rng');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 ////////////////////////////////////////////////////////////////////////////////
 // Address class
@@ -153,7 +154,7 @@ function getMasterHex (seedHex, bip39Password, cipher){
 // restore hdwallet
 
 HDWallet.new = function(cipher){
-  var mnemonic = BIP39.generateMnemonic();
+  var mnemonic = BIP39.generateMnemonic(undefined, RNG.run.bind(RNG));
   var seedHex  = BIP39.mnemonicToEntropy(mnemonic);
   return HDWallet.restore(seedHex, '', cipher);
 };
