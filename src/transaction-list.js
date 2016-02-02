@@ -1,6 +1,7 @@
 'use strict';
 
 var assert  = require('assert')
+  , EventEmitter  = require('events')
   , Helpers = require('./helpers')
   , API     = require('./api')
   , Tx      = require('./wallet-transaction');
@@ -12,11 +13,7 @@ var TransactionList = function (getContext, loadNumber) {
   this._context       = getContext();
   this._transactions  = [];
   this._txsFetched    = 0;
-  this._observers     = [];
-
-  this._notifyObservers = function () {
-    this._observers.forEach(function (obs) { obs(); });
-  };
+  this._events        = new EventEmitter();
 };
 
 Object.defineProperties(TransactionList.prototype, {
@@ -54,20 +51,19 @@ TransactionList.prototype.fetchTxs = function (amount) {
 TransactionList.prototype.pushTxs = function (txs) {
   txs = Helpers.toArrayFormat(txs).map(Tx.factory);
   this._transactions = this._transactions.concat(txs);
-  this._notifyObservers();
+  this._events.emit('update');
 };
 
 TransactionList.prototype.shiftTxs = function (txs) {
   txs = Helpers.toArrayFormat(txs).map(Tx.factory);
   this._transactions = txs.concat(this._transactions);
-  this._notifyObservers();
+  this._events.emit('update');
 };
 
-TransactionList.prototype.subscribe = function (callback) {
-  this._observers.push(callback);
-  return function () {
-    this._observers.splice(this._observers.indexOf(callback), 1);
-  }.bind(this);
+TransactionList.prototype.subscribe = function (listener) {
+  if ('function' !== typeof listener) return;
+  this._events.addListener('update', listener);
+  return this._events.removeListener.bind(this._events, 'update', listener);
 };
 
 module.exports = TransactionList;
