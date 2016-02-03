@@ -8,6 +8,7 @@ var Bitcoin  = require('bitcoinjs-lib');
 var Helpers  = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 var shared   = require('./shared');
+var ImportExport = require('./import-export');
 ////////////////////////////////////////////////////////////////////////////////
 // Address class
 function Address(object){
@@ -174,6 +175,35 @@ Address.import = function(key, label){
   return address;
 };
 
+Address.fromString = function(keyOrAddr, label, bipPass){
+  var asyncParse = function(resolve, reject) {
+    if (Helpers.isBitcoinAddress(keyOrAddr)) {
+      return resolve(Address.import(keyOrAddr, label));
+    } else {
+      // Import private key
+      var format    = MyWallet.detectPrivateKeyFormat(keyOrAddr)
+        , okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
+
+      if (format === 'bip38') {
+        if (bipPass == undefined || bipPass === '') {
+          return reject('needsBip38');
+        }
+        ImportExport.parseBIP38toECKey(keyOrAddr, bipPass,
+          function (key) { resolve(Address.import(key, label));},
+          function ()    { reject('wrongBipPass'); },
+          function ()    { reject('importError');}
+        );
+      }
+      else if (okFormats.indexOf(format) > -1) {
+        var k = MyWallet.privateKeyStringToKey(keyOrAddr, format);
+        return resolve(Address.import(k, label));
+      }
+      else { reject('unknown key format'); }
+    }
+  }
+  return new Promise(asyncParse);
+}
+
 Address.new = function(label){
   var key = Bitcoin.ECKey.makeRandom(true, RNG.run.bind(RNG));
   return Address.import(key, label);
@@ -182,7 +212,7 @@ Address.new = function(label){
 Address.reviver = function(k,v){
   if (k === '') return new Address(v);
   return v;
-}
+};
 
 Address.prototype.toJSON = function(){
   var address = {
