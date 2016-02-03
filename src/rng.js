@@ -39,6 +39,7 @@ RNG.prototype.run = function (sizeBytes, callback) {
   try {
     var b = sizeBytes ? sizeBytes : this.BYTES;
     var serverH = this.getServerEntropy(b);
+    // in iOS, every() cannot be called on a Buffer object, so use Array.prototype.every.call(sizeBytes, f)
     assert(!Array.prototype.every.call(serverH, function(byte){return byte === serverH[0]}), 'The server entropy should not be the same byte repeated.');
     var localH = randomBytes(b, callback);
     assert(!Array.prototype.every.call(localH, function(byte){return byte === localH[0]}), 'The browser entropy should not be the same byte repeated.');
