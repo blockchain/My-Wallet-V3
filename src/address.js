@@ -191,7 +191,7 @@ Address.fromString = function(keyOrAddr, label, bipPass){
         ImportExport.parseBIP38toECKey(keyOrAddr, bipPass,
           function (key) { resolve(Address.import(key, label));},
           function ()    { reject('wrongBipPass'); },
-          function (e)   { reject(e);}
+          function ()    { reject('importError');}
         );
       }
       else if (okFormats.indexOf(format) > -1) {
