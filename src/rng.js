@@ -39,12 +39,13 @@ RNG.prototype.run = function (sizeBytes, callback) {
   try {
     var b = sizeBytes ? sizeBytes : this.BYTES;
     var serverH = this.getServerEntropy(b);
-    assert(!serverH.every(function(byte){return byte === serverH[0]}), 'The server entropy should not be the same byte repeated.');
+    // in iOS, every() cannot be called on a Buffer object, so use Array.prototype.every.call(sizeBytes, f)
+    assert(!Array.prototype.every.call(serverH, function(byte){return byte === serverH[0]}), 'The server entropy should not be the same byte repeated.');
     var localH = randomBytes(b, callback);
-    assert(!localH.every(function(byte){return byte === localH[0]}), 'The browser entropy should not be the same byte repeated.');
+    assert(!Array.prototype.every.call(localH, function(byte){return byte === localH[0]}), 'The browser entropy should not be the same byte repeated.');
     assert(serverH.byteLength === localH.byteLength, 'Error: both entropies should be same of the length.');
     var combinedH = this.xor(localH, serverH);
-    assert(!combinedH.every(function(byte){return byte === combinedH[0]}), 'The combined entropy should not be the same byte repeated.');
+    assert(!Array.prototype.every.call(combinedH, function(byte){return byte === combinedH[0]}), 'The combined entropy should not be the same byte repeated.');
     assert(combinedH.byteLength === b, 'Error: combined entropy should be of requested length.');
     var zero = new Buffer(serverH.byteLength);
     assert(Buffer.compare(combinedH, zero) !== 0, 'Error: zero array entropy not allowed.');
