@@ -33,14 +33,13 @@ RNG.prototype.run = function (nBytes) {
   try {
     nBytes = !isNaN(nBytes) && nBytes > 0 ? nBytes : this.BYTES;
     var serverH = this.getServerEntropy(nBytes);
+    var localH = randomBytes(nBytes);
+    var combinedH = this.xor(localH, serverH);
 
     assert(
       !Array.prototype.every.call(serverH, function (b) { return b === serverH[0] }),
       'The server entropy should not be the same byte repeated.'
     );
-
-    var localH = randomBytes(nBytes);
-
     assert(
       !Array.prototype.every.call(localH, function (b) { return b === localH[0] }),
       'The browser entropy should not be the same byte repeated.'
@@ -49,9 +48,6 @@ RNG.prototype.run = function (nBytes) {
       serverH.byteLength === localH.byteLength,
       'Both entropies should be same of the length.'
     );
-
-    var combinedH = this.xor(localH, serverH);
-
     assert(
       !Array.prototype.every.call(combinedH, function (b) { return b === combinedH[0] }),
       'The combined entropy should not be the same byte repeated.'
