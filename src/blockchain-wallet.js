@@ -25,7 +25,6 @@ var Tx = require('./wallet-transaction');
 var shared = require('./shared');
 var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var KeyRing  = require('./keyring');
-var Analytics = require('./analytics');
 var TxList = require('./transaction-list');
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -757,7 +756,6 @@ Wallet.prototype.newHDWallet = function(firstAccountLabel, pw, success, error){
   var account = this.newAccount(label, pw, this._hd_wallets.length-1, true);
   var guid = this.guid;
   MyWallet.syncWallet(function(res) {
-    Analytics.walletUpgraded(guid);
     success();
   }, error);
 

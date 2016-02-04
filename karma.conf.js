@@ -68,7 +68,6 @@ module.exports = function(karma) {
       'node_modules/jasmine-es6-promise-matchers/jasmine-es6-promise-matchers.js',
       'tests/wallet_token_endpoints.js.coffee',
       'tests/wallet_network_spec.js.coffee',
-      'tests/analytics.js.coffee',
       'tests/helpers_spec.js.coffee',
       'tests/blockchain_socket.js.coffee',
       // 'src/shared.js',
