@@ -36,16 +36,11 @@ describe "RNG", ->
       R = '5e2266a1'
       expect(RNG.xor(A,B).toString('hex')).toEqual(R)
 
-    it "should throw when buffers are of different length", ->
+    it "should return the shortest common length", ->
       A = new Buffer('a123'    , 'hex')
       B = new Buffer('ff0123cd', 'hex')
-      spy = jasmine.createSpy('after xor')
-      try
-        RNG.xor(A, B)
-        spy()
-      catch error
-        expect(error.message).toEqual('Expected arguments to have equal length')
-      expect(spy).not.toHaveBeenCalled()
+      R = '5e22'
+      expect(RNG.xor(A,B).toString('hex')).toEqual(R)
 
   describe ".run()", ->
     browser = {

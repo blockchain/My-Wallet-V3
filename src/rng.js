@@ -18,14 +18,19 @@ function RNG() {
 
 // xor :: Buffer -> Buffer -> Buffer
 RNG.prototype.xor = function (a, b) {
-  assert(Buffer.isBuffer(a) && Buffer.isBuffer(b), 'Expected arguments to be buffers');
-  assert(a.byteLength === b.byteLength, 'Expected arguments to have equal length');
+  assert(
+    Buffer.isBuffer(a) && Buffer.isBuffer(b),
+    'Expected arguments to be buffers'
+  );
 
-  var xorBytes = Array.prototype.map.call(a, function (aByte, index) {
-    return aByte ^ b[index];
-  });
+  var length = Math.min(a.length, b.length);
+  var buffer = new Buffer(length);
 
-  return new Buffer(xorBytes);
+  for (var i = 0; i < length; ++i) {
+    buffer[i] = a[i] ^ b[i];
+  }
+
+  return buffer;
 };
 
 // run :: Int -> Buffer
