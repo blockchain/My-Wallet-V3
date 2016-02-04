@@ -69,6 +69,7 @@ module.exports = function(karma) {
       'tests/wallet_token_endpoints.js.coffee',
       'tests/wallet_network_spec.js.coffee',
       'tests/analytics.js.coffee',
+      'tests/blockchain_socket.js.coffee',
       // 'src/shared.js',
       // 'tests/**/*.coffee',
       // Or specify individual test files:
