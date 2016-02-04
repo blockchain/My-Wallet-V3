@@ -25,16 +25,16 @@ describe "analytics", ->
       }
   }
 
-  CryptoJS = {
-    SHA256: (input) -> {
-      toString: () ->
+  WalletCrypto = {
+    sha256: (input) -> {
+      toString: (enc) ->
         input + "|sha256"
     }
   }
 
   Analytics = proxyquire('../src/analytics', {
      './api': API,
-     'crypto-js' : CryptoJS
+     './wallet-crypto' : WalletCrypto
   })
 
   describe "postEvent", ->

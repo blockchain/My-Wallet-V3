@@ -1,6 +1,5 @@
 'use strict';
 
-var CryptoJS = require('crypto-js');
 var MyWallet = require('./wallet');
 var WalletCrypto = require('./wallet-crypto');
 var hasProp = {}.hasOwnProperty;
@@ -168,7 +167,7 @@ var WalletStore = (function() {
       guid = stringValue;
     },
     generatePayloadChecksum: function() {
-      return CryptoJS.SHA256(encrypted_wallet_data).toString();
+      return WalletCrypto.sha256(encrypted_wallet_data).toString('hex');
     },
     setEncryptedWalletData: function(data) {
       if (!data || data.length == 0) {

@@ -3,7 +3,7 @@
 var assert = require('assert');
 
 var API = require('./api');
-var CryptoJS = require('crypto-js');
+var WalletCrypto = require('./wallet-crypto');
 
 // If there is a problem with the analytics endpoint, the application should
 // just proceed. Therefor we're not returning a promise in the methods below.
@@ -23,7 +23,7 @@ function postEvent(name, guid) {
 
   var params = {
     name: name,
-    hashed_guid: CryptoJS.SHA256(guid).toString()
+    hashed_guid: WalletCrypto.sha256(guid).toString('hex')
   };
 
   API.request('POST', 'wallet-event', params, false)

@@ -172,69 +172,40 @@ package = JSON.parse(File.read('package.json'))
 #########
 # NPM   #
 #########
-if package["name"] == "My-Wallet-HD" # Only My-Wallet-HD uses NPM
 
-  shrinkwrap = JSON.parse(File.read('npm-shrinkwrap.json'))
-  deps = shrinkwrap["dependencies"]
+shrinkwrap = JSON.parse(File.read('npm-shrinkwrap.json'))
+deps = shrinkwrap["dependencies"]
 
-  output = JSON.parse(File.read('npm-shrinkwrap.json')) # More reliable than cloning
-  output_deps = output["dependencies"]
+output = JSON.parse(File.read('npm-shrinkwrap.json')) # More reliable than cloning
+output_deps = output["dependencies"]
 
-  check_commits!(deps, whitelist, output_deps, :npm)
+check_commits!(deps, whitelist, output_deps, :npm)
 
-  # TODO: shrinkwrap each subdependency and/or disallow packages to install dependencies themselves?
+# TODO: shrinkwrap each subdependency and/or disallow packages to install dependencies themselves?
 
-  File.write("build/npm-shrinkwrap.json", JSON.pretty_generate(output))
-
+File.write("build/npm-shrinkwrap.json", JSON.pretty_generate(output))
 
 
-  output = package.dup
 
-  # output["dependencies"] = {}
+output = package.dup
 
-  # Remove unessential dev dependencies:
-  output["devDependencies"].keys.each do |devDep|
-    output["devDependencies"].delete(devDep) unless ["grunt-contrib-clean", "grunt-contrib-concat", "grunt-surround", "grunt-contrib-coffee"].include?(devDep)
-  end
+# output["dependencies"] = {}
 
-  output.delete("author")
-  output.delete("contributors")
-  output.delete("homepage")
-  output.delete("bugs")
-  output.delete("license")
-  output.delete("repository")
-  output["scripts"].delete("test")
-  if package["name"] == "My-Wallet-HD"
-    output["scripts"]["postinstall"] = "cd node_modules/sjcl && ./configure --with-sha1 && make && cd -"
-  elsif package["name"] == "angular-blockchain-wallet"
-    output["scripts"].delete("postinstall")
-  else
-    abort("Package renamed? " + package["name"])
-  end
-
-  File.write("build/package.json", JSON.pretty_generate(output))
+# Remove unessential dev dependencies:
+output["devDependencies"].keys.each do |devDep|
+  output["devDependencies"].delete(devDep) unless ["grunt-contrib-clean", "grunt-contrib-concat", "grunt-surround", "grunt-contrib-coffee"].include?(devDep)
 end
 
-#########
-# Bower #
-#########
-# Only used by the frontend
-if package["name"] == "angular-blockchain-wallet"
-  bower = JSON.parse(File.read('bower.json'))
-  output = bower.dup
-  output.delete("authors")
-  output.delete("main")
-  output.delete("ignore")
-  output.delete("license")
-  output.delete("keywords")
-  # output.delete("devDependencies") # TODO don't load LocalStorageModule in production
+output.delete("author")
+output.delete("contributors")
+output.delete("homepage")
+output.delete("bugs")
+output.delete("license")
+output.delete("repository")
+output["scripts"].delete("test")
+output["scripts"]["postinstall"] = "cd node_modules/sjcl && ./configure --with-sha1 && make && cd -"
 
-  deps = bower["dependencies"]
-
-  check_commits!(deps, whitelist, output["dependencies"], :bower)
-
-  File.write("build/bower.json", JSON.pretty_generate(output))
-end
+File.write("build/package.json", JSON.pretty_generate(output))
 
 if @failed
   abort "Please fix the above issues..."

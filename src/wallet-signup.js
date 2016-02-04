@@ -1,7 +1,6 @@
 'use strict';
 
 var assert = require('assert');
-var CryptoJS = require('crypto-js');
 
 var MyWallet = require('./wallet');
 var WalletStore = require('./wallet-store');
@@ -37,7 +36,7 @@ function insertWallet(guid, sharedKey, password, extra, successcallback, errorca
       function success() { // success callback for decryptWallet
 
         //SHA256 new_checksum verified by server in case of corruption during transit
-        var new_checksum = CryptoJS.SHA256(crypted, {asBytes: true}).toString();
+        var new_checksum = WalletCrypto.sha256(crypted).toString('hex');
 
         extra = extra || '';
 

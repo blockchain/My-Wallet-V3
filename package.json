@@ -25,6 +25,8 @@
   },
   "scripts": {
     "postinstall": "cd node_modules/sjcl || cd ../sjcl && ./configure --with-sha1 && make",
+    "disc": "browserify --full-paths index.js | discify --open",
+    "disc:min": "browserify --full-paths index.js | uglifyjs | discify --open",
     "test": "./node_modules/karma/bin/karma start karma.conf.js"
   },
   "dependencies": {
@@ -32,14 +34,12 @@
     "bip39": "2.1.*",
     "bitcoinjs-lib": "1.5.*",
     "bs58": "2.0.*",
-    "crypto-js": "3.1.4",
     "es6-promise": "^3.0.2",
     "isomorphic-fetch": "^2.2.0",
     "randombytes": "^2.0.1",
     "sjcl": "1.0.*",
     "unorm": "^1.4.1",
-    "ws": "^0.8.0",
-    "xregexp": "2.0.*"
+    "ws": "0.8.*"
   },
   "devDependencies": {
     "browserify": "~8.1.1",

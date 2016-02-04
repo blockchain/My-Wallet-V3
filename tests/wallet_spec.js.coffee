@@ -7,7 +7,6 @@ WalletSignup = {}
 stubs = { './wallet-store': WalletStore, './wallet-crypto': WalletCrypto, './wallet-signup': WalletSignup}
 
 MyWallet = proxyquire('../src/wallet', stubs)
-CryptoJS = require('crypto-js')
 
 # TODO only to get coverage report until there are tests for these files:
 BlockchainSettingsAPI = proxyquire('../src/blockchain-settings-api', {})
@@ -22,10 +21,10 @@ describe "Wallet", ->
   describe "stretchPassword()", ->
     it "should stretch a password", ->
       password = "1234567890"
-      salt = CryptoJS.enc.Hex.parse("a633e05b567f64482d7620170bd45201")
+      salt = 'a633e05b567f64482d7620170bd45201'
       pbkdf2_iterations = 10
 
-      expect(WalletCrypto.stretchPassword(password, salt, pbkdf2_iterations).toString()).toBe("4be158806522094dd184bc9c093ea185c6a4ec003bdc6323108e3f5eeb7e388d")
+      expect(WalletCrypto.stretchPassword(password, salt, pbkdf2_iterations).toString('hex')).toBe("4be158806522094dd184bc9c093ea185c6a4ec003bdc6323108e3f5eeb7e388d")
 
   describe "decryptPasswordWithProcessedPin()", ->
         it "should return the password", ->
@@ -119,7 +118,7 @@ describe "Wallet", ->
 
       spyOn(obj, "success")
 
-      spyOn(WalletCrypto, "stretchPassword").and.returnValue(CryptoJS.enc.Hex.parse("338f6acb3fa8d4f2373c31a1cfe21dd6684a9ad62b4afff68e19d6b4cdabeea6"))
+      spyOn(WalletCrypto, "stretchPassword").and.returnValue("338f6acb3fa8d4f2373c31a1cfe21dd6684a9ad62b4afff68e19d6b4cdabeea6")
 
       WalletCrypto.decryptWallet(data, password, obj.success, obj.error)
 

@@ -1,37 +1,15 @@
 'use strict';
 
 var assert = require('assert');
-var CryptoJS = require('crypto-js');
 var Bitcoin = require('bitcoinjs-lib');
 var BigInteger = require('bigi');
 var Base58 = require('bs58');
 var Unorm = require('unorm');
+var WalletCrypto = require('./wallet-crypto');
 
 var hash256 = Bitcoin.crypto.hash256;
 
-
 var ImportExport = new function() {
-
-  function bufferToWordArray(buffer) {
-    assert(Buffer.isBuffer(buffer), "Expected Buffer, got", buffer);
-    var words = [];
-    for (var i = 0, b = 0; i < buffer.length; i++, b += 8) {
-      words[b >>> 5] |= buffer[i] << 24 - b % 32;
-    }
-
-    return new CryptoJS.lib.WordArray.init(words, buffer.length);
-  }
-
-  function wordArrayToBuffer(wordArray) {
-    assert(Array.isArray(wordArray.words), "Expected WordArray, got" + wordArray);
-    var words = wordArray.words;
-    var buffer = new Buffer(words.length * 4);
-    words.forEach(function(value, i) {
-      buffer.writeInt32BE(value & -1, i * 4);
-    });
-
-    return buffer;
-  }
 
   this.parseBIP38toECKey = function(base58Encrypted, passphrase, success, wrong_password, error) {
     var hex;
@@ -88,7 +66,7 @@ var ImportExport = new function() {
     }
 
     var decrypted;
-    var AES_opts = { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.NoPadding };
+    var AES_opts = { mode: WalletCrypto.AES.ECB, padding: WalletCrypto.pad.NoPadding };
 
     var verifyHashAndReturn = function() {
       var tmpkey = new Bitcoin.ECKey(decrypted, isCompPoint);
@@ -110,10 +88,9 @@ var ImportExport = new function() {
 
       ImportExport.Crypto_scrypt(passphrase, addresshash, 16384, 8, 8, 64, function(derivedBytes) {
 
-        var k = bufferToWordArray(derivedBytes.slice(32, 32+32));
+        var k = derivedBytes.slice(32, 32+32);
 
-        var decryptedWords = CryptoJS.AES.decrypt({ciphertext: bufferToWordArray(Buffer(hex.slice(7, 7+32)))}, k, AES_opts);
-        var decryptedBytes = wordArrayToBuffer(decryptedWords);
+        var decryptedBytes = WalletCrypto.AES.decrypt(Buffer(hex.slice(7, 7+32)), k, null, AES_opts);
         for (var x = 0; x < 32; x++) { decryptedBytes[x] ^= derivedBytes[x]; }
 
         decrypted = BigInteger.fromBuffer(decryptedBytes);
@@ -144,19 +121,15 @@ var ImportExport = new function() {
         var addresshashplusownerentropy = Buffer(hex.slice(3, 3+12));
 
         ImportExport.Crypto_scrypt(passpoint, addresshashplusownerentropy, 1024, 1, 1, 64, function(derived) {
-          var k = bufferToWordArray(derived.slice(32));
+          var k = derived.slice(32);
 
-          var unencryptedpart2 = CryptoJS.AES.decrypt({ciphertext: bufferToWordArray(encryptedpart2)}, k, AES_opts);
-
-          var unencryptedpart2Bytes = wordArrayToBuffer(unencryptedpart2);
+          var unencryptedpart2Bytes = WalletCrypto.AES.decrypt(encryptedpart2, k, null, AES_opts);
 
           for (var i = 0; i < 16; i++) { unencryptedpart2Bytes[i] ^= derived[i+16]; }
 
           var encryptedpart1 = Buffer.concat([Buffer(hex.slice(15, 15+8)), Buffer(unencryptedpart2Bytes.slice(0, 0+8))]);
 
-          var unencryptedpart1 = CryptoJS.AES.decrypt({ciphertext: bufferToWordArray(encryptedpart1)}, k, AES_opts);
-
-          var unencryptedpart1Bytes = wordArrayToBuffer(unencryptedpart1);
+          var unencryptedpart1Bytes = WalletCrypto.AES.decrypt(encryptedpart1, k, null, AES_opts);
 
           for (var i = 0; i < 16; i++) { unencryptedpart1Bytes[i] ^= derived[i]; }
 
@@ -185,74 +158,20 @@ var ImportExport = new function() {
     if (N > MAX_VALUE / 128 / r) throw Error("Parameter N is too large");
     if (r > MAX_VALUE / 128 / p) throw Error("Parameter r is too large");
 
-    if(typeof(passwd) !== 'string') {
-      passwd = bufferToWordArray(passwd);
+    if(!Buffer.isBuffer(passwd)) {
+      passwd = new Buffer(passwd, 'utf8');
     }
 
-    if(typeof(salt) !== 'string') {
-      salt = bufferToWordArray(salt);
+    if(!Buffer.isBuffer(salt)) {
+      salt = new Buffer(salt, 'utf8');
     }
 
-    var PBKDF2_opts = {iterations: 1, keySize: dkLen/4, hasher: CryptoJS.algo.SHA256};
+    var B = WalletCrypto.pbkdf2(passwd, salt, 1, (p * 128 * r), WalletCrypto.algo.SHA256);
 
-    var B = CryptoJS.PBKDF2(passwd, salt, { iterations: 1, keySize: (p * 128 * r)/4, hasher: CryptoJS.algo.SHA256});
-
-    B = wordArrayToBuffer(B);
-
-    // There is a bug in the web worker below, so it's not used currently.
-
-    // try {
-    //     var i = 0;
-    //     var worksDone = 0;
-    //     var makeWorker = function() {
-    //         if (!workerUrl) {
-    //             var code = '('+scryptCore.toString()+')()';
-    //             var blob;
-    //             try {
-    //                 blob = new Blob([code], {type: "text/javascript"});
-    //             } catch(e) {
-    //                 window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder || window.MSBlobBuilder;
-    //                 blob = new BlobBuilder();
-    //                 blob.append(code);
-    //                 blob = blob.getBlob("text/javascript");
-    //             }
-    //             workerUrl = URL.createObjectURL(blob);
-    //         }
-    //         var worker = new Worker(workerUrl);
-    //         worker.onmessage = function(event) {
-    //             var Bi = event.data[0], Bslice = event.data[1];
-    //             worksDone++;
-    //
-    //             if (i < p) {
-    //                 worker.postMessage([N, r, p, B, i++]);
-    //             }
-    //
-    //             var length = Bslice.length, destPos = Bi * 128 * r, srcPos = 0;
-    //             while (length--) {
-    //                 B[destPos++] = Bslice[srcPos++];
-    //             }
-    //
-    //             if (worksDone == p) {
-    //                 B = Buffer(B);
-    //                 B = bufferToWordArray(B);
-    //
-    //                 var ret = wordArrayToBuffer(CryptoJS.PBKDF2(passwd, B, PBKDF2_opts));
-    //                 callback(ret);
-    //             }
-    //         };
-    //         return worker;
-    //     };
-    //     var workers = [makeWorker()];
-    //     workers[0].postMessage([N, r, p, B, i++]);
-    //     if (p > 1) {
-    //         workers[1].postMessage([N, r, p, B, i++]);
-    //     }
-    // } catch (e) {
     // Called in Firefox and IE which don't support Blob web workers with CSP enabled.
     window.setTimeout(function() {
       scryptCore();
-      B = bufferToWordArray(B);
-      var ret = wordArrayToBuffer(CryptoJS.PBKDF2(passwd, B, PBKDF2_opts));
+      var ret = WalletCrypto.pbkdf2(passwd, B, 1, dkLen, WalletCrypto.algo.SHA256);
 
       callback(ret);
     }, 0);
