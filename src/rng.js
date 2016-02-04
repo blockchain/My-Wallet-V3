@@ -72,23 +72,37 @@ RNG.prototype.run = function (nBytes) {
 };
 
 // getServerEntropy :: int -> Buffer
-RNG.prototype.getServerEntropy = function (sizeBytes) {
+RNG.prototype.getServerEntropy = function (nBytes) {
+  assert(
+    this.FORMAT === 'hex',
+    'Only supported hex format.'
+  );
 
+  nBytes = !isNaN(nBytes) && nBytes > 0 ? nBytes : this.BYTES;
   var request = new XMLHttpRequest();
-  assert(this.FORMAT === 'hex', 'Only supported hex format.')
-  var b = sizeBytes ? sizeBytes : this.BYTES;
-  var data = { bytes: b, format: this.FORMAT };
-  var url = this.URL +  '?' + API.encodeFormData(data);
-  request.open(this.ACTION, url , false);
+  var data = { bytes: nBytes, format: this.FORMAT };
+  var url = this.URL + '?' + API.encodeFormData(data);
+
+  request.open(this.ACTION, url, false);
   request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
   request.send(null);
+
   if (request.status === 200) {
-    assert(Helpers.isHex(request.responseText), 'Error: non-hex server entropy answer.');
+    assert(
+      Helpers.isHex(request.responseText),
+      'Non-hex server entropy answer.'
+    );
+
     var B = new Buffer(request.responseText, this.FORMAT);
-    assert(B.byteLength === b, 'Error: different entropy length requested.');
+
+    assert(
+      B.byteLength === nBytes,
+      'Different entropy length requested.'
+    );
+
     return B;
   }
-  else{
-    throw 'network connection error';
+  else {
+    throw 'Received not ok status: ' + request.status;
   }
 }
