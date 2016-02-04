@@ -143,6 +143,13 @@ Object.defineProperties(Tx.prototype, {
       }
       return v;
     }
+  },
+  "belongsTo": {
+    configurable: false,
+    value: function (identity) {
+      return this.processedInputs.concat(this.processedOutputs)
+        .some(function (processed) { return processed.identity == identity; });
+    }
   }
 });
 
@@ -164,8 +171,15 @@ function isAccountChange(x) {
 };
 
 function accountPath(x){
-  var accIdx = MyWallet.wallet.hdwallet.account(x.xpub.m).index;
-  return accIdx + x.xpub.path.substr(1);
+  return account(x).index + x.xpub.path.substr(1);
+};
+
+function account(x) {
+  return MyWallet.wallet.hdwallet.account(x.xpub.m);
+};
+
+function address(x) {
+  return MyWallet.wallet.key(x.addr);
 };
 
 function tagCoin(x) {
@@ -173,19 +187,25 @@ function tagCoin(x) {
   var am = x.value;
   var coinType = null;
   var change = false;
+  var id;
+  var label = null;
 
   switch (true) {
     case isLegacy(x):
       coinType = "legacy";
+      id = 'imported';
+      label = address(x).label;
       break;
     case isAccount(x):
       coinType = accountPath(x);
       change = isAccountChange(x);
+      id = account(x).index;
+      label = account(x).label;
       break;
     default:
       coinType = "external";
   }
-  return {address: ad, amount: am, coinType: coinType, change: change};
+  return {address: ad, amount: am, coinType: coinType, change: change, label: label, identity: id};
 };
 
 function unpackInput(input) {

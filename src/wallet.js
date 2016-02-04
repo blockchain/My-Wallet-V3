@@ -197,6 +197,9 @@ function socketConnect() {
       var tx_processed = MyWallet.processTransaction(tx);
       var tx_account = tx_processed.to.accounts[0];
 
+      // Adds raw tx to txList, processing done by txList
+      MyWallet.wallet.txList.shiftTxs(obj.x);
+
       //Check if this is a duplicate
       //Maybe should have a map_prev to check for possible double spends
       for (var key in transactions) {
