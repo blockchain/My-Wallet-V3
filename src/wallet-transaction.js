@@ -154,17 +154,13 @@ Object.defineProperties(Tx.prototype, {
   "fromWatchOnly": {
     configurable: false,
     get: function() {
-      return this._processed_ins
-        .map(function(o) { return o.isWatchOnly ? true : false})
-        .reduce(Helpers.or);
+      return this._processed_ins.some(function (o) { return o.isWatchOnly; });
     }
   },
   "toWatchOnly": {
     configurable: false,
     get: function() {
-      return this._processed_outs
-        .map(function(o) { return o.isWatchOnly ? true : false})
-        .reduce(Helpers.or);
+      return this._processed_outs.some(function (o) { return o.isWatchOnly; });
     }
   },
 });
