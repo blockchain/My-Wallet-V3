@@ -1,5 +1,6 @@
 
 var WebSocket = require('ws');
+var Helpers   = require('./helpers');
 
 function BlockchainSocket() {
   this.wsUrl = 'wss://blockchain.info/inv';
@@ -29,6 +30,7 @@ if (!(typeof window === 'undefined')) {
 
 
 BlockchainSocket.prototype.connect = function (onOpen, onMessage, onClose) {
+  if(Helpers.tor()) return;
 
   this.reconnect = function () {
     var connect = this.connectOnce.bind(this, onOpen, onMessage, onClose);
@@ -52,6 +54,8 @@ BlockchainSocket.prototype.connectOnce = function (onOpen, onMessage, onClose) {
 };
 
 BlockchainSocket.prototype.send = function (message) {
+  if(Helpers.tor()) return;
+
   this.reconnect();
   var send = function() {this.socket.send(message); }.bind(this);
   if (this.socket && this.socket.readyState === 1) { send();}

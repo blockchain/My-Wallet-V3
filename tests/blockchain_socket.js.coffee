@@ -10,8 +10,13 @@ describe "Websocket", ->
       url: url
     }
 
+  Helpers = {
+    tor: () -> false
+  }
+
   BlockchainSocket = proxyquire('../src/blockchain-socket', {
      'ws': ws,
+     './helpers': Helpers
   })
 
   describe "new", ->
@@ -34,6 +39,14 @@ describe "Websocket", ->
         # The mock websocket has a URL method:
         expect(ws.socket.url.indexOf("wss://")).toEqual(0)
 
+      describe "on TOR", ->
+        beforeEach ->
+          spyOn(Helpers, "tor").and.returnValue true
+
+        it "should not open a socket", ->
+          ws.connect()
+          expect(ws.socket).not.toBeDefined()
+
     describe "send()", ->
       beforeEach ->
         ws.connect()
@@ -43,3 +56,19 @@ describe "Websocket", ->
         spyOn(ws.socket, "send")
         ws.send(message)
         expect(ws.socket.send).toHaveBeenCalledWith(message)
+
+      describe "on TOR", ->
+        message = '{"op":"addr_sub", "addr": "1btc"}'
+
+        beforeEach ->
+          ws.socket = undefined
+          spyOn(Helpers, "tor").and.returnValue true
+          ws.connect()
+
+        it "should not reconnect", ->
+          ws.send(message)
+          expect(ws.socket).not.toBeDefined()
+
+        it "should do nothing", ->
+          # ws.socket is not defined, so nothing to spy on
+          expect(() -> ws.send(message)).not.toThrow()
