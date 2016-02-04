@@ -150,7 +150,23 @@ Object.defineProperties(Tx.prototype, {
       return this.processedInputs.concat(this.processedOutputs)
         .some(function (processed) { return processed.identity == identity; });
     }
-  }
+  },
+  "fromWatchOnly": {
+    configurable: false,
+    get: function() {
+      return this._processed_ins
+        .map(function(o) { return o.isWatchOnly ? true : false})
+        .reduce(Helpers.or);
+    }
+  },
+  "toWatchOnly": {
+    configurable: false,
+    get: function() {
+      return this._processed_outs
+        .map(function(o) { return o.isWatchOnly ? true : false})
+        .reduce(Helpers.or);
+    }
+  },
 });
 
 function isAccount(x) {
@@ -189,12 +205,15 @@ function tagCoin(x) {
   var change = false;
   var id;
   var label = null;
+  var isWatchOnly = null;
 
   switch (true) {
     case isLegacy(x):
       coinType = "legacy";
       id = 'imported';
-      label = address(x).label;
+      var addr = address(x);
+      label = addr.label;
+      isWatchOnly = addr.isWatchOnly;
       break;
     case isAccount(x):
       coinType = accountPath(x);
@@ -205,7 +224,15 @@ function tagCoin(x) {
     default:
       coinType = "external";
   }
-  return {address: ad, amount: am, coinType: coinType, change: change, label: label, identity: id};
+  return {
+    address: ad,
+    amount: am,
+    coinType: coinType,
+    change: change,
+    label: label,
+    identity: id,
+    isWatchOnly: isWatchOnly
+  };
 };
 
 function unpackInput(input) {
