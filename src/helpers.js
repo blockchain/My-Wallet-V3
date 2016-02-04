@@ -255,6 +255,27 @@ Helpers.scorePassword = function (password){
   return entropyWeighted(password);
 
 };
+
+Helpers.getHostName = function() {
+  if ((typeof window === 'undefined')) {
+    return null;
+  }
+
+  if (typeof window.location === 'undefined' || window.location.hostname === 'undefined') {
+    return null;
+  }
+
+  return window.location.hostname;
+}
+
+Helpers.tor = function () {
+  var hostname = Helpers.getHostName()
+
+  // NodeJS TOR detection not supported:
+  if(hostname === null) return null
+
+  return hostname.indexOf(".onion") > -1
+}
 ////////////////////////////////////////////////////////////////////////////////
 
 
