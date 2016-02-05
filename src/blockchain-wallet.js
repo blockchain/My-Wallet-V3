@@ -475,7 +475,17 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
   var modifyAddress = function (newKey) {
     var watchOnlyKey = this._addresses[addr];
     if (newKey.address !== watchOnlyKey.address) {
-      throw 'addressDoesNotMatchWithTheKey'
+      if (!this.containsLegacyAddress(newKey.address)) {
+        console.log(newKey)
+        return this.importLegacyAddress(privateKey, null, secPass, bipPass);
+      } else {
+         if (this.key(newKey.address).isWatchOnly) {
+           watchOnlyKey = this._addresses[newKey.address];
+         }  else {
+          throw 'privateKeyOfAnotherNonWatchOnlyAddress'
+         }
+      }
+
     }
     watchOnlyKey._priv = newKey._priv;
     if (this.isDoubleEncrypted) {
