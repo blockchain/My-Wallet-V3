@@ -101,7 +101,7 @@ var AES = {
     var cipher = crypto.createCipheriv(options.mode || AES.CBC, key, salt || '');
     cipher.setAutoPadding(!options.padding);
 
-    if (options.padding) dataBytes = options.padding.pad(dataBytes, KEY_BIT_LEN);
+    if (options.padding) dataBytes = options.padding.pad(dataBytes, KEY_BIT_LEN / 8);
     var encryptedBytes = Buffer.concat([ cipher.update(dataBytes), cipher.final() ]);
 
     return encryptedBytes;
