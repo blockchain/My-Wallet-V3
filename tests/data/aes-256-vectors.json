@@ -1,0 +1,77 @@
+{
+  "cbc": {
+    "key": "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4",
+    "tests": [
+      {
+        "iv": "000102030405060708090A0B0C0D0E0F",
+        "testvector": "6bc1bee22e409f96e93d7e117393172a",
+        "ciphertext": "f58c4c04d6e5f1ba779eabfb5f7bfbd6"
+      },
+      {
+        "iv": "F58C4C04D6E5F1BA779EABFB5F7BFBD6",
+        "testvector": "ae2d8a571e03ac9c9eb76fac45af8e51",
+        "ciphertext": "9cfc4e967edb808d679f777bc6702c7d"
+      },
+      {
+        "iv": "9CFC4E967EDB808D679F777BC6702C7D",
+        "testvector": "30c81c46a35ce411e5fbc1191a0a52ef",
+        "ciphertext": "39f23369a9d9bacfa530e26304231461"
+      },
+      {
+        "iv": "39F23369A9D9BACFA530E26304231461",
+        "testvector": "f69f2445df4f9b17ad2b417be66c3710",
+        "ciphertext": "b2eb05e2c39be9fcda6c19078c6a9d1b"
+      }
+    ]
+  },
+  "ofb": {
+    "key": "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4",
+    "tests": [
+      {
+        "iv": "000102030405060708090A0B0C0D0E0F",
+        "testvector": "6bc1bee22e409f96e93d7e117393172a",
+        "ciphertext": "dc7e84bfda79164b7ecd8486985d3860"
+      },
+      {
+        "iv": "B7BF3A5DF43989DD97F0FA97EBCE2F4A",
+        "testvector": "ae2d8a571e03ac9c9eb76fac45af8e51",
+        "ciphertext": "4febdc6740d20b3ac88f6ad82a4fb08d"
+      },
+      {
+        "iv": "E1C656305ED1A7A6563805746FE03EDC",
+        "testvector": "30c81c46a35ce411e5fbc1191a0a52ef",
+        "ciphertext": "71ab47a086e86eedf39d1c5bba97c408"
+      },
+      {
+        "iv": "41635BE625B48AFC1666DD42A09D96E7",
+        "testvector": "f69f2445df4f9b17ad2b417be66c3710",
+        "ciphertext": "0126141d67f37be8538f5a8be740e484"
+      }
+    ]
+  },
+  "ecb": {
+    "key": "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4",
+    "tests": [
+      {
+        "iv": "",
+        "testvector": "6bc1bee22e409f96e93d7e117393172a",
+        "ciphertext": "f3eed1bdb5d2a03c064b5a7e3db181f8"
+      },
+      {
+        "iv": "",
+        "testvector": "ae2d8a571e03ac9c9eb76fac45af8e51",
+        "ciphertext": "591ccb10d410ed26dc5ba74a31362870"
+      },
+      {
+        "iv": "",
+        "testvector": "30c81c46a35ce411e5fbc1191a0a52ef",
+        "ciphertext": "b6ed21b99ca6f4f9f153e7b1beafed1d"
+      },
+      {
+        "iv": "",
+        "testvector": "f69f2445df4f9b17ad2b417be66c3710",
+        "ciphertext": "23304b7a39f9f3ff067d8d8f9e24ecc7"
+      }
+    ]
+  }
+}
