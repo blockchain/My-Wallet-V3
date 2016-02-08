@@ -642,7 +642,7 @@ function isAccountNonUsed (account, progress) {
 
 Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, startedRestoreHDWallet, progress){
   // wallet restoration
-  startedRestoreHDWallet && startedRestoreHDWallet;
+  startedRestoreHDWallet && startedRestoreHDWallet();
   var self = this;
   var seedHex = BIP39.mnemonicToEntropy(mnemonic);
   var pass39  = Helpers.isString(bip39Password) ? bip39Password : "";
