@@ -6,7 +6,6 @@ var Bitcoin = require('bitcoinjs-lib');
 var assert  = require('assert');
 var Helpers = require('./helpers');
 var HDAccount = require('./hd-account');
-var WalletCrypto = require('./wallet-crypto');
 var BIP39 = require('bip39');
 var RNG = require('./rng');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
