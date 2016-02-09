@@ -170,6 +170,10 @@ module.exports = (grunt) ->
           grep_commits: '^fix|^feat|^docs|^refactor|^chore|^test|BREAKING'
           repo_url: 'https://github.com/blockchain/My-Wallet-V3'
 
+    semistandard:
+      app:
+        src:
+          ['{,src/}*.js']
 
   grunt.loadNpmTasks 'grunt-browserify'
   grunt.loadNpmTasks 'grunt-contrib-clean'
@@ -181,8 +185,9 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-preprocess'
   grunt.loadNpmTasks 'grunt-shell'
   grunt.loadNpmTasks 'grunt-text-replace'
-  grunt.loadNpmTasks('git-changelog')
-  grunt.loadNpmTasks('grunt-karma-coveralls')
+  grunt.loadNpmTasks 'git-changelog'
+  grunt.loadNpmTasks 'grunt-karma-coveralls'
+  grunt.loadNpmTasks 'grunt-semistandard'
 
   grunt.registerTask "default", [
     "build"
