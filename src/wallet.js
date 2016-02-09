@@ -775,7 +775,9 @@ function decryptAndInitializeWallet(success, error, decrypt_success, build_hd_su
 MyWallet.makePairingCode = function(success, error) {
   try {
     MyWallet.securePost('wallet', { method : 'pairing-encryption-password' }, function(encryption_phrase) {
-      success('1|' + MyWallet.wallet.guid + '|' + WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + WalletStore.getPassword(), encryption_phrase, 10));
+      var pwHex = new Buffer(WalletStore.getPassword()).toString('hex');
+      var encrypted = WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + pwHex, encryption_phrase, 10);
+      success('1|' + MyWallet.wallet.guid + '|' + encrypted);
     }, function(e) {
       error(e);
     });
