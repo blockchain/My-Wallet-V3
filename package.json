@@ -59,6 +59,7 @@
     "grunt-env": "^0.4.4",
     "grunt-karma-coveralls": "^2.5.4",
     "grunt-preprocess": "^4.1.0",
+    "grunt-semistandard": "^1.0.5",
     "grunt-shell": "^1.1.2",
     "grunt-text-replace": "^0.4.0",
     "jasmine-core": "^2.2.0",
