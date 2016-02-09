@@ -3,7 +3,6 @@
 var assert = require('assert');
 
 var MyWallet = require('./wallet');
-var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');

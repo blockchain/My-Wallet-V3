@@ -6,20 +6,14 @@ module.exports = Wallet;
 // dependencies
 var assert = require('assert');
 var Bitcoin = require('bitcoinjs-lib');
-var ECKey = Bitcoin.ECKey;
-var BigInteger = require('bigi');
-var Buffer = require('buffer').Buffer;
-var Base58 = require('bs58');
 var BIP39 = require('bip39');
 
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var HDWallet = require('./hd-wallet');
-var HDAccount = require('./hd-account');
 var Address = require('./address');
 var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
-var ImportExport = require('./import-export');
 var API = require('./api');
 var Tx = require('./wallet-transaction');
 var shared = require('./shared');

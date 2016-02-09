@@ -7,7 +7,6 @@ var Helpers       = require('./helpers');
 var WalletStore   = require('./wallet-store');
 var WalletCrypto  = require('./wallet-crypto');
 var MyWallet      = require('./wallet');
-var Buffer        = require('buffer').Buffer;
 
 ////////////////////////////////////////////////////////////////////////////////
 // API class

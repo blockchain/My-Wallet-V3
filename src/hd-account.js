@@ -5,7 +5,6 @@ module.exports = HDAccount;
 var Bitcoin = require('bitcoinjs-lib');
 var assert  = require('assert');
 var Helpers = require('./helpers');
-var WalletCrypto = require('./wallet-crypto');
 var KeyRing  = require('./keyring');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 ////////////////////////////////////////////////////////////////////////////////
