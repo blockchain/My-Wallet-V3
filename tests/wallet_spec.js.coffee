@@ -18,6 +18,31 @@ describe "Wallet", ->
 
   beforeEach ->
 
+
+  describe "makePairingCode()", ->
+    success = undefined
+    error = undefined
+
+    beforeEach ->
+      MyWallet.wallet =
+        guid: 'wallet-guid'
+        sharedKey: 'shared-key'
+      spyOn(MyWallet, 'securePost').and.callFake((_a, _b, cb) -> cb('enc-phrase'))
+      spyOn(WalletStore, 'getPassword').and.returnValue('pw')
+      spyOn(WalletCrypto, 'encrypt').and.callFake((d) -> "(enc:#{d})")
+      success = jasmine.createSpy('pairing code success')
+      error = jasmine.createSpy('pairing code error')
+
+    it "should make a pairing code", ->
+      MyWallet.makePairingCode(success, error)
+      expect(success).toHaveBeenCalledWith('1|wallet-guid|(enc:shared-key|7077)')
+      expect(error).not.toHaveBeenCalled()
+
+    it "should call WalletCrypto.encrypt with the encryption phrase", ->
+      MyWallet.makePairingCode(success, error)
+      expect(WalletCrypto.encrypt).toHaveBeenCalledWith('shared-key|7077', 'enc-phrase', 10)
+      expect(error).not.toHaveBeenCalled()
+
   describe "stretchPassword()", ->
     it "should stretch a password", ->
       password = "1234567890"
