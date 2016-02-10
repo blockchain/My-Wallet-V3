@@ -121,7 +121,7 @@ Object.defineProperties(Address.prototype, {
         MyWallet.syncWallet();
       }
       else
-        { throw 'Error: address.archived must be a boolean';};
+        { throw 'Error: address.archived must be a boolean';}
     }
   },
   "active": {
@@ -137,7 +137,7 @@ Address.factory = function(o,a){
   }
   else {
     o[a.addr] = a;
-  };
+  }
   return o;
 };
 
@@ -160,13 +160,13 @@ Address.import = function(key, label){
       object.priv = Base58.encode(key.d.toBuffer(32));
       break;
     case Helpers.isBitcoinPrivateKey(key):
-      key = Bitcoin.ECKey.fromWIF(key)
+      key = Bitcoin.ECKey.fromWIF(key);
       object.addr = key.pub.getAddress().toString();
       object.priv = Base58.encode(key.d.toBuffer(32));
       break;
     default:
       throw 'Error: address import format not supported';
-  };
+  }
 
   //initialization
   var address = new Address(object);
@@ -200,9 +200,9 @@ Address.fromString = function(keyOrAddr, label, bipPass){
       }
       else { reject('unknown key format'); }
     }
-  }
+  };
   return new Promise(asyncParse);
-}
+};
 
 Address.new = function(label){
   var key = Bitcoin.ECKey.makeRandom(true, RNG.run.bind(RNG));
@@ -230,7 +230,7 @@ Address.prototype.toJSON = function(){
 Address.prototype.encrypt = function(cipher){
   if (!this._priv) return this;
   var priv = cipher ? cipher(this._priv) : this._priv;
-  if (!priv) { throw 'Error Encoding key'; };
+  if (!priv) { throw 'Error Encoding key'; }
   this._temporal_priv = priv;
   return this;
 };
@@ -238,7 +238,7 @@ Address.prototype.encrypt = function(cipher){
 Address.prototype.decrypt = function(cipher){
   if (!this._priv) return this;
   var priv = cipher ? cipher(this._priv) : this._priv;
-  if (!priv) { throw 'Error Decoding key'; };
+  if (!priv) { throw 'Error Decoding key'; }
   this._temporal_priv = priv;
   return this;
 };

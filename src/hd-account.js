@@ -51,7 +51,7 @@ Object.defineProperties(HDAccount.prototype, {
         MyWallet.syncWallet();
       }else{
         throw 'Error: account.label must be an alphanumeric string';
-      };
+      }
     }
   },
   "balance": {
@@ -243,7 +243,7 @@ HDAccount.factory = function(o){
   if (o instanceof Object && !(o instanceof HDAccount)) {
     return new HDAccount(o);
   }
-  else { return o; };
+  else { return o; }
 };
 ////////////////////////////////////////////////////////////////////////////////
 // JSON SERIALIZER
@@ -266,7 +266,7 @@ HDAccount.prototype.toJSON = function(){
 HDAccount.reviver = function(k,v){
   if (k === '') return new HDAccount(v);
   return v;
-}
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -277,7 +277,7 @@ HDAccount.prototype.incrementReceiveIndex = function() {
 HDAccount.prototype.incrementReceiveIndexIfLast = function(index) {
   if (this._receiveIndex === index){
     this.incrementReceiveIndex();
-  };
+  }
   return this;
 };
 ////////////////////////////////////////////////////////////////////////////////
@@ -319,7 +319,7 @@ HDAccount.prototype.receiveAddressAtIndex = function(index) {
 HDAccount.prototype.encrypt = function(cipher){
   if(!this._xpriv) return this;
   var xpriv = cipher? cipher(this._xpriv) : this._xpriv;
-  if (!xpriv) { throw 'Error Encoding account extended private key'; };
+  if (!xpriv) { throw 'Error Encoding account extended private key'; }
   this._temporal_xpriv = xpriv;
   return this;
 };
@@ -327,7 +327,7 @@ HDAccount.prototype.encrypt = function(cipher){
 HDAccount.prototype.decrypt = function(cipher){
   if(!this._xpriv) return this;
   var xpriv = cipher? cipher(this._xpriv) : this._xpriv;
-  if (!xpriv) { throw 'Error Decoding account extended private key'; };
+  if (!xpriv) { throw 'Error Decoding account extended private key'; }
   this._temporal_xpriv = xpriv;
   return this;
 };

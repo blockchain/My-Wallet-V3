@@ -130,13 +130,13 @@ Object.defineProperties(Tx.prototype, {
       var impactNoFee = this.result + this.fee;
       switch (true) {
         case impactNoFee === 0:
-          v = "transfer"
+          v = "transfer";
           break;
         case impactNoFee < 0:
-          v = "sent"
+          v = "sent";
           break;
         case impactNoFee > 0:
-          v = "received"
+          v = "received";
           break;
         default:
           v = "complex"
@@ -162,37 +162,37 @@ Object.defineProperties(Tx.prototype, {
     get: function() {
       return this._processed_outs.some(function (o) { return o.isWatchOnly; });
     }
-  },
+  }
 });
 
 function isAccount(x) {
   if (x.xpub) { return true;}
   else {return false;}
-};
+}
 
 function isLegacy(x) {
   return MyWallet.wallet.containsLegacyAddress(x.addr);
-};
+}
 
 function isInternal(x) {
   return (isAccount(x) || isLegacy(x));
-};
+}
 
 function isAccountChange(x) {
   return (isAccount(x) && x.xpub.path.split('/')[1] === '1');
-};
+}
 
 function accountPath(x){
   return account(x).index + x.xpub.path.substr(1);
-};
+}
 
 function account(x) {
   return MyWallet.wallet.hdwallet.account(x.xpub.m);
-};
+}
 
 function address(x) {
   return MyWallet.wallet.key(x.addr);
-};
+}
 
 function tagCoin(x) {
   var ad = x.addr;
@@ -229,15 +229,15 @@ function tagCoin(x) {
     identity: id,
     isWatchOnly: isWatchOnly
   };
-};
+}
 
 function unpackInput(input) {
   return input.prev_out;
-};
+}
 
 Tx.factory = function(o){
   if (o instanceof Object && !(o instanceof Tx)) {
     return new Tx(o);
   }
-  else { return o; };
+  else { return o; }
 };

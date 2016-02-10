@@ -68,7 +68,7 @@ var SharedCoin = new function() {
             var scriptLength = readVarInt(buffer).intValue();
             var script = new Bitcoin.Script(buffer.splice(0, scriptLength));
 
-            var out = new Bitcoin.TransactionOut({script : script, value : valueBytes})
+            var out = new Bitcoin.TransactionOut({script : script, value : valueBytes});
 
             tx.outs.push(out);
         }
@@ -143,7 +143,7 @@ var SharedCoin = new function() {
                 this.modal.find('.btn.btn-secondary').prop('disabled', false);
             }
         }
-    }
+    };
     this.newProposal = function() {
         return {
             _pollForCompleted : function(success, error) {
@@ -179,7 +179,7 @@ var SharedCoin = new function() {
                     } else {
                         error('Unknown status ' + obj.status)
                     }
-                }
+                };
 
                 self._pollForCompleted(handleObj, error)
             }
@@ -265,7 +265,7 @@ var SharedCoin = new function() {
                     }  else {
                         error('Unknown status ' + obj.status)
                     }
-                }
+                };
 
                 self._pollForProposalID(handleObj, error)
             },
@@ -581,7 +581,7 @@ var SharedCoin = new function() {
         extra_private_keys[address.toString()] = Bitcoin.Base58.encode(key.priv);
 
         return address;
-    }
+    };
 
     this.newPlan = function() {
         return {
@@ -927,47 +927,47 @@ var SharedCoin = new function() {
 
     this.getMaximumOfferNumberOfInputs = function() {
         return options.maximum_offer_number_of_inputs;
-    }
+    };
 
     this.getMaximumOfferNumberOfOutputs = function() {
         return options.maximum_offer_number_of_outputs;
-    }
+    };
 
     this.getMinimumOutputValue = function() {
         return options.minimum_output_value;
-    }
+    };
 
     this.getMinimumOutputValueExcludingFee = function() {
         return options.minimum_output_value_exclude_fee;
-    }
+    };
 
     this.getToken = function() {
         return options.token;
-    }
+    };
 
     this.getMinimumInputValue = function() {
         return options.minimum_input_value;
-    }
+    };
 
     this.getMinimumSupportedVersion = function() {
         return options.min_supported_version;
-    }
+    };
 
     this.getIsEnabled = function() {
         return options.enabled;
-    }
+    };
 
     this.getMaximumOutputValue = function() {
         return options.maximum_output_value;
-    }
+    };
 
     this.getFee = function() {
         return options.fee_percent;
-    }
+    };
 
     this.getMinimumFee = function() {
         return options.minimum_fee ? options.minimum_fee : 0;
-    }
+    };
 
     this.constructPlan = function(el, success, error) {
         try {
@@ -1025,7 +1025,7 @@ var SharedCoin = new function() {
                             throw 'You must enter a value greater than zero';
                     } catch (e) {
                         throw 'Invalid send amount';
-                    };
+                    }
 
                     //Trim and remove non-printable characters
                   var send_to_address = (send_to_input.val()).replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
@@ -1174,7 +1174,7 @@ var SharedCoin = new function() {
         } catch (e) {
             _error(e);
         }
-    }
+    };
 
     this.calculateFeeForValue = function(fee_percent, input_value) {
         var minFee = BigInteger.valueOf(SharedCoin.getMinimumFee());
@@ -1192,7 +1192,7 @@ var SharedCoin = new function() {
         } else {
             return minFee;
         }
-    }
+    };
 
     this.recoverSeeds = function(shared_coin_seeds, success, error) {
         var key = 0;
@@ -1351,7 +1351,7 @@ var SharedCoin = new function() {
                                         console.log('Recover Error');
                                     });
                                 }
-                            }, 2000)
+                            }, 2000);
 
                             progressModal.enableCancel();
                         };
@@ -1366,7 +1366,7 @@ var SharedCoin = new function() {
                             progressModal.hide();
 
                             enableSendButton();
-                        }
+                        };
 
                         if (input_value.compareTo(BigInteger.valueOf(SharedCoin.getMinimumOutputValue())) < 0) {
                             WalletStore.sendEvent("msg", {type: "error", message: 'The Minimum Send Value is ' +  formatPrecision(SharedCoin.getMinimumOutputValue())});
@@ -1462,4 +1462,4 @@ var SharedCoin = new function() {
 
         enableSendButton();
     }
-}
+};

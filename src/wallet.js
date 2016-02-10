@@ -214,7 +214,7 @@ function socketConnect() {
           }
           if (addresses.some(function(a){return a === account.receiveAddress})){
             account.incrementReceiveIndex();
-          };
+          }
         }
       }
 
@@ -240,7 +240,7 @@ function socketConnect() {
       WalletStore.setLatestBlock(shared.BlockFromJSON(obj.x));
       WalletStore.sendEvent('on_block');
     }
-  };
+  }
 
   function onOpen() {
     WalletStore.sendEvent('ws_on_open');
@@ -263,11 +263,11 @@ function socketConnect() {
     }
 
     MyWallet.ws.send(msg);
-  };
+  }
 
   function onClose() {
     WalletStore.sendEvent('ws_on_close');
-  };
+  }
 }
 
 // used in walletstore and locally wallet.js
@@ -382,7 +382,7 @@ MyWallet.processTransaction = function(tx) {
         transaction.to.email = { email: paidToItem.email, redeemedAt: paidToItem.redeemedAt };
       } else if (paidToItem.mobile) {
         transaction.to.mobile = { number: paidToItem.mobile, redeemedAt: paidToItem.redeemedAt };
-      };
+      }
       transaction.intraWallet = false;
     }else {
       var toAccountSet = false;
@@ -572,7 +572,7 @@ MyWallet.getBalanceForRedeemCode = function(privatekey, successCallback, errorCa
     return Object.keys(data)
                  .map(function(a){ return data[a].final_balance;})
                  .reduce(Helpers.add, 0);
-  };
+  }
 
   API.getBalances([from_address_compressed, from_address_uncompressed])
     .then(totalBalance)
@@ -757,7 +757,7 @@ function decryptAndInitializeWallet(success, error, decrypt_success, build_hd_su
       }
       if (MyWallet.wallet.isUpgradedToHD === false) {
         WalletStore.sendEvent('hd_wallets_does_not_exist');
-      };
+      }
       setIsInitialized();
       success();
     },
@@ -829,7 +829,7 @@ MyWallet.login = function ( user_guid
         return;
       }
       successCallback(obj)
-    }
+    };
 
     var error = function(e) {
        console.log(e);
@@ -849,9 +849,9 @@ MyWallet.login = function ( user_guid
        if (obj.initial_error) {
          WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
        }
-    }
+    };
     API.request("GET", 'wallet/' + guid, data, true, false).then(success).catch(error);
-  }
+  };
 
   var tryToFetchWalletWith2FA = function (guid, two_factor_auth_key, successCallback) {
 
@@ -870,15 +870,15 @@ MyWallet.login = function ( user_guid
      }
      if (data != 'Not modified') { WalletStore.setEncryptedWalletData(data); }
      successCallback(data);
-    }
+    };
     var error = function (response) {
      WalletStore.setRestoringWallet(false);
      wrong_two_factor_code(response);
-    }
+    };
 
     var myData = { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : API.API_CODE};
     API.request("POST", 'wallet', myData, true, false).then(success).catch(error);
-  }
+  };
 
   var didFetchWalletJSON = function(obj) {
 
@@ -979,7 +979,7 @@ function setIsInitialized() {
   if (isInitialized) return;
   socketConnect();
   isInitialized = true;
-};
+}
 
 // used on iOS
 MyWallet.connectWebSocket = function() {
@@ -1093,7 +1093,7 @@ function syncWallet (successcallback, errorcallback) {
       } catch (e) {
         _errorcallback(e);
         WalletStore.enableLogout();
-      };
+      }
     },
                                function(e) {
                                  console.log(e);
@@ -1104,10 +1104,10 @@ function syncWallet (successcallback, errorcallback) {
     WalletStore.enableLogout();
   }
 
-};
+}
 MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function(){
   console.log("SAVE CALLED...");
-  WalletStore.setIsSynchronizedWithServer(false)
+  WalletStore.setIsSynchronizedWithServer(false);
 });
 ////////////////////////////////////////////////////////////////////////////////
 // used mainly on blockchain API
@@ -1186,13 +1186,13 @@ function nKeys(obj) {
     size++;
   }
   return size;
-};
+}
 
 // used on frontend
 MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
   var walletSuccess = function(guid, sharedKey, password) {
     WalletStore.unsafeSetPassword(password);
-    var runSuccess = function () {success({ guid: guid, sharedKey: sharedKey, password: password});}
+    var runSuccess = function () {success({ guid: guid, sharedKey: sharedKey, password: password});};
     MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password, undefined, startedRestoreHDWallet, accountProgress).then(runSuccess).catch(error);
   };
   WalletSignup.generateNewWallet(inputedPassword, inputedEmail, null, walletSuccess, error, true, generateUUIDProgress, decryptWalletProgress);
@@ -1207,7 +1207,7 @@ MyWallet.logout = function(force) {
       console.log(e);
     }
   };
-  var data = {format : 'plain', api_code : API.API_CODE}
+  var data = {format : 'plain', api_code : API.API_CODE};
   WalletStore.sendEvent('logging_out');
   API.request("GET", 'wallet/logout', data, true, false).then(reload).catch(reload);
 };

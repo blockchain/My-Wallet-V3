@@ -16,7 +16,7 @@ function HDWallet(object){
   function addAccount (o, index){
     o.index = index;
     return HDAccount.factory(o);
-  };
+  }
 
   // private members
   var obj      = object || {};
@@ -54,7 +54,7 @@ Object.defineProperties(HDWallet.prototype, {
       }
       else{
         throw 'Error: unvalid default index account';
-      };
+      }
     }
   },
   "defaultAccount": {
@@ -88,7 +88,7 @@ Object.defineProperties(HDWallet.prototype, {
   "balanceActiveAccounts":{
     configurable: false,
     get: function() {
-      var balances = this.activeAccounts.map(function(k){return k.balance;})
+      var balances = this.activeAccounts.map(function(k){return k.balance;});
       if (balances.some(Helpers.isNotNumber)) return null;
       return balances.reduce(Helpers.add, 0);
     }
@@ -126,24 +126,24 @@ function decryptMnemonic (seedHex, cipher){
       return BIP39.entropyToMnemonic(seedHex);
     } else {
       throw "Decryption function needed to get the mnemonic";
-    };
-  };
-};
+    }
+  }
+}
 
 function decryptPassphrase (bip39Password, cipher){
-  if (bip39Password === "") {return bip39Password};
+  if (bip39Password === "") {return bip39Password}
   if (cipher) {
     return cipher(bip39Password);
   } else {
     return bip39Password;
-  };
-};
+  }
+}
 
 function getMasterHex (seedHex, bip39Password, cipher){
   var mnemonic   = decryptMnemonic(seedHex, cipher);
   var passphrase = decryptPassphrase(bip39Password, cipher);
   return BIP39.mnemonicToSeed(mnemonic, passphrase);
-};
+}
 ////////////////////////////////////////////////////////////////////////////////
 // Constructors
 
@@ -172,7 +172,7 @@ HDWallet.restore = function(seedHex, bip39Password, cipher){
   var newHDwallet = new HDWallet(hdwallet);
   if (cipher) {
     newHDwallet.encrypt(cipher).persist();
-  };
+  }
   return newHDwallet;
 };
 
@@ -180,7 +180,7 @@ HDWallet.factory = function(o){
   if (o instanceof Object && !(o instanceof HDWallet)) {
     return new HDWallet(o);
   }
-  else { return o; };
+  else { return o; }
 };
 
 HDWallet.prototype.newAccount = function(label, cipher){
@@ -192,7 +192,7 @@ HDWallet.prototype.newAccount = function(label, cipher){
   if (cipher) {
     dec    = cipher("dec");
     enc    = cipher("enc");
-  };
+  }
 
   var masterhex = getMasterHex(this._seedHex, this._bip39Password, dec);
   var network   = Bitcoin.networks.bitcoin;
@@ -234,7 +234,7 @@ HDWallet.prototype.verifyMnemonic = function(){
 
 HDWallet.prototype.account = function(xpub){
   var f = this._accounts
-            .filter(function(a){return a.extendedPublicKey === xpub})
+            .filter(function(a){return a.extendedPublicKey === xpub});
   var r = f.length === 0 ? null : f[0];
   return r;
 };
@@ -249,7 +249,7 @@ HDWallet.prototype.activeAccount = function(xpub){
 // account managment
 
 HDWallet.prototype.encrypt = function(cipher){
-  function f(acc) {acc.encrypt(cipher);};
+  function f(acc) {acc.encrypt(cipher);}
   this._accounts.forEach(f);
   this._temporal_seedHex = cipher(this._seedHex);
   this._temporal_bip39Password = this._bip39Password === ""
@@ -259,7 +259,7 @@ HDWallet.prototype.encrypt = function(cipher){
 };
 
 HDWallet.prototype.decrypt = function(cipher){
-  function f(acc) {acc.decrypt(cipher);};
+  function f(acc) {acc.decrypt(cipher);}
   this._accounts.forEach(f);
   this._temporal_seedHex = cipher(this._seedHex);
   this._temporal_bip39Password = this._bip39Password === ""
@@ -270,12 +270,12 @@ HDWallet.prototype.decrypt = function(cipher){
 
 HDWallet.prototype.persist = function(){
   if (this._temporal_seedHex === undefined || this._temporal_bip39Password === undefined)
-    {return this;};
+    {return this;}
   this._seedHex = this._temporal_seedHex;
   this._bip39Password = this._temporal_bip39Password;
   delete this._temporal_seedHex;
   delete this._temporal_bip39Password;
-  function f(acc) {acc.persist();};
+  function f(acc) {acc.persist();}
   this._accounts.forEach(f);
   return this;
 };
@@ -295,7 +295,7 @@ HDWallet.prototype.forEachPaidTo = function(f) {
   // f is a function taking (txHash, paidToElement)
   for (var txHash in this._paidTo) {
     f(txHash, this._paidTo[txHash]);
-  };
+  }
   return this;
 };
 ////////////////////////////////////////////////////////////////////////////////
