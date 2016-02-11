@@ -19,7 +19,7 @@ describe "KeyChain constructor", ->
   it "should construct from extended private key and get key for index", ->
     xpriv = "xprv9zJ1cTHnqzgBXr9Uq9jXrdbk2LwApa3Vu6dquzhmckQyj1hvK9xugPNsycfveTGcTy2571Rq71daBpe1QESUsjX7d2ZHVVXEwJEwDiiMD7E"
     kc = new KeyChain(xpriv, 0, null)
-    pkey = Base58.encode(kc.getPrivateKey(100).d.toBuffer(32));
+    pkey = Base58.encode(kc.getPrivateKey(100).keyPair.d.toBuffer(32));
     expect(pkey).toEqual("ETsc7CKyRYFNzHPVfR4GDPj3NyJBMLiACRrXg814tJ5w")
 
   it "should not print xpriv when you ask for xpub", ->

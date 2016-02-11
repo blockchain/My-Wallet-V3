@@ -8,14 +8,14 @@ Helpers.isString = function (str){
   return typeof str == 'string' || str instanceof String;
 };
 Helpers.isKey = function (bitcoinKey){
-  return bitcoinKey instanceof Bitcoin.ECKey;
+  return bitcoinKey instanceof Bitcoin.ECPair;
 };
 Helpers.isInstanceOf = function(object, theClass) {
   return object instanceof theClass;
 };
 Helpers.isBitcoinAddress = function(candidate) {
   try {
-    var d = Bitcoin.Address.fromBase58Check(candidate);
+    var d = Bitcoin.address.fromBase58Check(candidate);
     var n = Bitcoin.networks.bitcoin;
     return d.version === n.pubKeyHash || d.version === n.scriptHash
   }
@@ -23,7 +23,7 @@ Helpers.isBitcoinAddress = function(candidate) {
 };
 Helpers.isBitcoinPrivateKey = function(candidate) {
   try {
-    Bitcoin.ECKey.fromWIF(candidate);
+    Bitcoin.ECPair.fromWIF(candidate);
     return true;
   }
   catch (e) { return false; };

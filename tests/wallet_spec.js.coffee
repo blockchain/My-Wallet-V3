@@ -347,7 +347,7 @@ describe "Wallet", ->
       key = info.key
       miniKey = info.miniKey
       expect(MyWallet.addPrivateKey).toHaveBeenCalled()
-      expect(key.pub.compressed).toBe(false)
+      expect(key.compressed).toBe(false)
       format = MyWallet.detectPrivateKeyFormat(miniKey)
       expect(format).toBe('mini')
       keyCheck = MyWallet.privateKeyStringToKey(miniKey, format)
@@ -361,7 +361,7 @@ describe "Wallet", ->
     it "generates a valid private key", ->
       key = MyWallet.generateNewKey()
       expect(MyWallet.addPrivateKey).toHaveBeenCalled()
-      expect(key.pub.compressed).toBe(true)
+      expect(key.compressed).toBe(true)
       format = MyWallet.detectPrivateKeyFormat(key.toWIF())
       expect(format).toBe('compsipa')
   ###

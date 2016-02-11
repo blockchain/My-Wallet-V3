@@ -857,5 +857,5 @@ Wallet.prototype._getPrivateKey = function(accountIndex, path, secondPassword) {
     WalletCrypto.decryptSecretWithSecondPassword(
       maybeXpriv , secondPassword, this.sharedKey, this.pbkdf2_iterations) : maybeXpriv;
   var kr = new KeyRing(xpriv, null);
-  return kr.privateKeyFromPath(path).toWIF();
+  return kr.privateKeyFromPath(path).keyPair.toWIF();
 };

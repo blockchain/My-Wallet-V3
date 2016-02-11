@@ -8,7 +8,6 @@ var MyWallet    = require('./wallet');
 var Buffer      = require('buffer').Buffer;
 
 var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAddress, listener) {
-
   if (!Array.isArray(toAddresses) && toAddresses != null) {toAddresses = [toAddresses];}
   if (!Array.isArray(amounts) && amounts != null) {amounts = [amounts];}
   var network = Bitcoin.networks.bitcoin;
@@ -29,9 +28,11 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
   assert(this.amount > BITCOIN_DUST, this.amount + ' must be above dust threshold (' + BITCOIN_DUST + ' Satoshis)');
   assert(unspentOutputs && unspentOutputs.length > 0, 'Missing coins to spend');
 
-  var transaction = new Bitcoin.Transaction();
+  var transaction = new Bitcoin.TransactionBuilder(Bitcoin.networks.bitcoin);
   // add all outputs
-  function addOutput(e, i) {transaction.addOutput(toAddresses[i],amounts[i]);}
+  function addOutput(e, i) {
+    transaction.addOutput(toAddresses[i],amounts[i]);
+  }
   toAddresses.map(addOutput);
 
   // Choose inputs
@@ -44,15 +45,15 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
 
   for (var i = 0; i < unspent.length; i++) {
     var output = unspent[i];
-    transaction.addInput(output.hash, output.index);
+    var transactionHashBuffer = Buffer(output.hash, 'hex');
+    transaction.addInput(transactionHashBuffer.reverse(), output.index);
     nIns += 1;
     this.fee = Helpers.isNumber(forcedFee) ? forcedFee : Helpers.guessFee(nIns, nOuts, MyWallet.wallet.fee_per_kb);
 
     // Generate address from output script and add to private list so we can check if the private keys match the inputs later
-
-    var script = Bitcoin.Script.fromHex(output.script);
-    assert.notEqual(Bitcoin.scripts.classifyOutput(script), 'nonstandard', 'Strange Script');
-    var address = Bitcoin.Address.fromOutputScript(script).toString();
+    var scriptBuffer = Buffer(output.script, "hex");
+    assert.notEqual(Bitcoin.script.classifyOutput(scriptBuffer), 'nonstandard', 'Strange Script');
+    var address = Bitcoin.address.fromOutputScript(scriptBuffer).toString();
     assert(address, 'Unable to decode output address from transaction hash ' + output.tx_hash);
     this.addressesOfInputs.push(address);
 
@@ -90,31 +91,10 @@ Transaction.prototype.addPrivateKeys = function(privateKeys) {
   assert.equal(privateKeys.length, this.addressesOfInputs.length, 'Number of private keys needs to match inputs');
 
   for (var i = 0; i < privateKeys.length; i++) {
-    assert.equal(this.addressesOfInputs[i], privateKeys[i].pub.getAddress().toBase58Check(), 'Private key does not match bitcoin address ' + this.addressesOfInputs[i] + '!=' + privateKeys[i].pub.getAddress().toBase58Check());
+    assert.equal(this.addressesOfInputs[i], privateKeys[i].getAddress(), 'Private key does not match bitcoin address ' + this.addressesOfInputs[i] + '!=' + privateKeys[i].getAddress() + ' while adding private key for input ' + i);
   }
 
   this.privateKeys = privateKeys;
-};
-
-/**
- * Shuffles the outputs of a transaction so that they receive and change
- * addresses are in random order.
- */
-Transaction.prototype.randomizeOutputs = function () {
-  function randomNumberBetweenZeroAnd(i) {
-    assert(i < Math.pow(2, 16), 'Cannot shuffle more outputs than one transaction can handle');
-
-    var randArray = randomBytes(2);
-    var rand = randArray[0] << 8 | randArray[1];
-
-    return rand%i;
-  }
-
-  function shuffle(o){
-    for(var j, x, i = o.length; i > 1; j = randomNumberBetweenZeroAnd(i), x = o[--i], o[i] = o[j], o[j] = x);
-    return o;
-  }
-  shuffle(this.transaction.outs);
 };
 
 /**
@@ -131,14 +111,14 @@ Transaction.prototype.sortBIP69 = function (){
     return x.compare(y) || a[0].index - b[0].index
   };
   var compareOutputs = function(a, b) {
-    return (a.value - b.value) || (a.script.buffer).compare(b.script.buffer)
+    return (a.value - b.value) || (a.script).compare(b.script)
   };
-  var mix = Helpers.zip3(this.transaction.ins, this.privateKeys, this.addressesOfInputs);
+  var mix = Helpers.zip3(this.transaction.tx.ins, this.privateKeys, this.addressesOfInputs);
   mix.sort(compareInputs);
-  this.transaction.ins   = mix.map(function(a){return a[0];});
-  this.privateKeys       = mix.map(function(a){return a[1];});
-  this.addressesOfInputs = mix.map(function(a){return a[2];});
-  this.transaction.outs.sort(compareOutputs);
+  this.transaction.tx.ins = mix.map(function(a){return a[0];});
+  this.privateKeys        = mix.map(function(a){return a[1];});
+  this.addressesOfInputs  = mix.map(function(a){return a[2];});
+  this.transaction.tx.outs.sort(compareOutputs);
 };
 /**
  * Sign the transaction
@@ -147,10 +127,10 @@ Transaction.prototype.sortBIP69 = function (){
 Transaction.prototype.sign = function() {
   assert(this.privateKeys, 'Need private keys to sign transaction');
 
-  assert.equal(this.privateKeys.length, this.transaction.ins.length, 'Number of private keys needs to match inputs');
+  assert.equal(this.privateKeys.length, this.transaction.inputs.length, 'Number of private keys needs to match inputs');
 
   for (var i = 0; i < this.privateKeys.length; i++) {
-    assert.equal(this.addressesOfInputs[i], this.privateKeys[i].pub.getAddress().toBase58Check(), 'Private key does not match bitcoin address ' + this.addressesOfInputs[i] + '!=' + this.privateKeys[i].pub.getAddress().toBase58Check());
+    assert.equal(this.addressesOfInputs[i], this.privateKeys[i].getAddress(), 'Private key does not match bitcoin address ' + this.addressesOfInputs[i] + '!=' + this.privateKeys[i].getAddress() + ' while signing input ' + i);
   }
 
   var listener = this.listener;
@@ -159,14 +139,14 @@ Transaction.prototype.sign = function() {
 
   var transaction = this.transaction;
 
-  for (var i = 0; i < transaction.ins.length; i++) {
+  for (var i = 0; i < transaction.inputs.length; i++) {
     listener && typeof(listener.on_sign_progress) === 'function' && listener.on_sign_progress(i+1);
 
     var key = this.privateKeys[i];
 
     transaction.sign(i, key);
 
-    assert(transaction.ins[i].script, 'Error creating input script');
+    assert(transaction.inputs[i].scriptType === 'pubkeyhash', 'Error creating input script');
   }
 
   listener && typeof(listener.on_finish_signing) === 'function' && listener.on_finish_signing();

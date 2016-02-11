@@ -28,16 +28,16 @@ describe "KeyRing", ->
     expect(privateKR._changeChain.xpub).toEqual("xpub6FMWuMox3fJxGARtaDVY6e9st4Hk5j8Ui6r7XLnBPFXPXkajXNiAfiEqBakuDKYYeRf4ERtPm1TawBqKaBWj2dsHNJT4rSsugssTnaDsz2m")
 
   it "should generate key from path when private keyring", ->
-    pkey = Base58.encode(privateKR.privateKeyFromPath("M/1/101").d.toBuffer(32))
+    pkey = Base58.encode(privateKR.privateKeyFromPath("M/1/101").keyPair.d.toBuffer(32))
     expect(pkey).toEqual("FsY7NFHZNQJL6LzNt7zGqthrMBpfNuDkGwQUCBhQCpTv")
 
   it "should not generate key from path when public keyring", ->
-    pkey = publicKR.privateKeyFromPath("M/1/101")
-    expect(pkey).toBe(null)
+    pkey = publicKR.privateKeyFromPath("M/1/101").keyPair.d
+    expect(pkey).toBe(undefined)
 
   it "should not generate key from path when cached keyring", ->
-    pkey = cacheKR.privateKeyFromPath("M/1/101")
-    expect(pkey).toBe(null)
+    pkey = cacheKR.privateKeyFromPath("M/1/101").keyPair.d
+    expect(pkey).toBe(undefined)
 
   it 'should not serialize non-expected fields or xprivs', ->
     privateKR.rarefield = "I am an intruder"
