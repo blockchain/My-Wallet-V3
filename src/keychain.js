@@ -15,10 +15,10 @@ function KeyChain(extendedKey, index, cache) {
   // this function should be part of the instance because it is memoized
   this._getKey = Helpers.memoize(function(index) {
     assert(typeof(index) === "number" && index >= 0, "Key index must be integer >= 0");
-    assert(this._chainRoot, "KeyChain is not initialized.")
+    assert(this._chainRoot, "KeyChain is not initialized.");
     return this._chainRoot.derive(index);
   });
-};
+}
 
 Object.defineProperties(KeyChain.prototype, {
   "xpub": {
@@ -38,7 +38,7 @@ KeyChain.prototype.init = function(extendedKey, index, cache) {
   else {
     this._chainRoot = extendedKey && Helpers.isNumber(index) && index >= 0
       ? Bitcoin.HDNode.fromBase58(extendedKey).derive(index) : undefined;
-  };
+  }
   return this;
 };
 

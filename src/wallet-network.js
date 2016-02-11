@@ -18,7 +18,7 @@ function generateUUIDs(count) {
 
   return API.retry(API.request.bind(API, 'GET', 'uuid-generator', data))
     .then(extractUUIDs);
-};
+}
 
 /**
  * Fetch information on wallet identfier with resend code set to true
@@ -42,7 +42,7 @@ function resendTwoFactorSms(user_guid) {
 
   return API.request('GET', 'wallet/' + user_guid, data, true, false)
     .catch(handleError);
-};
+}
 
 /**
  * Trigger an email with the users wallet guid(s)
@@ -73,7 +73,7 @@ function recoverGuid(user_email, captcha) {
 
   return API.request('POST', 'wallet', data, true)
     .then(handleResponse).catch(handleError);
-};
+}
 
 /**
  * Trigger the 2FA reset process
@@ -112,7 +112,7 @@ function requestTwoFactorReset(
 
   return API.request('POST', 'wallet', data, true)
     .then(handleResponse);
-};
+}
 
 module.exports = {
   generateUUIDs: generateUUIDs,

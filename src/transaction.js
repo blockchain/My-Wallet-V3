@@ -81,7 +81,7 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
 
   if (accum < subTotal) {
    throw { error: 500, message: 'Insufficient funds. Value Needed ' +  subTotal / 100000000 + 'BTC' +'. Available amount ' + accum / 100000000 + 'BTC'};
-  };
+  }
 
   this.transaction = transaction;
 };
@@ -113,7 +113,7 @@ Transaction.prototype.randomizeOutputs = function () {
   function shuffle(o){
     for(var j, x, i = o.length; i > 1; j = randomNumberBetweenZeroAnd(i), x = o[--i], o[i] = o[j], o[j] = x);
     return o;
-  };
+  }
   shuffle(this.transaction.outs);
 };
 
@@ -126,8 +126,8 @@ Transaction.prototype.sortBIP69 = function (){
   var compareInputs = function(a, b) {
     var hasha = new Buffer(a[0].hash);
     var hashb = new Buffer(b[0].hash);
-    var x = [].reverse.call(hasha)
-    var y = [].reverse.call(hashb)
+    var x = [].reverse.call(hasha);
+    var y = [].reverse.call(hashb);
     return x.compare(y) || a[0].index - b[0].index
   };
   var compareOutputs = function(a, b) {

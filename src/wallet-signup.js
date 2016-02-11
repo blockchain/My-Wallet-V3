@@ -104,7 +104,7 @@ function generateNewWallet(password, email, firstAccountName, success, error, is
     Wallet.new(guid, sharedKey, firstAccountName, saveWallet, error, isHD);
 
   }).catch(error);
-};
+}
 
 module.exports = {
   generateNewWallet: generateNewWallet

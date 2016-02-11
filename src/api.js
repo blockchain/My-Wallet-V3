@@ -23,7 +23,7 @@ function API(){
 API.prototype.encodeFormData = function (data) {
   if (!data) return "";
   var encoded = Object.keys(data).map(function(k) {
-      return encodeURIComponent(k) + '=' + encodeURIComponent(data[k])
+      return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]);
   }).join('&');
   return encoded;
 };
@@ -55,7 +55,7 @@ API.prototype.request = function(action, method, data, withCred) {
       ) {
         return response.json();
       } else if (data.format === 'json') {
-        return response.json()
+        return response.json();
       } else {
         return response.text();
 
@@ -74,7 +74,7 @@ API.prototype.request = function(action, method, data, withCred) {
     .catch(handleNetworkError)
     .then(checkStatus)
     .then(handleResponse);
-}
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 API.prototype.retry = function(f, n) {
@@ -87,7 +87,7 @@ API.prototype.retry = function(f, n) {
     );
   } else {
     return f();
-  };
+  }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -179,7 +179,7 @@ API.prototype.securePost = function (url, data){
   if (!Helpers.isValidGUID(data.guid)) { clone.guid = MyWallet.wallet.guid; }
   if (!data.sharedKey) {
     var sharedKey = MyWallet.wallet ? MyWallet.wallet.sharedKey : undefined;
-    if (!Helpers.isValidSharedKey(sharedKey)) throw 'Shared key is invalid'
+    if (!Helpers.isValidSharedKey(sharedKey)) throw 'Shared key is invalid';
     //Rather than sending the shared key plain text
     //send a hash using a totp scheme
     var now = new Date().getTime();
@@ -199,7 +199,7 @@ API.prototype.securePost = function (url, data){
     clone.sKDebugOriginalClientTime = now;
     clone.sKDebugOriginalSharedKey  = sharedKey;
   }
-  clone.api_code                  = this.API_CODE
+  clone.api_code                  = this.API_CODE;
   clone.format                    = data.format ? data.format : 'plain';
 
   return this.retry(this.request.bind(this, "POST", url, clone, true));
@@ -224,7 +224,7 @@ API.prototype.pushTx = function (tx, note){
       { return tx_hash;}
     else
       { return responseText;}
-  }
+  };
 
   return this.request("POST", "pushtx", data).then(responseTXHASH);
 };

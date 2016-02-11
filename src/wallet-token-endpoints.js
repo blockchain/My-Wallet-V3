@@ -52,7 +52,7 @@ function authorizeApprove(token, differentBrowserCallback, differentBrowserAppro
     }
   };
 
-  var extraParams = {}
+  var extraParams = {};
   if (differentBrowserApproved !== null) {
     extraParams.confirm_approval = differentBrowserApproved;
   }

@@ -269,7 +269,7 @@ Helpers.getHostName = function() {
   }
 
   return window.location.hostname;
-}
+};
 
 Helpers.tor = function () {
   var hostname = Helpers.getHostName()
@@ -278,7 +278,7 @@ Helpers.tor = function () {
   if(hostname === null) return null
 
   return hostname.indexOf(".onion") > -1
-}
+};
 ////////////////////////////////////////////////////////////////////////////////
 
 

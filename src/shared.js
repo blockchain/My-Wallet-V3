@@ -25,7 +25,7 @@ module.exports = {
   BlockFromJSON: BlockFromJSON
 };
 
-function myprint (x) {console.log(x);};
+function myprint (x) {console.log(x);}
 
 function setLocalSymbol(new_symbol) {
   if (!new_symbol) return;
@@ -65,7 +65,7 @@ function playSound(id) {
 
     _sounds[id].play();
   } catch (e) { }
-};
+}
 
 //Ignore Console
 try {

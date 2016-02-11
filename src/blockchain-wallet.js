@@ -51,7 +51,7 @@ function Wallet(object) {
   if (this.isUpgradedToHD){
     Helpers.merge(this._paidTo, this.hdwallet._paidTo); // move paidTo from the wrong place
     delete this.hdwallet._paidTo;
-  };
+  }
 
   // address book list
   // address book in json is [{address: "address1", label: "label1"} , ... ]
@@ -119,7 +119,7 @@ Object.defineProperties(Wallet.prototype, {
         default:
           this._fee_per_kb = value;
           MyWallet.syncWallet();
-      };
+      }
     }
   },
   "pbkdf2_iterations": {
@@ -337,7 +337,7 @@ Wallet.prototype._updateWalletInfo = function(obj) {
     this.numberTxTotal   = 0;
     this.numberTxFetched = 0;
     return true;
-  };
+  }
 
   this.totalSent     = obj.wallet.total_sent;
   this.totalReceived = obj.wallet.total_received;
@@ -357,15 +357,15 @@ Wallet.prototype._updateWalletInfo = function(obj) {
 
         if (account.getLabelForReceivingAddress(account.receiveIndex)) {
           account.incrementReceiveIndex();
-        };
-      };
+        }
+      }
     }
     var address = this.activeKey(e.address);
     if (address){
       address.balance       = e.final_balance;
       address.totalReceived = e.total_received;
       address.totalSent     = e.total_sent;
-    };
+    }
   };
 
   obj.addresses.forEach(updateAccountAndAddressesInfo.bind(this));
@@ -406,7 +406,7 @@ Wallet.prototype.fetchMoreTransactions = function(didFetchOldestTransaction) {
     this.numberTxFetched += pTx.length;
     if (pTx.length < this.txPerScroll) { didFetchOldestTransaction(); }
     return pTx;
-  };
+  }
   return txListP.then(processTxs.bind(this));
 };
 
@@ -440,7 +440,7 @@ Wallet.prototype.toJSON = function(){
   function addressBookToJSON (addressBook) {
     return Object.keys(addressBook)
              .map(function(a){ return {addr: a, label: addressBook[a]};});
-  };
+  }
 
   var wallet = {
     guid              : this.guid,
@@ -470,7 +470,7 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
     var watchOnlyKey = this._addresses[addr];
     if (newKey.address !== watchOnlyKey.address) {
       if (!this.containsLegacyAddress(newKey.address)) {
-        console.log(newKey)
+        console.log(newKey);
         return this.importLegacyAddress(privateKey, null, secPass, bipPass);
       } else {
          if (this.key(newKey.address).isWatchOnly) {
@@ -525,7 +525,7 @@ Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) 
 Wallet.prototype.containsLegacyAddress = function(address) {
   if(Helpers.isInstanceOf(address, Address)) address = address.address;
   return this._addresses.hasOwnProperty(address);
-}
+};
 
 Wallet.prototype.newLegacyAddress = function(label, pw, success, error){
   try {
@@ -539,7 +539,7 @@ Wallet.prototype.newLegacyAddress = function(label, pw, success, error){
     assert(pw, "Error: second password needed");
     var cipher = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
     ad.encrypt(cipher).persist();
-  };
+  }
   this._addresses[ad.address] = ad;
   MyWallet.syncWallet(success, error);
   return ad;
@@ -581,13 +581,13 @@ Wallet.prototype.encrypt = function(pw, success, error, encrypting, syncing){
     else {
       // already encrypted
       return this;
-    };
+    }
   }
   catch (e){
     console.log("wallet encryption failure");
     error && error(e);
     return false;
-  };
+  }
   // if encryption finished well, then save
   this._dpasswordhash = WalletCrypto.hashNTimes(this._sharedKey + pw, this._pbkdf2_iterations);
   this._double_encryption = true;
@@ -612,13 +612,13 @@ Wallet.prototype.decrypt = function(pw, success, error, decrypting, syncing){
     else {
       // already decrypted
       return this;
-    };
+    }
   }
   catch (e){
     console.log("wallet decryption failure");
     error && error(e);
     return false;
-  };
+  }
   // if encryption finished well, then save
   this._dpasswordhash     = undefined;
   this._double_encryption = false;
@@ -627,14 +627,14 @@ Wallet.prototype.decrypt = function(pw, success, error, decrypting, syncing){
   this._hd_wallets.forEach(p);
   syncing && syncing();
   if (success) { MyWallet.syncWallet(success.bind(undefined, this));}
-  else {MyWallet.syncWallet();};
+  else {MyWallet.syncWallet();}
   return this;
 };
 
 Wallet.reviver = function(k,v){
   if (k === '') return new Wallet(v);
   return v;
-}
+};
 
 function isAccountNonUsed (account, progress) {
   var isNonUsed = function(obj){
@@ -642,7 +642,7 @@ function isAccountNonUsed (account, progress) {
     return obj.addresses[0].account_index === 0 && obj.addresses[0].change_index === 0;
   };
   return API.getHistory([account.extendedPublicKey], 0, 0, 50).then(isNonUsed);
-};
+}
 
 Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, startedRestoreHDWallet, progress){
   // wallet restoration
@@ -661,7 +661,7 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, started
   var untilNEmptyAccounts = function(n){
     var go = function(nonused) {
       if (nonused) { return untilNEmptyAccounts(n-1);}
-      else { return untilNEmptyAccounts(AccountsGap);};
+      else { return untilNEmptyAccounts(AccountsGap);}
     };
     if (n === 0) {
       self.hdwallet._accounts.splice(-AccountsGap);
@@ -670,7 +670,7 @@ Wallet.prototype.restoreHDWallet = function(mnemonic, bip39Password, pw, started
       accountIndex++;
       account = self.newAccount("My Bitcoin Wallet " + accountIndex.toString(), pw, 0, undefined, true);
       return isAccountNonUsed(account, progress).then(go);
-    };
+    }
   };
 
   var saveAndReturn = function (){
@@ -698,7 +698,7 @@ Wallet.prototype.enableNotifications = function(success, error) {
       error();
     }
   )
-}
+};
 
 Wallet.prototype.disableNotifications = function(success, error) {
   assert(success, "Success callback required");
@@ -715,7 +715,7 @@ Wallet.prototype.disableNotifications = function(success, error) {
     }
   );
 
-}
+};
 
 // creating a new wallet object
 Wallet.new = function(guid, sharedKey, firstAccountLabel, success, error, isHD){
@@ -744,7 +744,7 @@ Wallet.new = function(guid, sharedKey, firstAccountLabel, success, error, isHD){
       // legacy wallet (generate address)
       var ad = Address.new(label);
       MyWallet.wallet._addresses[ad.address] = ad;
-    };
+    }
   } catch (e) { error(e); return; }
   success(MyWallet.wallet);
 };
@@ -772,7 +772,7 @@ Wallet.prototype.newAccount = function(label, pw, hdwalletIndex, success, nosave
   var cipher = undefined;
   if (this.isDoubleEncrypted) {
     cipher = WalletCrypto.cipherFunction.bind(undefined, pw, this._sharedKey, this._pbkdf2_iterations);
-  };
+  }
   var newAccount = this._hd_wallets[index].newAccount(label, cipher).lastAccount;
   MyWallet.listenToHDWalletAccount(newAccount.extendedPublicKey);
   if(!(nosave === true)) MyWallet.syncWallet();
@@ -833,8 +833,8 @@ Wallet.prototype.changePbkdf2Iterations = function(newIterations, password){
       this._pbkdf2_iterations = newIterations;        // sec pass iterations
       WalletStore.setPbkdf2Iterations(newIterations); // main pass iterations
       MyWallet.syncWallet();
-    };
-  };
+    }
+  }
   return true;
 };
 
@@ -845,7 +845,7 @@ Wallet.prototype.getPrivateKeyForAddress = function(address, secondPassword) {
     pk = this.isDoubleEncrypted ?
       WalletCrypto.decryptSecretWithSecondPassword(
         address.priv, secondPassword, this.sharedKey, this.pbkdf2_iterations) : address.priv;
-  };
+  }
   return pk;
 };
 
