@@ -37,6 +37,7 @@ KeyRing.prototype.init = function (extendedKey, cache){
   return this;
 };
 
+// "M/0/0" -> HDNode
 KeyRing.prototype.privateKeyFromPath = function (path) {
   var components = path.split('/');
   assert(components[0] === 'M', 'Invalid Path prefix');

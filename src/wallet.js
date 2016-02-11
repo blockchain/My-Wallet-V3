@@ -3,6 +3,8 @@
 var MyWallet = module.exports = {};
 
 var assert = require('assert');
+var Bitcoin = require('bitcoinjs-lib');
+var ECPair = Bitcoin.ECPair;
 var Buffer = require('buffer').Buffer;
 
 var WalletStore = require('./wallet-store');
@@ -562,5 +564,6 @@ MyWallet.logout = function (force) {
   };
   var data = {format : 'plain', api_code : API.API_CODE};
   WalletStore.sendEvent('logging_out');
-  API.request('GET', 'wallet/logout', data, true, false).then(reload).catch(reload);
+
+  API.request("GET", 'wallet/logout', data, true, false).then(reload).catch(reload);
 };

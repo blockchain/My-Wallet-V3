@@ -44,11 +44,11 @@ KeyChain.prototype.init = function (extendedKey, index, cache) {
 
 KeyChain.prototype.getAddress = function (index) {
   assert(Helpers.isPositiveInteger(index), 'Address index must be integer >= 0');
-  return this._getKey(index).getAddress().toString();
+  return this._getKey(index).getAddress();
 };
 
 KeyChain.prototype.getPrivateKey = function (index) {
   assert(Helpers.isPositiveInteger(index), 'private key index must be integer >= 0');
-  var key = this._getKey(index).privKey;
+  var key = this._getKey(index);
   return key ? key : null;
 };
