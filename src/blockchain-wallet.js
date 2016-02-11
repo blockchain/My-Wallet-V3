@@ -706,6 +706,7 @@ Wallet.new = function(guid, sharedKey, firstAccountLabel, success, error, isHD){
 
 // adding and hd wallet to an existing wallet, used by frontend and iOs
 Wallet.prototype.newHDWallet = function(firstAccountLabel, pw, success, error){
+
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, "enc");
   try {
     var newHDwallet = HDWallet.new(encoder);
@@ -714,6 +715,16 @@ Wallet.prototype.newHDWallet = function(firstAccountLabel, pw, success, error){
   var label = firstAccountLabel ? firstAccountLabel : "My Bitcoin Wallet";
   var account = this.newAccount(label, pw, this._hd_wallets.length-1, true);
   var guid = this.guid;
+
+  // fix possible wrong legacy addresses (missing leading zero)
+  var cipher = undefined;
+  if (this.isDoubleEncrypted) {
+    cipher = WalletCrypto.cipherFunction.bind(undefined, pw, this._sharedKey, this._pbkdf2_iterations);
+  }
+  var f = function(a) {a.repair(cipher);};
+  this.keys.forEach(f);
+
+  // save
   MyWallet.syncWallet(function(res) {
     success();
   }, error);
