@@ -26,7 +26,6 @@ describe "HDWallet", ->
       'created_device_name': 'javascript_web'
       'created_device_version': '1.0'
     } ]
-    'paidTo': {}
     'hd_wallets': [ {
       'seed_hex': '7e061ca8e579e5e70e9989ca40d342fe'
       'passphrase': ''
@@ -420,9 +419,6 @@ describe "HDWallet", ->
           expect(cb.error).toHaveBeenCalled()
 
       it ".newAccount", ->
-        pending()
-
-      it ".getPaidTo", ->
         pending()
 
       it ".getAddressBookLabel", ->

@@ -17,8 +17,6 @@ describe "Transaction", ->
       multipleAmounts: [20000,10000]
       fee: 10000
       note: "That is an expensive toy"
-      email: "emmy@noether.me"
-      mobile: "+34649999999"
       unspentMock: [
           {
             "tx_hash": "594c66729d5068b7d816760fc304accd760629ee75a371529049a94cffa50861"

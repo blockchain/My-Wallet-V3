@@ -224,38 +224,3 @@ API.prototype.pushTx = function (txHex, note){
 
   return this.request("POST", "pushtx", data).then(response);
 };
-
-// OLD FUNCTIONS COPIED: Must rewrite this ones (email ,sms)
-// function sendViaEmail(email, tx, privateKey, successCallback, errorCallback) {
-//   try {
-//     MyWallet.securePost('send-via', {
-//       type : 'email',
-//       to : email,
-//       priv : privateKey,
-//       hash : tx.getHash().toString('hex')
-//     }, function(data) {
-//       successCallback(data);
-//     }, function(data) {
-//       errorCallback(data ? data.responseText : null);
-//     });
-//   } catch (e) {
-//     errorCallback(e);
-//   }
-// };
-//
-// function sendViaSMS(number, tx, privateKey, successCallback, errorCallback) {
-//   try {
-//     MyWallet.securePost('send-via', {
-//       type : 'sms',
-//       to : number,
-//       priv : privateKey,
-//       hash : tx.getHash().toString('hex')
-//     }, function() {
-//       successCallback();
-//     }, function(data) {
-//       errorCallback(data ? data.responseText : null);
-//     });
-//   } catch (e) {
-//     errorCallback(e);
-//   }
-// };

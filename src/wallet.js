@@ -63,96 +63,6 @@ MyWallet.getUnCompressedAddressString = function(key) {
   return new ECPair(key.d, null, {compressed: false}).getAddress().toString();
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// TODO :: WALLET SPENDER FIX
-// only used on the Spender (for paytoEmail/Mobile, need a fix)
-MyWallet.addPrivateKey = function(key, opts, second_password) {
-  var sharedKey = MyWallet.wallet.sharedKey;
-  var pbkdf2_iterations = MyWallet.wallet.pbkdf2_iterations;
-
-  if (WalletStore.walletIsFull()) {
-    throw 'Wallet is full.';
-  }
-  if (key == null) {
-    throw 'Cannot add null key.';
-  }
-  if (opts == null)
-    opts = {compressed: true};
-
-  var addr = opts.compressed ? MyWallet.getCompressedAddressString(key) : MyWallet.getUnCompressedAddressString(key);
-  var base58 = Base58.encode(key.d.toBuffer(32));
-  var encoded = base58 == null || second_password == null ? base58 : WalletCrypto.encryptSecretWithSecondPassword(base58, second_password, sharedKey, pbkdf2_iterations);
-  if (encoded == null) {
-    throw 'Error Encoding key';
-  }
-  var decoded_base_58 = second_password == null ? base58 : WalletCrypto.decryptSecretWithSecondPassword(encoded, second_password, sharedKey, pbkdf2_iterations);
-  var decoded_key = new ECPair(new BigInteger.fromBuffer(decoded_base_58), null, opts);
-  if (addr != MyWallet.getUnCompressedAddressString(key) && addr != MyWallet.getCompressedAddressString(key)) {
-    throw 'Decoded Key address does not match generated address';
-  }
-  if (addr != MyWallet.getUnCompressedAddressString(key) && addr != MyWallet.getCompressedAddressString(key)) {
-    throw 'Decoded Key address does not match generated address';
-  }
-
-  //TODO: Move this once opts and probably all addPrivateKey func to walletstore
-  var addresses = WalletStore.getAddresses();
-  if (WalletStore.addLegacyAddress(addr, encoded)) {
-    addresses[addr].tag = 1; //Mark as unsynced
-    addresses[addr].created_time = opts.created_time ? opts.created_time : 0; //Stamp With Creation time
-    addresses[addr].created_device_name = opts.app_name ? opts.app_name : shared.APP_NAME; //Created Device
-    addresses[addr].created_device_version = opts.app_version ? opts.app_version : shared.APP_VERSION; //Created App Version
-
-    if (addresses[addr].priv != encoded)
-      throw 'Address priv does not match encoded';
-
-    //Subscribe to transaction updates through websockets
-    try {
-      MyWallet.ws.send('{"op":"addr_sub", "addr":"'+addr+'"}');
-    } catch (e) { }
-  } else {
-    throw 'Could not add key. This key already exists in your wallet.';
-  }
-  return addr;
-};
-
-// used on sharedcoin.js, wallet-spender.js and wallet.js
-MyWallet.generateNewKey = function(_password) {
-  var key = Bitcoin.ECPair.makeRandom({compressed: true});
-
-  // key is uncompressed, so cannot passed in opts.compressed = true here
-  if (MyWallet.addPrivateKey(key)) {
-    return key;
-  }
-};
-// used on wallet-spender.js and wallet.js
-MyWallet.generateNewMiniPrivateKey = function() {
-  // Documentation: https://en.bitcoin.it/wiki/Mini_private_key_format
-  while (true) {
-    //Use a normal ECPair to generate random bytes
-    var key = Bitcoin.ECPair.makeRandom({compressed: false});
-
-    //Make Candidate Mini Key
-    var minikey = 'S' + Base58.encode(key.d.toBuffer(32)).substr(0, 21);
-
-    //Append ? & hash it again
-    var bytes_appended = Bitcoin.crypto.sha256(minikey + '?');
-
-    //If zero byte then the key is valid
-    if (bytes_appended[0] == 0) {
-
-      //SHA256
-      var bytes = Bitcoin.crypto.sha256(minikey);
-
-      var ecpair = new Bitcoin.ECPair(new BigInteger.fromBuffer(bytes), null, {compressed: false});
-
-      if (MyWallet.addPrivateKey(ecpair, {compressed: true}))
-        return {key : ecpair, miniKey : minikey};
-    }
-  }
-};
-// TODO :: END WALLET SPENDER FIX
-////////////////////////////////////////////////////////////////////////////////
-
 // used locally
 function socketConnect() {
   MyWallet.ws.connect(onOpen, onMessage, onClose);
@@ -222,7 +132,6 @@ function socketConnect() {
       MyWallet.wallet.numberTxFetched += 1;
       tx.setConfirmations(0);
       WalletStore.pushTransaction(tx);
-      shared.playSound('beep');
       WalletStore.sendEvent('on_tx');
 
     }  else if (obj.op == 'block') {
@@ -275,7 +184,7 @@ MyWallet.processTransaction = function(tx) {
 
   var transaction = {
     from: {account: null, legacyAddresses: null, externalAddresses: null},
-    to: {accounts: [], legacyAddresses: null, externalAddresses: null, email: null, mobile: null},
+    to: {accounts: [], legacyAddresses: null, externalAddresses: null},
     fee: 0,
     intraWallet: null
   };
@@ -376,15 +285,7 @@ MyWallet.processTransaction = function(tx) {
         transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
       }
       transaction.fee -= output.value;
-    } else if (MyWallet.wallet.getPaidTo(tx.hash) && MyWallet.wallet.getPaidTo(tx.hash).address == output.addr) {
-      var paidToItem = MyWallet.wallet.getPaidTo(tx.hash);
-      if(paidToItem.email) {
-        transaction.to.email = { email: paidToItem.email, redeemedAt: paidToItem.redeemedAt };
-      } else if (paidToItem.mobile) {
-        transaction.to.mobile = { number: paidToItem.mobile, redeemedAt: paidToItem.redeemedAt };
-      }
-      transaction.intraWallet = false;
-    }else {
+    } else {
       var toAccountSet = false;
       if (MyWallet.wallet.isUpgradedToHD) {
         for (var j in MyWallet.wallet.hdwallet.accounts) {
@@ -457,8 +358,6 @@ MyWallet.processTransaction = function(tx) {
   transaction.txTime = tx.time;
   transaction.publicNote = tx.note || null;
   transaction.note = MyWallet.wallet.getNote(tx.hash);
-  // TODO: review tags
-  // transaction.tags = WalletStore.getTags(tx.hash);
   transaction.size = tx.size;
   transaction.tx_index = tx.txIndex;
   transaction.block_height = tx.blockHeight;
