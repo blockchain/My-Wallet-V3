@@ -506,6 +506,8 @@ Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) 
     if (this.containsLegacyAddress(ad)) {
       if (!this.key(ad.address).isWatchOnly) {
         throw 'presentInWallet';
+      } else {
+        ad.label = this.key(ad.address).label;
       }
     }
     if (this.isDoubleEncrypted) {
