@@ -504,7 +504,9 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
 Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) {
   var importAddress = function (ad) {
     if (this.containsLegacyAddress(ad)) {
-      throw 'presentInWallet';
+      if (!this.key(ad.address).isWatchOnly) {
+        throw 'presentInWallet';
+      }
     }
     if (this.isDoubleEncrypted) {
       if (!secPass) {throw 'Error: second password needed';}
