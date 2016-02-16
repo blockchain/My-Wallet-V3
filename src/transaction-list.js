@@ -57,13 +57,17 @@ TransactionList.prototype.fetchTxs = function (amount) {
 };
 
 TransactionList.prototype.pushTxs = function (txs) {
-  txs = Helpers.toArrayFormat(txs).map(Tx.factory);
+  txs = Helpers.toArrayFormat(txs).map(Tx.factory).filter(function (tx) {
+    return !this.transaction(tx.hash);
+  }.bind(this));
   this._transactions = this._transactions.concat(txs);
   this._events.emit('update');
 };
 
 TransactionList.prototype.shiftTxs = function (txs) {
-  txs = Helpers.toArrayFormat(txs).map(Tx.factory);
+  txs = Helpers.toArrayFormat(txs).map(Tx.factory).filter(function (tx) {
+    return !this.transaction(tx.hash);
+  }.bind(this));
   this._transactions = txs.concat(this._transactions);
   this._events.emit('update');
 };
