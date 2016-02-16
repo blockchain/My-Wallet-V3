@@ -32,13 +32,11 @@ root.decryptedWalletPayload = {
 	  {"addr" : "1C26NBkFUc2Et2Ghf3mwPtKYFm2MqGvC7q", "label" : "Friend 1"}
 	],
 	"tx_notes" : {"9cfb4c8a92ad1ce0ac464132b270f3bb691587f923f48e3bbdf32736d8359309":"Test note","f5c59046e58826ee77ab281c4994b7d7f55bff311ed89fc18cf0b2daae73a90b":"Wow","2e56a0fdcc8567083abb1385c48e0b59f6fc5e6005533c6b49c22932281f87bd":"Flaa   f","3ade266d618ed2c5ab6dfdc1f6c71bad29afd155c1ea48fdef26233a772ca4d5":"AB","2a639e2e927a7d62854d492734cf450d6d07c1779dc6fbe0b763103275bb2d74":"Sent to other wallet","aba107861882b781b433141e1fa5e63312387eb228adcf519d70933440c19de5":"a","af3282da9abfae94573cb0493d59ba15882535b63e04da32c6110b40e8171b82":"Bllll","a44751173217cb0f547176a7e0c5b973548ede1dabfdd65a9e0d6de11e70c3ca":"Bla tea"},
-	"tag_names" : [],
 	"hd_wallets" : [
 	  {
       "seed_hex" : root.seed,
       "mnemonic_verified" : "false",
       "default_account_idx" : "0",
-      "paidTo" : {"af3282da9abfae94573cb0493d59ba15882535b63e04da32c6110b40e8171b82":{"email":"test-emailroot.purpledunes.com","mobile":null,"redeemedAt":1417171978,"address":"1NsGohE53dzWMNFJo2KynFpmDumpBCnFFf"}},
     	"accounts" : [
         {
           "label":"Checking",
@@ -79,13 +77,11 @@ root.decryptedWalletWithSecondPasswordPayload = {
 	  {"addr" : "1C26NBkFUc2Et2Ghf3mwPtKYFm2MqGvC7q", "label" : "Friend 1"}
 	],
 	"tx_notes" : {"9cfb4c8a92ad1ce0ac464132b270f3bb691587f923f48e3bbdf32736d8359309":"Test note","f5c59046e58826ee77ab281c4994b7d7f55bff311ed89fc18cf0b2daae73a90b":"Wow","2e56a0fdcc8567083abb1385c48e0b59f6fc5e6005533c6b49c22932281f87bd":"Flaa   f","3ade266d618ed2c5ab6dfdc1f6c71bad29afd155c1ea48fdef26233a772ca4d5":"AB","2a639e2e927a7d62854d492734cf450d6d07c1779dc6fbe0b763103275bb2d74":"Sent to other wallet","aba107861882b781b433141e1fa5e63312387eb228adcf519d70933440c19de5":"a","af3282da9abfae94573cb0493d59ba15882535b63e04da32c6110b40e8171b82":"Bllll","a44751173217cb0f547176a7e0c5b973548ede1dabfdd65a9e0d6de11e70c3ca":"Bla tea"},
-	"tag_names" : [],
 	"hd_wallets" : [
 	  {
       "seed_hex" : "...",
       "mnemonic_verified" : "false",
       "default_account_idx" : "0",
-      "paidTo" : {"af3282da9abfae94573cb0493d59ba15882535b63e04da32c6110b40e8171b82":{"email":"test-emailroot.purpledunes.com","mobile":null,"redeemedAt":1417171978,"address":"1NsGohE53dzWMNFJo2KynFpmDumpBCnFFf"}},
     	"accounts" : [
         {
           "label":"Checking",

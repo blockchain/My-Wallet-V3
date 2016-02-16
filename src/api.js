@@ -207,59 +207,20 @@ API.prototype.securePost = function (url, data){
 
 
 //01000000013e095250cb35129c7dee081b8c89b4bff69f72222a25c45ba9747a704a6d0bcd010000006b4830450221009b4f6619b1499ea19494aec34c36fdeac9146b9f87f010b7ebf1eb8a1b590c6e02202f5d9b0cfa4107d586b5b370494b9932eba1411468af06e431001932c12bf245012103cf91e6b06d1a2432721559a010ee67e98f8ef0421b15cca66dc9717ac1af8d1effffffff0210270000000000001976a91402549a8a872fbe54721a899e5ac2a87daac2358088acf0ba0400000000001976a9148ee77b3dd0e33783c11a6c28473d16e9b63dc38588ac00000000
-API.prototype.pushTx = function (tx, note){
-  assert(tx, "transaction required");
-
-  var txHex = tx.toHex();
-  var tx_hash = tx.getId();
-  var buffer = tx.toBuffer();
+API.prototype.pushTx = function (txHex, note){
+  assert(txHex, "transaction required");
 
   var data = {
       tx : txHex
     , api_code : this.API_CODE
   };
 
-  var responseTXHASH = function (responseText) {
+  var response = function (responseText) {
     if (responseText.indexOf("Transaction Submitted") > -1)
-      { return tx_hash;}
+      { return true;}
     else
-      { return responseText;}
-  };
+      { return Promise.reject(responseText);}
+  }
 
-  return this.request("POST", "pushtx", data).then(responseTXHASH);
+  return this.request("POST", "pushtx", data).then(response);
 };
-
-// OLD FUNCTIONS COPIED: Must rewrite this ones (email ,sms)
-// function sendViaEmail(email, tx, privateKey, successCallback, errorCallback) {
-//   try {
-//     MyWallet.securePost('send-via', {
-//       type : 'email',
-//       to : email,
-//       priv : privateKey,
-//       hash : tx.getHash().toString('hex')
-//     }, function(data) {
-//       successCallback(data);
-//     }, function(data) {
-//       errorCallback(data ? data.responseText : null);
-//     });
-//   } catch (e) {
-//     errorCallback(e);
-//   }
-// };
-//
-// function sendViaSMS(number, tx, privateKey, successCallback, errorCallback) {
-//   try {
-//     MyWallet.securePost('send-via', {
-//       type : 'sms',
-//       to : number,
-//       priv : privateKey,
-//       hash : tx.getHash().toString('hex')
-//     }, function() {
-//       successCallback();
-//     }, function(data) {
-//       errorCallback(data ? data.responseText : null);
-//     });
-//   } catch (e) {
-//     errorCallback(e);
-//   }
-// };

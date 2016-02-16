@@ -2,9 +2,6 @@ var satoshi = 100000000; //One satoshi
 var symbol_btc = {code : "BTC", symbol : "BTC", name : "Bitcoin",  conversion : satoshi, symbolAppearsAfter : true, local : false}; //Default BTC Currency Symbol object
 var symbol_local = {"conversion":0,"symbol":"$","name":"U.S. dollar","symbolAppearsAfter":false,"local":true,"code":"USD"}; //Users local currency object
 var symbol = symbol_btc; //Active currency object
-var resource = 'Resources/';
-var war_checksum;
-var min = true; //whether to load minified scripts
 var APP_VERSION = '3.0'; //Need some way to set this dynamically
 var APP_NAME = 'javascript_web';
 var IMPORTED_APP_NAME = 'external'; //Need some way to set this dynamically
@@ -18,9 +15,7 @@ module.exports = {
   satoshi: satoshi,
   setLocalSymbol: setLocalSymbol,
   setBTCSymbol: setBTCSymbol,
-  playSound: playSound,
   sShift: sShift,
-  webSocketConnect: webSocketConnect,
   TransactionFromJSON: TransactionFromJSON,
   BlockFromJSON: BlockFromJSON
 };
@@ -56,16 +51,6 @@ function setBTCSymbol(new_symbol) {
 function getBTCSymbol() {
   return symbol_btc;
 }
-// used iOS
-var _sounds = {};
-function playSound(id) {
-  try {
-    if (!_sounds[id])
-      _sounds[id] = new Audio('/'+resource+id+'.wav');
-
-    _sounds[id].play();
-  } catch (e) { }
-}
 
 //Ignore Console
 try {
@@ -83,47 +68,6 @@ try {
 //The current 'shift' value - BTC = 1, mBTC = 3, uBTC = 6
 function sShift(symbol) {
   return (satoshi / symbol.conversion).toString().length-1;
-}
-
-var ws;
-var reconnectInterval;
-function webSocketConnect(success) {
-  try {
-    function reallyConnect() {
-      try {
-        var url = "wss://blockchain.info/inv";
-
-        console.log('Connect ' + url);
-
-        ws = new WebSocket(url);
-
-        if (!ws) {
-          return;
-        }
-
-        if (success)
-          success(ws);
-      } catch (e) {
-        console.log(e);
-      }
-    }
-
-    //Updates time last block was received and check for websocket connectivity
-    function reconnectTimer () {
-      if (!ws || ws.readyState == WebSocket.CLOSED) {
-        reallyConnect();
-      }
-    }
-
-    if (window.WebSocket) {
-      reallyConnect();
-
-      if (!reconnectInterval)
-        reconnectInterval = setInterval(reconnectTimer, 20000);
-    }
-  } catch (e) {
-    console.log(e);
-  }
 }
 
 function BlockFromJSON(json) {

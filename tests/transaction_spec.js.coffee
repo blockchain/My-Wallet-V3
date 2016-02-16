@@ -102,7 +102,6 @@ describe "Transaction", ->
       isUpgradedToHD: true
       hdwallet:
         accounts: hdAccounts
-      getPaidTo: () -> {}
       getNote: () -> ""
 
     spyOn(WalletStore, "getLatestBlock").and.returnValue(true)
@@ -116,8 +115,6 @@ describe "Transaction", ->
 
   describe "processTransaction()", ->
     beforeEach ->
-      # spyOn(WalletStore, "getTags").and.returnValue([])
-
       spyOn(MyWallet, "getConfirmationsForTx").and.callFake(
         (block, tx)-> tx.confirmations
       )
@@ -199,8 +196,6 @@ describe "Transaction", ->
               'address': '1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg'
               'amount': 30000
             ]
-            'email': null
-            'mobile': null
           'fee': 10000
           'intraWallet': false
           'hash': 'cfb77ea99f7d97e551afae96e1fe028e56933621d8cc4342b399fba03bfe8826'
@@ -208,7 +203,6 @@ describe "Transaction", ->
           'txTime': 1425942592
           'publicNote': null
           'note': null
-          'tags': []
           'size': 226
           'tx_index': 80064446
           'block_height': 346920
@@ -309,8 +303,6 @@ describe "Transaction", ->
               'externalAddresses':
                 'addressWithLargestOutput': '1FeerpCgswvGRLVKme759C96DUBtf7SvA2'
                 'amount': 75196
-              'email': null
-              'mobile': null
             'fee': 10000
             'intraWallet': false
             'hash': 'b0cf5a859187e9c0cd7f7836fac88ade98713021eb2c3bcb92d677ac4a2a45ba'
@@ -318,7 +310,6 @@ describe "Transaction", ->
             'txTime': 1419598158
             'publicNote': null
             'note': null
-            'tags': []
             'size': 226
             'tx_index': 72945763
             'block_height': 335985
@@ -387,8 +378,6 @@ describe "Transaction", ->
               'address': '1BwJQxNLnc9CgtVBhRuwdyQsYqhoD4oPWg'
               'amount': 100000
             ]
-            'email': null
-            'mobile': null
           'fee': 10000
           'intraWallet': false
           'hash': '62636544b31da6a14a419ab1ee3a253bb1ebca65175d351ba4bb54b00b896a87'
@@ -396,7 +385,6 @@ describe "Transaction", ->
           'txTime': 1425727751
           'publicNote': null
           'note': null
-          'tags': []
           'size': 191
           'tx_index': 79823045
           'block_height': 346553
@@ -541,8 +529,6 @@ describe "Transaction", ->
                     "address": "1PZ5GCtYQesYMKEQMtkRQcutLXpkMCWCTM",
                     "amount": 123120
                 }],
-                "email": null,
-                "mobile": null
             },
             "fee": 10000,
             "intraWallet": false,
@@ -551,7 +537,6 @@ describe "Transaction", ->
             "txTime": 1427744469,
             "publicNote": null,
             "note": null,
-            "tags": [],
             "size": 669,
             "tx_index": 82134531,
             "result": -133120
@@ -641,8 +626,6 @@ describe "Transaction", ->
             ]
             'legacyAddresses': null
             'externalAddresses': null
-            'email': null
-            'mobile': null
           'fee': 10000
           'intraWallet': false
           'hash': '68ca0a6593f546ab50a41f70b3241795f80d16b8ede7a238f3b9a5b6520f6a6d'
@@ -650,7 +633,6 @@ describe "Transaction", ->
           'txTime': 1425659266
           'publicNote': null
           'note': null
-          'tags': []
           'size': 225
           'tx_index': 79746098
           'block_height': 346444
@@ -752,8 +734,6 @@ describe "Transaction", ->
             ]
             'legacyAddresses': null
             'externalAddresses': null
-            'email': null
-            'mobile': null
           'fee': 10000
           'intraWallet': true
           'hash': 'eb70c6df08de770782b351c84fb2a96ea100d37ff8edcad579c32c52213c26f7'
@@ -761,7 +741,6 @@ describe "Transaction", ->
           'txTime': 1419596460
           'publicNote': null
           'note': null
-          'tags': []
           'size': 225
           'tx_index': 72943968
           'block_height': 335980
@@ -878,8 +857,6 @@ describe "Transaction", ->
 
             'legacyAddresses': null
             'externalAddresses': null
-            'email': null
-            'mobile': null
           'fee': 10000
           'intraWallet': true
           'hash': 'eb70c6df08de770782b351c84fb2a96ea100d37ff8edcad579c32c52213c26f7'
@@ -887,7 +864,6 @@ describe "Transaction", ->
           'txTime': 1419596460
           'publicNote': null
           'note': null
-          'tags': []
           'size': 225
           'tx_index': 72943968
           'block_height': 335980
@@ -972,8 +948,6 @@ describe "Transaction", ->
             'address': '1FeerpCgswvGRLVKme759C96DUBtf7SvA2'
             'amount': 20000
           ]
-          'email': null
-          'mobile': null
         'fee': 10000
         'intraWallet': false
         'hash': '391cfffa273d82866b367af7941fb3aca35b5a1a95003140a148166bf5d02ee8'
@@ -981,7 +955,6 @@ describe "Transaction", ->
         'txTime': 1419595953
         'publicNote': null
         'note': null
-        'tags': []
         'size': 257
         'tx_index': 72943525
         'block_height': 335980
@@ -1064,8 +1037,6 @@ describe "Transaction", ->
             'amount': 30000
           } ]
           'externalAddresses': null
-          'email': null
-          'mobile': null
         'fee': 10000
         'intraWallet': true
         'hash': '7134e24bdc3a26522e251dfd1e4c2f94b2fb63541d65eda323a87456bb80de9f'
@@ -1073,7 +1044,6 @@ describe "Transaction", ->
         'txTime': 1425918981
         'publicNote': null
         'note': null
-        'tags': []
         'size': 258
         'tx_index': 80032677
         'block_height': null
@@ -1161,8 +1131,6 @@ describe "Transaction", ->
           ]
           'legacyAddresses': []
           'externalAddresses': null
-          'email': null
-          'mobile': null
         'fee': 10000
         'intraWallet': true
         'hash': '6c3224f1bd35ec8e57fc8494c65f6964ba4eec8eba1a1b6c77410a480cba6a01'
@@ -1170,7 +1138,6 @@ describe "Transaction", ->
         'txTime': 1425915550
         'publicNote': null
         'note': null
-        'tags': []
         'size': 257
         'tx_index': 80026565
         'block_height': null
@@ -1267,8 +1234,6 @@ describe "Transaction", ->
               'amount': 50000
             } ]
             'externalAddresses': null
-            'email': null
-            'mobile': null
           'fee': 10000
           'intraWallet': true
           'hash': '9d470a7518f3f98b865f2c68f4a39f64138fc61807ba4168764b104798800911'
@@ -1276,7 +1241,6 @@ describe "Transaction", ->
           'txTime': 1425912653
           'publicNote': null
           'note': null
-          'tags': []
           'size': 226
           'tx_index': 80021322
           'block_height': 346868
@@ -1362,8 +1326,6 @@ describe "Transaction", ->
               'amount': 40959
             } ]
             'externalAddresses': null
-            'email': null
-            'mobile': null
           'fee': 10000
           'intraWallet': false
           'hash': '1ae6e674f0ea63284ea471f2809f5c84574237d589e16eee356c76d691fe9272'
@@ -1371,7 +1333,6 @@ describe "Transaction", ->
           'txTime': 1420717021
           'publicNote': null
           'note': null
-          'tags': []
           'size': 226
           'tx_index': 74018824
           'block_height': 338047
@@ -1383,221 +1344,6 @@ describe "Transaction", ->
         expect(result["from"]).toEqual(transaction["from"])
         # It shouldn't include the change
         expect(result["to"]).toEqual(transaction["to"])
-
-    describe "to email", ->
-      pending()
-      paidTo["3d14659f29c8d7380cc9998e1d696494e1a1cd27e030b1824499b5ce3afec5ca"] =
-        address: "1K9H68VuHYgzEW13srbBRHQiZ48qsCZiz2"
-        email: "info@blockchain.com"
-        mobile: null
-        redeemedAt: null
-
-      tx = {
-        "hash": "3d14659f29c8d7380cc9998e1d696494e1a1cd27e030b1824499b5ce3afec5ca",
-        "size": 225,
-        "txIndex": 81004662,
-        "time": 1426761515,
-        "inputs": [
-            {
-                "sequence": 4294967295,
-                "prev_out": {
-                    "spent": true,
-                    "tx_index": 81001062,
-                    "type": 0,
-                    "addr": "1AhmcswVJhhAuFmYn933rGuJKj8frKrR4W",
-                    "value": 256036,
-                    "xpub": {
-                        "path": "M/1/5",
-                        "m": "xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5"
-                    },
-                    "n": 1,
-                    "script": "76a9146a6f0428ed2771b9bca2cbfc47c53305adb13d4e88ac"
-                },
-                "script": "473044022012e476a979225d5c2adbc0395444741525a97c4c6e5e4f82c4fa30373b1681b00220201c391e8fbf4bc6c385dc3a5d808c9d31c661e1d5ccb61161ba67affc4c19560121021ccecd1bae8d54ec982a23e84de552712c751e01edf5c9f4d34a9a0d88f515b4"
-            }
-        ],
-        "out": [
-            {
-                "spent": false,
-                "tx_index": 81004662,
-                "type": 0,
-                "addr": "1K9H68VuHYgzEW13srbBRHQiZ48qsCZiz2",
-                "value": 20000,
-                "n": 0,
-                "script": "76a914c70305918e4ebd1d256a5b73ae99d6d36c47cf2988ac"
-            },
-            {
-                "spent": true,
-                "tx_index": 81004662,
-                "type": 0,
-                "addr": "1M8RzPni5mNj4xmtzKnVaRjP2MCUWsRuWP",
-                "value": 226036,
-                "xpub": {
-                    "path": "M/1/6",
-                    "m": "xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5"
-                },
-                "n": 1,
-                "script": "76a914dcca49a16e24bf9415f18df7cf8a263c7429dd8b88ac"
-            }
-        ],
-        "result": -10000,
-        "blockHeight": 348273,
-        "balance": 315906,
-        "account_indexes": [
-            0,
-            0
-        ],
-        "confirmations": 4
-      }
-
-      transaction = {
-        "from": {
-            "account": {
-                "index": 0,
-                "amount": 30000
-            },
-            "legacyAddresses": null,
-            "externalAddresses": null
-        },
-        "to": {
-            "account": null,
-            "legacyAddresses": null,
-            "externalAddresses": null,
-            "email": {
-                "email": "info@blockchain.com",
-                "redeemedAt": null
-            },
-            "mobile": null
-        },
-        "fee": 30000,
-        "intraWallet": false,
-        "hash": "3d14659f29c8d7380cc9998e1d696494e1a1cd27e030b1824499b5ce3afec5ca",
-        "confirmations": 4,
-        "txTime": 1426761515,
-        "publicNote": null,
-        "note": "Naar email",
-        "tags": [],
-        "size": 225,
-        "tx_index": 81004662,
-        "block_height": 348273,
-        "result": -10000
-      }
-
-      it "should be recognized", ->
-        result = MyWallet.processTransaction(tx)
-        expect(result.to).toEqual(transaction.to)
-
-      it "should not be intra wallet", ->
-       result = MyWallet.processTransaction(tx)
-       expect(result.intraWallet).toBe(false)
-
-    describe "to mobile", ->
-      pending()
-      paidTo["f7cab2c5c2df517fae77e90cd1d85f77b826e92b4769113cbfb9aff61a9b5b81"] =
-        "email":null,
-        "mobile":"+31111111111",
-        "redeemedAt":null,
-        "address": "1CifSS1USfx3ZCRozis5MnRAP3Ev9cT7Zu"
-
-      tx = {
-        "hash": "f7cab2c5c2df517fae77e90cd1d85f77b826e92b4769113cbfb9aff61a9b5b81",
-        "size": 225,
-        "txIndex": 80848993,
-        "time": 1426623900,
-        "inputs": [
-            {
-                "sequence": 4294967295,
-                "prev_out": {
-                    "spent": true,
-                    "tx_index": 80838974,
-                    "type": 0,
-                    "addr": "1FbhEFqBcoFCCjPyScp6BceZDqBwvWeK6E",
-                    "value": 318036,
-                    "xpub": {
-                        "path": "M/1/3",
-                        "m": "xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5"
-                    },
-                    "n": 1,
-                    "script": "76a914a0217c1a1a223f54a916258d6fc8139f6b6b211988ac"
-                },
-                "script": "473044022023d2069ba19eebc4869124005b4560f67879c9fc96a2e3ca92285b76e08c39cc0220625352950eae5b8081b4494bb61e950b5af8685a7483b098eaa56db91a1186c00121022801cf9df1c49972e73235aed1ca1ad5e88bf4293156dc44a99580604fe563e2"
-            }
-        ],
-        "out": [
-            {
-                "spent": false,
-                "tx_index": 80848993,
-                "type": 0,
-                "addr": "1CifSS1USfx3ZCRozis5MnRAP3Ev9cT7Zu",
-                "value": 22000,
-                "n": 0,
-                "script": "76a914808a865e0c70359dc00a274b19a0e16fc19dc41c88ac"
-            },
-            {
-                "spent": false,
-                "tx_index": 80848993,
-                "type": 0,
-                "addr": "1N2H3sKgv9dVqBxDtnEpn35iTrDvMba9XG",
-                "value": 286036,
-                "xpub": {
-                    "path": "M/1/4",
-                    "m": "xpub6DWoQTdpQcaSjAtcsCX2kasHB4U12MiLSYSFWCHbdhtcM2GRrvGpNsQMLE4bNYaZHSQJYsTvpZoJCcyzTfGesV46A8SucSGhE4jfBngXrR5"
-                },
-                "n": 1,
-                "script": "76a914e698746f1cd6836a89207a2ed1526ccbf4796eae88ac"
-            }
-        ],
-        "result": -10000,
-        "blockHeight": 348037,
-        "balance": 375906,
-        "account_indexes": [
-            0,
-            0
-        ],
-        "confirmations": 232
-      }
-
-      transaction = {
-        "from": {
-            "account": {
-                "index": 0,
-                "amount": 32000
-            },
-            "legacyAddresses": null,
-            "externalAddresses": null
-        },
-        "to": {
-            "account": null,
-            "legacyAddresses": null,
-            "externalAddresses": null,
-            "email" : null,
-            "mobile" : {
-              "number":"+31111111111",
-              "redeemedAt":null
-            }
-        },
-        "fee": 10000,
-        "intraWallet": false,
-        "hash": "f7cab2c5c2df517fae77e90cd1d85f77b826e92b4769113cbfb9aff61a9b5b81",
-        "confirmations": 232,
-        "txTime": 1426623900,
-        "publicNote": null,
-        "note": null,
-        "tags": [],
-        "size": 225,
-        "tx_index": 80848993,
-        "block_height": 348037,
-        "result": -10000
-      }
-
-
-      it "should be recognized", ->
-        result = MyWallet.processTransaction(tx)
-        expect(result.to).toEqual(transaction.to)
-
-      it "should not be intra wallet", ->
-       result = MyWallet.processTransaction(tx)
-       expect(result.intraWallet).toBe(false)
 
     describe "confirmations", ->
       ##########################################################################

@@ -240,11 +240,11 @@ Payment.from = function(origin) {
     // from PrivateKey
     case (pkFormat !== null):
       var key    = MyWallet.privateKeyStringToKey(origin, pkFormat);
-      key.pub.compressed = false;
-      var addrUncomp = key.pub.getAddress().toString();
+      key.compressed = false;
+      var addrUncomp = key.getAddress().toString();
       var uWIF = key.toWIF();
-      key.pub.compressed = true;
-      var addrComp = key.pub.getAddress().toString();
+      key.compressed = true;
+      var addrComp = key.getAddress().toString();
       var cWIF = key.toWIF();
       wifs      = [cWIF, uWIF];
       addresses = [addrComp, addrUncomp];
@@ -331,9 +331,8 @@ Payment.sign = function(password) {
 Payment.publish = function() {
   return function (payment) {
 
-    var success = function (tx_hash) {
-      console.log("published");
-      payment.txid = tx_hash;
+    var success = function () {
+      payment.txid = payment.transaction.getId();
       return payment;
     };
 
@@ -343,11 +342,13 @@ Payment.publish = function() {
 
     var getValue = function(coin) {return coin.value;};
     var isSmall = function(value) {return value < 500000;};
-    var anySmall = payment.transaction.outs.map(getValue).some(isSmall);
+    var anySmall = payment.transaction.tx.outs.map(getValue).some(isSmall);
     if(anySmall && payment.note !== undefined && payment.note !== null)
       {throw "There is an output too small to publish a note";}
 
-    return API.pushTx(payment.transaction, payment.note)
+    payment.transaction = payment.transaction.build();
+
+    return API.pushTx(payment.transaction.toHex(), payment.note)
       .then(success).catch(handleError);
   };
 };
@@ -389,10 +390,10 @@ function getKeyForAddress(password, addr) {
   var format = MyWallet.detectPrivateKeyFormat(privateKeyBase58);
   var key    = MyWallet.privateKeyStringToKey(privateKeyBase58, format);
   if (MyWallet.getCompressedAddressString(key) === addr) {
-    key = new Bitcoin.ECKey(key.d, true);
+    key = new Bitcoin.ECPair(key.d, null, {compressed: true});
   }
   else if (MyWallet.getUnCompressedAddressString(key) === addr) {
-    key = new Bitcoin.ECKey(key.d, false);
+    key = new Bitcoin.ECPair(key.d, null, {compressed: false});
   };
   return key;
 }
@@ -409,10 +410,10 @@ function getXPRIV(password, accountIndex) {
   return xpriv;
 };
 ////////////////////////////////////////////////////////////////////////////////
-// getKeyForPath :: xpriv -> path -> [private key]
+// getKeyForPath :: xpriv -> path -> ECPair
 function getKeyForPath(extendedPrivateKey, neededPrivateKeyPath) {
   var keyring = new KeyRing(extendedPrivateKey);
-  return keyring.privateKeyFromPath(neededPrivateKeyPath);
+  return keyring.privateKeyFromPath(neededPrivateKeyPath).keyPair;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

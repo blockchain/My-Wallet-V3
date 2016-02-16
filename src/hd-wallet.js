@@ -21,14 +21,12 @@ function HDWallet(object){
   // private members
   var obj      = object || {};
   obj.accounts = obj.accounts || [];
-  obj.paidTo   = obj.paidTo || {};
 
   this._seedHex             = obj.seed_hex;
   this._bip39Password       = obj.passphrase;
   this._mnemonic_verified   = obj.mnemonic_verified;
   this._default_account_idx = obj.default_account_idx;
   this._accounts = obj.accounts ? obj.accounts.map(addAccount) : [];
-  this._paidTo              = obj.paidTo;
 }
 
 Object.defineProperties(HDWallet.prototype, {
@@ -212,7 +210,6 @@ HDWallet.prototype.toJSON = function(){
     passphrase          : this._bip39Password,
     mnemonic_verified   : this._mnemonic_verified,
     default_account_idx : this._default_account_idx,
-    // paidTo              : this._paidTo,
     accounts            : this._accounts
   };
   return hdwallet;
@@ -279,25 +276,7 @@ HDWallet.prototype.persist = function(){
   this._accounts.forEach(f);
   return this;
 };
-////////////////////////////////////////////////////////////////////////////////
-// paid to Dictionary
-// {"txhash": {email:email, mobile: null, redeemedAt: null, address: "1x..."}}
 
-HDWallet.prototype.addPaidToElement = function(txHash, element){
-  this._paidTo[txHash] = element;
-  MyWallet.syncWallet();
-  return this;
-};
-HDWallet.prototype.getPaidToElement = function(txHash){
-  return this._paidTo[txHash];
-};
-HDWallet.prototype.forEachPaidTo = function(f) {
-  // f is a function taking (txHash, paidToElement)
-  for (var txHash in this._paidTo) {
-    f(txHash, this._paidTo[txHash]);
-  }
-  return this;
-};
 ////////////////////////////////////////////////////////////////////////////////
 // checkers
 HDWallet.prototype.isValidAccountIndex = function(index){

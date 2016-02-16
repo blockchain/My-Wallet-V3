@@ -7,14 +7,16 @@ MyWallet = {
 }
 
 Bitcoin = {
-  ECKey: {
-    makeRandom: (compressed, rng) ->
-      pk = rng(32)
+  ECPair: {
+    makeRandom: (options) ->
+      pk = options.rng(32)
       {
-        pub:
-          getAddress: () ->
-            toString: () ->
-              "random_address"
+        getAddress: () ->
+          toString: () ->
+            "random_address"
+        pub: {
+
+        }
         d:
           toBuffer: () ->
             pk + "_private_key_buffer"
@@ -89,7 +91,7 @@ describe "Address", ->
 
     describe "Address.new()", ->
       beforeEach ->
-        spyOn(Bitcoin.ECKey, "makeRandom").and.callThrough()
+        spyOn(Bitcoin.ECPair, "makeRandom").and.callThrough()
         spyOn(RNG, "run").and.callThrough()
 
       it "should return an address", ->
@@ -104,15 +106,15 @@ describe "Address", ->
         a = Address.new("My New Address")
         expect(a.address).toBe("random_address")
 
-      it "should call Bitcoin.ECKey.makeRandom with our RNG", ->
+      it "should call Bitcoin.ECPair.makeRandom with our RNG", ->
         a = Address.new("My New Address")
-        expect(Bitcoin.ECKey.makeRandom).toHaveBeenCalled()
+        expect(Bitcoin.ECPair.makeRandom).toHaveBeenCalled()
         expect(RNG.run).toHaveBeenCalled()
 
       it "should throw if RNG throws", ->
         # E.g. because there was a network failure.
-        # This assumes BitcoinJS ECKey.makeRandom does not rescue a throw
-        # inside the RNG, which is the case in version 1.5.*
+        # This assumes BitcoinJS ECPair.makeRandom does not rescue a throw
+        # inside the RNG, which is the case in version 2.1.4
         RNG.shouldThrow = true
         expect(() -> Address.new("My New Address")).toThrow('Connection failed')
 

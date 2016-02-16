@@ -46,13 +46,6 @@ function Wallet(object) {
   // hdwallets list
   this._hd_wallets = obj.hd_wallets ? obj.hd_wallets.map(HDWallet.factory) : undefined;
 
-  // paidTo dictionary
-  this._paidTo = obj.paidTo || {};
-  if (this.isUpgradedToHD){
-    Helpers.merge(this._paidTo, this.hdwallet._paidTo); // move paidTo from the wrong place
-    delete this.hdwallet._paidTo;
-  }
-
   // address book list
   // address book in json is [{address: "address1", label: "label1"} , ... ]
   // address book in memory is {address1: "label1", address2: "label2"}
@@ -65,12 +58,6 @@ function Wallet(object) {
 
   // tx_notes dictionary
   this._tx_notes = obj.tx_notes || {};
-
-  // tx_tags list (not sure if list or object)
-  // this._tx_tags = obj.tx_tags || [];
-
-  // tag_names list (check how is represented each tag-name)
-  this._tx_names = obj.tx_names || [];
 
   // fetched data from the server
   this._totalSent       = 0;
@@ -392,7 +379,6 @@ Wallet.prototype.getHistory = function() {
       function(account){ allAddresses.push(account.extendedPublicKey);}
     );
   }
-  // TODO: obtain paidTo addresses too
   var promise = API.getHistory(allAddresses, 0 ,0, 50).then(this._updateWalletInfo.bind(this));
   return promise;
 };
@@ -455,10 +441,7 @@ Wallet.prototype.toJSON = function(){
     },
     address_book      : addressBookToJSON(this._address_book),
     tx_notes          : this._tx_notes,
-    // tx_tags           : this._tx_tags,
-    tx_names          : this._tx_names,
     keys              : this.keys,
-    paidTo            : this._paidTo,
     hd_wallets        : Helpers.isEmptyArray(this._hd_wallets) ? undefined : this._hd_wallets
   };
   return wallet;
@@ -784,10 +767,6 @@ Wallet.prototype.newAccount = function(label, pw, hdwalletIndex, success, nosave
   return newAccount;
 };
 
-Wallet.prototype.getPaidTo = function(txHash){
-  return this._paidTo[txHash];
-};
-
 Wallet.prototype.getAddressBookLabel = function(address){
   return this._address_book[address];
 };
@@ -861,5 +840,5 @@ Wallet.prototype._getPrivateKey = function(accountIndex, path, secondPassword) {
     WalletCrypto.decryptSecretWithSecondPassword(
       maybeXpriv , secondPassword, this.sharedKey, this.pbkdf2_iterations) : maybeXpriv;
   var kr = new KeyRing(xpriv, null);
-  return kr.privateKeyFromPath(path).toWIF();
+  return kr.privateKeyFromPath(path).keyPair.toWIF();
 };

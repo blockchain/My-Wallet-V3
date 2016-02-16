@@ -11,8 +11,8 @@
     "repo" : "bitcoinjs/bip39"
   },
   "bitcoinjs-lib" : {
-    "version": "1.5.8",
-    "commits" : ["8a8eb76b192603243af02afaef5230cc857a2aba"],
+    "version": "2.1.4",
+    "commits" : ["e25ce449dcd932d34d15e47a269a54ea155bdb4d"],
     "repo" : "bitcoinjs/bitcoinjs-lib"
   },
   "bs58" : {
@@ -159,5 +159,25 @@
     "version" : "2.2.0",
     "commits" : ["eca212b486d2dcf009201291472911dd842df623"],
     "repo" : "nodejs/nan"
+  },
+  "bip66" : {
+    "version" : "1.1.0",
+    "commits" : ["f99d22f1e491a3ccd7b8c4150e2d288f03ccf11c", "74446416688f9c5972833634a521c1a7c7c48304"],
+    "repo" : "bitcoinjs/bip66"
+  },
+  "buffer-equals" : {
+    "version" : "1.0.3",
+    "commits" : ["c66074728571cbbebe579cc1dae25e3f2bf07f3d"],
+    "repo" : "sindresorhus/buffer-equals"
+  },
+  "buffer-reverse" : {
+    "version" : "1.0.0",
+    "commits" : ["7873fb252091280b917be7f580554d8c52c016ed"],
+    "repo" : "crypto-browserify/buffer-reverse"
+  },
+  "wif" : {
+    "version" : "1.2.1",
+    "commits" : ["418b433f194b17763e856eb1d0bfc5042ed5b8d9"],
+    "repo" : "bitcoinjs/wif"
   }
 }
