@@ -504,10 +504,10 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
 Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) {
   var importAddress = function (ad) {
     if (this.containsLegacyAddress(ad)) {
-      if (!this.key(ad.address).isWatchOnly) {
-        throw 'presentInWallet';
+      if (this.key(ad.address).isWatchOnly && !ad.isWatchOnly) {
+        return this.addKeyToLegacyAddress(ad.priv, ad.address, secPass, bipPass);
       } else {
-        ad.label = this.key(ad.address).label;
+        throw 'presentInWallet';
       }
     }
     if (this.isDoubleEncrypted) {
