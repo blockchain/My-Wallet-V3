@@ -101,6 +101,17 @@ var WalletStore = (function() {
     getCurrencies: function() {
       return currencyCodeToCurrency;
     },
+    getTransaction: function(hash) {
+      var ref, i, len, tx;
+      ref = this.getTransactions();
+      for (i = 0, len = ref.length; i < len; i++) {
+        tx = ref[i];
+        if(tx.hash == hash) {
+          return tx;
+        }
+      }
+      return null;
+    },
     getTransactions: function() {
       return transactions;
     },

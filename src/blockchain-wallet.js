@@ -373,7 +373,9 @@ Wallet.prototype._updateWalletInfo = function(obj) {
   this.numberTxFetched += obj.txs.length;
   for (var i = 0; i < obj.txs.length; ++i) {
     var tx = shared.TransactionFromJSON(obj.txs[i]);
-    WalletStore.pushTransaction(tx);
+    if(!WalletStore.getTransaction(tx.hash)) {
+      WalletStore.pushTransaction(tx);
+    }
   }
 
   if (obj.info.latest_block)
