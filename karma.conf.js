@@ -79,6 +79,7 @@ module.exports = function(karma) {
       'tests/transaction_spec.js.coffee',          //(OK)
       'tests/transaction_spend_spec.js.coffee',    //(OK)
       'tests/wallet_spec.js.coffee',               //(PARTIAL)
+      'tests/wallet_store_spec.js.coffee',
       'tests/bip38_spec.js.coffee',                //(OK)
       'tests/address_spec.js.coffee',
       'tests/keychain_spec.js.coffee',

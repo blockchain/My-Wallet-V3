@@ -3,6 +3,7 @@ MyWallet   = undefined
 Address    = undefined
 Wallet     = undefined
 HDWallet   = undefined
+WalletStore = undefined
 
 describe "HDWallet", ->
   wallet = undefined
@@ -77,11 +78,21 @@ describe "HDWallet", ->
       isInstanceOf: (candidate, theClass) ->
         candidate.label != undefined || typeof(candidate) == "object"
 
+    walletStoreTxs = []
+    WalletStore = {
+      pushTransaction: (tx)  -> walletStoreTxs.push(tx)
+      getTransactions: ()    -> walletStoreTxs
+      getTransaction: (hash) -> walletStoreTxs.filter(
+        (tx) -> tx.hash == hash
+      )[0]
+    }
+
     stubs = {
       './wallet'  : MyWallet,
       './address' : Address,
       './helpers' : Helpers,
-      './hd-wallet': HDWallet
+      './hd-wallet': HDWallet,
+      './wallet-store' : WalletStore
     }
     Wallet = proxyquire('../src/blockchain-wallet', stubs)
 
@@ -445,6 +456,42 @@ describe "HDWallet", ->
 
       it ".getPrivateKeyForAddress", ->
         pending()
+
+    describe "_updateWalletInfo()", ->
+      multiaddr = {
+        wallet:
+          total_sent: 1
+          total_received: 0
+          final_balance: 0
+          n_tx: 1
+        addresses: [
+          {
+              address:"1CzYCAAi46b8CFiybd3CcGbUykCAeqaocj",
+              n_tx:1,
+              total_received: 0,
+              total_sent: 1,
+              final_balance: 0
+          }
+        ]
+        txs: [
+          {
+            hash: "1234"
+          }
+        ]
+        info:
+          latest_block: 300000
+      }
+      beforeEach ->
+        spyOn(WalletStore, "pushTransaction").and.callThrough()
+
+      it "should add a new transaction", ->
+        wallet._updateWalletInfo(multiaddr)
+        expect(WalletStore.pushTransaction).toHaveBeenCalled()
+
+      it "should not add a duplicate transaction", ->
+        wallet._updateWalletInfo(multiaddr)
+        wallet._updateWalletInfo(multiaddr)
+        expect(WalletStore.getTransactions().length).toEqual(1)
 
     describe "JSON serialization", ->
 

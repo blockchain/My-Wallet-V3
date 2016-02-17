@@ -101,6 +101,9 @@ var WalletStore = (function() {
     getCurrencies: function() {
       return currencyCodeToCurrency;
     },
+    getTransaction: function(hash) {
+      return transactions.filter(function(tx){return tx.hash === hash})[0]
+    },
     getTransactions: function() {
       return transactions;
     },

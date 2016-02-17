@@ -50,13 +50,33 @@ describe 'TransactionList', ->
       expect(txList.transactions().length).toEqual(1)
       done()
 
+  it 'should not add duplicate tx to the list', (done) ->
+    txList.fetchTxs().then (numFetched1) ->
+
+      txList.fetchTxs().then (numFetched2) ->
+        expect(numFetched1).toEqual(1)
+        expect(numFetched2).toEqual(1)
+
+        expect(txList.transactions().length).toEqual(1)
+        done()
+
   it 'should add txs to the tx list', ->
     txList.pushTxs({ txType: 'sent' })
     expect(txList.transactions.length).toEqual(1)
 
   it 'should prepend txs to the tx list', ->
-    txList.shiftTxs({ txType: 'sent' })
-    expect(txList.transactions.length).toEqual(1)
+    expect(txList.transactions().length).toEqual(0)
+
+    txList.shiftTxs({ txType: 'sent', hash: "1234" })
+    expect(txList.transactions().length).toEqual(1)
+
+  it 'should not prepend duplicate txs to the tx list', ->
+    txList.shiftTxs({ txType: 'sent', hash: "1234"})
+    txList.shiftTxs({ txType: 'sent', hash: "1234"})
+
+    expect(txList.transactions().length).toEqual(1)
+
+
 
   describe 'events', ->
     spy = undefined
