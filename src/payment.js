@@ -332,9 +332,23 @@ Payment.publish = function() {
   return function (payment) {
 
     var success = function (tx_hash) {
-      console.log("published");
       payment.txid = tx_hash;
-      return payment;
+
+      // Normally the transaction is returned via a web socket.
+      // Perform a manual refresh after 1 second just in case, as
+      // well as for TOR.
+      return new Promise(function(resolve, reject) {
+        setTimeout(
+          function() {
+            MyWallet.wallet.txList.fetchTxs(1, 0, true)
+              .then(function() {
+                resolve(payment);
+              })
+              .catch(function(e) { reject({ error: e, payment: payment }); });
+          },
+          2000
+        );
+      });
     };
 
     var handleError = function (e) {
