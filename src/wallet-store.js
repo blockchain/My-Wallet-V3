@@ -102,15 +102,7 @@ var WalletStore = (function() {
       return currencyCodeToCurrency;
     },
     getTransaction: function(hash) {
-      var ref, i, len, tx;
-      ref = this.getTransactions();
-      for (i = 0, len = ref.length; i < len; i++) {
-        tx = ref[i];
-        if(tx.hash == hash) {
-          return tx;
-        }
-      }
-      return null;
+      return transactions.filter(function(tx){return tx.hash === hash})[0]
     },
     getTransactions: function() {
       return transactions;
