@@ -153,6 +153,44 @@ describe "Address", ->
         expect(a.label).toEqual("my label")
         expect(MyWallet.syncWallet).toHaveBeenCalled()
 
+      it "label should be alphanumerical", ->
+        invalid = () ->
+          a.label = 1
+
+        expect(invalid).toThrow()
+        expect(MyWallet.syncWallet).not.toHaveBeenCalled()
+
+      it "totalSent must be a number", ->
+        invalid = () ->
+          a.totalSent = "1"
+
+        valid = () ->
+          a.totalSent = 1
+
+        expect(invalid).toThrow()
+        expect(a.totalSent).toEqual(null)
+        expect(valid).not.toThrow()
+        expect(a.totalSent).toEqual(1)
+
+      it "totalReceived must be a number", ->
+        invalid = () ->
+          a.totalReceived = "1"
+
+        valid = () ->
+          a.totalReceived = 1
+
+        expect(invalid).toThrow()
+        expect(a.totalReceived).toEqual(null)
+        expect(valid).not.toThrow()
+        expect(a.totalReceived).toEqual(1)
+
+      it "active shoud toggle archived", ->
+        a.active = false
+        expect(a.archived).toBeTruthy()
+        expect(MyWallet.syncWallet).toHaveBeenCalled()
+        a.active = true
+        expect(a.archived).toBeFalsy()
+
       it "private key is read only", ->
         a.priv = "not allowed"
         expect(a.priv).toEqual("GFZrKdb4tGWBWrvkjwRymnhGX8rfrWAGYadfHSJz36dF")
@@ -262,6 +300,17 @@ describe "Address", ->
         b.rarefield = "I am an intruder"
         bb = new Address(b)
         expect(bb).toEqual(a)
+
+    describe ".fromString", ->
+      
+      it "should not import unknown formats", ->
+        promise = Address.fromString("abcd", null, null)
+        expect(promise).toBeRejectedWith('unknown key format')
+
+      it "should not import BIP-38 format without a password", ->
+        promise = Address.fromString("6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg", null, null)
+        expect(promise).toBeRejectedWith('needsBip38')
+
 
     describe "Address import", ->
       it '', ->
