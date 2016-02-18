@@ -160,7 +160,6 @@ Payment.listener = function(listener) {
 Payment.sweep = function(amount) {
   return function(payment) {
     payment.amounts = payment.sweepAmount ? [payment.sweepAmount] : undefined;
-    payment.forcedFee = payment.sweepFee;
     return Promise.resolve(payment);
   };
 };
