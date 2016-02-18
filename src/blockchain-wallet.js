@@ -354,17 +354,18 @@ Wallet.prototype._updateWalletInfo = function(obj) {
 
   WalletStore.sendEvent('did_multiaddr');
 
-  return true;
+  return obj.txs.length;
 };
 
 Wallet.prototype.getHistory = function() {
-  this.txList.wipe();
-  return this.fetchTransactions();
+  return API.getHistory(this.context, 0, 0, this.txList.loadNumber)
+    .then(function (obj) { this.txList.wipe(); return obj; }.bind(this))
+    .then(this._updateWalletInfo.bind(this));
 };
 
 Wallet.prototype.fetchTransactions = function() {
-  return API.getHistory(this.context, 0 ,this.txList.fetched, this.txList.loadNumber)
-              .then(this._updateWalletInfo.bind(this));
+  return API.getHistory(this.context, 0, this.txList.fetched, this.txList.loadNumber)
+    .then(this._updateWalletInfo.bind(this));
 };
 ////////////////////////////////////////////////////////////////////////////////
 
