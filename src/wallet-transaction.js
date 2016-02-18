@@ -241,3 +241,14 @@ Tx.factory = function(o){
   }
   else { return o; }
 };
+
+Tx.IOSfactory = function(tx){
+  return {
+    time          : tx.time,
+    result        : tx.result,
+    confirmations : tx.confirmations,
+    myHash        : tx.hash,
+    txType        : tx.txType,
+    block_height  : tx.block_height,
+  };
+};

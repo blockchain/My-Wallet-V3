@@ -23,6 +23,12 @@ Object.defineProperties(TransactionList.prototype, {
         });
     }
   },
+  'transactionsForIOS': {
+    configurable: false,
+    get: function () {
+      return this._transactions.map(Tx.IOSfactory);
+    }
+  },
   'transaction': {
     configurable: false,
     value: function (hash) {
