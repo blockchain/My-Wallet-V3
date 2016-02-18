@@ -100,12 +100,13 @@ describe "RNG", ->
   describe ".getServerEntropy()", ->
     mock =
       responseText: "0000000000000000000000000000000000000000000000000000000000000010"
+      statusCode: 200
 
     request =
       open: () ->
       setRequestHeader: () ->
       send: () ->
-        this.status = 200
+        this.status = mock.statusCode
         this.responseText = mock.responseText
 
     beforeEach ->
@@ -129,4 +130,8 @@ describe "RNG", ->
     it "throws an exception if result is the wrong length", ->
       mock.responseText = "000001"
       expect(() -> RNG.getServerEntropy(3)).not.toThrow()
+      expect(() -> RNG.getServerEntropy(32)).toThrow()
+
+    it "throws an exception if the server does not return a 200", ->
+      mock.statusCode = 500
       expect(() -> RNG.getServerEntropy(32)).toThrow()
