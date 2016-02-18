@@ -173,8 +173,6 @@ function socketConnect() {
       return;
     }
 
-    var transactions = WalletStore.getTransactions();
-
     if (obj.op == 'on_change') {
       var old_checksum = WalletStore.generatePayloadChecksum();
       var new_checksum = obj.checksum;
@@ -188,21 +186,11 @@ function socketConnect() {
     } else if (obj.op == 'utx') {
 
       MyWallet.wallet.getHistory();
-      shared.playSound('beep');
       WalletStore.sendEvent('on_tx');
 
     }  else if (obj.op == 'block') {
-      //Check any transactions included in this block, if the match one our ours then set the block index
-      for (var i = 0; i < obj.x.txIndexes.length; ++i) {
-        for (var ii = 0; ii < transactions.length; ++ii) {
-          if (transactions[ii].txIndex == obj.x.txIndexes[i]) {
-            if (transactions[ii].blockHeight == null || transactions[ii].blockHeight == 0) {
-              transactions[ii].blockHeight = obj.x.height;
-              break;
-            }
-          }
-        }
-      }
+
+      MyWallet.wallet.getHistory();
       WalletStore.setLatestBlock(shared.BlockFromJSON(obj.x));
       WalletStore.sendEvent('on_block');
     }

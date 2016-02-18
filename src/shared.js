@@ -20,8 +20,6 @@ module.exports = {
   setBTCSymbol: setBTCSymbol,
   playSound: playSound,
   sShift: sShift,
-  webSocketConnect: webSocketConnect,
-  TransactionFromJSON: TransactionFromJSON,
   BlockFromJSON: BlockFromJSON
 };
 
