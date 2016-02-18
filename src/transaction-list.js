@@ -41,8 +41,8 @@ Object.defineProperties(TransactionList.prototype, {
   }
 });
 
-TransactionList.prototype.fetchTxs = function (amount) {
-  var refresh = this._getContext().join() !== this._context.join()
+TransactionList.prototype.fetchTxs = function (amount, refresh) {
+  var refresh = this._getContext().join() !== this._context.join() || refresh
     , context = this._context = refresh ? this._getContext() : this._context
     , txIndex = refresh ? 0 : this._txsFetched
     , amount  = amount || this.loadNumber
