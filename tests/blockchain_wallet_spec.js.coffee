@@ -146,6 +146,17 @@ describe "HDWallet", ->
         expect(wrongSet).toThrow()
         expect(MyWallet.syncWallet).not.toHaveBeenCalled()
 
+      it "fee_per_kb should throw expection if set to high", ->
+        invalid = () -> wallet.fee_per_kb = 100000000
+        expect(invalid).toThrow()
+        expect(MyWallet.syncWallet).not.toHaveBeenCalled()
+
+      it "fee_per_kb should be set to the value sent", ->
+        invalid = () -> wallet.fee_per_kb = 10000
+        expect(invalid).not.toThrow()
+        expect(MyWallet.syncWallet).toHaveBeenCalled()
+        expect(wallet.fee_per_kb).toEqual(10000)
+
       it "pbkdf2_iterations is read only", ->
         wallet.pbkdf2_iterations = "not allowed"
         expect(wallet.pbkdf2_iterations).not.toEqual("not allowed")
@@ -402,8 +413,26 @@ describe "HDWallet", ->
       it ".validateSecondPassword", ->
         pending()
 
-      it ".encrypt", ->
-        pending()
+      describe ".encrypt", ->
+        cb =
+          success: () ->
+          error: () ->
+          encrypting: () ->
+          syncing: () ->
+
+        beforeEach ->
+          spyOn(cb, "success")
+          spyOn(cb, "error")
+          spyOn(cb, "encrypting")
+          spyOn(cb, "syncing")
+
+        it "should encrypt a non encrypted wallet", ->
+          wallet.encrypt("batteryhorsestaple", cb.success, cb.error, cb.encrypting, cb.syncing)
+          expect(wallet.isDoubleEncrypted).toBeTruthy()
+          expect(cb.success).toHaveBeenCalled()
+          expect(cb.syncing).toHaveBeenCalled()
+          expect(cb.encrypting).toHaveBeenCalled()
+          expect(cb.error).not.toHaveBeenCalled()
 
       it ".decrypt", ->
         pending()
@@ -451,8 +480,15 @@ describe "HDWallet", ->
       it ".getMnemonic", ->
         pending()
 
-      it ".changePbkdf2Iterations", ->
-        pending()
+      describe ".changePbkdf2Iterations", ->
+        it "should be change the number of iterations when called correctly", ->
+          wallet.changePbkdf2Iterations(10000, null)
+          expect(MyWallet.syncWallet).toHaveBeenCalled()
+          expect(wallet.pbkdf2_iterations).toEqual(10000)
+
+        it "should do nothing when called with the number of iterations it already has", ->
+          wallet.changePbkdf2Iterations(5000, null)
+          expect(MyWallet.syncWallet).not.toHaveBeenCalled()
 
       it ".getPrivateKeyForAddress", ->
         pending()
