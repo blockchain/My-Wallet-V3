@@ -113,14 +113,8 @@ var WalletStore = (function() {
       return latest_block;
     },
     setLatestBlock: function(block) {
-      var i, len, ref, tx;
       if (block != null) {
         latest_block = block;
-        ref = this.getTransactions();
-        for (i = 0, len = ref.length; i < len; i++) {
-          tx = ref[i];
-          tx.setConfirmations(MyWallet.getConfirmationsForTx(latest_block, tx));
-        }
         this.sendEvent('did_set_latest_block');
       }
     },
