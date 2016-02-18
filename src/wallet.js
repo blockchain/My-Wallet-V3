@@ -185,6 +185,7 @@ function socketConnect() {
 
     } else if (obj.op == 'utx') {
 
+      WalletStore.sendEvent('on_tx_received');
       var sendOnTx = WalletStore.sendEvent.bind(null, 'on_tx');
       MyWallet.wallet.getHistory().then(sendOnTx);
 
