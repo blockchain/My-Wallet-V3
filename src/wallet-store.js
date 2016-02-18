@@ -58,7 +58,6 @@ var WalletStore = (function() {
   var password; //Password
   var guid; //Wallet identifier
   var language = 'en';
-  var transactions = [];
   var pbkdf2_iterations = 5000; // pbkdf2_interations of the main password (to encrypt the full payload)
   var disable_logout = false;
   var mixer_fee = 0.5;
@@ -100,18 +99,6 @@ var WalletStore = (function() {
     },
     getCurrencies: function() {
       return currencyCodeToCurrency;
-    },
-    getTransaction: function(hash) {
-      return transactions.filter(function(tx){return tx.hash === hash})[0]
-    },
-    getTransactions: function() {
-      return transactions;
-    },
-    pushTransaction: function(tx) {
-      transactions.push(tx);
-    },
-    getAllTransactions: function() {
-      return transactions.map(MyWallet.processTransaction);
     },
     disableLogout: function() {
       disable_logout = true;

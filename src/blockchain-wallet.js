@@ -77,15 +77,7 @@ function Wallet(object) {
   this._totalReceived   = 0;
   this._finalBalance    = 0;
   this._numberTxTotal   = 0;
-  this._numberTxFetched = 0;
-  this._txPerScroll     = 50;
-
-  var getWalletContext = function () {
-    var xpubs = this.hdwallet && this.hdwallet.xpubs;
-    return this.addresses.concat(xpubs || []);
-  }.bind(this);
-
-  this._txList = new TxList(getWalletContext, this._txPerScroll);
+  this._txList = new TxList();
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -96,6 +88,13 @@ Object.defineProperties(Wallet.prototype, {
   "sharedKey": {
     configurable: false,
     get: function() { return this._sharedKey;}
+  },
+  "context": {
+    configurable: false,
+    get: function() {
+      var xpubs = this.hdwallet && this.hdwallet.xpubs;
+      return this.addresses.concat(xpubs || []);
+    }
   },
   "isDoubleEncrypted": {
     configurable: false,
@@ -169,20 +168,6 @@ Object.defineProperties(Wallet.prototype, {
       else
         throw 'Error: wallet.numberTx must be a number';
     }
-  },
-  "numberTxFetched": {
-    configurable: false,
-    get: function() { return this._numberTxFetched;},
-    set: function(value) {
-      if(Helpers.isNumber(value))
-        this._numberTxFetched = value;
-      else
-        throw 'Error: wallet.numberTxFetched must be a number';
-    }
-  },
-  "txPerScroll": {
-    configurable: false,
-    get: function() { return this._txPerScroll;}
   },
   "addresses": {
     configurable: false,
@@ -317,10 +302,6 @@ Object.defineProperties(Wallet.prototype, {
 // update-wallet-balances after multiaddr call
 Wallet.prototype._updateWalletInfo = function(obj) {
 
-  // delete all transactions stored
-  var transactions = WalletStore.getTransactions();
-  transactions.length = 0;
-
   if (obj.info) {
     if (obj.info.symbol_local)
       shared.setLocalSymbol(obj.info.symbol_local);
@@ -335,7 +316,6 @@ Wallet.prototype._updateWalletInfo = function(obj) {
     this.totalReceived   = 0;
     this.finalBalance    = 0;
     this.numberTxTotal   = 0;
-    this.numberTxFetched = 0;
     return true;
   }
 
@@ -352,9 +332,7 @@ Wallet.prototype._updateWalletInfo = function(obj) {
         account.n_tx         = e.n_tx;
         account.lastUsedReceiveIndex = e.account_index;
         account.receiveIndex = Math.max(account.lastUsedReceiveIndex, account.maxLabeledReceiveIndex);
-
         account.changeIndex  = e.change_index;
-
         if (account.getLabelForReceivingAddress(account.receiveIndex)) {
           account.incrementReceiveIndex();
         }
@@ -369,12 +347,7 @@ Wallet.prototype._updateWalletInfo = function(obj) {
   };
 
   obj.addresses.forEach(updateAccountAndAddressesInfo.bind(this));
-
-  this.numberTxFetched += obj.txs.length;
-  for (var i = 0; i < obj.txs.length; ++i) {
-    var tx = shared.TransactionFromJSON(obj.txs[i]);
-    WalletStore.pushTransaction(tx);
-  }
+  this.txList.pushTxs(obj.txs);
 
   if (obj.info.latest_block)
     WalletStore.setLatestBlock(obj.info.latest_block);
@@ -386,28 +359,13 @@ Wallet.prototype._updateWalletInfo = function(obj) {
 
 // equivalent to MyWallet.get_history(success, error) but returning a promise
 Wallet.prototype.getHistory = function() {
-  var allAddresses = this.activeAddresses;
-  if (this.isUpgradedToHD) {
-    this.hdwallet.accounts.forEach(
-      function(account){ allAddresses.push(account.extendedPublicKey);}
-    );
-  }
-  // TODO: obtain paidTo addresses too
-  var promise = API.getHistory(allAddresses, 0 ,0, 50).then(this._updateWalletInfo.bind(this));
-  return promise;
+  this.txList.wipe();
+  return this.fetchTransactions();
 };
 
-Wallet.prototype.fetchMoreTransactions = function(didFetchOldestTransaction) {
-  var xpubs = this.isUpgradedToHD ? this.hdwallet.activeXpubs : [];
-  var list = this.activeAddresses.concat(xpubs);
-  var txListP = API.getHistory(list, null, this.numberTxFetched, this.txPerScroll);
-  function processTxs(data) {
-    var pTx = data.txs.map(MyWallet.processTransaction.compose(shared.TransactionFromJSON));
-    this.numberTxFetched += pTx.length;
-    if (pTx.length < this.txPerScroll) { didFetchOldestTransaction(); }
-    return pTx;
-  }
-  return txListP.then(processTxs.bind(this));
+Wallet.prototype.fetchTransactions = function() {
+  return API.getHistory(this.context, 0 ,this.txList.fetched, this.txList.loadNumber)
+              .then(this._updateWalletInfo.bind(this));
 };
 
 Wallet.prototype.ask100TxTest = function(){

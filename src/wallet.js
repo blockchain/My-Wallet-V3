@@ -186,42 +186,8 @@ function socketConnect() {
       }
 
     } else if (obj.op == 'utx') {
-      var tx = shared.TransactionFromJSON(obj.x);
-      var tx_processed = MyWallet.processTransaction(tx);
-      var tx_account = tx_processed.to.accounts[0];
 
-      // Adds raw tx to txList, processing done by txList
-      MyWallet.wallet.txList.shiftTxs(obj.x);
-
-      //Check if this is a duplicate
-      //Maybe should have a map_prev to check for possible double spends
-      for (var key in transactions) {
-        if (transactions[key].txIndex == tx.txIndex) return;
-      }
-
-      MyWallet.wallet.finalBalance += tx_processed.result;
       MyWallet.wallet.getHistory();
-
-      if (tx_account) {
-        var account = MyWallet.wallet.hdwallet.accounts[tx_account.index];
-        account.balance += tx_processed.result;
-
-        // Increase receive address index if this was an incoming transaction using the highest index:
-        if((tx_processed.result > 0 || tx_processed.intraWallet)) {
-          var addresses = [];
-          for(i in tx.out) {
-            addresses.push(tx.out[i].addr);
-          }
-          if (addresses.some(function(a){return a === account.receiveAddress})){
-            account.incrementReceiveIndex();
-          }
-        }
-      }
-
-      MyWallet.wallet.numberTxTotal   += 1;
-      MyWallet.wallet.numberTxFetched += 1;
-      tx.setConfirmations(0);
-      WalletStore.pushTransaction(tx);
       shared.playSound('beep');
       WalletStore.sendEvent('on_tx');
 
