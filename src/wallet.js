@@ -310,16 +310,6 @@ MyWallet.isValidPrivateKey = function(candidate) {
   }
 };
 
-// used on wallet-store and locally (wallet.js)
-MyWallet.getConfirmationsForTx = function(latest_block, tx) {
-  if (latest_block && tx.blockHeight != null && tx.blockHeight > 0) {
-    return latest_block.height - tx.blockHeight + 1;
-  } else {
-    tx.setConfirmations(0);
-    return 0;
-  }
-};
-
 // used two times
 function didDecryptWallet(success) {
 
