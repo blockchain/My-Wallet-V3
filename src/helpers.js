@@ -277,7 +277,7 @@ Helpers.tor = function () {
   // NodeJS TOR detection not supported:
   if(hostname === null) return null
 
-  return hostname.indexOf(".onion") > -1
+  return hostname.endsWith(".onion")
 };
 ////////////////////////////////////////////////////////////////////////////////
 
