@@ -346,11 +346,11 @@ Wallet.prototype._updateWalletInfo = function(obj) {
     }
   };
 
-  obj.addresses.forEach(updateAccountAndAddressesInfo.bind(this));
-  this.txList.pushTxs(obj.txs);
-
   if (obj.info.latest_block)
     WalletStore.setLatestBlock(obj.info.latest_block);
+
+  obj.addresses.forEach(updateAccountAndAddressesInfo.bind(this));
+  this.txList.pushTxs(obj.txs);
 
   WalletStore.sendEvent('did_multiaddr');
 

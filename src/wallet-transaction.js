@@ -9,6 +9,15 @@ var WalletStore = require('./wallet-store');
 function Tx(object){
   var obj = object || {};
   // original properties
+  var setConfirmations = function(tx_block_height) {
+    var lastBlock = WalletStore.getLatestBlock();
+    var conf = 0;
+    if (lastBlock && tx_block_height != null && tx_block_height > 0) {
+      conf = lastBlock.height - tx_block_height + 1;
+    }
+    return conf;
+  }
+
   this.balance          = obj.balance;
   this.block_height     = obj.block_height;
   this.hash             = obj.hash;
@@ -26,23 +35,13 @@ function Tx(object){
   this.double_spend     = obj.double_spend;
   this.publicNote       = obj.note;
   this.note             = MyWallet.wallet.getNote(this.hash);
+  this.confirmations    = setConfirmations(this.block_height);
   // computed properties
   this._processed_ins    = this.inputs.map(tagCoin.compose(unpackInput));
   this._processed_outs   = this.out.map(tagCoin);
 }
 
 Object.defineProperties(Tx.prototype, {
-  "confirmations": {
-    configurable: false,
-    get: function() {
-      var lastBlock = WalletStore.getLatestBlock();
-      var conf = 0;
-      if (lastBlock && this.block_height != null && this.block_height > 0) {
-        conf = lastBlock.height - this.block_height + 1;
-      }
-      return conf;
-    }
-  },
   "processedInputs": {
     configurable: false,
     get: function() { return this._processed_ins.map(function(x){return x;});}
