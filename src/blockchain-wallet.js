@@ -357,7 +357,6 @@ Wallet.prototype._updateWalletInfo = function(obj) {
   return true;
 };
 
-// equivalent to MyWallet.get_history(success, error) but returning a promise
 Wallet.prototype.getHistory = function() {
   this.txList.wipe();
   return this.fetchTransactions();
@@ -366,13 +365,6 @@ Wallet.prototype.getHistory = function() {
 Wallet.prototype.fetchTransactions = function() {
   return API.getHistory(this.context, 0 ,this.txList.fetched, this.txList.loadNumber)
               .then(this._updateWalletInfo.bind(this));
-};
-
-Wallet.prototype.ask100TxTest = function(){
-  var context = this.activeAddresses.concat(this.hdwallet.activeXpubs);
-  var txListP = API.getHistory(context, null, 0, 100);
-  function processTxs(data) { return data.txs.map(Tx.factory);};
-  return txListP.then(processTxs);
 };
 ////////////////////////////////////////////////////////////////////////////////
 
