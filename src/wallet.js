@@ -115,8 +115,8 @@ MyWallet.addPrivateKey = function(key, opts, second_password) {
   return addr;
 };
 
-// used on sharedcoin.js, wallet-spender.js and wallet.js
-MyWallet.generateNewKey = function(_password) {
+// used on sharedcoin.js
+MyWallet.generateNewKey = function() {
   var key = Bitcoin.ECKey.makeRandom(true);
 
   // key is uncompressed, so cannot passed in opts.compressed = true here
