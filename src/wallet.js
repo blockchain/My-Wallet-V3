@@ -124,32 +124,7 @@ MyWallet.generateNewKey = function() {
     return key;
   }
 };
-// used on wallet-spender.js and wallet.js
-MyWallet.generateNewMiniPrivateKey = function() {
-  // Documentation: https://en.bitcoin.it/wiki/Mini_private_key_format
-  while (true) {
-    //Use a normal ECKey to generate random bytes
-    var key = Bitcoin.ECKey.makeRandom(false);
 
-    //Make Candidate Mini Key
-    var minikey = 'S' + Base58.encode(key.d.toBuffer(32)).substr(0, 21);
-
-    //Append ? & hash it again
-    var bytes_appended = Bitcoin.crypto.sha256(minikey + '?');
-
-    //If zero byte then the key is valid
-    if (bytes_appended[0] == 0) {
-
-      //SHA256
-      var bytes = Bitcoin.crypto.sha256(minikey);
-
-      var eckey = new Bitcoin.ECKey(new BigInteger.fromBuffer(bytes), false);
-
-      if (MyWallet.addPrivateKey(eckey, {compressed: true}))
-        return {key : eckey, miniKey : minikey};
-    }
-  }
-};
 // TODO :: END WALLET SPENDER FIX
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -225,7 +200,7 @@ function socketConnect() {
   }
 }
 
-// used on wallet-spender and locally
+// used only on the frontend
 MyWallet.getBaseFee = function() {
   var network = Bitcoin.networks.bitcoin;
   return network.feePerKb;
