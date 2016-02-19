@@ -279,6 +279,11 @@ Helpers.tor = function () {
 
   return hostname.endsWith(".onion")
 };
+
+Helpers.buffertoByteArray = function(value) {
+  return BigInteger.fromBuffer(value).toByteArray();
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 

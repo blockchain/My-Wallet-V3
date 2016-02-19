@@ -872,31 +872,28 @@ MyWallet.detectPrivateKeyFormat = function(key) {
 
   console.error('Unknown Key Format ' + key);
 };
-// should be a helper
-function buffertoByteArray(value) {
-  return BigInteger.fromBuffer(value).toByteArray();
-}
+
 // should be a helper
 // used locally and wallet-spender.js
 MyWallet.privateKeyStringToKey = function(value, format) {
   var key_bytes = null;
 
   if (format == 'base58') {
-    key_bytes = buffertoByteArray(Base58.decode(value));
+    key_bytes = Helpers.buffertoByteArray(Base58.decode(value));
   } else if (format == 'base64') {
-    key_bytes = buffertoByteArray(new Buffer(value, 'base64'));
+    key_bytes = Helpers.buffertoByteArray(new Buffer(value, 'base64'));
   } else if (format == 'hex') {
-    key_bytes = buffertoByteArray(new Buffer(value, 'hex'));
+    key_bytes = Helpers.buffertoByteArray(new Buffer(value, 'hex'));
   } else if (format == 'mini') {
-    key_bytes = buffertoByteArray(parseMiniKey(value));
+    key_bytes = Helpers.buffertoByteArray(parseMiniKey(value));
   } else if (format == 'sipa') {
-    var tbytes = buffertoByteArray(Base58.decode(value));
+    var tbytes = Helpers.buffertoByteArray(Base58.decode(value));
     tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
     tbytes.shift();
     key_bytes = tbytes.slice(0, tbytes.length - 4);
 
   } else if (format == 'compsipa') {
-    var tbytes = buffertoByteArray(Base58.decode(value));
+    var tbytes = Helpers.buffertoByteArray(Base58.decode(value));
     tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
     tbytes.shift();
     tbytes.pop();
