@@ -28,31 +28,6 @@ MyWallet.securePost = function(url, data, success, error) {
   API.securePost(url, data).then(success).catch(error);
 };
 
-// used only locally: wallet.js : checkAllKeys (see what happens with this sanity check)
-MyWallet.B58LegacyDecode = function(input) {
-  var alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-  var base = BigInteger.valueOf(58);
-
-  var bi = BigInteger.valueOf(0);
-  var leadingZerosNum = 0;
-  for (var i = input.length - 1; i >= 0; i--) {
-    var alphaIndex = alphabet.indexOf(input[i]);
-
-    bi = bi.add(BigInteger.valueOf(alphaIndex)
-                .multiply(base.pow(input.length - 1 -i)));
-
-    // This counts leading zero bytes
-    if (input[i] == "1") leadingZerosNum++;
-    else leadingZerosNum = 0;
-  }
-  var bytes = bi.toByteArrayUnsigned();
-
-  // Add leading zeros
-  while (leadingZerosNum-- > 0) bytes.unshift(0);
-
-  return bytes;
-};
-
 // Temporary workaround instead instead of modding bitcoinjs to do it TODO: not efficient
 // used only on wallet.js and wallet-store.js
 MyWallet.getCompressedAddressString = function(key) {
