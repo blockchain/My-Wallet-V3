@@ -868,9 +868,9 @@ MyWallet.detectPrivateKeyFormat = function(key) {
       return 'mini';
   }
 
-  return null;
-
   console.error('Unknown Key Format ' + key);
+
+  return null;
 };
 
 // should be a helper
