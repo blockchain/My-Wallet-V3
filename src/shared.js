@@ -20,8 +20,6 @@ module.exports = {
   setBTCSymbol: setBTCSymbol,
   playSound: playSound,
   sShift: sShift,
-  webSocketConnect: webSocketConnect,
-  TransactionFromJSON: TransactionFromJSON,
   BlockFromJSON: BlockFromJSON
 };
 
@@ -85,47 +83,6 @@ function sShift(symbol) {
   return (satoshi / symbol.conversion).toString().length-1;
 }
 
-var ws;
-var reconnectInterval;
-function webSocketConnect(success) {
-  try {
-    function reallyConnect() {
-      try {
-        var url = "wss://blockchain.info/inv";
-
-        console.log('Connect ' + url);
-
-        ws = new WebSocket(url);
-
-        if (!ws) {
-          return;
-        }
-
-        if (success)
-          success(ws);
-      } catch (e) {
-        console.log(e);
-      }
-    }
-
-    //Updates time last block was received and check for websocket connectivity
-    function reconnectTimer () {
-      if (!ws || ws.readyState == WebSocket.CLOSED) {
-        reallyConnect();
-      }
-    }
-
-    if (window.WebSocket) {
-      reallyConnect();
-
-      if (!reconnectInterval)
-        reconnectInterval = setInterval(reconnectTimer, 20000);
-    }
-  } catch (e) {
-    console.log(e);
-  }
-}
-
 function BlockFromJSON(json) {
   return {
     hash : json.hash,
@@ -136,27 +93,6 @@ function BlockFromJSON(json) {
     totalBTCSent : json.totalBTCSent,
     foundBy : json.foundBy,
     size : json.size
-  };
-}
-
-function TransactionFromJSON(json) {
-  return {
-    hash : json.hash,
-    size : json.size,
-    txIndex : json.tx_index,
-    time : json.time,
-    inputs : json.inputs,
-    out : json.out,
-    blockIndex : json.block_index,
-    // result : json.result,
-    blockHeight : json.block_height,
-    balance : json.balance,
-    double_spend : json.double_spend,
-    note : json.note,
-    account_indexes : [], // should be filled later
-    setConfirmations : function(n_confirmations) {
-      this.confirmations = n_confirmations;
-    }
   };
 }
 
