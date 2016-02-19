@@ -173,8 +173,6 @@ function socketConnect() {
       return;
     }
 
-    var transactions = WalletStore.getTransactions();
-
     if (obj.op == 'on_change') {
       var old_checksum = WalletStore.generatePayloadChecksum();
       var new_checksum = obj.checksum;
@@ -186,59 +184,16 @@ function socketConnect() {
       }
 
     } else if (obj.op == 'utx') {
-      var tx = shared.TransactionFromJSON(obj.x);
-      var tx_processed = MyWallet.processTransaction(tx);
-      var tx_account = tx_processed.to.accounts[0];
 
-      // Adds raw tx to txList, processing done by txList
-      MyWallet.wallet.txList.shiftTxs(obj.x);
-
-      //Check if this is a duplicate
-      //Maybe should have a map_prev to check for possible double spends
-      for (var key in transactions) {
-        if (transactions[key].txIndex == tx.txIndex) return;
-      }
-
-      MyWallet.wallet.finalBalance += tx_processed.result;
-      MyWallet.wallet.getHistory();
-
-      if (tx_account) {
-        var account = MyWallet.wallet.hdwallet.accounts[tx_account.index];
-        account.balance += tx_processed.result;
-
-        // Increase receive address index if this was an incoming transaction using the highest index:
-        if((tx_processed.result > 0 || tx_processed.intraWallet)) {
-          var addresses = [];
-          for(i in tx.out) {
-            addresses.push(tx.out[i].addr);
-          }
-          if (addresses.some(function(a){return a === account.receiveAddress})){
-            account.incrementReceiveIndex();
-          }
-        }
-      }
-
-      MyWallet.wallet.numberTxTotal   += 1;
-      MyWallet.wallet.numberTxFetched += 1;
-      tx.setConfirmations(0);
-      WalletStore.pushTransaction(tx);
-      shared.playSound('beep');
-      WalletStore.sendEvent('on_tx');
+      WalletStore.sendEvent('on_tx_received');
+      var sendOnTx = WalletStore.sendEvent.bind(null, 'on_tx');
+      MyWallet.wallet.getHistory().then(sendOnTx);
 
     }  else if (obj.op == 'block') {
-      //Check any transactions included in this block, if the match one our ours then set the block index
-      for (var i = 0; i < obj.x.txIndexes.length; ++i) {
-        for (var ii = 0; ii < transactions.length; ++ii) {
-          if (transactions[ii].txIndex == obj.x.txIndexes[i]) {
-            if (transactions[ii].blockHeight == null || transactions[ii].blockHeight == 0) {
-              transactions[ii].blockHeight = obj.x.height;
-              break;
-            }
-          }
-        }
-      }
+
+      var sendOnBlock = WalletStore.sendEvent.bind(null, 'on_block');
+      MyWallet.wallet.getHistory().then(sendOnBlock);
       WalletStore.setLatestBlock(shared.BlockFromJSON(obj.x));
-      WalletStore.sendEvent('on_block');
     }
   }
 
@@ -270,286 +225,10 @@ function socketConnect() {
   }
 }
 
-// used in walletstore and locally wallet.js
-MyWallet.processTransaction = function(tx) {
-
-  var transaction = {
-    from: {account: null, legacyAddresses: null, externalAddresses: null},
-    to: {accounts: [], legacyAddresses: null, externalAddresses: null, email: null, mobile: null},
-    fee: 0,
-    intraWallet: null
-  };
-
-
-  var legacyAddressWithLargestOutput = undefined;
-  var externalAddressWithLargestOutput = undefined;
-  var amountFromLegacyAddresses = 0;
-  var amountFromExternalAddresses = 0;
-  var legacyAddressWithLargestOutputAmount = 0;
-  var externalAddressWithLargestOutputAmount = 0;
-  var fromAccountIndex = undefined;
-  var amountFromAccount = 0;
-
-  for (var i = 0; i < tx.inputs.length; ++i) {
-    var isOrigin = false;
-    var output = tx.inputs[i].prev_out;
-    if (!output || !output.addr)
-      continue;
-    if (MyWallet.wallet.activeKey(output.addr)) {
-      isOrigin = true;
-      if (transaction.from.legacyAddresses == null)
-        transaction.from.legacyAddresses = [];
-      transaction.from.legacyAddresses.push({address: output.addr, amount: output.value});
-      transaction.fee += output.value;
-    } else {
-      if (MyWallet.wallet.isUpgradedToHD) {
-        for (var j in MyWallet.wallet.hdwallet.accounts) {
-          var account = MyWallet.wallet.hdwallet.accounts[j];
-          if (account.active && output.xpub != null && account.extendedPublicKey === output.xpub.m) {
-            amountFromAccount += output.value;
-
-            if (! isOrigin) {
-              isOrigin = true;
-              fromAccountIndex = parseInt(j);
-
-              transaction.fee += output.value;
-            } else {
-              if ( output.value > legacyAddressWithLargestOutputAmount ) {
-                legacyAddressWithLargestOutput = output.addr;
-                legacyAddressWithLargestOutputAmount = output.value;
-              }
-              amountFromLegacyAddresses += output.value;
-              transaction.fee += output.value;
-            }
-            break;
-          }
-        }
-      }
-
-      if (! isOrigin) {
-        if ( output.value > externalAddressWithLargestOutputAmount ) {
-          externalAddressWithLargestOutput = output.addr;
-          externalAddressWithLargestOutputAmount = output.value;
-        }
-        amountFromExternalAddresses += output.value;
-        transaction.fee += output.value;
-        transaction.intraWallet = false;
-      }
-    }
-
-    if(transaction.intraWallet == null) {
-      transaction.intraWallet = true;
-    }
-  }
-
-  if(amountFromExternalAddresses > 0) {
-    transaction.from.externalAddresses = {addressWithLargestOutput: externalAddressWithLargestOutput, amount: amountFromExternalAddresses};
-  }
-
-  if(amountFromLegacyAddresses > 0) {
-    transaction.from.legacyAddresses = {addressWithLargestOutput: legacyAddressWithLargestOutput, amount: amountFromLegacyAddresses};
-  }
-
-  if(amountFromAccount > 0) {
-    transaction.from.account = {index: fromAccountIndex, amount: amountFromAccount};
-
-  }
-
-  for (var i = 0; i < tx.out.length; ++i) {
-    var output = tx.out[i];
-    if (!output || !output.addr)
-      continue;
-
-    if (MyWallet.wallet.activeKey(output.addr)) {
-      if (transaction.to.legacyAddresses == null)
-        transaction.to.legacyAddresses = [];
-
-      var isFromLegacyAddresses = false;
-      for (var j in transaction.from.legacyAddresses) {
-        var addressAmount = transaction.from.legacyAddresses[j];
-        if (addressAmount.address == output.addr) {
-          addressAmount.amount -= output.value;
-          isFromLegacyAddresses = true;
-        }
-      }
-      if (! isFromLegacyAddresses) {
-        transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
-      }
-      transaction.fee -= output.value;
-    } else if (MyWallet.wallet.getPaidTo(tx.hash) && MyWallet.wallet.getPaidTo(tx.hash).address == output.addr) {
-      var paidToItem = MyWallet.wallet.getPaidTo(tx.hash);
-      if(paidToItem.email) {
-        transaction.to.email = { email: paidToItem.email, redeemedAt: paidToItem.redeemedAt };
-      } else if (paidToItem.mobile) {
-        transaction.to.mobile = { number: paidToItem.mobile, redeemedAt: paidToItem.redeemedAt };
-      }
-      transaction.intraWallet = false;
-    }else {
-      var toAccountSet = false;
-      if (MyWallet.wallet.isUpgradedToHD) {
-        for (var j in MyWallet.wallet.hdwallet.accounts) {
-          var account = MyWallet.wallet.hdwallet.accounts[j];
-          if (account.active && output.xpub != null && account.extendedPublicKey == output.xpub.m) {
-            if (! toAccountSet) {
-              if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
-                transaction.from.account.amount -= output.value;
-              } else {
-                transaction.to.accounts.push({index: parseInt(j), amount: output.value});
-              }
-              toAccountSet = true;
-              transaction.fee -= output.value;
-            } else {
-              if (transaction.from.account != null && transaction.from.account.index == parseInt(j)) {
-                transaction.from.account.amount -= output.value;
-              } else if ((transaction.from.account != null || transaction.from.legacyAddresses != null)) {
-                  if (transaction.to.externalAddresses == null)
-                      transaction.to.externalAddresses = [];
-                  transaction.to.externalAddresses.push({address: output.addr, amount: output.value});
-              }
-              transaction.fee -= output.value;
-            }
-            break;
-          }
-        }
-      }
-      if (! toAccountSet) {
-        if ((transaction.from.account != null || transaction.from.legacyAddresses != null)) {
-          if (transaction.to.externalAddresses == null)
-              transaction.to.externalAddresses = [];
-          transaction.to.externalAddresses.push({address: output.addr, amount: output.value});
-        }
-        transaction.fee -= output.value;
-        transaction.intraWallet = false;
-      }
-    }
-  }
-
-
-  if (transaction.to.accounts.length == 0 &&
-      (transaction.to.legacyAddresses == null || transaction.to.legacyAddresses.length === 0) &&
-      transaction.to.externalAddresses == null &&
-      MyWallet.wallet.activeKey(output.addr)) {
-    var output = tx.out[0];
-    transaction.to.legacyAddresses.push({address: output.addr, amount: output.value});
-  }
-
-  if (transaction.from.account == null && transaction.from.legacyAddresses == null && transaction.from.externalAddresses != null) {
-    var fromAmount = 0;
-    for (var i in transaction.to.accounts) {
-      fromAmount += transaction.to.accounts[i].amount;
-    }
-    for (var i in transaction.to.legacyAddresses) {
-      var addressAmount = transaction.to.legacyAddresses[i];
-      fromAmount += addressAmount.amount;
-    }
-    transaction.from.externalAddresses.amount = fromAmount;
-  }
-
-  transaction.hash = tx.hash;
-
-  /* Typically processTransaction() is called directly after transactions
-   have been downloaded from the server. In that case you could simply
-   reuse tx.confirmations. However processTransaction() can also be
-   called at a later time, e.g. if the user keeps their wallet open
-   while waiting for a confirmation. */
-  transaction.confirmations = MyWallet.getConfirmationsForTx(WalletStore.getLatestBlock(), tx);
-
-  transaction.txTime = tx.time;
-  transaction.publicNote = tx.note || null;
-  transaction.note = MyWallet.wallet.getNote(tx.hash);
-  // TODO: review tags
-  // transaction.tags = WalletStore.getTags(tx.hash);
-  transaction.size = tx.size;
-  transaction.tx_index = tx.txIndex;
-  transaction.block_height = tx.blockHeight;
-
-  transaction.result = MyWallet.calculateTransactionResult(transaction);
-
-  // Check if fee is frugal (incomplete):
-  transaction.frugal = transaction.fee < 10000
-
-  transaction.double_spend = tx.double_spend == null ? false : tx.double_spend
-
-  return transaction;
-};
-// used once on this file
-MyWallet.calculateTransactionResult = function(transaction) {
-
-  var totalOurs = function(toOrFrom) {
-    var result = 0;
-
-    if(toOrFrom.account || (toOrFrom.accounts && toOrFrom.accounts.length > 0)) {
-      if(toOrFrom.account) {
-        result = toOrFrom.account.amount;
-      } else if (toOrFrom.accounts) {
-        for(var i in toOrFrom.accounts) {
-          result += toOrFrom.accounts[i].amount;
-        }
-      }
-    } else if (toOrFrom.legacyAddresses && toOrFrom.legacyAddresses.length > 0) {
-      for(var i in toOrFrom.legacyAddresses) {
-        var legacyAddress = toOrFrom.legacyAddresses[i];
-        result += legacyAddress.amount;
-      }
-    }
-
-    return result;
-  };
-
-  var result = 0;
-
-  if (transaction.intraWallet) {
-    result = totalOurs(transaction.to);
-  } else {
-    result = totalOurs(transaction.to) - totalOurs(transaction.from);
-  }
-
-  return result;
-};
-
 // used on wallet-spender and locally
 MyWallet.getBaseFee = function() {
   var network = Bitcoin.networks.bitcoin;
   return network.feePerKb;
-};
-
-/**
- * @param {function(Array)} successCallback success callback function with transaction array
- * @param {function()} errorCallback error callback function
- * @param {function()} didFetchOldestTransaction callback is called when all transanctions for the specified account has been fetched
- */
- // used only on the frontend
-
-MyWallet.fetchMoreTransactionsForAll = function(success, error, didFetchOldestTransaction) {
-
-  console.log("deprecated use of MyWallet.fetchMoreTransactionsForAll --> Wallet.prototype.fetchMoreTransactions");
-  var p = MyWallet.wallet.fetchMoreTransactions(didFetchOldestTransaction);
-  if (success) { p.then(success);};
-  if (error)   { p.catch(error); };
-};
-
-/**
- * @param {function(Array)} successCallback success callback function with transaction array
- * @param {function()} errorCallback error callback function
- * @param {function()} didFetchOldestTransaction callback is called when all transanctions for the specified account has been fetched
- */
- // used only on the frontend
-
-MyWallet.fetchMoreTransactionsForAccounts = function(success, error, didFetchOldestTransaction) {
-  console.log("MyWallet.fetchMoreTransactionsForAccounts");
-  MyWallet.fetchMoreTransactionsForAll(success, error, didFetchOldestTransaction);
-};
-
-/**
- * @param {number} accountIdx idx of account
- * @param {function(Array)} successCallback success callback function with transaction array
- * @param {function()} errorCallback error callback function
- * @param {function()} didFetchOldestTransaction callback is called when all transanctions for the specified account has been fetched
- */
- // used once locally and in the frontend
-MyWallet.fetchMoreTransactionsForAccount = function(accountIdx, success, error, didFetchOldestTransaction) {
-  console.log("deprecated use of MyWallet.fetchMoreTransactionsForAccount ");
-  MyWallet.fetchMoreTransactionsForAll(success, error, didFetchOldestTransaction);
 };
 
 /**
@@ -578,17 +257,6 @@ MyWallet.getBalanceForRedeemCode = function(privatekey, successCallback, errorCa
     .then(totalBalance)
     .then(successCallback)
     .catch(errorCallback);
-};
-
-/**
- * @param {function():Array} successCallback success callback function with transaction array
- * @param {function()} errorCallback callback function
- * @param {function()} didFetchOldestTransaction callback is called when all transanctions for legacy addresses have been fetched
- */
- // used on the frontend
-MyWallet.fetchMoreTransactionsForLegacyAddresses = function(success, error, didFetchOldestTransaction) {
-  console.log("deprecated use of MyWallet.fetchMoreTransactionsForLegacyAddresses");
-  MyWallet.fetchMoreTransactionsForAll(success, error, didFetchOldestTransaction);
 };
 
 /**
@@ -643,23 +311,6 @@ MyWallet.isValidPrivateKey = function(candidate) {
   }
 };
 
-// used on myWallet and iOS
-MyWallet.get_history = function(success, error) {
-  console.log("deprecated use of MyWallet.get_history()!!");
-  var p = MyWallet.wallet.getHistory();
-  if (success) { p.then(success);};
-  if (error) {p.catch(error);};
-};
-// used on wallet-store and locally (wallet.js)
-MyWallet.getConfirmationsForTx = function(latest_block, tx) {
-  if (latest_block && tx.blockHeight != null && tx.blockHeight > 0) {
-    return latest_block.height - tx.blockHeight + 1;
-  } else {
-    tx.setConfirmations(0);
-    return 0;
-  }
-};
-
 // used two times
 function didDecryptWallet(success) {
 
@@ -668,19 +319,6 @@ function didDecryptWallet(success) {
   WalletStore.resetLogoutTimeout();
   success();
 }
-
-/**
- * Get the list of transactions from the http API.
- * Needs to be called by client in the success callback of fetchWalletJson and after MyWallet.initializeHDWallet
- * @param {function()=} success Success callback function.
- */
- // used in the frontend and iOS
-MyWallet.getHistoryAndParseMultiAddressJSON = function(success, error) {
-  console.log("deprecated use of getHistoryAndParseMultiAddressJSON");
-  var p = MyWallet.wallet.getHistory();
-  if (success) { p.then(success);};
-  if (error) { p.catch(error);};
-};
 
 // used once
 function checkWalletChecksum(payload_checksum, success, error) {

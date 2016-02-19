@@ -74,13 +74,9 @@ module.exports = function(karma) {
       // 'tests/**/*.coffee',
       // Or specify individual test files:
       'tests/mocks/*.coffee',
-      //'tests/wallet_spender_spec.js.coffee',     //(FAIL)
-      // 'tests/claim_redeem_spec.js.coffee',      //(requires refactor)
-      'tests/transaction_spec.js.coffee',          //(OK)
-      'tests/transaction_spend_spec.js.coffee',    //(OK)
-      'tests/wallet_spec.js.coffee',               //(PARTIAL)
-      'tests/wallet_store_spec.js.coffee',
-      'tests/bip38_spec.js.coffee',                //(OK)
+      'tests/transaction_spend_spec.js.coffee',
+      'tests/wallet_spec.js.coffee',
+      'tests/bip38_spec.js.coffee',
       'tests/address_spec.js.coffee',
       'tests/keychain_spec.js.coffee',
       'tests/keyring_spec.js.coffee',
