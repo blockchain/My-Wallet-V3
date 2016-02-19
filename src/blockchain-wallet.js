@@ -382,8 +382,8 @@ Wallet.prototype.getBalancesForArchived = function() {
   var archivedAddrs = this.addresses.filter(function (addr) {
       return MyWallet.wallet.key(addr).archived === true;
   });
-  var promise = API.getHistory(archivedAddrs, 0 ,0, 1).then(updateBalances.bind(this));
-  return promise;
+
+  return API.getHistory(archivedAddrs, 0 ,0, 1).then(updateBalances.bind(this));
 };
 ////////////////////////////////////////////////////////////////////////////////
 Wallet.prototype.toJSON = function(){
@@ -393,7 +393,7 @@ Wallet.prototype.toJSON = function(){
              .map(function(a){ return {addr: a, label: addressBook[a]};});
   }
 
-  var wallet = {
+  return {
     guid              : this.guid,
     sharedKey         : this.sharedKey,
     double_encryption : this.isDoubleEncrypted,
@@ -412,7 +412,6 @@ Wallet.prototype.toJSON = function(){
     paidTo            : this._paidTo,
     hd_wallets        : Helpers.isEmptyArray(this._hd_wallets) ? undefined : this._hd_wallets
   };
-  return wallet;
 };
 
 Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bipPass) {

@@ -400,13 +400,12 @@ function getKeyForAddress(password, addr) {
 // getXPRIV :: password -> index -> xpriv
 function getXPRIV(password, accountIndex) {
   var fromAccount = MyWallet.wallet.hdwallet.accounts[accountIndex];
-  var xpriv = fromAccount.extendedPrivateKey == null || password == null
+  return fromAccount.extendedPrivateKey == null || password == null
     ? fromAccount.extendedPrivateKey
     : WalletCrypto.decryptSecretWithSecondPassword( fromAccount.extendedPrivateKey
                                                   , password
                                                   , MyWallet.wallet.sharedKey
                                                   , MyWallet.wallet.pbkdf2_iterations);
-  return xpriv;
 };
 ////////////////////////////////////////////////////////////////////////////////
 // getKeyForPath :: xpriv -> path -> [private key]
