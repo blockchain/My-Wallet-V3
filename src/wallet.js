@@ -86,7 +86,7 @@ MyWallet.addPrivateKey = function(key, opts, second_password) {
     throw 'Error Encoding key';
   }
   var decoded_base_58 = second_password == null ? base58 : WalletCrypto.decryptSecretWithSecondPassword(encoded, second_password, sharedKey, pbkdf2_iterations);
-  var decoded_key = new ECKey(new BigInteger.fromBuffer(decoded_base_58), opts.compressed);
+
   if (addr != MyWallet.getUnCompressedAddressString(key) && addr != MyWallet.getCompressedAddressString(key)) {
     throw 'Decoded Key address does not match generated address';
   }
@@ -591,7 +591,6 @@ MyWallet.initializeWallet = function(pw, success, other_error, decrypt_success, 
 
   WalletStore.setRestoringWallet(true);
   WalletStore.unsafeSetPassword(pw);
-  var encryptedWalletData = WalletStore.getEncryptedWalletData();
 
   decryptAndInitializeWallet(
     function() {
@@ -817,14 +816,6 @@ MyWallet.createNewWallet = function(inputedEmail, inputedPassword, firstAccountN
     error(e);
   }, isHD);
 };
-// used 3 times
-function nKeys(obj) {
-  var size = 0, key;
-  for (key in obj) {
-    size++;
-  }
-  return size;
-}
 
 // used on frontend
 MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
