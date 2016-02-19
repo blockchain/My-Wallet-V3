@@ -25,9 +25,6 @@ tx = {
 };
 
 TransactionList = proxyquire('../src/transaction-list', {
-  './api': {
-    getHistory: () -> Promise.resolve({ txs: [tx] })
-  },
   './wallet-transaction': {
     factory: (tx) -> tx
   }
@@ -37,43 +34,20 @@ describe 'TransactionList', ->
   txList = undefined
 
   beforeEach ->
-    txList = new TransactionList((-> ['addr', 'xpub']), 10)
+    txList = new TransactionList(10)
 
   it 'should lookup a transaction by its hash', ->
     txList.pushTxs({ hash: 'abcdef', txType: 'sent' })
     tx = txList.transaction('abcdef')
     expect(tx.txType).toEqual('sent')
 
-  it 'should fetch new txs', (done) ->
-    txList.fetchTxs().then (numFetched) ->
-      expect(numFetched).toEqual(1)
-      expect(txList.transactions().length).toEqual(1)
-      done()
-
-  it 'should not add duplicate tx to the list', (done) ->
-    txList.fetchTxs().then (numFetched1) ->
-
-      txList.fetchTxs().then (numFetched2) ->
-        expect(numFetched1).toEqual(1)
-        expect(numFetched2).toEqual(1)
-
-        expect(txList.transactions().length).toEqual(1)
-        done()
-
   it 'should add txs to the tx list', ->
     txList.pushTxs({ txType: 'sent' })
     expect(txList.transactions.length).toEqual(1)
 
-  it 'should prepend txs to the tx list', ->
-    expect(txList.transactions().length).toEqual(0)
-
-    txList.shiftTxs({ txType: 'sent', hash: "1234" })
-    expect(txList.transactions().length).toEqual(1)
-
-  it 'should not prepend duplicate txs to the tx list', ->
-    txList.shiftTxs({ txType: 'sent', hash: "1234"})
-    txList.shiftTxs({ txType: 'sent', hash: "1234"})
-
+  it 'should not add duplicate txs to the tx list', ->
+    txList.pushTxs({ txType: 'sent', hash: "1234"})
+    txList.pushTxs({ txType: 'sent', hash: "1234"})
     expect(txList.transactions().length).toEqual(1)
 
 
@@ -86,15 +60,11 @@ describe 'TransactionList', ->
       spy = jasmine.createSpy()
       unsub = txList.subscribe(spy)
 
-    it 'should send event listeners an update when shiftTxs is called', ->
-      txList.shiftTxs({ txType: 'sent' })
-      expect(spy).toHaveBeenCalled()
-
     it 'should send event listeners an update when pushTxs is called', ->
       txList.pushTxs({ txType: 'sent' })
       expect(spy).toHaveBeenCalled()
 
     it 'should have the ability to unsubscribe', ->
       unsub()
-      txList.shiftTxs({ txType: 'sent' })
+      txList.pushTxs({ txType: 'sent' })
       expect(spy).not.toHaveBeenCalled()
