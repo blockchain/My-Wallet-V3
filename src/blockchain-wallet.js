@@ -20,6 +20,7 @@ var shared = require('./shared');
 var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var KeyRing  = require('./keyring');
 var TxList = require('./transaction-list');
+var Base58 = require('bs58');
 
 ////////////////////////////////////////////////////////////////////////////////
 // Wallet
@@ -804,15 +805,41 @@ Wallet.prototype.changePbkdf2Iterations = function(newIterations, password){
   return true;
 };
 
-Wallet.prototype.getPrivateKeyForAddress = function(address, secondPassword) {
-  assert(address, 'Error: address must be defined');
+Wallet.prototype.getPrivateKeyForAddress = function(addObject, secondPassword) {
+  assert(addObject, 'Error: address must be defined');
   var pk = null;
-  if (!address.isWatchOnly) {
+  if (!addObject.isWatchOnly) {
     pk = this.isDoubleEncrypted ?
       WalletCrypto.decryptSecretWithSecondPassword(
-        address.priv, secondPassword, this.sharedKey, this.pbkdf2_iterations) : address.priv;
+        addObject.priv, secondPassword, this.sharedKey, this.pbkdf2_iterations) : addObject.priv;
   }
   return pk;
+};
+
+Wallet.prototype.addrObjToPrivKeyObj = function(addObject, secondPassword) {
+
+  var privateKeyBase58 = this.getPrivateKeyForAddress(addObject, secondPassword);
+  var format = MyWallet.detectPrivateKeyFormat(privateKeyBase58);
+  var key    = MyWallet.privateKeyStringToKey(privateKeyBase58, format);
+
+  // check for key with missing leading zeros
+  var newBase58 = Base58.encode(key.d.toBuffer(32));
+  if (privateKeyBase58 !== newBase58) {
+    var cipher = undefined;
+    if (this.isDoubleEncrypted) {
+      cipher = WalletCrypto.cipherFunction.bind(undefined, secondPassword, this._sharedKey, this._pbkdf2_iterations);
+    }
+    addObject.repair(cipher);
+    MyWallet.syncWallet();
+  }
+
+  if (MyWallet.getCompressedAddressString(key) === addObject.address) {
+    key = new Bitcoin.ECKey(key.d, true);
+  }
+  else if (MyWallet.getUnCompressedAddressString(key) === addObject.address) {
+    key = new Bitcoin.ECKey(key.d, false);
+  };
+  return key;
 };
 
 Wallet.prototype._getPrivateKey = function(accountIndex, path, secondPassword) {

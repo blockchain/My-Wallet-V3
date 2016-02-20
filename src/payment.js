@@ -374,28 +374,15 @@ function getUnspentCoins(addressList) {
   }
 
   return API.getUnspent(addressList, 0).then(processCoins);
-}
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // obtain private key for an address
 // from Address
 function getKeyForAddress(password, addr) {
-  var k = MyWallet.wallet.key(addr).priv;
-  var privateKeyBase58 = password == null ? k :
-    WalletCrypto.decryptSecretWithSecondPassword( k
-                                                , password
-                                                , MyWallet.wallet.sharedKey
-                                                , MyWallet.wallet.pbkdf2_iterations);
-  var format = MyWallet.detectPrivateKeyFormat(privateKeyBase58);
-  var key    = MyWallet.privateKeyStringToKey(privateKeyBase58, format);
-  if (MyWallet.getCompressedAddressString(key) === addr) {
-    key = new Bitcoin.ECKey(key.d, true);
-  }
-  else if (MyWallet.getUnCompressedAddressString(key) === addr) {
-    key = new Bitcoin.ECKey(key.d, false);
-  };
-  return key;
-}
+  var ad = MyWallet.wallet.key(addr);
+  return MyWallet.wallet.addrObjToPrivKeyObj(ad, password);
+};
 ////////////////////////////////////////////////////////////////////////////////
 // getXPRIV :: password -> index -> xpriv
 function getXPRIV(password, accountIndex) {
