@@ -28,10 +28,8 @@ Helpers.isBitcoinPrivateKey = function(candidate) {
   }
   catch (e) { return false; };
 };
-Helpers.isBase58Key = function(k) {
-  return Helpers.isString(k) &&
-         (/^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{44}$/.test(k) ||
-         /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{43}$/.test(k))
+Helpers.isBase58Key = function(str) {
+  return Helpers.isString(str) && /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$/.test(str);
 };
 Helpers.isXprivKey = function(k) {
   return Helpers.isString(k) && k.substring(0, 4) === "xprv";
