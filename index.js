@@ -36,7 +36,7 @@ module.exports = {
   WalletNetwork: require('./src/wallet-network'),
   RNG: require('./src/rng')
   // Wallet: require('./blockchain-wallet'),
-  // Address: require('./address'),
+  // Address: require('./src/address')
   // HDAccount: require('./hd-account'),
   // HDWallet: require('./hd-wallet'),
   // KeyChain: require('./keychain'),

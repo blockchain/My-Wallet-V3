@@ -899,7 +899,8 @@ MyWallet.detectPrivateKeyFormat = function(key) {
 };
 // should be a helper
 function buffertoByteArray(value) {
-  return BigInteger.fromBuffer(value).toByteArray();
+  return Array.prototype.map.call(value, function (b) { return b; })
+  // return BigInteger.fromBuffer(value).toByteArray();
 }
 // should be a helper
 // used locally and wallet-spender.js
@@ -930,7 +931,8 @@ MyWallet.privateKeyStringToKey = function(value, format) {
     throw 'Unsupported Key Format';
   }
 
-  if (key_bytes.length != 32 && key_bytes.length != 33)
+  if (key_bytes.length !== 31 && key_bytes.length !== 32 && key_bytes.length !== 33)
+    // 31 is included as valid for the leading 0 problem
     throw 'Result not 32 or 33 bytes in length';
 
   return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format !== 'sipa'));

@@ -9,6 +9,7 @@ var Helpers  = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 var shared   = require('./shared');
 var ImportExport = require('./import-export');
+var BigInteger = require('bigi');
 ////////////////////////////////////////////////////////////////////////////////
 // Address class
 function Address(object){
@@ -247,5 +248,33 @@ Address.prototype.persist = function(){
   if (!this._temporal_priv) return this;
   this._priv = this._temporal_priv;
   delete this._temporal_priv;
+  return this;
+};
+
+Address.prototype.repair = function(cipher){
+  if (!this._priv) return this;
+  var dec = undefined;
+  var enc = undefined;
+  if (cipher) {
+    dec    = cipher("dec");
+    enc    = cipher("enc");
+  }
+  this.decrypt(dec);
+  var keyBuffer = Base58.decode(this._temporal_priv);
+  var keyBytes  = Array.prototype.map.call(keyBuffer, function (b) { return b; });
+  var fixedKeyC  = new Bitcoin.ECKey(new BigInteger.fromByteArrayUnsigned(keyBytes), true);
+  var fixedKeyN  = new Bitcoin.ECKey(new BigInteger.fromByteArrayUnsigned(keyBytes), false);
+  var newAddrC   = fixedKeyC.pub.getAddress().toString();
+  var newAddrN   = fixedKeyN.pub.getAddress().toString();
+  var newB58Key = Base58.encode(fixedKeyC.d.toBuffer(32));
+
+  if (this.priv !== newB58Key && (this.address === newAddrC || this.address === newAddrN)) {
+    // if same address and key was wrong, then fix it.
+    this._temporal_priv = newB58Key;
+    this.persist();
+    this.encrypt(enc);
+    this.persist();
+  }
+
   return this;
 };
