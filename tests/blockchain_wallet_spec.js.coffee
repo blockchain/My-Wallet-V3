@@ -430,7 +430,9 @@ describe "Blockchain-Wallet", ->
         expect(MyWallet.syncWallet).toHaveBeenCalled()
 
       it ".validateSecondPassword", ->
-        pending()
+        wallet.encrypt("batteryhorsestaple")
+        expect(wallet.isDoubleEncrypted).toBeTruthy()
+        expect(wallet.validateSecondPassword("batteryhorsestaple")).toBeTruthy()
 
       describe ".encrypt", ->
         cb =
@@ -453,8 +455,46 @@ describe "Blockchain-Wallet", ->
           expect(cb.encrypting).toHaveBeenCalled()
           expect(cb.error).not.toHaveBeenCalled()
 
+        it "should not encrypt an already encrypted wallet", ->
+          wallet.encrypt("batteryhorsestaple")
+          wallet.encrypt("batteryhorsestaple", cb.success, cb.error, cb.encrypting, cb.syncing)
+          expect(wallet.isDoubleEncrypted).toBeTruthy()
+          expect(cb.success).not.toHaveBeenCalled()
+          expect(cb.syncing).not.toHaveBeenCalled()
+          expect(cb.encrypting).toHaveBeenCalled()
+          expect(cb.error).not.toHaveBeenCalled()
+
       it ".decrypt", ->
-        pending()
+        cb =
+          success: () ->
+          error: () ->
+          decrypting: () ->
+          syncing: () ->
+
+        beforeEach ->
+          spyOn(cb, "success")
+          spyOn(cb, "error")
+          spyOn(cb, "decrypting")
+          spyOn(cb, "syncing")
+
+        it "should decrypt an encrypted wallet", ->
+          wallet.encrypt("batteryhorsestaple")
+          expect(wallet.isDoubleEncrypted).toBeTruthy()
+          wallet.decrypt("batteryhorsestaple", cb.success, cb.error, cb.decrypting, cb.syncing)
+          expect(cb.success).toHaveBeenCalled()
+          expect(cb.syncing).toHaveBeenCalled()
+          expect(cb.decrypting).toHaveBeenCalled()
+          expect(cb.error).not.toHaveBeenCalled()
+          expect(wallet.isDoubleEncrypted).toBeFalsy()
+          expect(MyWallet.syncWallet).toHaveBeenCalled()
+
+        it "should not decrypt an already decrypted wallet", ->
+          expect(wallet.isDoubleEncrypted).toBeFalsy()
+          wallet.decrypt("batteryhorsestaple", cb.success, cb.error, cb.decrypting, cb.syncing)
+          expect(cb.success).not.toHaveBeenCalled()
+          expect(cb.syncing).not.toHaveBeenCalled()
+          expect(cb.decrypting).toHaveBeenCalled()
+          expect(cb.error).not.toHaveBeenCalled()
 
       it ".restoreHDWallet", ->
         pending()
@@ -509,8 +549,34 @@ describe "Blockchain-Wallet", ->
           wallet.changePbkdf2Iterations(5000, null)
           expect(MyWallet.syncWallet).not.toHaveBeenCalled()
 
-      it ".getPrivateKeyForAddress", ->
-        pending()
+        it "should work with a double encrypted wallet", ->
+          wallet.encrypt("batteryhorsestaple")
+          expect(wallet.isDoubleEncrypted).toBeTruthy()
+          wallet.changePbkdf2Iterations(10000, "batteryhorsestaple")
+          expect(MyWallet.syncWallet).toHaveBeenCalled()
+          wallet.decrypt("batteryhorsestaple")
+          expect(wallet.pbkdf2_iterations).toEqual(10000)
+
+      describe ".getPrivateKeyForAddress", ->
+        it "should work for non double encrypted wallets", ->
+          expect(wallet.isDoubleEncrypted).toBeFalsy()
+          expect(wallet.getPrivateKeyForAddress(wallet.keys[0])).toEqual('HUFhy1SvLBzzdAYpwD3quUN9kxqmm9U3Y1ZDdwBhHjPH')
+
+        it "should work for double encrypted wallets", ->
+          wallet.encrypt("batteryhorsestaple")
+          expect(wallet.isDoubleEncrypted).toBeTruthy()
+          expect(wallet.getPrivateKeyForAddress(wallet.keys[0], "batteryhorsestaple")).toEqual('HUFhy1SvLBzzdAYpwD3quUN9kxqmm9U3Y1ZDdwBhHjPH')
+
+        it "should return null for watch-only addresses in non double encrypted wallets", ->
+          expect(wallet.isDoubleEncrypted).toBeFalsy()
+          expect(wallet.keys[1].isWatchOnly).toBeTruthy()
+          expect(wallet.getPrivateKeyForAddress(wallet.keys[1])).toEqual(null)
+
+        it "should return null for watch-only addresses in for double encrypted wallets", ->
+          wallet.encrypt("batteryhorsestaple")
+          expect(wallet.isDoubleEncrypted).toBeTruthy()
+          expect(wallet.keys[1].isWatchOnly).toBeTruthy()
+          expect(wallet.getPrivateKeyForAddress(wallet.keys[1], "batteryhorsestaple")).toEqual(null)
 
     describe "_updateWalletInfo()", ->
       multiaddr = {
