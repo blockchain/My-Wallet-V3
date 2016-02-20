@@ -1,3 +1,5 @@
+Bitcoin = require('bitcoinjs-lib')
+
 proxyquire = require('proxyquireify')(require)
 MyWallet = {
   wallet: {
@@ -6,44 +8,18 @@ MyWallet = {
   }
 }
 
-Bitcoin = {
-  ECKey: {
-    makeRandom: (compressed, rng) ->
-      pk = rng(32)
-      {
-        pub:
-          getAddress: () ->
-            toString: () ->
-              "random_address"
-        d:
-          toBuffer: () ->
-            pk + "_private_key_buffer"
-      }
-  }
-}
-
-Base58 = {
-  encode: (v) -> v + "_base58"
-}
-
-Helpers = {
-  isBitcoinAddress: () -> false
-  isKey: () -> true
-  isBitcoinPrivateKey: () -> false
-}
-
 RNG = {
   run: (input) ->
     if RNG.shouldThrow
       throw 'Connection failed'
-    "random"
+    new Buffer(
+      "0000000000000000000000000000000000000000000000000000000000000010",
+      "hex"
+    )
 }
 
 stubs = {
   './wallet': MyWallet,
-  'bitcoinjs-lib' : Bitcoin,
-  './helpers' : Helpers,
-  'bs58' : Base58,
   './rng' : RNG
 }
 
@@ -88,9 +64,6 @@ describe "Address", ->
         expect(a.isWatchOnly).not.toBeTruthy()
 
     describe "Address.new()", ->
-      beforeEach ->
-        spyOn(Bitcoin.ECKey, "makeRandom").and.callThrough()
-        spyOn(RNG, "run").and.callThrough()
 
       it "should return an address", ->
         a = Address.new("My New Address")
@@ -98,15 +71,15 @@ describe "Address", ->
 
       it "should generate a random private key", ->
         a = Address.new("My New Address")
-        expect(a.priv).toBe("random_private_key_buffer_base58")
+        expect(a.priv).toBe("1111111111111111111111111111111H")
 
       it "should generate a random address", ->
         a = Address.new("My New Address")
-        expect(a.address).toBe("random_address")
+        expect(a.address).toBe("19p7ktDbdJnmV4YLC7zQ37RsYczMZJmd6q")
 
       it "should call Bitcoin.ECKey.makeRandom with our RNG", ->
+        spyOn(RNG, "run").and.callThrough()
         a = Address.new("My New Address")
-        expect(Bitcoin.ECKey.makeRandom).toHaveBeenCalled()
         expect(RNG.run).toHaveBeenCalled()
 
       it "should throw if RNG throws", ->
@@ -311,10 +284,37 @@ describe "Address", ->
         promise = Address.fromString("6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg", null, null)
         expect(promise).toBeRejectedWith('needsBip38')
 
+      it "should not import BIP-38 format with an empty password", ->
+        promise = Address.fromString("6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg", null, "")
+        expect(promise).toBeRejectedWith('needsBip38')
+
+      it "should import valid addresses string", ->
+        promise = Address.fromString("19p7ktDbdJnmV4YLC7zQ37RsYczMZJmd6q", null, null)
+        expect(promise).toBeResolvedWith((addr) -> addr.address == "19p7ktDbdJnmV4YLC7zQ37RsYczMZJmd6q")
+
+      it "should import private keys using mini format string", ->
+        promise = Address.fromString("SzavMBLoXU6kDrqtUVmffv", null, null)
+        expect(promise).toBeResolvedWith((addr) -> addr.address == "1CC3X2gu58d6wXUWMffpuzN9JAfTUWu4Kj")
+
+      it "should not import invalid private keys using mini format string", ->
+        promise = Address.fromString("SzavMBLoXU6kDrqtUVmffv", null, null)
+        expect(promise).toBeResolvedWith((addr) -> addr.address == "1CC3X2gu58d6wXUWMffpuzN9JAfTUWu4Kj")
 
     describe "Address import", ->
-      it '', ->
-        pending()
+      it "should not import unknown formats", ->
+        expect(() -> Address.import("abcd", null)).toThrow()
+
+      it "should not import invalid addresses", ->
+        expect(() -> Address.import("19p7ktDbdJnmV4YLC7zQ37RsYczMZJmd66", null)).toThrow()
+
+      it "should import WIF keys", ->
+        addr = Address.import("5KUwyCzLyDjAvNGN4qmasFqnSimHzEYVTuHLNyME63JKfVU4wiU", null)
+        expect(addr.address).toEqual("1KySxcrixYhxcRQ8m6rFcTyc74AwN6VP6b")
+
+      it "should import valid addresses", ->
+        addr = Address.import("19p7ktDbdJnmV4YLC7zQ37RsYczMZJmd6q", null)
+        expect(addr.address).toEqual("19p7ktDbdJnmV4YLC7zQ37RsYczMZJmd6q")
+
 
     describe "Address factory", ->
       it '', ->
