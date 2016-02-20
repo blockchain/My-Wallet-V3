@@ -34,7 +34,7 @@ function HDAccount(object){
   this._changeIndex   = 0;
   this._n_tx          = 0;
   this._balance       = null;
-  this._index         = Helpers.isNumber(obj.index) ? obj.index : null;
+  this._index         = Helpers.isPositiveInteger(obj.index) ? obj.index : null;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -58,19 +58,19 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function() { return this._balance;},
     set: function(num) {
-      if(Helpers.isNumber(num))
+      if(Helpers.isPositiveNumber(num))
         this._balance = num;
       else
-        throw 'Error: account.balance must be a number';
+        throw 'Error: account.balance must be a positive number';
     }
   },
   "n_tx": {
     get: function() { return this._n_tx;},
     set: function(num) {
-      if(Helpers.isNumber(num))
+      if(Helpers.isPositiveInteger(num))
         this._n_tx = num;
       else
-        throw 'Error: account.n_tx must be a number';
+        throw 'Error: account.n_tx must be a positive integer';
     }
   },
   "archived": {
@@ -99,7 +99,7 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function() { return this._receiveIndex;},
     set: function(value) {
-      if(Helpers.isNumber(value))
+      if(Helpers.isPositiveInteger(value))
         this._receiveIndex = value;
       else
         throw 'Error: account.receiveIndex must be a number';
@@ -109,7 +109,7 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function() { return this._lastUsedReceiveIndex;},
     set: function(value) {
-      if(Helpers.isNumber(value))
+      if(Helpers.isPositiveInteger(value))
         this._lastUsedReceiveIndex = value;
       else
         throw 'Error: account.lastUsedReceiveIndex must be a number';
@@ -132,7 +132,7 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function() { return this._changeIndex;},
     set: function(value) {
-      if(Helpers.isNumber(value))
+      if(Helpers.isPositiveInteger(value))
         this._changeIndex = value;
       else
         throw 'Error: account.changeIndex must be a number';
@@ -205,7 +205,7 @@ HDAccount.fromAccountMasterKey = function(accountZero, index, label){
 
   assert(accountZero, "Account MasterKey must be given to create an account.");
   var account    = new HDAccount();
-  account._index = Helpers.isNumber(index) ? index : null;
+  account._index = Helpers.isPositiveInteger(index) ? index : null;
   account._label  = label;
   account._xpriv = accountZero.toBase58();
   account._xpub  = accountZero.neutered().toBase58();
@@ -216,7 +216,7 @@ HDAccount.fromAccountMasterKey = function(accountZero, index, label){
 HDAccount.fromWalletMasterKey = function(masterkey, index, label) {
 
   assert(masterkey, "Wallet MasterKey must be given to create an account.");
-  assert(Helpers.isNumber(index), "Derivation index must be an integer.");
+  assert(Helpers.isPositiveInteger(index), "Derivation index must be a positive integer.");
   var accountZero = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(index);
   return HDAccount.fromAccountMasterKey(accountZero, index, label);
 };
@@ -283,7 +283,7 @@ HDAccount.prototype.incrementReceiveIndexIfLast = function(index) {
 ////////////////////////////////////////////////////////////////////////////////
 // address labels
 HDAccount.prototype.setLabelForReceivingAddress = function(index, label) {
-  assert(Helpers.isNumber(index), 'Error: address index must be a number');
+  assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
 
   if(!Helpers.isValidLabel(label)) {
     return Promise.reject('NOT_ALPHANUMERIC');
@@ -300,19 +300,19 @@ HDAccount.prototype.setLabelForReceivingAddress = function(index, label) {
 };
 
 HDAccount.prototype.removeLabelForReceivingAddress = function(index) {
-  assert(Helpers.isNumber(index), "Error: address index must be a number");
+  assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
   delete this._address_labels[index];
   MyWallet.syncWallet();
   return this;
 };
 
 HDAccount.prototype.getLabelForReceivingAddress = function(index) {
-  assert(Helpers.isNumber(index), "Error: address index must be a number");
+  assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
   return this._address_labels[index];
 };
 
 HDAccount.prototype.receiveAddressAtIndex = function(index) {
-  assert(Helpers.isNumber(index), "Error: address index must be a number");
+  assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
   return this._keyRing.receive.getAddress(index);
 };
 

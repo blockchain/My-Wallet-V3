@@ -14,7 +14,7 @@ function KeyChain(extendedKey, index, cache) {
 
   // this function should be part of the instance because it is memoized
   this._getKey = Helpers.memoize(function(index) {
-    assert(typeof(index) === "number" && index >= 0, "Key index must be integer >= 0");
+    assert(Helpers.isPositiveInteger(index), "Key index must be integer >= 0");
     assert(this._chainRoot, "KeyChain is not initialized.");
     return this._chainRoot.derive(index);
   });
@@ -36,19 +36,19 @@ KeyChain.prototype.init = function(extendedKey, index, cache) {
     this._chainRoot = Bitcoin.HDNode.fromBase58(cache);
   }
   else {
-    this._chainRoot = extendedKey && Helpers.isNumber(index) && index >= 0
+    this._chainRoot = extendedKey && Helpers.isPositiveInteger(index) && index >= 0
       ? Bitcoin.HDNode.fromBase58(extendedKey).derive(index) : undefined;
   }
   return this;
 };
 
 KeyChain.prototype.getAddress = function(index) {
-  assert(typeof(index) === "number" && index >= 0, "Address index must be integer >= 0");
+  assert(Helpers.isPositiveInteger(index), "Address index must be integer >= 0");
   return this._getKey(index).getAddress().toString();
 };
 
 KeyChain.prototype.getPrivateKey = function(index) {
-  assert(typeof(index) === "number" && index >= 0 , "private key index must be integer >= 0");
+  assert(Helpers.isPositiveInteger(index), "private key index must be integer >= 0");
   var key = this._getKey(index).privKey;
   return key ? key : null;
 };

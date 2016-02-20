@@ -118,10 +118,10 @@ Payment.sideEffect = function(myFunction) {
 Payment.to = function(destinations) {
   var formatDest = null;
   var isValidIndex = function(i) {
-    return Helpers.isNumber(i) && (0 <= i) && MyWallet.wallet.isUpgradedToHD && (i < MyWallet.wallet.hdwallet.accounts.length);
+    return Helpers.isPositiveInteger(i) && MyWallet.wallet.isUpgradedToHD && (i < MyWallet.wallet.hdwallet.accounts.length);
   };
   var accountToAddress = function (i) {
-    if (Helpers.isNumber(i)) {
+    if (Helpers.isPositiveInteger(i)) {
       return MyWallet.wallet.hdwallet.accounts[i].receiveAddress;}
     else {
       return i;}
@@ -174,7 +174,7 @@ Payment.note = function(note) {
 };
 
 Payment.fee = function(amount) {
-  var forcedFee = Helpers.isNumber(amount) ? amount : null;
+  var forcedFee = Helpers.isPositiveNumber(amount) ? amount : null;
   return function(payment) {
     payment.forcedFee = forcedFee;
     return Promise.resolve(payment);
@@ -185,13 +185,13 @@ Payment.amount = function(amounts) {
   var formatAmo = null;
   switch (true) {
     // single output
-    case Helpers.isNumber(amounts):
+    case Helpers.isPositiveNumber(amounts):
       formatAmo = Helpers.toArrayFormat(amounts);
       break;
     // multiple outputs
     case Array.isArray(amounts) &&
          amounts.length > 0 &&
-         amounts.every(Helpers.isNumber):
+         amounts.every(Helpers.isPositiveNumber):
       formatAmo = amounts;
       break;
     default:
@@ -222,8 +222,7 @@ Payment.from = function(origin) {
       change    = origin;
       break;
     // single account index
-    case Helpers.isNumber(origin) &&
-         (0 <= origin) &&
+    case Helpers.isPositiveInteger(origin) &&
          (origin < MyWallet.wallet.hdwallet.accounts.length):
       var fromAccount = MyWallet.wallet.hdwallet.accounts[origin];
       addresses = [fromAccount.extendedPublicKey];
@@ -420,7 +419,7 @@ function getPrivateKeys(password, payment) {
   var transaction = payment.transaction;
   var privateKeys = [];
   // if from Account
-  if (Helpers.isNumber(payment.fromAccountIdx)) {
+  if (Helpers.isPositiveInteger(payment.fromAccountIdx)) {
     var xpriv = getXPRIV(password, payment.fromAccountIdx);
     privateKeys = transaction.pathsOfNeededPrivateKeys.map(getKeyForPath.bind(this, xpriv));
   };

@@ -69,30 +69,30 @@ Object.defineProperties(Address.prototype, {
     configurable: false,
     get: function() { return this._balance;},
     set: function(num) {
-      if(Helpers.isNumber(num))
+      if(Helpers.isPositiveNumber(num))
         this._balance = num;
       else
-        throw 'Error: address.balance must be a number';
+        throw 'Error: address.balance must be a positive number';
     }
   },
   "totalSent": {
     configurable: false,
     get: function() { return this._totalSent;},
     set: function(num) {
-      if(Helpers.isNumber(num))
+      if(Helpers.isPositiveNumber(num))
         this._totalSent = num;
       else
-        throw 'Error: address.totalSent must be a number';
+        throw 'Error: address.totalSent must be a positive number';
     }
   },
   "totalReceived": {
     configurable: false,
     get: function() { return this._totalReceived;},
     set: function(num) {
-      if(Helpers.isNumber(num))
+      if(Helpers.isPositiveNumber(num))
         this._totalReceived = num;
       else
-        throw 'Error: address.totalReceived must be a number';
+        throw 'Error: address.totalReceived must be a positive number';
     }
   },
   "isWatchOnly": {

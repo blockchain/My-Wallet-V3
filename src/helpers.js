@@ -54,6 +54,12 @@ Helpers.isBase64 = function (str){
 Helpers.isNumber = function (num){
   return typeof num == 'number' && !isNaN(num);
 };
+Helpers.isPositiveNumber = function (num) {
+  return Helpers.isNumber(num) && num >= 0;
+};
+Helpers.isPositiveInteger = function (num) {
+  return Helpers.isPositiveNumber(num) && num % 1 == 0;
+};
 Helpers.isNotNumber = function (num){
   return !Helpers.isNumber(num)
 };

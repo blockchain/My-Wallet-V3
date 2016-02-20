@@ -46,7 +46,7 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
     var output = unspent[i];
     transaction.addInput(output.hash, output.index);
     nIns += 1;
-    this.fee = Helpers.isNumber(forcedFee) ? forcedFee : Helpers.guessFee(nIns, nOuts, MyWallet.wallet.fee_per_kb);
+    this.fee = Helpers.isPositiveNumber(forcedFee) ? forcedFee : Helpers.guessFee(nIns, nOuts, MyWallet.wallet.fee_per_kb);
 
     // Generate address from output script and add to private list so we can check if the private keys match the inputs later
 
