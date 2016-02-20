@@ -8,6 +8,11 @@ describe "RNG", ->
     "hex"
   )
 
+  longServerBuffer = new Buffer(
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010",
+    "hex"
+  )
+
   zerosServerBuffer = new Buffer(
     "0000000000000000000000000000000000000000000000000000000000000000",
     "hex"
@@ -58,6 +63,15 @@ describe "RNG", ->
           serverBuffer
       )
       RNG.run()
+
+    it "should ask an arbitrary amount of bytes from the server", ->
+      spyOn(RNG, "getServerEntropy").and.callFake(
+        (bytes) ->
+          expect(bytes).toEqual(64)
+          longServerBuffer
+      )
+
+      RNG.run(64)
 
     it "returns the mixed entropy", ->
       spyOn(RNG, "getServerEntropy").and.callFake(
@@ -122,6 +136,11 @@ describe "RNG", ->
     it "returns a buffer is successful", ->
       res = RNG.getServerEntropy(32)
       expect(Buffer.isBuffer(res)).toBeTruthy()
+
+    it "returns a 32 bytes buffer if nBytes not indicated and if is successful", ->
+      res = RNG.getServerEntropy()
+      expect(Buffer.isBuffer(res)).toBeTruthy()
+      expect(res.length).toEqual(32)
 
     it "throws an exception if result is not hex", ->
       mock.responseText = "This page was not found"
