@@ -92,8 +92,8 @@ Object.defineProperties(Wallet.prototype, {
   "context": {
     configurable: false,
     get: function() {
-      var xpubs = this.hdwallet && this.hdwallet.xpubs;
-      return this.addresses.concat(xpubs || []);
+      var xpubs = this.hdwallet && this.hdwallet.activeXpubs;
+      return this.activeAddresses.concat(xpubs || []);
     }
   },
   "isDoubleEncrypted": {
