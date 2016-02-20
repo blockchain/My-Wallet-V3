@@ -50,6 +50,8 @@ describe 'TransactionList', ->
     txList.pushTxs({ txType: 'sent', hash: "1234"})
     expect(txList.transactions().length).toEqual(1)
 
+  it "should have defined its load number", ->
+    expect(txList.loadNumber).toEqual(10)
 
 
   describe 'events', ->
@@ -68,3 +70,9 @@ describe 'TransactionList', ->
       unsub()
       txList.pushTxs({ txType: 'sent' })
       expect(spy).not.toHaveBeenCalled()
+
+  describe ".wipe", ->
+
+    it "should empty the list", ->
+      txList.wipe()
+      expect(txList.transactions().length).toEqual(0)
