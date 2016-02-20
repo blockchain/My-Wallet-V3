@@ -278,12 +278,12 @@ Helpers.getHostName = function() {
 };
 
 Helpers.tor = function () {
-  var hostname = Helpers.getHostName()
+  var hostname = Helpers.getHostName();
 
   // NodeJS TOR detection not supported:
-  if(hostname === null) return null
+  if ('string' !== typeof hostname) return null;
 
-  return hostname.endsWith(".onion")
+  return hostname.slice(-6) === '.onion';
 };
 
 Helpers.buffertoByteArray = function(value) {
