@@ -867,7 +867,7 @@ MyWallet.detectPrivateKeyFormat = function(key) {
     if (testBytes[0] === 0x00 || testBytes[0] === 0x01)
       return 'mini';
   }
-
+  
   console.error('Unknown Key Format ' + key);
 
   return null;
@@ -901,9 +901,6 @@ MyWallet.privateKeyStringToKey = function(value, format) {
   } else {
     throw 'Unsupported Key Format';
   }
-
-  if (key_bytes.length != 32 && key_bytes.length != 33)
-    throw 'Result not 32 or 33 bytes in length';
 
   return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format !== 'sipa'));
 };
