@@ -28,31 +28,6 @@ MyWallet.securePost = function(url, data, success, error) {
   API.securePost(url, data).then(success).catch(error);
 };
 
-// used only locally: wallet.js : checkAllKeys (see what happens with this sanity check)
-MyWallet.B58LegacyDecode = function(input) {
-  var alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-  var base = BigInteger.valueOf(58);
-
-  var bi = BigInteger.valueOf(0);
-  var leadingZerosNum = 0;
-  for (var i = input.length - 1; i >= 0; i--) {
-    var alphaIndex = alphabet.indexOf(input[i]);
-
-    bi = bi.add(BigInteger.valueOf(alphaIndex)
-                .multiply(base.pow(input.length - 1 -i)));
-
-    // This counts leading zero bytes
-    if (input[i] == "1") leadingZerosNum++;
-    else leadingZerosNum = 0;
-  }
-  var bytes = bi.toByteArrayUnsigned();
-
-  // Add leading zeros
-  while (leadingZerosNum-- > 0) bytes.unshift(0);
-
-  return bytes;
-};
-
 // Temporary workaround instead instead of modding bitcoinjs to do it TODO: not efficient
 // used only on wallet.js and wallet-store.js
 MyWallet.getCompressedAddressString = function(key) {
@@ -86,7 +61,7 @@ MyWallet.addPrivateKey = function(key, opts, second_password) {
     throw 'Error Encoding key';
   }
   var decoded_base_58 = second_password == null ? base58 : WalletCrypto.decryptSecretWithSecondPassword(encoded, second_password, sharedKey, pbkdf2_iterations);
-  var decoded_key = new ECKey(new BigInteger.fromBuffer(decoded_base_58), opts.compressed);
+
   if (addr != MyWallet.getUnCompressedAddressString(key) && addr != MyWallet.getCompressedAddressString(key)) {
     throw 'Decoded Key address does not match generated address';
   }
@@ -566,7 +541,6 @@ MyWallet.initializeWallet = function(pw, success, other_error, decrypt_success, 
 
   WalletStore.setRestoringWallet(true);
   WalletStore.unsafeSetPassword(pw);
-  var encryptedWalletData = WalletStore.getEncryptedWalletData();
 
   decryptAndInitializeWallet(
     function() {
@@ -792,14 +766,6 @@ MyWallet.createNewWallet = function(inputedEmail, inputedPassword, firstAccountN
     error(e);
   }, isHD);
 };
-// used 3 times
-function nKeys(obj) {
-  var size = 0, key;
-  for (key in obj) {
-    size++;
-  }
-  return size;
-}
 
 // used on frontend
 MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
@@ -863,6 +829,41 @@ MyWallet.detectPrivateKeyFormat = function(key) {
   console.error('Unknown Key Format ' + key);
 
   return null;
+};
+// should be a helper
+function buffertoByteArray(value) {
+  return BigInteger.fromBuffer(value).toByteArray();
+}
+// should be a helper
+// used locally and wallet-spender.js
+MyWallet.privateKeyStringToKey = function(value, format) {
+  var key_bytes = null;
+
+  if (format == 'base58') {
+    key_bytes = buffertoByteArray(Base58.decode(value));
+  } else if (format == 'base64') {
+    key_bytes = buffertoByteArray(new Buffer(value, 'base64'));
+  } else if (format == 'hex') {
+    key_bytes = buffertoByteArray(new Buffer(value, 'hex'));
+  } else if (format == 'mini') {
+    key_bytes = buffertoByteArray(parseMiniKey(value));
+  } else if (format == 'sipa') {
+    var tbytes = buffertoByteArray(Base58.decode(value));
+    tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
+    tbytes.shift();
+    key_bytes = tbytes.slice(0, tbytes.length - 4);
+
+  } else if (format == 'compsipa') {
+    var tbytes = buffertoByteArray(Base58.decode(value));
+    tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
+    tbytes.shift();
+    tbytes.pop();
+    key_bytes = tbytes.slice(0, tbytes.length - 4);
+  } else {
+    throw 'Unsupported Key Format';
+  }
+
+  return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format !== 'sipa'));
 };
 
 // used once

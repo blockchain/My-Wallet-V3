@@ -4,70 +4,16 @@ var MyWallet = require('./wallet');
 var WalletCrypto = require('./wallet-crypto');
 
 var WalletStore = (function() {
-
-  var languageCodeToLanguage = {
-    'de': 'German',
-    'hi': 'Hindi',
-    'no': 'Norwegian',
-    'ru': 'Russian',
-    'pt': 'Portuguese',
-    'bg': 'Bulgarian',
-    'fr': 'French',
-    'zh-cn': 'Chinese Simplified',
-    'hu': 'Hungarian',
-    'sl': 'Slovenian',
-    'id': 'Indonesian',
-    'sv': 'Swedish',
-    'ko': 'Korean',
-    'el': 'Greek',
-    'en': 'English',
-    'it': 'Italiano',
-    'es': 'Spanish',
-    'vi': 'Vietnamese',
-    'th': 'Thai',
-    'ja': 'Japanese',
-    'pl': 'Polish',
-    'da': 'Danish',
-    'ro': 'Romanian',
-    'nl': 'Dutch',
-    'tr': 'Turkish'
-  };
-  var currencyCodeToCurrency = {
-    'ISK': 'lcelandic Króna',
-    'HKD': 'Hong Kong Dollar',
-    'TWD': 'New Taiwan Dollar',
-    'CHF': 'Swiss Franc',
-    'EUR': 'Euro',
-    'DKK': 'Danish Krone',
-    'CLP': 'Chilean, Peso',
-    'USD': 'U.S. Dollar',
-    'CAD': 'Canadian Dollar',
-    'CNY': 'Chinese Yuan',
-    'THB': 'Thai Baht',
-    'AUD': 'Australian Dollar',
-    'SGD': 'Singapore Dollar',
-    'KRW': 'South Korean Won',
-    'JPY': 'Japanese Yen',
-    'PLN': 'Polish Zloty',
-    'GBP': 'Great British Pound',
-    'SEK': 'Swedish Krona',
-    'NZD': 'New Zealand Dollar',
-    'BRL': 'Brazil Real',
-    'RUB': 'Russian Ruble'
-  };
   var password; //Password
   var guid; //Wallet identifier
   var language = 'en';
   var pbkdf2_iterations = 5000; // pbkdf2_interations of the main password (to encrypt the full payload)
   var disable_logout = false;
-  var mixer_fee = 0.5;
   var latest_block = null;
   var api_code = "0";
   var real_auth_type = 0; //The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
   var encrypted_wallet_data; //Encrypted wallet data (Base64, AES 256)
   var payload_checksum; //SHA256 hash of the current wallet.aes.json
-  var sharedcoin_endpoint; //The URL to the sharedcoin node
-  var sharedKey; //Shared key used to prove that the wallet has succesfully been decrypted, meaning you can't overwrite a wallet backup even if you have the guid
   var isPolling = false;
   var isRestoringWallet = false;
   var counter = 0;
@@ -93,12 +39,6 @@ var WalletStore = (function() {
     },
     setLanguage: function(lan) {
       language = lan;
-    },
-    getLanguages: function() {
-      return languageCodeToLanguage;
-    },
-    getCurrencies: function() {
-      return currencyCodeToCurrency;
     },
     disableLogout: function() {
       disable_logout = true;

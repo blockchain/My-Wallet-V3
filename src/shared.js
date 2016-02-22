@@ -95,39 +95,3 @@ function BlockFromJSON(json) {
     size : json.size
   };
 }
-
-function formatSatoshi(value, shift, no_comma) {
-  if (!value)
-    return '0.00';
-
-  var neg = '';
-  if (value < 0) {
-    value = -value;
-    neg = '-';
-  }
-
-  if (!shift) shift = 0;
-
-  value = ''+parseInt(value);
-
-  //TODO Clean this up
-  var integerPart = (value.length > (8-shift) ? value.substr(0, value.length-(8-shift)) : '0');
-
-  if (!no_comma) integerPart = integerPart.replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
-
-  var decimalPart = value.length > (8-shift) ? value.substr(value.length-(8-shift)) : value;
-
-  if (decimalPart && decimalPart != 0) {
-    while (decimalPart.length < (8-shift)) decimalPart = "0"+decimalPart;
-    decimalPart = decimalPart.replace(/0*$/, '');
-    while (decimalPart.length < 2) decimalPart += "0";
-
-    return neg + integerPart+"."+decimalPart;
-  }
-
-  return neg + integerPart;
-}
-
-function convert(x, conversion) {
-  return (x / conversion).toFixed(2).toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
-}
