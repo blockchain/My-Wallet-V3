@@ -173,10 +173,6 @@ function isLegacy(x) {
   return MyWallet.wallet.containsLegacyAddress(x.addr);
 }
 
-function isInternal(x) {
-  return (isAccount(x) || isLegacy(x));
-}
-
 function isAccountChange(x) {
   return (isAccount(x) && x.xpub.path.split('/')[1] === '1');
 }
