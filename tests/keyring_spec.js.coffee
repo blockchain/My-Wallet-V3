@@ -39,6 +39,9 @@ describe "KeyRing", ->
     pkey = cacheKR.privateKeyFromPath("M/1/101")
     expect(pkey).toBe(null)
 
+    pkey = cacheKR.privateKeyFromPath("M/0/101")
+    expect(pkey).toBe(null)
+
   it 'should not serialize non-expected fields or xprivs', ->
     privateKR.rarefield = "I am an intruder"
     json = JSON.stringify(privateKR, null, 2)
@@ -48,3 +51,13 @@ describe "KeyRing", ->
     expect(object.rarefield).not.toBeDefined()
     expect(object.receiveAccount).toBe(cache.receiveAccount)
     expect(object.changeAccount).toBe(cache.changeAccount)
+
+  describe ".init", ->
+    it "should not touch an already created object", ->
+      fromInit = privateKR.init(xpriv, null)
+      expect(fromInit).toEqual(privateKR)
+
+    it "should do nothing with undefined arguments on an empty object", ->
+      kr = new KeyRing()
+      fromInit = kr.init()
+      expect(fromInit).toEqual(kr)
