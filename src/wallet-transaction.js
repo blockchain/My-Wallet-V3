@@ -165,8 +165,7 @@ Object.defineProperties(Tx.prototype, {
 });
 
 function isAccount(x) {
-  if (x.xpub) { return true;}
-  else {return false;}
+  return !!x.xpub;
 }
 
 function isLegacy(x) {

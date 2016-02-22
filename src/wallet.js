@@ -90,8 +90,8 @@ MyWallet.addPrivateKey = function(key, opts, second_password) {
   return addr;
 };
 
-// used on sharedcoin.js, wallet-spender.js and wallet.js
-MyWallet.generateNewKey = function(_password) {
+// used on sharedcoin.js
+MyWallet.generateNewKey = function() {
   var key = Bitcoin.ECKey.makeRandom(true);
 
   // key is uncompressed, so cannot passed in opts.compressed = true here
@@ -99,32 +99,7 @@ MyWallet.generateNewKey = function(_password) {
     return key;
   }
 };
-// used on wallet-spender.js and wallet.js
-MyWallet.generateNewMiniPrivateKey = function() {
-  // Documentation: https://en.bitcoin.it/wiki/Mini_private_key_format
-  while (true) {
-    //Use a normal ECKey to generate random bytes
-    var key = Bitcoin.ECKey.makeRandom(false);
 
-    //Make Candidate Mini Key
-    var minikey = 'S' + Base58.encode(key.d.toBuffer(32)).substr(0, 21);
-
-    //Append ? & hash it again
-    var bytes_appended = Bitcoin.crypto.sha256(minikey + '?');
-
-    //If zero byte then the key is valid
-    if (bytes_appended[0] == 0) {
-
-      //SHA256
-      var bytes = Bitcoin.crypto.sha256(minikey);
-
-      var eckey = new Bitcoin.ECKey(new BigInteger.fromBuffer(bytes), false);
-
-      if (MyWallet.addPrivateKey(eckey, {compressed: true}))
-        return {key : eckey, miniKey : minikey};
-    }
-  }
-};
 // TODO :: END WALLET SPENDER FIX
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -200,7 +175,7 @@ function socketConnect() {
   }
 }
 
-// used on wallet-spender and locally
+// used only on the frontend
 MyWallet.getBaseFee = function() {
   var network = Bitcoin.networks.bitcoin;
   return network.feePerKb;
@@ -218,7 +193,7 @@ MyWallet.getBalanceForRedeemCode = function(privatekey, successCallback, errorCa
     errorCallback("Unkown private key format");
     return;
   }
-  var privateKeyToSweep = MyWallet.privateKeyStringToKey(privatekey, format);
+  var privateKeyToSweep = Helpers.privateKeyStringToKey(privatekey, format);
   var from_address_compressed = MyWallet.getCompressedAddressString(privateKeyToSweep);
   var from_address_uncompressed = MyWallet.getUnCompressedAddressString(privateKeyToSweep);
 
@@ -279,7 +254,7 @@ MyWallet.isValidPrivateKey = function(candidate) {
   try {
     var format = MyWallet.detectPrivateKeyFormat(candidate);
     if(format == "bip38") { return true }
-    var key = MyWallet.privateKeyStringToKey(candidate, format);
+    var key = Helpers.privateKeyStringToKey(candidate, format);
     return key.pub.getAddress().toString();
   } catch (e) {
     return false;
@@ -815,15 +790,7 @@ MyWallet.logout = function(force) {
   WalletStore.sendEvent('logging_out');
   API.request("GET", 'wallet/logout', data, true, false).then(reload).catch(reload);
 };
-// used once
-// TODO : should be a helper
-function parseMiniKey(miniKey) {
-  var check = Bitcoin.crypto.sha256(miniKey + "?");
-  if (check[0] !== 0x00) {
-    throw 'Invalid mini key';
-  }
-  return Bitcoin.crypto.sha256(miniKey);
-}
+
 // used locally and iOS
 // should be a helper
 MyWallet.detectPrivateKeyFormat = function(key) {
@@ -836,7 +803,7 @@ MyWallet.detectPrivateKeyFormat = function(key) {
     return 'compsipa';
 
   // 40-44 characters base58
-  if (/^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{40,44}$/.test(key))
+  if (Helpers.isBase58Key(key))
     return 'base58';
 
   if (/^[A-Fa-f0-9]{64}$/.test(key))
@@ -859,9 +826,9 @@ MyWallet.detectPrivateKeyFormat = function(key) {
       return 'mini';
   }
 
-  return null;
-
   console.error('Unknown Key Format ' + key);
+
+  return null;
 };
 // should be a helper
 function buffertoByteArray(value) {
@@ -898,6 +865,7 @@ MyWallet.privateKeyStringToKey = function(value, format) {
 
   return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format !== 'sipa'));
 };
+
 // used once
 // should be a helper
 function parseValueBitcoin(valueString) {

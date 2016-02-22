@@ -36,7 +36,7 @@ RNG.prototype.xor = function (a, b) {
 // run :: Int -> Buffer
 RNG.prototype.run = function (nBytes) {
   try {
-    nBytes = !isNaN(nBytes) && nBytes > 0 ? nBytes : this.BYTES;
+    nBytes = Helpers.isPositiveInteger(nBytes) ? nBytes : this.BYTES;
     var serverH = this.getServerEntropy(nBytes);
     var localH = randomBytes(nBytes);
     var combinedH = this.xor(localH, serverH);
@@ -78,7 +78,7 @@ RNG.prototype.getServerEntropy = function (nBytes) {
     'Only supported hex format.'
   );
 
-  nBytes = !isNaN(nBytes) && nBytes > 0 ? nBytes : this.BYTES;
+  nBytes = Helpers.isPositiveInteger(nBytes) ? nBytes : this.BYTES;
   var request = new XMLHttpRequest();
   var data = { bytes: nBytes, format: this.FORMAT };
   var url = this.URL + '?' + API.encodeFormData(data);

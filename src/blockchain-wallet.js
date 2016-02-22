@@ -108,8 +108,8 @@ Object.defineProperties(Wallet.prototype, {
     get: function() { return this._fee_per_kb;},
     set: function(value) {
       switch (true) {
-        case !Helpers.isNumber(value):
-          throw 'Error: wallet.fee_per_kb must be a number';
+        case !Helpers.isPositiveNumber(value):
+          throw 'Error: wallet.fee_per_kb must be a positive number';
           break;
         case value > 1000000:  // 0.01 btc
           throw 'Error: wallet.fee_per_kb too high (0.01 btc limit)';
@@ -128,30 +128,30 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function() { return this._totalSent;},
     set: function(value) {
-      if(Helpers.isNumber(value))
+      if(Helpers.isPositiveNumber(value))
         this._totalSent = value;
       else
-        throw 'Error: wallet.totalSent must be a number';
+        throw 'Error: wallet.totalSent must be a positive number';
     }
   },
   "totalReceived": {
     configurable: false,
     get: function() { return this._totalReceived;},
     set: function(value) {
-      if(Helpers.isNumber(value))
+      if(Helpers.isPositiveNumber(value))
         this._totalReceived = value;
       else
-        throw 'Error: wallet.totalReceived must be a number';
+        throw 'Error: wallet.totalReceived must be a positive number';
     }
   },
   "finalBalance": {
     configurable: false,
     get: function() { return this._finalBalance;},
     set: function(value) {
-      if(Helpers.isNumber(value))
+      if(Helpers.isPositiveNumber(value))
         this._finalBalance = value;
       else
-        throw 'Error: wallet.finalBalance must be a number';
+        throw 'Error: wallet.finalBalance must be a positive number';
     }
   },
   "txList": {
@@ -162,10 +162,10 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function() { return this._numberTxTotal;},
     set: function(value) {
-      if(Helpers.isNumber(value))
+      if(Helpers.isPositiveInteger(value))
         this._numberTxTotal = value;
       else
-        throw 'Error: wallet.numberTx must be a number';
+        throw 'Error: wallet.numberTx must be a positive integer';
     }
   },
   "addresses": {
@@ -287,11 +287,11 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function() { return this._logout_time; },
     set: function(t) {
-      if (Helpers.isNumber(t) && Helpers.isInRange(t, 60000, 86400001)) {
+      if (Helpers.isPositiveInteger(t) && Helpers.isInRange(t, 60000, 86400001)) {
         this._logout_time = t;
         MyWallet.syncWallet();
       } else {
-        throw "Error: wallet.logoutTime must be a number in range 60000,86400001";
+        throw "Error: wallet.logoutTime must be a positive integer in range 60000,86400001";
       }
     }
   }
@@ -381,8 +381,8 @@ Wallet.prototype.getBalancesForArchived = function() {
   var archivedAddrs = this.addresses.filter(function (addr) {
       return MyWallet.wallet.key(addr).archived === true;
   });
-  var promise = API.getHistory(archivedAddrs, 0 ,0, 1).then(updateBalances.bind(this));
-  return promise;
+
+  return API.getHistory(archivedAddrs, 0 ,0, 1).then(updateBalances.bind(this));
 };
 ////////////////////////////////////////////////////////////////////////////////
 Wallet.prototype.toJSON = function(){
@@ -392,7 +392,7 @@ Wallet.prototype.toJSON = function(){
              .map(function(a){ return {addr: a, label: addressBook[a]};});
   }
 
-  var wallet = {
+  return {
     guid              : this.guid,
     sharedKey         : this.sharedKey,
     double_encryption : this.isDoubleEncrypted,
@@ -411,7 +411,6 @@ Wallet.prototype.toJSON = function(){
     paidTo            : this._paidTo,
     hd_wallets        : Helpers.isEmptyArray(this._hd_wallets) ? undefined : this._hd_wallets
   };
-  return wallet;
 };
 
 Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bipPass) {
@@ -722,7 +721,7 @@ Wallet.prototype.newHDWallet = function(firstAccountLabel, pw, success, error){
 
 Wallet.prototype.newAccount = function(label, pw, hdwalletIndex, success, nosave){
   if (!this.isUpgradedToHD) { return false; };
-  var index = Helpers.isNumber(hdwalletIndex) ? hdwalletIndex : 0;
+  var index = Helpers.isPositiveInteger(hdwalletIndex) ? hdwalletIndex : 0;
   var cipher = undefined;
   if (this.isDoubleEncrypted) {
     cipher = WalletCrypto.cipherFunction.bind(undefined, pw, this._sharedKey, this._pbkdf2_iterations);
@@ -775,7 +774,7 @@ Wallet.prototype.getMnemonic = function(password){
 };
 
 Wallet.prototype.changePbkdf2Iterations = function(newIterations, password){
-  assert(Helpers.isNumber(newIterations), "wallet.pbkdf2_iterations must be a number");
+  assert(Helpers.isPositiveInteger(newIterations), "wallet.pbkdf2_iterations must be a positive integer");
   if (newIterations !== this._pbkdf2_iterations) {
     if (this.isDoubleEncrypted) {
       this.decrypt(password);

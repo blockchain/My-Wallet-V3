@@ -141,7 +141,7 @@ API.prototype.getTicker = function(){
 API.prototype.getUnspent = function(fromAddresses, confirmations){
   var data = {
       active : fromAddresses.join('|')
-    , confirmations : Helpers.isNumber(confirmations) ? confirmations : 0
+    , confirmations : Helpers.isPositiveNumber(confirmations) ? confirmations : 0
     , format: 'json'
     , api_code : this.API_CODE
   };

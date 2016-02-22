@@ -203,8 +203,12 @@ describe "HDWallet", ->
 
       it ".isValidAccountIndex should be (0 =< index < #accounts - 1)", ->
         expect(wallet.isValidAccountIndex(-1)).toBeFalsy()
+        expect(wallet.isValidAccountIndex(-1.242)).toBeFalsy()
         expect(wallet.isValidAccountIndex(0)).toBeTruthy()
         expect(wallet.isValidAccountIndex(+1)).toBeFalsy()
+        expect(wallet.isValidAccountIndex(+1.325453)).toBeFalsy()
+        expect(wallet.isValidAccountIndex({'a': 1})).toBeFalsy()
+
 
       it ".verifyMnemonic should set to true and sync", ->
         wallet.verifyMnemonic()

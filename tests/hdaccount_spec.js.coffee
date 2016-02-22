@@ -252,6 +252,13 @@ describe "HDAccount", ->
         expect(valid).not.toThrow()
         expect(account.lastUsedReceiveIndex).toEqual(1)
 
+      it "lastUsedReceiveIndex must be a positive number", ->
+          invalid = () ->
+            account.lastUsedReceiveIndex = -534.23
+
+          expect(invalid).toThrow()
+          expect(account.lastUsedReceiveIndex).toEqual(0)
+
       it "receiveIndex must be a number", ->
         invalid = () ->
           account.receiveIndex = "1"
@@ -264,6 +271,13 @@ describe "HDAccount", ->
         expect(valid).not.toThrow()
         expect(account.receiveIndex).toEqual(1)
 
+      it "receiveIndex must be a positive number", ->
+        invalid = () ->
+          account.receiveIndex = -534.34
+
+        expect(invalid).toThrow()
+        expect(account.receiveIndex).toEqual(0)
+
       it "changeIndex must be a number", ->
         invalid = () ->
           account.changeIndex = "1"
@@ -275,6 +289,13 @@ describe "HDAccount", ->
         expect(account.changeIndex).toEqual(0)
         expect(valid).not.toThrow()
         expect(account.changeIndex).toEqual(1)
+
+      it "changeIndex must be a positive number", ->
+        invalid = () ->
+          account.changeIndex = -534.234
+
+        expect(invalid).toThrow()
+        expect(account.changeIndex).toEqual(0)
 
     describe "Getter", ->
       it "maxLabeledReceiveIndex should return the highest labeled index", ->

@@ -1,6 +1,11 @@
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
+var ECKey = Bitcoin.ECKey;
+var BigInteger = require('bigi');
+var Buffer = require('buffer').Buffer;
+var Base58 = require('bs58');
+
 var Helpers = {};
 Math.log2 = function(x) { return Math.log(x) / Math.LN2;};
 
@@ -51,6 +56,12 @@ Helpers.isBase64 = function (str){
 };
 Helpers.isNumber = function (num){
   return typeof num == 'number' && !isNaN(num);
+};
+Helpers.isPositiveNumber = function (num) {
+  return Helpers.isNumber(num) && num >= 0;
+};
+Helpers.isPositiveInteger = function (num) {
+  return Helpers.isPositiveNumber(num) && num % 1 == 0;
 };
 Helpers.isNotNumber = function (num){
   return !Helpers.isNumber(num)
@@ -268,6 +279,49 @@ Helpers.tor = function () {
 
   return hostname.slice(-6) === '.onion';
 };
+
+Helpers.buffertoByteArray = function(value) {
+  return BigInteger.fromBuffer(value).toByteArray();
+};
+
+function parseMiniKey(miniKey) {
+  var check = Bitcoin.crypto.sha256(miniKey + "?");
+  if (check[0] !== 0x00) {
+    throw 'Invalid mini key';
+  }
+  return Bitcoin.crypto.sha256(miniKey);
+}
+
+Helpers.privateKeyStringToKey = function(value, format) {
+  var key_bytes = null;
+
+  if (format == 'base58') {
+    key_bytes = Helpers.buffertoByteArray(Base58.decode(value));
+  } else if (format == 'base64') {
+    key_bytes = Helpers.buffertoByteArray(new Buffer(value, 'base64'));
+  } else if (format == 'hex') {
+    key_bytes = Helpers.buffertoByteArray(new Buffer(value, 'hex'));
+  } else if (format == 'mini') {
+    key_bytes = Helpers.buffertoByteArray(parseMiniKey(value));
+  } else if (format == 'sipa') {
+    var tbytes = Helpers.buffertoByteArray(Base58.decode(value));
+    tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
+    tbytes.shift();
+    key_bytes = tbytes.slice(0, tbytes.length - 4);
+
+  } else if (format == 'compsipa') {
+    var tbytes = Helpers.buffertoByteArray(Base58.decode(value));
+    tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
+    tbytes.shift();
+    tbytes.pop();
+    key_bytes = tbytes.slice(0, tbytes.length - 4);
+  } else {
+    throw 'Unsupported Key Format';
+  }
+
+  return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format !== 'sipa'));
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
