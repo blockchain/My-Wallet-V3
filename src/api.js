@@ -13,10 +13,10 @@ var MyWallet      = require('./wallet');
 function API(){
   // private members
   this.ROOT_URL           = "https://blockchain.info/";
-  this.AJAX_TIMEOUT       = 60000;
   this.AJAX_RETRY_DEFAULT = 2;
   this.API_CODE           = "1770d5d9-bcea-4d28-ad21-6cbd5be018a8";
   this.SERVER_TIME_OFFSET = null;
+  this.AJAX_TIMEOUT       = 60000;
 }
 
 // encodeFormData :: Object -> url encoded params
@@ -141,7 +141,7 @@ API.prototype.getTicker = function(){
 API.prototype.getUnspent = function(fromAddresses, confirmations){
   var data = {
       active : fromAddresses.join('|')
-    , confirmations : Helpers.isNumber(confirmations) ? confirmations : 0
+    , confirmations : Helpers.isPositiveNumber(confirmations) ? confirmations : 0
     , format: 'json'
     , api_code : this.API_CODE
   };

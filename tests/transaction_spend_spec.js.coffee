@@ -1,6 +1,8 @@
 Transaction = require('../src/transaction')
 MyWallet    = require('../src/wallet')
 Bitcoin     = require('bitcoinjs-lib')
+Helpers     = require('../src/helpers')
+
 
 describe "Transaction", ->
 
@@ -106,7 +108,7 @@ describe "Transaction", ->
 
       privateKeyBase58 = data.privateKey
       format = MyWallet.detectPrivateKeyFormat(privateKeyBase58)
-      key = MyWallet.privateKeyStringToKey(privateKeyBase58, format)
+      key = Helpers.privateKeyStringToKey(privateKeyBase58, format)
       key.pub.compressed = false;
       privateKeys = [key]
 
@@ -131,7 +133,7 @@ describe "Transaction", ->
 
       privateKeyBase58 = data.privateKey
       format = MyWallet.detectPrivateKeyFormat(privateKeyBase58)
-      key = MyWallet.privateKeyStringToKey(privateKeyBase58, format)
+      key = Helpers.privateKeyStringToKey(privateKeyBase58, format)
       key.pub.compressed = false;
       privateKeys = [key]
 
@@ -144,7 +146,7 @@ describe "Transaction", ->
 
       privateKeyWIF = '5JfdACpmDbLk7jmjU6kuCdLNFgedL19RnbjZYENAEG8Ntto9zRc'
       format = MyWallet.detectPrivateKeyFormat(privateKeyWIF)
-      key = MyWallet.privateKeyStringToKey(privateKeyWIF, format)
+      key = Helpers.privateKeyStringToKey(privateKeyWIF, format)
       privateKeys = [key]
 
       expect( () -> transaction.addPrivateKeys(privateKeys) ).toThrow
@@ -155,7 +157,7 @@ describe "Transaction", ->
 
       privateKeyBase58 = data.privateKey
       format = MyWallet.detectPrivateKeyFormat(privateKeyBase58)
-      key = MyWallet.privateKeyStringToKey(privateKeyBase58, format)
+      key = Helpers.privateKeyStringToKey(privateKeyBase58, format)
       key.pub.compressed = false;
       privateKeys = [key]
 

@@ -203,8 +203,12 @@ describe "HDWallet", ->
 
       it ".isValidAccountIndex should be (0 =< index < #accounts - 1)", ->
         expect(wallet.isValidAccountIndex(-1)).toBeFalsy()
+        expect(wallet.isValidAccountIndex(-1.242)).toBeFalsy()
         expect(wallet.isValidAccountIndex(0)).toBeTruthy()
         expect(wallet.isValidAccountIndex(+1)).toBeFalsy()
+        expect(wallet.isValidAccountIndex(+1.325453)).toBeFalsy()
+        expect(wallet.isValidAccountIndex({'a': 1})).toBeFalsy()
+
 
       it ".verifyMnemonic should set to true and sync", ->
         wallet.verifyMnemonic()
@@ -250,9 +254,7 @@ describe "HDWallet", ->
 
         wallet.encrypt(() -> "encrypted")
 
-        areAccountsEncrypted = not wallet.accounts
-                                 .map((a) ->  a._temporal_xpriv)
-                                   .some((e) -> e is undefined)
+        areAccountsEncrypted = not wallet.accounts.map((a) ->  a._temporal_xpriv).some((e) -> e is undefined)
         expect(wallet._temporal_seedHex).toEqual("encrypted")
         expect(wallet._temporal_bip39Password).toEqual("encrypted")
         expect(wallet.seedHex).toEqual(originalSeed)
@@ -291,9 +293,7 @@ describe "HDWallet", ->
 
         wallet.decrypt(() -> "decrypted")
 
-        areAccountsDecrypted = not wallet.accounts
-                                 .map((a) ->  a._temporal_xpriv)
-                                   .some((e) -> e is undefined)
+        areAccountsDecrypted = not wallet.accounts.map((a) ->  a._temporal_xpriv).some((e) -> e is undefined)
         expect(wallet._temporal_seedHex).toEqual("decrypted")
         expect(wallet._temporal_bip39Password).toEqual("decrypted")
         expect(wallet.seedHex).toEqual(originalSeed)

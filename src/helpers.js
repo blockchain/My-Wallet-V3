@@ -1,6 +1,11 @@
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
+var ECKey = Bitcoin.ECKey;
+var BigInteger = require('bigi');
+var Buffer = require('buffer').Buffer;
+var Base58 = require('bs58');
+
 var Helpers = {};
 Math.log2 = function(x) { return Math.log(x) / Math.LN2;};
 
@@ -28,10 +33,8 @@ Helpers.isBitcoinPrivateKey = function(candidate) {
   }
   catch (e) { return false; };
 };
-Helpers.isBase58Key = function(k) {
-  return Helpers.isString(k) &&
-         (/^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{44}$/.test(k) ||
-         /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{43}$/.test(k))
+Helpers.isBase58Key = function(str) {
+  return Helpers.isString(str) && /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{40,44}$/.test(str);
 };
 Helpers.isXprivKey = function(k) {
   return Helpers.isString(k) && k.substring(0, 4) === "xprv";
@@ -53,6 +56,12 @@ Helpers.isBase64 = function (str){
 };
 Helpers.isNumber = function (num){
   return typeof num == 'number' && !isNaN(num);
+};
+Helpers.isPositiveNumber = function (num) {
+  return Helpers.isNumber(num) && num >= 0;
+};
+Helpers.isPositiveInteger = function (num) {
+  return Helpers.isPositiveNumber(num) && num % 1 == 0;
 };
 Helpers.isNotNumber = function (num){
   return !Helpers.isNumber(num)
@@ -140,15 +149,6 @@ Helpers.merge = function (o, p) {
     }
   }
   return o;
-};
-
-// toFormData :: Object -> FormData
-Helpers.toFormData = function (item) {
-  var form_data = new FormData();
-  for ( var key in item ) {
-      form_data.append(key, item[key]);
-  }
-  return form_data;
 };
 
 Helpers.zipLong = function (f, xs, ys) {
@@ -272,13 +272,56 @@ Helpers.getHostName = function() {
 };
 
 Helpers.tor = function () {
-  var hostname = Helpers.getHostName()
+  var hostname = Helpers.getHostName();
 
   // NodeJS TOR detection not supported:
-  if(hostname === null) return null
+  if ('string' !== typeof hostname) return null;
 
-  return hostname.indexOf(".onion") > -1
+  return hostname.slice(-6) === '.onion';
 };
+
+Helpers.buffertoByteArray = function(value) {
+  return BigInteger.fromBuffer(value).toByteArray();
+};
+
+function parseMiniKey(miniKey) {
+  var check = Bitcoin.crypto.sha256(miniKey + "?");
+  if (check[0] !== 0x00) {
+    throw 'Invalid mini key';
+  }
+  return Bitcoin.crypto.sha256(miniKey);
+}
+
+Helpers.privateKeyStringToKey = function(value, format) {
+  var key_bytes = null;
+
+  if (format == 'base58') {
+    key_bytes = Helpers.buffertoByteArray(Base58.decode(value));
+  } else if (format == 'base64') {
+    key_bytes = Helpers.buffertoByteArray(new Buffer(value, 'base64'));
+  } else if (format == 'hex') {
+    key_bytes = Helpers.buffertoByteArray(new Buffer(value, 'hex'));
+  } else if (format == 'mini') {
+    key_bytes = Helpers.buffertoByteArray(parseMiniKey(value));
+  } else if (format == 'sipa') {
+    var tbytes = Helpers.buffertoByteArray(Base58.decode(value));
+    tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
+    tbytes.shift();
+    key_bytes = tbytes.slice(0, tbytes.length - 4);
+
+  } else if (format == 'compsipa') {
+    var tbytes = Helpers.buffertoByteArray(Base58.decode(value));
+    tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
+    tbytes.shift();
+    tbytes.pop();
+    key_bytes = tbytes.slice(0, tbytes.length - 4);
+  } else {
+    throw 'Unsupported Key Format';
+  }
+
+  return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format !== 'sipa'));
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 

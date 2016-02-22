@@ -301,5 +301,5 @@ HDWallet.prototype.forEachPaidTo = function(f) {
 ////////////////////////////////////////////////////////////////////////////////
 // checkers
 HDWallet.prototype.isValidAccountIndex = function(index){
-  return Helpers.isNumber(index) && index >= 0 && index < this._accounts.length;
+  return Helpers.isPositiveInteger(index) && index < this._accounts.length;
 };

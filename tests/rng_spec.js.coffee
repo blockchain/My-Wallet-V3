@@ -8,6 +8,11 @@ describe "RNG", ->
     "hex"
   )
 
+  longServerBuffer = new Buffer(
+    "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010",
+    "hex"
+  )
+
   zerosServerBuffer = new Buffer(
     "0000000000000000000000000000000000000000000000000000000000000000",
     "hex"
@@ -59,6 +64,15 @@ describe "RNG", ->
       )
       RNG.run()
 
+    it "should ask an arbitrary amount of bytes from the server", ->
+      spyOn(RNG, "getServerEntropy").and.callFake(
+        (bytes) ->
+          expect(bytes).toEqual(64)
+          longServerBuffer
+      )
+
+      RNG.run(64)
+
     it "returns the mixed entropy", ->
       spyOn(RNG, "getServerEntropy").and.callFake(
         (bytes) ->
@@ -100,12 +114,13 @@ describe "RNG", ->
   describe ".getServerEntropy()", ->
     mock =
       responseText: "0000000000000000000000000000000000000000000000000000000000000010"
+      statusCode: 200
 
     request =
       open: () ->
       setRequestHeader: () ->
       send: () ->
-        this.status = 200
+        this.status = mock.statusCode
         this.responseText = mock.responseText
 
     beforeEach ->
@@ -122,6 +137,11 @@ describe "RNG", ->
       res = RNG.getServerEntropy(32)
       expect(Buffer.isBuffer(res)).toBeTruthy()
 
+    it "returns a 32 bytes buffer if nBytes not indicated and if is successful", ->
+      res = RNG.getServerEntropy()
+      expect(Buffer.isBuffer(res)).toBeTruthy()
+      expect(res.length).toEqual(32)
+
     it "throws an exception if result is not hex", ->
       mock.responseText = "This page was not found"
       expect(() -> RNG.getServerEntropy(32)).toThrow()
@@ -129,4 +149,8 @@ describe "RNG", ->
     it "throws an exception if result is the wrong length", ->
       mock.responseText = "000001"
       expect(() -> RNG.getServerEntropy(3)).not.toThrow()
+      expect(() -> RNG.getServerEntropy(32)).toThrow()
+
+    it "throws an exception if the server does not return a 200", ->
+      mock.statusCode = 500
       expect(() -> RNG.getServerEntropy(32)).toThrow()

@@ -22,8 +22,11 @@ describe "HDAccount", ->
   beforeEach ->
     MyWallet =
       syncWallet: () ->
+      wallet:
+        getHistory: () ->
 
     spyOn(MyWallet, "syncWallet")
+    spyOn(MyWallet.wallet, "getHistory")
     # account = new HDAccount(object)
 
   describe "Constructor", ->
@@ -142,7 +145,32 @@ describe "HDAccount", ->
         expect(MyWallet.syncWallet).toHaveBeenCalled()
         expect(account.getLabelForReceivingAddress(10)).toEqual("my label")
 
+      it "should not set a non-valid label", ->
+        fail = (reason) ->
+          except(reason).toEqual('NOT_ALPHANUMERIC')
+
+        success = () ->
+
+        account.setLabelForReceivingAddress(10, 0).then(success).catch(fail)
+        expect(MyWallet.syncWallet).not.toHaveBeenCalled()
+
+      it "should not set a label with a gap too wide", ->
+        fail = (reason) ->
+          except(reason).toEqual('GAP')
+
+        success = () ->
+
+        account.setLabelForReceivingAddress(100, "my label").then(success).catch(fail)
+        expect(MyWallet.syncWallet).not.toHaveBeenCalled()
+
     describe "Setter", ->
+
+      it "active shoud toggle archived", ->
+        account.active = false
+        expect(account.archived).toBeTruthy()
+        expect(MyWallet.syncWallet).toHaveBeenCalled()
+        account.active = true
+        expect(account.archived).toBeFalsy()
 
       it "archived should archive the account and sync wallet", ->
         account.archived = true
@@ -153,6 +181,11 @@ describe "HDAccount", ->
       it "archived should throw exception if is non-boolean set", ->
         wrongSet = () -> account.archived = "failure"
         expect(wrongSet).toThrow()
+
+      it "archived should call MyWallet.sync.getHistory when set to false", ->
+        account.archived = false
+        expect(MyWallet.wallet.getHistory).toHaveBeenCalled()
+        expect(MyWallet.syncWallet).toHaveBeenCalled()
 
       it "balance should be set and not sync wallet", ->
         account.balance = 100
@@ -177,6 +210,12 @@ describe "HDAccount", ->
         expect(account.label).toEqual("my label")
         expect(MyWallet.syncWallet).toHaveBeenCalled()
 
+      it "label should be valid", ->
+        test = () ->
+          account.label = 0
+
+        expect(test).toThrow()
+
       it "xpriv is read only", ->
         account.extendedPrivateKey = "not allowed"
         expect(account.extendedPrivateKey).not.toEqual("not allowed")
@@ -200,6 +239,80 @@ describe "HDAccount", ->
       it "KeyRing is read only", ->
         account.keyRing = "not allowed"
         expect(account.keyRing).not.toEqual("not allowed")
+
+      it "lastUsedReceiveIndex must be a number", ->
+        invalid = () ->
+          account.lastUsedReceiveIndex = "1"
+
+        valid = () ->
+          account.lastUsedReceiveIndex = 1
+
+        expect(invalid).toThrow()
+        expect(account.lastUsedReceiveIndex).toEqual(0)
+        expect(valid).not.toThrow()
+        expect(account.lastUsedReceiveIndex).toEqual(1)
+
+      it "lastUsedReceiveIndex must be a positive number", ->
+          invalid = () ->
+            account.lastUsedReceiveIndex = -534.23
+
+          expect(invalid).toThrow()
+          expect(account.lastUsedReceiveIndex).toEqual(0)
+
+      it "receiveIndex must be a number", ->
+        invalid = () ->
+          account.receiveIndex = "1"
+
+        valid = () ->
+          account.receiveIndex = 1
+
+        expect(invalid).toThrow()
+        expect(account.receiveIndex).toEqual(0)
+        expect(valid).not.toThrow()
+        expect(account.receiveIndex).toEqual(1)
+
+      it "receiveIndex must be a positive number", ->
+        invalid = () ->
+          account.receiveIndex = -534.34
+
+        expect(invalid).toThrow()
+        expect(account.receiveIndex).toEqual(0)
+
+      it "changeIndex must be a number", ->
+        invalid = () ->
+          account.changeIndex = "1"
+
+        valid = () ->
+          account.changeIndex = 1
+
+        expect(invalid).toThrow()
+        expect(account.changeIndex).toEqual(0)
+        expect(valid).not.toThrow()
+        expect(account.changeIndex).toEqual(1)
+
+      it "changeIndex must be a positive number", ->
+        invalid = () ->
+          account.changeIndex = -534.234
+
+        expect(invalid).toThrow()
+        expect(account.changeIndex).toEqual(0)
+
+    describe "Getter", ->
+      it "maxLabeledReceiveIndex should return the highest labeled index", ->
+        expect(account.maxLabeledReceiveIndex).toEqual(-1)
+
+        account.setLabelForReceivingAddress(1, "label1")
+        account.setLabelForReceivingAddress(10, "label100")
+
+        expect(account.maxLabeledReceiveIndex).toEqual(10)
+
+      it "labeledReceivingAddresses should return all the labeled receiving addresses", ->
+        expect(account.labeledReceivingAddresses.length).toEqual(0)
+
+        account.setLabelForReceivingAddress(1, "label1")
+        account.setLabelForReceivingAddress(10, "label100")
+
+        expect(account.labeledReceivingAddresses.length).toEqual(2)
 
     describe ".encrypt", ->
       beforeEach ->
@@ -274,3 +387,16 @@ describe "HDAccount", ->
         expect(account.extendedPrivateKey).toEqual(temp)
         expect(account._temporal_xpriv).not.toBeDefined()
         expect(MyWallet.syncWallet).not.toHaveBeenCalled()
+
+    describe ".removeLabelForReceivingAddress", ->
+      it "should remove the label and sync the wallet", ->
+        fail = (reason) ->
+          console.log(reason)
+
+        resolve = () ->
+
+        account.setLabelForReceivingAddress(0, "Savings").then(resolve).catch(fail)
+        expect(MyWallet.syncWallet).toHaveBeenCalled()
+        account.removeLabelForReceivingAddress(0)
+        expect(MyWallet.syncWallet).toHaveBeenCalled()
+        expect(account.getLabelForReceivingAddress(0)).not.toEqual("Savings")

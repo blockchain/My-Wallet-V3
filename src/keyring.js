@@ -45,10 +45,9 @@ KeyRing.prototype.privateKeyFromPath = function (path) {
   assert(components.length === 3, 'Invalid Path length');
   var receiveOrChange = parseInt(components[1]);
   var index = parseInt(components[2]);
-  var key = receiveOrChange === 0 ?
+  return receiveOrChange === 0 ?
     this._receiveChain.getPrivateKey(index) :
     this._changeChain.getPrivateKey(index) ;
-  return key;
 };
 
 KeyRing.prototype.toJSON = function (){

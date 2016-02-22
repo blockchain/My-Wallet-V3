@@ -16,3 +16,30 @@ describe "Helpers", ->
 
       spyOn(Helpers, "getHostName").and.returnValue "blockchainbdgpzk.onion"
       expect(Helpers.tor()).toBeTruthy()
+
+    it "should not detect false positives", ->
+      spyOn(Helpers, "getHostName").and.returnValue "the.onion.org"
+      expect(Helpers.tor()).toBeFalsy()
+
+
+  describe "isBitcoinAddress", ->
+    it "should recognize valid addresses", ->
+      expect(Helpers.isBitcoinAddress("1KM7w12SkjzJ1FYV2g1UCMzHjv3pkMgkEb")).toBeTruthy()
+
+    it "should not recognize bad addresses", ->
+      expect(Helpers.isBitcoinAddress("1KM7w12SkjzJ1FYV2g1UCMzHjv3pkMgkEa")).toBeFalsy()
+      expect(Helpers.isBitcoinAddress("5KM7w12SkjzJ1FYV2g1UCMzHjv3pkMgkEb")).toBeFalsy()
+      expect(Helpers.isBitcoinAddress("1KM7w12SkjzJ1FYV2g1UCMzHjv")).toBeFalsy()
+
+  describe "isBitcoinPrivateKey", ->
+    it "should recognize valid private keys", ->
+      expect(Helpers.isBitcoinPrivateKey("5JFXNQvtFZSobCCRPxnTZiW1PDVnXvGBg5XeuUDoUCi8LRsV3gn")).toBeTruthy()
+
+    it "should not recognize private keys with a bad header", ->
+      expect(Helpers.isBitcoinPrivateKey("4JFXNQvtFZSobCCRPxnTZiW1PDVnXvGBg5XeuUDoUCi8LRsV3gn")).toBeFalsy()
+
+    it "should not recognize private keys with a bad checksum", ->
+      expect(Helpers.isBitcoinPrivateKey("4JFXNQvtFZSobCCRPxnTZiW1PDVnXvGBg5XeuUDoUCi8LRsV3gw")).toBeFalsy()
+
+    it "should not recognize private keys with a bad length", ->
+      expect(Helpers.isBitcoinPrivateKey("5JFXNQvtFZSobCCRPxnTZiW1PDVnXvGBg5XeuUDoUC")).toBeFalsy()

@@ -126,3 +126,10 @@ describe 'WalletCrypto', ->
       it 'should unpad an Iso97971 padded buffer', ->
         output = pad.Iso97971.unpad(pad.Iso97971.pad(input, BLOCK_SIZE_BYTES))
         expect(output.compare(input)).toEqual(0)
+
+  describe 'cipherFunction', ->
+    it 'should not modify the message is all parameters are falsy', ->
+      expect(WalletCrypto.cipherFunction()('toto')).toEqual('toto')
+
+    it 'should not modify the operation is unknown', ->
+      expect(WalletCrypto.cipherFunction('password', 'key', 1000, 'nop')('toto')).toEqual('toto')

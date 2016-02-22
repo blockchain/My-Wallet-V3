@@ -165,16 +165,11 @@ Object.defineProperties(Tx.prototype, {
 });
 
 function isAccount(x) {
-  if (x.xpub) { return true;}
-  else {return false;}
+  return !!x.xpub;
 }
 
 function isLegacy(x) {
   return MyWallet.wallet.containsLegacyAddress(x.addr);
-}
-
-function isInternal(x) {
-  return (isAccount(x) || isLegacy(x));
 }
 
 function isAccountChange(x) {

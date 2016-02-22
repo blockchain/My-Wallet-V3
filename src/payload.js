@@ -24,12 +24,11 @@ function Payload(object) {
 //  i need a settings class to store all the wallet settings (now is shared js) maybe inside wallet object
 
 Payload.prototype.toJSON = function(){
-  var payload = {
+  return {
     pbkdf2_iterations : this._pbkdf2_iterations,
     version           : this._version,
     payload           : this._payload // encrypted wallet (string)
   };
-  return payload;
 };
 
 Payload.prototype.toWallet = function(){
