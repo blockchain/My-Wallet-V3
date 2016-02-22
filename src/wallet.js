@@ -845,7 +845,7 @@ MyWallet.detectPrivateKeyFormat = function(key) {
     return 'compsipa';
 
   // 40-44 characters base58
-  if (/^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{40,44}$/.test(key))
+  if (Helpers.isBase58Key(key))
     return 'base58';
 
   if (/^[A-Fa-f0-9]{64}$/.test(key))
