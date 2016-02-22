@@ -29,7 +29,7 @@ Helpers.isBitcoinPrivateKey = function(candidate) {
   catch (e) { return false; };
 };
 Helpers.isBase58Key = function(str) {
-  return Helpers.isString(str) && /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]+$/.test(str);
+  return Helpers.isString(str) && /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{40,44}$/.test(str);
 };
 Helpers.isXprivKey = function(k) {
   return Helpers.isString(k) && k.substring(0, 4) === "xprv";

@@ -844,8 +844,8 @@ MyWallet.detectPrivateKeyFormat = function(key) {
   if (/^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key))
     return 'compsipa';
 
-  // 52 characters base58
-  if (/^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{44}$/.test(key) || /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{43}$/.test(key))
+  // 40-44 characters base58
+  if (/^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{40,44}$/.test(key))
     return 'base58';
 
   if (/^[A-Fa-f0-9]{64}$/.test(key))
@@ -867,7 +867,7 @@ MyWallet.detectPrivateKeyFormat = function(key) {
     if (testBytes[0] === 0x00 || testBytes[0] === 0x01)
       return 'mini';
   }
-  
+
   console.error('Unknown Key Format ' + key);
 
   return null;
