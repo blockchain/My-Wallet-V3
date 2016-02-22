@@ -16,6 +16,7 @@ function API(){
   this.AJAX_RETRY_DEFAULT = 2;
   this.API_CODE           = "1770d5d9-bcea-4d28-ad21-6cbd5be018a8";
   this.SERVER_TIME_OFFSET = null;
+  this.AJAX_TIMEOUT       = 60000;
 }
 
 // encodeFormData :: Object -> url encoded params
