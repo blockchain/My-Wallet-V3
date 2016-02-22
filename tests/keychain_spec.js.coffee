@@ -26,3 +26,15 @@ describe "KeyChain constructor", ->
     xpriv = "xprv9zJ1cTHnqzgBXr9Uq9jXrdbk2LwApa3Vu6dquzhmckQyj1hvK9xugPNsycfveTGcTy2571Rq71daBpe1QESUsjX7d2ZHVVXEwJEwDiiMD7E"
     kc = new KeyChain(xpriv, 0, null)
     expect(kc.xpub).toEqual("xpub6FMWuMox3fJxEv2TSLN6jYQg6tHZBS7tKRSu7w4Q7F9K2UsSu4RxtwxfeHVhUv3csTSCRkKREpiVdr8EquBPXfBDZSMe84wmN9LzR3rwNZP")
+
+  it "should not create a chain given an invalid index", ->
+    xpriv = "xprv9zJ1cTHnqzgBXr9Uq9jXrdbk2LwApa3Vu6dquzhmckQyj1hvK9xugPNsycfveTGcTy2571Rq71daBpe1QESUsjX7d2ZHVVXEwJEwDiiMD7E"
+    kc = new KeyChain(xpriv, -1, null)
+    expect(kc.xpub).toEqual(null)
+
+  describe ".init", ->
+    it "should not overwrite an existing chain", ->
+      xpriv = "xprv9zJ1cTHnqzgBXr9Uq9jXrdbk2LwApa3Vu6dquzhmckQyj1hvK9xugPNsycfveTGcTy2571Rq71daBpe1QESUsjX7d2ZHVVXEwJEwDiiMD7E"
+      kc = new KeyChain(xpriv, 0, null)
+      fromInit = kc.init("xprv9yko4kDvhYSdUcqK5e8naLwtGE1Ca57mwJ6JMB8WxeYq8t1w3PpiZfGGvLN6N6GEwLF8XuHnp8HeNLrWWviAjXxb2BFEiLaW2UgukMZ3Zva", 0, null)
+      expect(fromInit.xpub).toEqual(kc.xpub)
