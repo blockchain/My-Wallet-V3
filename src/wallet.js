@@ -175,12 +175,6 @@ function socketConnect() {
   }
 }
 
-// used only on the frontend
-MyWallet.getBaseFee = function() {
-  var network = Bitcoin.networks.bitcoin;
-  return network.feePerKb;
-};
-
 /**
  * @param {string} privatekey private key to redeem
  * @param {function()} successCallback success callback function with balance in satoshis
