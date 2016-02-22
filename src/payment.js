@@ -238,7 +238,7 @@ Payment.from = function(origin) {
       break;
     // from PrivateKey
     case (pkFormat !== null):
-      var key    = MyWallet.privateKeyStringToKey(origin, pkFormat);
+      var key    = Helpers.privateKeyStringToKey(origin, pkFormat);
       key.pub.compressed = false;
       var addrUncomp = key.pub.getAddress().toString();
       var uWIF = key.toWIF();
@@ -386,7 +386,7 @@ function getKeyForAddress(password, addr) {
                                                 , MyWallet.wallet.sharedKey
                                                 , MyWallet.wallet.pbkdf2_iterations);
   var format = MyWallet.detectPrivateKeyFormat(privateKeyBase58);
-  var key    = MyWallet.privateKeyStringToKey(privateKeyBase58, format);
+  var key    = Helpers.privateKeyStringToKey(privateKeyBase58, format);
   if (MyWallet.getCompressedAddressString(key) === addr) {
     key = new Bitcoin.ECKey(key.d, true);
   }

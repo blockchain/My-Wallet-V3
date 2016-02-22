@@ -195,7 +195,7 @@ Address.fromString = function(keyOrAddr, label, bipPass){
         );
       }
       else if (okFormats.indexOf(format) > -1) {
-        var k = MyWallet.privateKeyStringToKey(keyOrAddr, format);
+        var k = Helpers.privateKeyStringToKey(keyOrAddr, format);
         return resolve(Address.import(k, label));
       }
       else { reject('unknown key format'); }

@@ -218,7 +218,7 @@ MyWallet.getBalanceForRedeemCode = function(privatekey, successCallback, errorCa
     errorCallback("Unkown private key format");
     return;
   }
-  var privateKeyToSweep = MyWallet.privateKeyStringToKey(privatekey, format);
+  var privateKeyToSweep = Helpers.privateKeyStringToKey(privatekey, format);
   var from_address_compressed = MyWallet.getCompressedAddressString(privateKeyToSweep);
   var from_address_uncompressed = MyWallet.getUnCompressedAddressString(privateKeyToSweep);
 
@@ -279,7 +279,7 @@ MyWallet.isValidPrivateKey = function(candidate) {
   try {
     var format = MyWallet.detectPrivateKeyFormat(candidate);
     if(format == "bip38") { return true }
-    var key = MyWallet.privateKeyStringToKey(candidate, format);
+    var key = Helpers.privateKeyStringToKey(candidate, format);
     return key.pub.getAddress().toString();
   } catch (e) {
     return false;
@@ -824,15 +824,7 @@ MyWallet.logout = function(force) {
   WalletStore.sendEvent('logging_out');
   API.request("GET", 'wallet/logout', data, true, false).then(reload).catch(reload);
 };
-// used once
-// TODO : should be a helper
-function parseMiniKey(miniKey) {
-  var check = Bitcoin.crypto.sha256(miniKey + "?");
-  if (check[0] !== 0x00) {
-    throw 'Invalid mini key';
-  }
-  return Bitcoin.crypto.sha256(miniKey);
-}
+
 // used locally and iOS
 // should be a helper
 MyWallet.detectPrivateKeyFormat = function(key) {
@@ -873,37 +865,6 @@ MyWallet.detectPrivateKeyFormat = function(key) {
   return null;
 };
 
-// should be a helper
-// used locally and wallet-spender.js
-MyWallet.privateKeyStringToKey = function(value, format) {
-  var key_bytes = null;
-
-  if (format == 'base58') {
-    key_bytes = Helpers.buffertoByteArray(Base58.decode(value));
-  } else if (format == 'base64') {
-    key_bytes = Helpers.buffertoByteArray(new Buffer(value, 'base64'));
-  } else if (format == 'hex') {
-    key_bytes = Helpers.buffertoByteArray(new Buffer(value, 'hex'));
-  } else if (format == 'mini') {
-    key_bytes = Helpers.buffertoByteArray(parseMiniKey(value));
-  } else if (format == 'sipa') {
-    var tbytes = Helpers.buffertoByteArray(Base58.decode(value));
-    tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
-    tbytes.shift();
-    key_bytes = tbytes.slice(0, tbytes.length - 4);
-
-  } else if (format == 'compsipa') {
-    var tbytes = Helpers.buffertoByteArray(Base58.decode(value));
-    tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
-    tbytes.shift();
-    tbytes.pop();
-    key_bytes = tbytes.slice(0, tbytes.length - 4);
-  } else {
-    throw 'Unsupported Key Format';
-  }
-
-  return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format !== 'sipa'));
-};
 // used once
 // should be a helper
 function parseValueBitcoin(valueString) {
