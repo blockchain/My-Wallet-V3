@@ -23,11 +23,6 @@ var isInitialized = false;
 MyWallet.wallet = undefined;
 MyWallet.ws = new BlockchainSocket();
 
-// used on MyWallet
-MyWallet.securePost = function(url, data, success, error) {
-  API.securePost(url, data).then(success).catch(error);
-};
-
 // Temporary workaround instead instead of modding bitcoinjs to do it TODO: not efficient
 // used only on wallet.js and wallet-store.js
 MyWallet.getCompressedAddressString = function(key) {
@@ -268,7 +263,7 @@ function didDecryptWallet(success) {
 function checkWalletChecksum(payload_checksum, success, error) {
   var data = {method : 'wallet.aes.json', format : 'json', checksum : payload_checksum};
 
-  MyWallet.securePost("wallet", data, function(obj) {
+  API.securePost("wallet", data, function(obj) {
     if (!obj.payload || obj.payload == 'Not modified') {
       if (success) success();
     } else if (error) error();
@@ -286,7 +281,7 @@ MyWallet.getWallet = function(success, error) {
   if (WalletStore.getPayloadChecksum() && WalletStore.getPayloadChecksum().length > 0)
     data.checksum = WalletStore.getPayloadChecksum();
 
-  MyWallet.securePost("wallet", data, function(obj) {
+  API.securePost("wallet", data, function(obj) {
     if (!obj.payload || obj.payload == 'Not modified') {
       if (success) success();
       return;
@@ -352,7 +347,7 @@ function decryptAndInitializeWallet(success, error, decrypt_success, build_hd_su
 // used in the frontend
 MyWallet.makePairingCode = function(success, error) {
   try {
-    MyWallet.securePost('wallet', { method : 'pairing-encryption-password' }, function(encryption_phrase) {
+    API.securePost('wallet', { method : 'pairing-encryption-password' }, function(encryption_phrase) {
       var pwHex = new Buffer(WalletStore.getPassword()).toString('hex');
       var encrypted = WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + pwHex, encryption_phrase, 10);
       success('1|' + MyWallet.wallet.guid + '|' + encrypted);
@@ -646,7 +641,7 @@ function syncWallet (successcallback, errorcallback) {
           ).join('|');
         }
 
-        MyWallet.securePost(
+        API.securePost(
             "wallet"
           , data
           , function(data) {

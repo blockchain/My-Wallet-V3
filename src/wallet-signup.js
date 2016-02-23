@@ -6,7 +6,8 @@ var MyWallet = require('./wallet');
 var WalletCrypto = require('./wallet-crypto');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
-var WalletNetwork = require('./wallet-network')
+var WalletNetwork = require('./wallet-network');
+var API = require('./api');
 
 // Save the javascript wallet to the remote server
 function insertWallet(guid, sharedKey, password, extra, successcallback, errorcallback, decryptWalletProgress) {
@@ -50,7 +51,7 @@ function insertWallet(guid, sharedKey, password, extra, successcallback, errorca
         };
 
         Helpers.merge(post_data, extra);
-        MyWallet.securePost(
+        API.securePost(
           'wallet',
           post_data,
           function(data) {

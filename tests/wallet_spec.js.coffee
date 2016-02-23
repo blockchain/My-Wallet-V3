@@ -3,8 +3,10 @@ proxyquire = require('proxyquireify')(require)
 WalletStore = {}
 WalletCrypto = {}
 WalletSignup = {}
+API =
+  securePost: () ->
 
-stubs = { './wallet-store': WalletStore, './wallet-crypto': WalletCrypto, './wallet-signup': WalletSignup}
+stubs = { './wallet-store': WalletStore, './wallet-crypto': WalletCrypto, './wallet-signup': WalletSignup, './api': API}
 
 MyWallet = proxyquire('../src/wallet', stubs)
 
@@ -27,7 +29,7 @@ describe "Wallet", ->
       MyWallet.wallet =
         guid: 'wallet-guid'
         sharedKey: 'shared-key'
-      spyOn(MyWallet, 'securePost').and.callFake((_a, _b, cb) -> cb('enc-phrase'))
+      spyOn(API, 'securePost').and.callFake((_a, _b, cb) -> cb('enc-phrase'))
       spyOn(WalletStore, 'getPassword').and.returnValue('pw')
       spyOn(WalletCrypto, 'encrypt').and.callFake((d) -> "(enc:#{d})")
       success = jasmine.createSpy('pairing code success')
