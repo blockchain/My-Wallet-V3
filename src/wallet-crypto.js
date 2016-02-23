@@ -272,18 +272,6 @@ function decryptDataWithPassword(data, password, iterations, options) {
   return decryptedBytes.toString('utf8');
 }
 
-function reencrypt(pw, sharedKey, prevPbkdf2Iterations, newPbkdf2Iterations) {
-  assert(pw, 'password missing');
-  assert(sharedKey, 'password missing');
-  assert(prevPbkdf2Iterations, 'prevPbkdf2Iterations missing');
-  assert(newPbkdf2Iterations, 'newPbkdf2Iterations missing');
-
-  return function (data) {
-    var decrypted = decryptSecretWithSecondPassword(data, pw, sharedKey, prevPbkdf2Iterations);
-    return encryptDataWithPassword(decrypted, sharedKey + pw, newPbkdf2Iterations);
-  };
-}
-
 function stretchPassword(password, salt, iterations, keylen) {
   assert(salt, 'salt missing');
   assert(password, 'password missing');
@@ -320,7 +308,6 @@ module.exports = {
   encryptWallet: encryptWallet,
   decryptWallet: decryptWallet,
   decryptWalletSync: decryptWalletSync,
-  reencrypt: reencrypt,
   cipherFunction: cipherFunction,
   decryptSecretWithSecondPassword: decryptSecretWithSecondPassword,
   encryptSecretWithSecondPassword: encryptSecretWithSecondPassword,
