@@ -252,5 +252,7 @@ Tx.IOSfactory = function(tx){
     myHash        : tx.hash,
     txType        : tx.txType,
     block_height  : tx.block_height,
+    fromWatchOnly : tx.fromWatchOnly,
+    toWatchOnly   : tx.toWatchOnly,
   };
 };
