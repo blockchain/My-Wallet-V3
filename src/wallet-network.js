@@ -2,6 +2,21 @@
 
 var API = require('./api');
 
+
+function handleError (msg) {
+  return function(e) {
+    var errMsg = e.responseJSON && e.responseJSON.initial_error
+        ? e.responseJSON.initial_error
+        : e || msg;
+    throw errMsg;
+  }
+}
+
+function handleResponse (obj) {
+  if (obj.success) return obj.message;
+  else throw obj.message;
+}
+
 function generateUUIDs(count) {
 
   var data = {
@@ -34,14 +49,8 @@ function resendTwoFactorSms(user_guid) {
     api_code : API.API_CODE
   };
 
-  var handleError = function (e) {
-    var errMsg = e.responseJSON && e.responseJSON.initial_error ?
-      e.responseJSON.initial_error : e || 'Could not resend two factor sms';
-    throw errMsg;
-  };
-
   return API.request('GET', 'wallet/' + user_guid, data, true, false)
-    .catch(handleError);
+    .catch(handleError('Could not resend two factor sms'));
 }
 
 /**
@@ -60,19 +69,8 @@ function recoverGuid(user_email, captcha) {
     api_code : API.API_CODE
   };
 
-  var handleResponse = function (obj) {
-    if (obj.success) return obj.message;
-    else throw obj.message;
-  };
-
-  var handleError = function (e) {
-    var errMsg = e.responseJSON && e.responseJSON.initial_error ?
-      e.responseJSON.initial_error : e || 'Could not send recovery email';
-    throw errMsg;
-  };
-
   return API.request('POST', 'wallet', data, true)
-    .then(handleResponse).catch(handleError);
+    .then(handleResponse).catch(handleError('Could not send recovery email'));
 }
 
 /**
@@ -103,11 +101,6 @@ function requestTwoFactorReset(
     kaptcha: captcha,
     ct : Date.now(),
     api_code : API.API_CODE
-  };
-
-  var handleResponse = function (obj) {
-    if (obj.success) return obj.message;
-    else throw obj.message;
   };
 
   return API.request('POST', 'wallet', data, true)
