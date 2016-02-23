@@ -73,29 +73,24 @@ function insertWallet(guid, sharedKey, password, extra, successcallback, errorca
 }
 
 function generateNewWallet(password, email, firstAccountName, success, error, isHD, generateUUIDProgress, decryptWalletProgress) {
+  assert(password.length <= 255, 'Passwords must be shorter than 256 characters');
+  assert(!navigator.userAgent.match(/MeeGo/i), 'MeeGo browser currently not supported.'); //User reported this browser generated an invalid private key
+
   isHD = Helpers.isBoolean(isHD) ? isHD : true;
+
   generateUUIDProgress && generateUUIDProgress();
+
   WalletNetwork.generateUUIDs(2).then(function(uuids) {
     var guid = uuids[0];
     var sharedKey = uuids[1];
-
-    if (password.length > 255) {
-      throw 'Passwords must be shorter than 256 characters';
-    }
-
-    //User reported this browser generated an invalid private key
-    if(navigator.userAgent.match(/MeeGo/i)) {
-      throw 'MeeGo browser currently not supported.';
-    }
 
     if (guid.length != 36 || sharedKey.length != 36) {
       throw 'Error generating wallet identifier';
     }
 
     // Upgrade to HD immediately:
-
     var saveWallet = function() {
-      insertWallet(guid, sharedKey, password, {email : email}, function(message){
+      insertWallet(guid, sharedKey, password, {email : email}, function() {
         success(guid, sharedKey, password);
       }, function(e) {
         error(e);
