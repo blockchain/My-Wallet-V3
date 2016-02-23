@@ -10,7 +10,6 @@ var WalletStore = (function() {
   var pbkdf2_iterations = 5000; // pbkdf2_interations of the main password (to encrypt the full payload)
   var disable_logout = false;
   var latest_block = null;
-  var api_code = "0";
   var real_auth_type = 0; //The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
   var encrypted_wallet_data; //Encrypted wallet data (Base64, AES 256)
   var payload_checksum; //SHA256 hash of the current wallet.aes.json
@@ -21,8 +20,6 @@ var WalletStore = (function() {
   var logout_ticker;
   var sync_pubkeys = false;
   var isSynchronizedWithServer = true;
-  var haveSetServerTime = false; //Whether or not we have synced with server time
-  var serverTimeOffset = 0; //Difference between server and client time
   var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
 
   ////////////////////////////////////////////////////////////////////////////
@@ -57,12 +54,6 @@ var WalletStore = (function() {
         latest_block = block;
         this.sendEvent('did_set_latest_block');
       }
-    },
-    setAPICode: function(stringInt) {
-      api_code = stringInt;
-    },
-    getAPICode: function() {
-      return api_code;
     },
     setRealAuthType: function(number) {
       real_auth_type = number;
@@ -154,18 +145,6 @@ var WalletStore = (function() {
     },
     setIsSynchronizedWithServer: function (bool){
       isSynchronizedWithServer = bool;
-    },
-    isHaveSetServerTime: function (){
-      return haveSetServerTime;
-    },
-    setHaveSetServerTime: function (){
-      haveSetServerTime = true;
-    },
-    getServerTimeOffset: function (){
-      return serverTimeOffset;
-    },
-    setServerTimeOffset: function (offset){
-      serverTimeOffset = offset;
     },
     addEventListener: function(func){
       event_listeners.push(func);
