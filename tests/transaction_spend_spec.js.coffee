@@ -1,10 +1,20 @@
-Transaction = require('../src/transaction')
-MyWallet    = require('../src/wallet')
+proxyquire = require('proxyquireify')(require)
+
 Bitcoin     = require('bitcoinjs-lib')
 Helpers     = require('../src/helpers')
 
+MyWallet =
+  wallet:
+    fee_per_kb: 10000
+
+
+stubs =
+  './wallet': MyWallet
+
 
 describe "Transaction", ->
+
+  Transaction = proxyquire('../src/transaction', stubs)
 
   observer              = undefined
   data                  = undefined
@@ -22,18 +32,43 @@ describe "Transaction", ->
       email: "emmy@noether.me"
       mobile: "+34649999999"
       unspentMock: [
-          {
-            "tx_hash": "594c66729d5068b7d816760fc304accd760629ee75a371529049a94cffa50861"
-            "hash": "6108a5ff4ca949905271a375ee290676cdac04c30f7616d8b768509d72664c59"
-            "tx_hash_big_endian": "6108a5ff4ca949905271a375ee290676cdac04c30f7616d8b768509d72664c59"
-            "tx_index": 82222265
-            "index": 0
-            "tx_output_n": 0
-            "script": "76a91449f842901a0c81fb9c0c0f8c61027d2b085a2a9088ac"
-            "value": 61746
-            "value_hex": "00f132"
-            "confirmations": 0
-          }
+        {
+          "tx_hash": "594c66729d5068b7d816760fc304accd760629ee75a371529049a94cffa50861"
+          "hash": "6108a5ff4ca949905271a375ee290676cdac04c30f7616d8b768509d72664c59"
+          "tx_hash_big_endian": "6108a5ff4ca949905271a375ee290676cdac04c30f7616d8b768509d72664c59"
+          "tx_index": 82222265
+          "index": 0
+          "tx_output_n": 0
+          "script": "76a91449f842901a0c81fb9c0c0f8c61027d2b085a2a9088ac"
+          "value": 61746
+          "value_hex": "00f132"
+          "confirmations": 0
+        },
+        {
+          "tx_hash": "74eac730a68e1b9f611e62f28a0dd3965be6015c486bc02305a20d6f32fe41f3"
+          "hash": "7445544080c67e7e94a6ab3b3c46998bc663e568a671ca79c66d370c21e9b115"
+          "tx_hash_big_endian": "f890ad1d8c4a20a75a4a9c00cde1dbfec594f0c1f00eb5a416b5561ac1c9de2d"
+          "tx_index": 822223424
+          "index": 0
+          "tx_output_n": 0
+          "script": "73a91449f842901a0c81fb9c0c0f8c61027d2b085a2a9088ac"
+          "value": 61746
+          "value_hex": "00f132"
+          "confirmations": 0,
+          "pending": true
+        },
+        {
+          "tx_hash": "f890ad1d8c4a20a75a4a9c00cde1dbfec594f0c1f00eb5a416b5561ac1c9de2d"
+          "hash": "7445544080c67e7e94a6ab3b3c46998bc663e568a671ca79c66d370c21e9b115"
+          "tx_hash_big_endian": "74eac730a68e1b9f611e62f28a0dd3965be6015c486bc02305a20d6f32fe41f3"
+          "tx_index": 822223424
+          "index": 0
+          "tx_output_n": 0
+          "script": "73a91449f842901a0c81fb9c0c0f8c61027d2b085a2a9088ac"
+          "value": 61746
+          "value_hex": "00f132"
+          "confirmations": 0
+        }
       ]
 
 
@@ -85,7 +120,11 @@ describe "Transaction", ->
 
       new Transaction(data.unspentMock, data.to, data.amount, data.fee, data.from, null)
 
-    it "should shuffle the outptus when asked to", ->
+    it "should set the fee to null if it's not a number", ->
+      tx = new Transaction(data.unspentMock, data.to, data.amount, "111", data.from, null)
+      expect(tx.fee).toEqual(Helpers.guessFee(1, 2, MyWallet.wallet.fee_per_kb))
+
+    it "should shuffle the outputs when asked to", ->
 
       tx = new Transaction(data.unspentMock, data.to, data.amount, data.fee, data.from, null)
       out0 = tx.transaction.outs[0]
@@ -153,8 +192,17 @@ describe "Transaction", ->
 
     it "should sign and produce the correct signed script", ->
 
-      transaction = new Transaction(data.unspentMock, data.to, data.amount, data.fee, data.from, null)
+      listener =
+        on_begin_signing: () ->
+        on_sign_progress: () ->
+        on_finish_signing: () ->
 
+      spyOn(listener, "on_begin_signing").and.callThrough()
+      spyOn(listener, "on_sign_progress").and.callThrough()
+      spyOn(listener, "on_finish_signing").and.callThrough()
+
+      transaction = new Transaction(data.unspentMock, data.to, data.amount, data.fee, data.from, null)
+      transaction.listener = listener
       privateKeyBase58 = data.privateKey
       format = MyWallet.detectPrivateKeyFormat(privateKeyBase58)
       key = Helpers.privateKeyStringToKey(privateKeyBase58, format)
@@ -163,6 +211,11 @@ describe "Transaction", ->
 
       transaction.addPrivateKeys(privateKeys)
       tx = transaction.sign()
+
+      expect(listener.on_begin_signing).toHaveBeenCalledTimes(1)
+      expect(listener.on_sign_progress).toHaveBeenCalledTimes(1)
+      expect(listener.on_finish_signing).toHaveBeenCalledTimes(1)
+
 
       expectedHex = '0100000001594c66729d5068b7d816760fc304accd760629ee75a371529049a94cffa50861000000008a4730440220187d6b567d29fe10bea29aa36158edb3fcd9bed5e835b93b9f30d630aea1c7740220612be05b0d87b0a170f7ead7f9688d7172c704f63deb74705779cf8ac26ec3b9014104a7392f5628776b530aa5fbb41ac10c327ccd2cf64622a81671038ecda25084af786fd54d43689241694d1d65e6bde98756fa01dfd2f5a90d5318ab3fb7bad8c1ffffffff0250c30000000000001976a914078d35591e340799ee96968936e8b2ea8ce504a688acd2060000000000001976a9148b71295471e921703a938aa9e01433deb07c1aa588ac00000000'
       expect(tx.toHex()).toEqual(expectedHex)
