@@ -67,7 +67,7 @@ Object.defineProperties(Tx.prototype, {
   "fee": {
     configurable: false,
     get: function() {
-      return this.totalIn - this.totalOut;
+      return isCoinBase(this.inputs[0]) ? 0 : this.totalIn - this.totalOut;
     }
   },
   "internalSpend": {
