@@ -43,3 +43,29 @@ describe "Helpers", ->
 
     it "should not recognize private keys with a bad length", ->
       expect(Helpers.isBitcoinPrivateKey("5JFXNQvtFZSobCCRPxnTZiW1PDVnXvGBg5XeuUDoUC")).toBeFalsy()
+
+  describe "isPositiveInteger", ->
+    it "should include 1", ->
+      expect(Helpers.isPositiveInteger(1)).toBe(true)
+
+    it "should include 0", ->
+      expect(Helpers.isPositiveInteger(0)).toBe(true)
+
+    it "should exclude -1", ->
+      expect(Helpers.isPositiveInteger(-1)).toBe(false)
+
+    it "should exclude 1.1", ->
+      expect(Helpers.isPositiveInteger(1.1)).toBe(false)
+
+  describe "isPositiveNumber", ->
+    it "should include 1", ->
+      expect(Helpers.isPositiveNumber(1)).toBe(true)
+
+    it "should include 0", ->
+      expect(Helpers.isPositiveNumber(0)).toBe(true)
+
+    it "should exclude -1", ->
+      expect(Helpers.isPositiveNumber(-1)).toBe(false)
+
+    it "should include 1.1", ->
+      expect(Helpers.isPositiveNumber(1.1)).toBe(true)

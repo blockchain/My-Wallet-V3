@@ -13,7 +13,7 @@ describe "HDAccount", ->
     'archived': false
     'xpriv': 'xprv9zJ1cTHnqzgBXr9Uq9jXrdbk2LwApa3Vu6dquzhmckQyj1hvK9xugPNsycfveTGcTy2571Rq71daBpe1QESUsjX7d2ZHVVXEwJEwDiiMD7E'
     'xpub': 'xpub6DHN1xpggNEUkLDwwBGYDmYUaNmfE2mMGKZSiP7PB5wxbp34rhHAEBhMpsjHEwZWsHY2kPmPPD1w6gxGSBe3bXQzCn2WV8FRd7ZKpsiGHMq'
-    'address_labels': []
+    'address_labels': [{"index": 0, "label": "root"}]
     'cache':
       'receiveAccount': 'xpub6FMWuMox3fJxEv2TSLN6jYQg6tHZBS7tKRSu7w4Q7F9K2UsSu4RxtwxfeHVhUv3csTSCRkKREpiVdr8EquBPXfBDZSMe84wmN9LzR3rwNZP'
       'changeAccount': 'xpub6FMWuMox3fJxGARtaDVY6e9st4Hk5j8Ui6r7XLnBPFXPXkajXNiAfiEqBakuDKYYeRf4ERtPm1TawBqKaBWj2dsHNJT4rSsugssTnaDsz2m'
@@ -45,6 +45,7 @@ describe "HDAccount", ->
         expect(account.active).toBeTruthy()
         expect(account.receiveIndex).toEqual(0)
         expect(account.changeIndex).toEqual(0)
+        expect(account.maxLabeledReceiveIndex).toEqual(-1)
 
       it "should create an HDAccount from AccountMasterKey", ->
         accountZero =
@@ -93,6 +94,7 @@ describe "HDAccount", ->
       expect(account.keyRing).toBeDefined()
       expect(account.receiveAddress).toBeDefined()
       expect(account.changeAddress).toBeDefined()
+      expect(account.receivingAddressesLabels.length).toEqual(1)
 
 
   describe "JSON serializer", ->
@@ -299,7 +301,7 @@ describe "HDAccount", ->
 
     describe "Getter", ->
       it "maxLabeledReceiveIndex should return the highest labeled index", ->
-        expect(account.maxLabeledReceiveIndex).toEqual(-1)
+        expect(account.maxLabeledReceiveIndex).toEqual(0)
 
         account.setLabelForReceivingAddress(1, "label1")
         account.setLabelForReceivingAddress(10, "label100")
@@ -307,12 +309,12 @@ describe "HDAccount", ->
         expect(account.maxLabeledReceiveIndex).toEqual(10)
 
       it "labeledReceivingAddresses should return all the labeled receiving addresses", ->
-        expect(account.labeledReceivingAddresses.length).toEqual(0)
+        expect(account.labeledReceivingAddresses.length).toEqual(1)
 
         account.setLabelForReceivingAddress(1, "label1")
         account.setLabelForReceivingAddress(10, "label100")
 
-        expect(account.labeledReceivingAddresses.length).toEqual(2)
+        expect(account.labeledReceivingAddresses.length).toEqual(3)
 
     describe ".encrypt", ->
       beforeEach ->
@@ -400,3 +402,29 @@ describe "HDAccount", ->
         account.removeLabelForReceivingAddress(0)
         expect(MyWallet.syncWallet).toHaveBeenCalled()
         expect(account.getLabelForReceivingAddress(0)).not.toEqual("Savings")
+
+    describe ".fromExtPublicKey", ->
+      it "should import a correct key", ->
+        account = HDAccount.fromExtPublicKey("xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8", 0, "New account")
+        expect(account._xpriv).toEqual(null)
+        expect(account.label).toEqual("New account")
+
+      it "should not import a truncated key", ->
+        expect(() -> HDAccount.fromExtPublicKey("xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGh", 0, "New account")).toThrowError('Invalid checksum')
+
+    describe ".fromExtPrivateKey", ->
+      it "should import a correct key", ->
+        account = HDAccount.fromExtPrivateKey("xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi", undefined, "Another new account")
+        expect(account.label).toEqual("Another new account")
+        expect(account._xpub).toEqual("xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8")
+        expect(account.isEncrypted).toBeFalsy()
+        expect(account.isUnEncrypted).toBeTruthy()
+        expect(account.index).toEqual(null)
+
+      it "should not import a truncated key", ->
+        expect(() -> HDAccount.fromExtPrivateKey("xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6", undefined, "Another new account")).toThrowError('Invalid checksum')
+
+    describe ".factory", ->
+      it "should not touch already instanciated objects", ->
+        fromFactory = HDAccount.factory(account)
+        expect(account).toEqual(fromFactory)

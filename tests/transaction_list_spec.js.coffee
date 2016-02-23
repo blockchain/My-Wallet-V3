@@ -1,28 +1,7 @@
 
 proxyquire = require('proxyquireify')(require)
 
-tx = {
-  "ver": 1,
-  "inputs": [
-    {
-      "sequence": 4294967295,
-      "prev_out": {
-        "spent": true,
-        "tx_index": 126405501,
-        "type": 0,
-        "addr": "1AaFJUs2XY1sGGg7p7ucJSZEJF3zB6r4Eh",
-        "value": 10000,
-        "xpub": {
-          "path": "M/1/15",
-          "m": "xpub6DX2ZjB6qgNGSn9tUQ4L13pYzuYxsxhj4rBeVcJeEAKfaLjipFRoexhpjnRJsSkRASubGq3ygkkGUMD7GpVdvXzSkn9pBqMKJ8m2rKuKQqz"
-        },
-        "n": 0,
-        "script": "76a9146902cc077690c73af06881e06db707840d3964ef88ac"
-      },
-      "script": "483045022100fa415187916382d4350b7f20426a630e5c04f47cfdfb17fd7e1da807cc4d83e802205e924c11f15b3c081deedcb74c539e42abab5ce444c0c6049f03a4c9607c0620012103a6248bd6143706d8524aa0a594d45e0abaed0457bacb8fbbfec012fb75b02811"
-    }
-  ]
-};
+tx = require('./data/transactions')["default"]
 
 TransactionList = proxyquire('../src/transaction-list', {
   './wallet-transaction': {
@@ -49,10 +28,27 @@ describe 'TransactionList', ->
     txList.pushTxs({ txType: 'sent', hash: "1234"})
     txList.pushTxs({ txType: 'sent', hash: "1234"})
     expect(txList.transactions().length).toEqual(1)
+    expect(txList.fetched).toEqual(1)
 
   it "should have defined its load number", ->
     expect(txList.loadNumber).toEqual(10)
 
+  it 'should correctly handle transactions identities', ->
+    tx1 =
+      hash: '234234',
+      txType: 'sent',
+      belongsTo: (identity) -> identity == 'imported'
+
+    tx2 =
+      hash: '6786',
+      txType: 'sent',
+      belongsTo: (identity) -> identity == '0/1/23'
+
+    txList.pushTxs(tx1)
+    txList.pushTxs(tx2)
+    expect(txList.transactions().length).toEqual(2)
+    expect(txList.transactions('').length).toEqual(2)
+    expect(txList.transactions('imported').length).toEqual(1)
 
   describe 'events', ->
     spy = undefined
@@ -71,8 +67,27 @@ describe 'TransactionList', ->
       txList.pushTxs({ txType: 'sent' })
       expect(spy).not.toHaveBeenCalled()
 
+    it 'should not add things that aren\'t functions as listeners', ->
+      res = txList.subscribe({garbadge: true})
+      expect(res).toEqual(undefined)
+
   describe ".wipe", ->
 
     it "should empty the list", ->
       txList.wipe()
       expect(txList.transactions().length).toEqual(0)
+
+  describe 'transactionsForIOS', ->
+
+    it "should return all transactions in the correct format", ->
+      txList.pushTxs({ txType: 'sent', hash: "1234"})
+      txList.pushTxs({ txType: 'sent', hash: "1234"})
+      txList.pushTxs({ txType: 'sent', hash: "3234"})
+
+      ios = txList.transactionsForIOS
+      
+      expect(ios.length).toEqual(2)
+      expect(ios[0].myHash).toEqual('1234')
+      expect(ios[1].myHash).toEqual('3234')
+      expect(ios[0].txType).toEqual('sent')
+      expect(ios[1].txType).toEqual('sent')
