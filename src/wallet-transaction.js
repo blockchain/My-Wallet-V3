@@ -37,8 +37,8 @@ function Tx(object){
   this.note             = MyWallet.wallet.getNote(this.hash);
   this.confirmations    = setConfirmations(this.block_height);
   // computed properties
-  this._processed_ins    = this.inputs.map(tagCoin.compose(unpackInput));
-  this._processed_outs   = this.out.map(tagCoin);
+  this._processed_outs   = this.out.map(tagCoin); // outputs must be tagged first
+  this._processed_ins    = this.inputs.map(tagCoin.compose(unpackInput.bind(this)));
 }
 
 Object.defineProperties(Tx.prototype, {
@@ -226,7 +226,15 @@ function tagCoin(x) {
 }
 
 function unpackInput(input) {
-  return input.prev_out;
+  if (isCoinBase(input)) {
+    return {addr: "Coinbase", value: this.totalOut};
+  } else {
+    return input.prev_out;
+  }
+}
+
+function isCoinBase(input) {
+  return (input == null || input.prev_out == null || input.prev_out.addr == null);
 }
 
 Tx.factory = function(o){
