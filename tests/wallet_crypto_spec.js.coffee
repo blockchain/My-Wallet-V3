@@ -25,6 +25,22 @@ describe 'WalletCrypto', ->
           dec = WalletCrypto.decryptWalletSync(wallet.enc, wallet.password)
           expect(dec.guid).toEqual(wallet.guid)
 
+    describe 'non-existing wallet v4', ->
+      walletData.v4.forEach (wallet) ->
+        it "should not decrypt #{wallet.mode}, #{wallet.padding}, #{wallet.iterations} iterations", ->
+          observers =
+            success: () ->
+            error: () ->
+
+          spyOn(observers, "success").and.callThrough()
+          spyOn(observers, "error").and.callThrough()
+
+          expect(() -> WalletCrypto.decryptWalletSync(wallet.enc, wallet.password)).toThrow("Wallet version 4 not supported.")
+          WalletCrypto.decryptWallet(wallet.enc, wallet.password, observers.success, observers.error)
+          expect(observers.success).not.toHaveBeenCalled()
+          expect(observers.error).toHaveBeenCalled()
+
+
   describe 'encryptWallet()', ->
     v3 = walletData.v3[0]
 
@@ -63,6 +79,25 @@ describe 'WalletCrypto', ->
           it "should decrypt #{caseData.testvector}", ->
             dec = WalletCrypto.AES.decrypt(enc, key, iv, opts)
             expect(dec.compare(testvector)).toEqual(0)
+
+    it "should use CBC if no mode is given", ->
+      key = new Buffer(vectors['cbc'].key, 'hex')
+
+      opts =
+        padding: WalletCrypto.pad.NoPadding
+
+      vectors['cbc'].tests.forEach (caseData) ->
+
+        iv = if caseData.iv then new Buffer(caseData.iv, 'hex') else null
+        testvector = new Buffer(caseData.testvector, 'hex')
+        ciphertext = new Buffer(caseData.ciphertext, 'hex')
+
+        enc = WalletCrypto.AES.encrypt(testvector, key, iv, opts)
+        expect(enc.compare(ciphertext)).toEqual(0)
+
+        dec = WalletCrypto.AES.decrypt(enc, key, iv, opts)
+        expect(dec.compare(testvector)).toEqual(0)
+
 
   describe 'padding', ->
 

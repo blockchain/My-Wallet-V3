@@ -19,6 +19,7 @@ var shared = require('./shared');
 var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var KeyRing  = require('./keyring');
 var TxList = require('./transaction-list');
+var Block = require('./bitcoin-block');
 
 ////////////////////////////////////////////////////////////////////////////////
 // Wallet
@@ -77,6 +78,7 @@ function Wallet(object) {
   this._finalBalance    = 0;
   this._numberTxTotal   = 0;
   this._txList = new TxList();
+  this._latestBlock    = null;
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -283,6 +285,20 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function(){return 5000;}
   },
+  "latestBlock": {
+    configurable: false,
+    get: function() { return this._latestBlock;},
+    set: function(json) {
+      var b = Block.fromJSON(json)
+      if(b != null) {
+        this._latestBlock = b;
+        WalletStore.sendEvent('did_set_latest_block');
+      }
+      else {
+        throw 'Error: tried to set wrong wallet.latestBlock';
+      }
+    }
+  },
   "logoutTime":{
     configurable: false,
     get: function() { return this._logout_time; },
@@ -344,15 +360,10 @@ Wallet.prototype._updateWalletInfo = function(obj) {
       address.totalSent     = e.total_sent;
     }
   };
-
-  if (obj.info.latest_block)
-    WalletStore.setLatestBlock(obj.info.latest_block);
-
+  this.latestBlock = obj.info.latest_block;
   obj.addresses.forEach(updateAccountAndAddressesInfo.bind(this));
   this.txList.pushTxs(obj.txs);
-
   WalletStore.sendEvent('did_multiaddr');
-
   return obj.txs.length;
 };
 

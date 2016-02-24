@@ -16,7 +16,6 @@ var WalletSignup = require('./wallet-signup');
 var API = require('./api');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
-var shared = require('./shared');
 var BlockchainSocket = require('./blockchain-socket');
 
 var isInitialized = false;
@@ -27,81 +26,6 @@ MyWallet.ws = new BlockchainSocket();
 MyWallet.securePost = function(url, data, success, error) {
   API.securePost(url, data).then(success).catch(error);
 };
-
-// Temporary workaround instead instead of modding bitcoinjs to do it TODO: not efficient
-// used only on wallet.js and wallet-store.js
-MyWallet.getCompressedAddressString = function(key) {
-  return new ECKey(key.d, true).pub.getAddress().toString();
-};
-// used only on wallet.js
-MyWallet.getUnCompressedAddressString = function(key) {
-  return new ECKey(key.d, false).pub.getAddress().toString();
-};
-
-////////////////////////////////////////////////////////////////////////////////
-// TODO :: WALLET SPENDER FIX
-// only used on the Spender (for paytoEmail/Mobile, need a fix)
-MyWallet.addPrivateKey = function(key, opts, second_password) {
-  var sharedKey = MyWallet.wallet.sharedKey;
-  var pbkdf2_iterations = MyWallet.wallet.pbkdf2_iterations;
-
-  if (WalletStore.walletIsFull()) {
-    throw 'Wallet is full.';
-  }
-  if (key == null) {
-    throw 'Cannot add null key.';
-  }
-  if (opts == null)
-    opts = {compressed: true};
-
-  var addr = opts.compressed ? MyWallet.getCompressedAddressString(key) : MyWallet.getUnCompressedAddressString(key);
-  var base58 = Base58.encode(key.d.toBuffer(32));
-  var encoded = base58 == null || second_password == null ? base58 : WalletCrypto.encryptSecretWithSecondPassword(base58, second_password, sharedKey, pbkdf2_iterations);
-  if (encoded == null) {
-    throw 'Error Encoding key';
-  }
-  var decoded_base_58 = second_password == null ? base58 : WalletCrypto.decryptSecretWithSecondPassword(encoded, second_password, sharedKey, pbkdf2_iterations);
-
-  if (addr != MyWallet.getUnCompressedAddressString(key) && addr != MyWallet.getCompressedAddressString(key)) {
-    throw 'Decoded Key address does not match generated address';
-  }
-  if (addr != MyWallet.getUnCompressedAddressString(key) && addr != MyWallet.getCompressedAddressString(key)) {
-    throw 'Decoded Key address does not match generated address';
-  }
-
-  //TODO: Move this once opts and probably all addPrivateKey func to walletstore
-  var addresses = WalletStore.getAddresses();
-  if (WalletStore.addLegacyAddress(addr, encoded)) {
-    addresses[addr].tag = 1; //Mark as unsynced
-    addresses[addr].created_time = opts.created_time ? opts.created_time : 0; //Stamp With Creation time
-    addresses[addr].created_device_name = opts.app_name ? opts.app_name : shared.APP_NAME; //Created Device
-    addresses[addr].created_device_version = opts.app_version ? opts.app_version : shared.APP_VERSION; //Created App Version
-
-    if (addresses[addr].priv != encoded)
-      throw 'Address priv does not match encoded';
-
-    //Subscribe to transaction updates through websockets
-    try {
-      MyWallet.ws.send('{"op":"addr_sub", "addr":"'+addr+'"}');
-    } catch (e) { }
-  } else {
-    throw 'Could not add key. This key already exists in your wallet.';
-  }
-  return addr;
-};
-
-// used on sharedcoin.js
-MyWallet.generateNewKey = function() {
-  var key = Bitcoin.ECKey.makeRandom(true);
-
-  // key is uncompressed, so cannot passed in opts.compressed = true here
-  if (MyWallet.addPrivateKey(key)) {
-    return key;
-  }
-};
-
-// TODO :: END WALLET SPENDER FIX
-////////////////////////////////////////////////////////////////////////////////
 
 // used locally
 function socketConnect() {
@@ -134,16 +58,14 @@ function socketConnect() {
       }
 
     } else if (obj.op == 'utx') {
-
       WalletStore.sendEvent('on_tx_received');
       var sendOnTx = WalletStore.sendEvent.bind(null, 'on_tx');
       MyWallet.wallet.getHistory().then(sendOnTx);
 
     }  else if (obj.op == 'block') {
-
       var sendOnBlock = WalletStore.sendEvent.bind(null, 'on_block');
       MyWallet.wallet.getHistory().then(sendOnBlock);
-      WalletStore.setLatestBlock(shared.BlockFromJSON(obj.x));
+      MyWallet.wallet.latestBlock = obj.x;
     }
   }
 
@@ -182,14 +104,14 @@ function socketConnect() {
  */
  // used only on the frontend
 MyWallet.getBalanceForRedeemCode = function(privatekey, successCallback, errorCallback)  {
-  var format = MyWallet.detectPrivateKeyFormat(privatekey);
+  var format = Helpers.detectPrivateKeyFormat(privatekey);
   if(format == null) {
     errorCallback("Unkown private key format");
     return;
   }
   var privateKeyToSweep = Helpers.privateKeyStringToKey(privatekey, format);
-  var from_address_compressed = MyWallet.getCompressedAddressString(privateKeyToSweep);
-  var from_address_uncompressed = MyWallet.getUnCompressedAddressString(privateKeyToSweep);
+  var from_address_compressed = new ECKey(privateKeyToSweep.d, true).pub.getAddress().toString();
+  var from_address_uncompressed = new ECKey(privateKeyToSweep.d, false).pub.getAddress().toString();
 
   function totalBalance (data) {
     return Object.keys(data)
@@ -201,15 +123,6 @@ MyWallet.getBalanceForRedeemCode = function(privatekey, successCallback, errorCa
     .then(totalBalance)
     .then(successCallback)
     .catch(errorCallback);
-};
-
-/**
- * @param {string} mnemonic mnemonic
- * @return {boolean} is valid mnemonic
- */
- // should be moved to helpers
-MyWallet.isValidateBIP39Mnemonic = function(mnemonic) {
-  return BIP39.validateMnemonic(mnemonic);
 };
 
 // used only locally (wallet.js)
@@ -225,34 +138,6 @@ MyWallet.listenToHDWalletAccounts = function() {
     var listen = function(a) { MyWallet.listenToHDWalletAccount(a.extendedPublicKey); }
     MyWallet.wallet.hdwallet.activeAccounts.forEach(listen);
   };
-};
-
-
-/**
- * @param {string} candidate candidate address
- * @return {boolean} is valid address
- */
- // TODO: This should be a helper
- // used on wallet-store, frontend and iOS,
-MyWallet.isValidAddress = function(candidate) {
-  return Helpers.isBitcoinAddress(candidate);
-};
-
-/**
- * @param {string} candidate candidate PrivateKey
- * @return {boolean} is valid PrivateKey
- */
- // used on the frontend
- // TODO: this should be a helper
-MyWallet.isValidPrivateKey = function(candidate) {
-  try {
-    var format = MyWallet.detectPrivateKeyFormat(candidate);
-    if(format == "bip38") { return true }
-    var key = Helpers.privateKeyStringToKey(candidate, format);
-    return key.pub.getAddress().toString();
-  } catch (e) {
-    return false;
-  }
 };
 
 // used two times
@@ -562,10 +447,6 @@ function setIsInitialized() {
   isInitialized = true;
 }
 
-// used on iOS
-MyWallet.connectWebSocket = function() {
-  socketConnect();
-};
 ////////////////////////////////////////////////////////////////////////////////
 // This should replace backup functions
 function syncWallet (successcallback, errorcallback) {
@@ -783,99 +664,4 @@ MyWallet.logout = function(force) {
   var data = {format : 'plain', api_code : API.API_CODE};
   WalletStore.sendEvent('logging_out');
   API.request("GET", 'wallet/logout', data, true, false).then(reload).catch(reload);
-};
-
-// used locally and iOS
-// should be a helper
-MyWallet.detectPrivateKeyFormat = function(key) {
-  // 51 characters base58, always starts with a '5'
-  if (/^5[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/.test(key))
-    return 'sipa';
-
-  //52 character compressed starts with L or K
-  if (/^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key))
-    return 'compsipa';
-
-  // 40-44 characters base58
-  if (Helpers.isBase58Key(key))
-    return 'base58';
-
-  if (/^[A-Fa-f0-9]{64}$/.test(key))
-    return 'hex';
-
-  if (/^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789=+\/]{44}$/.test(key))
-    return 'base64';
-
-  if (/^6P[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{56}$/.test(key))
-    return 'bip38';
-
-  if (/^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{21}$/.test(key) ||
-      /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{25}$/.test(key) ||
-      /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{29}$/.test(key) ||
-      /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{30}$/.test(key)) {
-
-    var testBytes = Bitcoin.crypto.sha256(key + "?");
-
-    if (testBytes[0] === 0x00 || testBytes[0] === 0x01)
-      return 'mini';
-  }
-
-  console.error('Unknown Key Format ' + key);
-
-  return null;
-};
-// should be a helper
-function buffertoByteArray(value) {
-  return BigInteger.fromBuffer(value).toByteArray();
-}
-// should be a helper
-// used locally and wallet-spender.js
-MyWallet.privateKeyStringToKey = function(value, format) {
-  var key_bytes = null;
-
-  if (format == 'base58') {
-    key_bytes = buffertoByteArray(Base58.decode(value));
-  } else if (format == 'base64') {
-    key_bytes = buffertoByteArray(new Buffer(value, 'base64'));
-  } else if (format == 'hex') {
-    key_bytes = buffertoByteArray(new Buffer(value, 'hex'));
-  } else if (format == 'mini') {
-    key_bytes = buffertoByteArray(parseMiniKey(value));
-  } else if (format == 'sipa') {
-    var tbytes = buffertoByteArray(Base58.decode(value));
-    tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
-    tbytes.shift();
-    key_bytes = tbytes.slice(0, tbytes.length - 4);
-
-  } else if (format == 'compsipa') {
-    var tbytes = buffertoByteArray(Base58.decode(value));
-    tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
-    tbytes.shift();
-    tbytes.pop();
-    key_bytes = tbytes.slice(0, tbytes.length - 4);
-  } else {
-    throw 'Unsupported Key Format';
-  }
-
-  return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format !== 'sipa'));
-};
-
-// used once
-// should be a helper
-function parseValueBitcoin(valueString) {
-  var valueString = valueString.toString();
-  // TODO: Detect other number formats (e.g. comma as decimal separator)
-  var valueComp = valueString.split('.');
-  var integralPart = valueComp[0];
-  var fractionalPart = valueComp[1] || "0";
-  while (fractionalPart.length < 8) fractionalPart += "0";
-  fractionalPart = fractionalPart.replace(/^0+/g, '');
-  var value = BigInteger.valueOf(parseInt(integralPart));
-  value = value.multiply(BigInteger.valueOf(100000000));
-  value = value.add(BigInteger.valueOf(parseInt(fractionalPart)));
-  return value;
-}
-// used iOS and mywallet
-MyWallet.precisionToSatoshiBN = function(x) {
-  return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, shared.sShift(shared.getBTCSymbol())).toString()));
 };

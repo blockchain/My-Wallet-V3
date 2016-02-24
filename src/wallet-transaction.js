@@ -10,7 +10,7 @@ function Tx(object){
   var obj = object || {};
   // original properties
   var setConfirmations = function(tx_block_height) {
-    var lastBlock = WalletStore.getLatestBlock();
+    var lastBlock = MyWallet.wallet.latestBlock;
     var conf = 0;
     if (lastBlock && tx_block_height != null && tx_block_height > 0) {
       conf = lastBlock.height - tx_block_height + 1;
@@ -252,5 +252,7 @@ Tx.IOSfactory = function(tx){
     myHash        : tx.hash,
     txType        : tx.txType,
     block_height  : tx.block_height,
+    fromWatchOnly : tx.fromWatchOnly,
+    toWatchOnly   : tx.toWatchOnly,
   };
 };

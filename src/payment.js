@@ -205,7 +205,7 @@ Payment.amount = function(amounts) {
 Payment.from = function(origin) {
   var addresses  = null;
   var change     = null;
-  var pkFormat   = MyWallet.detectPrivateKeyFormat(origin);
+  var pkFormat   = Helpers.detectPrivateKeyFormat(origin);
   var wifs       = []; // only used fromPrivateKey
   var fromAccId  = null;
 
@@ -384,14 +384,12 @@ function getKeyForAddress(password, addr) {
                                                 , password
                                                 , MyWallet.wallet.sharedKey
                                                 , MyWallet.wallet.pbkdf2_iterations);
-  var format = MyWallet.detectPrivateKeyFormat(privateKeyBase58);
+  var format = Helpers.detectPrivateKeyFormat(privateKeyBase58);
   var key    = Helpers.privateKeyStringToKey(privateKeyBase58, format);
-  if (MyWallet.getCompressedAddressString(key) === addr) {
-    key = new Bitcoin.ECKey(key.d, true);
-  }
-  else if (MyWallet.getUnCompressedAddressString(key) === addr) {
-    key = new Bitcoin.ECKey(key.d, false);
-  };
+  var ckey = new Bitcoin.ECKey(key.d, true);
+  var ukey = new Bitcoin.ECKey(key.d, false);
+  if (ckey.pub.getAddress().toString() === addr) {return ckey;}
+  else if (ukey.pub.getAddress().toString() === addr) {return ukey;}
   return key;
 }
 ////////////////////////////////////////////////////////////////////////////////

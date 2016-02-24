@@ -9,7 +9,6 @@ var WalletStore = (function() {
   var language = 'en';
   var pbkdf2_iterations = 5000; // pbkdf2_interations of the main password (to encrypt the full payload)
   var disable_logout = false;
-  var latest_block = null;
   var api_code = "0";
   var real_auth_type = 0; //The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
   var encrypted_wallet_data; //Encrypted wallet data (Base64, AES 256)
@@ -48,15 +47,6 @@ var WalletStore = (function() {
     },
     isLogoutDisabled: function() {
       return disable_logout;
-    },
-    getLatestBlock: function() {
-      return latest_block;
-    },
-    setLatestBlock: function(block) {
-      if (block != null) {
-        latest_block = block;
-        this.sendEvent('did_set_latest_block');
-      }
     },
     setAPICode: function(stringInt) {
       api_code = stringInt;
