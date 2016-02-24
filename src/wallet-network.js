@@ -1,6 +1,9 @@
 'use strict';
 
 var API = require('./api');
+var Helpers = require('./helpers');
+var WalletCrypto = require('./wallet-crypto');
+var MyWallet = require('./wallet');
 
 
 function handleError (msg) {
@@ -107,7 +110,56 @@ function requestTwoFactorReset(
     .then(handleResponse);
 }
 
+// Save the javascript wallet to the remote server
+function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) {
+  assert(guid, "GUID missing");
+  assert(sharedKey, "Shared Key missing");
+  assert(password, "Password missing");
+  assert(typeof decryptWalletProgress == 'function', "decryptWalletProgress must be a function");
+
+  return new Promise(function(resolve, reject) {
+    // var data = MyWallet.makeCustomWalletJSON(null, guid, sharedKey);
+    var data = JSON.stringify(MyWallet.wallet, null, 2);
+
+    //Everything looks ok, Encrypt the JSON output
+    var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.wallet.defaultPbkdf2Iterations,  MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0);
+
+    if (crypted.length == 0) {
+      reject('Error encrypting the JSON output');
+    }
+
+    decryptWalletProgress && decryptWalletProgress();
+
+    //Now Decrypt the it again to double check for any possible corruption
+    try {
+      WalletCrypto.decryptWalletSync(crypted, password);
+    } catch (e) {
+      reject(e);
+    }
+
+    //SHA256 new_checksum verified by server in case of corruption during transit
+    var new_checksum = WalletCrypto.sha256(crypted).toString('hex');
+
+    extra = extra || {};
+
+    var post_data = {
+      length: crypted.length,
+      payload: crypted,
+      checksum: new_checksum,
+      method : 'insert',
+      format : 'plain',
+      sharedKey : sharedKey,
+      guid : guid
+    };
+
+    Helpers.merge(post_data, extra);
+    API.securePost('wallet', post_data, resolve, reject);
+
+  });
+}
+
 module.exports = {
+  insertWallet: insertWallet,
   generateUUIDs: generateUUIDs,
   resendTwoFactorSms: resendTwoFactorSms,
   recoverGuid: recoverGuid,
