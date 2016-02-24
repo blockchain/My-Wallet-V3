@@ -27,7 +27,7 @@ function HDWallet(object){
   this._bip39Password       = obj.passphrase;
   this._mnemonic_verified   = obj.mnemonic_verified;
   this._default_account_idx = obj.default_account_idx;
-  this._accounts = obj.accounts ? obj.accounts.map(addAccount) : [];
+  this._accounts = obj.accounts.map(addAccount);
   this._paidTo              = obj.paidTo;
 }
 
