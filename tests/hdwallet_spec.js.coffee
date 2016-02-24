@@ -339,3 +339,84 @@ describe "HDWallet", ->
         expect(wallet._temporal_seedHex).not.toBeDefined()
         expect(wallet._temporal_bip39Password).not.toBeDefined()
         expect(MyWallet.syncWallet).not.toHaveBeenCalled()
+
+    describe ".factory", ->
+      it "should not touch an existing object", ->
+        fromFactory = HDWallet.factory(wallet)
+        expect(fromFactory).toEqual(wallet)
+
+    describe ".restore", ->
+      it "should not restore an invalid hex seed", ->
+        expect(() -> HDWallet.restore("i'm not valid", "password")).toThrow()
+
+      it "should set the password to '' if not a string", ->
+        wallet = HDWallet.restore("0123456789abcdef0123456789abcdef", 4334)
+        expect(wallet._bip39Password).toEqual("")
+
+    describe ".newAccount", ->
+
+      observer =
+        cipher: (mode) ->
+          if mode == "enc"
+            return () -> "aSBhbSBlbmNyeXB0ZWQ="
+          else if mode == "dec"
+            return () -> "0123456789abecdf0123456789abecdf"
+          else
+            expect(true).toEqual(false)
+
+      it "should not create a new account without a cipher when the seed hex is bad", ->
+        wallet._seedHex = "i'm a bad seed hex"
+        before = wallet.accounts.length
+        expect(() -> wallet.newAccount("Savings")).toThrow()
+
+        expect(wallet.accounts.length).toEqual(before)
+
+      it "should create a new account without a cipher and with an empty passphrase", ->
+        wallet = wallet.newAccount("Savings")
+
+        expect(wallet.accounts.length).toEqual(2)
+        expect(wallet.accounts[wallet.accounts.length - 1].label).toEqual('Savings')
+
+      it "should create a new account without a cipher and with a password", ->
+        wallet = HDWallet.restore("0123456789abcdef0123456789abcdef", "password")
+        wallet = wallet.newAccount("Savings")
+
+        expect(wallet.accounts.length).toEqual(1)
+        expect(wallet.accounts[wallet.accounts.length - 1].label).toEqual('Savings')
+
+      it "should create a new account with a cipher and with an empty passphrase", ->
+        wallet = wallet.newAccount("Savings", observer.cipher)
+
+        expect(wallet.accounts.length).toEqual(2)
+        expect(wallet.accounts[wallet.accounts.length - 1].label).toEqual('Savings')
+
+      it "should create a new account with a cipher and with a password", ->
+        wallet = HDWallet.restore("0123456789abcdef0123456789abcdef", "password")
+        wallet = wallet.newAccount("Savings", observer.cipher)
+
+        expect(wallet.accounts.length).toEqual(1)
+        expect(wallet.accounts[wallet.accounts.length - 1].label).toEqual('Savings')
+
+    describe "isUnEncrypted and isEncrypted", ->
+      observer =
+        cipher: (mode) ->
+          if mode == "enc"
+            return () -> "aSBhbSBlbmNyeXB0ZWQ="
+          else if mode == "dec"
+            return () -> "0123456789abecdf0123456789abecdf"
+          else
+            expect(true).toEqual(false)
+
+      it "should be correct for the non encrypted test HDWallet", ->
+        expect(wallet.isUnEncrypted).toBeTruthy()
+        expect(wallet.isEncrypted).toBeFalsy()
+
+      it "should considered an encrypted but non persisted wallet as unencrypted", ->
+        wallet = wallet.encrypt(observer.cipher('enc'))
+        expect(wallet.isUnEncrypted).toBeTruthy()
+        expect(wallet.isEncrypted).toBeFalsy()
+
+      it "should considered an encrypted and persisted wallet as encrypted", ->
+        wallet = wallet.encrypt(observer.cipher('enc')).persist()
+        expect(wallet.isUnEncrypted).toBeFalsy()
+        expect(wallet.isEncrypted).toBeTruthy()
