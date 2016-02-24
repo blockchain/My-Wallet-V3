@@ -199,6 +199,7 @@ Payment.amount = function(amounts) {
   } // fi switch
   return function(payment) {
     payment.amounts = formatAmo;
+    payment.forcedFee = null;
     return Promise.resolve(payment);
   };
 };
@@ -248,8 +249,6 @@ Payment.from = function(origin) {
       wifs      = [cWIF, uWIF];
       addresses = [addrComp, addrUncomp];
       change    = addrComp;
-      // 5Kb8kLf9zgWQnogidDA76MzPL6TsZZY36hWXMssSzNydYXYB9KF
-      // L53fCHmQhbNp1B4JipfBtfeHZH7cAibzG9oK19XfiFzxHgAkz6JK
       break;
     default:
       console.log("No origin set.")
@@ -259,6 +258,7 @@ Payment.from = function(origin) {
     payment.change         = change;
     payment.wifKeys        = wifs;
     payment.fromAccountIdx = fromAccId;
+    payment.forcedFee      = null;
 
     return getUnspentCoins(addresses).then(
       function (coins) {
