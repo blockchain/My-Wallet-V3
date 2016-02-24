@@ -5,6 +5,8 @@ var ECKey = Bitcoin.ECKey;
 var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
+var BIP39 = require('bip39');
+var shared = require('./shared');
 
 var Helpers = {};
 Math.log2 = function(x) { return Math.log(x) / Math.LN2;};
@@ -322,7 +324,74 @@ Helpers.privateKeyStringToKey = function(value, format) {
   return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format !== 'sipa'));
 };
 
-////////////////////////////////////////////////////////////////////////////////
+Helpers.detectPrivateKeyFormat = function(key) {
+  // 51 characters base58, always starts with a '5'
+  if (/^5[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/.test(key))
+    return 'sipa';
 
+  //52 character compressed starts with L or K
+  if (/^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key))
+    return 'compsipa';
+
+  // 40-44 characters base58
+  if (Helpers.isBase58Key(key))
+    return 'base58';
+
+  if (/^[A-Fa-f0-9]{64}$/.test(key))
+    return 'hex';
+
+  if (/^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789=+\/]{44}$/.test(key))
+    return 'base64';
+
+  if (/^6P[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{56}$/.test(key))
+    return 'bip38';
+
+  if (/^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{21}$/.test(key) ||
+      /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{25}$/.test(key) ||
+      /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{29}$/.test(key) ||
+      /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{30}$/.test(key)) {
+
+    var testBytes = Bitcoin.crypto.sha256(key + "?");
+
+    if (testBytes[0] === 0x00 || testBytes[0] === 0x01)
+      return 'mini';
+  }
+  console.error('Unknown Key Format ' + key);
+  return null;
+};
+
+Helpers.isValidBIP39Mnemonic = function(mnemonic) {
+  return BIP39.validateMnemonic(mnemonic);
+};
+
+Helpers.isValidPrivateKey = function(candidate) {
+  try {
+    var format = Helpers.detectPrivateKeyFormat(candidate);
+    if(format == "bip38") { return true }
+    var key = Helpers.privateKeyStringToKey(candidate, format);
+    return key.pub.getAddress().toString();
+  } catch (e) {
+    return false;
+  }
+};
+
+function parseValueBitcoin(valueString) {
+  var valueString = valueString.toString();
+  // TODO: Detect other number formats (e.g. comma as decimal separator)
+  var valueComp = valueString.split('.');
+  var integralPart = valueComp[0];
+  var fractionalPart = valueComp[1] || "0";
+  while (fractionalPart.length < 8) fractionalPart += "0";
+  fractionalPart = fractionalPart.replace(/^0+/g, '');
+  var value = BigInteger.valueOf(parseInt(integralPart));
+  value = value.multiply(BigInteger.valueOf(100000000));
+  value = value.add(BigInteger.valueOf(parseInt(fractionalPart)));
+  return value;
+}
+
+Helpers.precisionToSatoshiBN = function(x) {
+  return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, shared.sShift(shared.getBTCSymbol())).toString()));
+};
+////////////////////////////////////////////////////////////////////////////////
 
 module.exports = Helpers;

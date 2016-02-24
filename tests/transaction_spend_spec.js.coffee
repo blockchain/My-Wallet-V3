@@ -146,7 +146,7 @@ describe "Transaction", ->
       tx = new Transaction(data.unspentMock, data.toMultiple, data.multipleAmounts, data.fee, data.from, null)
 
       privateKeyBase58 = data.privateKey
-      format = MyWallet.detectPrivateKeyFormat(privateKeyBase58)
+      format = Helpers.detectPrivateKeyFormat(privateKeyBase58)
       key = Helpers.privateKeyStringToKey(privateKeyBase58, format)
       key.pub.compressed = false;
       privateKeys = [key]
@@ -171,7 +171,7 @@ describe "Transaction", ->
       transaction = new Transaction(data.unspentMock, data.to, data.amount, data.fee, data.from, null)
 
       privateKeyBase58 = data.privateKey
-      format = MyWallet.detectPrivateKeyFormat(privateKeyBase58)
+      format = Helpers.detectPrivateKeyFormat(privateKeyBase58)
       key = Helpers.privateKeyStringToKey(privateKeyBase58, format)
       key.pub.compressed = false;
       privateKeys = [key]
@@ -184,7 +184,7 @@ describe "Transaction", ->
       transaction = new Transaction(data.unspentMock, data.to, data.amount, data.fee, data.from, null)
 
       privateKeyWIF = '5JfdACpmDbLk7jmjU6kuCdLNFgedL19RnbjZYENAEG8Ntto9zRc'
-      format = MyWallet.detectPrivateKeyFormat(privateKeyWIF)
+      format = Helpers.detectPrivateKeyFormat(privateKeyWIF)
       key = Helpers.privateKeyStringToKey(privateKeyWIF, format)
       privateKeys = [key]
 
@@ -204,7 +204,7 @@ describe "Transaction", ->
       transaction = new Transaction(data.unspentMock, data.to, data.amount, data.fee, data.from, null)
       transaction.listener = listener
       privateKeyBase58 = data.privateKey
-      format = MyWallet.detectPrivateKeyFormat(privateKeyBase58)
+      format = Helpers.detectPrivateKeyFormat(privateKeyBase58)
       key = Helpers.privateKeyStringToKey(privateKeyBase58, format)
       key.pub.compressed = false;
       privateKeys = [key]
