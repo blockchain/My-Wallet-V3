@@ -122,7 +122,7 @@ function decryptMnemonic (seedHex, cipher){
   if (cipher) {
     return BIP39.entropyToMnemonic(cipher(seedHex));
   } else {
-    if (Helpers.isHex(seedHex)) {
+    if (Helpers.isSeedHex(seedHex)) {
       return BIP39.entropyToMnemonic(seedHex);
     } else {
       throw "Decryption function needed to get the mnemonic";
