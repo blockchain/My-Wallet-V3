@@ -7,6 +7,7 @@ var Helpers       = require('./helpers');
 var WalletStore   = require('./wallet-store');
 var WalletCrypto  = require('./wallet-crypto');
 var MyWallet      = require('./wallet');
+var Bitcoin = require('bitcoinjs-lib');
 var ECKey         = Bitcoin.ECKey;
 ////////////////////////////////////////////////////////////////////////////////
 // API class
