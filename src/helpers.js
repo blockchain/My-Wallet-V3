@@ -15,7 +15,7 @@ Helpers.isString = function (str){
   return typeof str == 'string' || str instanceof String;
 };
 Helpers.isKey = function (bitcoinKey){
-  return bitcoinKey instanceof Bitcoin.ECKey;
+  return Helpers.isInstanceOf(bitcoinKey, Bitcoin.ECKey);
 };
 Helpers.isInstanceOf = function(object, theClass) {
   return object instanceof theClass;
