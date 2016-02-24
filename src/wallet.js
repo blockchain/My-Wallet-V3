@@ -134,16 +134,14 @@ function socketConnect() {
       }
 
     } else if (obj.op == 'utx') {
-
       WalletStore.sendEvent('on_tx_received');
       var sendOnTx = WalletStore.sendEvent.bind(null, 'on_tx');
       MyWallet.wallet.getHistory().then(sendOnTx);
 
     }  else if (obj.op == 'block') {
-
       var sendOnBlock = WalletStore.sendEvent.bind(null, 'on_block');
       MyWallet.wallet.getHistory().then(sendOnBlock);
-      WalletStore.setLatestBlock(shared.BlockFromJSON(obj.x));
+      MyWallet.wallet.latestBlock = obj.x;
     }
   }
 

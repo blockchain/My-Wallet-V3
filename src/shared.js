@@ -19,8 +19,7 @@ module.exports = {
   setLocalSymbol: setLocalSymbol,
   setBTCSymbol: setBTCSymbol,
   playSound: playSound,
-  sShift: sShift,
-  BlockFromJSON: BlockFromJSON
+  sShift: sShift
 };
 
 function myprint (x) {console.log(x);}
@@ -81,17 +80,4 @@ try {
 //The current 'shift' value - BTC = 1, mBTC = 3, uBTC = 6
 function sShift(symbol) {
   return (satoshi / symbol.conversion).toString().length-1;
-}
-
-function BlockFromJSON(json) {
-  return {
-    hash : json.hash,
-    time : json.time,
-    blockIndex : json.blockIndex,
-    height : json.height,
-    txIndex : json.txIndexes,
-    totalBTCSent : json.totalBTCSent,
-    foundBy : json.foundBy,
-    size : json.size
-  };
 }

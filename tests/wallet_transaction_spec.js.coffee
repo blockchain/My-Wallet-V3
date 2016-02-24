@@ -9,16 +9,12 @@ MyWallet =
       account: () -> { index: 0, label: "Savings" }
 
     key: () -> { label: "Genesis", isWatchOnly: true }
-
-
-WalletStore =
-  getLatestBlock: () -> { height: 399680 }
+    latestBlock: { height: 399680 }
 
 transactions = require('./data/transactions')
 
 Tx = proxyquire('../src/wallet-transaction', {
-  './wallet': MyWallet,
-  './wallet-store': WalletStore,
+  './wallet': MyWallet
 })
 
 describe 'Transaction', ->
@@ -113,4 +109,3 @@ describe 'Transaction', ->
       expect(ios.txType).toEqual(tx.txType)
       expect(ios.block_height).toEqual(tx.block_height)
       expect(ios.myHash).toEqual(tx.hash)
-
