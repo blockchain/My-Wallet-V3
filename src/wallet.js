@@ -571,53 +571,6 @@ MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function(){
   console.log("SAVE CALLED...");
   WalletStore.setIsSynchronizedWithServer(false);
 });
-////////////////////////////////////////////////////////////////////////////////
-// used mainly on blockchain API
-MyWallet.handleNTPResponse = function(obj, clientTime) {
-  //Calculate serverTimeOffset using NTP alog
-  var nowTime = (new Date()).getTime();
-  if (obj.clientTimeDiff && obj.serverTime) {
-    var serverClientResponseDiffTime = nowTime - obj.serverTime;
-    var responseTime = (obj.clientTimeDiff - nowTime + clientTime - serverClientResponseDiffTime) / 2;
-
-    var thisOffset = (serverClientResponseDiffTime - responseTime) / 2;
-
-    if (WalletStore.isHaveSetServerTime()) {
-      var sto = (WalletStore.getServerTimeOffset() + thisOffset) / 2;
-      WalletStore.setServerTimeOffset(sto);
-    } else {
-      WalletStore.setServerTimeOffset(thisOffset);
-      WalletStore.setHaveSetServerTime();
-    }
-    console.log('Server Time offset ' + WalletStore.getServerTimeOffset() + 'ms - This offset ' + thisOffset);
-  }
-};
-
-/**
- * @param {string} address bitcoin address
- * @param {string} message message
- * @return {string} message signature in base64
- */
- // [NOT USED]
-MyWallet.signMessage = function(address, message) {
-  var addr = WalletStore.getAddress(address);
-
-  if (!addr.priv)
-    throw 'Cannot sign a watch only address';
-
-  var decryptedpk = addr.priv;
-
-  // TODO: deal with second password
-  // var decryptedpk = MyWallet.decodePK(addr.priv);
-
-  var key = new ECKey(new BigInteger.fromBuffer(decryptedpk), false);
-  if (key.pub.getAddress().toString() != address) {
-    key = new ECKey(new BigInteger.fromBuffer(decryptedpk), true);
-  }
-
-  var signatureBuffer = Bitcoin.Message.sign(key, message, Bitcoin.networks.bitcoin);
-  return signatureBuffer.toString("base64", 0, signatureBuffer.length);
-};
 
 /**
  * @param {string} inputedEmail user email
