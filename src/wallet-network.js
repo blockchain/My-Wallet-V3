@@ -4,6 +4,7 @@ var API = require('./api');
 var Helpers = require('./helpers');
 var WalletCrypto = require('./wallet-crypto');
 var MyWallet = require('./wallet');
+var assert = require('assert');
 
 
 function handleError (msg) {
@@ -11,13 +12,17 @@ function handleError (msg) {
     var errMsg = e.responseJSON && e.responseJSON.initial_error
         ? e.responseJSON.initial_error
         : e || msg;
-    throw errMsg;
+    return Promise.reject(errMsg);
   }
 }
 
 function handleResponse (obj) {
-  if (obj.success) return obj.message;
-  else throw obj.message;
+  console.log(obj.success);
+  if (obj.success) {
+    return obj.message;
+  } else {
+    return Promise.reject(obj.message);
+  }
 }
 
 function generateUUIDs(count) {
@@ -29,8 +34,9 @@ function generateUUIDs(count) {
   };
 
   var extractUUIDs = function (data) {
-    if (!data.uuids || data.uuids.length != count)
-      throw 'Could not generate uuids';
+    if (!data.uuids || data.uuids.length != count) {
+      return Promise.reject('Could not generate uuids');
+    }
     return data.uuids;
   };
 
@@ -117,7 +123,7 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
   assert(password, "Password missing");
   assert(typeof decryptWalletProgress == 'function', "decryptWalletProgress must be a function");
 
-  return new Promise(function(resolve, reject) {
+  var dataPromise = new Promise(function(resolve, reject) {
     // var data = MyWallet.makeCustomWalletJSON(null, guid, sharedKey);
     var data = JSON.stringify(MyWallet.wallet, null, 2);
 
@@ -125,7 +131,7 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
     var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.wallet.defaultPbkdf2Iterations,  MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0);
 
     if (crypted.length == 0) {
-      reject('Error encrypting the JSON output');
+      return reject('Error encrypting the JSON output');
     }
 
     decryptWalletProgress && decryptWalletProgress();
@@ -134,7 +140,7 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
     try {
       WalletCrypto.decryptWalletSync(crypted, password);
     } catch (e) {
-      reject(e);
+      return reject(e);
     }
 
     //SHA256 new_checksum verified by server in case of corruption during transit
@@ -153,9 +159,14 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
     };
 
     Helpers.merge(post_data, extra);
-    API.securePost('wallet', post_data, resolve, reject);
-
+    resolve(post_data);
   });
+
+  var apiPromise = dataPromise.then(function (postData) {
+    return API.securePost('wallet', postData)
+  });
+
+  return Promise.all([dataPromise, apiPromise]);
 }
 
 module.exports = {
