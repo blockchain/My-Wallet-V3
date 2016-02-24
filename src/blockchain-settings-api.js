@@ -7,7 +7,7 @@ var MyWallet = require('./wallet.js');
 var API = require('./api');
 
 function get_account_info(success, error) {
-  MyWallet.securePost("wallet", {method : 'get-info', format : 'json'}, function(data) {
+  API.securePost("wallet", {method : 'get-info', format : 'json'}, function(data) {
     typeof(success) === "function" && success(data);
 
   }, function(data) {
@@ -27,7 +27,7 @@ function updateKV(txt, method, value, success, error, extra) {
 
   extra = extra || '';
 
-  MyWallet.securePost("wallet"+extra, { length : (value+'').length, payload : value+'', method : method }, function(data) {
+  API.securePost("wallet"+extra, { length : (value+'').length, payload : value+'', method : method }, function(data) {
     WalletStore.sendEvent("msg", {type: "success", message: method + '-success: ' + data});
 
     typeof(success) === "function" && success();
@@ -162,7 +162,7 @@ function setTwoFactorEmail(success, error) {
 }
 
 function setTwoFactorGoogleAuthenticator(success, error) {
-  MyWallet.securePost("wallet", { method : 'generate-google-secret' }, function(google_secret_url) {
+  API.securePost("wallet", { method : 'generate-google-secret' }, function(google_secret_url) {
     typeof(success) === "function" && success(google_secret_url);
   }, function(data) {
     WalletStore.sendEvent("msg", {type: "error", message: data.responseText});
@@ -194,7 +194,7 @@ function resendEmailConfirmation(email, success, error) {
  * @param {function()} error Error callback function.
  */
 function verifyEmail(code, success, error) {
-  MyWallet.securePost("wallet", { payload:code, length : code.length, method : 'verify-email' }, function(data) {
+  API.securePost("wallet", { payload:code, length : code.length, method : 'verify-email' }, function(data) {
     WalletStore.sendEvent("msg", {type: "success", message: data});
     typeof(success) === "function" && success(data);
   }, function(data) {
@@ -209,7 +209,7 @@ function verifyEmail(code, success, error) {
  * @param {function()} error Error callback function.
  */
 function verifyMobile(code, success, error) {
-  MyWallet.securePost("wallet", { payload:code, length : code.length, method : 'verify-sms' }, function(data) {
+  API.securePost("wallet", { payload:code, length : code.length, method : 'verify-sms' }, function(data) {
     WalletStore.sendEvent("msg", {type: "success", message: data});
     typeof(success) === "function" && success(data);
   }, function(data) {
@@ -219,7 +219,7 @@ function verifyMobile(code, success, error) {
 }
 
 function getActivityLogs(success, error) {
-  MyWallet.securePost("wallet", {method : 'list-logs', format : 'json'}, function(data) {
+  API.securePost("wallet", {method : 'list-logs', format : 'json'}, function(data) {
     typeof(success) === "function" && success(data);
   }, function(data) {
     var response = data.responseText || 'Error Downloading Activity Logs';

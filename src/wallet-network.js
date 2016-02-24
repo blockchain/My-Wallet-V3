@@ -1,6 +1,29 @@
 'use strict';
 
 var API = require('./api');
+var Helpers = require('./helpers');
+var WalletCrypto = require('./wallet-crypto');
+var MyWallet = require('./wallet');
+var assert = require('assert');
+
+
+function handleError (msg) {
+  return function(e) {
+    var errMsg = e.responseJSON && e.responseJSON.initial_error
+        ? e.responseJSON.initial_error
+        : e || msg;
+    return Promise.reject(errMsg);
+  }
+}
+
+function handleResponse (obj) {
+  console.log(obj.success);
+  if (obj.success) {
+    return obj.message;
+  } else {
+    return Promise.reject(obj.message);
+  }
+}
 
 function generateUUIDs(count) {
 
@@ -11,8 +34,9 @@ function generateUUIDs(count) {
   };
 
   var extractUUIDs = function (data) {
-    if (!data.uuids || data.uuids.length != count)
-      throw 'Could not generate uuids';
+    if (!data.uuids || data.uuids.length != count) {
+      return Promise.reject('Could not generate uuids');
+    }
     return data.uuids;
   };
 
@@ -34,14 +58,8 @@ function resendTwoFactorSms(user_guid) {
     api_code : API.API_CODE
   };
 
-  var handleError = function (e) {
-    var errMsg = e.responseJSON && e.responseJSON.initial_error ?
-      e.responseJSON.initial_error : e || 'Could not resend two factor sms';
-    throw errMsg;
-  };
-
   return API.request('GET', 'wallet/' + user_guid, data, true, false)
-    .catch(handleError);
+    .catch(handleError('Could not resend two factor sms'));
 }
 
 /**
@@ -60,19 +78,8 @@ function recoverGuid(user_email, captcha) {
     api_code : API.API_CODE
   };
 
-  var handleResponse = function (obj) {
-    if (obj.success) return obj.message;
-    else throw obj.message;
-  };
-
-  var handleError = function (e) {
-    var errMsg = e.responseJSON && e.responseJSON.initial_error ?
-      e.responseJSON.initial_error : e || 'Could not send recovery email';
-    throw errMsg;
-  };
-
   return API.request('POST', 'wallet', data, true)
-    .then(handleResponse).catch(handleError);
+    .then(handleResponse).catch(handleError('Could not send recovery email'));
 }
 
 /**
@@ -105,16 +112,65 @@ function requestTwoFactorReset(
     api_code : API.API_CODE
   };
 
-  var handleResponse = function (obj) {
-    if (obj.success) return obj.message;
-    else throw obj.message;
-  };
-
   return API.request('POST', 'wallet', data, true)
     .then(handleResponse);
 }
 
+// Save the javascript wallet to the remote server
+function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) {
+  assert(guid, "GUID missing");
+  assert(sharedKey, "Shared Key missing");
+  assert(password, "Password missing");
+  assert(typeof decryptWalletProgress == 'function', "decryptWalletProgress must be a function");
+
+  var dataPromise = new Promise(function(resolve, reject) {
+    // var data = MyWallet.makeCustomWalletJSON(null, guid, sharedKey);
+    var data = JSON.stringify(MyWallet.wallet, null, 2);
+
+    //Everything looks ok, Encrypt the JSON output
+    var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.wallet.defaultPbkdf2Iterations,  MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0);
+
+    if (crypted.length == 0) {
+      return reject('Error encrypting the JSON output');
+    }
+
+    decryptWalletProgress && decryptWalletProgress();
+
+    //Now Decrypt the it again to double check for any possible corruption
+    try {
+      WalletCrypto.decryptWalletSync(crypted, password);
+    } catch (e) {
+      return reject(e);
+    }
+
+    //SHA256 new_checksum verified by server in case of corruption during transit
+    var new_checksum = WalletCrypto.sha256(crypted).toString('hex');
+
+    extra = extra || {};
+
+    var post_data = {
+      length: crypted.length,
+      payload: crypted,
+      checksum: new_checksum,
+      method : 'insert',
+      format : 'plain',
+      sharedKey : sharedKey,
+      guid : guid
+    };
+
+    Helpers.merge(post_data, extra);
+    resolve(post_data);
+  });
+
+  var apiPromise = dataPromise.then(function (postData) {
+    return API.securePost('wallet', postData)
+  });
+
+  return Promise.all([dataPromise, apiPromise]);
+}
+
 module.exports = {
+  insertWallet: insertWallet,
   generateUUIDs: generateUUIDs,
   resendTwoFactorSms: resendTwoFactorSms,
   recoverGuid: recoverGuid,
