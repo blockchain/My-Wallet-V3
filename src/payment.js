@@ -387,12 +387,10 @@ function getKeyForAddress(password, addr) {
                                                 , MyWallet.wallet.pbkdf2_iterations);
   var format = MyWallet.detectPrivateKeyFormat(privateKeyBase58);
   var key    = Helpers.privateKeyStringToKey(privateKeyBase58, format);
-  if (MyWallet.getCompressedAddressString(key) === addr) {
-    key = new Bitcoin.ECKey(key.d, true);
-  }
-  else if (MyWallet.getUnCompressedAddressString(key) === addr) {
-    key = new Bitcoin.ECKey(key.d, false);
-  };
+  var ckey = new Bitcoin.ECKey(key.d, true);
+  var ukey = new Bitcoin.ECKey(key.d, false);
+  if (ckey.pub.getAddress().toString() === addr) {return ckey;}
+  else if (ukey.pub.getAddress().toString() === addr) {return ukey;}
   return key;
 }
 ////////////////////////////////////////////////////////////////////////////////
