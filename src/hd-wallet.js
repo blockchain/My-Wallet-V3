@@ -279,26 +279,7 @@ HDWallet.prototype.persist = function(){
   this._accounts.forEach(f);
   return this;
 };
-////////////////////////////////////////////////////////////////////////////////
-// paid to Dictionary
-// {"txhash": {email:email, mobile: null, redeemedAt: null, address: "1x..."}}
 
-HDWallet.prototype.addPaidToElement = function(txHash, element){
-  this._paidTo[txHash] = element;
-  MyWallet.syncWallet();
-  return this;
-};
-HDWallet.prototype.getPaidToElement = function(txHash){
-  return this._paidTo[txHash];
-};
-HDWallet.prototype.forEachPaidTo = function(f) {
-  // f is a function taking (txHash, paidToElement)
-  for (var txHash in this._paidTo) {
-    f(txHash, this._paidTo[txHash]);
-  }
-  return this;
-};
-////////////////////////////////////////////////////////////////////////////////
 // checkers
 HDWallet.prototype.isValidAccountIndex = function(index){
   return Helpers.isPositiveInteger(index) && index < this._accounts.length;
