@@ -70,7 +70,6 @@ module.exports = function(karma) {
       'tests/wallet_network_spec.js.coffee',
       'tests/helpers_spec.js.coffee',
       'tests/blockchain_socket.js.coffee',
-      // 'src/shared.js',
       // 'tests/**/*.coffee',
       // Or specify individual test files:
       'tests/mocks/*.coffee',
