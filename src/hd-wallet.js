@@ -160,7 +160,7 @@ HDWallet.new = function(cipher){
 
 HDWallet.restore = function(seedHex, bip39Password, cipher){
 
-  assert(Helpers.isString(seedHex), 'hdwallet.seedHex must exist');
+  assert(Helpers.isSeedHex(seedHex), 'hdwallet.seedHex must exist and be a seed hex');
   if (!Helpers.isString(bip39Password)) bip39Password = "";
   var hdwallet = {
     seed_hex            : seedHex,
