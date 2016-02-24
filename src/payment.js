@@ -22,6 +22,7 @@ function Payment (payment) {
   // payment.sweepAmount    :: Integer
   // payment.sweepFee       :: Integer
   // payment.forcedFee      :: Integer
+  // payment.feePerKb       :: Integer
   // payment.coins          :: [coins]
   // payment.to             :: [bitcoin address]
   // payment.amounts        :: [Integer]
@@ -73,6 +74,11 @@ Payment.prototype.sweep = function () {
 
 Payment.prototype.fee = function (fee) {
   this.payment = this.payment.then(Payment.fee(fee));
+  return this;
+};
+
+Payment.prototype.feePerKb = function (feePerKb) {
+  this.payment = this.payment.then(Payment.feePerKb(feePerKb));
   return this;
 };
 
@@ -181,6 +187,14 @@ Payment.fee = function (amount) {
   };
 };
 
+Payment.feePerKb = function (amount) {
+  var feePerKb = Helpers.isNumber(amount) ? amount : null;
+  return function(payment) {
+    payment.feePerKb = feePerKb;
+    return Promise.resolve(payment);
+  };
+};
+
 Payment.amount = function (amounts) {
   var formatAmo = null;
   switch (true) {
@@ -262,7 +276,7 @@ Payment.from = function (origin) {
 
     return getUnspentCoins(addresses).then(
       function (coins) {
-        var sweep = computeSuggestedSweep(coins);
+        var sweep = computeSuggestedSweep(coins, payment.feePerKb);
         payment.sweepAmount = sweep[0];
         payment.sweepFee    = sweep[1];
         payment.coins       = coins;
@@ -287,7 +301,8 @@ Payment.build = function () {
     try {
       payment.transaction = new Transaction(payment.coins, payment.to,
                                             payment.amounts, payment.forcedFee,
-                                            payment.change, payment.listener);
+                                            payment.feePerKb, payment.change,
+                                            payment.listener);
       payment.fee = payment.transaction.fee;
     } catch (err) {
       console.log("Error Building: " + err);
@@ -303,7 +318,8 @@ Payment.buildbeta = function () {
     try {
       payment.transaction = new Transaction(payment.coins, payment.to,
                                             payment.amounts, payment.forcedFee,
-                                            payment.change, payment.listener);
+                                            payment.feePerKb, payment.change,
+                                            payment.listener);
       payment.fee = payment.transaction.fee;
       return Promise.resolve(payment);
     } catch (e) {
@@ -430,14 +446,15 @@ function getPrivateKeys (password, payment) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // computeSuggestedSweep :: [coins] -> [maxSpendeableAmount - fee, fee]
-function computeSuggestedSweep (coins){
-  var getValue = function (coin) {return coin.value;};
-  var sortedCoinValues = coins.map(getValue).sort(function (a, b){return b-a});
+function computeSuggestedSweep(coins, feePerKb){
+  feePerKb = Helpers.isNumber(feePerKb) ? feePerKb : MyWallet.wallet.fee_per_kb;
+  var getValue = function (coin) { return coin.value; };
+  var sortedCoinValues = coins.map(getValue).sort(function (a, b) { return b - a });
   var accumulatedValues = sortedCoinValues
-    .map(function (element,index,array){
-      var fee = Helpers.guessFee(index+1, 2, MyWallet.wallet.fee_per_kb);
-      return [array.slice(0,index+1).reduce(Helpers.add,0) - fee, fee];  //[total-fee, fee]
-    }).sort(function (a,b){return b[0]-a[0]});
+    .map(function (element, index, array) {
+      var fee = Helpers.guessFee(index + 1, 2, feePerKb);
+      return [array.slice(0, index + 1).reduce(Helpers.add, 0) - fee, fee];  //[total-fee, fee]
+    }).sort(function (a, b) { return b[0] - a[0] });
   // dont return negative max spendable
   if (accumulatedValues[0][0] < 0) { accumulatedValues[0][0] = 0; }
   return accumulatedValues[0];

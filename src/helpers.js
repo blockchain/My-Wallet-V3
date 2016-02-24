@@ -195,12 +195,8 @@ Helpers.guessSize = function (nInputs, nOutputs) {
 };
 
 Helpers.guessFee = function (nInputs, nOutputs, feePerKb) {
-  var size  = Helpers.guessSize(nInputs, nOutputs);
-  var thousands = Math.floor(size/1000);
-  var remainder = size % 1000;
-  var fee = feePerKb * thousands;
-  if(remainder > 0) { fee += feePerKb;};
-  return fee;
+  var sizeBytes  = Helpers.guessSize(nInputs, nOutputs);
+  return Math.ceil(feePerKb * (sizeBytes / 1000));
 };
 
 ////////////////////////////////////////////////////////////////////////////////
