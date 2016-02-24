@@ -28,81 +28,6 @@ MyWallet.securePost = function(url, data, success, error) {
   API.securePost(url, data).then(success).catch(error);
 };
 
-// Temporary workaround instead instead of modding bitcoinjs to do it TODO: not efficient
-// used only on wallet.js and wallet-store.js
-MyWallet.getCompressedAddressString = function(key) {
-  return new ECKey(key.d, true).pub.getAddress().toString();
-};
-// used only on wallet.js
-MyWallet.getUnCompressedAddressString = function(key) {
-  return new ECKey(key.d, false).pub.getAddress().toString();
-};
-
-////////////////////////////////////////////////////////////////////////////////
-// TODO :: WALLET SPENDER FIX
-// only used on the Spender (for paytoEmail/Mobile, need a fix)
-MyWallet.addPrivateKey = function(key, opts, second_password) {
-  var sharedKey = MyWallet.wallet.sharedKey;
-  var pbkdf2_iterations = MyWallet.wallet.pbkdf2_iterations;
-
-  if (WalletStore.walletIsFull()) {
-    throw 'Wallet is full.';
-  }
-  if (key == null) {
-    throw 'Cannot add null key.';
-  }
-  if (opts == null)
-    opts = {compressed: true};
-
-  var addr = opts.compressed ? MyWallet.getCompressedAddressString(key) : MyWallet.getUnCompressedAddressString(key);
-  var base58 = Base58.encode(key.d.toBuffer(32));
-  var encoded = base58 == null || second_password == null ? base58 : WalletCrypto.encryptSecretWithSecondPassword(base58, second_password, sharedKey, pbkdf2_iterations);
-  if (encoded == null) {
-    throw 'Error Encoding key';
-  }
-  var decoded_base_58 = second_password == null ? base58 : WalletCrypto.decryptSecretWithSecondPassword(encoded, second_password, sharedKey, pbkdf2_iterations);
-
-  if (addr != MyWallet.getUnCompressedAddressString(key) && addr != MyWallet.getCompressedAddressString(key)) {
-    throw 'Decoded Key address does not match generated address';
-  }
-  if (addr != MyWallet.getUnCompressedAddressString(key) && addr != MyWallet.getCompressedAddressString(key)) {
-    throw 'Decoded Key address does not match generated address';
-  }
-
-  //TODO: Move this once opts and probably all addPrivateKey func to walletstore
-  var addresses = WalletStore.getAddresses();
-  if (WalletStore.addLegacyAddress(addr, encoded)) {
-    addresses[addr].tag = 1; //Mark as unsynced
-    addresses[addr].created_time = opts.created_time ? opts.created_time : 0; //Stamp With Creation time
-    addresses[addr].created_device_name = opts.app_name ? opts.app_name : shared.APP_NAME; //Created Device
-    addresses[addr].created_device_version = opts.app_version ? opts.app_version : shared.APP_VERSION; //Created App Version
-
-    if (addresses[addr].priv != encoded)
-      throw 'Address priv does not match encoded';
-
-    //Subscribe to transaction updates through websockets
-    try {
-      MyWallet.ws.send('{"op":"addr_sub", "addr":"'+addr+'"}');
-    } catch (e) { }
-  } else {
-    throw 'Could not add key. This key already exists in your wallet.';
-  }
-  return addr;
-};
-
-// used on sharedcoin.js
-MyWallet.generateNewKey = function() {
-  var key = Bitcoin.ECKey.makeRandom(true);
-
-  // key is uncompressed, so cannot passed in opts.compressed = true here
-  if (MyWallet.addPrivateKey(key)) {
-    return key;
-  }
-};
-
-// TODO :: END WALLET SPENDER FIX
-////////////////////////////////////////////////////////////////////////////////
-
 // used locally
 function socketConnect() {
   MyWallet.ws.connect(onOpen, onMessage, onClose);
@@ -188,8 +113,8 @@ MyWallet.getBalanceForRedeemCode = function(privatekey, successCallback, errorCa
     return;
   }
   var privateKeyToSweep = Helpers.privateKeyStringToKey(privatekey, format);
-  var from_address_compressed = MyWallet.getCompressedAddressString(privateKeyToSweep);
-  var from_address_uncompressed = MyWallet.getUnCompressedAddressString(privateKeyToSweep);
+  var from_address_compressed = new ECKey(privateKeyToSweep.d, true).pub.getAddress().toString();
+  var from_address_uncompressed = new ECKey(privateKeyToSweep.d, false).pub.getAddress().toString();
 
   function totalBalance (data) {
     return Object.keys(data)
@@ -562,10 +487,6 @@ function setIsInitialized() {
   isInitialized = true;
 }
 
-// used on iOS
-MyWallet.connectWebSocket = function() {
-  socketConnect();
-};
 ////////////////////////////////////////////////////////////////////////////////
 // This should replace backup functions
 function syncWallet (successcallback, errorcallback) {
