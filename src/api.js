@@ -7,7 +7,7 @@ var Helpers       = require('./helpers');
 var WalletStore   = require('./wallet-store');
 var WalletCrypto  = require('./wallet-crypto');
 var MyWallet      = require('./wallet');
-
+var ECKey         = Bitcoin.ECKey;
 ////////////////////////////////////////////////////////////////////////////////
 // API class
 function API(){
@@ -120,7 +120,22 @@ API.prototype.getBalances = function(addresses){
   return this.retry(this.request.bind(this, "POST", "multiaddr", data));
 };
 
-  API.prototype.getFiatAtTime = function(time, value, currencyCode){
+API.prototype.getBalanceForRedeemCode = function(privatekey){
+
+  var format = Helpers.detectPrivateKeyFormat(privatekey);
+  if(format == null) { return Promise.reject('Unknown private key format'); }
+  var privateKeyToSweep = Helpers.privateKeyStringToKey(privatekey, format);
+  var aC = new ECKey(privateKeyToSweep.d, true).pub.getAddress().toString();
+  var aU = new ECKey(privateKeyToSweep.d, false).pub.getAddress().toString();
+  var totalBalance = function(data) {
+    return Object.keys(data)
+                 .map(function(a){ return data[a].final_balance;})
+                 .reduce(Helpers.add, 0);
+  }
+  return API.getBalances([aC, aU]).then(totalBalance)
+};
+
+API.prototype.getFiatAtTime = function(time, value, currencyCode){
   var data = {
       value : value
     , currency: currencyCode

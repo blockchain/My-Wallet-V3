@@ -4,7 +4,6 @@ var MyWallet = module.exports = {};
 
 var assert = require('assert');
 var Bitcoin = require('bitcoinjs-lib');
-var ECKey = Bitcoin.ECKey;
 var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
@@ -96,34 +95,6 @@ function socketConnect() {
     WalletStore.sendEvent('ws_on_close');
   }
 }
-
-/**
- * @param {string} privatekey private key to redeem
- * @param {function()} successCallback success callback function with balance in satoshis
- * @param {function()} errorCallback error callback function
- */
- // used only on the frontend
-MyWallet.getBalanceForRedeemCode = function(privatekey, successCallback, errorCallback)  {
-  var format = Helpers.detectPrivateKeyFormat(privatekey);
-  if(format == null) {
-    errorCallback("Unkown private key format");
-    return;
-  }
-  var privateKeyToSweep = Helpers.privateKeyStringToKey(privatekey, format);
-  var from_address_compressed = new ECKey(privateKeyToSweep.d, true).pub.getAddress().toString();
-  var from_address_uncompressed = new ECKey(privateKeyToSweep.d, false).pub.getAddress().toString();
-
-  function totalBalance (data) {
-    return Object.keys(data)
-                 .map(function(a){ return data[a].final_balance;})
-                 .reduce(Helpers.add, 0);
-  }
-
-  API.getBalances([from_address_compressed, from_address_uncompressed])
-    .then(totalBalance)
-    .then(successCallback)
-    .catch(errorCallback);
-};
 
 // used only locally (wallet.js)
 MyWallet.listenToHDWalletAccount = function(accountExtendedPublicKey) {
