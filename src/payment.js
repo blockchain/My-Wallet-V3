@@ -188,7 +188,7 @@ Payment.fee = function (amount) {
 };
 
 Payment.feePerKb = function (amount) {
-  var feePerKb = Helpers.isNumber(amount) ? amount : null;
+  var feePerKb = Helpers.isPositiveNumber(amount) ? amount : null;
   return function(payment) {
     payment.feePerKb = feePerKb;
     return Promise.resolve(payment);
