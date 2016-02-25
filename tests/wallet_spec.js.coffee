@@ -4,7 +4,7 @@ WalletStore = {}
 WalletCrypto = {}
 WalletSignup = {}
 API =
-  securePost: () ->
+  securePostCallbacks: () ->
 
 stubs = { './wallet-store': WalletStore, './wallet-crypto': WalletCrypto, './wallet-signup': WalletSignup, './api': API}
 
@@ -19,7 +19,7 @@ describe "Wallet", ->
   callbacks = undefined
 
   beforeEach ->
-    
+
   describe "makePairingCode()", ->
     success = undefined
     error = undefined
@@ -28,7 +28,7 @@ describe "Wallet", ->
       MyWallet.wallet =
         guid: 'wallet-guid'
         sharedKey: 'shared-key'
-      spyOn(API, 'securePost').and.callFake((_a, _b, cb) -> cb('enc-phrase'))
+      spyOn(API, 'securePostCallbacks').and.callFake((_a, _b, cb) -> cb('enc-phrase'))
       spyOn(WalletStore, 'getPassword').and.returnValue('pw')
       spyOn(WalletCrypto, 'encrypt').and.callFake((d) -> "(enc:#{d})")
       success = jasmine.createSpy('pairing code success')
