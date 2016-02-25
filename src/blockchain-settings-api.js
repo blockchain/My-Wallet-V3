@@ -311,5 +311,7 @@ module.exports = {
   disableAllNotifications: disableAllNotifications,
   // for tests only
   enableEmailNotifications: enableEmailNotifications,
-  enableReceiveNotifications: enableReceiveNotifications
+  enableReceiveNotifications: enableReceiveNotifications,
+  updateAuthType: updateAuthType
+
 };
