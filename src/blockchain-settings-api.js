@@ -72,36 +72,31 @@ function update_tor_ip_block(enabled, success, error) {
   updateKV('update-block-tor-ips', enabled, success, error);
 }
 
-function update_password_hint1(value, success, error) {
-  switch (true) {
-    case value.split('').some(function(c){return c.charCodeAt(0) > 255;}):
-      error(101); // invalid charset
-      break;
-    case (WalletStore.getPassword() === value):
-      error(102); // password hint cannot be main wallet pass
-      break;
-    case (MyWallet.wallet.isDoubleEncrypted && MyWallet.wallet.validateSecondPassword(value)):
-      error(103); // password hint cannot be second passord
-      break;
-    default:
-      updateKV('update-password-hint1', value, success, error);
+function isBadPasswordHint(value) {
+  if (value.split('').some(function(c){return c.charCodeAt(0) > 255;})) {
+    return 101; // invalid charset
+  } else if (WalletStore.getPassword() === value) {
+    return 102; // password hint cannot be main wallet pass
+  } else if (MyWallet.wallet.isDoubleEncrypted && MyWallet.wallet.validateSecondPassword(value)) {
+    return 103; // password hint cannot be second passord
+  } else {
+    return false;
   }
 }
 
+function update_password_hint1(value, success, error) {
+  assert(error && typeof(error) === "function", "Error callback required");
+
+  var isBad = isBadPasswordHint(value);
+  isBad ? error(isBad) : updateKV('update-password-hint1', value, success, error);
+}
+
 function update_password_hint2(value, success, error) {
-  switch (true) {
-    case value.split('').some(function(c){return c.charCodeAt(0) > 255;}):
-      error(101); // invalid charset
-      break;
-    case (WalletStore.getPassword() === value):
-      error(102); // password hint cannot be main wallet pass
-      break;
-    case (MyWallet.wallet.isDoubleEncrypted && MyWallet.wallet.validateSecondPassword(value)):
-      error(103); // password hint cannot be second passord
-      break;
-    default:
-      updateKV('update-password-hint2', value, success, error);
-  }
+  assert(error && typeof(error) === "function", "Error callback required");
+
+  var isBad = isBadPasswordHint(value);
+  isBad ? error(isBad) : updateKV('update-password-hint2', value, success, error);
+
 }
 
 function change_email(email, success, error) {
