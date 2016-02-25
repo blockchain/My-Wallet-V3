@@ -226,9 +226,9 @@ function enableEmailNotifications(success, error) {
     method : 'update-notifications-type',
     length: 1,
     payload: 1
-  }).then(function(data) {
+  }, function(data) {
     typeof(success) === "function" && success(data);
-  }).catch(function(data) {
+  }, function(data) {
     var response = data.responseText || 'Error Enabling Email Notifications';
     WalletStore.sendEvent("msg", {type: "error", message: response});
     typeof(error) === "function" &&  error();
@@ -240,9 +240,9 @@ function enableReceiveNotifications(success, error) {
     method : 'update-notifications-on',
     length: 1,
     payload: 2
-  }).then(function(data) {
+  }, function(data) {
     typeof(success) === "function" && success(data);
-  }).catch(function(data) {
+  }, function(data) {
     var response = data.responseText || 'Error Enabling Receive Notifications';
     WalletStore.sendEvent("msg", {type: "error", message: response});
     typeof(error) === "function" &&  error();
@@ -272,9 +272,9 @@ function disableAllNotifications(success, error) {
     method : 'update-notifications-type',
     length: 1,
     payload: 0
-  }).then(function(data) {
+  }, function(data) {
     success(data);
-  }).catch(function(data) {
+  }, function(data) {
     var response = data.responseText || 'Error Disabling Receive Notifications';
     WalletStore.sendEvent("msg", {type: "error", message: response});
     error();
