@@ -9,7 +9,7 @@ var BIP39 = require('bip39');
 var shared = require('./shared');
 
 var Helpers = {};
-Math.log2 = function(x) { return Math.log(x) / Math.LN2;};
+Math.log2 = function (x) { return Math.log(x) / Math.LN2;};
 
 Helpers.isString = function (str){
   return typeof str == 'string' || str instanceof String;
@@ -17,10 +17,10 @@ Helpers.isString = function (str){
 Helpers.isKey = function (bitcoinKey){
   return Helpers.isInstanceOf(bitcoinKey, Bitcoin.ECKey);
 };
-Helpers.isInstanceOf = function(object, theClass) {
+Helpers.isInstanceOf = function (object, theClass) {
   return object instanceof theClass;
 };
-Helpers.isBitcoinAddress = function(candidate) {
+Helpers.isBitcoinAddress = function (candidate) {
   try {
     var d = Bitcoin.Address.fromBase58Check(candidate);
     var n = Bitcoin.networks.bitcoin;
@@ -28,20 +28,20 @@ Helpers.isBitcoinAddress = function(candidate) {
   }
   catch (e) { return false; };
 };
-Helpers.isBitcoinPrivateKey = function(candidate) {
+Helpers.isBitcoinPrivateKey = function (candidate) {
   try {
     Bitcoin.ECKey.fromWIF(candidate);
     return true;
   }
   catch (e) { return false; };
 };
-Helpers.isBase58Key = function(str) {
+Helpers.isBase58Key = function (str) {
   return Helpers.isString(str) && /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{40,44}$/.test(str);
 };
-Helpers.isXprivKey = function(k) {
+Helpers.isXprivKey = function (k) {
   return Helpers.isString(k) && k.substring(0, 4) === "xprv";
 };
-Helpers.isXpubKey = function(k) {
+Helpers.isXpubKey = function (k) {
   return Helpers.isString(k) && k.substring(0, 4) === "xpub";
 };
 Helpers.isAlphaNum = function (str){
@@ -105,7 +105,7 @@ Helpers.isValidGUID = function (guid){
 // Return a memoized version of function f
 Helpers.memoize = function (f){
   var cache = {};
-  return function() {
+  return function () {
     var key = arguments.length + Array.prototype.join.call(arguments, ",");
     if (key in cache) return cache[key];
     else return cache[key] = f.apply(this, arguments);
@@ -124,7 +124,7 @@ Helpers.isEmptyArray = function (x) {
 Helpers.asyncOnce = function (f, milliseconds, before){
   var timer = null;
   var oldArguments = new Array();
-  return function() {
+  return function () {
     before && before()
     if (timer) {
       clearTimeout(timer);
@@ -135,7 +135,7 @@ Helpers.asyncOnce = function (f, milliseconds, before){
     for (var i = 0; i < arguments.length; i++) { myArgs[i] = arguments[i];};
     var myArgs = Helpers.zipLong(Helpers.maybeCompose, myArgs, oldArguments);
     oldArguments = myArgs;
-    timer = setTimeout(function(){
+    timer = setTimeout(function (){
                          f.apply(this, myArgs);
                          oldArguments = new Array();
                        }, milliseconds);
@@ -159,7 +159,7 @@ Helpers.zipLong = function (f, xs, ys) {
     return null;
   } else{
     var zs = xs.length > ys.length ? xs : ys;
-    return zs.map(function(v,i){return f(xs[i],ys[i]);});
+    return zs.map(function (v,i){return f(xs[i],ys[i]);});
   };
 };
 
@@ -168,7 +168,7 @@ Helpers.zip3 = function (xs, ys, zs) {
   if (!(xs instanceof Array && ys instanceof Array && zs instanceof Array)){
     return null;
   } else{
-    return xs.map(function(v,i){return [xs[i],ys[i],zs[i]];});
+    return xs.map(function (v,i){return [xs[i],ys[i],zs[i]];});
   };
 };
 
@@ -183,9 +183,9 @@ Helpers.maybeCompose = function (f, g) {
   };
 };
 
-Function.prototype.compose = function(g) {
+Function.prototype.compose = function (g) {
      var fn = this;
-     return function() {
+     return function () {
          return fn.call(this, g.apply(this, arguments));
    };
 };
@@ -227,18 +227,18 @@ Helpers.scorePassword = function (password){
     ,[1, /^.*$/]
   ];
 
-  var hasDigits = function(str) { return /[0-9]/.test(str);};
-  var hasLowerCase = function(str) { return /[a-z]/.test(str);};
-  var hasUpperCase = function(str) { return /[A-Z]/.test(str);};
-  var hasSymbol    = function(str) { return /[^0-9a-zA-z]/.test(str);};
-  var computeSet   = function(str) {
-    var maxChar = Math.max.apply(Math,str.split("").map(function(c){return c.charCodeAt(0);}));
+  var hasDigits = function (str) { return /[0-9]/.test(str);};
+  var hasLowerCase = function (str) { return /[a-z]/.test(str);};
+  var hasUpperCase = function (str) { return /[A-Z]/.test(str);};
+  var hasSymbol    = function (str) { return /[^0-9a-zA-z]/.test(str);};
+  var computeSet   = function (str) {
+    var maxChar = Math.max.apply(Math,str.split("").map(function (c){return c.charCodeAt(0);}));
     return maxChar + 256 - maxChar % 256;
   };
 
-  var base = function(str) {
+  var base = function (str) {
     var tuples = [[10,hasDigits(str)],[26,hasLowerCase(str)],[26,hasUpperCase(str)]];
-    var bases = tuples.filter(function(t){return t[1]}).map(function(t){return t[0]});
+    var bases = tuples.filter(function (t){return t[1]}).map(function (t){return t[0]});
     var setSize = hasSymbol(str) ? computeSet(str) : bases.reduce(Helpers.add, 0);
     var ret = setSize === 0 ? 1 : setSize;
     return ret;
@@ -249,11 +249,11 @@ Helpers.scorePassword = function (password){
   };
 
   var quality = function (str) {
-    var pats = patternsList.filter(function(p){return p[1].test(str);}).map(function(p){return p[0]});
+    var pats = patternsList.filter(function (p){return p[1].test(str);}).map(function (p){return p[0]});
     return Math.min.apply(Math, pats);
   };
 
-  var entropyWeighted = function(str) {
+  var entropyWeighted = function (str) {
     return quality(str)*entropy(str);
   };
 
@@ -261,7 +261,7 @@ Helpers.scorePassword = function (password){
 
 };
 
-Helpers.getHostName = function() {
+Helpers.getHostName = function () {
   if ((typeof window === 'undefined')) {
     return null;
   }
@@ -282,11 +282,11 @@ Helpers.tor = function () {
   return hostname.slice(-6) === '.onion';
 };
 
-Helpers.buffertoByteArray = function(value) {
+Helpers.buffertoByteArray = function (value) {
   return BigInteger.fromBuffer(value).toByteArray();
 };
 
-function parseMiniKey(miniKey) {
+function parseMiniKey (miniKey) {
   var check = Bitcoin.crypto.sha256(miniKey + "?");
   if (check[0] !== 0x00) {
     throw 'Invalid mini key';
@@ -294,7 +294,7 @@ function parseMiniKey(miniKey) {
   return Bitcoin.crypto.sha256(miniKey);
 }
 
-Helpers.privateKeyStringToKey = function(value, format) {
+Helpers.privateKeyStringToKey = function (value, format) {
   var key_bytes = null;
 
   if (format == 'base58') {
@@ -324,7 +324,7 @@ Helpers.privateKeyStringToKey = function(value, format) {
   return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format !== 'sipa'));
 };
 
-Helpers.detectPrivateKeyFormat = function(key) {
+Helpers.detectPrivateKeyFormat = function (key) {
   // 51 characters base58, always starts with a '5'
   if (/^5[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/.test(key))
     return 'sipa';
@@ -360,11 +360,11 @@ Helpers.detectPrivateKeyFormat = function(key) {
   return null;
 };
 
-Helpers.isValidBIP39Mnemonic = function(mnemonic) {
+Helpers.isValidBIP39Mnemonic = function (mnemonic) {
   return BIP39.validateMnemonic(mnemonic);
 };
 
-Helpers.isValidPrivateKey = function(candidate) {
+Helpers.isValidPrivateKey = function (candidate) {
   try {
     var format = Helpers.detectPrivateKeyFormat(candidate);
     if(format == "bip38") { return true }
@@ -375,7 +375,7 @@ Helpers.isValidPrivateKey = function(candidate) {
   }
 };
 
-function parseValueBitcoin(valueString) {
+function parseValueBitcoin (valueString) {
   var valueString = valueString.toString();
   // TODO: Detect other number formats (e.g. comma as decimal separator)
   var valueComp = valueString.split('.');
@@ -389,7 +389,7 @@ function parseValueBitcoin(valueString) {
   return value;
 }
 
-Helpers.precisionToSatoshiBN = function(x) {
+Helpers.precisionToSatoshiBN = function (x) {
   return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, shared.sShift(shared.getBTCSymbol())).toString()));
 };
 ////////////////////////////////////////////////////////////////////////////////

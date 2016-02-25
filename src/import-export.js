@@ -9,9 +9,9 @@ var WalletCrypto = require('./wallet-crypto');
 
 var hash256 = Bitcoin.crypto.hash256;
 
-var ImportExport = new function() {
+var ImportExport = new function () {
 
-  this.parseBIP38toECKey = function(base58Encrypted, passphrase, success, wrong_password, error) {
+  this.parseBIP38toECKey = function (base58Encrypted, passphrase, success, wrong_password, error) {
     var hex;
 
     // Unicode NFC normalization
@@ -68,7 +68,7 @@ var ImportExport = new function() {
     var decrypted;
     var AES_opts = { mode: WalletCrypto.AES.ECB, padding: WalletCrypto.pad.NoPadding };
 
-    var verifyHashAndReturn = function() {
+    var verifyHashAndReturn = function () {
       var tmpkey = new Bitcoin.ECKey(decrypted, isCompPoint);
 
       var base58Address = tmpkey.pub.getAddress().toBase58Check();
@@ -86,7 +86,7 @@ var ImportExport = new function() {
     if (!isECMult) {
       var addresshash = Buffer(hex.slice(3, 7));
 
-      ImportExport.Crypto_scrypt(passphrase, addresshash, 16384, 8, 8, 64, function(derivedBytes) {
+      ImportExport.Crypto_scrypt(passphrase, addresshash, 16384, 8, 8, 64, function (derivedBytes) {
 
         var k = derivedBytes.slice(32, 32+32);
 
@@ -101,7 +101,7 @@ var ImportExport = new function() {
       var ownerentropy = hex.slice(7, 7+8);
       var ownersalt = Buffer(!hasLotSeq ? ownerentropy : ownerentropy.slice(0, 4));
 
-      ImportExport.Crypto_scrypt(passphrase, ownersalt, 16384, 8, 8, 32, function(prefactorA) {
+      ImportExport.Crypto_scrypt(passphrase, ownersalt, 16384, 8, 8, 32, function (prefactorA) {
 
         var passfactor;
 
@@ -120,7 +120,7 @@ var ImportExport = new function() {
 
         var addresshashplusownerentropy = Buffer(hex.slice(3, 3+12));
 
-        ImportExport.Crypto_scrypt(passpoint, addresshashplusownerentropy, 1024, 1, 1, 64, function(derived) {
+        ImportExport.Crypto_scrypt(passpoint, addresshashplusownerentropy, 1024, 1, 1, 64, function (derived) {
           var k = derived.slice(32);
 
           var unencryptedpart2Bytes = WalletCrypto.AES.decrypt(encryptedpart2, k, null, AES_opts);
@@ -152,7 +152,7 @@ var ImportExport = new function() {
   var MAX_VALUE = 2147483647;
   var workerUrl = null;
 
-  this.Crypto_scrypt = function(passwd, salt, N, r, p, dkLen, callback) {
+  this.Crypto_scrypt = function (passwd, salt, N, r, p, dkLen, callback) {
     if (N == 0 || (N & (N - 1)) != 0) throw Error("N must be > 0 and a power of 2");
 
     if (N > MAX_VALUE / 128 / r) throw Error("Parameter N is too large");
@@ -169,7 +169,7 @@ var ImportExport = new function() {
     var B = WalletCrypto.pbkdf2(passwd, salt, 1, (p * 128 * r), WalletCrypto.algo.SHA256);
 
     // Called in Firefox and IE which don't support Blob web workers with CSP enabled.
-    window.setTimeout(function() {
+    window.setTimeout(function () {
       scryptCore();
       var ret = WalletCrypto.pbkdf2(passwd, B, 1, dkLen, WalletCrypto.algo.SHA256);
 
@@ -178,11 +178,11 @@ var ImportExport = new function() {
     // }
 
     // using this function to enclose everything needed to create a worker (but also invokable directly for synchronous use)
-    function scryptCore() {
+    function scryptCore () {
       var XY = [], V = [];
 
       if (typeof B === 'undefined') {
-        onmessage = function(event) {
+        onmessage = function (event) {
           var data = event.data;
           var N = data[0], r = data[1], p = data[2], B = data[3], i = data[4];
 
@@ -198,7 +198,7 @@ var ImportExport = new function() {
         }
       }
 
-      function smix(B, Bi, r, N, V, XY) {
+      function smix (B, Bi, r, N, V, XY) {
         var Xi = 0;
         var Yi = 128 * r;
         var i;
@@ -219,7 +219,7 @@ var ImportExport = new function() {
         arraycopy32(XY, Xi, B, Bi, Yi);
       }
 
-      function blockmix_salsa8(BY, Bi, Yi, r) {
+      function blockmix_salsa8 (BY, Bi, Yi, r) {
         var X = [];
         var i;
 
@@ -240,11 +240,11 @@ var ImportExport = new function() {
         }
       }
 
-      function R(a, b) {
+      function R (a, b) {
         return (a << b) | (a >>> (32 - b));
       }
 
-      function salsa20_8(B) {
+      function salsa20_8 (B) {
         var B32 = new Array(32);
         var x   = new Array(32);
         var i;
@@ -288,7 +288,7 @@ var ImportExport = new function() {
         }
       }
 
-      function blockxor(S, Si, D, Di, len) {
+      function blockxor (S, Si, D, Di, len) {
         var i = len>>6;
         while (i--) {
           D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
@@ -333,7 +333,7 @@ var ImportExport = new function() {
         }
       }
 
-      function integerify(B, bi, r) {
+      function integerify (B, bi, r) {
         var n;
 
         bi += (2 * r - 1) * 64;
@@ -346,13 +346,13 @@ var ImportExport = new function() {
         return n;
       }
 
-      function arraycopy(src, srcPos, dest, destPos, length) {
+      function arraycopy (src, srcPos, dest, destPos, length) {
         while (length-- ){
           dest[destPos++] = src[srcPos++];
         }
       }
 
-      function arraycopy32(src, srcPos, dest, destPos, length) {
+      function arraycopy32 (src, srcPos, dest, destPos, length) {
         var i = length>>5;
         while(i--) {
           dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];

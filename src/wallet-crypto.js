@@ -124,7 +124,7 @@ var AES = {
   }
 };
 
-function encryptWallet(data, password, pbkdf2_iterations, version) {
+function encryptWallet (data, password, pbkdf2_iterations, version) {
   assert(data, 'data missing');
   assert(password, 'password missing');
   assert(pbkdf2_iterations, 'pbkdf2_iterations missing');
@@ -137,12 +137,12 @@ function encryptWallet(data, password, pbkdf2_iterations, version) {
   });
 }
 
-function decryptWallet(data, password, success, error) {
+function decryptWallet (data, password, success, error) {
   try       { success(decryptWalletSync(data, password)); }
   catch (e) { error(e && e.message || e);                 }
 }
 
-function decryptWalletSync(data, password) {
+function decryptWalletSync (data, password) {
   assert(data, 'function `decryptWallet` requires encrypted wallet data');
   assert(password, 'function `decryptWallet` requires a password');
 
@@ -174,7 +174,7 @@ function decryptWalletSync(data, password) {
   }
 }
 
-function decryptWalletV1(data, password) {
+function decryptWalletV1 (data, password) {
   // Possible decryption methods for v1 wallets
   var decryptFns = [
     // v1: CBC, ISO10126, 10 iterations
@@ -207,7 +207,7 @@ function decryptWalletV1(data, password) {
   }, null);
 }
 
-function cipherFunction(password, sharedKey, pbkdf2Iterations, operation) {
+function cipherFunction (password, sharedKey, pbkdf2Iterations, operation) {
   // operation can be 'enc' or 'dec'
   var id = function (msg) { return msg; };
   if (!password || !sharedKey || !pbkdf2Iterations) { return id; }
@@ -227,19 +227,19 @@ function cipherFunction(password, sharedKey, pbkdf2Iterations, operation) {
   }
 }
 
-function encryptSecretWithSecondPassword(base58, password, sharedKey, pbkdf2_iterations) {
+function encryptSecretWithSecondPassword (base58, password, sharedKey, pbkdf2_iterations) {
   return encryptDataWithPassword(base58, sharedKey + password, pbkdf2_iterations);
 }
 
-function decryptSecretWithSecondPassword(secret, password, sharedKey, pbkdf2_iterations) {
+function decryptSecretWithSecondPassword (secret, password, sharedKey, pbkdf2_iterations) {
   return decryptDataWithPassword(secret, sharedKey + password, pbkdf2_iterations);
 }
 
-function decryptPasswordWithProcessedPin(data, password, pbkdf2_iterations) {
+function decryptPasswordWithProcessedPin (data, password, pbkdf2_iterations) {
   return decryptDataWithPassword(data, password, pbkdf2_iterations);
 }
 
-function encryptDataWithPassword(data, password, iterations) {
+function encryptDataWithPassword (data, password, iterations) {
   assert(data, 'data missing');
   assert(password, 'password missing');
   assert(iterations, 'iterations missing');
@@ -255,7 +255,7 @@ function encryptDataWithPassword(data, password, iterations) {
   return payload.toString('base64');
 }
 
-function decryptDataWithPassword(data, password, iterations, options) {
+function decryptDataWithPassword (data, password, iterations, options) {
   assert(data, 'data missing');
   assert(password, 'password missing');
   assert(iterations, 'iterations missing');
@@ -272,7 +272,7 @@ function decryptDataWithPassword(data, password, iterations, options) {
   return decryptedBytes.toString('utf8');
 }
 
-function stretchPassword(password, salt, iterations, keylen) {
+function stretchPassword (password, salt, iterations, keylen) {
   assert(salt, 'salt missing');
   assert(password, 'password missing');
   assert(iterations, 'iterations missing');
@@ -288,19 +288,19 @@ function stretchPassword(password, salt, iterations, keylen) {
   return new Buffer(sjcl.codec.hex.fromBits(stretched), 'hex');
 }
 
-function pbkdf2(password, salt, iterations, keylen, algorithm) {
+function pbkdf2 (password, salt, iterations, keylen, algorithm) {
   algorithm = algorithm || ALGO.SHA1;
   var iv = salt.toString('binary');
   return crypto.pbkdf2Sync(password, iv, iterations, keylen, algorithm);
 }
 
-function hashNTimes(data, iterations) {
+function hashNTimes (data, iterations) {
   assert(iterations > 0, '`iterations` must be a number greater than 0');
   while (iterations--) data = sha256(data);
   return data.toString('hex');
 }
 
-function sha256(data) {
+function sha256 (data) {
   return crypto.createHash('sha256').update(data).digest();
 }
 

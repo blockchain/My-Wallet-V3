@@ -3,7 +3,7 @@
 var MyWallet = require('./wallet');
 var WalletCrypto = require('./wallet-crypto');
 
-var WalletStore = (function() {
+var WalletStore = (function () {
   var password; //Password
   var guid; //Wallet identifier
   var language = 'en';
@@ -23,35 +23,35 @@ var WalletStore = (function() {
 
   ////////////////////////////////////////////////////////////////////////////
   return {
-    setPbkdf2Iterations: function(iterations) {
+    setPbkdf2Iterations: function (iterations) {
       pbkdf2_iterations = iterations;
       return;
     },
-    getPbkdf2Iterations: function() {
+    getPbkdf2Iterations: function () {
       return pbkdf2_iterations;
     },
-    getLanguage: function() {
+    getLanguage: function () {
       return language;
     },
-    setLanguage: function(lan) {
+    setLanguage: function (lan) {
       language = lan;
     },
-    disableLogout: function() {
+    disableLogout: function () {
       disable_logout = true;
     },
-    enableLogout: function() {
+    enableLogout: function () {
       disable_logout = false;
     },
-    isLogoutDisabled: function() {
+    isLogoutDisabled: function () {
       return disable_logout;
     },
-    setRealAuthType: function(number) {
+    setRealAuthType: function (number) {
       real_auth_type = number;
     },
-    get2FAType: function() {
+    get2FAType: function () {
       return real_auth_type;
     },
-    get2FATypeString: function() {
+    get2FATypeString: function () {
       var stringType = "";
       switch(real_auth_type){
       case 0: stringType = null; break;
@@ -64,16 +64,16 @@ var WalletStore = (function() {
       }
       return stringType;
     },
-    getGuid: function() {
+    getGuid: function () {
       return guid;
     },
-    setGuid: function(stringValue) {
+    setGuid: function (stringValue) {
       guid = stringValue;
     },
-    generatePayloadChecksum: function() {
+    generatePayloadChecksum: function () {
       return WalletCrypto.sha256(encrypted_wallet_data).toString('hex');
     },
-    setEncryptedWalletData: function(data) {
+    setEncryptedWalletData: function (data) {
       if (!data || data.length == 0) {
         encrypted_wallet_data = null;
         payload_checksum = null;
@@ -83,13 +83,13 @@ var WalletStore = (function() {
         payload_checksum = this.generatePayloadChecksum();
       }
     },
-    getEncryptedWalletData: function() {
+    getEncryptedWalletData: function () {
       return encrypted_wallet_data;
     },
-    getPayloadChecksum: function() {
+    getPayloadChecksum: function () {
       return payload_checksum;
     },
-    setPayloadChecksum: function(value) {
+    setPayloadChecksum: function (value) {
       payload_checksum = value;
     },
     isPolling: function () {
@@ -98,7 +98,7 @@ var WalletStore = (function() {
     setIsPolling: function (bool) {
       isPolling = bool;
     },
-    isRestoringWallet: function() {
+    isRestoringWallet: function () {
       return isRestoringWallet;
     },
     setRestoringWallet: function (bool) {
@@ -136,35 +136,35 @@ var WalletStore = (function() {
     setIsSynchronizedWithServer: function (bool){
       isSynchronizedWithServer = bool;
     },
-    addEventListener: function(func){
+    addEventListener: function (func){
       event_listeners.push(func);
     },
-    sendEvent: function(event_name, obj){
+    sendEvent: function (event_name, obj){
       for (var listener in event_listeners) {
         event_listeners[listener](event_name, obj);
       }
     },
-    isCorrectMainPassword: function(candidate){
+    isCorrectMainPassword: function (candidate){
       return password === candidate;
     },
-    changePassword: function(new_password, success, error){
+    changePassword: function (new_password, success, error){
       password = new_password;
       MyWallet.syncWallet(success, error);
     },
-    unsafeSetPassword: function(newPassword){
+    unsafeSetPassword: function (newPassword){
       password = newPassword;
     },
-    getPassword: function(){
+    getPassword: function (){
       return password;
     },
-    getLogoutTime: function() {
+    getLogoutTime: function () {
       return MyWallet.wallet._logout_time;
     },
-    setLogoutTime: function(logout_time) {
+    setLogoutTime: function (logout_time) {
       MyWallet.wallet.logoutTime = logout_time;
       this.resetLogoutTimeout();
     },
-    resetLogoutTimeout: function() {
+    resetLogoutTimeout: function () {
       this.setLogoutTimeout(Date.now() + this.getLogoutTime());
     }
   };

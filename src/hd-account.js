@@ -10,7 +10,7 @@ var MyWallet = require('./wallet'); // This cyclic import should be avoided once
 ////////////////////////////////////////////////////////////////////////////////
 // HDAccount Class
 
-function HDAccount(object){
+function HDAccount (object){
 
   var self = this;
   var obj = object || {};
@@ -24,7 +24,7 @@ function HDAccount(object){
   this._network  = obj.network || Bitcoin.networks.bitcoin;
 
   this._address_labels = [];
-  obj.address_labels.map(function(e){self._address_labels[e.index] = e.label;});
+  obj.address_labels.map(function (e){self._address_labels[e.index] = e.label;});
 
   // computed properties
   this._keyRing       = new KeyRing(obj.xpub, obj.cache);
@@ -44,8 +44,8 @@ Object.defineProperties(HDAccount.prototype, {
 
   "label": {
     configurable: false,
-    get: function() { return this._label;},
-    set: function(str) {
+    get: function () { return this._label;},
+    set: function (str) {
       if(Helpers.isValidLabel(str)){
         this._label = str;
         MyWallet.syncWallet();
@@ -56,8 +56,8 @@ Object.defineProperties(HDAccount.prototype, {
   },
   "balance": {
     configurable: false,
-    get: function() { return this._balance;},
-    set: function(num) {
+    get: function () { return this._balance;},
+    set: function (num) {
       if(Helpers.isPositiveNumber(num))
         this._balance = num;
       else
@@ -65,8 +65,8 @@ Object.defineProperties(HDAccount.prototype, {
     }
   },
   "n_tx": {
-    get: function() { return this._n_tx;},
-    set: function(num) {
+    get: function () { return this._n_tx;},
+    set: function (num) {
       if(Helpers.isPositiveInteger(num))
         this._n_tx = num;
       else
@@ -75,8 +75,8 @@ Object.defineProperties(HDAccount.prototype, {
   },
   "archived": {
     configurable: false,
-    get: function() { return this._archived;},
-    set: function(value) {
+    get: function () { return this._archived;},
+    set: function (value) {
       if(Helpers.isBoolean(value)){
         this._archived = value;
         MyWallet.syncWallet();
@@ -92,13 +92,13 @@ Object.defineProperties(HDAccount.prototype, {
   },
   "active": {
     configurable: false,
-    get: function() { return !this.archived;},
-    set: function(value) { this.archived = !value; }
+    get: function () { return !this.archived;},
+    set: function (value) { this.archived = !value; }
   },
   "receiveIndex": {
     configurable: false,
-    get: function() { return this._receiveIndex;},
-    set: function(value) {
+    get: function () { return this._receiveIndex;},
+    set: function (value) {
       if(Helpers.isPositiveInteger(value))
         this._receiveIndex = value;
       else
@@ -107,8 +107,8 @@ Object.defineProperties(HDAccount.prototype, {
   },
   "lastUsedReceiveIndex": {
     configurable: false,
-    get: function() { return this._lastUsedReceiveIndex;},
-    set: function(value) {
+    get: function () { return this._lastUsedReceiveIndex;},
+    set: function (value) {
       if(Helpers.isPositiveInteger(value))
         this._lastUsedReceiveIndex = value;
       else
@@ -117,8 +117,8 @@ Object.defineProperties(HDAccount.prototype, {
   },
   "maxLabeledReceiveIndex" : {
     configurable: false,
-    get: function() {
-      var keys = Object.keys(this._address_labels).map(function(k) {
+    get: function () {
+      var keys = Object.keys(this._address_labels).map(function (k) {
         return parseInt(k);
       });
       if (keys.length == 0) {
@@ -130,8 +130,8 @@ Object.defineProperties(HDAccount.prototype, {
   },
   "changeIndex": {
     configurable: false,
-    get: function() { return this._changeIndex;},
-    set: function(value) {
+    get: function () { return this._changeIndex;},
+    set: function (value) {
       if(Helpers.isPositiveInteger(value))
         this._changeIndex = value;
       else
@@ -140,54 +140,54 @@ Object.defineProperties(HDAccount.prototype, {
   },
   "receivingAddressesLabels": {
     configurable: false,
-    get: function() {
+    get: function () {
       var denseArray = [];
       this._address_labels
-        .map(function(lab,ind){denseArray.push({"index": ind, "label": lab})});
+        .map(function (lab,ind){denseArray.push({"index": ind, "label": lab})});
       return denseArray;
     }
   },
   "labeledReceivingAddresses": {
     configurable: false,
-    get: function() {
+    get: function () {
       var denseArray = [];
       var outerThis = this;
       this._address_labels
-        .map(function(lab,i){denseArray.push(outerThis.receiveAddressAtIndex(i))});
+        .map(function (lab,i){denseArray.push(outerThis.receiveAddressAtIndex(i))});
       return denseArray;
     }
   },
   "extendedPublicKey": {
      configurable: false,
-     get: function() { return this._xpub;}
+     get: function () { return this._xpub;}
    },
   "extendedPrivateKey": {
     configurable: false,
-    get: function() { return this._xpriv;}
+    get: function () { return this._xpriv;}
   },
   "keyRing": {
     configurable: false,
-    get: function() { return this._keyRing;}
+    get: function () { return this._keyRing;}
   },
   "receiveAddress": {
     configurable: false,
-    get: function() { return this._keyRing.receive.getAddress(this._receiveIndex);}
+    get: function () { return this._keyRing.receive.getAddress(this._receiveIndex);}
   },
   "changeAddress": {
     configurable: false,
-    get: function() { return this._keyRing.change.getAddress(this._changeIndex);}
+    get: function () { return this._keyRing.change.getAddress(this._changeIndex);}
   },
   "isEncrypted": {
     configurable: false,
-    get: function() { return Helpers.isBase64(this._xpriv) && !Helpers.isXprivKey(this._xpriv);}
+    get: function () { return Helpers.isBase64(this._xpriv) && !Helpers.isXprivKey(this._xpriv);}
   },
   "isUnEncrypted": {
     configurable: false,
-    get: function() { return Helpers.isXprivKey(this._xpriv);}
+    get: function () { return Helpers.isXprivKey(this._xpriv);}
   },
   "index": {
     configurable: false,
-    get: function() { return this._index;}
+    get: function () { return this._index;}
   }
 });
 
@@ -201,7 +201,7 @@ Object.defineProperties(HDAccount.prototype, {
  * Purpose is a constant set to 44' following the BIP43 recommendation
  * Registered coin types: 0' for Bitcoin
  */
-HDAccount.fromAccountMasterKey = function(accountZero, index, label){
+HDAccount.fromAccountMasterKey = function (accountZero, index, label){
 
   assert(accountZero, "Account MasterKey must be given to create an account.");
   var account    = new HDAccount();
@@ -213,7 +213,7 @@ HDAccount.fromAccountMasterKey = function(accountZero, index, label){
   return account;
 };
 
-HDAccount.fromWalletMasterKey = function(masterkey, index, label) {
+HDAccount.fromWalletMasterKey = function (masterkey, index, label) {
 
   assert(masterkey, "Wallet MasterKey must be given to create an account.");
   assert(Helpers.isPositiveInteger(index), "Derivation index must be a positive integer.");
@@ -221,7 +221,7 @@ HDAccount.fromWalletMasterKey = function(masterkey, index, label) {
   return HDAccount.fromAccountMasterKey(accountZero, index, label);
 };
 
-HDAccount.fromExtPublicKey = function(extPublicKey, index, label){
+HDAccount.fromExtPublicKey = function (extPublicKey, index, label){
   // this is creating a read-only account
   assert(Helpers.isXpubKey(extPublicKey)
       , "Extended public key must be given to create an account.");
@@ -231,7 +231,7 @@ HDAccount.fromExtPublicKey = function(extPublicKey, index, label){
   return a;
 };
 
-HDAccount.fromExtPrivateKey = function(extPrivateKey, index, label){
+HDAccount.fromExtPrivateKey = function (extPrivateKey, index, label){
 
   assert(Helpers.isXprivKey(extPrivateKey)
       , "Extended private key must be given to create an account.");
@@ -239,7 +239,7 @@ HDAccount.fromExtPrivateKey = function(extPrivateKey, index, label){
   return HDAccount.fromAccountMasterKey(accountZero, index, label);
 };
 
-HDAccount.factory = function(o){
+HDAccount.factory = function (o){
   if (o instanceof Object && !(o instanceof HDAccount)) {
     return new HDAccount(o);
   }
@@ -248,7 +248,7 @@ HDAccount.factory = function(o){
 ////////////////////////////////////////////////////////////////////////////////
 // JSON SERIALIZER
 
-HDAccount.prototype.toJSON = function(){
+HDAccount.prototype.toJSON = function (){
 
   // should we add checks on the serializer too?
   var hdaccount = {
@@ -263,18 +263,18 @@ HDAccount.prototype.toJSON = function(){
   return hdaccount;
 };
 
-HDAccount.reviver = function(k,v){
+HDAccount.reviver = function (k,v){
   if (k === '') return new HDAccount(v);
   return v;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-HDAccount.prototype.incrementReceiveIndex = function() {
+HDAccount.prototype.incrementReceiveIndex = function () {
   this._receiveIndex++;
   return this;
 };
-HDAccount.prototype.incrementReceiveIndexIfLast = function(index) {
+HDAccount.prototype.incrementReceiveIndexIfLast = function (index) {
   if (this._receiveIndex === index){
     this.incrementReceiveIndex();
   }
@@ -282,7 +282,7 @@ HDAccount.prototype.incrementReceiveIndexIfLast = function(index) {
 };
 ////////////////////////////////////////////////////////////////////////////////
 // address labels
-HDAccount.prototype.setLabelForReceivingAddress = function(index, label) {
+HDAccount.prototype.setLabelForReceivingAddress = function (index, label) {
   assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
 
   if(!Helpers.isValidLabel(label)) {
@@ -299,24 +299,24 @@ HDAccount.prototype.setLabelForReceivingAddress = function(index, label) {
   }
 };
 
-HDAccount.prototype.removeLabelForReceivingAddress = function(index) {
+HDAccount.prototype.removeLabelForReceivingAddress = function (index) {
   assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
   delete this._address_labels[index];
   MyWallet.syncWallet();
   return this;
 };
 
-HDAccount.prototype.getLabelForReceivingAddress = function(index) {
+HDAccount.prototype.getLabelForReceivingAddress = function (index) {
   assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
   return this._address_labels[index];
 };
 
-HDAccount.prototype.receiveAddressAtIndex = function(index) {
+HDAccount.prototype.receiveAddressAtIndex = function (index) {
   assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
   return this._keyRing.receive.getAddress(index);
 };
 
-HDAccount.prototype.encrypt = function(cipher){
+HDAccount.prototype.encrypt = function (cipher){
   if(!this._xpriv) return this;
   var xpriv = cipher? cipher(this._xpriv) : this._xpriv;
   if (!xpriv) { throw 'Error Encoding account extended private key'; }
@@ -324,7 +324,7 @@ HDAccount.prototype.encrypt = function(cipher){
   return this;
 };
 
-HDAccount.prototype.decrypt = function(cipher){
+HDAccount.prototype.decrypt = function (cipher){
   if(!this._xpriv) return this;
   var xpriv = cipher? cipher(this._xpriv) : this._xpriv;
   if (!xpriv) { throw 'Error Decoding account extended private key'; }
@@ -332,7 +332,7 @@ HDAccount.prototype.decrypt = function(cipher){
   return this;
 };
 
-HDAccount.prototype.persist = function(){
+HDAccount.prototype.persist = function (){
   if (!this._temporal_xpriv) return this;
   this._xpriv = this._temporal_xpriv;
   delete this._temporal_xpriv;

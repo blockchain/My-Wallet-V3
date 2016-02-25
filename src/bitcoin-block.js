@@ -2,7 +2,7 @@
 
 module.exports = Block;
 
-function Block(object){
+function Block (object){
   var obj = object || {};
   this._hash       = obj.hash || "emptyBlock";
   this._time       = obj.time || 0;
@@ -13,23 +13,23 @@ function Block(object){
 Object.defineProperties(Block.prototype, {
   "hash": {
     configurable: false,
-    get: function() { return this._hash;}
+    get: function () { return this._hash;}
   },
   "time": {
     configurable: false,
-    get: function() { return this._time;}
+    get: function () { return this._time;}
   },
   "blockIndex": {
     configurable: false,
-    get: function() { return this._blockIndex;}
+    get: function () { return this._blockIndex;}
   },
   "height": {
     configurable: false,
-    get: function() { return this._height;}
+    get: function () { return this._height;}
   }
 });
 
-Block.prototype.toJSON = function(){
+Block.prototype.toJSON = function (){
   return {
     hash       : this.hash,
     time       : this.time,
@@ -38,7 +38,7 @@ Block.prototype.toJSON = function(){
   };
 };
 
-Block.fromJSON = function(json) {
+Block.fromJSON = function (json) {
   // block height is the only property we require
   if (json == null || json.height == null)
     return null;

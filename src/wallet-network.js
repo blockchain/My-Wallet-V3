@@ -8,7 +8,7 @@ var assert = require('assert');
 
 
 function handleError (msg) {
-  return function(e) {
+  return function (e) {
     var errMsg = e.responseJSON && e.responseJSON.initial_error
         ? e.responseJSON.initial_error
         : e || msg;
@@ -25,7 +25,7 @@ function handleResponse (obj) {
   }
 }
 
-function generateUUIDs(count) {
+function generateUUIDs (count) {
 
   var data = {
     format: 'json',
@@ -49,7 +49,7 @@ function generateUUIDs(count) {
  * @param {string} user_guid User GUID.
  */
 // used in the frontend and in iOS
-function resendTwoFactorSms(user_guid) {
+function resendTwoFactorSms (user_guid) {
 
   var data = {
     format : 'json',
@@ -68,7 +68,7 @@ function resendTwoFactorSms(user_guid) {
  * @param {string} captcha Spam protection
  */
 // used in the frontend
-function recoverGuid(user_email, captcha) {
+function recoverGuid (user_email, captcha) {
 
   var data = {
     method: 'recover-wallet',
@@ -92,7 +92,7 @@ function recoverGuid(user_email, captcha) {
  * @param {string} captcha Spam protection
  */
 // used in the frontend
-function requestTwoFactorReset(
+function requestTwoFactorReset (
   user_guid,
   user_email,
   user_new_email,
@@ -122,7 +122,7 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
   assert(sharedKey, "Shared Key missing");
   assert(password, "Password missing");
 
-  var dataPromise = new Promise(function(resolve, reject) {
+  var dataPromise = new Promise(function (resolve, reject) {
     // var data = MyWallet.makeCustomWalletJSON(null, guid, sharedKey);
     var data = JSON.stringify(MyWallet.wallet, null, 2);
 
