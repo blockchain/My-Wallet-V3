@@ -15,7 +15,7 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
   assert(toAddresses, 'Missing destination address');
   assert(amounts,     'Missing amount to pay');
 
-  this.amount = amounts.reduce(function(a, b) {return a + b;},0);
+  this.amount = amounts.reduce(function (a, b) {return a + b;},0);
   this.listener = listener;
   this.addressesOfInputs = [];
   this.privateKeys = null;
@@ -31,7 +31,7 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
 
   var transaction = new Bitcoin.Transaction();
   // add all outputs
-  function addOutput(e, i) {transaction.addOutput(toAddresses[i],amounts[i]);}
+  function addOutput (e, i) {transaction.addOutput(toAddresses[i],amounts[i]);}
   toAddresses.map(addOutput);
 
   // Choose inputs
@@ -86,7 +86,7 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
   this.transaction = transaction;
 };
 
-Transaction.prototype.addPrivateKeys = function(privateKeys) {
+Transaction.prototype.addPrivateKeys = function (privateKeys) {
   assert.equal(privateKeys.length, this.addressesOfInputs.length, 'Number of private keys needs to match inputs');
 
   for (var i = 0; i < privateKeys.length; i++) {
@@ -101,7 +101,7 @@ Transaction.prototype.addPrivateKeys = function(privateKeys) {
  * addresses are in random order.
  */
 Transaction.prototype.randomizeOutputs = function () {
-  function randomNumberBetweenZeroAnd(i) {
+  function randomNumberBetweenZeroAnd (i) {
     assert(i < Math.pow(2, 16), 'Cannot shuffle more outputs than one transaction can handle');
 
     var randArray = randomBytes(2);
@@ -110,7 +110,7 @@ Transaction.prototype.randomizeOutputs = function () {
     return rand%i;
   }
 
-  function shuffle(o){
+  function shuffle (o){
     for(var j, x, i = o.length; i > 1; j = randomNumberBetweenZeroAnd(i), x = o[--i], o[i] = o[j], o[j] = x);
     return o;
   }
@@ -123,28 +123,28 @@ Transaction.prototype.randomizeOutputs = function () {
 
 Transaction.prototype.sortBIP69 = function (){
 
-  var compareInputs = function(a, b) {
+  var compareInputs = function (a, b) {
     var hasha = new Buffer(a[0].hash);
     var hashb = new Buffer(b[0].hash);
     var x = [].reverse.call(hasha);
     var y = [].reverse.call(hashb);
     return x.compare(y) || a[0].index - b[0].index
   };
-  var compareOutputs = function(a, b) {
+  var compareOutputs = function (a, b) {
     return (a.value - b.value) || (a.script.buffer).compare(b.script.buffer)
   };
   var mix = Helpers.zip3(this.transaction.ins, this.privateKeys, this.addressesOfInputs);
   mix.sort(compareInputs);
-  this.transaction.ins   = mix.map(function(a){return a[0];});
-  this.privateKeys       = mix.map(function(a){return a[1];});
-  this.addressesOfInputs = mix.map(function(a){return a[2];});
+  this.transaction.ins   = mix.map(function (a){return a[0];});
+  this.privateKeys       = mix.map(function (a){return a[1];});
+  this.addressesOfInputs = mix.map(function (a){return a[2];});
   this.transaction.outs.sort(compareOutputs);
 };
 /**
  * Sign the transaction
  * @return {Object} Signed transaction
  */
-Transaction.prototype.sign = function() {
+Transaction.prototype.sign = function () {
   assert(this.privateKeys, 'Need private keys to sign transaction');
 
   assert.equal(this.privateKeys.length, this.transaction.ins.length, 'Number of private keys needs to match inputs');
@@ -175,7 +175,7 @@ Transaction.prototype.sign = function() {
 };
 
 
-function sortUnspentOutputs(unspentOutputs) {
+function sortUnspentOutputs (unspentOutputs) {
   var unspent = [];
 
   for (var key in unspentOutputs) {
@@ -185,7 +185,7 @@ function sortUnspentOutputs(unspentOutputs) {
     }
   }
 
-  unspent.sort(function(o1, o2){
+  unspent.sort(function (o1, o2){
     return o2.value - o1.value;
   });
 

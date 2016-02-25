@@ -24,7 +24,7 @@ module.exports = {
 
 function myprint (x) {console.log(x);}
 
-function setLocalSymbol(new_symbol) {
+function setLocalSymbol (new_symbol) {
   if (!new_symbol) return;
 
   if (symbol === symbol_local) {
@@ -35,11 +35,11 @@ function setLocalSymbol(new_symbol) {
   }
 }
 
-function getLocalSymbol() {
+function getLocalSymbol () {
   return symbol_local;
 }
 
-function setBTCSymbol(new_symbol) {
+function setBTCSymbol (new_symbol) {
   if (!new_symbol) return;
 
   if (symbol === symbol_btc) {
@@ -50,12 +50,12 @@ function setBTCSymbol(new_symbol) {
   }
 }
 
-function getBTCSymbol() {
+function getBTCSymbol () {
   return symbol_btc;
 }
 // used iOS
 var _sounds = {};
-function playSound(id) {
+function playSound (id) {
   try {
     if (!_sounds[id])
       _sounds[id] = new Audio('/'+resource+id+'.wav');
@@ -72,12 +72,12 @@ try {
 
     window.console = {};
     for (var i = 0; i < names.length; ++i) {
-      window.console[names[i]] = function() {};
+      window.console[names[i]] = function () {};
     }
   }
 } catch (e) {
 }
 //The current 'shift' value - BTC = 1, mBTC = 3, uBTC = 6
-function sShift(symbol) {
+function sShift (symbol) {
   return (satoshi / symbol.conversion).toString().length-1;
 }

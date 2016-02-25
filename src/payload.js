@@ -8,7 +8,7 @@ var assert = require('assert');
 
 ////////////////////////////////////////////////////////////////////////////////
 // Payload
-function Payload(object) {
+function Payload (object) {
   var obj = object || {};
   this._pbkdf2_iterations = obj.pbkdf2_iterations || 5000;
   this._version = obj.version || 3;
@@ -23,7 +23,7 @@ function Payload(object) {
 //  segurament pot ser walletcrypto que sinstancia guardant stat del password inclus de la sharedkey
 //  i need a settings class to store all the wallet settings (now is shared js) maybe inside wallet object
 
-Payload.prototype.toJSON = function(){
+Payload.prototype.toJSON = function (){
   return {
     pbkdf2_iterations : this._pbkdf2_iterations,
     version           : this._version,
@@ -31,7 +31,7 @@ Payload.prototype.toJSON = function(){
   };
 };
 
-Payload.prototype.toWallet = function(){
+Payload.prototype.toWallet = function (){
   // decrypt payload
   // construct the wallet (give to it pbkdf iterations)
   // return the wallet object
@@ -39,7 +39,7 @@ Payload.prototype.toWallet = function(){
 };
 
 // constructor
-Payload.fromWallet = function(walletObject){
+Payload.fromWallet = function (walletObject){
   var o = {};
   o.pbkdf2_iterations = walletObject._pbkdf2_iterations; // todo, use getter
   // encrypt the wallet to generate payload

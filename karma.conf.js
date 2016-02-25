@@ -1,4 +1,4 @@
-module.exports = function(karma) {
+module.exports = function (karma) {
 
   var configuration = {
     basePath : './',
@@ -42,8 +42,8 @@ module.exports = function(karma) {
     },
 
     browserify: {
-      configure: function(bundle) {
-        bundle.once('prebundle', function() {
+      configure: function (bundle) {
+        bundle.once('prebundle', function () {
           bundle.transform('coffeeify');
           bundle.transform('browserify-istanbul');
           bundle.plugin('proxyquireify/plugin');
@@ -59,7 +59,7 @@ module.exports = function(karma) {
         sourceMap: true
       },
       // transforming the filenames
-      transformPath: function(path) {
+      transformPath: function (path) {
         return path.replace(/\.coffee$/, '.js');
       }
     },

@@ -12,7 +12,7 @@ var KeyRing       = require('./keyring');
 //// Payment Class
 ////////////////////////////////////////////////////////////////////////////////
 
-function Payment(payment) {
+function Payment (payment) {
   this.payment = Payment.return(payment);
   // type definitions
   // payment.from           :: [bitcoin address || xpub]
@@ -31,93 +31,93 @@ function Payment(payment) {
 }
 ////////////////////////////////////////////////////////////////////////////////
 // Payment instance methods (can be chained)
-Payment.prototype.to = function(destinations) {
+Payment.prototype.to = function (destinations) {
   this.payment = this.payment.then(Payment.to(destinations));
   return this;
 };
 
-Payment.prototype.from = function(origin) {
+Payment.prototype.from = function (origin) {
   this.payment = this.payment.then(Payment.from(origin));
   return this;
 };
 
-Payment.prototype.amount = function(amounts) {
+Payment.prototype.amount = function (amounts) {
   this.payment = this.payment.then(Payment.amount(amounts));
   return this;
 };
 
-Payment.prototype.then = function(myFunction) {
+Payment.prototype.then = function (myFunction) {
   this.payment = this.payment.then(myFunction);
   return this;
 };
 
-Payment.prototype.catch = function(errorHandler) {
+Payment.prototype.catch = function (errorHandler) {
   this.payment = this.payment.catch(errorHandler);
   return this;
 };
 
-Payment.prototype.sideEffect = function(myFunction) {
+Payment.prototype.sideEffect = function (myFunction) {
   this.payment = this.payment.then(Payment.sideEffect(myFunction));
   return this;
 };
 
-Payment.prototype.listener = function(listener) {
+Payment.prototype.listener = function (listener) {
   this.payment = this.payment.then(Payment.listener(listener));
   return this;
 };
 
-Payment.prototype.sweep = function() {
+Payment.prototype.sweep = function () {
   this.payment = this.payment.then(Payment.sweep());
   return this;
 };
 
-Payment.prototype.fee = function(fee) {
+Payment.prototype.fee = function (fee) {
   this.payment = this.payment.then(Payment.fee(fee));
   return this;
 };
 
-Payment.prototype.note = function(note) {
+Payment.prototype.note = function (note) {
   this.payment = this.payment.then(Payment.note(note));
   return this;
 };
 
-Payment.prototype.build = function() {
+Payment.prototype.build = function () {
   this.payment = this.payment.then(Payment.build());
   return this;
 };
 
-Payment.prototype.buildbeta = function() {
+Payment.prototype.buildbeta = function () {
   this.payment = this.payment.then(Payment.buildbeta());
   return this;
 };
 
-Payment.prototype.sign = function(password) {
+Payment.prototype.sign = function (password) {
   this.payment = this.payment.then(Payment.sign(password));
   return this;
 };
 
-Payment.prototype.publish = function() {
+Payment.prototype.publish = function () {
   this.payment = this.payment.then(Payment.publish());
   return this;
 };
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-Payment.return = function(payment) {
+Payment.return = function (payment) {
   var p = payment ? payment : {}
   return Promise.resolve(p);
 };
 
 // myFunction :: payment -> ()
-Payment.sideEffect = function(myFunction) {
-  return function(payment) {
+Payment.sideEffect = function (myFunction) {
+  return function (payment) {
     myFunction(payment);
     return Promise.resolve(payment);
   };
 };
 
-Payment.to = function(destinations) {
+Payment.to = function (destinations) {
   var formatDest = null;
-  var isValidIndex = function(i) {
+  var isValidIndex = function (i) {
     return Helpers.isPositiveInteger(i) && MyWallet.wallet.isUpgradedToHD && (i < MyWallet.wallet.hdwallet.accounts.length);
   };
   var accountToAddress = function (i) {
@@ -144,44 +144,44 @@ Payment.to = function(destinations) {
     default:
       console.log("No destination set.")
   } // fi switch
-  return function(payment) {
+  return function (payment) {
     payment.to = formatDest;
     return Promise.resolve(payment);
   };
 };
 
-Payment.listener = function(listener) {
-  return function(payment) {
+Payment.listener = function (listener) {
+  return function (payment) {
     payment.listener = listener
     return Promise.resolve(payment);
   };
 };
 
-Payment.sweep = function() {
-  return function(payment) {
+Payment.sweep = function () {
+  return function (payment) {
     payment.amounts = payment.sweepAmount ? [payment.sweepAmount] : undefined;
     payment.forcedFee = payment.sweepFee;
     return Promise.resolve(payment);
   };
 };
 
-Payment.note = function(note) {
+Payment.note = function (note) {
   var publicNote = Helpers.isString(note) ? note : null;
-  return function(payment) {
+  return function (payment) {
     payment.note = publicNote;
     return Promise.resolve(payment);
   };
 };
 
-Payment.fee = function(amount) {
+Payment.fee = function (amount) {
   var forcedFee = Helpers.isPositiveNumber(amount) ? amount : null;
-  return function(payment) {
+  return function (payment) {
     payment.forcedFee = forcedFee;
     return Promise.resolve(payment);
   };
 };
 
-Payment.amount = function(amounts) {
+Payment.amount = function (amounts) {
   var formatAmo = null;
   switch (true) {
     // single output
@@ -197,14 +197,14 @@ Payment.amount = function(amounts) {
     default:
       console.log("No amounts set.")
   } // fi switch
-  return function(payment) {
+  return function (payment) {
     payment.amounts = formatAmo;
     payment.forcedFee = null;
     return Promise.resolve(payment);
   };
 };
 
-Payment.from = function(origin) {
+Payment.from = function (origin) {
   var addresses  = null;
   var change     = null;
   var pkFormat   = Helpers.detectPrivateKeyFormat(origin);
@@ -253,7 +253,7 @@ Payment.from = function(origin) {
     default:
       console.log("No origin set.")
   } // fi switch
-  return function(payment) {
+  return function (payment) {
     payment.from           = addresses;
     payment.change         = change;
     payment.wifKeys        = wifs;
@@ -281,9 +281,9 @@ Payment.from = function(origin) {
   };
 };
 
-Payment.build = function() {
+Payment.build = function () {
 
-  return function(payment) {
+  return function (payment) {
     try {
       payment.transaction = new Transaction(payment.coins, payment.to,
                                             payment.amounts, payment.forcedFee,
@@ -296,7 +296,7 @@ Payment.build = function() {
   };
 };
 
-Payment.buildbeta = function() {
+Payment.buildbeta = function () {
   // I should check for all the payment needed fields and reject with the wrong payment
   // then the frontend can show the error and recreate the payment with the same state
   return function (payment) {
@@ -312,11 +312,11 @@ Payment.buildbeta = function() {
   };
 };
 
-Payment.sign = function(password) {
-  return function(payment) {
+Payment.sign = function (password) {
+  return function (payment) {
     function importWIF (WIF) {
       MyWallet.wallet.importLegacyAddress(WIF, "Redeemed code.", password)
-        .then(function(A){A.archived = true;});
+        .then(function (A){A.archived = true;});
     };
     if (Array.isArray(payment.wifKeys)) payment.wifKeys.forEach(importWIF);
     if (!payment.transaction) throw "You cannot sign a non-build transaction."
@@ -327,7 +327,7 @@ Payment.sign = function(password) {
   };
 };
 
-Payment.publish = function() {
+Payment.publish = function () {
   return function (payment) {
 
     var success = function (tx_hash) {
@@ -340,8 +340,8 @@ Payment.publish = function() {
       throw e.message || e.responseText;
     };
 
-    var getValue = function(coin) {return coin.value;};
-    var isSmall = function(value) {return value < 500000;};
+    var getValue = function (coin) {return coin.value;};
+    var isSmall = function (value) {return value < 500000;};
     var anySmall = payment.transaction.outs.map(getValue).some(isSmall);
     if(anySmall && payment.note !== undefined && payment.note !== null)
       {throw "There is an output too small to publish a note";}
@@ -359,10 +359,10 @@ module.exports = Payment;
 
 //////////////////////////////////////////////////////////////////////////////
 // getUnspentCoins :: [address] -> Promise [coins]
-function getUnspentCoins(addressList) {
+function getUnspentCoins (addressList) {
 
   var processCoins = function (obj) {
-    var processCoin = function(utxo) {
+    var processCoin = function (utxo) {
       var txBuffer = new Buffer(utxo.tx_hash, "hex");
       Array.prototype.reverse.call(txBuffer);
       utxo.hash = txBuffer.toString("hex");
@@ -378,7 +378,7 @@ function getUnspentCoins(addressList) {
 ////////////////////////////////////////////////////////////////////////////////
 // obtain private key for an address
 // from Address
-function getKeyForAddress(password, addr) {
+function getKeyForAddress (password, addr) {
   var k = MyWallet.wallet.key(addr).priv;
   var privateKeyBase58 = password == null ? k :
     WalletCrypto.decryptSecretWithSecondPassword( k
@@ -395,7 +395,7 @@ function getKeyForAddress(password, addr) {
 }
 ////////////////////////////////////////////////////////////////////////////////
 // getXPRIV :: password -> index -> xpriv
-function getXPRIV(password, accountIndex) {
+function getXPRIV (password, accountIndex) {
   var fromAccount = MyWallet.wallet.hdwallet.accounts[accountIndex];
   return fromAccount.extendedPrivateKey == null || password == null
     ? fromAccount.extendedPrivateKey
@@ -406,14 +406,14 @@ function getXPRIV(password, accountIndex) {
 };
 ////////////////////////////////////////////////////////////////////////////////
 // getKeyForPath :: xpriv -> path -> [private key]
-function getKeyForPath(extendedPrivateKey, neededPrivateKeyPath) {
+function getKeyForPath (extendedPrivateKey, neededPrivateKeyPath) {
   var keyring = new KeyRing(extendedPrivateKey);
   return keyring.privateKeyFromPath(neededPrivateKeyPath);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 // getPrivateKeys :: password -> payment -> [private key]
-function getPrivateKeys(password, payment) {
+function getPrivateKeys (password, payment) {
   var transaction = payment.transaction;
   var privateKeys = [];
   // if from Account
@@ -430,14 +430,14 @@ function getPrivateKeys(password, payment) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // computeSuggestedSweep :: [coins] -> [maxSpendeableAmount - fee, fee]
-function computeSuggestedSweep(coins){
-  var getValue = function(coin) {return coin.value;};
-  var sortedCoinValues = coins.map(getValue).sort(function(a, b){return b-a});
+function computeSuggestedSweep (coins){
+  var getValue = function (coin) {return coin.value;};
+  var sortedCoinValues = coins.map(getValue).sort(function (a, b){return b-a});
   var accumulatedValues = sortedCoinValues
-    .map(function(element,index,array){
+    .map(function (element,index,array){
       var fee = Helpers.guessFee(index+1, 2, MyWallet.wallet.fee_per_kb);
       return [array.slice(0,index+1).reduce(Helpers.add,0) - fee, fee];  //[total-fee, fee]
-    }).sort(function(a,b){return b[0]-a[0]});
+    }).sort(function (a,b){return b[0]-a[0]});
   // dont return negative max spendable
   if (accumulatedValues[0][0] < 0) { accumulatedValues[0][0] = 0; }
   return accumulatedValues[0];
@@ -458,16 +458,16 @@ function computeSuggestedSweep(coins){
 //   .to("1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF")
 //   .build()
 //   .sign("hola")
-//   .payment.then(function(p){console.log( "result: " +  JSON.stringify(p, null, 2));})
-//           .catch(function(e){console.log( "error: " + e);});
+//   .payment.then(function (p){console.log( "result: " +  JSON.stringify(p, null, 2));})
+//           .catch(function (e){console.log( "error: " + e);});
 
 //
-// var error = function(e) {console.log("error: " + e);}
-// var success = function(p) {console.log("final: "); console.log(p); return p;}
-// var op1Fail = function(p) {throw "I failed!!";}
-// var op2Good = function(p) {console.log("op"); console.log(p); p.op2 = true; return p;}
-// var op3Good = function(p) {console.log("op"); console.log(p);p.op3 = true; return p;}
-// var print   = function(p) {console.log("from: "+ p.from);}
+// var error = function (e) {console.log("error: " + e);}
+// var success = function (p) {console.log("final: "); console.log(p); return p;}
+// var op1Fail = function (p) {throw "I failed!!";}
+// var op2Good = function (p) {console.log("op"); console.log(p); p.op2 = true; return p;}
+// var op3Good = function (p) {console.log("op"); console.log(p);p.op3 = true; return p;}
+// var print   = function (p) {console.log("from: "+ p.from);}
 //
 // var payment = new Blockchain.Payment();
 // payment
@@ -480,10 +480,10 @@ function computeSuggestedSweep(coins){
 //   .then(success)
 //   .catch(error)
 //
-// var error        = function(e) {console.log("error: " + JSON.stringify(e, null, 2));}
-// var buildFailure = function(e) {console.log(e.error); return e.payment;}
-// var success      = function(p) {console.log("final: "); console.log(p); return p;}
-// var print        = function(p) {console.log("promise: "); console.log(p);}
+// var error        = function (e) {console.log("error: " + JSON.stringify(e, null, 2));}
+// var buildFailure = function (e) {console.log(e.error); return e.payment;}
+// var success      = function (p) {console.log("final: "); console.log(p); return p;}
+// var print        = function (p) {console.log("promise: "); console.log(p);}
 //
 // var payment = new Blockchain.Payment();
 // payment

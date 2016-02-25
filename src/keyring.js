@@ -8,7 +8,7 @@ var KeyChain = require('./keychain');
 ////////////////////////////////////////////////////////////////////////////////
 // keyring: A collection of keychains
 
-function KeyRing(extendedKey, cache) {
+function KeyRing (extendedKey, cache) {
   this._receiveChain = null;
   this._changeChain  = null;
   this.init(extendedKey, cache);
@@ -17,11 +17,11 @@ function KeyRing(extendedKey, cache) {
 Object.defineProperties(KeyRing.prototype, {
   "receive": {
     configurable: false,
-    get: function() {return this._receiveChain;}
+    get: function () {return this._receiveChain;}
   },
   "change": {
     configurable: false,
-    get: function() {return this._changeChain;}
+    get: function () {return this._changeChain;}
   }
 });
 
