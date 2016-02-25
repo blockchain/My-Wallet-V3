@@ -86,7 +86,8 @@ module.exports = function(karma) {
       'tests/wallet_transaction_spec.js.coffee',
       'tests/transaction_list_spec.js.coffee',
       'tests/wallet_crypto_spec.js.coffee',
-      'tests/wallet_signup_spec.js.coffee'
+      'tests/wallet_signup_spec.js.coffee',
+      'tests/blockchain_settings_api_spec.js.coffee'
     ]
   };
 
