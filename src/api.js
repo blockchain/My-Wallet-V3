@@ -11,7 +11,7 @@ var Bitcoin = require('bitcoinjs-lib');
 var ECKey         = Bitcoin.ECKey;
 ////////////////////////////////////////////////////////////////////////////////
 // API class
-function API(){
+function API (){
   // private members
   this.ROOT_URL           = "https://blockchain.info/";
   this.AJAX_RETRY_DEFAULT = 2;
@@ -23,14 +23,14 @@ function API(){
 // encodeFormData :: Object -> url encoded params
 API.prototype.encodeFormData = function (data) {
   if (!data) return "";
-  var encoded = Object.keys(data).map(function(k) {
+  var encoded = Object.keys(data).map(function (k) {
       return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]);
   }).join('&');
   return encoded;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-API.prototype.request = function(action, method, data, withCred) {
+API.prototype.request = function (action, method, data, withCred) {
   var url   = this.ROOT_URL + method
     , body  = this.encodeFormData(data)
     , time  = (new Date()).getTime();
@@ -78,7 +78,7 @@ API.prototype.request = function(action, method, data, withCred) {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-API.prototype.retry = function(f, n) {
+API.prototype.retry = function (f, n) {
   var self = this;
   var i = n === null || n === undefined ? this.AJAX_RETRY_DEFAULT : n;
   if (i > 1) {
@@ -93,7 +93,7 @@ API.prototype.retry = function(f, n) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // sync clocks with network time protocol
-API.prototype.handleNTPResponse = function(obj, clientTime) {
+API.prototype.handleNTPResponse = function (obj, clientTime) {
   //Calculate serverTimeOffset using NTP algo
   var nowTime = (new Date()).getTime();
   if (obj.clientTimeDiff && obj.serverTime) {
@@ -111,7 +111,7 @@ API.prototype.handleNTPResponse = function(obj, clientTime) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Definition of API
-API.prototype.getBalances = function(addresses){
+API.prototype.getBalances = function (addresses){
   var data = {
       active : addresses.join('|')
     , simple: true
@@ -121,22 +121,22 @@ API.prototype.getBalances = function(addresses){
   return this.retry(this.request.bind(this, "POST", "multiaddr", data));
 };
 
-API.prototype.getBalanceForRedeemCode = function(privatekey){
+API.prototype.getBalanceForRedeemCode = function (privatekey){
 
   var format = Helpers.detectPrivateKeyFormat(privatekey);
   if(format == null) { return Promise.reject('Unknown private key format'); }
   var privateKeyToSweep = Helpers.privateKeyStringToKey(privatekey, format);
   var aC = new ECKey(privateKeyToSweep.d, true).pub.getAddress().toString();
   var aU = new ECKey(privateKeyToSweep.d, false).pub.getAddress().toString();
-  var totalBalance = function(data) {
+  var totalBalance = function (data) {
     return Object.keys(data)
-                 .map(function(a){ return data[a].final_balance;})
+                 .map(function (a){ return data[a].final_balance;})
                  .reduce(Helpers.add, 0);
   }
   return API.getBalances([aC, aU]).then(totalBalance)
 };
 
-API.prototype.getFiatAtTime = function(time, value, currencyCode){
+API.prototype.getFiatAtTime = function (time, value, currencyCode){
   var data = {
       value : value
     , currency: currencyCode
@@ -148,13 +148,13 @@ API.prototype.getFiatAtTime = function(time, value, currencyCode){
   return this.retry(this.request.bind(this, "GET", "frombtc", data));
 };
 
-API.prototype.getTicker = function(){
+API.prototype.getTicker = function (){
   var data = { format: 'json' , api_code : this.API_CODE};
   // return this.request("GET", "ticker", data);
   return this.retry(this.request.bind(this, "GET", "ticker", data));
 };
 
-API.prototype.getUnspent = function(fromAddresses, confirmations){
+API.prototype.getUnspent = function (fromAddresses, confirmations){
   var data = {
       active : fromAddresses.join('|')
     , confirmations : Helpers.isPositiveNumber(confirmations) ? confirmations : 0
@@ -257,9 +257,9 @@ API.prototype.pushTx = function (tx, note){
 //       to : email,
 //       priv : privateKey,
 //       hash : tx.getHash().toString('hex')
-//     }, function(data) {
+//     }, function (data) {
 //       successCallback(data);
-//     }, function(data) {
+//     }, function (data) {
 //       errorCallback(data ? data.responseText : null);
 //     });
 //   } catch (e) {
@@ -274,9 +274,9 @@ API.prototype.pushTx = function (tx, note){
 //       to : number,
 //       priv : privateKey,
 //       hash : tx.getHash().toString('hex')
-//     }, function() {
+//     }, function () {
 //       successCallback();
-//     }, function(data) {
+//     }, function (data) {
 //       errorCallback(data ? data.responseText : null);
 //     });
 //   } catch (e) {

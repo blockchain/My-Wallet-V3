@@ -6,10 +6,10 @@ var Helpers     = require('./helpers');
 var MyWallet    = require('./wallet');
 var WalletStore = require('./wallet-store');
 ////////////////////////////////////////////////////////////////////////////////
-function Tx(object){
+function Tx (object){
   var obj = object || {};
   // original properties
-  var setConfirmations = function(tx_block_height) {
+  var setConfirmations = function (tx_block_height) {
     var lastBlock = MyWallet.wallet.latestBlock;
     var conf = 0;
     if (lastBlock && tx_block_height != null && tx_block_height > 0) {
@@ -44,51 +44,51 @@ function Tx(object){
 Object.defineProperties(Tx.prototype, {
   "processedInputs": {
     configurable: false,
-    get: function() { return this._processed_ins.map(function(x){return x;});}
+    get: function () { return this._processed_ins.map(function (x){return x;});}
   },
   "processedOutputs": {
     configurable: false,
-    get: function() { return this._processed_outs.map(function(x){return x;});}
+    get: function () { return this._processed_outs.map(function (x){return x;});}
   },
   "totalIn": {
     configurable: false,
-    get: function() {
-      return this._processed_ins.map(function(x){return x.amount;})
+    get: function () {
+      return this._processed_ins.map(function (x){return x.amount;})
                                  .reduce(Helpers.add, 0);
     }
   },
   "totalOut": {
     configurable: false,
-    get: function() {
-      return this._processed_outs.map(function(x){return x.amount;})
+    get: function () {
+      return this._processed_outs.map(function (x){return x.amount;})
                                  .reduce(Helpers.add, 0);
     }
   },
   "fee": {
     configurable: false,
-    get: function() {
+    get: function () {
       return isCoinBase(this.inputs[0]) ? 0 : this.totalIn - this.totalOut;
     }
   },
   "internalSpend": {
     configurable: false,
-    get: function() {
-      return this._processed_ins.filter(function(i){ return i.coinType !== 'external';})
-                                .map(function(i){return i.amount})
+    get: function () {
+      return this._processed_ins.filter(function (i){ return i.coinType !== 'external';})
+                                .map(function (i){return i.amount})
                                 .reduce(Helpers.add, 0);
     }
   },
   "internalReceive": {
     configurable: false,
-    get: function() {
-      return this._processed_outs.filter(function(i){ return i.coinType !== 'external';})
-                                 .map(function(i){return i.amount})
+    get: function () {
+      return this._processed_outs.filter(function (i){ return i.coinType !== 'external';})
+                                 .map(function (i){return i.amount})
                                  .reduce(Helpers.add, 0);
     }
   },
   "result": {
     configurable: false,
-    get: function() {
+    get: function () {
       var r = this._result;
       if(this._result == null) r = this.internalReceive - this.internalSpend;
       return r;
@@ -96,7 +96,7 @@ Object.defineProperties(Tx.prototype, {
   },
   "amount": {
     configurable: false,
-    get: function() {
+    get: function () {
       var am = 0;
       switch (this.txType) {
         case "transfer":
@@ -116,15 +116,15 @@ Object.defineProperties(Tx.prototype, {
   },
   "changeAmount": {
     configurable: false,
-    get: function() {
-      return this._processed_outs.filter(function(i){ return (i.coinType !== 'external') && (i.change === true);})
-                                 .map(function(i){return i.amount})
+    get: function () {
+      return this._processed_outs.filter(function (i){ return (i.coinType !== 'external') && (i.change === true);})
+                                 .map(function (i){return i.amount})
                                  .reduce(Helpers.add, 0);
     }
   },
   "txType": {
     configurable: false,
-    get: function() {
+    get: function () {
       var v = null;
       var impactNoFee = this.result + this.fee;
       switch (true) {
@@ -152,43 +152,43 @@ Object.defineProperties(Tx.prototype, {
   },
   "fromWatchOnly": {
     configurable: false,
-    get: function() {
+    get: function () {
       return this._processed_ins.some(function (o) { return o.isWatchOnly; });
     }
   },
   "toWatchOnly": {
     configurable: false,
-    get: function() {
+    get: function () {
       return this._processed_outs.some(function (o) { return o.isWatchOnly; });
     }
   }
 });
 
-function isAccount(x) {
+function isAccount (x) {
   return !!x.xpub;
 }
 
-function isLegacy(x) {
+function isLegacy (x) {
   return MyWallet.wallet.containsLegacyAddress(x.addr);
 }
 
-function isAccountChange(x) {
+function isAccountChange (x) {
   return (isAccount(x) && x.xpub.path.split('/')[1] === '1');
 }
 
-function accountPath(x){
+function accountPath (x){
   return account(x).index + x.xpub.path.substr(1);
 }
 
-function account(x) {
+function account (x) {
   return MyWallet.wallet.hdwallet.account(x.xpub.m);
 }
 
-function address(x) {
+function address (x) {
   return MyWallet.wallet.key(x.addr);
 }
 
-function tagCoin(x) {
+function tagCoin (x) {
   var ad = x.addr;
   var am = x.value;
   var coinType = null;
@@ -225,7 +225,7 @@ function tagCoin(x) {
   };
 }
 
-function unpackInput(input) {
+function unpackInput (input) {
   if (isCoinBase(input)) {
     return {addr: "Coinbase", value: this.totalOut};
   } else {
@@ -233,18 +233,18 @@ function unpackInput(input) {
   }
 }
 
-function isCoinBase(input) {
+function isCoinBase (input) {
   return (input == null || input.prev_out == null || input.prev_out.addr == null);
 }
 
-Tx.factory = function(o){
+Tx.factory = function (o){
   if (o instanceof Object && !(o instanceof Tx)) {
     return new Tx(o);
   }
   else { return o; }
 };
 
-Tx.IOSfactory = function(tx){
+Tx.IOSfactory = function (tx){
   return {
     time          : tx.time,
     result        : tx.result,

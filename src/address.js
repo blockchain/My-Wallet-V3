@@ -11,7 +11,7 @@ var shared   = require('./shared');
 var ImportExport = require('./import-export');
 ////////////////////////////////////////////////////////////////////////////////
 // Address class
-function Address(object){
+function Address (object){
   // private members
   var obj = object || {};
   this._addr  = obj.addr;
@@ -31,20 +31,20 @@ function Address(object){
 Object.defineProperties(Address.prototype, {
   "address": {
     configurable: false,
-    get: function() { return this._addr;}
+    get: function () { return this._addr;}
   },
   "priv": {
     configurable: false,
-    get: function() { return this._priv;}
+    get: function () { return this._priv;}
   },
   "tag": {
     configurable: false,
-    get: function() { return this._tag;}
+    get: function () { return this._tag;}
   },
   "label": {
     configurable: false,
-    get: function() { return this._label;},
-    set: function(str) {
+    get: function () { return this._label;},
+    set: function (str) {
       if(Helpers.isValidLabel(str) || str == null) {
         this._label = str === ""? undefined : str;
         MyWallet.syncWallet();
@@ -55,20 +55,20 @@ Object.defineProperties(Address.prototype, {
   },
   "created_time": {
     configurable: false,
-    get: function() {return this._created_time;}
+    get: function () {return this._created_time;}
   },
   "created_device_name": {
     configurable: false,
-    get: function() {return this._created_device_name;}
+    get: function () {return this._created_device_name;}
   },
   "created_device_version": {
     configurable: false,
-    get: function() {return this._created_device_version;}
+    get: function () {return this._created_device_version;}
   },
   "balance": {
     configurable: false,
-    get: function() { return this._balance;},
-    set: function(num) {
+    get: function () { return this._balance;},
+    set: function (num) {
       if(Helpers.isPositiveNumber(num))
         this._balance = num;
       else
@@ -77,8 +77,8 @@ Object.defineProperties(Address.prototype, {
   },
   "totalSent": {
     configurable: false,
-    get: function() { return this._totalSent;},
-    set: function(num) {
+    get: function () { return this._totalSent;},
+    set: function (num) {
       if(Helpers.isPositiveNumber(num))
         this._totalSent = num;
       else
@@ -87,8 +87,8 @@ Object.defineProperties(Address.prototype, {
   },
   "totalReceived": {
     configurable: false,
-    get: function() { return this._totalReceived;},
-    set: function(num) {
+    get: function () { return this._totalReceived;},
+    set: function (num) {
       if(Helpers.isPositiveNumber(num))
         this._totalReceived = num;
       else
@@ -97,20 +97,20 @@ Object.defineProperties(Address.prototype, {
   },
   "isWatchOnly": {
     configurable: false,
-    get: function() { return this._priv == null;}
+    get: function () { return this._priv == null;}
   },
   "isEncrypted": {
     configurable: false,
-    get: function() { return Helpers.isBase64(this._priv) && !Helpers.isBase58Key(this._priv);}
+    get: function () { return Helpers.isBase64(this._priv) && !Helpers.isBase58Key(this._priv);}
   },
   "isUnEncrypted": {
     configurable: false,
-    get: function() { return Helpers.isBase58Key(this._priv);}
+    get: function () { return Helpers.isBase58Key(this._priv);}
   },
   "archived": {
     configurable: false,
-    get: function() { return this._tag === 2;},
-    set: function(value) {
+    get: function () { return this._tag === 2;},
+    set: function (value) {
       if(Helpers.isBoolean(value)) {
         if (value) { // Archive:
           this._tag = 2;
@@ -126,12 +126,12 @@ Object.defineProperties(Address.prototype, {
   },
   "active": {
     configurable: false,
-    get: function() { return !this.archived;},
-    set: function(value) { this.archived = !value; }
+    get: function () { return !this.archived;},
+    set: function (value) { this.archived = !value; }
   }
 });
 
-Address.factory = function(o,a){
+Address.factory = function (o,a){
   if (a instanceof Object && !(a instanceof Address)) {
     o[a.addr] = new Address(a);
   }
@@ -141,7 +141,7 @@ Address.factory = function(o,a){
   return o;
 };
 
-Address.import = function(key, label){
+Address.import = function (key, label){
   var object = {
     addr                   : null,
     priv                   : null,
@@ -175,8 +175,8 @@ Address.import = function(key, label){
   return address;
 };
 
-Address.fromString = function(keyOrAddr, label, bipPass){
-  var asyncParse = function(resolve, reject) {
+Address.fromString = function (keyOrAddr, label, bipPass){
+  var asyncParse = function (resolve, reject) {
     if (Helpers.isBitcoinAddress(keyOrAddr)) {
       return resolve(Address.import(keyOrAddr, label));
     } else {
@@ -204,17 +204,17 @@ Address.fromString = function(keyOrAddr, label, bipPass){
   return new Promise(asyncParse);
 };
 
-Address.new = function(label){
+Address.new = function (label){
   var key = Bitcoin.ECKey.makeRandom(true, RNG.run.bind(RNG));
   return Address.import(key, label);
 };
 
-Address.reviver = function(k,v){
+Address.reviver = function (k,v){
   if (k === '') return new Address(v);
   return v;
 };
 
-Address.prototype.toJSON = function(){
+Address.prototype.toJSON = function (){
   var address = {
     addr   : this.address,
     priv   : this.priv,
@@ -227,7 +227,7 @@ Address.prototype.toJSON = function(){
   return address;
 };
 
-Address.prototype.encrypt = function(cipher){
+Address.prototype.encrypt = function (cipher){
   if (!this._priv) return this;
   var priv = cipher ? cipher(this._priv) : this._priv;
   if (!priv) { throw 'Error Encoding key'; }
@@ -235,7 +235,7 @@ Address.prototype.encrypt = function(cipher){
   return this;
 };
 
-Address.prototype.decrypt = function(cipher){
+Address.prototype.decrypt = function (cipher){
   if (!this._priv) return this;
   var priv = cipher ? cipher(this._priv) : this._priv;
   if (!priv) { throw 'Error Decoding key'; }
@@ -243,7 +243,7 @@ Address.prototype.decrypt = function(cipher){
   return this;
 };
 
-Address.prototype.persist = function(){
+Address.prototype.persist = function (){
   if (!this._temporal_priv) return this;
   this._priv = this._temporal_priv;
   delete this._temporal_priv;

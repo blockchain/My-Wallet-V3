@@ -5,7 +5,7 @@ var assert = require('assert');
 var API = require('./api');
 var Helpers = require('./helpers');
 
-function postTokenEndpoint(method, token, extraParams) {
+function postTokenEndpoint (method, token, extraParams) {
   assert(token, "Token required");
   assert(extraParams, "Extra params dictionary required");
 
@@ -30,15 +30,15 @@ function postTokenEndpoint(method, token, extraParams) {
     .then(handleResponse);
 }
 
-function verifyEmail(token) {
+function verifyEmail (token) {
   return this.postTokenEndpoint('verify-email-token', token, {});
 }
 
-function unsubscribe(token) {
+function unsubscribe (token) {
   return this.postTokenEndpoint('unsubscribe', token, {});
 }
 
-function authorizeApprove(token, differentBrowserCallback, differentBrowserApproved) {
+function authorizeApprove (token, differentBrowserCallback, differentBrowserApproved) {
   assert(Helpers.isBoolean(differentBrowserApproved) || differentBrowserApproved == null, "differentBrowserApproved must be null, false or true");
 
   var handleError = function (res) {
@@ -61,7 +61,7 @@ function authorizeApprove(token, differentBrowserCallback, differentBrowserAppro
     .catch(handleError);
 }
 
-function resetTwoFactor(token) {
+function resetTwoFactor (token) {
   return this.postTokenEndpoint('reset-two-factor-token', token, {});
 }
 

@@ -22,12 +22,12 @@ MyWallet.wallet = undefined;
 MyWallet.ws = new BlockchainSocket();
 
 // used locally
-function socketConnect() {
+function socketConnect () {
   MyWallet.ws.connect(onOpen, onMessage, onClose);
 
   var last_on_change = null;
 
-  function onMessage(message) {
+  function onMessage (message) {
     var obj = null;
 
     if (!(typeof window === 'undefined')) {
@@ -63,7 +63,7 @@ function socketConnect() {
     }
   }
 
-  function onOpen() {
+  function onOpen () {
     WalletStore.sendEvent('ws_on_open');
 
     var msg = '{"op":"blocks_sub"}';
@@ -73,7 +73,7 @@ function socketConnect() {
 
     try {
       MyWallet.wallet.activeAddresses.forEach(
-        function(address) { msg += '{"op":"addr_sub", "addr":"'+ address +'"}'; }
+        function (address) { msg += '{"op":"addr_sub", "addr":"'+ address +'"}'; }
       );
 
       if (MyWallet.wallet.isUpgradedToHD)
@@ -86,28 +86,28 @@ function socketConnect() {
     MyWallet.ws.send(msg);
   }
 
-  function onClose() {
+  function onClose () {
     WalletStore.sendEvent('ws_on_close');
   }
 }
 
 // used only locally (wallet.js)
-MyWallet.listenToHDWalletAccount = function(accountExtendedPublicKey) {
+MyWallet.listenToHDWalletAccount = function (accountExtendedPublicKey) {
   try {
     var msg = '{"op":"xpub_sub", "xpub":"'+ accountExtendedPublicKey +'"}';
     MyWallet.ws.send(msg);
   } catch (e) { }
 };
 // used only once locally
-MyWallet.listenToHDWalletAccounts = function() {
+MyWallet.listenToHDWalletAccounts = function () {
   if (Blockchain.MyWallet.wallet.isUpgradedToHD) {
-    var listen = function(a) { MyWallet.listenToHDWalletAccount(a.extendedPublicKey); }
+    var listen = function (a) { MyWallet.listenToHDWalletAccount(a.extendedPublicKey); }
     MyWallet.wallet.hdwallet.activeAccounts.forEach(listen);
   };
 };
 
 // used two times
-function didDecryptWallet(success) {
+function didDecryptWallet (success) {
 
   //We need to check if the wallet has changed
   MyWallet.getWallet();
@@ -116,14 +116,14 @@ function didDecryptWallet(success) {
 }
 
 // used once
-function checkWalletChecksum(payload_checksum, success, error) {
+function checkWalletChecksum (payload_checksum, success, error) {
   var data = {method : 'wallet.aes.json', format : 'json', checksum : payload_checksum};
 
-  API.securePostCallbacks("wallet", data, function(obj) {
+  API.securePostCallbacks("wallet", data, function (obj) {
     if (!obj.payload || obj.payload == 'Not modified') {
       if (success) success();
     } else if (error) error();
-  }, function(e) {
+  }, function (e) {
     if (error) error();
   });
 }
@@ -131,13 +131,13 @@ function checkWalletChecksum(payload_checksum, success, error) {
 //Fetch a new wallet from the server
 //success(modified true/false)
 // used locally and iOS
-MyWallet.getWallet = function(success, error) {
+MyWallet.getWallet = function (success, error) {
   var data = {method : 'wallet.aes.json', format : 'json'};
 
   if (WalletStore.getPayloadChecksum() && WalletStore.getPayloadChecksum().length > 0)
     data.checksum = WalletStore.getPayloadChecksum();
 
-  API.securePostCallbacks("wallet", data, function(obj) {
+  API.securePostCallbacks("wallet", data, function (obj) {
     if (!obj.payload || obj.payload == 'Not modified') {
       if (success) success();
       return;
@@ -145,21 +145,21 @@ MyWallet.getWallet = function(success, error) {
 
     WalletStore.setEncryptedWalletData(obj.payload);
 
-    decryptAndInitializeWallet(function() {
+    decryptAndInitializeWallet(function () {
       MyWallet.wallet.getHistory();
 
       if (success) success();
-    }, function() {
+    }, function () {
       if (error) error();
     });
-  }, function(e) {
+  }, function (e) {
     if (error) error();
   });
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function decryptAndInitializeWallet(success, error, decrypt_success, build_hd_success) {
+function decryptAndInitializeWallet (success, error, decrypt_success, build_hd_success) {
   assert(success, 'Success callback required');
   assert(error, 'Error callback required');
   var encryptedWalletData = WalletStore.getEncryptedWalletData();
@@ -171,7 +171,7 @@ function decryptAndInitializeWallet(success, error, decrypt_success, build_hd_su
   WalletCrypto.decryptWallet(
     encryptedWalletData,
     WalletStore.getPassword(),
-    function(obj, rootContainer) {
+    function (obj, rootContainer) {
       decrypt_success && decrypt_success();
       MyWallet.wallet = new Wallet(obj);
 
@@ -201,13 +201,13 @@ function decryptAndInitializeWallet(success, error, decrypt_success, build_hd_su
 ////////////////////////////////////////////////////////////////////////////////
 
 // used in the frontend
-MyWallet.makePairingCode = function(success, error) {
+MyWallet.makePairingCode = function (success, error) {
   try {
-    API.securePostCallbacks('wallet', { method : 'pairing-encryption-password' }, function(encryption_phrase) {
+    API.securePostCallbacks('wallet', { method : 'pairing-encryption-password' }, function (encryption_phrase) {
       var pwHex = new Buffer(WalletStore.getPassword()).toString('hex');
       var encrypted = WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + pwHex, encryption_phrase, 10);
       success('1|' + MyWallet.wallet.guid + '|' + encrypted);
-    }, function(e) {
+    }, function (e) {
       error(e);
     });
   } catch (e) {
@@ -238,9 +238,9 @@ MyWallet.login = function ( user_guid
 
   if (shared_key) { data.sharedKey = shared_key; }
 
-  var tryToFetchWalletJSON = function(guid, successCallback) {
+  var tryToFetchWalletJSON = function (guid, successCallback) {
 
-    var success = function(obj) {
+    var success = function (obj) {
       fetch_success && fetch_success();
       // Even if Two Factor is enabled, some settings need to be saved here,
       // because they won't be part of the 2FA response.
@@ -264,7 +264,7 @@ MyWallet.login = function ( user_guid
       successCallback(obj)
     };
 
-    var error = function(e) {
+    var error = function (e) {
        console.log(e);
        var obj = 'object' === typeof e ? e : JSON.parse(e);
        if(obj && obj.initial_error && !obj.authorization_required) {
@@ -273,8 +273,8 @@ MyWallet.login = function ( user_guid
        }
        WalletStore.sendEvent('did_fail_set_guid');
        if (obj.authorization_required && typeof(authorization_required) === "function") {
-         authorization_required(function() {
-           MyWallet.pollForSessionGUID(function() {
+         authorization_required(function () {
+           MyWallet.pollForSessionGUID(function () {
              tryToFetchWalletJSON(guid, successCallback);
            });
          });
@@ -296,7 +296,7 @@ MyWallet.login = function ( user_guid
      other_error('You must enter a Two Factor Authentication code');
      return;
     }
-    var success = function(data) {
+    var success = function (data) {
      if (data == null || data.length == 0) {
        other_error('Server Return Empty Wallet Data');
        return;
@@ -313,7 +313,7 @@ MyWallet.login = function ( user_guid
     API.request("POST", 'wallet', myData, true, false).then(success).catch(error);
   };
 
-  var didFetchWalletJSON = function(obj) {
+  var didFetchWalletJSON = function (obj) {
 
     if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
      WalletStore.setEncryptedWalletData(obj.payload);
@@ -340,7 +340,7 @@ MyWallet.login = function ( user_guid
 ////////////////////////////////////////////////////////////////////////////////
 
 // used locally
-MyWallet.pollForSessionGUID = function(successCallback) {
+MyWallet.pollForSessionGUID = function (successCallback) {
 
   if (WalletStore.isPolling()) return;
   WalletStore.setIsPolling(true);
@@ -353,7 +353,7 @@ MyWallet.pollForSessionGUID = function(successCallback) {
     } else {
       if (WalletStore.getCounter() < 600) {
         WalletStore.incrementCounter();
-        setTimeout(function() {
+        setTimeout(function () {
           API.request("GET", 'wallet/poll-for-session-guid', data, true, false).then(success).catch(error);
         }, 2000);
       } else {
@@ -361,7 +361,7 @@ MyWallet.pollForSessionGUID = function(successCallback) {
       }
     }
   }
-  var error = function() {
+  var error = function () {
     WalletStore.setIsPolling(false);
   }
   API.request("GET", 'wallet/poll-for-session-guid', data, true, false).then(success).catch(error);
@@ -369,14 +369,14 @@ MyWallet.pollForSessionGUID = function(successCallback) {
 // used locally
 ////////////////////////////////////////////////////////////////////////////////
 
-MyWallet.initializeWallet = function(pw, success, other_error, decrypt_success, build_hd_success) {
+MyWallet.initializeWallet = function (pw, success, other_error, decrypt_success, build_hd_success) {
   assert(success, 'Success callback required');
   assert(other_error, 'Error callback required');
   if (isInitialized || WalletStore.isRestoringWallet()) {
     return;
   }
 
-  function _error(e) {
+  function _error (e) {
     WalletStore.setRestoringWallet(false);
     WalletStore.sendEvent("msg", {type: "error", message: e});
 
@@ -388,7 +388,7 @@ MyWallet.initializeWallet = function(pw, success, other_error, decrypt_success, 
   WalletStore.unsafeSetPassword(pw);
 
   decryptAndInitializeWallet(
-    function() {
+    function () {
       WalletStore.setRestoringWallet(false);
       didDecryptWallet(success);
     }
@@ -402,12 +402,12 @@ MyWallet.initializeWallet = function(pw, success, other_error, decrypt_success, 
 ////////////////////////////////////////////////////////////////////////////////
 
 // used on iOS
-MyWallet.getIsInitialized = function() {
+MyWallet.getIsInitialized = function () {
   return isInitialized;
 };
 
 // used once
-function setIsInitialized() {
+function setIsInitialized () {
   if (isInitialized) return;
   socketConnect();
   isInitialized = true;
@@ -417,7 +417,7 @@ function setIsInitialized() {
 // This should replace backup functions
 function syncWallet (successcallback, errorcallback) {
 
-  var panic = function(e) {
+  var panic = function (e) {
       console.log('Panic ' + e);
       window.location.replace("/");
       throw 'Save disabled.';
@@ -435,7 +435,7 @@ function syncWallet (successcallback, errorcallback) {
 
   WalletStore.disableLogout();
 
-  var _errorcallback = function(e) {
+  var _errorcallback = function (e) {
     WalletStore.sendEvent('on_backup_wallet_error');
     WalletStore.sendEvent("msg", {type: "error", message: 'Error Saving Wallet: ' + e});
     // Re-fetch the wallet from server
@@ -457,7 +457,7 @@ function syncWallet (successcallback, errorcallback) {
     }
 
     //Now Decrypt the it again to double check for any possible corruption
-    WalletCrypto.decryptWallet(crypted, WalletStore.getPassword(), function(obj) {
+    WalletCrypto.decryptWallet(crypted, WalletStore.getPassword(), function (obj) {
       try {
         var oldChecksum = WalletStore.getPayloadChecksum();
         WalletStore.sendEvent('on_backup_wallet_start');
@@ -482,7 +482,7 @@ function syncWallet (successcallback, errorcallback) {
             MyWallet.wallet.hdwallet != undefined &&
             MyWallet.wallet.hdwallet.accounts != undefined
           ) ? [].concat.apply([],
-            MyWallet.wallet.hdwallet.accounts.map(function(account) {
+            MyWallet.wallet.hdwallet.accounts.map(function (account) {
               return account.labeledReceivingAddresses
             })) : [];
           data.active = [].concat.apply([],
@@ -496,23 +496,23 @@ function syncWallet (successcallback, errorcallback) {
         API.securePostCallbacks(
             "wallet"
           , data
-          , function(data) {
+          , function (data) {
               checkWalletChecksum(
                   new_checksum
-                , function() {
+                , function () {
                     WalletStore.setIsSynchronizedWithServer(true);
                     WalletStore.enableLogout();
                     WalletStore.resetLogoutTimeout();
                     WalletStore.sendEvent('on_backup_wallet_success');
                     successcallback && successcallback();
                     }
-                , function() {
+                , function () {
                     _errorcallback('Checksum Did Not Match Expected Value');
                     WalletStore.enableLogout();
                   }
               );
             }
-          , function(e) {
+          , function (e) {
             WalletStore.enableLogout();
             _errorcallback(e);
           }
@@ -523,7 +523,7 @@ function syncWallet (successcallback, errorcallback) {
         WalletStore.enableLogout();
       }
     },
-                               function(e) {
+                               function (e) {
                                  console.log(e);
                                  throw("Decryption failed");
                                });
@@ -533,7 +533,7 @@ function syncWallet (successcallback, errorcallback) {
   }
 
 }
-MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function(){
+MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function (){
   console.log("SAVE CALLED...");
   WalletStore.setIsSynchronizedWithServer(false);
 });
@@ -543,12 +543,12 @@ MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function(){
  * @param {string} inputedPassword user main password
  * @param {string} languageCode fiat currency code (e.g. USD)
  * @param {string} currencyCode language code (e.g. en)
- * @param {function(string, string, string)} success callback function with guid, sharedkey and password
- * @param {function(string)} error callback function with error message
+ * @param {function (string, string, string)} success callback function with guid, sharedkey and password
+ * @param {function (string)} error callback function with error message
  */
  // used on mywallet, iOS and frontend
-MyWallet.createNewWallet = function(inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, success, error, isHD) {
-  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, firstAccountName, function(createdGuid, createdSharedKey, createdPassword) {
+MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, success, error, isHD) {
+  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, firstAccountName, function (createdGuid, createdSharedKey, createdPassword) {
 
     if (languageCode)
       WalletStore.setLanguage(languageCode);
@@ -562,8 +562,8 @@ MyWallet.createNewWallet = function(inputedEmail, inputedPassword, firstAccountN
 };
 
 // used on frontend
-MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
-  var walletSuccess = function(guid, sharedKey, password) {
+MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
+  var walletSuccess = function (guid, sharedKey, password) {
     WalletStore.unsafeSetPassword(password);
     var runSuccess = function () {success({ guid: guid, sharedKey: sharedKey, password: password});};
     MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password, undefined, startedRestoreHDWallet, accountProgress).then(runSuccess).catch(error);
@@ -572,10 +572,10 @@ MyWallet.recoverFromMnemonic = function(inputedEmail, inputedPassword, recoveryM
 };
 
 // used frontend and mywallet
-MyWallet.logout = function(force) {
+MyWallet.logout = function (force) {
   if (!force && WalletStore.isLogoutDisabled())
     return;
-  var reload = function() {
+  var reload = function () {
     try { window.location.reload(); } catch (e) {
       console.log(e);
     }

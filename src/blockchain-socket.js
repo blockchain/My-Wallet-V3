@@ -2,7 +2,7 @@
 var WebSocket = require('ws');
 var Helpers   = require('./helpers');
 
-function BlockchainSocket() {
+function BlockchainSocket () {
   this.wsUrl = 'wss://blockchain.info/inv';
   this.headers = { 'Origin': 'https://blockchain.info' };
   this.socket;
@@ -57,7 +57,7 @@ BlockchainSocket.prototype.send = function (message) {
   if(Helpers.tor()) return;
 
   this.reconnect();
-  var send = function() {this.socket.send(message); }.bind(this);
+  var send = function () {this.socket.send(message); }.bind(this);
   if (this.socket && this.socket.readyState === 1) { send();}
 };
 
