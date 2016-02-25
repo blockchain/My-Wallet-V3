@@ -121,7 +121,6 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
   assert(guid, "GUID missing");
   assert(sharedKey, "Shared Key missing");
   assert(password, "Password missing");
-  assert(typeof decryptWalletProgress == 'function', "decryptWalletProgress must be a function");
 
   var dataPromise = new Promise(function(resolve, reject) {
     // var data = MyWallet.makeCustomWalletJSON(null, guid, sharedKey);
