@@ -257,8 +257,8 @@ function enableReceiveNotifications(success, error) {
 }
 
 function enableEmailReceiveNotifications(success, error) {
-  assert(success, "Success callback required");
-  assert(error, "Error callback required");
+  assert(success && typeof(error) === "function", "Success callback required");
+  assert(error && typeof(error) === "function", "Error callback required");
 
   enableEmailNotifications(
     function() {
@@ -272,19 +272,19 @@ function enableEmailReceiveNotifications(success, error) {
 }
 
 function disableAllNotifications(success, error) {
-  assert(success, "Success callback required");
-  assert(error, "Error callback required");
+  assert(success && typeof(error) === "function", "Success callback required");
+  assert(error && typeof(error) === "function", "Error callback required");
 
   API.securePostCallbacks("wallet", {
     method : 'update-notifications-type',
     length: 1,
     payload: 0
   }).then(function(data) {
-    typeof(success) === "function" && success(data);
+    success(data);
   }).catch(function(data) {
     var response = data.responseText || 'Error Disabling Receive Notifications';
     WalletStore.sendEvent("msg", {type: "error", message: response});
-    typeof(error) === "function" &&  error();
+    error();
   });
 }
 
