@@ -119,7 +119,7 @@ function didDecryptWallet(success) {
 function checkWalletChecksum(payload_checksum, success, error) {
   var data = {method : 'wallet.aes.json', format : 'json', checksum : payload_checksum};
 
-  API.securePost("wallet", data, function(obj) {
+  API.securePostCallbacks("wallet", data, function(obj) {
     if (!obj.payload || obj.payload == 'Not modified') {
       if (success) success();
     } else if (error) error();
@@ -137,7 +137,7 @@ MyWallet.getWallet = function(success, error) {
   if (WalletStore.getPayloadChecksum() && WalletStore.getPayloadChecksum().length > 0)
     data.checksum = WalletStore.getPayloadChecksum();
 
-  API.securePost("wallet", data, function(obj) {
+  API.securePostCallbacks("wallet", data, function(obj) {
     if (!obj.payload || obj.payload == 'Not modified') {
       if (success) success();
       return;
@@ -203,7 +203,7 @@ function decryptAndInitializeWallet(success, error, decrypt_success, build_hd_su
 // used in the frontend
 MyWallet.makePairingCode = function(success, error) {
   try {
-    API.securePost('wallet', { method : 'pairing-encryption-password' }, function(encryption_phrase) {
+    API.securePostCallbacks('wallet', { method : 'pairing-encryption-password' }, function(encryption_phrase) {
       var pwHex = new Buffer(WalletStore.getPassword()).toString('hex');
       var encrypted = WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + pwHex, encryption_phrase, 10);
       success('1|' + MyWallet.wallet.guid + '|' + encrypted);
@@ -493,7 +493,7 @@ function syncWallet (successcallback, errorcallback) {
           ).join('|');
         }
 
-        API.securePost(
+        API.securePostCallbacks(
             "wallet"
           , data
           , function(data) {
