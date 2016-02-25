@@ -38,7 +38,7 @@ function updateKV(method, value, success, error, extra) {
 }
 
 function update_API_access(enabled, success, error) {
-  updateKV('update-api-access-enabled', enabled ? 1 : 0, success, error);
+  updateKV('update-api-access-enabled', enabled ? true : false, success, error);
 }
 
 /**
@@ -67,7 +67,7 @@ function change_btc_currency(code, success, error) {
 }
 
 function update_tor_ip_block(enabled, success, error) {
-  updateKV('update-block-tor-ips', enabled, success, error);
+  updateKV('update-block-tor-ips', enabled ? true : false, success, error);
 }
 
 function isBadPasswordHint(value) {
