@@ -266,7 +266,7 @@ function enableEmailReceiveNotifications(success, error) {
 }
 
 function disableAllNotifications(success, error) {
-  assert(success && typeof(error) === "function", "Success callback required");
+  assert(success && typeof(success) === "function", "Success callback required");
   assert(error && typeof(error) === "function", "Error callback required");
 
   API.securePostCallbacks("wallet", {
