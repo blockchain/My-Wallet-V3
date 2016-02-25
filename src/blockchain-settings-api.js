@@ -12,10 +12,8 @@ function get_account_info(success, error) {
     typeof(success) === "function" && success(data);
 
   }, function(data) {
-    if (data.responseText)
-      WalletStore.sendEvent("msg", {type: "error", message: data.responseText});
-    else
-      WalletStore.sendEvent("msg", {type: "error", message: 'Error Downloading Account Settings'});
+    var response = data.responseText || 'Error Downloading Account Settings';
+    WalletStore.sendEvent("msg", {type: "error", message: response});
 
     typeof(error) === "function" &&  error();
   });
