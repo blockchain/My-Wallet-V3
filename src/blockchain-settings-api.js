@@ -307,5 +307,8 @@ module.exports = {
   verifyMobile: verifyMobile,
   getActivityLogs: getActivityLogs,
   enableEmailReceiveNotifications: enableEmailReceiveNotifications,
-  disableAllNotifications: disableAllNotifications
+  disableAllNotifications: disableAllNotifications,
+  // for tests only
+  enableEmailNotifications: enableEmailNotifications,
+  enableReceiveNotifications: enableReceiveNotifications
 };
