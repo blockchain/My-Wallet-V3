@@ -18,9 +18,23 @@ RNG = {
     )
 }
 
+ImportExport =
+  shouldResolve: true
+  shouldReject: true
+  shouldFail: true
+
+  parseBIP38toECKey: (b58, pass, succ, wrong, error) ->
+    if ImportExport.shouldResolve
+      succ('5KUwyCzLyDjAvNGN4qmasFqnSimHzEYVTuHLNyME63JKfVU4wiU')
+    else if ImportExport.shouldReject
+      wrong()
+    else if ImportExport.shouldFail
+      error()
+
 stubs = {
   './wallet': MyWallet,
-  './rng' : RNG
+  './rng' : RNG,
+  './import-export': ImportExport
 }
 
 Address    = proxyquire('../src/address', stubs)
@@ -40,6 +54,11 @@ describe "Address", ->
   beforeEach ->
     spyOn(MyWallet, "syncWallet")
     spyOn(MyWallet.wallet, "getHistory")
+
+  afterEach ->
+    ImportExport.shouldResolve = false
+    ImportExport.shouldReject = false
+    ImportExport.shouldFail = false
 
   describe "class", ->
     describe "new Address()", ->
@@ -132,6 +151,11 @@ describe "Address", ->
 
         expect(invalid).toThrow()
         expect(MyWallet.syncWallet).not.toHaveBeenCalled()
+
+      it "label should be undefined if set to empty string", ->
+        a.label = ''
+
+        expect(a.label).toEqual(undefined)
 
       it "totalSent must be a number", ->
         invalid = () ->
@@ -288,6 +312,21 @@ describe "Address", ->
         promise = Address.fromString("6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg", null, "", done)
         expect(promise).toBeRejectedWith('needsBip38', done)
 
+      it "should not import BIP-38 format with a bad password", (done) ->
+        ImportExport.shouldReject = true
+        promise = Address.fromString("6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg", null, "pass", done)
+        expect(promise).toBeRejectedWith('wrongBipPass', done)
+
+      it "should not import BIP-38 format if the decryption fails", (done) ->
+        ImportExport.shouldFail = true
+        promise = Address.fromString("6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg", null, "pass", done)
+        expect(promise).toBeRejectedWith('importError', done)
+
+      it "should import BIP-38 format with a correct password", (done) ->
+        ImportExport.shouldResolve = true
+        promise = Address.fromString("6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg", null, "pass", done)
+        expect(promise).toBeResolved(done)
+
       it "should import valid addresses string", (done) ->
         promise = Address.fromString("19p7ktDbdJnmV4YLC7zQ37RsYczMZJmd6q", null, null)
         match = jasmine.objectContaining({_addr: "19p7ktDbdJnmV4YLC7zQ37RsYczMZJmd6q"})
@@ -319,5 +358,42 @@ describe "Address", ->
 
 
     describe "Address factory", ->
-      it '', ->
-        pending()
+      it 'should not touch an already existing object', ->
+        addr = Address.import("19p7ktDbdJnmV4YLC7zQ37RsYczMZJmd6q", null)
+        fromFactory = Address.factory({}, addr)
+
+        expect(fromFactory['19p7ktDbdJnmV4YLC7zQ37RsYczMZJmd6q']).toEqual(addr)
+
+    describe "isEncrypted", ->
+
+      it 'should be false if the address has been encrypted but not persisted', ->
+        expect(a.isEncrypted).toBeFalsy()
+        a.encrypt(() -> 'ZW5jcnlwdGVk')
+        expect(a.isEncrypted).toBeFalsy()
+
+      it 'should be true if the address has been encrypted and persisted', ->
+        expect(a.isEncrypted).toBeFalsy()
+        a.encrypt(() -> 'ZW5jcnlwdGVk')
+        a.persist()
+        expect(a.isEncrypted).toBeTruthy()
+
+    describe "isUnEncrypted", ->
+
+      it 'should be false if the address has been decrypted but not persisted', ->
+        expect(a.isUnEncrypted).toBeTruthy()
+        expect(a.isEncrypted).toBeFalsy()
+        a.encrypt(() -> 'ZW5jcnlwdGVk')
+        a.persist()
+        expect(a.isUnEncrypted).toBeFalsy()
+        a.decrypt(() -> '5KUwyCzLyDjAvNGN4qmasFqnSimHzEYVTuHLNyME63JKfVU4wiU')
+        expect(a.isUnEncrypted).toBeFalsy()
+
+      it 'should be true if the address has been decrypted and persisted', ->
+        expect(a.isEncrypted).toBeFalsy()
+        a.encrypt(() -> 'ZW5jcnlwdGVk')
+        a.persist()
+        expect(a.isUnEncrypted).toBeFalsy()
+        a.decrypt(() -> 'GFZrKdb4tGWBWrvkjwRymnhGX8rfrWAGYadfHSJz36dF')
+        expect(a.isUnEncrypted).toBeFalsy()
+        a.persist()
+        expect(a.isUnEncrypted).toBeTruthy()
