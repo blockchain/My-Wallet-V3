@@ -3,10 +3,11 @@ ECKey = Bitcoin.ECKey
 BigInteger = require('bigi')
 
 ImportExport = require('../src/import-export')
+WalletCrypto = require('../src/wallet-crypto')
 
 # localStorage.clear()
 
-describe "Crypto_scrypt", ->
+describe "scrypt", ->
 
   observer =
     callback: (hash) ->
@@ -24,7 +25,7 @@ describe "Crypto_scrypt", ->
     spyOn(observer, "callback")
     expected = "77d6576238657b203b19ca42c18a0497f16b4844e3074ae8dfdffa3fede21442\
                 fcd0069ded0948f8326a753a0fc81f17e8d3e0fb2e0d3628cf35e20c38d18906"
-    ImportExport.Crypto_scrypt "", "" , 16, 1, 1, 64, observer.callback
+    WalletCrypto.scrypt "", "" , 16, 1, 1, 64, observer.callback
     expect(observer.callback).toHaveBeenCalled()
     computed = observer.callback.calls.argsFor(0)[0].toString("hex")
     expect(expected).toEqual(computed)
@@ -69,7 +70,7 @@ describe "Crypto_scrypt", ->
     spyOn(observer, "callback")
     expected = "53019da47bc9fbdc4f719183e08d149bc1cd6b5bf3ab24df8a7c69daed193c69\
                 2d0d56d4c2af3ce3f98a317671bdb40afb15aaf4f08146cffbc4ccdd66817402"
-    ImportExport.Crypto_scrypt "suchCrypto", "soSalty" , 16, 8, 1, 64, observer.callback
+    WalletCrypto.scrypt "suchCrypto", "soSalty" , 16, 8, 1, 64, observer.callback
     expect(observer.callback).toHaveBeenCalled()
     computed = observer.callback.calls.argsFor(0)[0].toString("hex")
     expect(expected).toEqual(computed)
@@ -78,7 +79,7 @@ describe "Crypto_scrypt", ->
     spyOn(observer, "callback")
     expected = "56f5f2c4809f3ab95ecc334e64450392bf6f1f7187653b1ba920f39b4c44b2d6\
                 b47a243c70b2c3444bc31cfec9c57893dd39fa0688bd8a5d1cdcbe08b17b432b"
-    ImportExport.Crypto_scrypt "ΜΟΛΩΝ", "ΛΑΒΕ" , 32, 4, 4, 64, observer.callback
+    WalletCrypto.scrypt "ΜΟΛΩΝ", "ΛΑΒΕ" , 32, 4, 4, 64, observer.callback
     expect(observer.callback).toHaveBeenCalled()
     computed = observer.callback.calls.argsFor(0)[0].toString("hex")
     expect(expected).toEqual(computed)
@@ -87,7 +88,7 @@ describe "Crypto_scrypt", ->
     spyOn(observer, "callback")
     expected = "f890a6beae1dc3f627f9d9bcca8a96950b11758beb1edf1b072c8b8522d15562\
                 9db68aba34619e1ae45b4b6b2917bcb8fd1698b536124df69d5c36d7f28fbe0e"
-    ImportExport.Crypto_scrypt "ϓ␀𐐀💩", "ϓ␀𐐀💩" , 64, 2, 2, 64, observer.callback
+    WalletCrypto.scrypt "ϓ␀𐐀💩", "ϓ␀𐐀💩" , 64, 2, 2, 64, observer.callback
     expect(observer.callback).toHaveBeenCalled()
     computed = observer.callback.calls.argsFor(0)[0].toString("hex")
     expect(expected).toEqual(computed)
@@ -109,7 +110,7 @@ describe "BIP38", ->
     window.setTimeout = (myFunction) -> myFunction()
 
     # mock used inside parseBIP38toECKey
-    spyOn(ImportExport, "Crypto_scrypt").and.callFake(
+    spyOn(WalletCrypto, "scrypt").and.callFake(
       (password, salt, N, r, p, dkLen, callback) ->
         # preimages of Crypto_scrypt
         wrongPassword = "WRONG_PASSWORD" + "e957a24a" + "16384" + "8" + "8" + "64"
@@ -238,7 +239,7 @@ describe "BIP38", ->
 
       ImportExport.parseBIP38toECKey  pk ,pw ,observer.success, observer.wrong_password
 
-      expect(ImportExport.Crypto_scrypt).toHaveBeenCalled()
+      expect(WalletCrypto.scrypt).toHaveBeenCalled()
 
       # Doesn't work:
       # expect(observer.success).toHaveBeenCalledWith(k)
