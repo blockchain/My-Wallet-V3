@@ -37,10 +37,6 @@ function updateKV (method, value, success, error, extra) {
   });
 }
 
-function update_API_access (enabled, success, error) {
-  updateKV('update-api-access-enabled', enabled ? true : false, success, error);
-}
-
 /**
  * @param {string} ips Multiple ip addresses should be comma separated. Use % as a wildcard. For example 127.0.0.% to whitelist 127.0.0.1-127.0.0.254.
  * @param {function ()} success success callback function
@@ -284,7 +280,6 @@ function disableAllNotifications (success, error) {
 
 module.exports = {
   get_account_info: get_account_info,
-  update_API_access: update_API_access,
   update_IP_lock: update_IP_lock,
   update_IP_lock_on: update_IP_lock_on,
   change_language: change_language,

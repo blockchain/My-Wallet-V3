@@ -47,10 +47,6 @@ describe "SettingsAPI", ->
   describe "boolean settings", ->
     booleanSettingsField = [
       {
-        func: "update_API_access",
-        endpoint: "update-api-access-enabled"
-      },
-      {
         func: "update_IP_lock_on",
         endpoint: "update-ip-lock-on"
       },
