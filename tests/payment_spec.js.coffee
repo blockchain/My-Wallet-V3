@@ -6,6 +6,7 @@ MyWallet =
   wallet:
     fee_per_kb: 10000
     isUpgradedToHD: true
+    key: () -> { priv: null, address: '16SPAGz8vLpP3jNTcP7T2io1YccMbjhkee' }
     spendableActiveAddresses: [
       '16SPAGz8vLpP3jNTcP7T2io1YccMbjhkee',
       '1FBHaa3JNjTbhvzMBdv2ymaahmgSSJ4Mis',
