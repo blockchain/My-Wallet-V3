@@ -8,7 +8,8 @@ MyWallet =
     isUpgradedToHD: true
     spendableActiveAddresses: [
       '16SPAGz8vLpP3jNTcP7T2io1YccMbjhkee',
-      '1FBHaa3JNjTbhvzMBdv2ymaahmgSSJ4Mis'
+      '1FBHaa3JNjTbhvzMBdv2ymaahmgSSJ4Mis',
+      '12C5rBJ7Ev3YGBCbJPY6C8nkGhkUTNqfW9'
     ]
     hdwallet:
       accounts: [
@@ -36,7 +37,8 @@ describe 'Payment', ->
 
   data =
     address: '16SPAGz8vLpP3jNTcP7T2io1YccMbjhkee'
-    addresses: ['16SPAGz8vLpP3jNTcP7T2io1YccMbjhkee', '1FBHaa3JNjTbhvzMBdv2ymaahmgSSJ4Mis']
+    addressesFromPk: ['1Q57STy6daELZqToY4Rs2BKWxau2kzwjdy', '12C5rBJ7Ev3YGBCbJPY6C8nkGhkUTNqfW9'] # Compressed and uncompressed
+    addresses: ['16SPAGz8vLpP3jNTcP7T2io1YccMbjhkee', '1FBHaa3JNjTbhvzMBdv2ymaahmgSSJ4Mis', '12C5rBJ7Ev3YGBCbJPY6C8nkGhkUTNqfW9']
 
   beforeEach ->
     JasminePromiseMatchers.install()
@@ -101,6 +103,60 @@ describe 'Payment', ->
       payment.from(data.address)
       result = { sweepAmount: 16260, sweepFee: 3740 }
       expect(payment.payment).toBeResolvedWith(jasmine.objectContaining(result), done)
+
+    it 'should set an address from a private key', (done) ->
+      payment.from('5JrXwqEhjpVF7oXnHPsuddTc6CceccLRTfNpqU2AZH8RkPMvZZu') # PK for 12C5rBJ7Ev3YGBCbJPY6C8nkGhkUTNqfW9
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ from: data.addressesFromPk }), done)
+
+    it 'should not set an address from an invalid string', (done) ->
+      payment.from('1badaddresss')
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ from: null, change: null }), done)
+
+  describe 'amount', ->
+
+    it 'should not set negative amounts', (done) ->
+      payment.amount(-1)
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ amounts: null }), done)
+
+    it 'should not set amounts that aren\'t positive integers', (done) ->
+      payment.amount('100000000')
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ amounts: null }), done)
+
+    it 'should not set amounts if an element of the array is invalid', (done) ->
+      payment.amount([10000, 20000, 30000, "324345"])
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ amounts: null }), done)
+
+    it 'should set amounts from a valid number', (done) ->
+      payment.amount(3000)
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ amounts: [3000] }), done)
+
+    it 'should set amounts from a valid number array', (done) ->
+      payment.amount([3000, 20000])
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ amounts: [3000, 20000] }), done)
+
+  describe 'fee', ->
+
+    it 'should not set a non positive integer fee', (done) ->
+      payment.fee(-3000)
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ forcedFee: null }), done)
+
+    it 'should not set a string fee', (done) ->
+      payment.fee('3000')
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ forcedFee: null }), done)
+
+    it 'should set a valid fee', (done) ->
+      payment.fee(31337)
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ forcedFee: 31337 }), done)
+
+  describe 'note', ->
+
+    it 'should not set a non string note', (done) ->
+      payment.note(1234)
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ note: null }), done)
+
+    it 'should set a valid note', (done) ->
+      payment.note('this is a valid note')
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ note: 'this is a valid note' }), done)
 
   describe 'feePerKb', ->
 
