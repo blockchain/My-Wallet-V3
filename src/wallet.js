@@ -16,6 +16,7 @@ var API = require('./api');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
 var BlockchainSocket = require('./blockchain-socket');
+var BlockchainSettingsAPI = require('./blockchain-settings-api');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -551,12 +552,16 @@ MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function (){
  // used on mywallet, iOS and frontend
 MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, success, error, isHD) {
   WalletSignup.generateNewWallet(inputedPassword, inputedEmail, firstAccountName, function (createdGuid, createdSharedKey, createdPassword) {
-
-    if (languageCode)
+    if (languageCode) {
       WalletStore.setLanguage(languageCode);
+      BlockchainSettingsAPI.change_language(languageCode, (() => {}));
+    }
+
+    if (currencyCode) {
+      BlockchainSettingsAPI.change_local_currency(currencyCode, (() => {}));
+    }
 
     WalletStore.unsafeSetPassword(createdPassword);
-
     success(createdGuid, createdSharedKey, createdPassword);
   }, function (e) {
     error(e);
