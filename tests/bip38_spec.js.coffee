@@ -185,6 +185,11 @@ describe "BIP38", ->
           callback null
     )
 
+    JasminePromiseMatchers.install()
+
+  afterEach ->
+    JasminePromiseMatchers.uninstall()
+
   describe "parseBIP38toECKey()", ->
     beforeEach ->
       Bitcoin.ECKey.originalFromWIF = Bitcoin.ECKey.fromWIF
@@ -224,7 +229,7 @@ describe "BIP38", ->
         }
       )
 
-    it "when called with correct password should fire success with the right params", ->
+    it "when called with correct password should fire success with the right params", (done) ->
 
       pw = "TestingOneTwoThree"
       pk = "6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg"
@@ -237,30 +242,30 @@ describe "BIP38", ->
       # Not needed:
       # k.pub.Q._zInv = k.pub.Q.z.modInverse k.pub.Q.curve.p unless k.pub.Q._zInv?
 
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success, observer.wrong_password
+      promise = ImportExport.parseBIP38toECKey  pk, pw
 
       expect(WalletCrypto.scrypt).toHaveBeenCalled()
 
       # Doesn't work:
       # expect(observer.success).toHaveBeenCalledWith(k)
 
-      expect(observer.success).toHaveBeenCalled()
-      expect(observer.success.calls.argsFor(0)[0].d).toEqual(k.d)
+      promise.then((res) ->
+        expect(res.key.d).toEqual(k.d)
+        done()
+      )
 
-      expect(observer.wrong_password).not.toHaveBeenCalled()
 
-    it "when called with wrong password should fire wrong_password", ->
+    it "when called with wrong password should fire wrong_password", (done) ->
 
       spyOn(observer, "success")
       spyOn(observer, "wrong_password")
       pw = "WRONG_PASSWORD"
       pk = "6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg"
 
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
+      promise = ImportExport.parseBIP38toECKey  pk, pw
+      expect(promise).toBeRejectedWith('wrong password', done)
 
-      expect(observer.wrong_password).toHaveBeenCalled()
-
-    it "(testvector1) No compression, no EC multiply, Test 1 , should work", ->
+    it "(testvector1) No compression, no EC multiply, Test 1 , should work", (done) ->
 
       spyOn(observer, "success")
       spyOn(observer, "wrong_password")
@@ -269,15 +274,16 @@ describe "BIP38", ->
       pw = "TestingOneTwoThree"
       pk = "6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg"
 
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
-      computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
-      computedCompression = observer.success.calls.argsFor(0)[1]
+      promise = ImportExport.parseBIP38toECKey  pk, pw
 
-      expect(observer.wrong_password).not.toHaveBeenCalled()
-      expect(computedWIF).toEqual(expectedWIF)
-      expect(computedCompression).toEqual(expectedCompression)
+      promise.then((res) ->
+        computedWIF = res.key.toWIF()
+        expect(computedWIF).toEqual(expectedWIF)
+        expect(res.compression).toEqual(expectedCompression)
+        done()
+      )
 
-    it "(testvector2) No compression, no EC multiply, Test 2, should work", ->
+    it "(testvector2) No compression, no EC multiply, Test 2, should work", (done) ->
 
       spyOn(observer, "success")
       spyOn(observer, "wrong_password")
@@ -286,15 +292,16 @@ describe "BIP38", ->
       pw = "Satoshi"
       pk = "6PRNFFkZc2NZ6dJqFfhRoFNMR9Lnyj7dYGrzdgXXVMXcxoKTePPX1dWByq"
 
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
-      computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
-      computedCompression = observer.success.calls.argsFor(0)[1]
+      promise = ImportExport.parseBIP38toECKey  pk, pw
 
-      expect(observer.wrong_password).not.toHaveBeenCalled()
-      expect(computedWIF).toEqual(expectedWIF)
-      expect(computedCompression).toEqual(expectedCompression)
+      promise.then((res) ->
+        computedWIF = res.key.toWIF()
+        expect(computedWIF).toEqual(expectedWIF)
+        expect(res.compression).toEqual(expectedCompression)
+        done()
+      )
 
-    xit "(testvector3) No compression, no EC multiply, Test 3, should work", ->
+    xit "(testvector3) No compression, no EC multiply, Test 3, should work", (done) ->
 
       spyOn(observer, "success")
       spyOn(observer, "wrong_password")
@@ -304,12 +311,14 @@ describe "BIP38", ->
       k = Bitcoin.ECKey
             .fromWIF "5Jajm8eQ22H3pGWLEVCXyvND8dQZhiQhoLJNKjYXk9roUFTMSZ4"
       # k.pub.Q._zInv = k.pub.Q.z.modInverse k.pub.Q.curve.p unless k.pub.Q._zInv?
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
+      promise = ImportExport.parseBIP38toECKey  pk, pw
 
-      expect(observer.wrong_password).not.toHaveBeenCalled()
-      expect(observer.success.calls.argsFor(0)[0].d).toEqual(k.d)
+      promise.then((res) ->
+        expect(res.key.d).toEqual(k.d)
+        done()
+      )
 
-    it "(testvector4) Compression, no EC multiply, Test 1, should work", ->
+    it "(testvector4) Compression, no EC multiply, Test 1, should work", (done) ->
 
       spyOn(observer, "success")
       spyOn(observer, "wrong_password")
@@ -318,15 +327,16 @@ describe "BIP38", ->
       pw = "TestingOneTwoThree"
       pk = "6PYNKZ1EAgYgmQfmNVamxyXVWHzK5s6DGhwP4J5o44cvXdoY7sRzhtpUeo"
 
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
-      computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
-      computedCompression = observer.success.calls.argsFor(0)[1]
+      promise = ImportExport.parseBIP38toECKey  pk, pw
 
-      expect(observer.wrong_password).not.toHaveBeenCalled()
-      expect(computedWIF).toEqual(expectedWIF)
-      expect(computedCompression).toEqual(expectedCompression)
+      promise.then((res) ->
+        computedWIF = res.key.toWIF()
+        expect(computedWIF).toEqual(expectedWIF)
+        expect(res.compression).toEqual(expectedCompression)
+        done()
+      )
 
-    it "(testvector5) Compression, no EC multiply, Test 2, should work", ->
+    it "(testvector5) Compression, no EC multiply, Test 2, should work", (done) ->
 
       spyOn(observer, "success")
       spyOn(observer, "wrong_password")
@@ -335,15 +345,16 @@ describe "BIP38", ->
       pw = "Satoshi"
       pk = "6PYLtMnXvfG3oJde97zRyLYFZCYizPU5T3LwgdYJz1fRhh16bU7u6PPmY7"
 
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
-      computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
-      computedCompression = observer.success.calls.argsFor(0)[1]
+      promise = ImportExport.parseBIP38toECKey  pk, pw
 
-      expect(observer.wrong_password).not.toHaveBeenCalled()
-      expect(computedWIF).toEqual(expectedWIF)
-      expect(computedCompression).toEqual(expectedCompression)
+      promise.then((res) ->
+        computedWIF = res.key.toWIF()
+        expect(computedWIF).toEqual(expectedWIF)
+        expect(res.compression).toEqual(expectedCompression)
+        done()
+      )
 
-    it "(testvector6) No compression, EC multiply, no lot/sequence numbers, Test 1, should work", ->
+    it "(testvector6) No compression, EC multiply, no lot/sequence numbers, Test 1, should work", (done) ->
 
       spyOn(observer, "success")
       spyOn(observer, "wrong_password")
@@ -352,15 +363,16 @@ describe "BIP38", ->
       pw = "TestingOneTwoThree"
       pk = "6PfQu77ygVyJLZjfvMLyhLMQbYnu5uguoJJ4kMCLqWwPEdfpwANVS76gTX"
 
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
-      computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
-      computedCompression = observer.success.calls.argsFor(0)[1]
+      promise = ImportExport.parseBIP38toECKey  pk, pw
 
-      expect(observer.wrong_password).not.toHaveBeenCalled()
-      expect(computedWIF).toEqual(expectedWIF)
-      expect(computedCompression).toEqual(expectedCompression)
+      promise.then((res) ->
+        computedWIF = res.key.toWIF()
+        expect(computedWIF).toEqual(expectedWIF)
+        expect(res.compression).toEqual(expectedCompression)
+        done()
+      )
 
-    it "(testvector7) No compression, EC multiply, no lot/sequence numbers, Test 2, should work", ->
+    it "(testvector7) No compression, EC multiply, no lot/sequence numbers, Test 2, should work", (done) ->
 
       spyOn(observer, "success")
       spyOn(observer, "wrong_password")
@@ -369,15 +381,16 @@ describe "BIP38", ->
       pw = "Satoshi"
       pk = "6PfLGnQs6VZnrNpmVKfjotbnQuaJK4KZoPFrAjx1JMJUa1Ft8gnf5WxfKd"
 
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
-      computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
-      computedCompression = observer.success.calls.argsFor(0)[1]
+      promise = ImportExport.parseBIP38toECKey  pk, pw
 
-      expect(observer.wrong_password).not.toHaveBeenCalled()
-      expect(computedWIF).toEqual(expectedWIF)
-      expect(computedCompression).toEqual(expectedCompression)
+      promise.then((res) ->
+        computedWIF = res.key.toWIF()
+        expect(computedWIF).toEqual(expectedWIF)
+        expect(res.compression).toEqual(expectedCompression)
+        done()
+      )
 
-    it "(testvector8) No compression, EC multiply, lot/sequence numbers, Test 1, should work", ->
+    it "(testvector8) No compression, EC multiply, lot/sequence numbers, Test 1, should work", (done) ->
 
       spyOn(observer, "success")
       spyOn(observer, "wrong_password")
@@ -386,15 +399,16 @@ describe "BIP38", ->
       pw = "MOLON LABE"
       pk = "6PgNBNNzDkKdhkT6uJntUXwwzQV8Rr2tZcbkDcuC9DZRsS6AtHts4Ypo1j"
 
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
-      computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
-      computedCompression = observer.success.calls.argsFor(0)[1]
+      promise = ImportExport.parseBIP38toECKey  pk, pw
 
-      expect(observer.wrong_password).not.toHaveBeenCalled()
-      expect(computedWIF).toEqual(expectedWIF)
-      expect(computedCompression).toEqual(expectedCompression)
+      promise.then((res) ->
+        computedWIF = res.key.toWIF()
+        expect(computedWIF).toEqual(expectedWIF)
+        expect(res.compression).toEqual(expectedCompression)
+        done()
+      )
 
-    it "(testvector9) No compression, EC multiply, lot/sequence numbers, Test 2, should work", ->
+    it "(testvector9) No compression, EC multiply, lot/sequence numbers, Test 2, should work", (done) ->
 
       spyOn(observer, "success")
       spyOn(observer, "wrong_password")
@@ -403,10 +417,11 @@ describe "BIP38", ->
       pw = "ΜΟΛΩΝ ΛΑΒΕ"
       pk = "6PgGWtx25kUg8QWvwuJAgorN6k9FbE25rv5dMRwu5SKMnfpfVe5mar2ngH"
 
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
-      computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
-      computedCompression = observer.success.calls.argsFor(0)[1]
+      promise = ImportExport.parseBIP38toECKey  pk, pw
 
-      expect(observer.wrong_password).not.toHaveBeenCalled()
-      expect(computedWIF).toEqual(expectedWIF)
-      expect(computedCompression).toEqual(expectedCompression)
+      promise.then((res) ->
+        computedWIF = res.key.toWIF()
+        expect(computedWIF).toEqual(expectedWIF)
+        expect(res.compression).toEqual(expectedCompression)
+        done()
+      )

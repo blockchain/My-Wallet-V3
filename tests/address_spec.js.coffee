@@ -23,13 +23,13 @@ ImportExport =
   shouldReject: true
   shouldFail: true
 
-  parseBIP38toECKey: (b58, pass, succ, wrong, error) ->
+  parseBIP38toECKey: (b58, pass) ->
     if ImportExport.shouldResolve
-      succ('5KUwyCzLyDjAvNGN4qmasFqnSimHzEYVTuHLNyME63JKfVU4wiU')
-    else if ImportExport.shouldReject
-      wrong()
+      Promise.resolve({ key: '5KUwyCzLyDjAvNGN4qmasFqnSimHzEYVTuHLNyME63JKfVU4wiU'})
     else if ImportExport.shouldFail
-      error()
+      Promise.reject('Invalid Private Key')
+    else if ImportExport.shouldReject
+      Promise.reject('wrong password')
 
 stubs = {
   './wallet': MyWallet,
@@ -315,12 +315,12 @@ describe "Address", ->
       it "should not import BIP-38 format with a bad password", (done) ->
         ImportExport.shouldReject = true
         promise = Address.fromString("6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg", null, "pass", done)
-        expect(promise).toBeRejectedWith('wrongBipPass', done)
+        expect(promise).toBeRejectedWith('wrong password', done)
 
       it "should not import BIP-38 format if the decryption fails", (done) ->
         ImportExport.shouldFail = true
         promise = Address.fromString("6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg", null, "pass", done)
-        expect(promise).toBeRejectedWith('importError', done)
+        expect(promise).toBeRejectedWith('Invalid Private Key', done)
 
       it "should import BIP-38 format with a correct password", (done) ->
         ImportExport.shouldResolve = true
