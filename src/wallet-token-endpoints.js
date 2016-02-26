@@ -6,8 +6,8 @@ var API = require('./api');
 var Helpers = require('./helpers');
 
 function postTokenEndpoint (method, token, extraParams) {
-  assert(token, "Token required");
-  assert(extraParams, "Extra params dictionary required");
+  assert(token, 'Token required');
+  assert(extraParams, 'Extra params dictionary required');
 
   var handleResponse = function (res) {
     if (res && res.success !== undefined)
@@ -39,13 +39,13 @@ function unsubscribe (token) {
 }
 
 function authorizeApprove (token, differentBrowserCallback, differentBrowserApproved) {
-  assert(Helpers.isBoolean(differentBrowserApproved) || differentBrowserApproved == null, "differentBrowserApproved must be null, false or true");
+  assert(Helpers.isBoolean(differentBrowserApproved) || differentBrowserApproved == null, 'differentBrowserApproved must be null, false or true');
 
   var handleError = function (res) {
     if (res.success === null) {
       differentBrowserCallback(res);
       return res;
-    } else if (res.success === false && res["request-denied"]) {
+    } else if (res.success === false && res['request-denied']) {
       return res;
     } else {
       return Promise.reject(res);

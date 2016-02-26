@@ -148,7 +148,7 @@ Payment.to = function (destinations) {
       formatDest = destinations.map(accountToAddress);
       break;
     default:
-      console.log("No destination set.")
+      console.log('No destination set.')
   } // fi switch
   return function (payment) {
     payment.to = formatDest;
@@ -209,7 +209,7 @@ Payment.amount = function (amounts) {
       formatAmo = amounts;
       break;
     default:
-      console.log("No amounts set.")
+      console.log('No amounts set.')
   } // fi switch
   return function (payment) {
     payment.amounts = formatAmo;
@@ -265,7 +265,7 @@ Payment.from = function (origin) {
       change    = addrComp;
       break;
     default:
-      console.log("No origin set.")
+      console.log('No origin set.')
   } // fi switch
   return function (payment) {
     payment.from           = addresses;
@@ -305,7 +305,7 @@ Payment.build = function () {
                                             payment.listener);
       payment.fee = payment.transaction.fee;
     } catch (err) {
-      console.log("Error Building: " + err);
+      console.log('Error Building: ' + err);
     }
     return Promise.resolve(payment);
   };
@@ -331,11 +331,11 @@ Payment.buildbeta = function () {
 Payment.sign = function (password) {
   return function (payment) {
     function importWIF (WIF) {
-      MyWallet.wallet.importLegacyAddress(WIF, "Redeemed code.", password)
+      MyWallet.wallet.importLegacyAddress(WIF, 'Redeemed code.', password)
         .then(function (A){A.archived = true;});
     };
     if (Array.isArray(payment.wifKeys)) payment.wifKeys.forEach(importWIF);
-    if (!payment.transaction) throw "You cannot sign a non-build transaction."
+    if (!payment.transaction) throw 'You cannot sign a non-build transaction.'
     payment.transaction.addPrivateKeys(getPrivateKeys(password, payment));
     payment.transaction.sortBIP69();
     payment.transaction = payment.transaction.sign();
@@ -347,7 +347,7 @@ Payment.publish = function () {
   return function (payment) {
 
     var success = function (tx_hash) {
-      console.log("published");
+      console.log('published');
       payment.txid = tx_hash;
       return payment;
     };
@@ -360,7 +360,7 @@ Payment.publish = function () {
     var isSmall = function (value) {return value < 500000;};
     var anySmall = payment.transaction.outs.map(getValue).some(isSmall);
     if(anySmall && payment.note !== undefined && payment.note !== null)
-      {throw "There is an output too small to publish a note";}
+      {throw 'There is an output too small to publish a note';}
 
     return API.pushTx(payment.transaction, payment.note)
       .then(success).catch(handleError);
@@ -379,9 +379,9 @@ function getUnspentCoins (addressList) {
 
   var processCoins = function (obj) {
     var processCoin = function (utxo) {
-      var txBuffer = new Buffer(utxo.tx_hash, "hex");
+      var txBuffer = new Buffer(utxo.tx_hash, 'hex');
       Array.prototype.reverse.call(txBuffer);
-      utxo.hash = txBuffer.toString("hex");
+      utxo.hash = txBuffer.toString('hex');
       utxo.index = utxo.tx_output_n;
     };
     obj.unspent_outputs.forEach(processCoin);
@@ -469,26 +469,26 @@ function computeSuggestedSweep(coins, feePerKb){
 //
 // var payment = new Blockchain.Payment();
 // payment
-//   .from("1PHHtxKAgbpwvK3JfwDT1Q5WbGmGrqm8gf")
-//   .from("1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN")
+//   .from('1PHHtxKAgbpwvK3JfwDT1Q5WbGmGrqm8gf')
+//   .from('1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN')
 //   .amount(10000)
-//   .to("1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF")
+//   .to('1Q5pU54M3ombtrGEGpAheWQtcX2DZ3CdqF')
 //   .build()
-//   .sign("hola")
-//   .payment.then(function (p){console.log( "result: " +  JSON.stringify(p, null, 2));})
-//           .catch(function (e){console.log( "error: " + e);});
+//   .sign('hola')
+//   .payment.then(function (p){console.log( 'result: ' +  JSON.stringify(p, null, 2));})
+//           .catch(function (e){console.log( 'error: ' + e);});
 
 //
-// var error = function (e) {console.log("error: " + e);}
-// var success = function (p) {console.log("final: "); console.log(p); return p;}
-// var op1Fail = function (p) {throw "I failed!!";}
-// var op2Good = function (p) {console.log("op"); console.log(p); p.op2 = true; return p;}
-// var op3Good = function (p) {console.log("op"); console.log(p);p.op3 = true; return p;}
-// var print   = function (p) {console.log("from: "+ p.from);}
+// var error = function (e) {console.log('error: ' + e);}
+// var success = function (p) {console.log('final: '); console.log(p); return p;}
+// var op1Fail = function (p) {throw 'I failed!!';}
+// var op2Good = function (p) {console.log('op'); console.log(p); p.op2 = true; return p;}
+// var op3Good = function (p) {console.log('op'); console.log(p);p.op3 = true; return p;}
+// var print   = function (p) {console.log('from: '+ p.from);}
 //
 // var payment = new Blockchain.Payment();
 // payment
-//   .from("1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN")
+//   .from('1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN')
 //   .then(op2Good)
 //   .amount(10000)
 //   .sideEffect(print)
@@ -497,16 +497,16 @@ function computeSuggestedSweep(coins, feePerKb){
 //   .then(success)
 //   .catch(error)
 //
-// var error        = function (e) {console.log("error: " + JSON.stringify(e, null, 2));}
+// var error        = function (e) {console.log('error: ' + JSON.stringify(e, null, 2));}
 // var buildFailure = function (e) {console.log(e.error); return e.payment;}
-// var success      = function (p) {console.log("final: "); console.log(p); return p;}
-// var print        = function (p) {console.log("promise: "); console.log(p);}
+// var success      = function (p) {console.log('final: '); console.log(p); return p;}
+// var print        = function (p) {console.log('promise: '); console.log(p);}
 //
 // var payment = new Blockchain.Payment();
 // payment
 //   .from(1)
 //   .amount([10000,20000,30000])
-//   .to(["13kFBeNZMptwvP9LXEvRdG5W5WWPhc6eaG", 0, 2])
+//   .to(['13kFBeNZMptwvP9LXEvRdG5W5WWPhc6eaG', 0, 2])
 //   .sideEffect(print)
 //   .buildbeta()
 //   .catch(buildFailure)

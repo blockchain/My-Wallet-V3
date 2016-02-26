@@ -39,10 +39,10 @@ Helpers.isBase58Key = function (str) {
   return Helpers.isString(str) && /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{40,44}$/.test(str);
 };
 Helpers.isXprivKey = function (k) {
-  return Helpers.isString(k) && k.substring(0, 4) === "xprv";
+  return Helpers.isString(k) && k.substring(0, 4) === 'xprv';
 };
 Helpers.isXpubKey = function (k) {
-  return Helpers.isString(k) && k.substring(0, 4) === "xpub";
+  return Helpers.isString(k) && k.substring(0, 4) === 'xpub';
 };
 Helpers.isAlphaNum = function (str){
   return Helpers.isString(str) && /^[\-+,._\w\d\s]+$/.test(str);
@@ -69,7 +69,7 @@ Helpers.isNotNumber = function (num){
   return !Helpers.isNumber(num)
 };
 Helpers.isBoolean = function (value){
-  return typeof(value) === "boolean";
+  return typeof(value) === 'boolean';
 };
 Helpers.isValidLabel = function (text){
   return Helpers.isString(text);
@@ -106,7 +106,7 @@ Helpers.isValidGUID = function (guid){
 Helpers.memoize = function (f){
   var cache = {};
   return function () {
-    var key = arguments.length + Array.prototype.join.call(arguments, ",");
+    var key = arguments.length + Array.prototype.join.call(arguments, ',');
     if (key in cache) return cache[key];
     else return cache[key] = f.apply(this, arguments);
   };
@@ -131,7 +131,7 @@ Helpers.asyncOnce = function (f, milliseconds, before){
       timer = null;
     };
     var myArgs = new Array();
-    // this is needed because arguments is not an "Array" instance
+    // this is needed because arguments is not an 'Array' instance
     for (var i = 0; i < arguments.length; i++) { myArgs[i] = arguments[i];};
     var myArgs = Helpers.zipLong(Helpers.maybeCompose, myArgs, oldArguments);
     oldArguments = myArgs;
@@ -228,7 +228,7 @@ Helpers.scorePassword = function (password){
   var hasUpperCase = function (str) { return /[A-Z]/.test(str);};
   var hasSymbol    = function (str) { return /[^0-9a-zA-z]/.test(str);};
   var computeSet   = function (str) {
-    var maxChar = Math.max.apply(Math,str.split("").map(function (c){return c.charCodeAt(0);}));
+    var maxChar = Math.max.apply(Math,str.split('').map(function (c){return c.charCodeAt(0);}));
     return maxChar + 256 - maxChar % 256;
   };
 
@@ -283,7 +283,7 @@ Helpers.buffertoByteArray = function (value) {
 };
 
 function parseMiniKey (miniKey) {
-  var check = Bitcoin.crypto.sha256(miniKey + "?");
+  var check = Bitcoin.crypto.sha256(miniKey + '?');
   if (check[0] !== 0x00) {
     throw 'Invalid mini key';
   }
@@ -347,7 +347,7 @@ Helpers.detectPrivateKeyFormat = function (key) {
       /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{29}$/.test(key) ||
       /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{30}$/.test(key)) {
 
-    var testBytes = Bitcoin.crypto.sha256(key + "?");
+    var testBytes = Bitcoin.crypto.sha256(key + '?');
 
     if (testBytes[0] === 0x00 || testBytes[0] === 0x01)
       return 'mini';
@@ -363,7 +363,7 @@ Helpers.isValidBIP39Mnemonic = function (mnemonic) {
 Helpers.isValidPrivateKey = function (candidate) {
   try {
     var format = Helpers.detectPrivateKeyFormat(candidate);
-    if(format == "bip38") { return true }
+    if(format == 'bip38') { return true }
     var key = Helpers.privateKeyStringToKey(candidate, format);
     return key.pub.getAddress().toString();
   } catch (e) {
@@ -376,8 +376,8 @@ function parseValueBitcoin (valueString) {
   // TODO: Detect other number formats (e.g. comma as decimal separator)
   var valueComp = valueString.split('.');
   var integralPart = valueComp[0];
-  var fractionalPart = valueComp[1] || "0";
-  while (fractionalPart.length < 8) fractionalPart += "0";
+  var fractionalPart = valueComp[1] || '0';
+  while (fractionalPart.length < 8) fractionalPart += '0';
   fractionalPart = fractionalPart.replace(/^0+/g, '');
   var value = BigInteger.valueOf(parseInt(integralPart));
   value = value.multiply(BigInteger.valueOf(100000000));

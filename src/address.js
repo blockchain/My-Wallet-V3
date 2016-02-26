@@ -29,43 +29,43 @@ function Address (object){
 
 // public members
 Object.defineProperties(Address.prototype, {
-  "address": {
+  'address': {
     configurable: false,
     get: function () { return this._addr;}
   },
-  "priv": {
+  'priv': {
     configurable: false,
     get: function () { return this._priv;}
   },
-  "tag": {
+  'tag': {
     configurable: false,
     get: function () { return this._tag;}
   },
-  "label": {
+  'label': {
     configurable: false,
     get: function () { return this._label;},
     set: function (str) {
       if(Helpers.isValidLabel(str) || str == null) {
-        this._label = str === ""? undefined : str;
+        this._label = str === ''? undefined : str;
         MyWallet.syncWallet();
       }
       else
         { throw 'Error: address.label must be an alphanumeric string'; }
     }
   },
-  "created_time": {
+  'created_time': {
     configurable: false,
     get: function () {return this._created_time;}
   },
-  "created_device_name": {
+  'created_device_name': {
     configurable: false,
     get: function () {return this._created_device_name;}
   },
-  "created_device_version": {
+  'created_device_version': {
     configurable: false,
     get: function () {return this._created_device_version;}
   },
-  "balance": {
+  'balance': {
     configurable: false,
     get: function () { return this._balance;},
     set: function (num) {
@@ -75,7 +75,7 @@ Object.defineProperties(Address.prototype, {
         throw 'Error: address.balance must be a positive number';
     }
   },
-  "totalSent": {
+  'totalSent': {
     configurable: false,
     get: function () { return this._totalSent;},
     set: function (num) {
@@ -85,7 +85,7 @@ Object.defineProperties(Address.prototype, {
         throw 'Error: address.totalSent must be a positive number';
     }
   },
-  "totalReceived": {
+  'totalReceived': {
     configurable: false,
     get: function () { return this._totalReceived;},
     set: function (num) {
@@ -95,19 +95,19 @@ Object.defineProperties(Address.prototype, {
         throw 'Error: address.totalReceived must be a positive number';
     }
   },
-  "isWatchOnly": {
+  'isWatchOnly': {
     configurable: false,
     get: function () { return this._priv == null;}
   },
-  "isEncrypted": {
+  'isEncrypted': {
     configurable: false,
     get: function () { return Helpers.isBase64(this._priv) && !Helpers.isBase58Key(this._priv);}
   },
-  "isUnEncrypted": {
+  'isUnEncrypted': {
     configurable: false,
     get: function () { return Helpers.isBase58Key(this._priv);}
   },
-  "archived": {
+  'archived': {
     configurable: false,
     get: function () { return this._tag === 2;},
     set: function (value) {
@@ -124,7 +124,7 @@ Object.defineProperties(Address.prototype, {
         { throw 'Error: address.archived must be a boolean';}
     }
   },
-  "active": {
+  'active': {
     configurable: false,
     get: function () { return !this.archived;},
     set: function (value) { this.archived = !value; }

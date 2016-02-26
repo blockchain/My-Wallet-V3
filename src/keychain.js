@@ -14,14 +14,14 @@ function KeyChain (extendedKey, index, cache) {
 
   // this function should be part of the instance because it is memoized
   this._getKey = Helpers.memoize(function (index) {
-    assert(Helpers.isPositiveInteger(index), "Key index must be integer >= 0");
-    assert(this._chainRoot, "KeyChain is not initialized.");
+    assert(Helpers.isPositiveInteger(index), 'Key index must be integer >= 0');
+    assert(this._chainRoot, 'KeyChain is not initialized.');
     return this._chainRoot.derive(index);
   });
 }
 
 Object.defineProperties(KeyChain.prototype, {
-  "xpub": {
+  'xpub': {
     configurable: false,
     get: function () { return this._chainRoot ? this._chainRoot.neutered().toBase58() : null;}
   }
@@ -43,12 +43,12 @@ KeyChain.prototype.init = function (extendedKey, index, cache) {
 };
 
 KeyChain.prototype.getAddress = function (index) {
-  assert(Helpers.isPositiveInteger(index), "Address index must be integer >= 0");
+  assert(Helpers.isPositiveInteger(index), 'Address index must be integer >= 0');
   return this._getKey(index).getAddress().toString();
 };
 
 KeyChain.prototype.getPrivateKey = function (index) {
-  assert(Helpers.isPositiveInteger(index), "private key index must be integer >= 0");
+  assert(Helpers.isPositiveInteger(index), 'private key index must be integer >= 0');
   var key = this._getKey(index).privKey;
   return key ? key : null;
 };

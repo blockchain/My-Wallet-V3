@@ -52,14 +52,14 @@ var WalletStore = (function () {
       return real_auth_type;
     },
     get2FATypeString: function () {
-      var stringType = "";
+      var stringType = '';
       switch(real_auth_type){
       case 0: stringType = null; break;
-      case 1: stringType = "Yubikey"; break;
-      case 2: stringType = "Email"; break;
-      case 3: stringType = "Yubikey MtGox - Unsupported"; break;
-      case 4: stringType = "Google Auth"; break;
-      case 5: stringType = "SMS"; break;
+      case 1: stringType = 'Yubikey'; break;
+      case 2: stringType = 'Email'; break;
+      case 3: stringType = 'Yubikey MtGox - Unsupported'; break;
+      case 4: stringType = 'Google Auth'; break;
+      case 5: stringType = 'SMS'; break;
       default: stringType = null; break;
       }
       return stringType;

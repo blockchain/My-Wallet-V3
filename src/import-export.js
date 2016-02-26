@@ -153,10 +153,10 @@ var ImportExport = new function () {
   var workerUrl = null;
 
   this.Crypto_scrypt = function (passwd, salt, N, r, p, dkLen, callback) {
-    if (N == 0 || (N & (N - 1)) != 0) throw Error("N must be > 0 and a power of 2");
+    if (N == 0 || (N & (N - 1)) != 0) throw Error('N must be > 0 and a power of 2');
 
-    if (N > MAX_VALUE / 128 / r) throw Error("Parameter N is too large");
-    if (r > MAX_VALUE / 128 / p) throw Error("Parameter r is too large");
+    if (N > MAX_VALUE / 128 / r) throw Error('Parameter N is too large');
+    if (r > MAX_VALUE / 128 / p) throw Error('Parameter r is too large');
 
     if(!Buffer.isBuffer(passwd)) {
       passwd = new Buffer(passwd, 'utf8');

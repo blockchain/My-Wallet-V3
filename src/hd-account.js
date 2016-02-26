@@ -42,7 +42,7 @@ function HDAccount (object){
 
 Object.defineProperties(HDAccount.prototype, {
 
-  "label": {
+  'label': {
     configurable: false,
     get: function () { return this._label;},
     set: function (str) {
@@ -54,7 +54,7 @@ Object.defineProperties(HDAccount.prototype, {
       }
     }
   },
-  "balance": {
+  'balance': {
     configurable: false,
     get: function () { return this._balance;},
     set: function (num) {
@@ -64,7 +64,7 @@ Object.defineProperties(HDAccount.prototype, {
         throw 'Error: account.balance must be a positive number';
     }
   },
-  "n_tx": {
+  'n_tx': {
     get: function () { return this._n_tx;},
     set: function (num) {
       if(Helpers.isPositiveInteger(num))
@@ -73,7 +73,7 @@ Object.defineProperties(HDAccount.prototype, {
         throw 'Error: account.n_tx must be a positive integer';
     }
   },
-  "archived": {
+  'archived': {
     configurable: false,
     get: function () { return this._archived;},
     set: function (value) {
@@ -90,12 +90,12 @@ Object.defineProperties(HDAccount.prototype, {
       }
     }
   },
-  "active": {
+  'active': {
     configurable: false,
     get: function () { return !this.archived;},
     set: function (value) { this.archived = !value; }
   },
-  "receiveIndex": {
+  'receiveIndex': {
     configurable: false,
     get: function () { return this._receiveIndex;},
     set: function (value) {
@@ -105,7 +105,7 @@ Object.defineProperties(HDAccount.prototype, {
         throw 'Error: account.receiveIndex must be a number';
     }
   },
-  "lastUsedReceiveIndex": {
+  'lastUsedReceiveIndex': {
     configurable: false,
     get: function () { return this._lastUsedReceiveIndex;},
     set: function (value) {
@@ -115,7 +115,7 @@ Object.defineProperties(HDAccount.prototype, {
         throw 'Error: account.lastUsedReceiveIndex must be a number';
     }
   },
-  "maxLabeledReceiveIndex" : {
+  'maxLabeledReceiveIndex' : {
     configurable: false,
     get: function () {
       var keys = Object.keys(this._address_labels).map(function (k) {
@@ -128,7 +128,7 @@ Object.defineProperties(HDAccount.prototype, {
       }
     }
   },
-  "changeIndex": {
+  'changeIndex': {
     configurable: false,
     get: function () { return this._changeIndex;},
     set: function (value) {
@@ -138,16 +138,16 @@ Object.defineProperties(HDAccount.prototype, {
         throw 'Error: account.changeIndex must be a number';
     }
   },
-  "receivingAddressesLabels": {
+  'receivingAddressesLabels': {
     configurable: false,
     get: function () {
       var denseArray = [];
       this._address_labels
-        .map(function (lab,ind){denseArray.push({"index": ind, "label": lab})});
+        .map(function (lab,ind){denseArray.push({'index': ind, 'label': lab})});
       return denseArray;
     }
   },
-  "labeledReceivingAddresses": {
+  'labeledReceivingAddresses': {
     configurable: false,
     get: function () {
       var denseArray = [];
@@ -157,35 +157,35 @@ Object.defineProperties(HDAccount.prototype, {
       return denseArray;
     }
   },
-  "extendedPublicKey": {
+  'extendedPublicKey': {
      configurable: false,
      get: function () { return this._xpub;}
    },
-  "extendedPrivateKey": {
+  'extendedPrivateKey': {
     configurable: false,
     get: function () { return this._xpriv;}
   },
-  "keyRing": {
+  'keyRing': {
     configurable: false,
     get: function () { return this._keyRing;}
   },
-  "receiveAddress": {
+  'receiveAddress': {
     configurable: false,
     get: function () { return this._keyRing.receive.getAddress(this._receiveIndex);}
   },
-  "changeAddress": {
+  'changeAddress': {
     configurable: false,
     get: function () { return this._keyRing.change.getAddress(this._changeIndex);}
   },
-  "isEncrypted": {
+  'isEncrypted': {
     configurable: false,
     get: function () { return Helpers.isBase64(this._xpriv) && !Helpers.isXprivKey(this._xpriv);}
   },
-  "isUnEncrypted": {
+  'isUnEncrypted': {
     configurable: false,
     get: function () { return Helpers.isXprivKey(this._xpriv);}
   },
-  "index": {
+  'index': {
     configurable: false,
     get: function () { return this._index;}
   }
@@ -203,7 +203,7 @@ Object.defineProperties(HDAccount.prototype, {
  */
 HDAccount.fromAccountMasterKey = function (accountZero, index, label){
 
-  assert(accountZero, "Account MasterKey must be given to create an account.");
+  assert(accountZero, 'Account MasterKey must be given to create an account.');
   var account    = new HDAccount();
   account._index = Helpers.isPositiveInteger(index) ? index : null;
   account._label  = label;
@@ -215,8 +215,8 @@ HDAccount.fromAccountMasterKey = function (accountZero, index, label){
 
 HDAccount.fromWalletMasterKey = function (masterkey, index, label) {
 
-  assert(masterkey, "Wallet MasterKey must be given to create an account.");
-  assert(Helpers.isPositiveInteger(index), "Derivation index must be a positive integer.");
+  assert(masterkey, 'Wallet MasterKey must be given to create an account.');
+  assert(Helpers.isPositiveInteger(index), 'Derivation index must be a positive integer.');
   var accountZero = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(index);
   return HDAccount.fromAccountMasterKey(accountZero, index, label);
 };
@@ -224,7 +224,7 @@ HDAccount.fromWalletMasterKey = function (masterkey, index, label) {
 HDAccount.fromExtPublicKey = function (extPublicKey, index, label){
   // this is creating a read-only account
   assert(Helpers.isXpubKey(extPublicKey)
-      , "Extended public key must be given to create an account.");
+      , 'Extended public key must be given to create an account.');
   var accountZero = Bitcoin.HDNode.fromBase58(extPublicKey);
   var a = HDAccount.fromAccountMasterKey(accountZero, index, label);
   a._xpriv = null;
@@ -234,7 +234,7 @@ HDAccount.fromExtPublicKey = function (extPublicKey, index, label){
 HDAccount.fromExtPrivateKey = function (extPrivateKey, index, label){
 
   assert(Helpers.isXprivKey(extPrivateKey)
-      , "Extended private key must be given to create an account.");
+      , 'Extended private key must be given to create an account.');
   var accountZero = Bitcoin.HDNode.fromBase58(extPrivateKey);
   return HDAccount.fromAccountMasterKey(accountZero, index, label);
 };

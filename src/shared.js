@@ -1,6 +1,6 @@
 var satoshi = 100000000; //One satoshi
-var symbol_btc = {code : "BTC", symbol : "BTC", name : "Bitcoin",  conversion : satoshi, symbolAppearsAfter : true, local : false}; //Default BTC Currency Symbol object
-var symbol_local = {"conversion":0,"symbol":"$","name":"U.S. dollar","symbolAppearsAfter":false,"local":true,"code":"USD"}; //Users local currency object
+var symbol_btc = {code : 'BTC', symbol : 'BTC', name : 'Bitcoin',  conversion : satoshi, symbolAppearsAfter : true, local : false}; //Default BTC Currency Symbol object
+var symbol_local = {'conversion':0,'symbol':'$','name':'U.S. dollar','symbolAppearsAfter':false,'local':true,'code':'USD'}; //Users local currency object
 var symbol = symbol_btc; //Active currency object
 var resource = 'Resources/';
 var war_checksum;
@@ -67,8 +67,8 @@ function playSound (id) {
 //Ignore Console
 try {
   if (!window.console) {
-    var names = ["log", "debug", "info", "warn", "error", "assert", "dir", "dirxml",
-                 "group", "groupEnd", "time", "timeEnd", "count", "trace", "profile", "profileEnd"];
+    var names = ['log', 'debug', 'info', 'warn', 'error', 'assert', 'dir', 'dirxml',
+                 'group', 'groupEnd', 'time', 'timeEnd', 'count', 'trace', 'profile', 'profileEnd'];
 
     window.console = {};
     for (var i = 0; i < names.length; ++i) {
