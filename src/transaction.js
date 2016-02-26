@@ -4,10 +4,9 @@ var assert      = require('assert');
 var Bitcoin     = require('bitcoinjs-lib');
 var randomBytes = require('randombytes');
 var Helpers     = require('./helpers');
-var MyWallet    = require('./wallet');
 var Buffer      = require('buffer').Buffer;
 
-var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAddress, listener) {
+var Transaction = function (unspentOutputs, toAddresses, amounts, fee, feePerKb, changeAddress, listener) {
 
   if (!Array.isArray(toAddresses) && toAddresses != null) {toAddresses = [toAddresses];}
   if (!Array.isArray(amounts) && amounts != null) {amounts = [amounts];}
@@ -23,7 +22,8 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
   this.pathsOfNeededPrivateKeys = [];
   this.fee = 0; // final used fee
   var BITCOIN_DUST = 5460;
-  var forcedFee = (typeof(fee) == "number") ? fee : null;
+  var forcedFee = Helpers.isNumber(fee) ? fee : null;
+  feePerKb = Helpers.isNumber(feePerKb) ? feePerKb : 10000;
 
   assert(toAddresses.length == amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
   assert(this.amount > BITCOIN_DUST, this.amount + ' must be above dust threshold (' + BITCOIN_DUST + ' Satoshis)');
@@ -46,7 +46,8 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, changeAdd
     var output = unspent[i];
     transaction.addInput(output.hash, output.index);
     nIns += 1;
-    this.fee = Helpers.isPositiveNumber(forcedFee) ? forcedFee : Helpers.guessFee(nIns, nOuts, MyWallet.wallet.fee_per_kb);
+    this.sizeEstimate = Helpers.guessSize(nIns, nOuts);
+    this.fee = Helpers.isPositiveNumber(forcedFee) ? forcedFee : Helpers.guessFee(nIns, nOuts, feePerKb);
 
     // Generate address from output script and add to private list so we can check if the private keys match the inputs later
 
