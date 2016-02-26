@@ -63,7 +63,7 @@ function change_btc_currency (code, success, error) {
 }
 
 function update_tor_ip_block (enabled, success, error) {
-  updateKV('update-block-tor-ips', enabled ? true : false, success, error);
+  updateKV('update-block-tor-ips', enabled ? 1 : 0, success, error);
 }
 
 function isBadPasswordHint (value) {
