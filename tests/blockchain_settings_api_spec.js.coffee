@@ -51,10 +51,6 @@ describe "SettingsAPI", ->
         endpoint: "update-ip-lock-on"
       },
       {
-        func: "update_tor_ip_block",
-        endpoint: "update-block-tor-ips"
-      },
-      {
         func: "toggleSave2FA",
         endpoint: "update-never-save-auth-type"
       }
@@ -86,6 +82,31 @@ describe "SettingsAPI", ->
           expect(WalletStore.sendEvent).toHaveBeenCalledWith("msg", {type: "error", message: setting.endpoint + '-error: call failed'})
           expect(observers.success).not.toHaveBeenCalled()
           expect(observers.error).toHaveBeenCalled()
+
+    describe "TOR block", ->
+      it "should work without any callbacks", ->
+        SettingsAPI.update_tor_ip_block(true)
+
+        # Payload must be 0 or 1, not false or true
+        expect(API.securePostCallbacks).toHaveBeenCalledWith("wallet", { length: 1, payload: '1', method : "update-block-tor-ips" }, jasmine.anything(), jasmine.anything())
+        expect(WalletStore.sendEvent).toHaveBeenCalledWith("msg", {type: "success", message: 'update-block-tor-ips-success: call succeeded'})
+
+      it "should work with callbacks", ->
+        SettingsAPI.update_tor_ip_block(false, observers.success, observers.error)
+
+        expect(API.securePostCallbacks).toHaveBeenCalledWith("wallet", { length: 1, payload: '0', method : "update-block-tor-ips" }, jasmine.anything(), jasmine.anything())
+        expect(WalletStore.sendEvent).toHaveBeenCalledWith("msg", {type: "success", message: 'update-block-tor-ips-success: call succeeded'})
+        expect(observers.success).toHaveBeenCalled()
+        expect(observers.error).not.toHaveBeenCalled()
+
+      it "should fail if the API call fails", ->
+        API.callFailWithoutResponseText = true
+        SettingsAPI.update_tor_ip_block(1, observers.success, observers.error)
+
+        expect(API.securePostCallbacks).toHaveBeenCalledWith("wallet", { length: 1, payload: '1', method : 'update-block-tor-ips' }, jasmine.anything(), jasmine.anything())
+        expect(WalletStore.sendEvent).toHaveBeenCalledWith("msg", {type: "error", message: 'update-block-tor-ips-error: call failed'})
+        expect(observers.success).not.toHaveBeenCalled()
+        expect(observers.error).toHaveBeenCalled()
 
   describe "string settings", ->
     stringSettingsField = [
