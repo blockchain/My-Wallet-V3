@@ -4,26 +4,26 @@ module.exports = Block;
 
 function Block (object){
   var obj = object || {};
-  this._hash       = obj.hash || "emptyBlock";
+  this._hash       = obj.hash || 'emptyBlock';
   this._time       = obj.time || 0;
   this._blockIndex = obj.blockIndex || 0;
   this._height     = obj.height || 0;
 }
 
 Object.defineProperties(Block.prototype, {
-  "hash": {
+  'hash': {
     configurable: false,
     get: function () { return this._hash;}
   },
-  "time": {
+  'time': {
     configurable: false,
     get: function () { return this._time;}
   },
-  "blockIndex": {
+  'blockIndex': {
     configurable: false,
     get: function () { return this._blockIndex;}
   },
-  "height": {
+  'height': {
     configurable: false,
     get: function () { return this._height;}
   }

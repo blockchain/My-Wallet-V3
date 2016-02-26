@@ -42,35 +42,35 @@ function Tx (object){
 }
 
 Object.defineProperties(Tx.prototype, {
-  "processedInputs": {
+  'processedInputs': {
     configurable: false,
     get: function () { return this._processed_ins.map(function (x){return x;});}
   },
-  "processedOutputs": {
+  'processedOutputs': {
     configurable: false,
     get: function () { return this._processed_outs.map(function (x){return x;});}
   },
-  "totalIn": {
+  'totalIn': {
     configurable: false,
     get: function () {
       return this._processed_ins.map(function (x){return x.amount;})
                                  .reduce(Helpers.add, 0);
     }
   },
-  "totalOut": {
+  'totalOut': {
     configurable: false,
     get: function () {
       return this._processed_outs.map(function (x){return x.amount;})
                                  .reduce(Helpers.add, 0);
     }
   },
-  "fee": {
+  'fee': {
     configurable: false,
     get: function () {
       return isCoinBase(this.inputs[0]) ? 0 : this.totalIn - this.totalOut;
     }
   },
-  "internalSpend": {
+  'internalSpend': {
     configurable: false,
     get: function () {
       return this._processed_ins.filter(function (i){ return i.coinType !== 'external';})
@@ -78,7 +78,7 @@ Object.defineProperties(Tx.prototype, {
                                 .reduce(Helpers.add, 0);
     }
   },
-  "internalReceive": {
+  'internalReceive': {
     configurable: false,
     get: function () {
       return this._processed_outs.filter(function (i){ return i.coinType !== 'external';})
@@ -86,7 +86,7 @@ Object.defineProperties(Tx.prototype, {
                                  .reduce(Helpers.add, 0);
     }
   },
-  "result": {
+  'result': {
     configurable: false,
     get: function () {
       var r = this._result;
@@ -94,18 +94,18 @@ Object.defineProperties(Tx.prototype, {
       return r;
     }
   },
-  "amount": {
+  'amount': {
     configurable: false,
     get: function () {
       var am = 0;
       switch (this.txType) {
-        case "transfer":
+        case 'transfer':
           am = this.internalReceive - this.changeAmount;
           break;
-        case "sent":
+        case 'sent':
           am = this.internalReceive - this.internalSpend;
           break;
-        case "received":
+        case 'received':
           am = this.internalReceive - this.internalSpend;
           break;
         default:
@@ -114,7 +114,7 @@ Object.defineProperties(Tx.prototype, {
       return am;
     }
   },
-  "changeAmount": {
+  'changeAmount': {
     configurable: false,
     get: function () {
       return this._processed_outs.filter(function (i){ return (i.coinType !== 'external') && (i.change === true);})
@@ -122,41 +122,41 @@ Object.defineProperties(Tx.prototype, {
                                  .reduce(Helpers.add, 0);
     }
   },
-  "txType": {
+  'txType': {
     configurable: false,
     get: function () {
       var v = null;
       var impactNoFee = this.result + this.fee;
       switch (true) {
         case impactNoFee === 0:
-          v = "transfer";
+          v = 'transfer';
           break;
         case impactNoFee < 0:
-          v = "sent";
+          v = 'sent';
           break;
         case impactNoFee > 0:
-          v = "received";
+          v = 'received';
           break;
         default:
-          v = "complex"
+          v = 'complex'
       }
       return v;
     }
   },
-  "belongsTo": {
+  'belongsTo': {
     configurable: false,
     value: function (identity) {
       return this.processedInputs.concat(this.processedOutputs)
         .some(function (processed) { return processed.identity == identity; });
     }
   },
-  "fromWatchOnly": {
+  'fromWatchOnly': {
     configurable: false,
     get: function () {
       return this._processed_ins.some(function (o) { return o.isWatchOnly; });
     }
   },
-  "toWatchOnly": {
+  'toWatchOnly': {
     configurable: false,
     get: function () {
       return this._processed_outs.some(function (o) { return o.isWatchOnly; });
@@ -199,7 +199,7 @@ function tagCoin (x) {
 
   switch (true) {
     case isLegacy(x):
-      coinType = "legacy";
+      coinType = 'legacy';
       id = 'imported';
       var addr = address(x);
       label = addr.label;
@@ -212,7 +212,7 @@ function tagCoin (x) {
       label = account(x).label;
       break;
     default:
-      coinType = "external";
+      coinType = 'external';
   }
   return {
     address: ad,
@@ -227,7 +227,7 @@ function tagCoin (x) {
 
 function unpackInput (input) {
   if (isCoinBase(input)) {
-    return {addr: "Coinbase", value: this.totalOut};
+    return {addr: 'Coinbase', value: this.totalOut};
   } else {
     return input.prev_out;
   }

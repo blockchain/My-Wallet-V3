@@ -36,7 +36,7 @@ BlockchainSocket.prototype.connect = function (onOpen, onMessage, onClose) {
     var connect = this.connectOnce.bind(this, onOpen, onMessage, onClose);
     if (!this.socket || this.socket.readyState === 3) connect();
   }.bind(this);
-  var pingSocket = function () { this.send('{"op":"ping"}'); }.bind(this);
+  var pingSocket = function () { this.send('{\'op\':\'ping\'}'); }.bind(this);
   this.reconnect();
   this.reconnectInterval = setInterval(this.reconnect, 20000);
   this.pingInterval = setInterval(pingSocket, 30013);

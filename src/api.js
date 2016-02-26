@@ -13,16 +13,16 @@ var ECKey         = Bitcoin.ECKey;
 // API class
 function API (){
   // private members
-  this.ROOT_URL           = "https://blockchain.info/";
+  this.ROOT_URL           = 'https://blockchain.info/';
   this.AJAX_RETRY_DEFAULT = 2;
-  this.API_CODE           = "1770d5d9-bcea-4d28-ad21-6cbd5be018a8";
+  this.API_CODE           = '1770d5d9-bcea-4d28-ad21-6cbd5be018a8';
   this.SERVER_TIME_OFFSET = null;
   this.AJAX_TIMEOUT       = 60000;
 }
 
 // encodeFormData :: Object -> url encoded params
 API.prototype.encodeFormData = function (data) {
-  if (!data) return "";
+  if (!data) return '';
   var encoded = Object.keys(data).map(function (k) {
       return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]);
   }).join('&');
@@ -52,7 +52,7 @@ API.prototype.request = function (action, method, data, withCred) {
     if (response.status >= 200 && response.status < 300) {
       if(
         response.headers.get('content-type') &&
-        response.headers.get('content-type').indexOf("application/json") > -1
+        response.headers.get('content-type').indexOf('application/json') > -1
       ) {
         return response.json();
       } else if (data.format === 'json') {
@@ -118,7 +118,7 @@ API.prototype.getBalances = function (addresses){
     , format: 'json'
     , api_code : this.API_CODE
   };
-  return this.retry(this.request.bind(this, "POST", "multiaddr", data));
+  return this.retry(this.request.bind(this, 'POST', 'multiaddr', data));
 };
 
 API.prototype.getBalanceForRedeemCode = function (privatekey){
@@ -145,13 +145,13 @@ API.prototype.getFiatAtTime = function (time, value, currencyCode){
     , nosavecurrency: true
     , api_code : this.API_CODE
   };
-  return this.retry(this.request.bind(this, "GET", "frombtc", data));
+  return this.retry(this.request.bind(this, 'GET', 'frombtc', data));
 };
 
 API.prototype.getTicker = function (){
   var data = { format: 'json' , api_code : this.API_CODE};
-  // return this.request("GET", "ticker", data);
-  return this.retry(this.request.bind(this, "GET", "ticker", data));
+  // return this.request('GET', 'ticker', data);
+  return this.retry(this.request.bind(this, 'GET', 'ticker', data));
 };
 
 API.prototype.getUnspent = function (fromAddresses, confirmations){
@@ -161,7 +161,7 @@ API.prototype.getUnspent = function (fromAddresses, confirmations){
     , format: 'json'
     , api_code : this.API_CODE
   };
-  return this.retry(this.request.bind(this, "POST", "unspent", data));
+  return this.retry(this.request.bind(this, 'POST', 'unspent', data));
 };
 
 API.prototype.getHistory = function (addresses, tx_filter, offset, n, syncBool) {
@@ -186,7 +186,7 @@ API.prototype.getHistory = function (addresses, tx_filter, offset, n, syncBool) 
     data.filter = tx_filter;
   }
 
-  return this.retry(this.request.bind(this, "POST", "multiaddr", data, null, syncBool));
+  return this.retry(this.request.bind(this, 'POST', 'multiaddr', data, null, syncBool));
 };
 
 API.prototype.securePost = function (url, data){
@@ -218,7 +218,7 @@ API.prototype.securePost = function (url, data){
   clone.api_code                  = this.API_CODE;
   clone.format                    = data.format ? data.format : 'plain';
 
-  return this.retry(this.request.bind(this, "POST", url, clone, true));
+  return this.retry(this.request.bind(this, 'POST', url, clone, true));
 };
 
 API.prototype.securePostCallbacks = function (url, data, success, error) {
@@ -228,7 +228,7 @@ API.prototype.securePostCallbacks = function (url, data, success, error) {
 
 //01000000013e095250cb35129c7dee081b8c89b4bff69f72222a25c45ba9747a704a6d0bcd010000006b4830450221009b4f6619b1499ea19494aec34c36fdeac9146b9f87f010b7ebf1eb8a1b590c6e02202f5d9b0cfa4107d586b5b370494b9932eba1411468af06e431001932c12bf245012103cf91e6b06d1a2432721559a010ee67e98f8ef0421b15cca66dc9717ac1af8d1effffffff0210270000000000001976a91402549a8a872fbe54721a899e5ac2a87daac2358088acf0ba0400000000001976a9148ee77b3dd0e33783c11a6c28473d16e9b63dc38588ac00000000
 API.prototype.pushTx = function (tx, note){
-  assert(tx, "transaction required");
+  assert(tx, 'transaction required');
 
   var txHex = tx.toHex();
   var tx_hash = tx.getId();
@@ -240,13 +240,13 @@ API.prototype.pushTx = function (tx, note){
   };
 
   var responseTXHASH = function (responseText) {
-    if (responseText.indexOf("Transaction Submitted") > -1)
+    if (responseText.indexOf('Transaction Submitted') > -1)
       { return tx_hash;}
     else
       { return responseText;}
   };
 
-  return this.request("POST", "pushtx", data).then(responseTXHASH);
+  return this.request('POST', 'pushtx', data).then(responseTXHASH);
 };
 
 // OLD FUNCTIONS COPIED: Must rewrite this ones (email ,sms)

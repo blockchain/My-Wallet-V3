@@ -67,21 +67,21 @@ function socketConnect () {
   function onOpen () {
     WalletStore.sendEvent('ws_on_open');
 
-    var msg = '{"op":"blocks_sub"}';
+    var msg = '{\'op\':\'blocks_sub\'}';
 
     if (MyWallet.wallet.guid != null)
-      msg += '{"op":"wallet_sub","guid":"'+MyWallet.wallet.guid+'"}';
+      msg += '{\'op\':\'wallet_sub\',\'guid\':\''+MyWallet.wallet.guid+'\'}';
 
     try {
       MyWallet.wallet.activeAddresses.forEach(
-        function (address) { msg += '{"op":"addr_sub", "addr":"'+ address +'"}'; }
+        function (address) { msg += '{\'op\':\'addr_sub\', \'addr\':\''+ address +'\'}'; }
       );
 
       if (MyWallet.wallet.isUpgradedToHD)
         MyWallet.listenToHDWalletAccounts();
 
     } catch (e) {
-      WalletStore.sendEvent("msg", {type: "error", message: 'error with websocket'});
+      WalletStore.sendEvent('msg', {type: 'error', message: 'error with websocket'});
     }
 
     MyWallet.ws.send(msg);
@@ -95,7 +95,7 @@ function socketConnect () {
 // used only locally (wallet.js)
 MyWallet.listenToHDWalletAccount = function (accountExtendedPublicKey) {
   try {
-    var msg = '{"op":"xpub_sub", "xpub":"'+ accountExtendedPublicKey +'"}';
+    var msg = '{\'op\':\'xpub_sub\', \'xpub\':\''+ accountExtendedPublicKey +'\'}';
     MyWallet.ws.send(msg);
   } catch (e) { }
 };
@@ -120,7 +120,7 @@ function didDecryptWallet (success) {
 function checkWalletChecksum (payload_checksum, success, error) {
   var data = {method : 'wallet.aes.json', format : 'json', checksum : payload_checksum};
 
-  API.securePostCallbacks("wallet", data, function (obj) {
+  API.securePostCallbacks('wallet', data, function (obj) {
     if (!obj.payload || obj.payload == 'Not modified') {
       if (success) success();
     } else if (error) error();
@@ -138,7 +138,7 @@ MyWallet.getWallet = function (success, error) {
   if (WalletStore.getPayloadChecksum() && WalletStore.getPayloadChecksum().length > 0)
     data.checksum = WalletStore.getPayloadChecksum();
 
-  API.securePostCallbacks("wallet", data, function (obj) {
+  API.securePostCallbacks('wallet', data, function (obj) {
     if (!obj.payload || obj.payload == 'Not modified') {
       if (success) success();
       return;
@@ -247,7 +247,7 @@ MyWallet.login = function ( user_guid
       // because they won't be part of the 2FA response.
 
       if (!obj.guid) {
-        WalletStore.sendEvent("msg", {type: "error", message: 'Server returned null guid.'});
+        WalletStore.sendEvent('msg', {type: 'error', message: 'Server returned null guid.'});
         other_error('Server returned null guid.');
         return;
       }
@@ -273,7 +273,7 @@ MyWallet.login = function ( user_guid
          return;
        }
        WalletStore.sendEvent('did_fail_set_guid');
-       if (obj.authorization_required && typeof(authorization_required) === "function") {
+       if (obj.authorization_required && typeof(authorization_required) === 'function') {
          authorization_required(function () {
            MyWallet.pollForSessionGUID(function () {
              tryToFetchWalletJSON(guid, successCallback);
@@ -281,10 +281,10 @@ MyWallet.login = function ( user_guid
          });
        }
        if (obj.initial_error) {
-         WalletStore.sendEvent("msg", {type: "error", message: obj.initial_error});
+         WalletStore.sendEvent('msg', {type: 'error', message: obj.initial_error});
        }
     };
-    API.request("GET", 'wallet/' + guid, data, true, false).then(success).catch(error);
+    API.request('GET', 'wallet/' + guid, data, true, false).then(success).catch(error);
   };
 
   var tryToFetchWalletWith2FA = function (guid, two_factor_auth_key, successCallback) {
@@ -314,7 +314,7 @@ MyWallet.login = function ( user_guid
     };
 
     var myData = { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : API.API_CODE};
-    API.request("POST", 'wallet', myData, true, false).then(success).catch(error);
+    API.request('POST', 'wallet', myData, true, false).then(success).catch(error);
   };
 
   var didFetchWalletJSON = function (obj) {
@@ -351,13 +351,13 @@ MyWallet.pollForSessionGUID = function (successCallback) {
   var success = function (obj) {
     if (obj.guid) {
       WalletStore.setIsPolling(false);
-      WalletStore.sendEvent("msg", {type: "success", message: 'Authorization Successful'});
+      WalletStore.sendEvent('msg', {type: 'success', message: 'Authorization Successful'});
       successCallback()
     } else {
       if (WalletStore.getCounter() < 600) {
         WalletStore.incrementCounter();
         setTimeout(function () {
-          API.request("GET", 'wallet/poll-for-session-guid', data, true, false).then(success).catch(error);
+          API.request('GET', 'wallet/poll-for-session-guid', data, true, false).then(success).catch(error);
         }, 2000);
       } else {
         WalletStore.setIsPolling(false);
@@ -367,7 +367,7 @@ MyWallet.pollForSessionGUID = function (successCallback) {
   var error = function () {
     WalletStore.setIsPolling(false);
   }
-  API.request("GET", 'wallet/poll-for-session-guid', data, true, false).then(success).catch(error);
+  API.request('GET', 'wallet/poll-for-session-guid', data, true, false).then(success).catch(error);
 };
 // used locally
 ////////////////////////////////////////////////////////////////////////////////
@@ -381,7 +381,7 @@ MyWallet.initializeWallet = function (pw, success, other_error, decrypt_success,
 
   function _error (e) {
     WalletStore.setRestoringWallet(false);
-    WalletStore.sendEvent("msg", {type: "error", message: e});
+    WalletStore.sendEvent('msg', {type: 'error', message: e});
 
     WalletStore.sendEvent('error_restoring_wallet');
     other_error(e);
@@ -422,13 +422,13 @@ function syncWallet (successcallback, errorcallback) {
 
   var panic = function (e) {
       console.log('Panic ' + e);
-      window.location.replace("/");
+      window.location.replace('/');
       throw 'Save disabled.';
       // kick out of the wallet in a inconsistent state to prevent save
   };
 
   if (MyWallet.wallet.isEncryptionConsistent === false) {
-    panic("The wallet was not fully enc/decrypted");
+    panic('The wallet was not fully enc/decrypted');
   }
 
   if (!MyWallet.wallet || !MyWallet.wallet.sharedKey
@@ -440,7 +440,7 @@ function syncWallet (successcallback, errorcallback) {
 
   var _errorcallback = function (e) {
     WalletStore.sendEvent('on_backup_wallet_error');
-    WalletStore.sendEvent("msg", {type: "error", message: 'Error Saving Wallet: ' + e});
+    WalletStore.sendEvent('msg', {type: 'error', message: 'Error Saving Wallet: ' + e});
     // Re-fetch the wallet from server
     MyWallet.getWallet();
     // try to save again:
@@ -497,7 +497,7 @@ function syncWallet (successcallback, errorcallback) {
         }
 
         API.securePostCallbacks(
-            "wallet"
+            'wallet'
           , data
           , function (data) {
               checkWalletChecksum(
@@ -528,7 +528,7 @@ function syncWallet (successcallback, errorcallback) {
     },
                                function (e) {
                                  console.log(e);
-                                 throw("Decryption failed");
+                                 throw('Decryption failed');
                                });
   } catch (e) {
     _errorcallback(e);
@@ -537,7 +537,7 @@ function syncWallet (successcallback, errorcallback) {
 
 }
 MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function (){
-  console.log("SAVE CALLED...");
+  console.log('SAVE CALLED...');
   WalletStore.setIsSynchronizedWithServer(false);
 });
 
@@ -589,5 +589,5 @@ MyWallet.logout = function (force) {
   };
   var data = {format : 'plain', api_code : API.API_CODE};
   WalletStore.sendEvent('logging_out');
-  API.request("GET", 'wallet/logout', data, true, false).then(reload).catch(reload);
+  API.request('GET', 'wallet/logout', data, true, false).then(reload).catch(reload);
 };

@@ -15,11 +15,11 @@ function KeyRing (extendedKey, cache) {
 }
 
 Object.defineProperties(KeyRing.prototype, {
-  "receive": {
+  'receive': {
     configurable: false,
     get: function () {return this._receiveChain;}
   },
-  "change": {
+  'change': {
     configurable: false,
     get: function () {return this._changeChain;}
   }
@@ -38,7 +38,7 @@ KeyRing.prototype.init = function (extendedKey, cache){
 };
 
 KeyRing.prototype.privateKeyFromPath = function (path) {
-  var components = path.split("/");
+  var components = path.split('/');
   assert(components[0] === 'M', 'Invalid Path prefix');
   assert(components[1] === '0' || components[1] === '1'
     ,'Invalid Path: change/receive index out of bounds');

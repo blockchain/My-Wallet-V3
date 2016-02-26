@@ -118,9 +118,9 @@ function requestTwoFactorReset (
 
 // Save the javascript wallet to the remote server
 function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) {
-  assert(guid, "GUID missing");
-  assert(sharedKey, "Shared Key missing");
-  assert(password, "Password missing");
+  assert(guid, 'GUID missing');
+  assert(sharedKey, 'Shared Key missing');
+  assert(password, 'Password missing');
 
   var dataPromise = new Promise(function (resolve, reject) {
     // var data = MyWallet.makeCustomWalletJSON(null, guid, sharedKey);
