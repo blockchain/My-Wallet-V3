@@ -5,6 +5,13 @@ WalletCrypto = {}
 WalletSignup = {}
 API =
   securePostCallbacks: () ->
+  request: () ->
+    then: (cb) ->
+      cb("{}")
+      {
+        catch: (cb) ->
+      }
+
 
 stubs = { './wallet-store': WalletStore, './wallet-crypto': WalletCrypto, './wallet-signup': WalletSignup, './api': API}
 
@@ -163,3 +170,59 @@ describe "Wallet", ->
       decrypted = WalletCrypto.decrypt(payload, encryption_phrase, 10)
       components = decrypted.split('|')
       expect(components[0]).toBe(guid)
+
+  describe "login", ->
+
+    callbacks = {
+      success: () ->
+      wrong_two_factor_code: () ->
+      other_error: () ->
+    }
+
+    beforeEach ->
+      spyOn(MyWallet,"initializeWallet").and.callFake((inputedPassword, success, other_error, decrypt_success, build_hd_success) ->
+        success()
+      )
+
+      spyOn(callbacks, "success")
+      spyOn(callbacks, "wrong_two_factor_code")
+      spyOn(API, "request").and.callThrough()
+
+    describe "with 2FA", ->
+      it "should pass code along", ->
+        MyWallet.login(
+          "1234",
+          null,
+          "password",
+          "BF399",
+          callbacks.success,
+          callbacks.needs_two_factor_code,
+          callbacks.wrong_two_factor_code,
+          callbacks.authorization_required
+          callbacks.other_error,
+          callbacks.fetch_success,
+          callbacks.decrypt_success,
+          callbacks.build_hd_success
+        )
+
+        expect(API.request.calls.argsFor(0)[2].payload).toEqual("BF399")
+        expect(callbacks.success).toHaveBeenCalled()
+
+      it "should convert code to upper case", ->
+        MyWallet.login(
+          "1234",
+          null,
+          "password",
+          "bf399",
+          callbacks.success,
+          callbacks.needs_two_factor_code,
+          callbacks.wrong_two_factor_code,
+          callbacks.authorization_required
+          callbacks.other_error,
+          callbacks.fetch_success,
+          callbacks.decrypt_success,
+          callbacks.build_hd_success
+        )
+
+        expect(API.request).toHaveBeenCalled()
+        expect(API.request.calls.argsFor(0)[2].payload).toEqual("BF399")

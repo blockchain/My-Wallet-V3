@@ -296,6 +296,9 @@ MyWallet.login = function ( user_guid
      other_error('You must enter a Two Factor Authentication code');
      return;
     }
+
+    two_factor_auth_key = two_factor_auth_key.toUpperCase();
+
     var success = function (data) {
      if (data == null || data.length == 0) {
        other_error('Server Return Empty Wallet Data');
@@ -314,7 +317,6 @@ MyWallet.login = function ( user_guid
   };
 
   var didFetchWalletJSON = function (obj) {
-
     if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
      WalletStore.setEncryptedWalletData(obj.payload);
     }
