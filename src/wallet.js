@@ -554,11 +554,11 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
   WalletSignup.generateNewWallet(inputedPassword, inputedEmail, firstAccountName, function (createdGuid, createdSharedKey, createdPassword) {
     if (languageCode) {
       WalletStore.setLanguage(languageCode);
-      BlockchainSettingsAPI.change_language(languageCode, (() => {}));
+      BlockchainSettingsAPI.change_language(languageCode, (function () {}));
     }
 
     if (currencyCode) {
-      BlockchainSettingsAPI.change_local_currency(currencyCode, (() => {}));
+      BlockchainSettingsAPI.change_local_currency(currencyCode, (function () {}));
     }
 
     WalletStore.unsafeSetPassword(createdPassword);
