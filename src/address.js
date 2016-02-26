@@ -136,7 +136,7 @@ Address.factory = function (o,a){
     o[a.addr] = new Address(a);
   }
   else {
-    o[a.addr] = a;
+    o[a.address] = a;
   }
   return o;
 };
