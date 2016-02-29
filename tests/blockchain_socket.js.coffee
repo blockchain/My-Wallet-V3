@@ -72,3 +72,73 @@ describe "Websocket", ->
         it "should do nothing", ->
           # ws.socket is not defined, so nothing to spy on
           expect(() -> ws.send(message)).not.toThrow()
+
+    describe "msgWalletSub()", ->
+      it "should subscribe to a guid", ->
+        res = ws.msgWalletSub("1234")
+        expected = JSON.stringify({op: "wallet_sub", guid: "1234"})
+        expect(res).toEqual(expected)
+
+      it "should return an empty string if guid is missing", ->
+        res = ws.msgWalletSub(null)
+        expected = ""
+        expect(res).toEqual(expected)
+
+    describe "msgBlockSub()", ->
+      it "should subscribe to new blocks", ->
+        res = ws.msgBlockSub()
+        expected = JSON.stringify({op: "blocks_sub"})
+        expect(res).toEqual(expected)
+
+    describe "msgAddrSub()", ->
+      it "should return an empty string if addresses are missing", ->
+        res = ws.msgAddrSub(null)
+        expected = ""
+        expect(res).toEqual(expected)
+
+      it "should subscribe to one adddress", ->
+        res = ws.msgAddrSub("1abc")
+        expected = JSON.stringify({op: "addr_sub", addr: "1abc"})
+        expect(res).toEqual(expected)
+
+      it "should subscribe to array of adddresses", ->
+        res = ws.msgAddrSub(["1abc", "1def"])
+        expected = JSON.stringify({op: "addr_sub", addr: "1abc"}) +
+                   JSON.stringify({op: "addr_sub", addr: "1def"})
+        expect(res).toEqual(expected)
+
+    describe "msgXPUBSub()", ->
+      it "should return an empty string if xpub is missing", ->
+        res = ws.msgXPUBSub(null)
+        expected = ""
+        expect(res).toEqual(expected)
+
+      it "should subscribe to one xpub", ->
+        res = ws.msgXPUBSub("1abc")
+        expected = JSON.stringify({op: "xpub_sub", xpub: "1abc"})
+        expect(res).toEqual(expected)
+
+      it "should subscribe to array of adddresses", ->
+        res = ws.msgXPUBSub(["1abc", "1def"])
+        expected = JSON.stringify({op: "xpub_sub", xpub: "1abc"}) +
+                   JSON.stringify({op: "xpub_sub", xpub: "1def"})
+        expect(res).toEqual(expected)
+
+    describe "msgPing()", ->
+      it "should ping", ->
+        res = ws.msgPing()
+        expected = JSON.stringify({op: "ping"})
+        expect(res).toEqual(expected)
+
+    describe "msgOnOpen()", ->
+      it "should subscribe to blocks, guid, addresses and xpubs", ->
+        guid = "1234"
+        addresses = ["123a", "1bcd"]
+        xpubs = "1eff"
+        res = ws.msgOnOpen(guid, addresses, xpubs)
+        expected = JSON.stringify({op: "blocks_sub"}) +
+                   JSON.stringify({op: "wallet_sub", guid: "1234"}) +
+                   JSON.stringify({op: "addr_sub", addr: "123a"}) +
+                   JSON.stringify({op: "addr_sub", addr: "1bcd"}) +
+                   JSON.stringify({op: "xpub_sub", xpub: "1eff"})
+        expect(res).toEqual(expected)
