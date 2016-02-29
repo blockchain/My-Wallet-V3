@@ -353,7 +353,7 @@ Payment.publish = function () {
     };
 
     var handleError = function (e) {
-      throw e.message || e.responseText;
+      throw e.message || e.responseText || e;
     };
 
     var getValue = function (coin) {return coin.value;};
