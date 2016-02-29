@@ -113,6 +113,11 @@ describe "Websocket", ->
         expected = ""
         expect(res).toEqual(expected)
 
+      it "should return an empty string if xpub is []", ->
+        res = ws.msgXPUBSub([])
+        expected = ""
+        expect(res).toEqual(expected)
+
       it "should subscribe to one xpub", ->
         res = ws.msgXPUBSub("1abc")
         expected = JSON.stringify({op: "xpub_sub", xpub: "1abc"})
