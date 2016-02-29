@@ -1,13 +1,20 @@
 proxyquire = require('proxyquireify')(require)
 
-WalletStore = {}
+WalletStore = {
+  setGuid: () ->
+  setRealAuthType: () ->
+  setSyncPubKeys: () ->
+}
 WalletCrypto = {}
 WalletSignup = {}
 API =
   securePostCallbacks: () ->
-  request: () ->
+  request: (action, method, data, withCred) ->
     then: (cb) ->
-      cb("{}")
+      if action == "GET"
+        cb({guid: '1234', payload: '1'})
+      else
+        cb({})
       {
         catch: (cb) ->
       }
@@ -189,7 +196,25 @@ describe "Wallet", ->
       spyOn(API, "request").and.callThrough()
 
     describe "with 2FA", ->
-      it "should pass code along", ->
+      it "can be absent", ->
+        MyWallet.login(
+          "1234",
+          null,
+          "password",
+          null,
+          callbacks.success,
+          callbacks.needs_two_factor_code,
+          callbacks.wrong_two_factor_code,
+          callbacks.authorization_required
+          callbacks.other_error,
+          callbacks.fetch_success,
+          callbacks.decrypt_success,
+          callbacks.build_hd_success
+        )
+
+        expect(callbacks.success).toHaveBeenCalled()
+
+      it "should pass code (as string) along", ->
         MyWallet.login(
           "1234",
           null,
@@ -208,12 +233,31 @@ describe "Wallet", ->
         expect(API.request.calls.argsFor(0)[2].payload).toEqual("BF399")
         expect(callbacks.success).toHaveBeenCalled()
 
-      it "should convert code to upper case", ->
+      it "should pass code (as object) along", ->
         MyWallet.login(
           "1234",
           null,
           "password",
-          "bf399",
+          {type: 5, code: "BF399"},
+          callbacks.success,
+          callbacks.needs_two_factor_code,
+          callbacks.wrong_two_factor_code,
+          callbacks.authorization_required
+          callbacks.other_error,
+          callbacks.fetch_success,
+          callbacks.decrypt_success,
+          callbacks.build_hd_success
+        )
+
+        expect(API.request.calls.argsFor(0)[2].payload).toEqual("BF399")
+        expect(callbacks.success).toHaveBeenCalled()
+
+      it "should convert SMS code to upper case", ->
+        MyWallet.login(
+          "1234",
+          null,
+          "password",
+          {type: 5, code: "bf399"},
           callbacks.success,
           callbacks.needs_two_factor_code,
           callbacks.wrong_two_factor_code,
@@ -226,3 +270,22 @@ describe "Wallet", ->
 
         expect(API.request).toHaveBeenCalled()
         expect(API.request.calls.argsFor(0)[2].payload).toEqual("BF399")
+
+      it "should not convert Yubikey code to upper case", ->
+        MyWallet.login(
+          "1234",
+          null,
+          "password",
+          "abcdef123",
+          callbacks.success,
+          callbacks.needs_two_factor_code,
+          callbacks.wrong_two_factor_code,
+          callbacks.authorization_required
+          callbacks.other_error,
+          callbacks.fetch_success,
+          callbacks.decrypt_success,
+          callbacks.build_hd_success
+        )
+
+        expect(API.request).toHaveBeenCalled()
+        expect(API.request.calls.argsFor(0)[2].payload).toEqual("abcdef123")

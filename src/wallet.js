@@ -220,7 +220,7 @@ MyWallet.makePairingCode = function (success, error) {
 MyWallet.login = function ( user_guid
                           , shared_key
                           , inputedPassword
-                          , twoFACode
+                          , twoFA
                           , success
                           , needs_two_factor_code
                           , wrong_two_factor_code
@@ -232,7 +232,12 @@ MyWallet.login = function ( user_guid
 
   assert(success, 'Success callback required');
   assert(other_error, 'Error callback required');
-  assert(twoFACode !== undefined, '2FA code must be null or set');
+  assert(twoFA !== undefined, '2FA code must be null or set');
+  assert(
+    twoFA === null ||
+    Helpers.isString(twoFA) ||
+    (Helpers.isPositiveInteger(twoFA.type) && Helpers.isString(twoFA.code))
+  );
 
   var clientTime = (new Date()).getTime();
   var data = { format : 'json', resend_code : null, ct : clientTime, api_code : API.API_CODE };
@@ -287,18 +292,33 @@ MyWallet.login = function ( user_guid
     API.request('GET', 'wallet/' + guid, data, true, false).then(success).catch(error);
   };
 
-  var tryToFetchWalletWith2FA = function (guid, two_factor_auth_key, successCallback) {
+  var tryToFetchWalletWith2FA = function (guid, two_factor_auth, successCallback) {
 
-    if (two_factor_auth_key == null) {
+    if(Helpers.isString(two_factor_auth)) {
+      two_factor_auth = {
+        type: null,
+        code: two_factor_auth
+      };
+    }
+
+    if (two_factor_auth.code == null) {
       other_error('Two Factor Authentication code this null');
       return;
     }
-    if (two_factor_auth_key.length == 0 || two_factor_auth_key.length > 255) {
+    if (two_factor_auth.code.length == 0 || two_factor_auth.code.length > 255) {
      other_error('You must enter a Two Factor Authentication code');
      return;
     }
 
-    two_factor_auth_key = two_factor_auth_key.toUpperCase();
+    var two_factor_auth_key = two_factor_auth.code;
+
+    switch(two_factor_auth.type) {
+      case 2: // email
+      case 4: // sms
+      case 5: // Google Auth
+        two_factor_auth_key = two_factor_auth_key.toUpperCase();
+      break;
+    }
 
     var success = function (data) {
      if (data == null || data.length == 0) {
@@ -328,7 +348,7 @@ MyWallet.login = function ( user_guid
     MyWallet.initializeWallet(inputedPassword, success, other_error, decrypt_success, build_hd_success);
   }
 
-  if(twoFACode == null) {
+  if(twoFA == null) {
     tryToFetchWalletJSON(user_guid, didFetchWalletJSON)
   } else {
     // If 2FA is enabled and we already fetched the wallet before, don't fetch
@@ -336,7 +356,7 @@ MyWallet.login = function ( user_guid
     if(user_guid === WalletStore.getGuid() && WalletStore.getEncryptedWalletData()) {
       MyWallet.initializeWallet(inputedPassword, success, other_error, decrypt_success, build_hd_success);
     } else {
-      tryToFetchWalletWith2FA(user_guid, twoFACode, didFetchWalletJSON)
+      tryToFetchWalletWith2FA(user_guid, twoFA, didFetchWalletJSON)
     }
   }
 };
