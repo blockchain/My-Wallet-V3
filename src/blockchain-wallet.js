@@ -477,7 +477,7 @@ Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) 
       ad.encrypt(cipher).persist();
     }
     this._addresses[ad.address] = ad;
-    MyWallet.ws.send('{\'op\':\'addr_sub\', \'addr\':\'' + ad.address + '\'}');
+    MyWallet.ws.send(MyWallet.ws.msgAddrSub(ad.address));
     MyWallet.syncWallet();
     this.getHistory();
     return ad;
@@ -738,7 +738,7 @@ Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosav
     cipher = WalletCrypto.cipherFunction.bind(undefined, pw, this._sharedKey, this._pbkdf2_iterations);
   }
   var newAccount = this._hd_wallets[index].newAccount(label, cipher).lastAccount;
-  MyWallet.listenToHDWalletAccount(newAccount.extendedPublicKey);
+  MyWallet.ws.send(MyWallet.ws.msgXPUBSub(newAccount.extendedPublicKey));
   if(!(nosave === true)) MyWallet.syncWallet();
   typeof(success) === 'function' && success();
   return newAccount;
