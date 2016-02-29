@@ -3,11 +3,7 @@
 var MyWallet = module.exports = {};
 
 var assert = require('assert');
-var Bitcoin = require('bitcoinjs-lib');
-var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
-var Base58 = require('bs58');
-var BIP39 = require('bip39');
 
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
