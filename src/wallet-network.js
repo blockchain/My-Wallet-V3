@@ -83,6 +83,7 @@ function recoverGuid (user_email, captcha) {
 }
 
 function checkWalletChecksum (payload_checksum, success, error) {
+  assert(payload_checksum, 'Payload checksum missing');
   var data = {method : 'wallet.aes.json', format : 'json', checksum : payload_checksum};
 
   API.securePostCallbacks('wallet', data, function (obj) {
