@@ -7,6 +7,8 @@ var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
 var BIP39 = require('bip39');
 var shared = require('./shared');
+var Address = require('./address');
+var ImportExport = require('./import-export');
 
 var Helpers = {};
 Math.log2 = function (x) { return Math.log(x) / Math.LN2;};
@@ -369,6 +371,33 @@ Helpers.isValidPrivateKey = function (candidate) {
   } catch (e) {
     return false;
   }
+};
+
+Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
+  var asyncParse = function (resolve, reject) {
+    var format    = Helpers.detectPrivateKeyFormat(priv)
+      , okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
+    if (format === 'bip38') {
+      if (bipPass == undefined || bipPass === '') {
+        return reject('needsBip38');
+      }
+      ImportExport.parseBIP38toECKey(priv, bipPass,
+        function (key) { resolve(key);},
+        function ()    { reject('wrongBipPass'); },
+        function ()    { reject('importError');}
+      );
+    }
+    else if (okFormats.indexOf(format) > -1) {
+      var k = Helpers.privateKeyStringToKey(priv, format);
+      return resolve(k);
+    }
+    else { reject('unknown key format'); }
+  }
+  var predicate = function(key){
+    var a = key.pub.getAddress().toString();
+    return a === address;
+  }
+  return new Promise(asyncParse).then(predicate);
 };
 
 function parseValueBitcoin (valueString) {
