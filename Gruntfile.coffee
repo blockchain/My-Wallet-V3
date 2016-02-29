@@ -6,7 +6,7 @@ module.exports = (grunt) ->
     clean:
       build: ["build"]
       dist: ["dist"]
-      test: ["coverage"]
+      test: ["coverage", "coverage-lcov"]
       testjs: ["tests/*js"]
       shrinkwrap: ["npm-shrinkwrap.*"]
       node_modules: ["node_modules"]

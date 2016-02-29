@@ -2,7 +2,7 @@
 
 JavaScript Model for Blockchain.info wallet.
 
-## Install
+## Build
 
 ```sh
 npm install
@@ -29,12 +29,6 @@ Clean generated files:
 
 ```sh
 grunt clean
-```
-
-Remove all installed dependencies:
-
-```sh
-rm -rf node_modules/
 ```
 
 ## Getting Started
