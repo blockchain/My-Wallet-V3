@@ -7,7 +7,6 @@ var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
 var BIP39 = require('bip39');
 var shared = require('./shared');
-var Address = require('./address');
 var ImportExport = require('./import-export');
 
 var Helpers = {};
@@ -395,7 +394,7 @@ Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
   }
   var predicate = function(key){
     var a = key.pub.getAddress().toString();
-    return a === address;
+    return a === address? Base58.encode(key.d.toBuffer(32)) : null;
   }
   return new Promise(asyncParse).then(predicate);
 };
