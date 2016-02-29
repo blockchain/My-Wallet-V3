@@ -4,6 +4,7 @@ var crypto  = require('crypto');
 var assert  = require('assert');
 var sjcl    = require('sjcl');
 var Buffer = require('buffer').Buffer;
+var Helpers    = require('./helpers');
 
 
 var SUPPORTED_ENCRYPTION_VERSION = 3
@@ -309,11 +310,17 @@ function sha256 (data) {
 function scrypt (passwd, salt, N, r, p, dkLen, callback) {
   var MAX_VALUE = 2147483647;
 
-  if (N == 0 || (N & (N - 1)) != 0) { throw Error('N must be > 0 and a power of 2'); }
+  if (!Helpers.isPositiveInteger(r) || r == 0) { throw Error('Parameter r must be a positive integer'); }
+
+  if (!Helpers.isPositiveInteger(p) || p == 0) { throw Error('Parameter p must be a positive integer'); }
+
+  if (!Helpers.isPositiveInteger(N) || N == 0 || (N & (N - 1)) != 0) { throw Error('N must be > 0 and a power of 2'); }
 
   if (N > MAX_VALUE / 128 / r) { throw Error('Parameter N is too large'); }
 
   if (r > MAX_VALUE / 128 / p) { throw Error('Parameter r is too large'); }
+
+  if (!Helpers.isPositiveInteger(dkLen) || dkLen == 0 || dkLen > MAX_VALUE * 32) { throw Error('Parameter dkLen must be ≤ (2^32− 1) * hLen'); }
 
   if(!Buffer.isBuffer(passwd)) {
     passwd = new Buffer(passwd, 'utf8');
