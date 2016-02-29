@@ -12,6 +12,7 @@ var BIP39 = require('bip39');
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var WalletSignup = require('./wallet-signup');
+var WalletNetwork = require('./wallet-network');
 var API = require('./api');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
@@ -114,19 +115,6 @@ function didDecryptWallet (success) {
   MyWallet.getWallet();
   WalletStore.resetLogoutTimeout();
   success();
-}
-
-// used once
-function checkWalletChecksum (payload_checksum, success, error) {
-  var data = {method : 'wallet.aes.json', format : 'json', checksum : payload_checksum};
-
-  API.securePostCallbacks('wallet', data, function (obj) {
-    if (!obj.payload || obj.payload == 'Not modified') {
-      if (success) success();
-    } else if (error) error();
-  }, function (e) {
-    if (error) error();
-  });
 }
 
 //Fetch a new wallet from the server
@@ -500,7 +488,7 @@ function syncWallet (successcallback, errorcallback) {
             'wallet'
           , data
           , function (data) {
-              checkWalletChecksum(
+              WalletNetwork.checkWalletChecksum(
                   new_checksum
                 , function () {
                     WalletStore.setIsSynchronizedWithServer(true);
