@@ -66,24 +66,8 @@ function socketConnect () {
 
   function onOpen () {
     WalletStore.sendEvent('ws_on_open');
-
-    var msg = '{\'op\':\'blocks_sub\'}';
-
-    if (MyWallet.wallet.guid != null)
-      msg += '{\'op\':\'wallet_sub\',\'guid\':\''+MyWallet.wallet.guid+'\'}';
-
-    try {
-      MyWallet.wallet.activeAddresses.forEach(
-        function (address) { msg += '{\'op\':\'addr_sub\', \'addr\':\''+ address +'\'}'; }
-      );
-
-      if (MyWallet.wallet.isUpgradedToHD)
-        MyWallet.listenToHDWalletAccounts();
-
-    } catch (e) {
-      WalletStore.sendEvent('msg', {type: 'error', message: 'error with websocket'});
-    }
-
+    var accounts = MyWallet.wallet.hdwallet? MyWallet.wallet.hdwallet.activeXpubs : [];
+    var msg = MyWallet.ws.msgOnOpen(MyWallet.wallet.guid, MyWallet.wallet.activeAddresses, accounts);
     MyWallet.ws.send(msg);
   }
 
@@ -91,21 +75,6 @@ function socketConnect () {
     WalletStore.sendEvent('ws_on_close');
   }
 }
-
-// used only locally (wallet.js)
-MyWallet.listenToHDWalletAccount = function (accountExtendedPublicKey) {
-  try {
-    var msg = '{\'op\':\'xpub_sub\', \'xpub\':\''+ accountExtendedPublicKey +'\'}';
-    MyWallet.ws.send(msg);
-  } catch (e) { }
-};
-// used only once locally
-MyWallet.listenToHDWalletAccounts = function () {
-  if (Blockchain.MyWallet.wallet.isUpgradedToHD) {
-    var listen = function (a) { MyWallet.listenToHDWalletAccount(a.extendedPublicKey); }
-    MyWallet.wallet.hdwallet.activeAccounts.forEach(listen);
-  };
-};
 
 // used two times
 function didDecryptWallet (success) {

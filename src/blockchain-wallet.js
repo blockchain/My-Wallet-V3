@@ -738,7 +738,7 @@ Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosav
     cipher = WalletCrypto.cipherFunction.bind(undefined, pw, this._sharedKey, this._pbkdf2_iterations);
   }
   var newAccount = this._hd_wallets[index].newAccount(label, cipher).lastAccount;
-  MyWallet.listenToHDWalletAccount(newAccount.extendedPublicKey);
+  MyWallet.ws.send(MyWallet.ws.msgXPUBSub(newAccount.extendedPublicKey));
   if(!(nosave === true)) MyWallet.syncWallet();
   typeof(success) === 'function' && success();
   return newAccount;
