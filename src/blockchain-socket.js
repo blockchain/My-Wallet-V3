@@ -36,7 +36,7 @@ BlockchainSocket.prototype.connect = function (onOpen, onMessage, onClose) {
     var connect = this.connectOnce.bind(this, onOpen, onMessage, onClose);
     if (!this.socket || this.socket.readyState === 3) connect();
   }.bind(this);
-  var pingSocket = function () { this.send('{\'op\':\'ping\'}'); }.bind(this);
+  var pingSocket = function () { this.send(this.msgPing()); }.bind(this);
   this.reconnect();
   this.reconnectInterval = setInterval(this.reconnect, 20000);
   this.pingInterval = setInterval(pingSocket, 30013);
@@ -90,6 +90,11 @@ BlockchainSocket.prototype.msgXPUBSub = function (xpubs) {
     return JSON.stringify(m);
   }
   return xpubsArray.map(toMsg).reduce(Helpers.add, "");
+};
+
+BlockchainSocket.prototype.msgPing = function () {
+  var m = { op : 'ping'};
+  return JSON.stringify(m);
 };
 
 BlockchainSocket.prototype.msgOnOpen = function (guid, addresses, xpubs) {
