@@ -74,7 +74,7 @@ var ImportExport = new function () {
         checksum = hash256(base58Address);
 
         if (checksum[0] != hex[3] || checksum[1] != hex[4] || checksum[2] != hex[5] || checksum[3] != hex[6]) {
-          return reject('wrong password');
+          return reject('wrongBipPass');
         }
 
         return resolve({
