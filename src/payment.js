@@ -26,6 +26,7 @@ function Payment (payment) {
   // payment.coins          :: [coins]
   // payment.to             :: [bitcoin address]
   // payment.amounts        :: [Integer]
+  // payment.fromWatchOnly  :: Boolean
   // payment.transaction    :: Transaction
   // payment.note           :: String
   // payment.listener       :: {Functions}
@@ -224,6 +225,7 @@ Payment.from = function (origin) {
   var pkFormat   = Helpers.detectPrivateKeyFormat(origin);
   var wifs       = []; // only used fromPrivateKey
   var fromAccId  = null;
+  var watchOnly  = false;
 
   switch (true) {
     // no origin => assume origin = all the legacy addresses (non - watchOnly)
@@ -260,9 +262,25 @@ Payment.from = function (origin) {
       key.pub.compressed = true;
       var addrComp = key.pub.getAddress().toString();
       var cWIF = key.toWIF();
-      wifs      = [cWIF, uWIF];
-      addresses = [addrComp, addrUncomp];
-      change    = addrComp;
+
+      var ukey = MyWallet.wallet.key(addrUncomp);
+      var ckey = MyWallet.wallet.key(addrComp);
+
+      if (ukey && ukey.isWatchOnly) {
+        wifs      = [uWIF];
+        addresses = [addrUncomp];
+        change    = addrUncomp;
+        watchOnly = true;
+      } else if (ckey && ckey.isWatchOnly) {
+        wifs      = [cWIF];
+        addresses = [addrComp];
+        change    = addrComp;
+        watchOnly = true;
+      } else {
+        wifs      = [cWIF, uWIF];
+        addresses = [addrComp, addrUncomp];
+        change    = addrComp;
+      }
       break;
     default:
       console.log('No origin set.')
@@ -273,6 +291,7 @@ Payment.from = function (origin) {
     payment.wifKeys        = wifs;
     payment.fromAccountIdx = fromAccId;
     payment.forcedFee      = null;
+    payment.fromWatchOnly  = watchOnly;
 
     return getUnspentCoins(addresses).then(
       function (coins) {
@@ -328,14 +347,16 @@ Payment.buildbeta = function () {
   };
 };
 
-Payment.sign = function (password) {
-  return function (payment) {
-    function importWIF (WIF) {
-      MyWallet.wallet.importLegacyAddress(WIF, 'Redeemed code.', password)
-        .then(function (A){A.archived = true;});
+Payment.sign = function(password) {
+  return function(payment) {
+    var importWIF = function (WIF) {
+      MyWallet.wallet.importLegacyAddress(WIF, "Redeemed code.", password)
+        .then(function(A){A.archived = true;});
     };
-    if (Array.isArray(payment.wifKeys)) payment.wifKeys.forEach(importWIF);
-    if (!payment.transaction) throw 'You cannot sign a non-build transaction.'
+
+    if (!payment.transaction) throw 'This transaction hasn\'t been built yet';
+    if (Array.isArray(payment.wifKeys) && !payment.fromWatchOnly) payment.wifKeys.forEach(importWIF);
+
     payment.transaction.addPrivateKeys(getPrivateKeys(password, payment));
     payment.transaction.sortBIP69();
     payment.transaction = payment.transaction.sign();
@@ -391,6 +412,16 @@ function getUnspentCoins (addressList) {
   return API.getUnspent(addressList, 0).then(processCoins);
 }
 
+function getKey(priv, addr) {
+  var format = Helpers.detectPrivateKeyFormat(priv);
+  var key    = Helpers.privateKeyStringToKey(priv, format);
+  var ckey = new Bitcoin.ECKey(key.d, true);
+  var ukey = new Bitcoin.ECKey(key.d, false);
+  if (ckey.pub.getAddress().toString() === addr) {return ckey;}
+  else if (ukey.pub.getAddress().toString() === addr) {return ukey;}
+  return key;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // obtain private key for an address
 // from Address
@@ -401,13 +432,7 @@ function getKeyForAddress (password, addr) {
                                                 , password
                                                 , MyWallet.wallet.sharedKey
                                                 , MyWallet.wallet.pbkdf2_iterations);
-  var format = Helpers.detectPrivateKeyFormat(privateKeyBase58);
-  var key    = Helpers.privateKeyStringToKey(privateKeyBase58, format);
-  var ckey = new Bitcoin.ECKey(key.d, true);
-  var ukey = new Bitcoin.ECKey(key.d, false);
-  if (ckey.pub.getAddress().toString() === addr) {return ckey;}
-  else if (ukey.pub.getAddress().toString() === addr) {return ukey;}
-  return key;
+  return getKey(privateKeyBase58, addr);
 }
 ////////////////////////////////////////////////////////////////////////////////
 // getXPRIV :: password -> index -> xpriv
@@ -438,8 +463,12 @@ function getPrivateKeys (password, payment) {
     privateKeys = transaction.pathsOfNeededPrivateKeys.map(getKeyForPath.bind(this, xpriv));
   };
   // if from Addresses
-  if (payment.from && payment.from.every(Helpers.isBitcoinAddress)) {
+  if (payment.from && payment.from.every(Helpers.isBitcoinAddress) && !payment.fromWatchOnly) {
     privateKeys = transaction.addressesOfNeededPrivateKeys.map(getKeyForAddress.bind(this, password));
+  };
+  // if from Watch Only
+  if (payment.from && Helpers.isBitcoinAddress(payment.from[0]) && payment.fromWatchOnly) {
+    privateKeys = transaction.addressesOfNeededPrivateKeys.map(getKey.bind(null, payment.wifKeys[0]));
   };
   return privateKeys;
 };
