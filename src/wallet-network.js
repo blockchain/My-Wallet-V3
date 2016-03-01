@@ -82,6 +82,19 @@ function recoverGuid (user_email, captcha) {
     .then(handleResponse).catch(handleError('Could not send recovery email'));
 }
 
+function checkWalletChecksum (payload_checksum, success, error) {
+  assert(payload_checksum, 'Payload checksum missing');
+  var data = {method : 'wallet.aes.json', format : 'json', checksum : payload_checksum};
+
+  API.securePostCallbacks('wallet', data, function (obj) {
+    if (!obj.payload || obj.payload == 'Not modified') {
+      if (success) success();
+    } else if (error) error();
+  }, function () {
+    if (error) error();
+  });
+}
+
 /**
  * Trigger the 2FA reset process
  * @param {string} user_guid User GUID.
@@ -169,6 +182,7 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
 }
 
 module.exports = {
+  checkWalletChecksum: checkWalletChecksum,
   insertWallet: insertWallet,
   generateUUIDs: generateUUIDs,
   resendTwoFactorSms: resendTwoFactorSms,

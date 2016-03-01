@@ -30,11 +30,22 @@ describe "MyWallet", ->
             resolve('done')
         else
           reject('bad call')
+
     securePost: () ->
       if API.callFail
         return Promise.reject('api call fail')
       else
         return Promise.resolve('api call success')
+
+    securePostCallbacks: (url, data, success, error) ->
+      if API.callFail
+        return error('api call fail')
+      else
+        if data.method == "wallet.aes.json"
+          if API.badChecksum
+            success({payload: 'hex data'})
+          else
+            success({payload: 'Not modified'})
 
   WalletCrypto =
     encryptWallet: () ->
@@ -193,3 +204,45 @@ describe "MyWallet", ->
       WalletCrypto.encryptError = false
       WalletCrypto.decryptError = false
       API.callFail = false
+
+  describe "checkWalletChecksum", ->
+
+    observers =
+      success: () ->
+      error: () ->
+
+    beforeEach ->
+      spyOn(observers, "success")
+      spyOn(observers, "error")
+
+    it "should not go through without a checksum", ->
+      try
+        WalletNetwork.checkWalletChecksum()
+      catch e
+        expect(e.toString()).toEqual('AssertionError: Payload checksum missing')
+
+    it "should go through without callbacks", ->
+      WalletNetwork.checkWalletChecksum('payload_checksum')
+
+    it "should be able to fail without callbacks", ->
+      API.callFail = true
+      WalletNetwork.checkWalletChecksum('payload_checksum')
+
+    it "should go through with callbacks", ->
+      WalletNetwork.checkWalletChecksum('payload_checksum', observers.success, observers.error)
+
+    it "should not be succeed if the api call fails", ->
+      API.callFail = true
+      WalletNetwork.checkWalletChecksum('payload_checksum', observers.success, observers.error)
+      expect(observers.success).not.toHaveBeenCalled()
+      expect(observers.error).toHaveBeenCalled()
+
+    it "should not be succeed if the checksum is bad", ->
+      API.badChecksum = true
+      WalletNetwork.checkWalletChecksum('payload_checksum', observers.success, observers.error)
+      expect(observers.success).not.toHaveBeenCalled()
+      expect(observers.error).toHaveBeenCalled()
+
+    afterEach ->
+      API.callFail = false
+      API.badChecksum = false
