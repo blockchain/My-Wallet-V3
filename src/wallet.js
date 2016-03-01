@@ -60,6 +60,9 @@ function socketConnect () {
       var sendOnBlock = WalletStore.sendEvent.bind(null, 'on_block');
       MyWallet.wallet.getHistory().then(sendOnBlock);
       MyWallet.wallet.latestBlock = obj.x;
+
+    }  else if (obj.op == 'pong') {
+      clearTimeout(MyWallet.ws.pingTimeoutPID);
     }
   }
 
