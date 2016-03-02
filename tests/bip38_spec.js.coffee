@@ -263,7 +263,7 @@ describe "BIP38", ->
       pk = "6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg"
 
       promise = ImportExport.parseBIP38toECKey  pk, pw
-      expect(promise).toBeRejectedWith('wrong password', done)
+      expect(promise).toBeRejectedWith('wrongBipPass', done)
 
     it "(testvector1) No compression, no EC multiply, Test 1 , should work", (done) ->
 
