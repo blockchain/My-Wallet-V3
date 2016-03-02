@@ -6,6 +6,7 @@ describe "Websocket", ->
     {
       on: (event, callback) ->
       send: (message) ->
+      close: () ->
       readyState: 1
       url: url
     }

@@ -11,7 +11,7 @@ function BlockchainSocket () {
   this.pingInterval = 15000; // 15 secs
   this.pingIntervalPID = null;
   // ping has a timeout of pingTimeout
-  this.pingTimeout = 1200; // 5 secs
+  this.pingTimeout = 5000; // 5 secs
   this.pingTimeoutPID = null;
 }
 
@@ -45,11 +45,11 @@ BlockchainSocket.prototype._initialize = function (onOpen, onMessage, onClose) {
 
   if (!this.socket || this.socket.readyState === 3) {
     try {
+      this.pingIntervalPID = setInterval(this.ping.bind(this), this.pingInterval);
       this.socket = new WebSocket(this.wsUrl, [], { headers: this.headers });
       this.socket.on('open', onOpen);
       this.socket.on('message', onMessage);
       this.socket.on('close', onClose);
-      this.pingIntervalPID = setInterval(this.ping.bind(this), this.pingInterval);
     } catch (e) {
       console.log('Failed to connect to websocket');
     }
