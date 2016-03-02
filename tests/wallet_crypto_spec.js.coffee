@@ -168,3 +168,40 @@ describe 'WalletCrypto', ->
 
     it 'should not modify the operation is unknown', ->
       expect(WalletCrypto.cipherFunction('password', 'key', 1000, 'nop')('toto')).toEqual('toto')
+
+  describe 'scrypt', ->
+    it 'should not an invalid CPU cost parameter', ->
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 1023, 1, 1, 64, () -> )).toThrowError('N must be > 0 and a power of 2')
+      expect(() -> WalletCrypto.scrypt('password', 'salt', -1, 1, 1, 64, () -> )).toThrowError('N must be > 0 and a power of 2')
+      expect(() -> WalletCrypto.scrypt('password', 'salt', [1024], 1, 1, 64, () -> )).toThrowError('N must be > 0 and a power of 2')
+      expect(() -> WalletCrypto.scrypt('password', 'salt', {'n': 1024}, 1, 1, 64, () -> )).toThrowError('N must be > 0 and a power of 2')
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 2048.234, 1, 1, 64, () -> )).toThrowError('N must be > 0 and a power of 2')
+
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 2147483648 / 64, 1, 1, 64, () -> )).toThrowError('Parameter N is too large')
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 2147483648 / 128, 2, 1, 64, () -> )).toThrowError('Parameter N is too large')
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 2147483648 / 1024, 10, 1, 64, () -> )).toThrowError('Parameter N is too large')
+
+    it 'should not an invalid r parameter', ->
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 1024, -1, 1, 64, () -> )).toThrowError('Parameter r must be a positive integer')
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 1024, 0, 1, 64, () -> )).toThrowError('Parameter r must be a positive integer')
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 1024, 1.234234, 1, 64, () -> )).toThrowError('Parameter r must be a positive integer')
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 1024, [1], 1, 64, () -> )).toThrowError('Parameter r must be a positive integer')
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 1024, {'n': 1}, 1, 64, () -> )).toThrowError('Parameter r must be a positive integer')
+
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 2, 2147483648 / 1024, 10, 64, () -> )).toThrowError('Parameter r is too large')
+
+
+    it 'should not an invalid p parameter', ->
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 1024, 1, -1, 64, () -> )).toThrowError('Parameter p must be a positive integer')
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 1024, 1, 0, 64, () -> )).toThrowError('Parameter p must be a positive integer')
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 1024, 1, 1.2342, 64, () -> )).toThrowError('Parameter p must be a positive integer')
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 1024, 1, [1], 64, () -> )).toThrowError('Parameter p must be a positive integer')
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 1024, 1, {'n': 1}, 64, () -> )).toThrowError('Parameter p must be a positive integer')
+
+    it 'should accept valid dkLen parameter', ->
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 2, 1, 1, -64, () -> )).toThrowError('Parameter dkLen must be ≤ (2^32− 1) * hLen')
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 128, 1, 1, 0, () -> )).toThrowError('Parameter dkLen must be ≤ (2^32− 1) * hLen')
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 512, 1, 1, 64.2342, () -> )).toThrowError('Parameter dkLen must be ≤ (2^32− 1) * hLen')
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 1024, 1, 1, [64], () -> )).toThrowError('Parameter dkLen must be ≤ (2^32− 1) * hLen')
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 2048, 1, 1, {'n': 64}, () -> )).toThrowError('Parameter dkLen must be ≤ (2^32− 1) * hLen')
+      expect(() -> WalletCrypto.scrypt('password', 'salt', 2048, 1, 1, 2147483647 * 32 + 1, () -> )).toThrowError('Parameter dkLen must be ≤ (2^32− 1) * hLen')

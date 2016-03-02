@@ -188,17 +188,15 @@ Address.fromString = function (keyOrAddr, label, bipPass){
         if (bipPass == undefined || bipPass === '') {
           return reject('needsBip38');
         }
-        ImportExport.parseBIP38toECKey(keyOrAddr, bipPass,
-          function (key) { resolve(Address.import(key, label));},
-          function ()    { reject('wrongBipPass'); },
-          function ()    { reject('importError');}
-        );
-      }
-      else if (okFormats.indexOf(format) > -1) {
+        ImportExport.parseBIP38toECKey(keyOrAddr, bipPass)
+            .then(function (result) { resolve(Address.import(result.key, label)); })
+            .catch(function (e) { reject(e); });
+      } else if (okFormats.indexOf(format) > -1) {
         var k = Helpers.privateKeyStringToKey(keyOrAddr, format);
         return resolve(Address.import(k, label));
+      } else {
+        reject('unknown key format');
       }
-      else { reject('unknown key format'); }
     }
   };
   return new Promise(asyncParse);
