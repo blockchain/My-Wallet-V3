@@ -81,8 +81,8 @@
     "repo" : "crypto-browserify/cipher-base"
   },
   "randombytes" : {
-    "version" : "2.0.2",
-    "commits" : ["9e49a0c722df7755376cfed04aeca651526540e5"],
+    "version" : "2.0.3",
+    "commits" : ["f466c002a706ee11dadf3b6aa0a6e9bf1c37c82d"],
     "repo" : "crypto-browserify/randombytes"
   },
   "es6-promise" : {
