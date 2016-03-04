@@ -192,6 +192,9 @@ Payment.feePerKb = function (amount) {
   var feePerKb = Helpers.isPositiveNumber(amount) ? amount : null;
   return function(payment) {
     payment.feePerKb = feePerKb;
+    var sweep = computeSuggestedSweep(payment.coins, payment.feePerKb);
+    payment.sweepAmount = sweep[0];
+    payment.sweepFee    = sweep[1];
     return Promise.resolve(payment);
   };
 };
