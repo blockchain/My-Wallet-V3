@@ -738,7 +738,7 @@ Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosav
     cipher = WalletCrypto.cipherFunction.bind(undefined, pw, this._sharedKey, this._pbkdf2_iterations);
   }
   var newAccount = this._hd_wallets[index].newAccount(label, cipher).lastAccount;
-  try {
+  try { // MyWallet.ws.send can fail when restoring from mnemonic because it is not initialized.
    MyWallet.ws.send(MyWallet.ws.msgXPUBSub(newAccount.extendedPublicKey));
   } catch (e){}
   if(!(nosave === true)) MyWallet.syncWallet();
