@@ -123,13 +123,22 @@ module.exports = (grunt) ->
         command: () ->
           'cp dist/my-wallet.* ../My-Wallet-V3-Bower/dist'
 
-      commit_and_push_dist:
-        command: (newVersion) ->
-          'cd ../My-Wallet-V3-Bower && git commit -a -m "Release ' + newVersion + '" && git push'
+      bower_version:
+        command: (version) ->
+          [
+           "cd ../My-Wallet-V3-Bower"
+           "git add Changelog.md npm-shrinkwrap.json"
+           "git commit -m 'Changelog and NPM shrinkwrap for #{ version }'"
+           "bower version #{ version }"
+          ].join(" && ")
 
-      tag_bower:
-        command: (newVersion, message) ->
-          'cd ../My-Wallet-V3-Bower && git tag -a -s ' + newVersion + " -m " + message + " && git push --tags"
+      push_bower:
+        command: () ->
+          'cd ../My-Wallet-V3-Bower && git push && git push --tags'
+
+      sign_bower_tag:
+        command: (newVersion) ->
+          "cd ../My-Wallet-V3-Bower && git tag #{ newVersion } #{ newVersion } -f -a -s -m '#{ newVersion }'"
 
       untag:
         command: (tag) ->
@@ -245,8 +254,9 @@ module.exports = (grunt) ->
       "shell:shrinkwrap_dev"
       "shell:mv_shrinkwrap"
       "shell:copy_dist"
-      "shell:commit_and_push_dist:#{ newVersion }"
-      "shell:tag_bower:#{ newVersion }:\"#{ newVersion }\""
+      "shell:bower_version:#{ newVersion }"
+      "shell:sign_bower_tag:#{ newVersion }"
+      "shell:push_bower"
       "release_done:#{ newVersion }"
     ]
 
