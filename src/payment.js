@@ -192,7 +192,7 @@ Payment.feePerKb = function (amount) {
   var feePerKb = Helpers.isPositiveNumber(amount) ? amount : null;
   return function(payment) {
     payment.feePerKb = feePerKb;
-    var sweep = computeSuggestedSweep(payment.coins, payment.feePerKb);
+    var sweep = Payment.computeSuggestedSweep(payment.coins, payment.feePerKb);
     payment.sweepAmount = sweep[0];
     payment.sweepFee    = sweep[1];
     return Promise.resolve(payment);
@@ -298,7 +298,7 @@ Payment.from = function (origin) {
 
     return getUnspentCoins(addresses).then(
       function (coins) {
-        var sweep = computeSuggestedSweep(coins, payment.feePerKb);
+        var sweep = Payment.computeSuggestedSweep(coins, payment.feePerKb);
         payment.sweepAmount = sweep[0];
         payment.sweepFee    = sweep[1];
         payment.coins       = coins;
@@ -390,6 +390,22 @@ Payment.publish = function () {
       .then(success).catch(handleError);
   };
 };
+
+////////////////////////////////////////////////////////////////////////////////
+// computeSuggestedSweep :: [coins] -> [maxSpendeableAmount - fee, fee]
+Payment.computeSuggestedSweep = function(coins, feePerKb) {
+  feePerKb = Helpers.isNumber(feePerKb) ? feePerKb : MyWallet.wallet.fee_per_kb;
+  var getValue = function (coin) { return coin.value; };
+  var sortedCoinValues = coins.map(getValue).sort(function (a, b) { return b - a });
+  var accumulatedValues = sortedCoinValues
+    .map(function (element, index, array) {
+      var fee = Helpers.guessFee(index + 1, 2, feePerKb);
+      return [array.slice(0, index + 1).reduce(Helpers.add, 0) - fee, fee];  //[total-fee, fee]
+    }).sort(function (a, b) { return b[0] - a[0] });
+  // dont return negative max spendable
+  if (accumulatedValues[0][0] < 0) { accumulatedValues[0][0] = 0; }
+  return accumulatedValues[0];
+};
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 module.exports = Payment;
@@ -474,22 +490,6 @@ function getPrivateKeys (password, payment) {
     privateKeys = transaction.addressesOfNeededPrivateKeys.map(getKey.bind(null, payment.wifKeys[0]));
   };
   return privateKeys;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-// computeSuggestedSweep :: [coins] -> [maxSpendeableAmount - fee, fee]
-function computeSuggestedSweep(coins, feePerKb){
-  feePerKb = Helpers.isNumber(feePerKb) ? feePerKb : MyWallet.wallet.fee_per_kb;
-  var getValue = function (coin) { return coin.value; };
-  var sortedCoinValues = coins.map(getValue).sort(function (a, b) { return b - a });
-  var accumulatedValues = sortedCoinValues
-    .map(function (element, index, array) {
-      var fee = Helpers.guessFee(index + 1, 2, feePerKb);
-      return [array.slice(0, index + 1).reduce(Helpers.add, 0) - fee, fee];  //[total-fee, fee]
-    }).sort(function (a, b) { return b[0] - a[0] });
-  // dont return negative max spendable
-  if (accumulatedValues[0][0] < 0) { accumulatedValues[0][0] = 0; }
-  return accumulatedValues[0];
 };
 
 

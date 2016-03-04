@@ -160,6 +160,9 @@ describe 'Payment', ->
       expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ note: 'this is a valid note' }), done)
 
   describe 'feePerKb', ->
+    beforeEach ->
+      spyOn(Payment, "computeSuggestedSweep").and.callFake (coins, feePerKb) ->
+        [8780, 11220]
 
     it 'should set to a positive value', (done) ->
       payment.feePerKb(22000)
