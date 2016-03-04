@@ -21,9 +21,11 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, feePerKb,
   this.addressesOfNeededPrivateKeys = [];
   this.pathsOfNeededPrivateKeys = [];
   this.fee = 0; // final used fee
+  this.unspentOutputs = unspentOutputs;
+  this.toAddresses = toAddresses;
   var BITCOIN_DUST = 5460;
   var forcedFee = Helpers.isNumber(fee) ? fee : null;
-  feePerKb = Helpers.isNumber(feePerKb) ? feePerKb : 10000;
+  this.feePerKb = Helpers.isNumber(feePerKb) ? feePerKb : 10000;
 
   assert(toAddresses.length == amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
   assert(this.amount > BITCOIN_DUST, this.amount + ' must be above dust threshold (' + BITCOIN_DUST + ' Satoshis)');
@@ -47,7 +49,7 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, feePerKb,
     transaction.addInput(output.hash, output.index);
     nIns += 1;
     this.sizeEstimate = Helpers.guessSize(nIns, nOuts);
-    this.fee = Helpers.isPositiveNumber(forcedFee) ? forcedFee : Helpers.guessFee(nIns, nOuts, feePerKb);
+    this.fee = Helpers.isPositiveNumber(forcedFee) ? forcedFee : Helpers.guessFee(nIns, nOuts, this.feePerKb);
 
     // Generate address from output script and add to private list so we can check if the private keys match the inputs later
 
@@ -175,6 +177,20 @@ Transaction.prototype.sign = function () {
   return transaction;
 };
 
+Transaction.prototype.estimateSizeForAmount = function (amount) {
+  var sizeEstimate, accum = 0, nIns = 0;
+  var nOuts = this.toAddresses.length + 1;
+  var unspent = sortUnspentOutputs(this.unspentOutputs);
+
+  for (var i = 0; i < unspent.length; i++) {
+    nIns += 1;
+    sizeEstimate = Helpers.guessSize(nIns, nOuts);
+    accum += unspent[i].value;
+    if (accum >= amount) break;
+  }
+
+  return sizeEstimate;
+};
 
 function sortUnspentOutputs (unspentOutputs) {
   var unspent = [];
