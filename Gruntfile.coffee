@@ -9,7 +9,6 @@ module.exports = (grunt) ->
       test: ["coverage", "coverage-lcov"]
       testjs: ["tests/*js"]
       shrinkwrap: ["npm-shrinkwrap.*"]
-      node_modules: ["node_modules"]
 
     coveralls:
       options:
@@ -116,6 +115,10 @@ module.exports = (grunt) ->
         command: () ->
           'cp Changelog.md ../My-Wallet-V3-Bower'
 
+      mv_shrinkwrap:
+        command: () ->
+          'mv npm-shrinkwrap.json ../My-Wallet-V3-Bower'
+
       copy_dist:
         command: () ->
           'cp dist/my-wallet.* ../My-Wallet-V3-Bower/dist'
@@ -132,11 +135,6 @@ module.exports = (grunt) ->
         command: (tag) ->
           'git tag -d ' + tag + ' && git push origin :refs/tags/' + tag + ' && cd ../My-Wallet-V3-Bower && git tag -d ' + tag + ' && git push origin :refs/tags/' + tag
 
-
-      npm_install:
-        command: () ->
-          'npm install'
-
       test_once:
         command: () ->
           './node_modules/karma/bin/karma start karma.conf.js --single-run'
@@ -144,6 +142,11 @@ module.exports = (grunt) ->
       shrinkwrap:
         command: () ->
           'npm shrinkwrap'
+
+      shrinkwrap_dev:
+        command: () ->
+          # This causes the dependency check to fail currently:
+          'npm shrinkwrap --dev'
 
     env:
       build:
@@ -202,22 +205,6 @@ module.exports = (grunt) ->
     "concat:mywallet"
   ]
 
-  # GITHUB_USER=... GITHUB_PASSWORD=... grunt dist
-  grunt.registerTask "dist", [
-    "env:production"
-    "clean:build"
-    "clean:dist"
-    "shell:shrinkwrap"
-    "shell:check_dependencies"
-    "clean:shrinkwrap"
-    "shell:npm_install_dependencies"
-    "preprocess"
-    "replace:bitcoinjs"
-    "browserify:production"
-    "concat:mywallet"
-    "uglify:mywallet"
-  ]
-
   # Skip dependency check, e.g. for staging:
   grunt.registerTask "dist_unsafe", [
     "env:production"
@@ -234,24 +221,38 @@ module.exports = (grunt) ->
   # E.g. when shipping 3.0.1:
   # grunt bower:3.0.1:"New stuff"
   # Expects ../My-Wallet-V3-Bower to exist
-  grunt.registerTask "bower", "bower(version, message)", (newVersion, message) =>
-    grunt.fail.fatal("New tag version required") if !newVersion?
-    grunt.fail.fatal("Message required") if !message?
+  grunt.registerTask "bower", "bower(version)", (newVersion) =>
+    if newVersion == undefined || newVersion[0] != "v"
+      grunt.fail.fatal("Missing version or version is missing 'v'")
 
     grunt.task.run [
-     "clean"
-     "shell:pull_bower_repo"
-     "shell:npm_install"
-     "build"
-     "shell:test_once"
-     "dist"
-     "git_changelog"
-     "shell:tag:" + newVersion + ":\"" + message + "\""
-     "shell:copy_changelog"
-     "shell:copy_dist"
-     "shell:commit_and_push_dist:" + newVersion
-     "shell:tag_bower:" + newVersion + ":\"" + message + "\""
+      "clean"
+      "shell:pull_bower_repo"
+      "build"
+      "shell:test_once"
+      "env:production"
+      "shell:shrinkwrap"
+      "shell:check_dependencies"
+      "shell:npm_install_dependencies"
+      "preprocess"
+      "replace:bitcoinjs"
+      "browserify:production"
+      "concat:mywallet"
+      "uglify:mywallet"
+      "git_changelog"
+      "shell:tag:#{ newVersion }:#{ newVersion }"
+      "shell:copy_changelog"
+      "shell:shrinkwrap_dev"
+      "shell:mv_shrinkwrap"
+      "shell:copy_dist"
+      "shell:commit_and_push_dist:#{ newVersion }"
+      "shell:tag_bower:#{ newVersion }:\"#{ newVersion }\""
+      "release_done:#{ newVersion }"
     ]
+
+  grunt.registerTask "release_done", (version) =>
+    console.log "Release done. Please copy Changelog.md over to Github release notes:"
+    console.log "https://github.com/blockchain/My-Wallet-V3/releases/edit/#{ version }"
 
   grunt.registerTask "untag", "remove tag", (tag) =>
     grunt.task.run [
