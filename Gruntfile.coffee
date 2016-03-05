@@ -127,7 +127,7 @@ module.exports = (grunt) ->
         command: (version) ->
           [
            "cd ../My-Wallet-V3-Bower"
-           "git add Changelog.md npm-shrinkwrap.json"
+           "git add Changelog.md npm-shrinkwrap.json dist/*"
            "git commit -m 'Changelog and NPM shrinkwrap for #{ version }'"
            "bower version #{ version }"
           ].join(" && ")
