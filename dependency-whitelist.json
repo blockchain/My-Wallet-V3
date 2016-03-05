@@ -36,8 +36,8 @@
     "repo" : "isaacs/inherits"
   },
   "bs58check" : {
-    "version" : "1.0.5",
-    "commits" : ["e96a4ffe237099f2e383766ba7d1344505fe7e60"],
+    "version" : "1.0.8",
+    "commits" : ["e28e2df22b88610d63314e3989873c300f51ec08"],
     "repo" : "dcousens/bs58check"
   },
   "ecurve" : {
