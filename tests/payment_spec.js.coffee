@@ -27,9 +27,13 @@ MyWallet =
 API =
   getUnspent: (addresses, conf) -> Promise.resolve(unspent)
 
+Helpers =
+   guessFee: (nInputs, nOutputs, feePerKb) -> 100
+
 Payment = proxyquire('../src/payment', {
   './wallet': MyWallet
-  './api': API
+  './api': API,
+  './helpers': Helpers
 })
 
 describe 'Payment', ->
@@ -102,8 +106,12 @@ describe 'Payment', ->
 
     it 'should set the correct sweep amount and sweep fee', (done) ->
       payment.from(data.address)
-      result = { sweepAmount: 16260, sweepFee: 3740 }
-      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining(result), done)
+      payment.payment.then((res) ->
+        expect(res.sweepAmount).toEqual(19900)
+        expect(res.sweepFee).toEqual(100)
+
+        done()
+      )
 
     it 'should set an address from a private key', (done) ->
       payment.from('5JrXwqEhjpVF7oXnHPsuddTc6CceccLRTfNpqU2AZH8RkPMvZZu') # PK for 12C5rBJ7Ev3YGBCbJPY6C8nkGhkUTNqfW9
@@ -177,3 +185,44 @@ describe 'Payment', ->
       payment.from(data.address)
       result = { sweepAmount: 8780, sweepFee: 11220 }
       expect(payment.payment).toBeResolvedWith(jasmine.objectContaining(result), done)
+
+
+  describe 'computeSuggestedSweep', ->
+
+    it 'should return amount = 0 when spending less than the fee', ->
+      coins = [{ value: 1 }, { value: 2 }]
+
+      res = Payment.computeSuggestedSweep(coins, 10000)
+      expect(res[0]).toEqual(0)
+
+    it 'should return amount = 0 and fee = 0 when no coins are provided', ->
+      res = Payment.computeSuggestedSweep([], 10000)
+      expect(res[0]).toEqual(0)
+      expect(res[1]).toEqual(0)
+
+    it 'should return amount = 0 and fee = 0 when bad input is provided', ->
+
+      res = Payment.computeSuggestedSweep(null, 10000)
+      expect(res[0]).toEqual(0)
+      expect(res[1]).toEqual(0)
+
+      res = Payment.computeSuggestedSweep(undefined, 10000)
+      expect(res[0]).toEqual(0)
+      expect(res[1]).toEqual(0)
+
+#      res = Payment.computeSuggestedSweep([{ valueeeeee: 1 }], 10000)
+#      expect(res[0]).toEqual(0)
+#      expect(res[1]).toEqual(0)
+
+    describe "when no fee is provided", ->
+
+      beforeEach ->
+        spyOn(Helpers, 'guessFee')
+
+      it 'should use the wallet default fee', ->
+        MyWallet.wallet.fee_per_kb = 1
+        coins = [{ value: 100000 }]
+        Payment.computeSuggestedSweep(coins)
+
+        expect(Helpers.guessFee).toHaveBeenCalledWith(jasmine.anything(), jasmine.anything(), 1)
+
