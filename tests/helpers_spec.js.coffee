@@ -168,3 +168,61 @@ describe "Helpers", ->
       setTimeout(result, 1000)
 
 
+  describe "guessFee", ->
+    # TODO make these tests pass
+    #    it "should not compute fee for null input", ->
+    #      expect(Helpers.guessFee(1, 1, null)).toBe(NaN)
+    #      expect(Helpers.guessFee(null, 1, 10000)).toBe(NaN)
+    #      expect(Helpers.guessFee(1, null, 10000)).toBe(NaN)
+
+    #it 'should not return a fee when using negative values', ->
+    #  expect(Helpers.guessFee(-1, 1, 10000)).toEqual(NaN)
+    #  expect(Helpers.guessFee(1, -1, 10000)).toEqual(NaN)
+    #  expect(Helpers.guessFee(1, 1, -10000)).toEqual(NaN)
+
+    #it 'should not return a fee when using non integer values', ->
+    #  expect(Helpers.guessFee(1.5, 1, 10000)).toEqual(NaN)
+    #  expect(Helpers.guessFee(1, 1.2, 10000)).toEqual(NaN)
+
+    # (148 * input + 34 * outputs + 10) * fee per kb (10 = overhead)
+    describe "standard formula", ->
+      it 'should work for 1 input, 1 output and 10000 fee per kB', ->
+        expect(Helpers.guessFee(1,1,10000)).toEqual(1920)
+
+      it 'should work for 1 input, 2 output and 10000 fee per kB', ->
+        expect(Helpers.guessFee(1,2,10000)).toEqual(2260)
+
+      it 'should round up for 2 input, 1 output and 10000 fee per kB', ->
+        expect(Helpers.guessFee(2,1,10000)).toEqual(3401)
+
+      it 'should work for 1 input, 1 output and 15000 fee per kB', ->
+        expect(Helpers.guessFee(1,1,15000)).toEqual(2880)
+
+
+  describe "guessSize", ->
+    # TODO make these tests pass
+    #    it "should not compute size for null input", ->
+    #      expect(Helpers.guessSize(1, 1)).toBe(NaN)
+    #      expect(Helpers.guessSize(null, 1)).toBe(NaN)
+    #      expect(Helpers.guessSize(1, null)).toBe(NaN)
+
+    #it 'should not return a fee when using negative values', ->
+    #  expect(Helpers.guessSize(-1, 1)).toEqual(NaN)
+    #  expect(Helpers.guessSize(1, -1)).toEqual(NaN)
+    #  expect(Helpers.guessSize(1, 1)).toEqual(NaN)
+
+    #it 'should not return a fee when using non integer values', ->
+    #  expect(Helpers.guessSize(1.5, 1)).toEqual(NaN)
+    #  expect(Helpers.guessSize(1, 1.2)).toEqual(NaN)
+
+    # (148 * input + 34 * outputs + 10) (10 = overhead)
+    describe "standard formula", ->
+      it 'should work for 1 input, 1 output', ->
+        expect(Helpers.guessSize(1,1)).toEqual(192)
+
+      it 'should work for 1 input, 2 output', ->
+        expect(Helpers.guessSize(1,2,10000)).toEqual(226)
+
+      it 'should work for 2 input, 1 output', ->
+        expect(Helpers.guessSize(2,1,10000)).toEqual(340)
+
