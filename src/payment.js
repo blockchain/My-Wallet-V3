@@ -394,6 +394,7 @@ Payment.publish = function () {
 ////////////////////////////////////////////////////////////////////////////////
 // computeSuggestedSweep :: [coins] -> [maxSpendeableAmount - fee, fee]
 Payment.computeSuggestedSweep = function(coins, feePerKb) {
+  if (coins == null || coins.length === 0) { return [0,0]; }
   feePerKb = Helpers.isNumber(feePerKb) ? feePerKb : MyWallet.wallet.fee_per_kb;
   var getValue = function (coin) { return coin.value; };
   var sortedCoinValues = coins.map(getValue).sort(function (a, b) { return b - a });
