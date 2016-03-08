@@ -28,7 +28,7 @@ API =
   getUnspent: (addresses, conf) -> Promise.resolve(unspent)
 
 Helpers =
-   guessFee: (nInputs, nOutputs, feePerKb) -> 100
+   guessFee: (nInputs, nOutputs, feePerKb) -> nInputs * 100
 
 Payment = proxyquire('../src/payment', {
   './wallet': MyWallet
@@ -107,8 +107,8 @@ describe 'Payment', ->
     it 'should set the correct sweep amount and sweep fee', (done) ->
       payment.from(data.address)
       payment.payment.then((res) ->
-        expect(res.sweepAmount).toEqual(19900)
-        expect(res.sweepFee).toEqual(100)
+        expect(res.sweepAmount).toEqual(19800)
+        expect(res.sweepFee).toEqual(200)
 
         done()
       )
@@ -226,3 +226,37 @@ describe 'Payment', ->
 
         expect(Helpers.guessFee).toHaveBeenCalledWith(jasmine.anything(), jasmine.anything(), 1)
 
+    it "fee + spendable balance should equal the sum of unspent outputs ", ->
+      coins = [{ value: 10000 }, { value: 20000 }]
+
+      res = Payment.computeSuggestedSweep(coins, 10000)
+
+      expect(res[0] + res[1]).toEqual(30000)
+
+    it "fee should equal Helpers.guessFee", ->
+      coins = [{ value: 10000 }, { value: 20000 }]
+
+      res = Payment.computeSuggestedSweep(coins, 10000)
+
+      expect(res[1]).toEqual(200)
+
+    it "fee should equal Helpers.guessFee whatever the order of the coins", ->
+      coins = [{ value: 20000 }, { value: 10000 }]
+
+      res = Payment.computeSuggestedSweep(coins, 10000)
+
+      expect(res[1]).toEqual(200)
+
+    it "should ignore outputs lower than the fee they add to the transactions", ->
+      coins = [{ value: 10000 }, { value: 99 }]
+
+      res = Payment.computeSuggestedSweep(coins, 10000)
+
+      expect(res[0]).toEqual(9900)
+
+    it "should not ignore outputs larger than the fee they add to the transactions", ->
+      coins = [{ value: 10000 }, { value: 101 }]
+
+      res = Payment.computeSuggestedSweep(coins, 10000)
+
+      expect(res[0]).toEqual(9901)
