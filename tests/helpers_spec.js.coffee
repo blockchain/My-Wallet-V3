@@ -1,8 +1,25 @@
 proxyquire = require('proxyquireify')(require)
+Bitcoin = require('bitcoinjs-lib')
+ECKey = Bitcoin.ECKey;
+BigInteger = require('bigi');
+
+ImportExport =
+  shouldResolve: false
+  shouldReject: false
+  shouldFail: true
+
+  parseBIP38toECKey: (b58, pass, succ, wrong, error) ->
+    if ImportExport.shouldResolve
+      succ(new ECKey(new BigInteger.fromByteArrayUnsigned(BigInteger.fromBuffer(new Buffer('E9873D79C6D87DC0FB6A5778633389F4453213303DA61F20BD67FC233AA33262', 'hex')).toByteArray()), true))
+    else if ImportExport.shouldReject
+      wrong()
+    else if ImportExport.shouldFail
+      error()
 
 describe "Helpers", ->
 
   Helpers = proxyquire('../src/helpers', {
+    './import-export': ImportExport
   })
 
   describe "getHostName", ->
@@ -246,3 +263,69 @@ describe "Helpers", ->
       expect(Helpers.isValidBIP39Mnemonic(0)).toBeFalsy()
       expect(Helpers.isValidBIP39Mnemonic({ 'mnemonic': "cat swing flag economy stadium alone churn speed unique patch report train" })).toBeFalsy()
 
+  describe "privateKeyCorrespondsToAddress", ->
+
+    afterEach ->
+      ImportExport.shouldResolve = false
+      ImportExport.shouldReject = false
+      ImportExport.shouldFail = false
+
+    it "should not recognize invalid formats", (done) ->
+      promise = Helpers.privateKeyCorrespondsToAddress('1PZuicD1ACRfBuKEgp2XaJhVvnwpeETDyN', "46c56bnXQiBjk9mqSYE7ykVQ7NzrRy")
+      expect(promise).toBeRejected(done)
+
+    it "should not match base58 private keys to wrong addresses", (done) ->
+      promise = Helpers.privateKeyCorrespondsToAddress('1PZuicD1ACRfBuKEgp2XaJhVvnwpeETDyN', "5JFXNQvtFZSobCCRPxnTZiW1PDVnXvGBg5XeuUDoUCi8LRsV3gn")
+      promise.then((data) ->
+        expect(data).toEqual(null)
+        done()
+      )
+
+    it "should not match mini private keys to wrong addresses", (done) ->
+      promise = Helpers.privateKeyCorrespondsToAddress('1PZuicD1ACRfBuKEgp2XaJhVvnwpeETDyN', "S6c56bnXQiBjk9mqSYE7ykVQ7NzrRy")
+      promise.then((data) ->
+        expect(data).toEqual(null)
+        done()
+      )
+
+    it "should not recognize BIP-38 addresses without password", (done) ->
+      ImportExport.shouldResolve = true
+      promise = Helpers.privateKeyCorrespondsToAddress('1PZuicD1ACRfBuKEgp2XaJhVvnwpeETDyn', "6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg")
+      expect(promise).toBeRejected(done)
+
+    it "should not recognize BIP-38 addresses with an empty password", (done) ->
+      ImportExport.shouldResolve = true
+      promise = Helpers.privateKeyCorrespondsToAddress('1PZuicD1ACRfBuKEgp2XaJhVvnwpeETDyn', "6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg", "")
+      expect(promise).toBeRejected(done)
+
+    it "should not recognize BIP-38 addresses with a bad password", (done) ->
+      ImportExport.shouldReject = true
+      promise = Helpers.privateKeyCorrespondsToAddress('1PZuicD1ACRfBuKEgp2XaJhVvnwpeETDyn', "6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg", "pass")
+      expect(promise).toBeRejected(done)
+
+    it "should not recognize BIP-38 addresses when decryption fails", (done) ->
+      ImportExport.shouldFail = true
+      promise = Helpers.privateKeyCorrespondsToAddress('1PZuicD1ACRfBuKEgp2XaJhVvnwpeETDyn', "6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg", "pass")
+      expect(promise).toBeRejected(done)
+
+    it "should recognize BIP-38 addresses when decryption succeeds", (done) ->
+      ImportExport.shouldResolve = true
+      promise = Helpers.privateKeyCorrespondsToAddress('19GuvDvMMUZ8vq84wT79fvnvhMd5MnfTkR', "6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg", "pass")
+      promise.then((data) ->
+        expect(data).not.toEqual(null)
+        done()
+      )
+
+    it "should match base58 private keys to their right addresses", (done) ->
+      promise = Helpers.privateKeyCorrespondsToAddress('1BDSbDEechSue77wS44Jn2uDiFaQWom2dG', "5JFXNQvtFZSobCCRPxnTZiW1PDVnXvGBg5XeuUDoUCi8LRsV3gn")
+      promise.then((data) ->
+        expect(data).not.toEqual(null)
+        done()
+      )
+
+    it "should match mini private keys to their right addresses", (done) ->
+      promise = Helpers.privateKeyCorrespondsToAddress('1PZuicD1ACRfBuKEgp2XaJhVvnwpeETDyn', "S6c56bnXQiBjk9mqSYE7ykVQ7NzrRy")
+      promise.then((data) ->
+        expect(data).not.toEqual(null)
+        done()
+      )
