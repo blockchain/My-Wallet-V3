@@ -248,6 +248,7 @@ Tx.IOSfactory = function (tx){
   return {
     time          : tx.time,
     result        : tx.result,
+    amount        : tx.amount,
     confirmations : tx.confirmations,
     myHash        : tx.hash,
     txType        : tx.txType,
