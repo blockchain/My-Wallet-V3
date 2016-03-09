@@ -329,3 +329,31 @@ describe "Helpers", ->
         expect(data).not.toEqual(null)
         done()
       )
+
+  describe "isValidPrivateKey", ->
+
+    it "should not recognize invalid hex keys", ->
+      expect(Helpers.isValidPrivateKey("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141")).toBeFalsy()
+      expect(Helpers.isValidPrivateKey("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")).toBeFalsy()
+      expect(Helpers.isValidPrivateKey("0000000000000000000000000000000000000000000000000000000000000000")).toBeFalsy()
+
+
+    it "should recognize valide hex keys", ->
+      expect(Helpers.isValidPrivateKey("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364139")).toBeTruthy()
+      expect(Helpers.isValidPrivateKey("0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF")).toBeTruthy()
+      expect(Helpers.isValidPrivateKey("0000000000000000000000000000000000000000000000000000000000000001")).toBeTruthy()
+
+    it "should not recognize invalid base 64 keys", ->
+      expect(Helpers.isValidPrivateKey("ASNFZ4mrze8BI0VniavN7wEjRWeJq83vASNFZ4mrze8=098")).toBeFalsy()
+      expect(Helpers.isValidPrivateKey("////////////////////////////////////////////")).toBeFalsy()
+
+    it "should recognize valid base 64 keys", ->
+      expect(Helpers.isValidPrivateKey("ASNFZ4mrze8BI0VniavN7wEjRWeJq83vASNFZ4mrze8=")).toBeTruthy()
+      expect(Helpers.isValidPrivateKey("/////////////////////rqu3OavSKA7v9JejNA2QTk=")).toBeTruthy()
+      expect(Helpers.isValidPrivateKey("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAE=")).toBeTruthy()
+
+    it "should recognize BIP-38 keys", ->
+      expect(Helpers.isValidPrivateKey("6PRMUxAWM4XyK8b3wyJRpTwvDdmCKakuP6aGxr3D8MuUaCWVLXM2wnGUCT")).toBeTruthy()
+      expect(Helpers.isValidPrivateKey("6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg")).toBeTruthy()
+
+
