@@ -226,3 +226,23 @@ describe "Helpers", ->
       it 'should work for 2 input, 1 output', ->
         expect(Helpers.guessSize(2,1,10000)).toEqual(340)
 
+  describe "isValidBIP39Mnemonic", ->
+
+    it "should recognize BIP-39 test vectors", ->
+      expect(Helpers.isValidBIP39Mnemonic("letter advice cage absurd amount doctor acoustic avoid letter advice cage above")).toBeTruthy()
+      expect(Helpers.isValidBIP39Mnemonic("abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about")).toBeTruthy()
+      expect(Helpers.isValidBIP39Mnemonic("vessel ladder alter error federal sibling chat ability sun glass valve picture")).toBeTruthy()
+      expect(Helpers.isValidBIP39Mnemonic("cat swing flag economy stadium alone churn speed unique patch report train")).toBeTruthy()
+
+    it "should not recognize invalid mnemonics", ->
+      expect(Helpers.isValidBIP39Mnemonic("letter advice cage absurd amount doctor acoustic avoid lettre advice cage above")).toBeFalsy()
+      expect(Helpers.isValidBIP39Mnemonic("abandon abandn abandon abandon abandon abandon abandon abandon abandon abandon abandon about")).toBeFalsy()
+      expect(Helpers.isValidBIP39Mnemonic("vessel ladder alter error federal sibling chat ability sun glass valves picture")).toBeFalsy()
+      expect(Helpers.isValidBIP39Mnemonic("cat swing flag economy stadum alone churn speed unique patch report train")).toBeFalsy()
+
+    it "should not recognize things that aren't mnemonics", ->
+      expect(Helpers.isValidBIP39Mnemonic("")).toBeFalsy()
+      expect(Helpers.isValidBIP39Mnemonic("a")).toBeFalsy()
+      expect(Helpers.isValidBIP39Mnemonic(0)).toBeFalsy()
+      expect(Helpers.isValidBIP39Mnemonic({ 'mnemonic': "cat swing flag economy stadium alone churn speed unique patch report train" })).toBeFalsy()
+
