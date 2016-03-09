@@ -1,6 +1,8 @@
 language: node_js
 node_js:
 - node
+node_js:
+  - 5.7
 script: node_modules/karma/bin/karma start karma.conf.js --single-run && grunt coveralls
 sudo: required
 before_install:
