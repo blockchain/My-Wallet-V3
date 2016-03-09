@@ -6,6 +6,10 @@ var randomBytes = require('randombytes');
 var Helpers     = require('./helpers');
 var Buffer      = require('buffer').Buffer;
 
+// Error messages that can be seen by the user should take the form of:
+// {error: "NOT_GOOD", some_param: 1}
+// Error messages that should only appear during development can be any string.
+
 var Transaction = function (unspentOutputs, toAddresses, amounts, fee, feePerKb, changeAddress, listener) {
 
   if (!Array.isArray(toAddresses) && toAddresses != null) {toAddresses = [toAddresses];}
@@ -26,8 +30,8 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, feePerKb,
   feePerKb = Helpers.isNumber(feePerKb) ? feePerKb : 10000;
 
   assert(toAddresses.length == amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
-  assert(this.amount > BITCOIN_DUST, this.amount + ' must be above dust threshold (' + BITCOIN_DUST + ' Satoshis)');
-  assert(unspentOutputs && unspentOutputs.length > 0, 'Missing coins to spend');
+  assert(this.amount > BITCOIN_DUST, {error: 'BELOW_DUST_THRESHOLD', amount: this.amount, threshold: BITCOIN_DUST});
+  assert(unspentOutputs && unspentOutputs.length > 0, {error: 'NO_UNSPENT_OUTPUTS'});
 
   var transaction = new Bitcoin.Transaction();
   // add all outputs
@@ -52,9 +56,9 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, feePerKb,
     // Generate address from output script and add to private list so we can check if the private keys match the inputs later
 
     var script = Bitcoin.Script.fromHex(output.script);
-    assert.notEqual(Bitcoin.scripts.classifyOutput(script), 'nonstandard', 'Strange Script');
+    assert.notEqual(Bitcoin.scripts.classifyOutput(script), 'nonstandard', {error: 'STRANGE_SCRIPT'});
     var address = Bitcoin.Address.fromOutputScript(script).toString();
-    assert(address, 'Unable to decode output address from transaction hash ' + output.tx_hash);
+    assert(address, {error: 'CANNOT_DECODE_OUTPUT_ADDRESS', tx_hash: output.tx_hash});
     this.addressesOfInputs.push(address);
 
     // Add to list of needed private keys

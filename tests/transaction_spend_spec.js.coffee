@@ -105,7 +105,7 @@ describe "Transaction", ->
         new Transaction(null, data.to, data.amount, data.fee, data.feePerKb, data.from, null)
       catch e
         expect(e.name).toBe('AssertionError')
-        expect(e.message).toBe('Missing coins to spend')
+        expect(e.message.error).toBe('NO_UNSPENT_OUTPUTS')
 
     it "should fail without amount lower than dust threshold", ->
 
@@ -115,7 +115,7 @@ describe "Transaction", ->
         new Transaction(data.unspentMock, data.to, data.amount, data.fee, data.feePerKb, data.from, null)
       catch e
         expect(e.name).toBe('AssertionError')
-        expect(e.message).toContain('dust threshold')
+        expect(e.message.error).toBe('BELOW_DUST_THRESHOLD')
 
     it "should initialize with good data", ->
 
