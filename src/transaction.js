@@ -25,7 +25,6 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, feePerKb,
   this.addressesOfNeededPrivateKeys = [];
   this.pathsOfNeededPrivateKeys = [];
   this.fee = 0; // final used fee
-  var BITCOIN_DUST = 5460;
   var forcedFee = Helpers.isNumber(fee) ? fee : null;
   feePerKb = Helpers.isNumber(feePerKb) ? feePerKb : 10000;
 
