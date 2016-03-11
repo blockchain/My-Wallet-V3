@@ -42,14 +42,14 @@
     "ws": "0.8.*"
   },
   "devDependencies": {
-    "browserify": "~8.1.1",
+    "browserify": "13.*",
     "browserify-istanbul": "^0.2.1",
     "bs58check": "^1.0.5",
     "coffee-script": "~1.8.0",
     "coffeeify": "^1.0.0",
     "git-changelog": "^0.1.8",
     "grunt": "^0.4.5",
-    "grunt-browserify": "^3.6.0",
+    "grunt-browserify": "5.0.*",
     "grunt-cli": "^0.1.13",
     "grunt-contrib-clean": "^0.6.0",
     "grunt-contrib-concat": "^0.5.1",
