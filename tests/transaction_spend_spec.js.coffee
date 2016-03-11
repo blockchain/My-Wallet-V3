@@ -281,3 +281,39 @@ describe "Transaction", ->
       allSortedOuts = (getOut(tx.transaction.outs[i]) is sortedOutputs[i] for i in [0..1]).every((x)->x)
       expect(allSortedIns).toBeTruthy()
       expect(allSortedOuts).toBeTruthy()
+
+  describe "UTXO selection", ->
+    coins = null
+
+    beforeEach ->
+      coins = [
+        {
+          "tx_hash": "594c66729d5068b7d816760fc304accd760629ee75a371529049a94cffa50861"
+          "hash": "6108a5ff4ca949905271a375ee290676cdac04c30f7616d8b768509d72664c59"
+          "index": 0
+          "script": "76a91449f842901a0c81fb9c0c0f8c61027d2b085a2a9088ac"
+          "value": 50000
+        },
+        {
+          "tx_hash": "74eac730a68e1b9f611e62f28a0dd3965be6015c486bc02305a20d6f32fe41f3"
+          "hash": "7445544080c67e7e94a6ab3b3c46998bc663e568a671ca79c66d370c21e9b115"
+          "index": 0
+          "script": "76a91449f842901a0c81fb9c0c0f8c61027d2b085a2a9088ac"
+          "value": 40000
+        },
+        {
+          "tx_hash": "f890ad1d8c4a20a75a4a9c00cde1dbfec594f0c1f00eb5a416b5561ac1c9de2d"
+          "hash": "7445544080c67e7e94a6ab3b3c46998bc663e568a671ca79c66d370c21e9b115"
+          "index": 0
+          "script": "76a91449f842901a0c81fb9c0c0f8c61027d2b085a2a9088ac"
+          "value": 10000
+        }
+      ]
+
+    it "should not result in a dust change output when a fee is forced", ->
+      tx = new Transaction(coins, data.to, 99000, 500)
+      expect(tx.transaction.outs.length).toEqual(1)
+
+    it "should not result in a dust change output when a fee is not forced", ->
+      tx = new Transaction(coins, data.to, 94500, null, 10000)
+      expect(tx.transaction.outs.length).toEqual(1)
