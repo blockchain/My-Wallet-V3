@@ -60,7 +60,6 @@
     "grunt-karma-coveralls": "^2.5.4",
     "grunt-preprocess": "^4.1.0",
     "grunt-semistandard": "^1.0.5",
-    "grunt-shell": "^1.1.2",
     "grunt-text-replace": "^0.4.0",
     "jasmine-core": "^2.2.0",
     "jasmine-es6-promise-matchers": "^2.0.1",
@@ -71,7 +70,6 @@
     "karma-coverage": "0.2.6",
     "karma-jasmine": "~0.3.5",
     "karma-phantomjs-launcher": "^0.1.4",
-    "proxyquireify": "^2.0.0",
-    "shelljs": "^0.3.0"
+    "proxyquireify": "^2.0.0"
   }
 }
