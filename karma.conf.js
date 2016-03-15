@@ -5,14 +5,7 @@ module.exports = function (karma) {
 
     frameworks: ['jasmine', 'browserify'],
 
-    browsers : ['Chrome'], //'PhantomJS'],
-
-    customLaunchers: {
-      Chrome_travis_ci: {
-        base: 'Chrome',
-        flags: ['--no-sandbox']
-      }
-    },
+    browsers : ['PhantomJS'],
 
     browserNoActivityTimeout: 60000,
 
@@ -65,6 +58,7 @@ module.exports = function (karma) {
     },
 
     files: [
+      'node_modules/babel-polyfill/dist/polyfill.js',
       'node_modules/jasmine-es6-promise-matchers/jasmine-es6-promise-matchers.js',
       'tests/wallet_token_endpoints.js.coffee',
       'tests/wallet_network_spec.js.coffee',
@@ -91,10 +85,6 @@ module.exports = function (karma) {
       'tests/blockchain_settings_api_spec.js.coffee'
     ]
   };
-
-  if(process.env.TRAVIS) {
-    configuration.browsers = ['Chrome_travis_ci'];
-  }
 
   karma.set(configuration);
 };
