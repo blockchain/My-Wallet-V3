@@ -1,8 +1,5 @@
 all: clean node_modules test dist/application.min.js
 
-# Skip test phase, pending Chrome issue
-jenkins: clean node_modules dist/application.min.js
-
 node_modules:
 	npm install
 
