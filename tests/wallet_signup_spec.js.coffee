@@ -33,11 +33,6 @@ describe "WalletSignup", ->
       password = (new Array(1024)).join("x")
       expect(() -> WalletSignup.generateNewWallet(password, 'a@a.co', 'My Wallet')).toThrow()
 
-    it "should not generate wallets for Meego users", ->
-      navigator.__defineGetter__('userAgent', () -> 'meego')
-      expect(() -> WalletSignup.generateNewWallet('pass', 'a@a.co', 'My Wallet')).toThrow()
-      navigator.__defineGetter__('userAgent', () -> 'dgfdg')
-
     describe "it should not generate a wallet with bad UUIDs", ->
 
       beforeEach (done) ->
@@ -104,8 +99,3 @@ describe "WalletSignup", ->
         expect(observers.progress).toHaveBeenCalled()
 
         WalletNetwork.failInsertion = false
-
-
-
-
-
