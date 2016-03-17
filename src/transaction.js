@@ -33,7 +33,7 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, feePerKb,
   assert(this.amount > BITCOIN_DUST, {error: 'BELOW_DUST_THRESHOLD', amount: this.amount, threshold: BITCOIN_DUST});
   assert(unspentOutputs && unspentOutputs.length > 0, {error: 'NO_UNSPENT_OUTPUTS'});
 
-  var transaction = new Bitcoin.TransactionBuilder(Bitcoin.networks.bitcoin);
+  var transaction = new Bitcoin.TransactionBuilder();
   // add all outputs
   function addOutput (e, i) {transaction.addOutput(toAddresses[i],amounts[i]);}
   toAddresses.map(addOutput);
@@ -75,7 +75,7 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, feePerKb,
       var change = accum - subTotal;
 
       // Consume the change if it would create a very small none standard output
-      if (change > network.dustThreshold) {
+      if (change > BITCOIN_DUST) {
         assert(changeAddress, 'No change address specified');
         transaction.addOutput(changeAddress, change);
       }

@@ -31,13 +31,13 @@ describe "KeyRing", ->
     pkey = Base58.encode(privateKR.privateKeyFromPath("M/1/101").keyPair.d.toBuffer(32))
     expect(pkey).toEqual("FsY7NFHZNQJL6LzNt7zGqthrMBpfNuDkGwQUCBhQCpTv")
 
-  it "should not generate key from path when public keyring", ->
-    pkey = publicKR.privateKeyFromPath("M/1/101").keyPair.d
-    expect(pkey).toBe(undefined)
+  it "should not generate private key from path when public keyring", ->
+    pkey = publicKR.privateKeyFromPath("M/1/101")
+    expect(pkey).toBe(null)
 
-  it "should not generate key from path when cached keyring", ->
-    pkey = cacheKR.privateKeyFromPath("M/1/101").keyPair.d
-    expect(pkey).toBe(undefined)
+  it "should not generate private key from path when cached keyring", ->
+    pkey = cacheKR.privateKeyFromPath("M/1/101")
+    expect(pkey).toBe(null)
 
     pkey = cacheKR.privateKeyFromPath("M/0/101")
     expect(pkey).toBe(null)

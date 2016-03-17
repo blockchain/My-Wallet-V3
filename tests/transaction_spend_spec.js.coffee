@@ -131,6 +131,19 @@ describe "Transaction", ->
       privateKeyBase58 = data.privateKey
       format = Helpers.detectPrivateKeyFormat(privateKeyBase58)
       key = Helpers.privateKeyStringToKey(privateKeyBase58, format)
+
+      # Jasmine seems to break the strict equality test here:
+      # https://github.com/bitcoinjs/bitcoinjs-lib/blob/v2.1.4/src/transaction_builder.js#L332
+
+      # Check the network property is set:
+      expect(key.network).toEqual(Bitcoin.networks.bitcoin)
+      expect(tx.transaction.network).toEqual(Bitcoin.networks.bitcoin)
+
+      # Override it so the assert statement passes:
+      key.network = Bitcoin.networks.bitcoin
+      tx.transaction.network = Bitcoin.networks.bitcoin
+      # End of Jasmine workaround
+
       key.compressed = false;
 
       privateKeys = [key]
@@ -195,6 +208,19 @@ describe "Transaction", ->
       privateKeys = [key]
 
       transaction.addPrivateKeys(privateKeys)
+
+      # Jasmine seems to break the strict equality test here:
+      # https://github.com/bitcoinjs/bitcoinjs-lib/blob/v2.1.4/src/transaction_builder.js#L332
+
+      # Check the network property is set:
+      expect(key.network).toEqual(Bitcoin.networks.bitcoin)
+      expect(transaction.transaction.network).toEqual(Bitcoin.networks.bitcoin)
+
+      # Override it so the assert statement passes:
+      key.network = Bitcoin.networks.bitcoin
+      transaction.transaction.network = Bitcoin.networks.bitcoin
+      # End of Jasmine workaround
+
       tx = transaction.sign().build()
 
       expect(listener.on_begin_signing).toHaveBeenCalledTimes(1)
@@ -202,7 +228,7 @@ describe "Transaction", ->
       expect(listener.on_finish_signing).toHaveBeenCalledTimes(1)
 
 
-      expectedHex = '0100000001594c66729d5068b7d816760fc304accd760629ee75a371529049a94cffa50861000000008a4730440220187d6b567d29fe10bea29aa36158edb3fcd9bed5e835b93b9f30d630aea1c7740220612be05b0d87b0a170f7ead7f9688d7172c704f63deb74705779cf8ac26ec3b9014104a7392f5628776b530aa5fbb41ac10c327ccd2cf64622a81671038ecda25084af786fd54d43689241694d1d65e6bde98756fa01dfd2f5a90d5318ab3fb7bad8c1ffffffff0250c30000000000001976a914078d35591e340799ee96968936e8b2ea8ce504a688acd2060000000000001976a9148b71295471e921703a938aa9e01433deb07c1aa588ac00000000'
+      expectedHex = '0100000001594c66729d5068b7d816760fc304accd760629ee75a371529049a94cffa50861000000008a47304402201451b02a877b1edd4def69cec424130cff33bb60ff5ee46e08566468edeb0af402201909c2841c4e591f5b6a22a41a0e54483acaa5ad67a2370d9ce91d36fc773dd2014104a7392f5628776b530aa5fbb41ac10c327ccd2cf64622a81671038ecda25084af786fd54d43689241694d1d65e6bde98756fa01dfd2f5a90d5318ab3fb7bad8c1ffffffff0150c30000000000001976a914078d35591e340799ee96968936e8b2ea8ce504a688ac00000000'
       expect(tx.toHex()).toEqual(expectedHex)
 
     describe "BIP69 transaction inputs and outputs", ->
