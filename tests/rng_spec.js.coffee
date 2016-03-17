@@ -3,6 +3,7 @@ proxyquire = require('proxyquireify')(require);
 RNG   = proxyquire('../src/rng', {})
 
 describe "RNG", ->
+
   serverBuffer = new Buffer(
     "0000000000000000000000000000000000000000000000000000000000000010",
     "hex"
@@ -53,7 +54,10 @@ describe "RNG", ->
     }
 
     beforeEach ->
-      spyOn(window.crypto, "getRandomValues").and.callFake((array) -> array[31] = browser.lastBit)
+      window.crypto.getRandomValues = (array) ->
+        array[31] = browser.lastBit
+        return
+
       spyOn(console, "log").and.callFake(() -> )
 
     it "should ask for 32 bytes from the server", ->

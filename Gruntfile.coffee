@@ -8,7 +8,6 @@ module.exports = (grunt) ->
       dist: ["dist"]
       test: ["coverage", "coverage-lcov"]
       testjs: ["tests/*js"]
-      shrinkwrap: ["npm-shrinkwrap.*"]
 
     coveralls:
       options:
@@ -90,73 +89,6 @@ module.exports = (grunt) ->
         ]
         tasks: ['build']
 
-    shell:
-      check_dependencies:
-        command: () ->
-           'mkdir -p build && ruby check-dependencies.rb'
-
-      skip_check_dependencies:
-        command: () ->
-          'cp -r node_modules build'
-
-      npm_install_dependencies:
-        command: () ->
-           'cd build && npm install'
-
-      tag:
-        command: (newVersion, message) ->
-          'git tag -a -s ' + newVersion + " -m " + message + ' && git push --tags'
-
-      pull_bower_repo:
-        command: () ->
-          'cd ../My-Wallet-V3-Bower && git pull'
-
-      copy_changelog:
-        command: () ->
-          'cp Changelog.md ../My-Wallet-V3-Bower'
-
-      mv_shrinkwrap:
-        command: () ->
-          'mv npm-shrinkwrap.json ../My-Wallet-V3-Bower'
-
-      copy_dist:
-        command: () ->
-          'cp dist/my-wallet.* ../My-Wallet-V3-Bower/dist'
-
-      bower_version:
-        command: (version) ->
-          [
-           "cd ../My-Wallet-V3-Bower"
-           "git add Changelog.md npm-shrinkwrap.json dist/*"
-           "git commit -m 'Changelog and NPM shrinkwrap for #{ version }'"
-           "bower version #{ version }"
-          ].join(" && ")
-
-      push_bower:
-        command: () ->
-          'cd ../My-Wallet-V3-Bower && git push && git push --tags'
-
-      sign_bower_tag:
-        command: (newVersion) ->
-          "cd ../My-Wallet-V3-Bower && git tag #{ newVersion } #{ newVersion } -f -a -s -m '#{ newVersion }'"
-
-      untag:
-        command: (tag) ->
-          'git tag -d ' + tag + ' && git push origin :refs/tags/' + tag + ' && cd ../My-Wallet-V3-Bower && git tag -d ' + tag + ' && git push origin :refs/tags/' + tag
-
-      test_once:
-        command: () ->
-          './node_modules/karma/bin/karma start karma.conf.js --single-run'
-
-      shrinkwrap:
-        command: () ->
-          'npm shrinkwrap'
-
-      shrinkwrap_dev:
-        command: () ->
-          # This causes the dependency check to fail currently:
-          'npm shrinkwrap --dev'
-
     env:
       build:
         DEBUG: "1"
@@ -195,7 +127,6 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-env'
   grunt.loadNpmTasks 'grunt-contrib-jshint'
   grunt.loadNpmTasks 'grunt-preprocess'
-  grunt.loadNpmTasks 'grunt-shell'
   grunt.loadNpmTasks 'grunt-text-replace'
   grunt.loadNpmTasks 'git-changelog'
   grunt.loadNpmTasks 'grunt-karma-coveralls'
@@ -214,59 +145,16 @@ module.exports = (grunt) ->
     "concat:mywallet"
   ]
 
-  # Skip dependency check, e.g. for staging:
-  grunt.registerTask "dist_unsafe", [
-    "env:production"
-    "clean:build"
-    "clean:dist"
-    "shell:skip_check_dependencies"
-    "preprocess"
-    "replace:bitcoinjs"
-    "browserify:production"
-    "concat:mywallet"
-    "uglify:mywallet"
-  ]
-
-  # E.g. when shipping 3.0.1:
-  # grunt bower:3.0.1:"New stuff"
-  # Expects ../My-Wallet-V3-Bower to exist
-  grunt.registerTask "bower", "bower(version)", (newVersion) =>
-    if newVersion == undefined || newVersion[0] != "v"
-      grunt.fail.fatal("Missing version or version is missing 'v'")
-
+  # You must run grunt clean and grunt build first
+  grunt.registerTask "dist", () =>
     grunt.task.run [
-      "clean"
-      "shell:pull_bower_repo"
-      "build"
-      "shell:test_once"
       "env:production"
-      "shell:shrinkwrap"
-      "shell:check_dependencies"
-      "shell:npm_install_dependencies"
       "preprocess"
       "replace:bitcoinjs"
       "browserify:production"
       "concat:mywallet"
       "uglify:mywallet"
       "git_changelog"
-      "shell:tag:#{ newVersion }:#{ newVersion }"
-      "shell:copy_changelog"
-      "shell:shrinkwrap_dev"
-      "shell:mv_shrinkwrap"
-      "shell:copy_dist"
-      "shell:bower_version:#{ newVersion }"
-      "shell:sign_bower_tag:#{ newVersion }"
-      "shell:push_bower"
-      "release_done:#{ newVersion }"
-    ]
-
-  grunt.registerTask "release_done", (version) =>
-    console.log "Release done. Please copy Changelog.md over to Github release notes:"
-    console.log "https://github.com/blockchain/My-Wallet-V3/releases/edit/#{ version }"
-
-  grunt.registerTask "untag", "remove tag", (tag) =>
-    grunt.task.run [
-      "shell:untag:" + tag
     ]
 
   return

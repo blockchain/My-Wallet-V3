@@ -1,16 +1,7 @@
 language: node_js
 node_js:
-- node
+- 5.8
 script: node_modules/karma/bin/karma start karma.conf.js --single-run && grunt coveralls
-sudo: required
-before_install:
-- export CHROME_BIN=/usr/bin/google-chrome
-- export DISPLAY=:99.0
-- sh -e /etc/init.d/xvfb start
-- sudo apt-get update
-- sudo apt-get install -y libappindicator1 fonts-liberation
-- wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-- sudo dpkg -i google-chrome*.deb
 notifications:
   slack:
     secure: QknuKmAVfKhlGjFoJVXbKaWh6ee/rph/gldqWcxCHnoXHtCQ+v02Q2WrEL9YiQtOIXQoPjqtMptjjVlBgoFYaAnXmQEpBa5IYwbTvm0T7A+fJaojr8bOi6HHohr8nrDuldtTSNLDVP135zJyzl/gpz0oUPyHCgJx02lQ3j5sVUmx99OxTFzPHAdHoRS+vj5AiCjRhalzkCrQBXq41UrJXmY4xdub4+attdQJf4lr5RMd1ZB1PNj4z94rTHSuYtvBxXrYNkiyPs58861JRCT7P+1dy5beS5OG0OeF+iN+tj9XUNBrqCiWnu3i4vKYmHr7xVyxLXOmo7DvR8o55qY9PhB1OkCmt5qHpoSB7r39f/Y2tg6mwwXz7dnnnnwnIMsKzQ1eVNXF4dqbf12iaJTQNOb4t69s6kn/ybeD3h7SGLTPl6Z1xQHWcTk4GrzfWNRK12cvMAULWOS7uyZlhJnNneyoIm7cLoBJKdsaQmSV998ZAu4qHjozKeHRi08UdNtyrsQ6KqUxof8haPU1L/p+enSCLJfYDBnYVspwtQVRIlFsmCqowM6JEl1Doc+be5/CVisQ7/IEROoNSz2Z7uNXIMgaiK+K3sB+3PFNWSuBT2Z35HtnCCNy2kwE5sAGxyGs/DUYe4uIQmE44ec7dtQRn4N8NaM/LlSclJaMlq/jVTk=
