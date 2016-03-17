@@ -1,6 +1,5 @@
 proxyquire = require('proxyquireify')(require)
 Bitcoin = require('bitcoinjs-lib')
-ECKey = Bitcoin.ECKey;
 BigInteger = require('bigi');
 
 ImportExport =
@@ -8,9 +7,9 @@ ImportExport =
   shouldReject: false
   shouldFail: true
 
-  parseBIP38toECKey: (b58, pass, succ, wrong, error) ->
+  parseBIP38toECPair: (b58, pass, succ, wrong, error) ->
     if ImportExport.shouldResolve
-      succ(new ECKey(new BigInteger.fromByteArrayUnsigned(BigInteger.fromBuffer(new Buffer('E9873D79C6D87DC0FB6A5778633389F4453213303DA61F20BD67FC233AA33262', 'hex')).toByteArray()), true))
+      succ(new Bitcoin.ECPair(new BigInteger.fromByteArrayUnsigned(BigInteger.fromBuffer(new Buffer('E9873D79C6D87DC0FB6A5778633389F4453213303DA61F20BD67FC233AA33262', 'hex')).toByteArray()), null,  {compressed: true}))
     else if ImportExport.shouldReject
       wrong()
     else if ImportExport.shouldFail
@@ -263,6 +262,21 @@ describe "Helpers", ->
       expect(Helpers.isValidBIP39Mnemonic(0)).toBeFalsy()
       expect(Helpers.isValidBIP39Mnemonic({ 'mnemonic': "cat swing flag economy stadium alone churn speed unique patch report train" })).toBeFalsy()
 
+  describe "detectPrivateKeyFormat", ->
+    it "should reject invalid formats", ->
+      res = Helpers.detectPrivateKeyFormat("46c56bnXQiBjk9mqSYE7ykVQ7NzrRy")
+      expect(res).toBeNull()
+
+    it "should recognise sipa", ->
+      res = Helpers.detectPrivateKeyFormat("5JFXNQvtFZSobCCRPxnTZiW1PDVnXvGBg5XeuUDoUCi8LRsV3gn")
+      expect(res).toEqual("sipa")
+
+  describe "privateKeyStringToKey", ->
+    it "should convert sipa format", ->
+      res = Helpers.privateKeyStringToKey("5JFXNQvtFZSobCCRPxnTZiW1PDVnXvGBg5XeuUDoUCi8LRsV3gn", "sipa")
+      expect(Helpers.isKey(res)).toBeTruthy()
+
+
   describe "privateKeyCorrespondsToAddress", ->
 
     afterEach ->
@@ -279,12 +293,20 @@ describe "Helpers", ->
       promise.then((data) ->
         expect(data).toEqual(null)
         done()
+      ).catch((e) ->
+        console.log(e)
+        assert(false)
+        done()
       )
 
     it "should not match mini private keys to wrong addresses", (done) ->
       promise = Helpers.privateKeyCorrespondsToAddress('1PZuicD1ACRfBuKEgp2XaJhVvnwpeETDyN', "S6c56bnXQiBjk9mqSYE7ykVQ7NzrRy")
       promise.then((data) ->
         expect(data).toEqual(null)
+        done()
+      ).catch((e) ->
+        console.log(e)
+        assert(false)
         done()
       )
 
@@ -355,5 +377,3 @@ describe "Helpers", ->
     it "should recognize BIP-38 keys", ->
       expect(Helpers.isValidPrivateKey("6PRMUxAWM4XyK8b3wyJRpTwvDdmCKakuP6aGxr3D8MuUaCWVLXM2wnGUCT")).toBeTruthy()
       expect(Helpers.isValidPrivateKey("6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg")).toBeTruthy()
-
-

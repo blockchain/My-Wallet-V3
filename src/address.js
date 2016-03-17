@@ -156,12 +156,12 @@ Address.import = function (key, label){
       object.priv = null;
       break;
     case Helpers.isKey(key):
-      object.addr = key.pub.getAddress().toString();
+      object.addr = key.getAddress();
       object.priv = Base58.encode(key.d.toBuffer(32));
       break;
     case Helpers.isBitcoinPrivateKey(key):
-      key = Bitcoin.ECKey.fromWIF(key);
-      object.addr = key.pub.getAddress().toString();
+      key = Bitcoin.ECPair.fromWIF(key);
+      object.addr = key.getAddress();
       object.priv = Base58.encode(key.d.toBuffer(32));
       break;
     default:
@@ -188,7 +188,7 @@ Address.fromString = function (keyOrAddr, label, bipPass){
         if (bipPass == undefined || bipPass === '') {
           return reject('needsBip38');
         }
-        ImportExport.parseBIP38toECKey(keyOrAddr, bipPass,
+        ImportExport.parseBIP38toECPair(keyOrAddr, bipPass,
           function (key) { resolve(Address.import(key, label));},
           function ()    { reject('wrongBipPass'); },
           function ()    { reject('importError');}
@@ -204,8 +204,11 @@ Address.fromString = function (keyOrAddr, label, bipPass){
   return new Promise(asyncParse);
 };
 
-Address.new = function (label){
-  var key = Bitcoin.ECKey.makeRandom(true, RNG.run.bind(RNG));
+Address.new = function(label){
+  var key = Bitcoin.ECPair.makeRandom({
+    rng: RNG.run.bind(RNG),
+    compressed: true
+  });
   return Address.import(key, label);
 };
 
