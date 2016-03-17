@@ -380,11 +380,9 @@ Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
       if (bipPass == undefined || bipPass === '') {
         return reject('needsBip38');
       }
-      ImportExport.parseBIP38toECKey(priv, bipPass,
-        function (key) { resolve(key);},
-        function ()    { reject('wrongBipPass'); },
-        function ()    { reject('importError');}
-      );
+      ImportExport.parseBIP38toECKey(priv, bipPass)
+          .then(function (result) { resolve(result.key); })
+          .catch(function (e) { reject(e); });
     }
     else if (okFormats.indexOf(format) > -1) {
       var k = Helpers.privateKeyStringToKey(priv, format);
