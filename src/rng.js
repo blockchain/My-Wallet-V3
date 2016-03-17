@@ -41,11 +41,11 @@ RNG.prototype.run = function (nBytes) {
     var localH = randomBytes(nBytes);
 
     assert(
-      localH.byteLength > 0 || localH.length > 0,
+      localH.length > 0,
       'Local entropy should not be empty.'
     );
     assert(
-      serverH.byteLength > 0 || serverH.length > 0,
+      serverH.length > 0,
       'Server entropy should not be empty.'
     );
 
@@ -58,7 +58,7 @@ RNG.prototype.run = function (nBytes) {
       'The browser entropy should not be the same byte repeated.'
     );
     assert(
-      serverH.byteLength === localH.byteLength || serverH.length === localH.length,
+      serverH.length === localH.length,
       'Both entropies should be same of the length.'
     );
 
@@ -69,7 +69,7 @@ RNG.prototype.run = function (nBytes) {
       'The combined entropy should not be the same byte repeated.'
     );
     assert(
-      combinedH.byteLength === nBytes || combinedH.length === nBytes,
+      combinedH.length === nBytes,
       'Combined entropy should be of requested length.'
     );
 
@@ -107,7 +107,7 @@ RNG.prototype.getServerEntropy = function (nBytes) {
     var B = new Buffer(request.responseText, this.FORMAT);
 
     assert(
-      B.byteLength === nBytes || B.length === nBytes,
+      B.length === nBytes,
       'Different entropy length requested.'
     );
 
