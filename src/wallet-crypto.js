@@ -276,6 +276,7 @@ function stretchPassword (password, salt, iterations, keylen) {
   assert(salt, 'salt missing');
   assert(password, 'password missing');
   assert(iterations, 'iterations missing');
+  assert(typeof(sjcl.hash.sha1) === 'function', 'missing sha1, make sure sjcl is configured correctly');
 
   var hmacSHA1 = function (key) {
     var hasher = new sjcl.misc.hmac(key, sjcl.hash.sha1);
