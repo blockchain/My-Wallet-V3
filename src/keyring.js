@@ -37,12 +37,14 @@ KeyRing.prototype.init = function (extendedKey, cache){
   return this;
 };
 
+// "M/0/0" -> HDNode
 KeyRing.prototype.privateKeyFromPath = function (path) {
   var components = path.split('/');
   assert(components[0] === 'M', 'Invalid Path prefix');
   assert(components[1] === '0' || components[1] === '1'
     ,'Invalid Path: change/receive index out of bounds');
   assert(components.length === 3, 'Invalid Path length');
+  if(this._receiveChain.isNeutered) return null;
   var receiveOrChange = parseInt(components[1]);
   var index = parseInt(components[2]);
   return receiveOrChange === 0 ?

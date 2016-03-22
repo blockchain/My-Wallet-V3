@@ -1,17 +1,13 @@
 Bitcoin = require('bitcoinjs-lib')
-ECKey = Bitcoin.ECKey
+ECPair = Bitcoin.ECPair
 BigInteger = require('bigi')
 
 ImportExport = require('../src/import-export')
-
-# localStorage.clear()
 
 describe "Crypto_scrypt", ->
 
   observer =
     callback: (hash) ->
-      console.log("Callback!")
-      console.log(hash)
 
   beforeEach ->
     # overrride as a temporary solution
@@ -96,19 +92,18 @@ describe "BIP38", ->
 
   observer =
     success: (key) ->
-      console.log("Success!")
-      console.log(key)
     wrong_password: () ->
-      console.log("Wrong password!")
     error: (err) ->
-      console.log("Some error")
-      console.log(err)
 
   beforeEach ->
     # overrride as a temporary solution
     window.setTimeout = (myFunction) -> myFunction()
 
-    # mock used inside parseBIP38toECKey
+    # TODO: figure out how to use ECPair.fromPublicKeyBuffer and reenable
+    # public key caching in tests
+    localStorage.clear()
+
+    # mock used inside parseBIP38toECPair
     spyOn(ImportExport, "Crypto_scrypt").and.callFake(
       (password, salt, N, r, p, dkLen, callback) ->
         # preimages of Crypto_scrypt
@@ -184,42 +179,48 @@ describe "BIP38", ->
           callback null
     )
 
-  describe "parseBIP38toECKey()", ->
+  describe "parseBIP38toECPair()", ->
     beforeEach ->
-      Bitcoin.ECKey.originalFromWIF = Bitcoin.ECKey.fromWIF
-      spyOn(Bitcoin.ECKey, "fromWIF").and.callFake((wif)->
+      Bitcoin.ECPair.originalFromWIF = Bitcoin.ECPair.fromWIF
+      spyOn(Bitcoin.ECPair, "fromWIF").and.callFake((wif)->
         key = undefined
 
-        if hex = localStorage.getItem("Bitcoin.ECKey.fromWIF " + wif)
+        if hex = localStorage.getItem("Bitcoin.ECPair.fromWIF " + wif)
           buffer = new Buffer(hex, "hex")
           key = {
             d: BigInteger.fromBuffer(buffer)
           }
         else
-          key = Bitcoin.ECKey.originalFromWIF(wif)
+          key = Bitcoin.ECPair.originalFromWIF(wif)
           hex = key.d.toBuffer().toString('hex')
-          localStorage.setItem("Bitcoin.ECKey.fromWIF " + wif, hex)
+          localStorage.setItem("Bitcoin.ECPair.fromWIF " + wif, hex)
 
         key
       )
 
-      Bitcoin.originalECKey = Bitcoin.ECKey
-      spyOn(Bitcoin, "ECKey").and.callFake((d, compressed) ->
-        cacheKey = "Bitcoin.ECKey " + d.toBuffer().toString('hex') + " " + compressed
+      Bitcoin.originalECPair = Bitcoin.ECPair
+      spyOn(Bitcoin, "ECPair").and.callFake((d, Q, options={}) ->
+        cacheKey = "Bitcoin.ECPair " + d.toBuffer().toString('hex') + " " + options.compressed
         pubKey = undefined
         if hex = localStorage.getItem(cacheKey)
-          pubKey  = Bitcoin.ECPubKey.fromHex(hex)
-
+          console.log("Cache hit: ", hex)
+          key  = Bitcoin.originalECPair.fromPublicKeyBuffer(Buffer(hex))
+          key.d = d
         else
-          Q = ECKey.curve.G.multiply(d)
-          pubKey  = new Bitcoin.ECPubKey(Q, compressed)
+          key  = new Bitcoin.originalECPair(d, null, {compressed: options.compressed})
+          hex = key.getPublicKeyBuffer().toString("hex")
+          # console.log("Cache miss: ", hex)
+          localStorage.setItem(cacheKey, hex)
 
-          localStorage.setItem(cacheKey, pubKey.toHex())
+        address = key.getAddress()
+        wif = key.toWIF()
+        pubKeyBuffer = key.getPublicKeyBuffer()
 
         {
           d: d
-          pub: pubKey
-          toWIF: Bitcoin.originalECKey.prototype.toWIF
+          getPublicKeyBuffer: () -> pubKeyBuffer
+          toWIF: () -> wif
+          getAddress: () -> address
         }
       )
 
@@ -230,13 +231,13 @@ describe "BIP38", ->
       spyOn(observer, "success")
       spyOn(observer, "wrong_password")
 
-      k = Bitcoin.ECKey
+      k = Bitcoin.ECPair
             .fromWIF "5KN7MzqK5wt2TP1fQCYyHBtDrXdJuXbUzm4A9rKAteGu3Qi5CVR"
 
       # Not needed:
       # k.pub.Q._zInv = k.pub.Q.z.modInverse k.pub.Q.curve.p unless k.pub.Q._zInv?
 
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success, observer.wrong_password
+      ImportExport.parseBIP38toECPair  pk ,pw ,observer.success, observer.wrong_password
 
       expect(ImportExport.Crypto_scrypt).toHaveBeenCalled()
 
@@ -244,6 +245,7 @@ describe "BIP38", ->
       # expect(observer.success).toHaveBeenCalledWith(k)
 
       expect(observer.success).toHaveBeenCalled()
+
       expect(observer.success.calls.argsFor(0)[0].d).toEqual(k.d)
 
       expect(observer.wrong_password).not.toHaveBeenCalled()
@@ -255,7 +257,7 @@ describe "BIP38", ->
       pw = "WRONG_PASSWORD"
       pk = "6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg"
 
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
+      ImportExport.parseBIP38toECPair  pk ,pw ,observer.success ,observer.wrong_password
 
       expect(observer.wrong_password).toHaveBeenCalled()
 
@@ -268,7 +270,7 @@ describe "BIP38", ->
       pw = "TestingOneTwoThree"
       pk = "6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg"
 
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
+      ImportExport.parseBIP38toECPair  pk ,pw ,observer.success ,observer.wrong_password
       computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
       computedCompression = observer.success.calls.argsFor(0)[1]
 
@@ -285,7 +287,7 @@ describe "BIP38", ->
       pw = "Satoshi"
       pk = "6PRNFFkZc2NZ6dJqFfhRoFNMR9Lnyj7dYGrzdgXXVMXcxoKTePPX1dWByq"
 
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
+      ImportExport.parseBIP38toECPair  pk ,pw ,observer.success ,observer.wrong_password
       computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
       computedCompression = observer.success.calls.argsFor(0)[1]
 
@@ -300,10 +302,10 @@ describe "BIP38", ->
 
       pw = String.fromCodePoint(0x03d2, 0x0301, 0x0000, 0x00010400, 0x0001f4a9)
       pk = "6PRW5o9FLp4gJDDVqJQKJFTpMvdsSGJxMYHtHaQBF3ooa8mwD69bapcDQn"
-      k = Bitcoin.ECKey
+      k = Bitcoin.ECPair
             .fromWIF "5Jajm8eQ22H3pGWLEVCXyvND8dQZhiQhoLJNKjYXk9roUFTMSZ4"
       # k.pub.Q._zInv = k.pub.Q.z.modInverse k.pub.Q.curve.p unless k.pub.Q._zInv?
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
+      ImportExport.parseBIP38toECPair  pk ,pw ,observer.success ,observer.wrong_password
 
       expect(observer.wrong_password).not.toHaveBeenCalled()
       expect(observer.success.calls.argsFor(0)[0].d).toEqual(k.d)
@@ -317,7 +319,7 @@ describe "BIP38", ->
       pw = "TestingOneTwoThree"
       pk = "6PYNKZ1EAgYgmQfmNVamxyXVWHzK5s6DGhwP4J5o44cvXdoY7sRzhtpUeo"
 
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
+      ImportExport.parseBIP38toECPair  pk ,pw ,observer.success ,observer.wrong_password
       computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
       computedCompression = observer.success.calls.argsFor(0)[1]
 
@@ -334,7 +336,7 @@ describe "BIP38", ->
       pw = "Satoshi"
       pk = "6PYLtMnXvfG3oJde97zRyLYFZCYizPU5T3LwgdYJz1fRhh16bU7u6PPmY7"
 
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
+      ImportExport.parseBIP38toECPair  pk ,pw ,observer.success ,observer.wrong_password
       computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
       computedCompression = observer.success.calls.argsFor(0)[1]
 
@@ -351,7 +353,7 @@ describe "BIP38", ->
       pw = "TestingOneTwoThree"
       pk = "6PfQu77ygVyJLZjfvMLyhLMQbYnu5uguoJJ4kMCLqWwPEdfpwANVS76gTX"
 
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
+      ImportExport.parseBIP38toECPair  pk ,pw ,observer.success ,observer.wrong_password
       computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
       computedCompression = observer.success.calls.argsFor(0)[1]
 
@@ -368,7 +370,7 @@ describe "BIP38", ->
       pw = "Satoshi"
       pk = "6PfLGnQs6VZnrNpmVKfjotbnQuaJK4KZoPFrAjx1JMJUa1Ft8gnf5WxfKd"
 
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
+      ImportExport.parseBIP38toECPair  pk ,pw ,observer.success ,observer.wrong_password
       computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
       computedCompression = observer.success.calls.argsFor(0)[1]
 
@@ -385,7 +387,7 @@ describe "BIP38", ->
       pw = "MOLON LABE"
       pk = "6PgNBNNzDkKdhkT6uJntUXwwzQV8Rr2tZcbkDcuC9DZRsS6AtHts4Ypo1j"
 
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
+      ImportExport.parseBIP38toECPair  pk ,pw ,observer.success ,observer.wrong_password
       computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
       computedCompression = observer.success.calls.argsFor(0)[1]
 
@@ -402,7 +404,7 @@ describe "BIP38", ->
       pw = "ΜΟΛΩΝ ΛΑΒΕ"
       pk = "6PgGWtx25kUg8QWvwuJAgorN6k9FbE25rv5dMRwu5SKMnfpfVe5mar2ngH"
 
-      ImportExport.parseBIP38toECKey  pk ,pw ,observer.success ,observer.wrong_password
+      ImportExport.parseBIP38toECPair  pk ,pw ,observer.success ,observer.wrong_password
       computedWIF = observer.success.calls.argsFor(0)[0].toWIF()
       computedCompression = observer.success.calls.argsFor(0)[1]
 

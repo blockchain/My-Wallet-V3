@@ -1,7 +1,6 @@
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
-var ECKey = Bitcoin.ECKey;
 var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
@@ -16,14 +15,14 @@ Helpers.isString = function (str){
   return typeof str == 'string' || str instanceof String;
 };
 Helpers.isKey = function (bitcoinKey){
-  return Helpers.isInstanceOf(bitcoinKey, Bitcoin.ECKey);
+  return Helpers.isInstanceOf(bitcoinKey, Bitcoin.ECPair);
 };
 Helpers.isInstanceOf = function (object, theClass) {
   return object instanceof theClass;
 };
 Helpers.isBitcoinAddress = function (candidate) {
   try {
-    var d = Bitcoin.Address.fromBase58Check(candidate);
+    var d = Bitcoin.address.fromBase58Check(candidate);
     var n = Bitcoin.networks.bitcoin;
     return d.version === n.pubKeyHash || d.version === n.scriptHash
   }
@@ -31,7 +30,7 @@ Helpers.isBitcoinAddress = function (candidate) {
 };
 Helpers.isBitcoinPrivateKey = function (candidate) {
   try {
-    Bitcoin.ECKey.fromWIF(candidate);
+    Bitcoin.ECPair.fromWIF(candidate);
     return true;
   }
   catch (e) { return false; };
@@ -318,7 +317,7 @@ Helpers.privateKeyStringToKey = function (value, format) {
     throw 'Unsupported Key Format';
   }
 
-  return new ECKey(new BigInteger.fromByteArrayUnsigned(key_bytes), (format !== 'sipa'));
+  return new Bitcoin.ECPair(new BigInteger.fromByteArrayUnsigned(key_bytes), null, {compressed: format !== 'sipa'});
 };
 
 Helpers.detectPrivateKeyFormat = function (key) {
@@ -366,7 +365,7 @@ Helpers.isValidPrivateKey = function (candidate) {
     var format = Helpers.detectPrivateKeyFormat(candidate);
     if(format == 'bip38') { return true }
     var key = Helpers.privateKeyStringToKey(candidate, format);
-    return key.pub.getAddress().toString();
+    return key.getAddress();
   } catch (e) {
     return false;
   }
@@ -380,7 +379,7 @@ Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
       if (bipPass == undefined || bipPass === '') {
         return reject('needsBip38');
       }
-      ImportExport.parseBIP38toECKey(priv, bipPass,
+      ImportExport.parseBIP38toECPair(priv, bipPass,
         function (key) { resolve(key);},
         function ()    { reject('wrongBipPass'); },
         function ()    { reject('importError');}
@@ -393,7 +392,7 @@ Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
     else { reject('unknown key format'); }
   }
   var predicate = function(key){
-    var a = key.pub.getAddress().toString();
+    var a = key.getAddress();
     return a === address? Base58.encode(key.d.toBuffer(32)) : null;
   }
   return new Promise(asyncParse).then(predicate);

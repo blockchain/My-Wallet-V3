@@ -8,33 +8,65 @@ MyWallet = {
   }
 }
 
+Bitcoin = {
+  ECPair: {
+    makeRandom: (options) ->
+      pk = options.rng(32)
+      {
+        getAddress: () ->
+          "random_address"
+        pub: {
+
+        }
+        d:
+          toBuffer: () ->
+            pk
+      }
+    fromWIF: (wif) ->
+      {
+        getAddress: () ->
+          "pub_key_for_" + wif
+        d:
+          toBuffer: () ->
+            wif + "_private_key_buffer"
+      }
+  }
+}
+
+Base58 = {
+  encode: (v) ->
+    v
+}
+
+Helpers = {
+  isBitcoinAddress: () -> false
+  isKey: () -> true
+  isBitcoinPrivateKey: () -> false
+}
+
 RNG = {
   run: (input) ->
     if RNG.shouldThrow
       throw 'Connection failed'
-    new Buffer(
-      "0000000000000000000000000000000000000000000000000000000000000010",
-      "hex"
-    )
+    "1111111111111111111111111111111H"
 }
 
 ImportExport =
-  shouldResolve: true
-  shouldReject: true
-  shouldFail: true
-
-  parseBIP38toECKey: (b58, pass, succ, wrong, error) ->
-    if ImportExport.shouldResolve
+  parseBIP38toECPair: (b58, pass, succ, wrong, error) ->
+    if pass == "correct"
       succ('5KUwyCzLyDjAvNGN4qmasFqnSimHzEYVTuHLNyME63JKfVU4wiU')
-    else if ImportExport.shouldReject
+    else if pass == "wrong"
       wrong()
-    else if ImportExport.shouldFail
+    else if pass == "fail"
       error()
 
 stubs = {
   './wallet': MyWallet,
   './rng' : RNG,
-  './import-export': ImportExport
+  './import-export': ImportExport,
+  './helpers' : Helpers,
+  'bitcoinjs-lib': Bitcoin,
+  'bs58' : Base58
 }
 
 Address    = proxyquire('../src/address', stubs)
@@ -54,11 +86,6 @@ describe "Address", ->
   beforeEach ->
     spyOn(MyWallet, "syncWallet")
     spyOn(MyWallet.wallet, "getHistory")
-
-  afterEach ->
-    ImportExport.shouldResolve = false
-    ImportExport.shouldReject = false
-    ImportExport.shouldFail = false
 
   describe "class", ->
     describe "new Address()", ->
@@ -83,6 +110,12 @@ describe "Address", ->
         expect(a.isWatchOnly).not.toBeTruthy()
 
     describe "Address.new()", ->
+      beforeEach ->
+        spyOn(Bitcoin.ECPair, "makeRandom").and.callThrough()
+        spyOn(RNG, "run").and.callThrough()
+        Helpers.isBitcoinAddress = () -> false
+        Helpers.isKey = () -> true
+        Helpers.isBitcoinPrivateKey = () -> false
 
       it "should return an address", ->
         a = Address.new("My New Address")
@@ -94,17 +127,17 @@ describe "Address", ->
 
       it "should generate a random address", ->
         a = Address.new("My New Address")
-        expect(a.address).toBe("19p7ktDbdJnmV4YLC7zQ37RsYczMZJmd6q")
+        expect(a.address).toBe("random_address")
 
-      it "should call Bitcoin.ECKey.makeRandom with our RNG", ->
-        spyOn(RNG, "run").and.callThrough()
+      it "should call Bitcoin.ECPair.makeRandom with our RNG", ->
         a = Address.new("My New Address")
+        expect(Bitcoin.ECPair.makeRandom).toHaveBeenCalled()
         expect(RNG.run).toHaveBeenCalled()
 
       it "should throw if RNG throws", ->
         # E.g. because there was a network failure.
-        # This assumes BitcoinJS ECKey.makeRandom does not rescue a throw
-        # inside the RNG, which is the case in version 1.5.*
+        # This assumes BitcoinJS ECPair.makeRandom does not rescue a throw
+        # inside the RNG, which is the case in version 2.1.4
         RNG.shouldThrow = true
         expect(() -> Address.new("My New Address")).toThrow('Connection failed')
 
@@ -299,58 +332,85 @@ describe "Address", ->
         expect(bb).toEqual(a)
 
     describe ".fromString", ->
-      
+      beforeEach ->
+        Helpers.isBitcoinAddress = (candidate) ->
+          return true if candidate == "address"
+          false
+
+        Helpers.detectPrivateKeyFormat = (candidate) ->
+          return null if candidate == "unknown_format"
+          return "bip38" if candidate == "bip_38"
+          return "mini" if candidate.indexOf("mini_") == 0
+          "sipa"
+
+        Helpers.privateKeyStringToKey = (address, format) ->
+          return "mini_address" if address == "mini_address"
+          throw "invalid mini" if address == "mini_invalid"
+
+
+        spyOn(Address, "import").and.callFake((address) ->
+          {
+            _addr: address
+          }
+        )
+
+
       it "should not import unknown formats", (done) ->
-        promise = Address.fromString("abcd", null, null)
+        promise = Address.fromString("unknown_format", null, null)
         expect(promise).toBeRejectedWith('unknown key format', done)
 
       it "should not import BIP-38 format without a password", (done) ->
-        promise = Address.fromString("6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg", null, null, done)
+        promise = Address.fromString("bip_38", null, null, done)
         expect(promise).toBeRejectedWith('needsBip38', done)
 
       it "should not import BIP-38 format with an empty password", (done) ->
-        promise = Address.fromString("6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg", null, "", done)
+        promise = Address.fromString("bip_38", null, "", done)
         expect(promise).toBeRejectedWith('needsBip38', done)
 
       it "should not import BIP-38 format with a bad password", (done) ->
-        ImportExport.shouldReject = true
-        promise = Address.fromString("6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg", null, "pass", done)
+        promise = Address.fromString("bip_38", null, "wrong", done)
         expect(promise).toBeRejectedWith('wrongBipPass', done)
 
       it "should not import BIP-38 format if the decryption fails", (done) ->
-        ImportExport.shouldFail = true
-        promise = Address.fromString("6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg", null, "pass", done)
+        promise = Address.fromString("bip_38", null, "fail", done)
         expect(promise).toBeRejectedWith('importError', done)
 
       it "should import BIP-38 format with a correct password", (done) ->
-        ImportExport.shouldResolve = true
-        promise = Address.fromString("6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg", null, "pass", done)
+        promise = Address.fromString("bip_38", null, "correct", done)
         expect(promise).toBeResolved(done)
 
       it "should import valid addresses string", (done) ->
-        promise = Address.fromString("19p7ktDbdJnmV4YLC7zQ37RsYczMZJmd6q", null, null)
-        match = jasmine.objectContaining({_addr: "19p7ktDbdJnmV4YLC7zQ37RsYczMZJmd6q"})
+        promise = Address.fromString("address", null, null)
+        match = jasmine.objectContaining({_addr: "address"})
         expect(promise).toBeResolvedWith(match, done)
 
       it "should import private keys using mini format string", (done) ->
-        promise = Address.fromString("S6c56bnXQiBjk9mqSYE7ykVQ7NzrRy", null, null)
-        match = jasmine.objectContaining({_addr: "1PZuicD1ACRfBuKEgp2XaJhVvnwpeETDyn"})
+        promise = Address.fromString("mini_address", null, null)
+        match = jasmine.objectContaining({_addr: "mini_address"})
         expect(promise).toBeResolvedWith(match, done)
 
       it "should not import private keys using an invalid mini format string", (done) ->
-        promise = Address.fromString("SzavMBLoXU6kDrqteVmffv", null, null)
+        promise = Address.fromString("mini_invalid", null, null)
         expect(promise).toBeRejected(done)
 
     describe "Address import", ->
+      beforeEach ->
+        Helpers.isKey = () -> false
+        Helpers.isBitcoinAddress = () -> true
+
       it "should not import unknown formats", ->
+        Helpers.isBitcoinAddress = () -> false
         expect(() -> Address.import("abcd", null)).toThrow()
 
       it "should not import invalid addresses", ->
+        Helpers.isBitcoinAddress = () -> false
         expect(() -> Address.import("19p7ktDbdJnmV4YLC7zQ37RsYczMZJmd66", null)).toThrow()
 
       it "should import WIF keys", ->
+        Helpers.isBitcoinAddress = () -> false
+        Helpers.isBitcoinPrivateKey = () -> true
         addr = Address.import("5KUwyCzLyDjAvNGN4qmasFqnSimHzEYVTuHLNyME63JKfVU4wiU", null)
-        expect(addr.address).toEqual("1KySxcrixYhxcRQ8m6rFcTyc74AwN6VP6b")
+        expect(addr.address).toEqual("pub_key_for_5KUwyCzLyDjAvNGN4qmasFqnSimHzEYVTuHLNyME63JKfVU4wiU")
 
       it "should import valid addresses", ->
         addr = Address.import("19p7ktDbdJnmV4YLC7zQ37RsYczMZJmd6q", null)
@@ -358,10 +418,13 @@ describe "Address", ->
 
 
     describe "Address factory", ->
+      beforeEach ->
+        Helpers.isKey = () -> false
+        Helpers.isBitcoinAddress = () -> true
+
       it 'should not touch an already existing object', ->
         addr = Address.import("19p7ktDbdJnmV4YLC7zQ37RsYczMZJmd6q", null)
         fromFactory = Address.factory({}, addr)
-
         expect(fromFactory['19p7ktDbdJnmV4YLC7zQ37RsYczMZJmd6q']).toEqual(addr)
 
     describe "isEncrypted", ->
