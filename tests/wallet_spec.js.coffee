@@ -235,71 +235,40 @@ describe "Wallet", ->
 
     callbacks = {
       success: () ->
-      wrong_two_factor_code: () ->
-      other_error: () ->
+      wrongTwoFactorCode: () ->
+      otherError: () ->
     }
 
     beforeEach ->
-      spyOn(MyWallet,"initializeWallet").and.callFake((inputedPassword, success, other_error, decrypt_success, build_hd_success) ->
+      spyOn(MyWallet,"initializeWallet").and.callFake((inputedPassword, success, otherError, didDecrypt, didBuildHD) ->
         success()
       )
 
       spyOn(callbacks, "success")
-      spyOn(callbacks, "wrong_two_factor_code")
+      spyOn(callbacks, "wrongTwoFactorCode")
       spyOn(API, "request").and.callThrough()
 
     describe "with 2FA", ->
-      it "can be absent", ->
+      it "can be null", ->
         MyWallet.login(
           "1234",
-          null,
           "password",
-          null,
-          callbacks.success,
-          callbacks.needs_two_factor_code,
-          callbacks.wrong_two_factor_code,
-          callbacks.authorization_required
-          callbacks.other_error,
-          callbacks.fetch_success,
-          callbacks.decrypt_success,
-          callbacks.build_hd_success
+          {
+              twoFactor: null
+          },
+          callbacks
         )
 
-        expect(callbacks.success).toHaveBeenCalled()
-
-      it "should pass code (as string) along", ->
-        MyWallet.login(
-          "1234",
-          null,
-          "password",
-          "BF399",
-          callbacks.success,
-          callbacks.needs_two_factor_code,
-          callbacks.wrong_two_factor_code,
-          callbacks.authorization_required
-          callbacks.other_error,
-          callbacks.fetch_success,
-          callbacks.decrypt_success,
-          callbacks.build_hd_success
-        )
-
-        expect(API.request.calls.argsFor(0)[2].payload).toEqual("BF399")
         expect(callbacks.success).toHaveBeenCalled()
 
       it "should pass code (as object) along", ->
         MyWallet.login(
           "1234",
-          null,
           "password",
-          {type: 5, code: "BF399"},
-          callbacks.success,
-          callbacks.needs_two_factor_code,
-          callbacks.wrong_two_factor_code,
-          callbacks.authorization_required
-          callbacks.other_error,
-          callbacks.fetch_success,
-          callbacks.decrypt_success,
-          callbacks.build_hd_success
+          {
+            twoFactor: {type: 5, code: "BF399"}
+          },
+          callbacks
         )
 
         expect(API.request.calls.argsFor(0)[2].payload).toEqual("BF399")
@@ -308,17 +277,11 @@ describe "Wallet", ->
       it "should convert SMS code to upper case", ->
         MyWallet.login(
           "1234",
-          null,
           "password",
-          {type: 5, code: "bf399"},
-          callbacks.success,
-          callbacks.needs_two_factor_code,
-          callbacks.wrong_two_factor_code,
-          callbacks.authorization_required
-          callbacks.other_error,
-          callbacks.fetch_success,
-          callbacks.decrypt_success,
-          callbacks.build_hd_success
+          {
+            twoFactor: {type: 5, code: "bf399"}
+          },
+          callbacks
         )
 
         expect(API.request).toHaveBeenCalled()
@@ -327,17 +290,11 @@ describe "Wallet", ->
       it "should not convert Yubikey code to upper case", ->
         MyWallet.login(
           "1234",
-          null,
           "password",
-          "abcdef123",
-          callbacks.success,
-          callbacks.needs_two_factor_code,
-          callbacks.wrong_two_factor_code,
-          callbacks.authorization_required
-          callbacks.other_error,
-          callbacks.fetch_success,
-          callbacks.decrypt_success,
-          callbacks.build_hd_success
+          {
+            twoFactor: {type: 1, code: "abcdef123"}
+          },
+          callbacks
         )
 
         expect(API.request).toHaveBeenCalled()
