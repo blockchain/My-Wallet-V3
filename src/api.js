@@ -232,7 +232,10 @@ API.prototype.pushTx = function (txHex, note){
   var data = {
       tx : txHex
     , api_code : this.API_CODE
+    , format : 'plain'
   };
+
+  if (note) data.note = note;
 
   var responseTXHASH = function (responseText) {
     if (responseText.indexOf('Transaction Submitted') > -1)
