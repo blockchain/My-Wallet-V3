@@ -10,24 +10,29 @@ var Buffer      = require('buffer').Buffer;
 // {error: "NOT_GOOD", some_param: 1}
 // Error messages that should only appear during development can be any string.
 
-var Transaction = function (unspentOutputs, toAddresses, amounts, fee, feePerKb, changeAddress, listener) {
+var Transaction = function (payment, emitter) {
+
+  var unspentOutputs = payment.selectedCoins;
+  var toAddresses    = payment.to;
+  var amounts        = payment.amounts;
+  var fee            = payment.finalFee;
+  var changeAddress  = payment.change;
+  var BITCOIN_DUST   = Bitcoin.networks.bitcoin.dustThreshold;
 
   if (!Array.isArray(toAddresses) && toAddresses != null) {toAddresses = [toAddresses];}
   if (!Array.isArray(amounts) && amounts != null) {amounts = [amounts];}
+
   var network = Bitcoin.networks.bitcoin;
+
   assert(toAddresses, 'Missing destination address');
   assert(amounts,     'Missing amount to pay');
 
-  this.amount = amounts.reduce(function (a, b) {return a + b;},0);
-  this.listener = listener;
+  this.emitter = emitter;
+  this.amount = amounts.reduce(Helpers.add, 0);
   this.addressesOfInputs = [];
   this.privateKeys = null;
   this.addressesOfNeededPrivateKeys = [];
   this.pathsOfNeededPrivateKeys = [];
-  this.fee = 0; // final used fee
-  var BITCOIN_DUST = 5460;
-  var forcedFee = Helpers.isNumber(fee) ? fee : null;
-  feePerKb = Helpers.isNumber(feePerKb) ? feePerKb : 10000;
 
   assert(toAddresses.length == amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
   assert(this.amount > BITCOIN_DUST, {error: 'BELOW_DUST_THRESHOLD', amount: this.amount, threshold: BITCOIN_DUST});
@@ -38,26 +43,19 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, feePerKb,
   function addOutput (e, i) {transaction.addOutput(toAddresses[i],amounts[i]);}
   toAddresses.map(addOutput);
 
-  // Choose inputs
-  var unspent = sortUnspentOutputs(unspentOutputs);
-  var accum = 0;
-  var subTotal = 0;
-
-  var nIns = 0;
-  var nOuts = toAddresses.length + 1; // assumed one change output
-
-  for (var i = 0; i < unspent.length; i++) {
-    var output = unspent[i];
+  // add all inputs
+  var total = 0;
+  for (var i = 0; i < unspentOutputs.length; i++) {
+    var output = unspentOutputs[i];
+    total = total + output.value;
     var transactionHashBuffer = Buffer(output.hash, 'hex');
     transaction.addInput(Array.prototype.reverse.call(transactionHashBuffer), output.index);
-    nIns += 1;
-    this.sizeEstimate = Helpers.guessSize(nIns, nOuts);
-    this.fee = Helpers.isPositiveNumber(forcedFee) ? forcedFee : Helpers.guessFee(nIns, nOuts, feePerKb);
 
     // Generate address from output script and add to private list so we can check if the private keys match the inputs later
     var scriptBuffer = Buffer(output.script, "hex");
     assert.notEqual(Bitcoin.script.classifyOutput(scriptBuffer), 'nonstandard', {error: 'STRANGE_SCRIPT'});
     var address = Bitcoin.address.fromOutputScript(scriptBuffer).toString();
+
     assert(address, {error: 'CANNOT_DECODE_OUTPUT_ADDRESS', tx_hash: output.tx_hash});
     this.addressesOfInputs.push(address);
 
@@ -68,24 +66,13 @@ var Transaction = function (unspentOutputs, toAddresses, amounts, fee, feePerKb,
     else {
       this.addressesOfNeededPrivateKeys.push(address);
     }
-
-    accum += output.value;
-    subTotal = this.amount + this.fee;
-    if (accum >= subTotal) {
-      var change = accum - subTotal;
-
-      // Consume the change if it would create a very small none standard output
-      if (change > BITCOIN_DUST) {
-        assert(changeAddress, 'No change address specified');
-        transaction.addOutput(changeAddress, change);
-      }
-
-      break;
-    }
   }
 
-  if (accum < subTotal) {
-   throw { error: 500, message: 'Insufficient funds. Value Needed ' +  subTotal / 100000000 + 'BTC' +'. Available amount ' + accum / 100000000 + 'BTC'};
+  // Consume the change if it would create a very small none standard output
+  var changeAmount = total - this.amount - fee;
+  if (changeAmount > BITCOIN_DUST) {
+    assert(changeAddress, 'No change address specified');
+    transaction.addOutput(changeAddress, changeAmount);
   }
 
   this.transaction = transaction;
@@ -138,24 +125,18 @@ Transaction.prototype.sign = function () {
     assert.equal(this.addressesOfInputs[i], this.privateKeys[i].getAddress(), 'Private key does not match bitcoin address ' + this.addressesOfInputs[i] + '!=' + this.privateKeys[i].getAddress() + ' while signing input ' + i);
   }
 
-  var listener = this.listener;
-
-  listener && typeof(listener.on_begin_signing) === 'function' && listener.on_begin_signing();
+  this.emitter.emit('on_begin_signing');
 
   var transaction = this.transaction;
 
   for (var i = 0; i < transaction.inputs.length; i++) {
-    listener && typeof(listener.on_sign_progress) === 'function' && listener.on_sign_progress(i+1);
-
+    this.emitter.emit('on_sign_progress', i+1);
     var key = this.privateKeys[i];
-
     transaction.sign(i, key);
-
     assert(transaction.inputs[i].scriptType === 'pubkeyhash', 'Error creating input script');
   }
 
-  listener && typeof(listener.on_finish_signing) === 'function' && listener.on_finish_signing();
-
+  this.emitter.emit('on_finish_signing');
   return transaction;
 };
 
@@ -177,4 +158,72 @@ function sortUnspentOutputs (unspentOutputs) {
   return unspent;
 }
 
+Transaction.inputCost = function (feePerKb) {
+  return Math.ceil(feePerKb * 0.148);
+};
+Transaction.guessSize = function (nInputs, nOutputs) {
+  if (nInputs < 1 || nOutputs < 1) { return 0;}
+  return (nInputs*148 + nOutputs*34 + 10);
+};
+
+Transaction.guessFee = function (nInputs, nOutputs, feePerKb) {
+  var sizeBytes  = Transaction.guessSize(nInputs, nOutputs);
+  return Math.ceil(feePerKb * (sizeBytes / 1000));
+};
+
+Transaction.filterUsableCoins = function (coins, feePerKb){
+  var icost = Transaction.inputCost(feePerKb);
+  return coins.filter(function(c) { return c.value >= icost });
+};
+
+Transaction.maxAvailableAmount = function (usableCoins, feePerKb){
+  var len = usableCoins.length;
+  var fee = Transaction.guessFee(len, 2, feePerKb);
+  return {"amount": usableCoins.reduce(function(a,e){a = a + e.value; return a},0) - fee, "fee" : fee};
+};
+
+Transaction.sumOfCoins = function (coins){
+  return coins.reduce(function(a,e){a = a + e.value; return a},0);
+};
+
+Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee){
+  var amount = amounts.reduce(Helpers.add,0);
+  var nouts  = amounts.length;
+  var sorted = usableCoins.sort(function (a, b) { return b.value - a.value });
+  var len = sorted.length;
+  var sel = [];
+  var accAm = 0;
+  var accFee = 0;
+
+  if (isAbsoluteFee) {
+    for (var i = 0; i < len; i++) {
+      var coin = sorted[i];
+      accAm = accAm + coin.value;
+      sel.push(coin);
+      if (accAm >= fee + amount) { return {"coins": sel, "fee": fee}; }
+    }
+  } else {
+    for (var i = 0; i < len; i++) {
+      var coin = sorted[i];
+      accAm = accAm + coin.value;
+      accFee = Transaction.guessFee(i+1, nouts+1, fee);
+      sel.push(coin);
+      if (accAm >= accFee + amount) { return {"coins": sel, "fee": accFee}; }
+    }
+  }
+  return {"coins": [], "fee": 0};
+};
+
+Transaction.confirmationEstimation = function(absoluteFees, fee) {
+  var len = absoluteFees.length;
+  for (var i = 0; i < len; i++) {
+    if (absoluteFees[i] > 0 && fee >= absoluteFees[i]) {
+      return i+1;
+    }
+    else{
+      if (absoluteFees[i] > 0 && (i+1 === len)) { return Infinity; }
+    }
+  }
+  return null;
+}
 module.exports = Transaction;

@@ -156,7 +156,7 @@ API.prototype.getTicker = function (){
 API.prototype.getUnspent = function (fromAddresses, confirmations){
   var data = {
       active : fromAddresses.join('|')
-    , confirmations : Helpers.isPositiveNumber(confirmations) ? confirmations : 0
+    , confirmations : Helpers.isPositiveNumber(confirmations) ? confirmations : -1
     , format: 'json'
     , api_code : this.API_CODE
   };
@@ -245,6 +245,25 @@ API.prototype.pushTx = function (txHex, note){
   };
 
   return this.request('POST', 'pushtx', data).then(responseTXHASH);
+};
+
+API.prototype.getFees = function () {
+
+  var handleNetworkError = function () {
+    return Promise.reject({ initial_error: 'Connectivity error, failed to send network request' });
+  };
+
+  var checkStatus = function (response) {
+    if (response.status >= 200 && response.status < 300) {
+        return response.json();
+    } else {
+      return response.text().then(Promise.reject.bind(Promise));
+    }
+  };
+
+  return fetch(this.API_ROOT_URL + "fees")
+            .then(checkStatus)
+            .catch(handleNetworkError);
 };
 
 // OLD FUNCTIONS COPIED: Must rewrite this ones (email ,sms)

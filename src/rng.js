@@ -10,7 +10,7 @@ var Helpers     = require('./helpers');
 
 function RNG () {
   this.ACTION    = 'GET';
-  this.URL       = 'https://api.blockchain.info/v2/randombytes';
+  this.URL       = 'https://api.blockchain.info/v2/randombytes'
   this.FORMAT    = 'hex';  // raw, hex, base64
   this.BYTES     = 32;
 }
