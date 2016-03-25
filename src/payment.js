@@ -521,7 +521,7 @@ function getUnspentCoins (addressList) {
     return obj.unspent_outputs;
   }
 
-  return API.getUnspent(addressList, 0).then(processCoins);
+  return API.getUnspent(addressList, -1).then(processCoins);
 }
 
 function getKey(priv, addr) {
