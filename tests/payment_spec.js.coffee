@@ -37,6 +37,7 @@ Payment = proxyquire('../src/payment', {
 })
 
 describe 'Payment', ->
+  pending()
   payment = undefined
   hdwallet = MyWallet.wallet.hdwallet
 
