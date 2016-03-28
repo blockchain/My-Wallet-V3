@@ -356,10 +356,7 @@ Payment.from = function (origin) {
       // this could fail for network issues or no-balance
       function (error) {
         console.log(error);
-        // TODO:: Better failure handling here
-        // payment.sweepAmount = 0;
-        // payment.sweepFee    = 0;
-        // payment.coins       = [];
+        payment.coins = [];
         return payment;
       }
     );

@@ -172,6 +172,7 @@ Transaction.guessFee = function (nInputs, nOutputs, feePerKb) {
 };
 
 Transaction.filterUsableCoins = function (coins, feePerKb){
+  if (!Array.isArray(coins)) return [];
   var icost = Transaction.inputCost(feePerKb);
   return coins.filter(function(c) { return c.value >= icost });
 };
