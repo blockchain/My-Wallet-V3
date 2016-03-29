@@ -37,7 +37,6 @@ var Transaction = function (payment, emitter) {
   assert(toAddresses.length == amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
   assert(this.amount > BITCOIN_DUST, {error: 'BELOW_DUST_THRESHOLD', amount: this.amount, threshold: BITCOIN_DUST});
   assert(unspentOutputs && unspentOutputs.length > 0, {error: 'NO_UNSPENT_OUTPUTS'});
-
   var transaction = new Bitcoin.TransactionBuilder();
   // add all outputs
   function addOutput (e, i) {transaction.addOutput(toAddresses[i],amounts[i]);}
@@ -55,7 +54,6 @@ var Transaction = function (payment, emitter) {
     var scriptBuffer = Buffer(output.script, "hex");
     assert.notEqual(Bitcoin.script.classifyOutput(scriptBuffer), 'nonstandard', {error: 'STRANGE_SCRIPT'});
     var address = Bitcoin.address.fromOutputScript(scriptBuffer).toString();
-
     assert(address, {error: 'CANNOT_DECODE_OUTPUT_ADDRESS', tx_hash: output.tx_hash});
     this.addressesOfInputs.push(address);
 
@@ -67,7 +65,6 @@ var Transaction = function (payment, emitter) {
       this.addressesOfNeededPrivateKeys.push(address);
     }
   }
-
   // Consume the change if it would create a very small none standard output
   var changeAmount = total - this.amount - fee;
   if (changeAmount > BITCOIN_DUST) {
