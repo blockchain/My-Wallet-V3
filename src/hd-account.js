@@ -288,7 +288,7 @@ HDAccount.prototype.setLabelForReceivingAddress = function (index, label) {
   if(!Helpers.isValidLabel(label)) {
     return Promise.reject('NOT_ALPHANUMERIC');
     // Error: address label must be alphanumeric
-  } else if (index - this.lastUsedReceiveIndex >= 20) {
+  } else if (index - this.lastUsedReceiveIndex >= 19) {
     // Exceeds BIP 44 unused address gap limit
     return Promise.reject('GAP');
   } else {
