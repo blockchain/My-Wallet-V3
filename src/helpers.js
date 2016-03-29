@@ -352,7 +352,6 @@ Helpers.detectPrivateKeyFormat = function (key) {
     if (testBytes[0] === 0x00 || testBytes[0] === 0x01)
       return 'mini';
   }
-  console.error('Unknown Key Format ' + key);
   return null;
 };
 
