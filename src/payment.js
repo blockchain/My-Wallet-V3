@@ -75,7 +75,8 @@ function Payment (payment) {
     sweepFees: [0,0,0,0,0,0], // sweep absolute fee per each fee per kb (1,2,3,4,5,6)
     maxSpendableAmounts: [0,0,0,0,0,0],  // max amount per each fee-per-kb
     confEstimation: "unknown",
-    txSize: 0 // transaciton size
+    txSize: 0, // transaciton size
+    dustThreshold: 0
   };
 
   var p = payment ? payment : initialState;
@@ -395,6 +396,7 @@ Payment.prebuild = function (absoluteFee) {
     payment.sweepAmount = max.amount;
     payment.sweepFee    = max.fee;
     payment.balance     = Transaction.sumOfCoins(payment.coins);
+    payment.dustThreshold = dust;
 
     // compute max spendable limits per each fee-per-kb
     var maxSpendablesPerFeePerKb = function(e){
