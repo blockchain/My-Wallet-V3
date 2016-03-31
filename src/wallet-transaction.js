@@ -36,133 +36,84 @@ function Tx (object){
   this.publicNote       = obj.note;
   this.note             = MyWallet.wallet.getNote(this.hash);
   this.confirmations    = setConfirmations(this.block_height);
+
   // computed properties
-  this._processed_outs   = this.out.map(tagCoin); // outputs must be tagged first
-  this._processed_ins    = this.inputs.map(tagCoin.compose(unpackInput.bind(this)));
+  var initialOut = {
+      taggedOuts: []
+    , toWatchOnly: false
+    , totalOut: 0
+    , internalReceive: 0
+    , changeAmount: 0
+  }
+  var pouts = this.out.reduce(procOuts, initialOut);
+  this.processedOutputs = pouts.taggedOuts;
+  this.toWatchOnly = pouts.toWatchOnly;
+  this.totalOut = pouts.totalOut;
+  this.internalReceive = pouts.internalReceive;
+  this.changeAmount = pouts.changeAmount;
+
+  var initialIn = {
+      taggedIns: []
+    , fromWatchOnly: false
+    , totalIn: 0
+    , internalSpend: 0
+  }
+  var pins = this.inputs.reduce(procIns.bind(this), initialIn);
+  this.processedInputs = pins.taggedIns;
+  this.totalIn        = pins.totalIn;
+  this.internalSpend  = pins.internalSpend;
+  this.fromWatchOnly  = pins.fromWatchOnly;
+
+  this.fee = isCoinBase(this.inputs[0]) ? 0 : this.totalIn - this.totalOut;
+  this.result = this._result ? this._result : this.internalReceive - this.internalSpend;
+  this.txType = computeTxType(this);
+  this.amount = computeAmount(this);
 }
 
+Tx.prototype.toString = function () {
+  return this.hash;
+};
+
 Object.defineProperties(Tx.prototype, {
-  'processedInputs': {
-    configurable: false,
-    get: function () { return this._processed_ins.map(function (x){return x;});}
-  },
-  'processedOutputs': {
-    configurable: false,
-    get: function () { return this._processed_outs.map(function (x){return x;});}
-  },
-  'totalIn': {
-    configurable: false,
-    get: function () {
-      return this._processed_ins.map(function (x){return x.amount;})
-                                 .reduce(Helpers.add, 0);
-    }
-  },
-  'totalOut': {
-    configurable: false,
-    get: function () {
-      return this._processed_outs.map(function (x){return x.amount;})
-                                 .reduce(Helpers.add, 0);
-    }
-  },
-  'fee': {
-    configurable: false,
-    get: function () {
-      return isCoinBase(this.inputs[0]) ? 0 : this.totalIn - this.totalOut;
-    }
-  },
-  'internalSpend': {
-    configurable: false,
-    get: function () {
-      return this._processed_ins.filter(function (i){ return i.coinType !== 'external';})
-                                .map(function (i){return i.amount})
-                                .reduce(Helpers.add, 0);
-    }
-  },
-  'internalReceive': {
-    configurable: false,
-    get: function () {
-      return this._processed_outs.filter(function (i){ return i.coinType !== 'external';})
-                                 .map(function (i){return i.amount})
-                                 .reduce(Helpers.add, 0);
-    }
-  },
-  'result': {
-    configurable: false,
-    get: function () {
-      var r = this._result;
-      if(this._result == null) r = this.internalReceive - this.internalSpend;
-      return r;
-    }
-  },
-  'amount': {
-    configurable: false,
-    get: function () {
-      var am = 0;
-      switch (this.txType) {
-        case 'transfer':
-          am = this.internalReceive - this.changeAmount;
-          break;
-        case 'sent':
-          am = this.internalReceive - this.internalSpend;
-          break;
-        case 'received':
-          am = this.internalReceive - this.internalSpend;
-          break;
-        default:
-          am = this.result;
-      }
-      return am;
-    }
-  },
-  'changeAmount': {
-    configurable: false,
-    get: function () {
-      return this._processed_outs.filter(function (i){ return (i.coinType !== 'external') && (i.change === true);})
-                                 .map(function (i){return i.amount})
-                                 .reduce(Helpers.add, 0);
-    }
-  },
-  'txType': {
-    configurable: false,
-    get: function () {
-      var v = null;
-      var impactNoFee = this.result + this.fee;
-      switch (true) {
-        case impactNoFee === 0:
-          v = 'transfer';
-          break;
-        case impactNoFee < 0:
-          v = 'sent';
-          break;
-        case impactNoFee > 0:
-          v = 'received';
-          break;
-        default:
-          v = 'complex'
-      }
-      return v;
-    }
-  },
   'belongsTo': {
     configurable: false,
-    value: function (identity) {
-      return this.processedInputs.concat(this.processedOutputs)
-        .some(function (processed) { return processed.identity == identity; });
-    }
-  },
-  'fromWatchOnly': {
-    configurable: false,
-    get: function () {
-      return this._processed_ins.some(function (o) { return o.isWatchOnly; });
-    }
-  },
-  'toWatchOnly': {
-    configurable: false,
-    get: function () {
-      return this._processed_outs.some(function (o) { return o.isWatchOnly; });
-    }
+    value: function (identity) { return belongsTo(this, identity); }
   }
 });
+
+function procOuts(acc, output) {
+  var tagOut = tagCoin(output);
+  acc.taggedOuts.push(tagOut);
+  if (tagOut.isWatchOnly) {
+    acc.toWatchOnly = true;
+  }
+  acc.toWatchOnly = acc.toWatchOnly || tagOut.isWatchOnly || false;
+  if (tagOut.coinType !== 'external') {
+    acc.internalReceive = acc.internalReceive + tagOut.amount;
+    if (tagOut.change === true) {
+      acc.changeAmount = acc.changeAmount + tagOut.amount;
+    }
+  }
+  acc.totalOut = acc.totalOut + tagOut.amount;
+  return acc;
+}
+
+function procIns(acc, input) {
+  var f = tagCoin.compose(unpackInput.bind(this));
+  var tagIn = f(input);
+  acc.taggedIns.push(tagIn);
+  acc.fromWatchOnly =  acc.fromWatchOnly || tagIn.isWatchOnly || false;
+  if (tagIn.coinType !== 'external') {
+    acc.internalSpend = acc.internalSpend + tagIn.amount;
+  }
+  acc.totalIn = acc.totalIn + tagIn.amount;
+  return acc;
+}
+
+function belongsTo(tx, id) {
+  return tx.processedInputs.concat(tx.processedOutputs).some(function (p) { return p.identity == id; });
+}
+// var memoizedBelongsTo = Helpers.memoize(belongsTo);
 
 function isAccount (x) {
   return !!x.xpub;
@@ -231,6 +182,43 @@ function unpackInput (input) {
   } else {
     return input.prev_out;
   }
+}
+
+function computeAmount(Tx) {
+  var am = 0;
+  switch (Tx.txType) {
+    case 'transfer':
+      am = Tx.internalReceive - Tx.changeAmount;
+      break;
+    case 'sent':
+      am = Tx.internalReceive - Tx.internalSpend;
+      break;
+    case 'received':
+      am = Tx.internalReceive - Tx.internalSpend;
+      break;
+    default:
+      am = Tx.result;
+  }
+  return am;
+}
+
+function computeTxType(Tx) {
+  var v = null;
+  var impactNoFee = Tx.result + Tx.fee;
+  switch (true) {
+    case impactNoFee === 0:
+      v = 'transfer';
+      break;
+    case impactNoFee < 0:
+      v = 'sent';
+      break;
+    case impactNoFee > 0:
+      v = 'received';
+      break;
+    default:
+      v = 'complex'
+  }
+  return v;
 }
 
 function isCoinBase (input) {
