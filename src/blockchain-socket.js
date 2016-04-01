@@ -6,9 +6,13 @@ function BlockchainSocket () {
   this.wsUrl = 'wss://blockchain.info/inv';
   this.headers = { 'Origin': 'https://blockchain.info' };
   this.socket;
-  this.reconnectInterval;
-  this.pingInterval;
-  this.reconnect;
+  this.reconnect = null;
+  // websocket pings the server every pingInterval
+  this.pingInterval = 15000; // 15 secs
+  this.pingIntervalPID = null;
+  // ping has a timeout of pingTimeout
+  this.pingTimeout = 5000; // 5 secs
+  this.pingTimeoutPID = null;
 }
 
 // hack to browserify websocket library
@@ -28,37 +32,49 @@ if (!(typeof window === 'undefined')) {
   };
 }
 
-
 BlockchainSocket.prototype.connect = function (onOpen, onMessage, onClose) {
   if(Helpers.tor()) return;
-
   this.reconnect = function () {
-    var connect = this.connectOnce.bind(this, onOpen, onMessage, onClose);
-    if (!this.socket || this.socket.readyState === 3) connect();
+    var connect = this._initialize.bind(this, onOpen, onMessage, onClose);
+    connect();
   }.bind(this);
-  var pingSocket = function () { this.send(this.msgPing()); }.bind(this);
   this.reconnect();
-  this.reconnectInterval = setInterval(this.reconnect, 20000);
-  this.pingInterval = setInterval(pingSocket, 30013);
 };
 
-BlockchainSocket.prototype.connectOnce = function (onOpen, onMessage, onClose) {
-  try {
-    this.socket = new WebSocket(this.wsUrl, [], { headers: this.headers });
-    this.socket.on('open', onOpen);
-    this.socket.on('message', onMessage);
-    this.socket.on('close', onClose);
-  } catch (e) {
-    console.log('Failed to connect to websocket');
+BlockchainSocket.prototype._initialize = function (onOpen, onMessage, onClose) {
+
+  if (!this.socket || this.socket.readyState === 3) {
+    try {
+      this.pingIntervalPID = setInterval(this.ping.bind(this), this.pingInterval);
+      this.socket = new WebSocket(this.wsUrl, [], { headers: this.headers });
+      this.socket.on('open', onOpen);
+      this.socket.on('message', onMessage);
+      this.socket.on('close', onClose);
+    } catch (e) {
+      console.log('Failed to connect to websocket');
+    }
   }
+};
+
+BlockchainSocket.prototype.ping = function (){
+  this.send(this.msgPing());
+  var connect = this.reconnect.bind(this);
+  var close = this.close.bind(this);
+  this.pingTimeoutPID = setTimeout(connect.compose(close), this.pingTimeout);
+};
+
+BlockchainSocket.prototype.close = function (){
+  if (this.socket) { this.socket.close();}
+  this.socket = null;
+  clearInterval(this.pingIntervalPID);
+  clearTimeout(this.pingTimeoutPID);
 };
 
 BlockchainSocket.prototype.send = function (message) {
   if(Helpers.tor()) return;
-
-  this.reconnect();
-  var send = function () {this.socket.send(message); }.bind(this);
-  if (this.socket && this.socket.readyState === 1) { send();}
+  if (this.socket && this.socket.readyState === 1) {
+    this.socket.send(message);
+  }
 };
 
 BlockchainSocket.prototype.msgWalletSub = function (myGUID) {
@@ -103,6 +119,5 @@ BlockchainSocket.prototype.msgOnOpen = function (guid, addresses, xpubs) {
          this.msgAddrSub(addresses) +
          this.msgXPUBSub(xpubs);
 };
-
 
 module.exports = BlockchainSocket;

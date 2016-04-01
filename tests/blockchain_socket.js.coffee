@@ -6,6 +6,7 @@ describe "Websocket", ->
     {
       on: (event, callback) ->
       send: (message) ->
+      close: () ->
       readyState: 1
       url: url
     }
@@ -72,6 +73,25 @@ describe "Websocket", ->
         it "should do nothing", ->
           # ws.socket is not defined, so nothing to spy on
           expect(() -> ws.send(message)).not.toThrow()
+
+    describe "close()", ->
+      beforeEach ->
+        ws.connect()
+
+      it "should clear interval and timeout", ->
+        ws.close()
+        expect(ws.pingTimeoutPID).toEqual(null)
+        expect(ws.socket).toEqual(null)
+
+    describe "ping()", ->
+      beforeEach ->
+        ws.connect()
+
+      it "should clear interval and timeout", ->
+        spyOn(ws, "send")
+        ws.ping()
+        expected = JSON.stringify({op: "ping"})
+        expect(ws.send).toHaveBeenCalledWith(expected)
 
     describe "msgWalletSub()", ->
       it "should subscribe to a guid", ->
