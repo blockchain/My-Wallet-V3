@@ -105,15 +105,6 @@ module.exports = (grunt) ->
         dest: 'build'
         ext: '.processed.js'
 
-    git_changelog:
-      default:
-        options:
-          file: 'Changelog.md',
-          app_name : 'Blockchain Wallet V3',
-          intro : 'Recent changes'
-          grep_commits: '^fix|^feat|^docs|^refactor|^chore|^test|BREAKING'
-          repo_url: 'https://github.com/blockchain/My-Wallet-V3'
-
     semistandard:
       app:
         src:
@@ -128,7 +119,6 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-contrib-jshint'
   grunt.loadNpmTasks 'grunt-preprocess'
   grunt.loadNpmTasks 'grunt-text-replace'
-  grunt.loadNpmTasks 'git-changelog'
   grunt.loadNpmTasks 'grunt-karma-coveralls'
   grunt.loadNpmTasks 'grunt-semistandard'
 
@@ -154,7 +144,6 @@ module.exports = (grunt) ->
       "browserify:production"
       "concat:mywallet"
       "uglify:mywallet"
-      "git_changelog"
     ]
 
   return

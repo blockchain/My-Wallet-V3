@@ -48,7 +48,7 @@
     "bs58check": "^1.0.5",
     "coffee-script": "~1.8.0",
     "coffeeify": "^1.0.0",
-    "git-changelog": "^0.1.8",
+    "git-changelog": "sjors/git-changelog#patch-1",
     "grunt": "^0.4.5",
     "grunt-browserify": "5.0.*",
     "grunt-cli": "^0.1.13",
