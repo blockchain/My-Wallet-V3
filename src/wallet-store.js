@@ -15,8 +15,6 @@ var WalletStore = (function () {
   var isPolling = false;
   var isRestoringWallet = false;
   var counter = 0;
-  var logout_timeout; //setTimeout return value for the automatic logout
-  var logout_ticker;
   var sync_pubkeys = false;
   var isSynchronizedWithServer = true;
   var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
@@ -110,20 +108,6 @@ var WalletStore = (function () {
     getCounter: function () {
       return counter;
     },
-    getLogoutTimeout: function () {
-      return logout_timeout;
-    },
-    setLogoutTimeout: function (value) {
-      if (!logout_ticker) {
-        logout_ticker = setInterval(function () {
-          if (Date.now() > logout_timeout) {
-            clearInterval(logout_ticker);
-            MyWallet.logout();
-          }
-        }, 20000);
-      }
-      logout_timeout = value;
-    },
     setSyncPubKeys: function (bool){
       sync_pubkeys = bool;
     },
@@ -162,10 +146,6 @@ var WalletStore = (function () {
     },
     setLogoutTime: function (logout_time) {
       MyWallet.wallet.logoutTime = logout_time;
-      this.resetLogoutTimeout();
-    },
-    resetLogoutTimeout: function () {
-      this.setLogoutTimeout(Date.now() + this.getLogoutTime());
     }
   };
 })();

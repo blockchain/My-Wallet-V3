@@ -83,7 +83,6 @@ function didDecryptWallet (success) {
 
   //We need to check if the wallet has changed
   MyWallet.getWallet();
-  WalletStore.resetLogoutTimeout();
   success();
 }
 
@@ -483,7 +482,6 @@ function syncWallet (successcallback, errorcallback) {
                 , function () {
                     WalletStore.setIsSynchronizedWithServer(true);
                     WalletStore.enableLogout();
-                    WalletStore.resetLogoutTimeout();
                     WalletStore.sendEvent('on_backup_wallet_success');
                     successcallback && successcallback();
                     }
