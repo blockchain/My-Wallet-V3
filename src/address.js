@@ -242,7 +242,7 @@ Address.prototype.signMessage = function (message, secondPassword) {
   var priv = this.isEncrypted ? getDecrypted() : this.priv;
   var keyPair = Helpers.privateKeyStringToKey(priv, 'base58');
 
-  return Bitcoin.message.sign(keyPair, message).toString('hex');
+  return Bitcoin.message.sign(keyPair, message).toString('base64');
 };
 
 Address.prototype.encrypt = function (cipher){
