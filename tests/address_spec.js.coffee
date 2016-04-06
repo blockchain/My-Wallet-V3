@@ -47,7 +47,9 @@ Helpers = {
   isBitcoinAddress: () -> false
   isKey: () -> true
   isBitcoinPrivateKey: () -> false
-  privateKeyStringToKey: (priv, format) -> { priv: priv }
+  privateKeyStringToKey: (priv, format) ->
+    priv: priv
+    getAddress: () -> '1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN'
 }
 
 RNG = {
