@@ -263,6 +263,18 @@ describe "Address", ->
         a._priv = null
         expect(a.signMessage.bind(a, 'message')).toThrow('Private key needed for message signing')
 
+      it 'should convert to base64', ->
+        spy = jasmine.createSpy('toString')
+        spyOn(Bitcoin.message, 'sign').and.returnValue({ toString: spy })
+        a.signMessage('message')
+        expect(spy).toHaveBeenCalledWith('base64')
+
+      it 'should try compressed format if the address does not match', ->
+        keyPair = { getAddress: (-> 'uncomp_address'), compressed: true }
+        spyOn(Helpers, 'privateKeyStringToKey').and.returnValue(keyPair)
+        a.signMessage('message')
+        expect(keyPair.compressed).toEqual(false)
+
     describe ".encrypt", ->
 
       it 'should fail when encryption fails', ->
