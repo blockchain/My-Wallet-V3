@@ -3,6 +3,8 @@ Bitcoin = require('bitcoinjs-lib')
 proxyquire = require('proxyquireify')(require)
 MyWallet = {
   wallet: {
+    sharedKey: 'shared_key'
+    pbkdf2_iterations: 5000
     getHistory: () ->
     syncWallet: () ->
   }
@@ -31,6 +33,9 @@ Bitcoin = {
             wif + "_private_key_buffer"
       }
   }
+  message: {
+    sign: (keyPair, message) -> message + '_signed'
+  }
 }
 
 Base58 = {
@@ -42,6 +47,9 @@ Helpers = {
   isBitcoinAddress: () -> false
   isKey: () -> true
   isBitcoinPrivateKey: () -> false
+  privateKeyStringToKey: (priv, format) ->
+    priv: priv
+    getAddress: () -> '1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN'
 }
 
 RNG = {
@@ -60,10 +68,14 @@ ImportExport =
     else if pass == "fail"
       error()
 
+WalletCrypto =
+  decryptSecretWithSecondPassword: (data, pw) -> data + '_decrypted_with_' + pw
+
 stubs = {
   './wallet': MyWallet,
   './rng' : RNG,
   './import-export': ImportExport,
+  './wallet-crypto': WalletCrypto,
   './helpers' : Helpers,
   'bitcoinjs-lib': Bitcoin,
   'bs58' : Base58
@@ -228,6 +240,28 @@ describe "Address", ->
       it "address is read only", ->
         a.address = "not allowed"
         expect(a.address).toEqual("1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN")
+
+    describe ".signMessage", ->
+
+      it 'should sign a message', ->
+        expect(a.signMessage('message')).toEqual('message_signed')
+
+      it 'should sign a message with the second password', ->
+        a._priv = 'encpriv'
+        spyOn(WalletCrypto, 'decryptSecretWithSecondPassword')
+        expect(a.signMessage('message', 'secpass')).toEqual('message_signed')
+        expect(WalletCrypto.decryptSecretWithSecondPassword).toHaveBeenCalledWith('encpriv', 'secpass', 'shared_key', 5000)
+
+      it 'should fail when not passed a bad message', ->
+        expect(a.signMessage.bind(a)).toThrow('Expected message to be a string')
+
+      it 'should fail when encrypted and second pw is not provided', ->
+        a._priv = 'encpriv'
+        expect(a.signMessage.bind(a, 'message')).toThrow('Second password needed to decrypt key')
+
+      it 'should fail when called on a watch only address', ->
+        a._priv = null
+        expect(a.signMessage.bind(a, 'message')).toThrow('Private key needed for message signing')
 
     describe ".encrypt", ->
 

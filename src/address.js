@@ -9,6 +9,7 @@ var Helpers  = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 var shared   = require('./shared');
 var ImportExport = require('./import-export');
+var WalletCrypto = require('./wallet-crypto');
 ////////////////////////////////////////////////////////////////////////////////
 // Address class
 function Address (object){
@@ -228,6 +229,21 @@ Address.prototype.toJSON = function (){
     created_device_version : this.created_device_version
   };
   return address;
+};
+
+Address.prototype.signMessage = function (message, secondPassword) {
+  if (!Helpers.isString(message)) throw 'Expected message to be a string';
+  if (this.isWatchOnly) throw 'Private key needed for message signing';
+  if (this.isEncrypted && secondPassword == null) throw 'Second password needed to decrypt key';
+
+  var getDecrypted = WalletCrypto.decryptSecretWithSecondPassword.bind(null,
+    this.priv, secondPassword, MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
+
+  var priv = this.isEncrypted ? getDecrypted() : this.priv;
+  var keyPair = Helpers.privateKeyStringToKey(priv, 'base58');
+
+  if (keyPair.getAddress() !== this.address) keyPair.compressed = false;
+  return Bitcoin.message.sign(keyPair, message).toString('base64');
 };
 
 Address.prototype.encrypt = function (cipher){
