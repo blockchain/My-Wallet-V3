@@ -10,7 +10,8 @@ var Helpers     = require('./helpers');
 
 function RNG () {
   this.ACTION    = 'GET';
-  this.URL       = 'https://api.blockchain.info/v2/randombytes'
+  // API is undefined at this point
+  // this.URL       = API.API_ROOT_URL + 'v2/randombytes'
   this.FORMAT    = 'hex';  // raw, hex, base64
   this.BYTES     = 32;
 }
@@ -92,7 +93,8 @@ RNG.prototype.getServerEntropy = function (nBytes) {
   nBytes = Helpers.isPositiveInteger(nBytes) ? nBytes : this.BYTES;
   var request = new XMLHttpRequest();
   var data = { bytes: nBytes, format: this.FORMAT };
-  var url = this.URL + '?' + API.encodeFormData(data);
+  var url = API.API_ROOT_URL + 'v2/randombytes'
+ + '?' + API.encodeFormData(data);
 
   request.open(this.ACTION, url, false);
   request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
