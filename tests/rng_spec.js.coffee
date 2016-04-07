@@ -135,7 +135,7 @@ describe "RNG", ->
       RNG.getServerEntropy(32)
       expect(request.open).toHaveBeenCalled()
       expect(request.open.calls.argsFor(0)[0]).toEqual("GET")
-      expect(request.open.calls.argsFor(0)[1]).toContain("api.blockchain.info")
+      expect(request.open.calls.argsFor(0)[1]).toContain("v2/randombytes")
 
     it "returns a buffer is successful", ->
       res = RNG.getServerEntropy(32)
