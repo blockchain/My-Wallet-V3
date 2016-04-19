@@ -414,6 +414,9 @@ function parseValueBitcoin (valueString) {
 Helpers.precisionToSatoshiBN = function (x) {
   return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, shared.sShift(shared.getBTCSymbol())).toString()));
 };
-////////////////////////////////////////////////////////////////////////////////
+
+Helpers.verifyMessage = function (address, signature, message) {
+  return Bitcoin.message.verify(address, signature, message);
+};
 
 module.exports = Helpers;
