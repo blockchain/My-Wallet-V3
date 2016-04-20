@@ -1,12 +1,12 @@
 'use strict';
 
 module.exports = KeyChain;
-////////////////////////////////////////////////////////////////////////////////
+
 var Bitcoin = require('bitcoinjs-lib');
 var assert = require('assert');
 var Helpers = require('./helpers');
 
-////////////////////////////////////////////////////////////////////////////////
+
 // keychain
 function KeyChain (extendedKey, index, cache) {
   this._chainRoot = null;

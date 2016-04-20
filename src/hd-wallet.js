@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = HDWallet;
-////////////////////////////////////////////////////////////////////////////////
+
 var Bitcoin = require('bitcoinjs-lib');
 var assert = require('assert');
 var Helpers = require('./helpers');
@@ -9,7 +9,7 @@ var HDAccount = require('./hd-account');
 var BIP39 = require('bip39');
 var RNG = require('./rng');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
-////////////////////////////////////////////////////////////////////////////////
+
 // Address class
 function HDWallet (object) {
 
@@ -115,7 +115,7 @@ Object.defineProperties(HDWallet.prototype, {
     }
   }
 });
-////////////////////////////////////////////////////////////////////////////////
+
 // non exposed functions
 function decryptMnemonic (seedHex, cipher) {
   if (cipher) {
@@ -143,7 +143,7 @@ function getMasterHex (seedHex, bip39Password, cipher) {
   var passphrase = decryptPassphrase(bip39Password, cipher);
   return BIP39.mnemonicToSeed(mnemonic, passphrase);
 }
-////////////////////////////////////////////////////////////////////////////////
+
 // Constructors
 
 // we need 3 actions
@@ -202,7 +202,7 @@ HDWallet.prototype.newAccount = function (label, cipher) {
   this._accounts.push(account);
   return this;
 };
-////////////////////////////////////////////////////////////////////////////////
+
 // JSON serializer
 
 HDWallet.prototype.toJSON = function () {
@@ -223,7 +223,7 @@ HDWallet.reviver = function (k, v) {
   return v;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+
 // methods
 
 HDWallet.prototype.verifyMnemonic = function () {
@@ -245,7 +245,7 @@ HDWallet.prototype.activeAccount = function (xpub) {
   return r;
 };
 
-////////////////////////////////////////////////////////////////////////////////
+
 // account managment
 
 HDWallet.prototype.encrypt = function (cipher) {

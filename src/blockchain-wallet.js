@@ -2,7 +2,7 @@
 
 module.exports = Wallet;
 
-////////////////////////////////////////////////////////////////////////////////
+
 // dependencies
 var assert = require('assert');
 var Bitcoin = require('bitcoinjs-lib');
@@ -21,7 +21,7 @@ var KeyRing = require('./keyring');
 var TxList = require('./transaction-list');
 var Block = require('./bitcoin-block');
 
-////////////////////////////////////////////////////////////////////////////////
+
 // Wallet
 
 function Wallet (object) {
@@ -35,7 +35,7 @@ function Wallet (object) {
   this._sharedKey = obj.sharedKey;
   this._double_encryption = obj.double_encryption || false;
   this._dpasswordhash = obj.dpasswordhash;
-  //options
+  // options
   this._pbkdf2_iterations = obj.options.pbkdf2_iterations;
   this._fee_per_kb = obj.options.fee_per_kb == null ? 10000 : obj.options.fee_per_kb;
   this._html5_notifications = obj.options.html5_notifications;
@@ -317,7 +317,7 @@ Object.defineProperties(Wallet.prototype, {
   }
 });
 
-////////////////////////////////////////////////////////////////////////////////
+
 // update-wallet-balances after multiaddr call
 Wallet.prototype._updateWalletInfo = function (obj) {
 
@@ -384,7 +384,7 @@ Wallet.prototype.fetchTransactions = function () {
   return API.getHistory(this.context, 0, this.txList.fetched, this.txList.loadNumber)
     .then(this._updateWalletInfo.bind(this));
 };
-////////////////////////////////////////////////////////////////////////////////
+
 
 Wallet.prototype.getBalancesForArchived = function () {
   var updateBalance = function (key) {
@@ -402,7 +402,7 @@ Wallet.prototype.getBalancesForArchived = function () {
 
   return API.getHistory(archivedAddrs, 0 , 0, 1).then(updateBalances.bind(this));
 };
-////////////////////////////////////////////////////////////////////////////////
+
 Wallet.prototype.toJSON = function () {
 
   function addressBookToJSON (addressBook) {

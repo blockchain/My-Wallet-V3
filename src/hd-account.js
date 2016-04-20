@@ -1,13 +1,13 @@
 'use strict';
 
 module.exports = HDAccount;
-////////////////////////////////////////////////////////////////////////////////
+
 var Bitcoin = require('bitcoinjs-lib');
 var assert = require('assert');
 var Helpers = require('./helpers');
 var KeyRing = require('./keyring');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
-////////////////////////////////////////////////////////////////////////////////
+
 // HDAccount Class
 
 function HDAccount (object) {
@@ -37,7 +37,7 @@ function HDAccount (object) {
   this._index = Helpers.isPositiveInteger(obj.index) ? obj.index : null;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+
 // PUBLIC PROPERTIES
 
 Object.defineProperties(HDAccount.prototype, {
@@ -195,7 +195,7 @@ Object.defineProperties(HDAccount.prototype, {
   }
 });
 
-////////////////////////////////////////////////////////////////////////////////
+
 // CONSTRUCTORS
 
 /* BIP 44 defines the following 5 levels in BIP32 path:
@@ -248,7 +248,7 @@ HDAccount.factory = function (o) {
     return o;
   }
 };
-////////////////////////////////////////////////////////////////////////////////
+
 // JSON SERIALIZER
 
 HDAccount.prototype.toJSON = function () {
@@ -271,7 +271,7 @@ HDAccount.reviver = function (k, v) {
   return v;
 };
 
-////////////////////////////////////////////////////////////////////////////////
+
 
 HDAccount.prototype.incrementReceiveIndex = function () {
   this._receiveIndex++;
@@ -283,7 +283,7 @@ HDAccount.prototype.incrementReceiveIndexIfLast = function (index) {
   }
   return this;
 };
-////////////////////////////////////////////////////////////////////////////////
+
 // address labels
 HDAccount.prototype.setLabelForReceivingAddress = function (index, label) {
   assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');

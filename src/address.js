@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = Address;
-////////////////////////////////////////////////////////////////////////////////
+
 var Base58 = require('bs58');
 var RNG = require('./rng');
 var Bitcoin = require('bitcoinjs-lib');
@@ -10,7 +10,7 @@ var MyWallet = require('./wallet'); // This cyclic import should be avoided once
 var shared = require('./shared');
 var ImportExport = require('./import-export');
 var WalletCrypto = require('./wallet-crypto');
-////////////////////////////////////////////////////////////////////////////////
+
 // Address class
 function Address (object) {
   // private members
@@ -18,7 +18,7 @@ function Address (object) {
   this._addr = obj.addr;
   this._priv = obj.priv;
   this._label = obj.label;
-  this._tag = obj.tag || 0;  //default is non-archived
+  this._tag = obj.tag || 0;  // default is non-archived
   this._created_time = obj.created_time;
   this._created_device_name = obj.created_device_name;
   this._created_device_version = obj.created_device_version;
@@ -167,7 +167,7 @@ Address.import = function (key, label) {
       throw 'Error: address import format not supported';
   }
 
-  //initialization
+  // initialization
   var address = new Address(object);
   address._label = label;
   address._tag = 0; // non-archived

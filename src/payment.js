@@ -10,9 +10,9 @@ var KeyRing = require('./keyring');
 var EventEmitter = require('events');
 var util = require('util');
 
-////////////////////////////////////////////////////////////////////////////////
-//// Payment Class
-////////////////////////////////////////////////////////////////////////////////
+
+// Payment Class
+
 
 function Payment (payment) {
   EventEmitter.call(this);
@@ -91,7 +91,7 @@ function Payment (payment) {
   // payment.transaction    :: Transaction
 }
 util.inherits(Payment, EventEmitter);
-////////////////////////////////////////////////////////////////////////////////
+
 // Payment instance methods (can be chained)
 Payment.prototype.to = function (destinations) {
   this.payment = this.payment.then(Payment.to(destinations));
@@ -175,8 +175,8 @@ Payment.prototype.printJSON = function () {
   return this;
 };
 
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
+
+
 Payment.return = function (payment) {
   var p = payment ? payment : {}
   return Promise.resolve(p);
@@ -480,13 +480,13 @@ Payment.publish = function () {
   };
 };
 
-////////////////////////////////////////////////////////////////////////////////
+
 module.exports = Payment;
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
+
+
 // Helper functions
 
-//////////////////////////////////////////////////////////////////////////////
+
 // getUnspentCoins :: [address] -> Promise [coins]
 function getUnspentCoins (addressList) {
 
@@ -514,7 +514,7 @@ function getKey(priv, addr) {
   return key;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+
 // obtain private key for an address
 // from Address
 function getKeyForAddress (password, addr) {
@@ -524,7 +524,7 @@ function getKeyForAddress (password, addr) {
         MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
   return getKey(privateKeyBase58, addr);
 }
-////////////////////////////////////////////////////////////////////////////////
+
 // getXPRIV :: password -> index -> xpriv
 function getXPRIV (password, accountIndex) {
   var fromAccount = MyWallet.wallet.hdwallet.accounts[accountIndex];
@@ -533,14 +533,14 @@ function getXPRIV (password, accountIndex) {
     : WalletCrypto.decryptSecretWithSecondPassword(fromAccount.extendedPrivateKey, password,
       MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
 }
-////////////////////////////////////////////////////////////////////////////////
+
 // getKeyForPath :: xpriv -> path -> ECPair
 function getKeyForPath(extendedPrivateKey, neededPrivateKeyPath) {
   var keyring = new KeyRing(extendedPrivateKey);
   return keyring.privateKeyFromPath(neededPrivateKeyPath).keyPair;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+
 // getPrivateKeys :: password -> payment -> [private key]
 function getPrivateKeys (password, payment) {
   var transaction = payment.transaction;

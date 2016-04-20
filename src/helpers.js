@@ -176,7 +176,7 @@ Helpers.maybeCompose = function (f, g) {
   } else {
     if (f instanceof Function) { return f};
     if (g instanceof Function) { return g};
-    //otherwise
+    // otherwise
     return f;
   };
 };
@@ -197,7 +197,7 @@ Helpers.guessFee = function (nInputs, nOutputs, feePerKb) {
   return Math.ceil(feePerKb * (sizeBytes / 1000));
 };
 
-////////////////////////////////////////////////////////////////////////////////
+
 // password scorer
 Helpers.scorePassword = function (password) {
 
@@ -301,13 +301,13 @@ Helpers.privateKeyStringToKey = function (value, format) {
     key_bytes = Helpers.buffertoByteArray(parseMiniKey(value));
   } else if (format == 'sipa') {
     var tbytes = Helpers.buffertoByteArray(Base58.decode(value));
-    tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
+    tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
     tbytes.shift();
     key_bytes = tbytes.slice(0, tbytes.length - 4);
 
   } else if (format == 'compsipa') {
     var tbytes = Helpers.buffertoByteArray(Base58.decode(value));
-    tbytes.shift(); //extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
+    tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
     tbytes.shift();
     tbytes.pop();
     key_bytes = tbytes.slice(0, tbytes.length - 4);
@@ -324,7 +324,7 @@ Helpers.detectPrivateKeyFormat = function (key) {
     return 'sipa';
   }
 
-  //52 character compressed starts with L or K
+  // 52 character compressed starts with L or K
   if (/^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key)) {
     return 'compsipa';
   }

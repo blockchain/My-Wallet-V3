@@ -81,13 +81,13 @@ function socketConnect () {
 // used two times
 function didDecryptWallet (success) {
 
-  //We need to check if the wallet has changed
+  // We need to check if the wallet has changed
   MyWallet.getWallet();
   success();
 }
 
-//Fetch a new wallet from the server
-//success(modified true/false)
+// Fetch a new wallet from the server
+// success(modified true/false)
 // used locally and iOS
 MyWallet.getWallet = function (success, error) {
   var data = {method: 'wallet.aes.json', format: 'json'};
@@ -120,7 +120,7 @@ MyWallet.getWallet = function (success, error) {
   });
 };
 
-////////////////////////////////////////////////////////////////////////////////
+
 
 function decryptAndInitializeWallet (success, error, decrypt_success, build_hd_success) {
   assert(success, 'Success callback required');
@@ -147,7 +147,7 @@ function decryptAndInitializeWallet (success, error, decrypt_success, build_hd_s
       if (rootContainer) {
         WalletStore.setPbkdf2Iterations(rootContainer.pbkdf2_iterations);
       }
-      //If we don't have a checksum then the wallet is probably brand new - so we can generate our own
+      // If we don't have a checksum then the wallet is probably brand new - so we can generate our own
       if (WalletStore.getPayloadChecksum() == null || WalletStore.getPayloadChecksum().length == 0) {
         WalletStore.setPayloadChecksum(WalletStore.generatePayloadChecksum());
       }
@@ -161,7 +161,7 @@ function decryptAndInitializeWallet (success, error, decrypt_success, build_hd_s
   );
 }
 
-////////////////////////////////////////////////////////////////////////////////
+
 
 // used in the frontend
 MyWallet.makePairingCode = function (success, error) {
@@ -178,7 +178,7 @@ MyWallet.makePairingCode = function (success, error) {
   }
 };
 
-////////////////////////////////////////////////////////////////////////////////
+
 MyWallet.login = function (user_guid, shared_key, inputedPassword, twoFA, success, needs_two_factor_code,
                            wrong_two_factor_code, authorization_required, other_error, fetch_success,
                            decrypt_success, build_hd_success) {
@@ -313,7 +313,7 @@ MyWallet.login = function (user_guid, shared_key, inputedPassword, twoFA, succes
     }
   }
 };
-////////////////////////////////////////////////////////////////////////////////
+
 
 // used locally
 MyWallet.pollForSessionGUID = function (successCallback) {
@@ -343,7 +343,7 @@ MyWallet.pollForSessionGUID = function (successCallback) {
   API.request('GET', 'wallet/poll-for-session-guid', data, true, false).then(success).catch(error);
 };
 // used locally
-////////////////////////////////////////////////////////////////////////////////
+
 
 MyWallet.initializeWallet = function (pw, success, other_error, decrypt_success, build_hd_success) {
   assert(success, 'Success callback required');
@@ -374,8 +374,8 @@ MyWallet.initializeWallet = function (pw, success, other_error, decrypt_success,
   );
 };
 
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
+
+
 
 // used on iOS
 MyWallet.getIsInitialized = function () {
@@ -389,7 +389,7 @@ function setIsInitialized () {
   isInitialized = true;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+
 // This should replace backup functions
 function syncWallet (successcallback, errorcallback) {
 
@@ -430,7 +430,7 @@ function syncWallet (successcallback, errorcallback) {
       throw 'Error encrypting the JSON output';
     }
 
-    //Now Decrypt the it again to double check for any possible corruption
+    // Now Decrypt the it again to double check for any possible corruption
     WalletCrypto.decryptWallet(crypted, WalletStore.getPassword(), function (obj) {
       try {
         var oldChecksum = WalletStore.getPayloadChecksum();

@@ -4,22 +4,21 @@ var MyWallet = require('./wallet');
 var WalletCrypto = require('./wallet-crypto');
 
 var WalletStore = (function () {
-  var password; //Password
-  var guid; //Wallet identifier
+  var password; // Password
+  var guid; // Wallet identifier
   var language = 'en';
   var pbkdf2_iterations = 5000; // pbkdf2_interations of the main password (to encrypt the full payload)
   var disable_logout = false;
-  var real_auth_type = 0; //The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
-  var encrypted_wallet_data; //Encrypted wallet data (Base64, AES 256)
-  var payload_checksum; //SHA256 hash of the current wallet.aes.json
+  var real_auth_type = 0; // The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
+  var encrypted_wallet_data; // Encrypted wallet data (Base64, AES 256)
+  var payload_checksum; // SHA256 hash of the current wallet.aes.json
   var isPolling = false;
   var isRestoringWallet = false;
   var counter = 0;
   var sync_pubkeys = false;
   var isSynchronizedWithServer = true;
-  var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
+  var event_listeners = []; // Emits Did decrypt wallet event (used on claim page)
 
-  ////////////////////////////////////////////////////////////////////////////
   return {
     setPbkdf2Iterations: function (iterations) {
       pbkdf2_iterations = iterations;

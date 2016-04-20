@@ -139,7 +139,7 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
     // var data = MyWallet.makeCustomWalletJSON(null, guid, sharedKey);
     var data = JSON.stringify(MyWallet.wallet, null, 2);
 
-    //Everything looks ok, Encrypt the JSON output
+    // Everything looks ok, Encrypt the JSON output
     var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.wallet.defaultPbkdf2Iterations,  MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0);
 
     if (crypted.length == 0) {
@@ -148,14 +148,14 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
 
     decryptWalletProgress && decryptWalletProgress();
 
-    //Now Decrypt the it again to double check for any possible corruption
+    // Now Decrypt the it again to double check for any possible corruption
     try {
       WalletCrypto.decryptWalletSync(crypted, password);
     } catch (e) {
       return reject(e);
     }
 
-    //SHA256 new_checksum verified by server in case of corruption during transit
+    // SHA256 new_checksum verified by server in case of corruption during transit
     var new_checksum = WalletCrypto.sha256(crypted).toString('hex');
 
     extra = extra || {};

@@ -1,14 +1,14 @@
 'use strict';
 
 module.exports = new API();
-////////////////////////////////////////////////////////////////////////////////
+
 var assert = require('assert');
 var Helpers = require('./helpers');
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var MyWallet = require('./wallet');
 var Bitcoin = require('bitcoinjs-lib');
-////////////////////////////////////////////////////////////////////////////////
+
 // API class
 function API () {
   // private members
@@ -28,7 +28,7 @@ API.prototype.encodeFormData = function (data) {
   return encoded;
 };
 
-////////////////////////////////////////////////////////////////////////////////
+
 API.prototype.request = function (action, method, data, withCred) {
   var url = this.ROOT_URL + method;
   var body = this.encodeFormData(data);
@@ -76,7 +76,7 @@ API.prototype.request = function (action, method, data, withCred) {
     .then(handleResponse);
 };
 
-////////////////////////////////////////////////////////////////////////////////
+
 API.prototype.retry = function (f, n) {
   var self = this;
   var i = n === null || n === undefined ? this.AJAX_RETRY_DEFAULT : n;
@@ -90,10 +90,10 @@ API.prototype.retry = function (f, n) {
   }
 };
 
-////////////////////////////////////////////////////////////////////////////////
+
 // sync clocks with network time protocol
 API.prototype.handleNTPResponse = function (obj, clientTime) {
-  //Calculate serverTimeOffset using NTP algo
+  // Calculate serverTimeOffset using NTP algo
   var nowTime = (new Date()).getTime();
   if (obj.clientTimeDiff && obj.serverTime) {
     var serverClientResponseDiffTime = nowTime - obj.serverTime;
@@ -108,7 +108,7 @@ API.prototype.handleNTPResponse = function (obj, clientTime) {
   }
 };
 
-////////////////////////////////////////////////////////////////////////////////
+
 // Definition of API
 API.prototype.getBalances = function (addresses) {
   var data = {
@@ -195,8 +195,8 @@ API.prototype.securePost = function (url, data) {
   if (!data.sharedKey) {
     var sharedKey = MyWallet.wallet ? MyWallet.wallet.sharedKey : undefined;
     if (!Helpers.isValidSharedKey(sharedKey)) throw 'Shared key is invalid';
-    //Rather than sending the shared key plain text
-    //send a hash using a totp scheme
+    // Rather than sending the shared key plain text
+    // send a hash using a totp scheme
     var now = new Date().getTime();
     var timestamp = parseInt((now - this.SERVER_TIME_OFFSET) / 10000);
     var SKHashHex = WalletCrypto.sha256(sharedKey.toLowerCase() + timestamp).toString('hex');
@@ -225,7 +225,7 @@ API.prototype.securePostCallbacks = function (url, data, success, error) {
 };
 
 
-//01000000013e095250cb35129c7dee081b8c89b4bff69f72222a25c45ba9747a704a6d0bcd010000006b4830450221009b4f6619b1499ea19494aec34c36fdeac9146b9f87f010b7ebf1eb8a1b590c6e02202f5d9b0cfa4107d586b5b370494b9932eba1411468af06e431001932c12bf245012103cf91e6b06d1a2432721559a010ee67e98f8ef0421b15cca66dc9717ac1af8d1effffffff0210270000000000001976a91402549a8a872fbe54721a899e5ac2a87daac2358088acf0ba0400000000001976a9148ee77b3dd0e33783c11a6c28473d16e9b63dc38588ac00000000
+// 01000000013e095250cb35129c7dee081b8c89b4bff69f72222a25c45ba9747a704a6d0bcd010000006b4830450221009b4f6619b1499ea19494aec34c36fdeac9146b9f87f010b7ebf1eb8a1b590c6e02202f5d9b0cfa4107d586b5b370494b9932eba1411468af06e431001932c12bf245012103cf91e6b06d1a2432721559a010ee67e98f8ef0421b15cca66dc9717ac1af8d1effffffff0210270000000000001976a91402549a8a872fbe54721a899e5ac2a87daac2358088acf0ba0400000000001976a9148ee77b3dd0e33783c11a6c28473d16e9b63dc38588ac00000000
 API.prototype.pushTx = function (txHex, note) {
   assert(txHex, 'transaction required');
 

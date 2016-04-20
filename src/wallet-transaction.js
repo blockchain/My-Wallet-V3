@@ -1,11 +1,11 @@
 'use strict';
 
 module.exports = Tx;
-////////////////////////////////////////////////////////////////////////////////
+
 var Helpers = require('./helpers');
 var MyWallet = require('./wallet');
 var WalletStore = require('./wallet-store');
-////////////////////////////////////////////////////////////////////////////////
+
 function Tx (object) {
   var obj = object || {};
   // original properties
