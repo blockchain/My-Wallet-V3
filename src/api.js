@@ -49,7 +49,7 @@ API.prototype.request = function (action, method, data, withCred) {
 
   var checkStatus = function (response) {
     if (response.status >= 200 && response.status < 300) {
-      if(
+      if (
         response.headers.get('content-type') &&
         response.headers.get('content-type').indexOf('application/json') > -1
       ) {
@@ -123,7 +123,7 @@ API.prototype.getBalances = function (addresses){
 API.prototype.getBalanceForRedeemCode = function (privatekey){
 
   var format = Helpers.detectPrivateKeyFormat(privatekey);
-  if(format == null) { return Promise.reject('Unknown private key format'); }
+  if (format == null) { return Promise.reject('Unknown private key format'); }
   var privateKeyToSweep = Helpers.privateKeyStringToKey(privatekey, format);
   var aC = new ECPair(privateKeyToSweep.d, null, {compressed: true}).getAddress();
   var aU = new ECPair(privateKeyToSweep.d, null, {compressed: false}).getAddress();

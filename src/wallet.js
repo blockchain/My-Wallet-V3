@@ -234,7 +234,7 @@ MyWallet.login = function ( user_guid
     var error = function (e) {
        console.log(e);
        var obj = 'object' === typeof e ? e : JSON.parse(e);
-       if(obj && obj.initial_error && !obj.authorization_required) {
+       if (obj && obj.initial_error && !obj.authorization_required) {
          other_error(obj.initial_error);
          return;
        }
@@ -255,7 +255,7 @@ MyWallet.login = function ( user_guid
 
   var tryToFetchWalletWith2FA = function (guid, two_factor_auth, successCallback) {
 
-    if(Helpers.isString(two_factor_auth)) {
+    if (Helpers.isString(two_factor_auth)) {
       two_factor_auth = {
         type: null,
         code: two_factor_auth
@@ -309,12 +309,12 @@ MyWallet.login = function ( user_guid
     MyWallet.initializeWallet(inputedPassword, success, other_error, decrypt_success, build_hd_success);
   }
 
-  if(twoFA == null) {
+  if (twoFA == null) {
     tryToFetchWalletJSON(user_guid, didFetchWalletJSON)
   } else {
     // If 2FA is enabled and we already fetched the wallet before, don't fetch
     // it again
-    if(user_guid === WalletStore.getGuid() && WalletStore.getEncryptedWalletData()) {
+    if (user_guid === WalletStore.getGuid() && WalletStore.getEncryptedWalletData()) {
       MyWallet.initializeWallet(inputedPassword, success, other_error, decrypt_success, build_hd_success);
     } else {
       tryToFetchWalletWith2FA(user_guid, twoFA, didFetchWalletJSON)

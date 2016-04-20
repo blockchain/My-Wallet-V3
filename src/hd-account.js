@@ -46,7 +46,7 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function () { return this._label;},
     set: function (str) {
-      if(Helpers.isValidLabel(str)){
+      if (Helpers.isValidLabel(str)){
         this._label = str;
         MyWallet.syncWallet();
       }else{
@@ -58,7 +58,7 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function () { return this._balance;},
     set: function (num) {
-      if(Helpers.isPositiveNumber(num))
+      if (Helpers.isPositiveNumber(num))
         this._balance = num;
       else
         throw 'Error: account.balance must be a positive number';
@@ -67,7 +67,7 @@ Object.defineProperties(HDAccount.prototype, {
   'n_tx': {
     get: function () { return this._n_tx;},
     set: function (num) {
-      if(Helpers.isPositiveInteger(num))
+      if (Helpers.isPositiveInteger(num))
         this._n_tx = num;
       else
         throw 'Error: account.n_tx must be a positive integer';
@@ -77,10 +77,10 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function () { return this._archived;},
     set: function (value) {
-      if(Helpers.isBoolean(value)){
+      if (Helpers.isBoolean(value)){
         this._archived = value;
         MyWallet.syncWallet();
-        if(!value) { // Unarchive
+        if (!value) { // Unarchive
           // we should define a way to update only the account, not the whole wallet
           MyWallet.wallet.getHistory();
         }
@@ -99,7 +99,7 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function () { return this._receiveIndex;},
     set: function (value) {
-      if(Helpers.isPositiveInteger(value))
+      if (Helpers.isPositiveInteger(value))
         this._receiveIndex = value;
       else
         throw 'Error: account.receiveIndex must be a number';
@@ -109,7 +109,7 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function () { return this._lastUsedReceiveIndex;},
     set: function (value) {
-      if(Helpers.isPositiveInteger(value))
+      if (Helpers.isPositiveInteger(value))
         this._lastUsedReceiveIndex = value;
       else
         throw 'Error: account.lastUsedReceiveIndex must be a number';
@@ -132,7 +132,7 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function () { return this._changeIndex;},
     set: function (value) {
-      if(Helpers.isPositiveInteger(value))
+      if (Helpers.isPositiveInteger(value))
         this._changeIndex = value;
       else
         throw 'Error: account.changeIndex must be a number';
@@ -285,7 +285,7 @@ HDAccount.prototype.incrementReceiveIndexIfLast = function (index) {
 HDAccount.prototype.setLabelForReceivingAddress = function (index, label) {
   assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
 
-  if(!Helpers.isValidLabel(label)) {
+  if (!Helpers.isValidLabel(label)) {
     return Promise.reject('NOT_ALPHANUMERIC');
     // Error: address label must be alphanumeric
   } else if (index - this.lastUsedReceiveIndex >= 19) {
@@ -317,7 +317,7 @@ HDAccount.prototype.receiveAddressAtIndex = function (index) {
 };
 
 HDAccount.prototype.encrypt = function (cipher){
-  if(!this._xpriv) return this;
+  if (!this._xpriv) return this;
   var xpriv = cipher? cipher(this._xpriv) : this._xpriv;
   if (!xpriv) { throw 'Error Encoding account extended private key'; }
   this._temporal_xpriv = xpriv;
@@ -325,7 +325,7 @@ HDAccount.prototype.encrypt = function (cipher){
 };
 
 HDAccount.prototype.decrypt = function (cipher){
-  if(!this._xpriv) return this;
+  if (!this._xpriv) return this;
   var xpriv = cipher? cipher(this._xpriv) : this._xpriv;
   if (!xpriv) { throw 'Error Decoding account extended private key'; }
   this._temporal_xpriv = xpriv;

@@ -33,7 +33,7 @@ if (!(typeof window === 'undefined')) {
 }
 
 BlockchainSocket.prototype.connect = function (onOpen, onMessage, onClose) {
-  if(Helpers.tor()) return;
+  if (Helpers.tor()) return;
   this.reconnect = function () {
     var connect = this._initialize.bind(this, onOpen, onMessage, onClose);
     connect();
@@ -71,7 +71,7 @@ BlockchainSocket.prototype.close = function (){
 };
 
 BlockchainSocket.prototype.send = function (message) {
-  if(Helpers.tor()) return;
+  if (Helpers.tor()) return;
   if (this.socket && this.socket.readyState === 1) {
     this.socket.send(message);
   }

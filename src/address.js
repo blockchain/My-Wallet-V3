@@ -46,7 +46,7 @@ Object.defineProperties(Address.prototype, {
     configurable: false,
     get: function () { return this._label;},
     set: function (str) {
-      if(Helpers.isValidLabel(str) || str == null) {
+      if (Helpers.isValidLabel(str) || str == null) {
         this._label = str === ''? undefined : str;
         MyWallet.syncWallet();
       }
@@ -70,7 +70,7 @@ Object.defineProperties(Address.prototype, {
     configurable: false,
     get: function () { return this._balance;},
     set: function (num) {
-      if(Helpers.isPositiveNumber(num))
+      if (Helpers.isPositiveNumber(num))
         this._balance = num;
       else
         throw 'Error: address.balance must be a positive number';
@@ -80,7 +80,7 @@ Object.defineProperties(Address.prototype, {
     configurable: false,
     get: function () { return this._totalSent;},
     set: function (num) {
-      if(Helpers.isPositiveNumber(num))
+      if (Helpers.isPositiveNumber(num))
         this._totalSent = num;
       else
         throw 'Error: address.totalSent must be a positive number';
@@ -90,7 +90,7 @@ Object.defineProperties(Address.prototype, {
     configurable: false,
     get: function () { return this._totalReceived;},
     set: function (num) {
-      if(Helpers.isPositiveNumber(num))
+      if (Helpers.isPositiveNumber(num))
         this._totalReceived = num;
       else
         throw 'Error: address.totalReceived must be a positive number';
@@ -112,7 +112,7 @@ Object.defineProperties(Address.prototype, {
     configurable: false,
     get: function () { return this._tag === 2;},
     set: function (value) {
-      if(Helpers.isBoolean(value)) {
+      if (Helpers.isBoolean(value)) {
         if (value) { // Archive:
           this._tag = 2;
         } else { // Unarchive:

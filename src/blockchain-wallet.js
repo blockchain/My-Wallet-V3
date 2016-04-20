@@ -130,7 +130,7 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () { return this._totalSent;},
     set: function (value) {
-      if(Helpers.isPositiveNumber(value))
+      if (Helpers.isPositiveNumber(value))
         this._totalSent = value;
       else
         throw 'Error: wallet.totalSent must be a positive number';
@@ -140,7 +140,7 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () { return this._totalReceived;},
     set: function (value) {
-      if(Helpers.isPositiveNumber(value))
+      if (Helpers.isPositiveNumber(value))
         this._totalReceived = value;
       else
         throw 'Error: wallet.totalReceived must be a positive number';
@@ -150,7 +150,7 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () { return this._finalBalance;},
     set: function (value) {
-      if(Helpers.isPositiveNumber(value))
+      if (Helpers.isPositiveNumber(value))
         this._finalBalance = value;
       else
         throw 'Error: wallet.finalBalance must be a positive number';
@@ -164,7 +164,7 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () { return this._numberTxTotal;},
     set: function (value) {
-      if(Helpers.isPositiveInteger(value))
+      if (Helpers.isPositiveInteger(value))
         this._numberTxTotal = value;
       else
         throw 'Error: wallet.numberTx must be a positive integer';
@@ -290,7 +290,7 @@ Object.defineProperties(Wallet.prototype, {
     get: function () { return this._latestBlock;},
     set: function (json) {
       var b = Block.fromJSON(json)
-      if(b != null) {
+      if (b != null) {
         this._latestBlock = b;
         WalletStore.sendEvent('did_set_latest_block');
       }
@@ -487,7 +487,7 @@ Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) 
 };
 
 Wallet.prototype.containsLegacyAddress = function (address) {
-  if(Helpers.isInstanceOf(address, Address)) address = address.address;
+  if (Helpers.isInstanceOf(address, Address)) address = address.address;
   return this._addresses.hasOwnProperty(address);
 };
 
@@ -741,7 +741,7 @@ Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosav
   try { // MyWallet.ws.send can fail when restoring from mnemonic because it is not initialized.
    MyWallet.ws.send(MyWallet.ws.msgXPUBSub(newAccount.extendedPublicKey));
   } catch (e){}
-  if(!(nosave === true)) MyWallet.syncWallet();
+  if (!(nosave === true)) MyWallet.syncWallet();
   typeof(success) === 'function' && success();
   return newAccount;
 };

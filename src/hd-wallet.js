@@ -48,7 +48,7 @@ Object.defineProperties(HDWallet.prototype, {
     configurable: false,
     get: function () { return this._default_account_idx;},
     set: function (value) {
-      if(this.isValidAccountIndex(value)){
+      if (this.isValidAccountIndex(value)){
         this._default_account_idx = value;
         MyWallet.syncWallet();
       }

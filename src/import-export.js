@@ -157,11 +157,11 @@ var ImportExport = new function () {
     if (N > MAX_VALUE / 128 / r) throw Error('Parameter N is too large');
     if (r > MAX_VALUE / 128 / p) throw Error('Parameter r is too large');
 
-    if(!Buffer.isBuffer(passwd)) {
+    if (!Buffer.isBuffer(passwd)) {
       passwd = new Buffer(passwd, 'utf8');
     }
 
-    if(!Buffer.isBuffer(salt)) {
+    if (!Buffer.isBuffer(salt)) {
       salt = new Buffer(salt, 'utf8');
     }
 
