@@ -520,10 +520,8 @@ function getKey(priv, addr) {
 function getKeyForAddress (password, addr) {
   var k = MyWallet.wallet.key(addr).priv;
   var privateKeyBase58 = password == null ? k :
-    WalletCrypto.decryptSecretWithSecondPassword( k
-                                                , password
-                                                , MyWallet.wallet.sharedKey
-                                                , MyWallet.wallet.pbkdf2_iterations);
+    WalletCrypto.decryptSecretWithSecondPassword(k, password,
+        MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
   return getKey(privateKeyBase58, addr);
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -532,17 +530,15 @@ function getXPRIV (password, accountIndex) {
   var fromAccount = MyWallet.wallet.hdwallet.accounts[accountIndex];
   return fromAccount.extendedPrivateKey == null || password == null
     ? fromAccount.extendedPrivateKey
-    : WalletCrypto.decryptSecretWithSecondPassword( fromAccount.extendedPrivateKey
-                                                  , password
-                                                  , MyWallet.wallet.sharedKey
-                                                  , MyWallet.wallet.pbkdf2_iterations);
-};
+    : WalletCrypto.decryptSecretWithSecondPassword(fromAccount.extendedPrivateKey, password,
+      MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
+}
 ////////////////////////////////////////////////////////////////////////////////
 // getKeyForPath :: xpriv -> path -> ECPair
 function getKeyForPath(extendedPrivateKey, neededPrivateKeyPath) {
   var keyring = new KeyRing(extendedPrivateKey);
   return keyring.privateKeyFromPath(neededPrivateKeyPath).keyPair;
-};
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // getPrivateKeys :: password -> payment -> [private key]

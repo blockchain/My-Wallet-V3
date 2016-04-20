@@ -179,18 +179,9 @@ MyWallet.makePairingCode = function (success, error) {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-MyWallet.login = function ( user_guid
-                          , shared_key
-                          , inputedPassword
-                          , twoFA
-                          , success
-                          , needs_two_factor_code
-                          , wrong_two_factor_code
-                          , authorization_required
-                          , other_error
-                          , fetch_success
-                          , decrypt_success
-                          , build_hd_success) {
+MyWallet.login = function (user_guid, shared_key, inputedPassword, twoFA, success, needs_two_factor_code,
+                           wrong_two_factor_code, authorization_required, other_error, fetch_success,
+                           decrypt_success, build_hd_success) {
 
   assert(success, 'Success callback required');
   assert(other_error, 'Error callback required');
@@ -373,13 +364,13 @@ MyWallet.initializeWallet = function (pw, success, other_error, decrypt_success,
   WalletStore.unsafeSetPassword(pw);
 
   decryptAndInitializeWallet(
-    function () {
-      WalletStore.setRestoringWallet(false);
-      didDecryptWallet(success);
-    }
-    , _error
-    , decrypt_success
-    , build_hd_success
+      function () {
+        WalletStore.setRestoringWallet(false);
+        didDecryptWallet(success);
+      },
+      _error,
+      decrypt_success,
+      build_hd_success
   );
 };
 
@@ -432,10 +423,8 @@ function syncWallet (successcallback, errorcallback) {
   try {
     var method = 'update';
     var data = JSON.stringify(MyWallet.wallet, null, 2);
-    var crypted = WalletCrypto.encryptWallet( data
-                                              , WalletStore.getPassword()
-                                              , WalletStore.getPbkdf2Iterations()
-                                              , MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0 );
+    var crypted = WalletCrypto.encryptWallet(data, WalletStore.getPassword(),
+        WalletStore.getPbkdf2Iterations(), MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0 );
 
     if (crypted.length == 0) {
       throw 'Error encrypting the JSON output';
@@ -479,24 +468,24 @@ function syncWallet (successcallback, errorcallback) {
         }
 
         API.securePostCallbacks(
-            'wallet'
-          , data
-          , function (data) {
+            'wallet',
+            data,
+            function (data) {
               WalletNetwork.checkWalletChecksum(
-                  new_checksum
-                , function () {
+                  new_checksum,
+                  function () {
                     WalletStore.setIsSynchronizedWithServer(true);
                     WalletStore.enableLogout();
                     WalletStore.sendEvent('on_backup_wallet_success');
                     successcallback && successcallback();
-                    }
-                , function () {
+                    },
+                  function () {
                     _errorcallback('Checksum Did Not Match Expected Value');
                     WalletStore.enableLogout();
                   }
               );
-            }
-          , function (e) {
+            },
+            function (e) {
             WalletStore.enableLogout();
             _errorcallback(e);
           }

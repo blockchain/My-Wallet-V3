@@ -39,12 +39,12 @@ function Tx (object) {
 
   // computed properties
   var initialOut = {
-      taggedOuts: []
-    , toWatchOnly: false
-    , totalOut: 0
-    , internalReceive: 0
-    , changeAmount: 0
-  }
+    taggedOuts: [],
+    toWatchOnly: false,
+    totalOut: 0,
+    internalReceive: 0,
+    changeAmount: 0
+  };
   var pouts = this.out.reduce(procOuts, initialOut);
   this.processedOutputs = pouts.taggedOuts;
   this.toWatchOnly = pouts.toWatchOnly;
@@ -53,11 +53,11 @@ function Tx (object) {
   this.changeAmount = pouts.changeAmount;
 
   var initialIn = {
-      taggedIns: []
-    , fromWatchOnly: false
-    , totalIn: 0
-    , internalSpend: 0
-  }
+    taggedIns: [],
+    fromWatchOnly: false,
+    totalIn: 0,
+    internalSpend: 0
+  };
   var pins = this.inputs.reduce(procIns.bind(this), initialIn);
   this.processedInputs = pins.taggedIns;
   this.totalIn = pins.totalIn;
@@ -242,6 +242,6 @@ Tx.IOSfactory = function (tx) {
     txType: tx.txType,
     block_height: tx.block_height,
     fromWatchOnly: tx.fromWatchOnly,
-    toWatchOnly: tx.toWatchOnly,
+    toWatchOnly: tx.toWatchOnly
   };
 };

@@ -376,8 +376,8 @@ Helpers.isValidPrivateKey = function (candidate) {
 
 Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
   var asyncParse = function (resolve, reject) {
-    var format = Helpers.detectPrivateKeyFormat(priv)
-      , okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
+    var format = Helpers.detectPrivateKeyFormat(priv);
+    var okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
     if (format === 'bip38') {
       if (bipPass == undefined || bipPass === '') {
         return reject('needsBip38');

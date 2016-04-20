@@ -1,9 +1,9 @@
 'use strict';
 
-var assert = require('assert')
-  , EventEmitter = require('events')
-  , Helpers = require('./helpers')
-  , Tx = require('./wallet-transaction');
+var assert = require('assert');
+var EventEmitter = require('events');
+var Helpers = require('./helpers');
+var Tx = require('./wallet-transaction');
 
 var TransactionList = function (loadNumber) {
   var DEFAULT_TX_LOAD = 50;

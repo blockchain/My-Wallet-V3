@@ -227,8 +227,7 @@ HDAccount.fromWalletMasterKey = function (masterkey, index, label) {
 
 HDAccount.fromExtPublicKey = function (extPublicKey, index, label) {
   // this is creating a read-only account
-  assert(Helpers.isXpubKey(extPublicKey)
-      , 'Extended public key must be given to create an account.');
+  assert(Helpers.isXpubKey(extPublicKey), 'Extended public key must be given to create an account.');
   var accountZero = Bitcoin.HDNode.fromBase58(extPublicKey);
   var a = HDAccount.fromAccountMasterKey(accountZero, index, label);
   a._xpriv = null;
@@ -237,8 +236,7 @@ HDAccount.fromExtPublicKey = function (extPublicKey, index, label) {
 
 HDAccount.fromExtPrivateKey = function (extPrivateKey, index, label) {
 
-  assert(Helpers.isXprivKey(extPrivateKey)
-      , 'Extended private key must be given to create an account.');
+  assert(Helpers.isXprivKey(extPrivateKey), 'Extended private key must be given to create an account.');
   var accountZero = Bitcoin.HDNode.fromBase58(extPrivateKey);
   return HDAccount.fromAccountMasterKey(accountZero, index, label);
 };

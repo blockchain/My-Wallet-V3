@@ -30,9 +30,9 @@ API.prototype.encodeFormData = function (data) {
 
 ////////////////////////////////////////////////////////////////////////////////
 API.prototype.request = function (action, method, data, withCred) {
-  var url = this.ROOT_URL + method
-    , body = this.encodeFormData(data)
-    , time = (new Date()).getTime();
+  var url = this.ROOT_URL + method;
+  var body = this.encodeFormData(data);
+  var time = (new Date()).getTime();
 
   var options = {
     method: action,
@@ -112,10 +112,10 @@ API.prototype.handleNTPResponse = function (obj, clientTime) {
 // Definition of API
 API.prototype.getBalances = function (addresses) {
   var data = {
-      active: addresses.join('|')
-    , simple: true
-    , format: 'json'
-    , api_code: this.API_CODE
+    active: addresses.join('|'),
+    simple: true,
+    format: 'json',
+    api_code: this.API_CODE
   };
   return this.retry(this.request.bind(this, 'POST', 'multiaddr', data));
 };
@@ -137,28 +137,28 @@ API.prototype.getBalanceForRedeemCode = function (privatekey) {
 
 API.prototype.getFiatAtTime = function (time, value, currencyCode) {
   var data = {
-      value: value
-    , currency: currencyCode
-    , time: time
-    , textual: false
-    , nosavecurrency: true
-    , api_code: this.API_CODE
+    value: value,
+    currency: currencyCode,
+    time: time,
+    textual: false,
+    nosavecurrency: true,
+    api_code: this.API_CODE
   };
   return this.retry(this.request.bind(this, 'GET', 'frombtc', data));
 };
 
 API.prototype.getTicker = function () {
-  var data = { format: 'json' , api_code: this.API_CODE};
+  var data = { format: 'json', api_code: this.API_CODE};
   // return this.request('GET', 'ticker', data);
   return this.retry(this.request.bind(this, 'GET', 'ticker', data));
 };
 
 API.prototype.getUnspent = function (fromAddresses, confirmations) {
   var data = {
-      active: fromAddresses.join('|')
-    , confirmations: Helpers.isPositiveNumber(confirmations) ? confirmations : -1
-    , format: 'json'
-    , api_code: this.API_CODE
+    active: fromAddresses.join('|'),
+    confirmations: Helpers.isPositiveNumber(confirmations) ? confirmations : -1,
+    format: 'json',
+    api_code: this.API_CODE
   };
   return this.retry(this.request.bind(this, 'POST', 'unspent', data));
 };
@@ -170,15 +170,15 @@ API.prototype.getHistory = function (addresses, tx_filter, offset, n, syncBool) 
   n = n || 0;
 
   var data = {
-      active: addresses.join('|')
-    , format: 'json'
-    , offset: offset
-    , no_compact: true
-    , ct: clientTime
-    , n: n
-    , language: WalletStore.getLanguage()
-    , no_buttons: true
-    , api_code: this.API_CODE
+    active: addresses.join('|'),
+    format: 'json',
+    offset: offset,
+    no_compact: true,
+    ct: clientTime,
+    n: n,
+    language: WalletStore.getLanguage(),
+    no_buttons: true,
+    api_code: this.API_CODE
   };
 
   if (tx_filter !== undefined && tx_filter !== null) {
@@ -230,9 +230,9 @@ API.prototype.pushTx = function (txHex, note) {
   assert(txHex, 'transaction required');
 
   var data = {
-      tx: txHex
-    , api_code: this.API_CODE
-    , format: 'plain'
+    tx: txHex,
+    api_code: this.API_CODE,
+    format: 'plain'
   };
 
   if (note) data.note = note;

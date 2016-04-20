@@ -1,13 +1,13 @@
 'use strict';
 
-var crypto = require('crypto')
-  , assert = require('assert')
-  , sjcl = require('sjcl');
+var crypto = require('crypto');
+var assert = require('assert');
+var sjcl = require('sjcl');
 
-var SUPPORTED_ENCRYPTION_VERSION = 3
-  , SALT_BYTES = 16
-  , KEY_BIT_LEN = 256
-  , BLOCK_BIT_LEN = 128;
+var SUPPORTED_ENCRYPTION_VERSION = 3;
+var SALT_BYTES = 16;
+var KEY_BIT_LEN = 256;
+var BLOCK_BIT_LEN = 128;
 
 var ALGO = {
   SHA1: 'sha1',
@@ -35,8 +35,8 @@ var ZeroPadding = {
   */
 
   pad: function (dataBytes, nBytesPerBlock) {
-    var nPaddingBytes = nBytesPerBlock - dataBytes.length % nBytesPerBlock
-      , zeroBytes = new Buffer(nPaddingBytes).fill(0x00);
+    var nPaddingBytes = nBytesPerBlock - dataBytes.length % nBytesPerBlock;
+    var zeroBytes = new Buffer(nPaddingBytes).fill(0x00);
     return Buffer.concat([ dataBytes, zeroBytes ]);
   },
 
@@ -53,9 +53,9 @@ var Iso10126 = {
   */
 
   pad: function (dataBytes, nBytesPerBlock) {
-    var nPaddingBytes = nBytesPerBlock - dataBytes.length % nBytesPerBlock
-      , paddingBytes = crypto.randomBytes(nPaddingBytes - 1)
-      , endByte = new Buffer([ nPaddingBytes ]);
+    var nPaddingBytes = nBytesPerBlock - dataBytes.length % nBytesPerBlock;
+    var paddingBytes = crypto.randomBytes(nPaddingBytes - 1);
+    var endByte = new Buffer([ nPaddingBytes ]);
     return Buffer.concat([ dataBytes, paddingBytes, endByte ]);
   },
 
@@ -244,13 +244,13 @@ function encryptDataWithPassword (data, password, iterations) {
   assert(password, 'password missing');
   assert(iterations, 'iterations missing');
 
-  var salt = crypto.randomBytes(SALT_BYTES)
-    , key = stretchPassword(password, salt, iterations, KEY_BIT_LEN)
-    , dataBytes = new Buffer(data, 'utf8')
-    , options = { mode: AES.CBC, padding: Iso10126 };
+  var salt = crypto.randomBytes(SALT_BYTES);
+  var key = stretchPassword(password, salt, iterations, KEY_BIT_LEN);
+  var dataBytes = new Buffer(data, 'utf8');
+  var options = { mode: AES.CBC, padding: Iso10126 };
 
-  var encryptedBytes = AES.encrypt(dataBytes, key, salt, options)
-    , payload = Buffer.concat([ salt, encryptedBytes ]);
+  var encryptedBytes = AES.encrypt(dataBytes, key, salt, options);
+  var payload = Buffer.concat([ salt, encryptedBytes ]);
 
   return payload.toString('base64');
 }
@@ -263,10 +263,10 @@ function decryptDataWithPassword (data, password, iterations, options) {
   options = options || {};
   options.padding = options.padding || Iso10126;
 
-  var dataHex = new Buffer(data, 'base64')
-    , salt = dataHex.slice(0, SALT_BYTES)
-    , payload = dataHex.slice(SALT_BYTES)
-    , key = stretchPassword(password, salt, iterations, KEY_BIT_LEN);
+  var dataHex = new Buffer(data, 'base64');
+  var salt = dataHex.slice(0, SALT_BYTES);
+  var payload = dataHex.slice(SALT_BYTES);
+  var key = stretchPassword(password, salt, iterations, KEY_BIT_LEN);
 
   var decryptedBytes = AES.decrypt(payload, key, salt, options);
   return decryptedBytes.toString('utf8');

@@ -180,8 +180,8 @@ Address.fromString = function (keyOrAddr, label, bipPass) {
       return resolve(Address.import(keyOrAddr, label));
     } else {
       // Import private key
-      var format = Helpers.detectPrivateKeyFormat(keyOrAddr)
-        , okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
+      var format = Helpers.detectPrivateKeyFormat(keyOrAddr);
+      var okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
 
       if (format === 'bip38') {
         if (bipPass == undefined || bipPass === '') {
