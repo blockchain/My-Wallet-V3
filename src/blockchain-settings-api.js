@@ -9,13 +9,13 @@ var API = require('./api');
 
 function get_account_info (success, error) {
   API.securePostCallbacks('wallet', {method: 'get-info', format: 'json'}, function (data) {
-    typeof(success) === 'function' && success(data);
+    typeof (success) === 'function' && success(data);
 
   }, function (data) {
     var response = data.responseText || 'Error Downloading Account Settings';
     WalletStore.sendEvent('msg', {type: 'error', message: response});
 
-    typeof(error) === 'function' &&  error();
+    typeof (error) === 'function' &&  error();
   });
 }
 
@@ -29,11 +29,11 @@ function updateKV (method, value, success, error, extra) {
   API.securePostCallbacks('wallet'+extra, { length: (value+'').length, payload: value+'', method: method }, function (data) {
     WalletStore.sendEvent('msg', {type: 'success', message: method + '-success: ' + data});
 
-    typeof(success) === 'function' && success();
+    typeof (success) === 'function' && success();
   }, function (data) {
     WalletStore.sendEvent('msg', {type: 'error', message: method + '-error: ' + data});
 
-    typeof(error) === 'function' &&  error();
+    typeof (error) === 'function' &&  error();
   });
 }
 
@@ -79,14 +79,14 @@ function isBadPasswordHint (value) {
 }
 
 function update_password_hint1 (value, success, error) {
-  assert(error && typeof(error) === 'function', 'Error callback required');
+  assert(error && typeof (error) === 'function', 'Error callback required');
 
   var isBad = isBadPasswordHint(value);
   isBad ? error(isBad) : updateKV('update-password-hint1', value, success, error);
 }
 
 function update_password_hint2 (value, success, error) {
-  assert(error && typeof(error) === 'function', 'Error callback required');
+  assert(error && typeof (error) === 'function', 'Error callback required');
 
   var isBad = isBadPasswordHint(value);
   isBad ? error(isBad) : updateKV('update-password-hint2', value, success, error);
@@ -116,7 +116,7 @@ function toggleSave2FA (val, success, error) {
 function updateAuthType (val, success, error) {
   updateKV('update-auth-type', val, function () {
     WalletStore.setRealAuthType(val);
-    typeof(success) === 'function' && success();
+    typeof (success) === 'function' && success();
   }, error);
 }
 
@@ -152,17 +152,17 @@ function setTwoFactorEmail (success, error) {
 
 function setTwoFactorGoogleAuthenticator (success, error) {
   API.securePostCallbacks('wallet', { method: 'generate-google-secret' }, function (google_secret_url) {
-    typeof(success) === 'function' && success(google_secret_url);
+    typeof (success) === 'function' && success(google_secret_url);
   }, function (data) {
     WalletStore.sendEvent('msg', {type: 'error', message: data.responseText});
-    typeof(error) === 'function' &&  error(data.responseText);
+    typeof (error) === 'function' &&  error(data.responseText);
   });
 }
 
 function confirmTwoFactorGoogleAuthenticator (code, success, error) {
   updateKV('update-auth-type', 4, function () {
     WalletStore.setRealAuthType(4);
-    typeof(success) === 'function' && success();
+    typeof (success) === 'function' && success();
   }, error, '?code='+code);
 }
 
@@ -185,10 +185,10 @@ function resendEmailConfirmation (email, success, error) {
 function verifyEmail (code, success, error) {
   API.securePostCallbacks('wallet', { payload:code, length: code.length, method: 'verify-email' }, function (data) {
     WalletStore.sendEvent('msg', {type: 'success', message: data});
-    typeof(success) === 'function' && success(data);
+    typeof (success) === 'function' && success(data);
   }, function (data) {
     WalletStore.sendEvent('msg', {type: 'error', message: data});
-    typeof(error) === 'function' &&  error();
+    typeof (error) === 'function' &&  error();
   });
 }
 
@@ -201,20 +201,20 @@ function verifyEmail (code, success, error) {
 function verifyMobile (code, success, error) {
   API.securePostCallbacks('wallet', { payload:code, length: code.length, method: 'verify-sms' }, function (data) {
     WalletStore.sendEvent('msg', {type: 'success', message: data});
-    typeof(success) === 'function' && success(data);
+    typeof (success) === 'function' && success(data);
   }, function (data) {
     WalletStore.sendEvent('msg', {type: 'error', message: data});
-    typeof(error) === 'function' &&  error();
+    typeof (error) === 'function' &&  error();
   });
 }
 
 function getActivityLogs (success, error) {
   API.securePostCallbacks('wallet', {method: 'list-logs', format: 'json'}, function (data) {
-    typeof(success) === 'function' && success(data);
+    typeof (success) === 'function' && success(data);
   }, function (data) {
     var response = data.responseText || 'Error Downloading Activity Logs';
     WalletStore.sendEvent('msg', {type: 'error', message: response});
-    typeof(error) === 'function' &&  error();
+    typeof (error) === 'function' &&  error();
   });
 }
 
@@ -224,11 +224,11 @@ function enableEmailNotifications (success, error) {
     length: 1,
     payload: 1
   }, function (data) {
-    typeof(success) === 'function' && success(data);
+    typeof (success) === 'function' && success(data);
   }, function (data) {
     var response = data.responseText || 'Error Enabling Email Notifications';
     WalletStore.sendEvent('msg', {type: 'error', message: response});
-    typeof(error) === 'function' &&  error();
+    typeof (error) === 'function' &&  error();
   });
 }
 
@@ -238,17 +238,17 @@ function enableReceiveNotifications (success, error) {
     length: 1,
     payload: 2
   }, function (data) {
-    typeof(success) === 'function' && success(data);
+    typeof (success) === 'function' && success(data);
   }, function (data) {
     var response = data.responseText || 'Error Enabling Receive Notifications';
     WalletStore.sendEvent('msg', {type: 'error', message: response});
-    typeof(error) === 'function' &&  error();
+    typeof (error) === 'function' &&  error();
   });
 }
 
 function enableEmailReceiveNotifications (success, error) {
-  assert(success && typeof(error) === 'function', 'Success callback required');
-  assert(error && typeof(error) === 'function', 'Error callback required');
+  assert(success && typeof (error) === 'function', 'Success callback required');
+  assert(error && typeof (error) === 'function', 'Error callback required');
 
   enableEmailNotifications(
     function () {
@@ -262,8 +262,8 @@ function enableEmailReceiveNotifications (success, error) {
 }
 
 function disableAllNotifications (success, error) {
-  assert(success && typeof(success) === 'function', 'Success callback required');
-  assert(error && typeof(error) === 'function', 'Error callback required');
+  assert(success && typeof (success) === 'function', 'Success callback required');
+  assert(error && typeof (error) === 'function', 'Error callback required');
 
   API.securePostCallbacks('wallet', {
     method: 'update-notifications-type',

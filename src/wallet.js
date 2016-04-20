@@ -231,7 +231,7 @@ MyWallet.login = function (user_guid, shared_key, inputedPassword, twoFA, succes
          return;
        }
        WalletStore.sendEvent('did_fail_set_guid');
-       if (obj.authorization_required && typeof(authorization_required) === 'function') {
+       if (obj.authorization_required && typeof (authorization_required) === 'function') {
          authorization_required(function () {
            MyWallet.pollForSessionGUID(function () {
              tryToFetchWalletJSON(guid, successCallback);

@@ -67,7 +67,7 @@ Helpers.isNotNumber = function (num) {
   return !Helpers.isNumber(num)
 };
 Helpers.isBoolean = function (value) {
-  return typeof(value) === 'boolean';
+  return typeof (value) === 'boolean';
 };
 Helpers.isValidLabel = function (text) {
   return Helpers.isString(text);

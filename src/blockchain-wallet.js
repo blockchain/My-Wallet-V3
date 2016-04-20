@@ -754,7 +754,7 @@ Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosav
    MyWallet.ws.send(MyWallet.ws.msgXPUBSub(newAccount.extendedPublicKey));
   } catch (e) {}
   if (!(nosave === true)) MyWallet.syncWallet();
-  typeof(success) === 'function' && success();
+  typeof (success) === 'function' && success();
   return newAccount;
 };
 
