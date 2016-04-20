@@ -64,7 +64,7 @@ BlockchainSocket.prototype.ping = function () {
 };
 
 BlockchainSocket.prototype.close = function () {
-  if (this.socket) { this.socket.close();}
+  if (this.socket) { this.socket.close(); }
   this.socket = null;
   clearInterval(this.pingIntervalPID);
   clearTimeout(this.pingTimeoutPID);

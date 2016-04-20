@@ -17,11 +17,11 @@ function KeyRing (extendedKey, cache) {
 Object.defineProperties(KeyRing.prototype, {
   'receive': {
     configurable: false,
-    get: function () {return this._receiveChain;}
+    get: function () { return this._receiveChain; }
   },
   'change': {
     configurable: false,
-    get: function () {return this._changeChain;}
+    get: function () { return this._changeChain; }
   }
 });
 

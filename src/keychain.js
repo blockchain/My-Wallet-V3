@@ -23,7 +23,7 @@ function KeyChain (extendedKey, index, cache) {
 Object.defineProperties(KeyChain.prototype, {
   'xpub': {
     configurable: false,
-    get: function () { return this._chainRoot ? this._chainRoot.neutered().toBase58() : null;}
+    get: function () { return this._chainRoot ? this._chainRoot.neutered().toBase58() : null; }
   },
   'isNeutered': {
     configurable: false,

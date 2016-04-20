@@ -34,19 +34,19 @@ function HDWallet (object) {
 Object.defineProperties(HDWallet.prototype, {
   'seedHex': {
     configurable: false,
-    get: function () { return this._seedHex;}
+    get: function () { return this._seedHex; }
   },
   'bip39Password': {
     configurable: false,
-    get: function () { return this._bip39Password;}
+    get: function () { return this._bip39Password; }
   },
   'isMnemonicVerified': {
     configurable: false,
-    get: function () { return this._mnemonic_verified;}
+    get: function () { return this._mnemonic_verified; }
   },
   'defaultAccountIndex': {
     configurable: false,
-    get: function () { return this._default_account_idx;},
+    get: function () { return this._default_account_idx; },
     set: function (value) {
       if (this.isValidAccountIndex(value)) {
         this._default_account_idx = value;
@@ -58,36 +58,36 @@ Object.defineProperties(HDWallet.prototype, {
   },
   'defaultAccount': {
     configurable: false,
-    get: function () {return this._accounts[this._default_account_idx];}
+    get: function () { return this._accounts[this._default_account_idx]; }
   },
   'accounts': {
     configurable: false,
     get: function () {
-      return this._accounts.map(function (a) {return a});
+      return this._accounts.map(function (a) { return a});
     }
   },
   'activeAccounts': {
     configurable: false,
     get: function () {
-      return this._accounts.filter(function (a) {return !a.archived});
+      return this._accounts.filter(function (a) { return !a.archived});
     }
   },
   'xpubs':{
     configurable: false,
     get: function () {
-      return this._accounts.map(function (a) {return (a.extendedPublicKey)});
+      return this._accounts.map(function (a) { return (a.extendedPublicKey)});
     }
   },
   'activeXpubs':{
     configurable: false,
     get: function () {
-      return this.activeAccounts.map(function (a) {return (a.extendedPublicKey)});
+      return this.activeAccounts.map(function (a) { return (a.extendedPublicKey)});
     }
   },
   'balanceActiveAccounts':{
     configurable: false,
     get: function () {
-      var balances = this.activeAccounts.map(function (k) {return k.balance;});
+      var balances = this.activeAccounts.map(function (k) { return k.balance; });
       if (balances.some(Helpers.isNotNumber)) return null;
       return balances.reduce(Helpers.add, 0);
     }
@@ -96,7 +96,7 @@ Object.defineProperties(HDWallet.prototype, {
     configurable: false,
     get: function () {
       var isSeedEnc = Helpers.isBase64(this._seedHex) && !Helpers.isSeedHex(this._seedHex);
-      return isSeedEnc && this._accounts.map(function (a) {return a.isEncrypted;})
+      return isSeedEnc && this._accounts.map(function (a) { return a.isEncrypted; })
                                           .reduce(Helpers.and, true);
     }
   },
@@ -104,7 +104,7 @@ Object.defineProperties(HDWallet.prototype, {
     configurable: false,
     get: function () {
       var isSeedUnEnc = Helpers.isSeedHex(this._seedHex);
-      return isSeedUnEnc && this._accounts.map(function (a) {return a.isUnEncrypted;})
+      return isSeedUnEnc && this._accounts.map(function (a) { return a.isUnEncrypted; })
                              .reduce(Helpers.and, true);
     }
   },
@@ -130,7 +130,7 @@ function decryptMnemonic (seedHex, cipher) {
 }
 
 function decryptPassphrase (bip39Password, cipher) {
-  if (bip39Password === '') {return bip39Password}
+  if (bip39Password === '') { return bip39Password}
   if (cipher) {
     return cipher(bip39Password);
   } else {
@@ -234,7 +234,7 @@ HDWallet.prototype.verifyMnemonic = function () {
 
 HDWallet.prototype.account = function (xpub) {
   var f = this._accounts
-            .filter(function (a) {return a.extendedPublicKey === xpub});
+            .filter(function (a) { return a.extendedPublicKey === xpub});
   var r = f.length === 0 ? null : f[0];
   return r;
 };
@@ -249,7 +249,7 @@ HDWallet.prototype.activeAccount = function (xpub) {
 // account managment
 
 HDWallet.prototype.encrypt = function (cipher) {
-  function f (acc) {acc.encrypt(cipher);}
+  function f (acc) {acc.encrypt(cipher); }
   this._accounts.forEach(f);
   this._temporal_seedHex = cipher(this._seedHex);
   this._temporal_bip39Password = this._bip39Password === ''
@@ -259,7 +259,7 @@ HDWallet.prototype.encrypt = function (cipher) {
 };
 
 HDWallet.prototype.decrypt = function (cipher) {
-  function f (acc) {acc.decrypt(cipher);}
+  function f (acc) {acc.decrypt(cipher); }
   this._accounts.forEach(f);
   this._temporal_seedHex = cipher(this._seedHex);
   this._temporal_bip39Password = this._bip39Password === ''
@@ -276,7 +276,7 @@ HDWallet.prototype.persist = function () {
   this._bip39Password = this._temporal_bip39Password;
   delete this._temporal_seedHex;
   delete this._temporal_bip39Password;
-  function f (acc) {acc.persist();}
+  function f (acc) {acc.persist(); }
   this._accounts.forEach(f);
   return this;
 };

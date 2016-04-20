@@ -22,7 +22,7 @@ module.exports = {
   sShift: sShift
 };
 
-function myprint (x) {console.log(x);}
+function myprint (x) {console.log(x); }
 
 function setLocalSymbol (new_symbol) {
   if (!new_symbol) {

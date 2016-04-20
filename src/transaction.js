@@ -19,8 +19,8 @@ var Transaction = function (payment, emitter) {
   var changeAddress  = payment.change;
   var BITCOIN_DUST   = Bitcoin.networks.bitcoin.dustThreshold;
 
-  if (!Array.isArray(toAddresses) && toAddresses != null) {toAddresses = [toAddresses];}
-  if (!Array.isArray(amounts) && amounts != null) {amounts = [amounts];}
+  if (!Array.isArray(toAddresses) && toAddresses != null) {toAddresses = [toAddresses]; }
+  if (!Array.isArray(amounts) && amounts != null) {amounts = [amounts]; }
 
   var network = Bitcoin.networks.bitcoin;
 
@@ -39,7 +39,7 @@ var Transaction = function (payment, emitter) {
   assert(unspentOutputs && unspentOutputs.length > 0, {error: 'NO_UNSPENT_OUTPUTS'});
   var transaction = new Bitcoin.TransactionBuilder();
   // add all outputs
-  function addOutput (e, i) {transaction.addOutput(toAddresses[i],amounts[i]);}
+  function addOutput (e, i) {transaction.addOutput(toAddresses[i],amounts[i]); }
   toAddresses.map(addOutput);
 
   // add all inputs
@@ -104,9 +104,9 @@ Transaction.prototype.sortBIP69 = function () {
   };
   var mix = Helpers.zip3(this.transaction.tx.ins, this.privateKeys, this.addressesOfInputs);
   mix.sort(compareInputs);
-  this.transaction.tx.ins = mix.map(function (a) {return a[0];});
-  this.privateKeys        = mix.map(function (a) {return a[1];});
-  this.addressesOfInputs  = mix.map(function (a) {return a[2];});
+  this.transaction.tx.ins = mix.map(function (a) { return a[0]; });
+  this.privateKeys        = mix.map(function (a) { return a[1]; });
+  this.addressesOfInputs  = mix.map(function (a) { return a[2]; });
   this.transaction.tx.outs.sort(compareOutputs);
 };
 /**
@@ -159,7 +159,7 @@ Transaction.inputCost = function (feePerKb) {
   return Math.ceil(feePerKb * 0.148);
 };
 Transaction.guessSize = function (nInputs, nOutputs) {
-  if (nInputs < 1 || nOutputs < 1) { return 0;}
+  if (nInputs < 1 || nOutputs < 1) { return 0; }
   return (nInputs*148 + nOutputs*34 + 10);
 };
 
@@ -177,11 +177,11 @@ Transaction.filterUsableCoins = function (coins, feePerKb) {
 Transaction.maxAvailableAmount = function (usableCoins, feePerKb) {
   var len = usableCoins.length;
   var fee = Transaction.guessFee(len, 2, feePerKb);
-  return {"amount": usableCoins.reduce(function(a,e) {a = a + e.value; return a},0) - fee, "fee" : fee};
+  return {"amount": usableCoins.reduce(function(a,e) { a = a + e.value; return a; }, 0) - fee, "fee" : fee};
 };
 
 Transaction.sumOfCoins = function (coins) {
-  return coins.reduce(function(a,e) {a = a + e.value; return a},0);
+  return coins.reduce(function(a,e) { a = a + e.value; return a; }, 0);
 };
 
 Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {

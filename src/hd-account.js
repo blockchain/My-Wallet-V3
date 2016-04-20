@@ -24,7 +24,7 @@ function HDAccount (object) {
   this._network  = obj.network || Bitcoin.networks.bitcoin;
 
   this._address_labels = [];
-  obj.address_labels.map(function (e) {self._address_labels[e.index] = e.label;});
+  obj.address_labels.map(function (e) {self._address_labels[e.index] = e.label; });
 
   // computed properties
   this._keyRing       = new KeyRing(obj.xpub, obj.cache);
@@ -44,7 +44,7 @@ Object.defineProperties(HDAccount.prototype, {
 
   'label': {
     configurable: false,
-    get: function () { return this._label;},
+    get: function () { return this._label; },
     set: function (str) {
       if (Helpers.isValidLabel(str)) {
         this._label = str;
@@ -56,7 +56,7 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'balance': {
     configurable: false,
-    get: function () { return this._balance;},
+    get: function () { return this._balance; },
     set: function (num) {
       if (Helpers.isPositiveNumber(num)) {
         this._balance = num;
@@ -66,7 +66,7 @@ Object.defineProperties(HDAccount.prototype, {
     }
   },
   'n_tx': {
-    get: function () { return this._n_tx;},
+    get: function () { return this._n_tx; },
     set: function (num) {
       if (Helpers.isPositiveInteger(num)) {
         this._n_tx = num;
@@ -77,7 +77,7 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'archived': {
     configurable: false,
-    get: function () { return this._archived;},
+    get: function () { return this._archived; },
     set: function (value) {
       if (Helpers.isBoolean(value)) {
         this._archived = value;
@@ -93,12 +93,12 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'active': {
     configurable: false,
-    get: function () { return !this.archived;},
+    get: function () { return !this.archived; },
     set: function (value) { this.archived = !value; }
   },
   'receiveIndex': {
     configurable: false,
-    get: function () { return this._receiveIndex;},
+    get: function () { return this._receiveIndex; },
     set: function (value) {
       if (Helpers.isPositiveInteger(value)) {
         this._receiveIndex = value;
@@ -109,7 +109,7 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'lastUsedReceiveIndex': {
     configurable: false,
-    get: function () { return this._lastUsedReceiveIndex;},
+    get: function () { return this._lastUsedReceiveIndex; },
     set: function (value) {
       if (Helpers.isPositiveInteger(value)) {
         this._lastUsedReceiveIndex = value;
@@ -133,7 +133,7 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'changeIndex': {
     configurable: false,
-    get: function () { return this._changeIndex;},
+    get: function () { return this._changeIndex; },
     set: function (value) {
       if (Helpers.isPositiveInteger(value)) {
         this._changeIndex = value;
@@ -163,35 +163,35 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'extendedPublicKey': {
      configurable: false,
-     get: function () { return this._xpub;}
+     get: function () { return this._xpub; }
    },
   'extendedPrivateKey': {
     configurable: false,
-    get: function () { return this._xpriv;}
+    get: function () { return this._xpriv; }
   },
   'keyRing': {
     configurable: false,
-    get: function () { return this._keyRing;}
+    get: function () { return this._keyRing; }
   },
   'receiveAddress': {
     configurable: false,
-    get: function () { return this._keyRing.receive.getAddress(this._receiveIndex);}
+    get: function () { return this._keyRing.receive.getAddress(this._receiveIndex); }
   },
   'changeAddress': {
     configurable: false,
-    get: function () { return this._keyRing.change.getAddress(this._changeIndex);}
+    get: function () { return this._keyRing.change.getAddress(this._changeIndex); }
   },
   'isEncrypted': {
     configurable: false,
-    get: function () { return Helpers.isBase64(this._xpriv) && !Helpers.isXprivKey(this._xpriv);}
+    get: function () { return Helpers.isBase64(this._xpriv) && !Helpers.isXprivKey(this._xpriv); }
   },
   'isUnEncrypted': {
     configurable: false,
-    get: function () { return Helpers.isXprivKey(this._xpriv);}
+    get: function () { return Helpers.isXprivKey(this._xpriv); }
   },
   'index': {
     configurable: false,
-    get: function () { return this._index;}
+    get: function () { return this._index; }
   }
 });
 

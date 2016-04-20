@@ -24,32 +24,32 @@ function Payment (payment) {
         "ok":true
      },
      "estimate":[
-        {
+     {
            "fee":45000.0,
            "surge":false,
            "ok":true
         },
-        {
+     {
            "fee":35000.00,
            "surge":false,
            "ok":true
         },
-        {
+     {
            "fee":22000.0,
            "surge":false,
            "ok":true
         },
-        {
+     {
            "fee":19000.0,
            "surge":false,
            "ok":true
         },
-        {
+     {
            "fee":15000.0,
            "surge":false,
            "ok":true
         },
-        {
+     {
            "fee":12000.0,
            "surge":false,
            "ok":true
@@ -170,7 +170,7 @@ Payment.prototype.publish = function () {
 };
 
 Payment.prototype.printJSON = function () {
-  var printJSON = function(p) {console.log(JSON.stringify(p, null, 2));}
+  var printJSON = function(p) {console.log(JSON.stringify(p, null, 2)); }
   this.sideEffect(printJSON);
   return this;
 };
@@ -197,9 +197,9 @@ Payment.to = function (destinations) {
   };
   var accountToAddress = function (i) {
     if (Helpers.isPositiveInteger(i)) {
-      return MyWallet.wallet.hdwallet.accounts[i].receiveAddress;}
+      return MyWallet.wallet.hdwallet.accounts[i].receiveAddress; }
     else {
-      return i;}
+      return i; }
   };
   switch (true) {
     // single bitcoin address
@@ -392,7 +392,7 @@ Payment.prebuild = function (absoluteFee) {
       return s.amount;
     }
     payment.maxSpendableAmounts = payment.fees.estimate.map(maxSpendablesPerFeePerKb);
-    payment.sweepFees = payment.maxSpendableAmounts.map(function(v) {return payment.balance - v;});
+    payment.sweepFees = payment.maxSpendableAmounts.map(function(v) { return payment.balance - v; });
 
     // if amounts defined refresh computations
     if (Array.isArray(payment.amounts) && payment.amounts.length > 0) {
@@ -448,7 +448,7 @@ Payment.sign = function(password) {
   return function(payment) {
     var importWIF = function (WIF) {
       MyWallet.wallet.importLegacyAddress(WIF, "Redeemed code.", password)
-        .then(function(A) {A.archived = true;});
+        .then(function(A) {A.archived = true; });
     };
 
     if (!payment.transaction) throw 'This transaction hasn\'t been built yet';
@@ -509,8 +509,8 @@ function getKey(priv, addr) {
   var key    = Helpers.privateKeyStringToKey(priv, format);
   var ckey = new Bitcoin.ECPair(key.d, null, {compressed: true});
   var ukey = new Bitcoin.ECPair(key.d, null, {compressed: false});
-  if (ckey.getAddress() === addr) {return ckey;}
-  else if (ukey.getAddress() === addr) {return ukey;}
+  if (ckey.getAddress() === addr) { return ckey; }
+  else if (ukey.getAddress() === addr) { return ukey; }
   return key;
 }
 

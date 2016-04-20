@@ -129,7 +129,7 @@ API.prototype.getBalanceForRedeemCode = function (privatekey) {
   var aU = new ECPair(privateKeyToSweep.d, null, {compressed: false}).getAddress();
   var totalBalance = function (data) {
     return Object.keys(data)
-                 .map(function (a) { return data[a].final_balance;})
+                 .map(function (a) { return data[a].final_balance; })
                  .reduce(Helpers.add, 0);
   }
   return API.getBalances([aC, aU]).then(totalBalance)

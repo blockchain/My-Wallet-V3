@@ -13,19 +13,19 @@ function Block (object) {
 Object.defineProperties(Block.prototype, {
   'hash': {
     configurable: false,
-    get: function () { return this._hash;}
+    get: function () { return this._hash; }
   },
   'time': {
     configurable: false,
-    get: function () { return this._time;}
+    get: function () { return this._time; }
   },
   'blockIndex': {
     configurable: false,
-    get: function () { return this._blockIndex;}
+    get: function () { return this._blockIndex; }
   },
   'height': {
     configurable: false,
-    get: function () { return this._height;}
+    get: function () { return this._height; }
   }
 });
 

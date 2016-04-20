@@ -84,11 +84,11 @@ function Wallet (object) {
 Object.defineProperties(Wallet.prototype, {
   'guid': {
     configurable: false,
-    get: function () { return this._guid;}
+    get: function () { return this._guid; }
   },
   'sharedKey': {
     configurable: false,
-    get: function () { return this._sharedKey;}
+    get: function () { return this._sharedKey; }
   },
   'context': {
     configurable: false,
@@ -99,15 +99,15 @@ Object.defineProperties(Wallet.prototype, {
   },
   'isDoubleEncrypted': {
     configurable: false,
-    get: function () { return this._double_encryption;}
+    get: function () { return this._double_encryption; }
   },
   'dpasswordhash': {
     configurable: false,
-    get: function () { return this._dpasswordhash;}
+    get: function () { return this._dpasswordhash; }
   },
   'fee_per_kb': {
     configurable: false,
-    get: function () { return this._fee_per_kb;},
+    get: function () { return this._fee_per_kb; },
     set: function (value) {
       switch (true) {
         case !Helpers.isPositiveNumber(value):
@@ -124,11 +124,11 @@ Object.defineProperties(Wallet.prototype, {
   },
   'pbkdf2_iterations': {
     configurable: false,
-    get: function () { return this._pbkdf2_iterations;}
+    get: function () { return this._pbkdf2_iterations; }
   },
   'totalSent': {
     configurable: false,
-    get: function () { return this._totalSent;},
+    get: function () { return this._totalSent; },
     set: function (value) {
       if (Helpers.isPositiveNumber(value)) {
         this._totalSent = value;
@@ -139,7 +139,7 @@ Object.defineProperties(Wallet.prototype, {
   },
   'totalReceived': {
     configurable: false,
-    get: function () { return this._totalReceived;},
+    get: function () { return this._totalReceived; },
     set: function (value) {
       if (Helpers.isPositiveNumber(value)) {
         this._totalReceived = value;
@@ -150,7 +150,7 @@ Object.defineProperties(Wallet.prototype, {
   },
   'finalBalance': {
     configurable: false,
-    get: function () { return this._finalBalance;},
+    get: function () { return this._finalBalance; },
     set: function (value) {
       if (Helpers.isPositiveNumber(value)) {
         this._finalBalance = value;
@@ -165,7 +165,7 @@ Object.defineProperties(Wallet.prototype, {
   },
   'numberTxTotal': {
     configurable: false,
-    get: function () { return this._numberTxTotal;},
+    get: function () { return this._numberTxTotal; },
     set: function (value) {
       if (Helpers.isPositiveInteger(value)) {
         this._numberTxTotal = value;
@@ -176,23 +176,23 @@ Object.defineProperties(Wallet.prototype, {
   },
   'addresses': {
     configurable: false,
-    get: function () {return Object.keys(this._addresses);}
+    get: function () { return Object.keys(this._addresses); }
   },
   'activeAddresses': {
     configurable: false,
-    get: function () {return this.activeKeys.map(function (k) {return k.address;});}
+    get: function () { return this.activeKeys.map(function (k) { return k.address; }); }
   },
   'spendableActiveAddresses': {
     configurable: false,
     get: function () {
       return this.activeKeys
-          .filter(function (k) {return !k.isWatchOnly;})
-          .map(function (k) {return k.address;});
+          .filter(function (k) { return !k.isWatchOnly; })
+          .map(function (k) { return k.address; });
     }
   },
   'key': {
     configurable: false,
-    value: function (addr) {return this._addresses[addr];}
+    value: function (addr) { return this._addresses[addr]; }
   },
   'activeKey': {
     configurable: false,
@@ -206,16 +206,16 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () {
       var that = this;
-      return that.addresses.map(function (a) {return that.key(a)});
+      return that.addresses.map(function (a) { return that.key(a); });
     }
   },
   'activeKeys': {
     configurable: false,
-    get: function () {return this.keys.filter(function (a) {return !a.archived;})}
+    get: function () { return this.keys.filter(function (a) { return !a.archived; })}
   },
   'hdwallet': {
     configurable: false,
-    get: function () {return this._hd_wallets[0];}
+    get: function () { return this._hd_wallets[0]; }
   },
   'isUpgradedToHD':{
     configurable: false,
@@ -228,11 +228,11 @@ Object.defineProperties(Wallet.prototype, {
     get: function () {
       var operation = undefined;
       if (this.isDoubleEncrypted) {
-        operation = function (k) {return k.isEncrypted;}
+        operation = function (k) { return k.isEncrypted; }
       } else { // no double encryption activated
-        operation = function (k) {return k.isUnEncrypted;}
+        operation = function (k) { return k.isUnEncrypted; }
       }
-      var A = this.keys.filter(function (k) {return !k.isWatchOnly;})
+      var A = this.keys.filter(function (k) { return !k.isWatchOnly; })
                        .map(operation)
                        .reduce(Helpers.and, true);
       var W = this._hd_wallets.map(operation)
@@ -244,7 +244,7 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () {
       return this.activeKeys
-                 .map(function (k) {return k.balance;})
+                 .map(function (k) { return k.balance; })
                  .reduce(Helpers.add, 0);
     }
   },
@@ -252,8 +252,8 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () {
       return this.hdwallet.accounts
-                 .filter(function (a) {return !a.archived;})
-                 .map(function (a) {return a.balance;})
+                 .filter(function (a) { return !a.archived; })
+                 .map(function (a) { return a.balance; })
                  .reduce(Helpers.add, 0);
     }
   },
@@ -277,22 +277,22 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () {
       return this.activeKeys
-                 .filter(function (k) {return !k.isWatchOnly;})
-                 .map(function (k) {return k.balance;})
+                 .filter(function (k) { return !k.isWatchOnly; })
+                 .map(function (k) { return k.balance; })
                  .reduce(Helpers.add, 0);
     }
   },
   'addressBook':{
     configurable: false,
-    get: function () { return this._address_book;}
+    get: function () { return this._address_book; }
   },
   'defaultPbkdf2Iterations':{
     configurable: false,
-    get: function () {return 5000;}
+    get: function () { return 5000; }
   },
   'latestBlock': {
     configurable: false,
-    get: function () { return this._latestBlock;},
+    get: function () { return this._latestBlock; },
     set: function (json) {
       var b = Block.fromJSON(json)
       if (b != null) {
@@ -407,7 +407,7 @@ Wallet.prototype.toJSON = function () {
 
   function addressBookToJSON (addressBook) {
     return Object.keys(addressBook)
-             .map(function (a) { return {addr: a, label: addressBook[a]};});
+             .map(function (a) { return {addr: a, label: addressBook[a]}; });
   }
 
   return {
@@ -450,8 +450,8 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
     }
     watchOnlyKey._priv = newKey._priv;
     if (this.isDoubleEncrypted) {
-      if (!secPass) {throw 'Error: second password needed';}
-      if (!this.validateSecondPassword(secPass)) { throw 'Error: wrong second password';}
+      if (!secPass) {throw 'Error: second password needed'; }
+      if (!this.validateSecondPassword(secPass)) { throw 'Error: wrong second password'; }
       var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, 'enc');
       watchOnlyKey.encrypt(cipher).persist();
     }
@@ -478,8 +478,8 @@ Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) 
       }
     }
     if (this.isDoubleEncrypted) {
-      if (!secPass) {throw 'Error: second password needed';}
-      if (!this.validateSecondPassword(secPass)) {throw 'Error: wrong second password';}
+      if (!secPass) {throw 'Error: second password needed'; }
+      if (!this.validateSecondPassword(secPass)) {throw 'Error: wrong second password'; }
       var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, 'enc');
       ad.encrypt(cipher).persist();
     }
@@ -545,7 +545,7 @@ Wallet.prototype.encrypt = function (pw, success, error, encrypting, syncing) {
   try {
     if (!this.isDoubleEncrypted) {
       var g = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, 'enc');
-      var f = function (element) {element.encrypt(g);};
+      var f = function (element) { element.encrypt(g); };
       this.keys.forEach(f);
       this._hd_wallets.forEach(f);
     } else {
@@ -560,7 +560,7 @@ Wallet.prototype.encrypt = function (pw, success, error, encrypting, syncing) {
   // if encryption finished well, then save
   this._dpasswordhash = WalletCrypto.hashNTimes(this._sharedKey + pw, this._pbkdf2_iterations);
   this._double_encryption = true;
-  var p = function (element) {element.persist();};
+  var p = function (element) { element.persist(); };
   this.keys.forEach(p);
   this._hd_wallets.forEach(p);
   syncing && syncing();
@@ -577,7 +577,7 @@ Wallet.prototype.decrypt = function (pw, success, error, decrypting, syncing) {
   try {
     if (this.isDoubleEncrypted) {
       var g = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, 'dec');
-      var f = function (element) {element.decrypt(g);};
+      var f = function (element) { element.decrypt(g); };
       this.keys.forEach(f);
       this._hd_wallets.forEach(f);
     } else {
@@ -592,7 +592,7 @@ Wallet.prototype.decrypt = function (pw, success, error, decrypting, syncing) {
   // if encryption finished well, then save
   this._dpasswordhash     = undefined;
   this._double_encryption = false;
-  var p = function (element) {element.persist();};
+  var p = function (element) { element.persist(); };
   this.keys.forEach(p);
   this._hd_wallets.forEach(p);
   syncing && syncing();
@@ -611,7 +611,7 @@ Wallet.reviver = function (k,v) {
 
 function isAccountNonUsed (account, progress) {
   var isNonUsed = function (obj) {
-    if (progress) { progress(obj);}
+    if (progress) { progress(obj); }
     return obj.addresses[0].account_index === 0 && obj.addresses[0].change_index === 0;
   };
   return API.getHistory([account.extendedPublicKey], 0, 0, 50).then(isNonUsed);

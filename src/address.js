@@ -32,19 +32,19 @@ function Address (object) {
 Object.defineProperties(Address.prototype, {
   'address': {
     configurable: false,
-    get: function () { return this._addr;}
+    get: function () { return this._addr; }
   },
   'priv': {
     configurable: false,
-    get: function () { return this._priv;}
+    get: function () { return this._priv; }
   },
   'tag': {
     configurable: false,
-    get: function () { return this._tag;}
+    get: function () { return this._tag; }
   },
   'label': {
     configurable: false,
-    get: function () { return this._label;},
+    get: function () { return this._label; },
     set: function (str) {
       if (Helpers.isValidLabel(str) || str == null) {
         this._label = str === ''? undefined : str;
@@ -54,19 +54,19 @@ Object.defineProperties(Address.prototype, {
   },
   'created_time': {
     configurable: false,
-    get: function () {return this._created_time;}
+    get: function () { return this._created_time; }
   },
   'created_device_name': {
     configurable: false,
-    get: function () {return this._created_device_name;}
+    get: function () { return this._created_device_name; }
   },
   'created_device_version': {
     configurable: false,
-    get: function () {return this._created_device_version;}
+    get: function () { return this._created_device_version; }
   },
   'balance': {
     configurable: false,
-    get: function () { return this._balance;},
+    get: function () { return this._balance; },
     set: function (num) {
       if (Helpers.isPositiveNumber(num)) {
         this._balance = num;
@@ -77,7 +77,7 @@ Object.defineProperties(Address.prototype, {
   },
   'totalSent': {
     configurable: false,
-    get: function () { return this._totalSent;},
+    get: function () { return this._totalSent; },
     set: function (num) {
       if (Helpers.isPositiveNumber(num)) {
         this._totalSent = num;
@@ -88,7 +88,7 @@ Object.defineProperties(Address.prototype, {
   },
   'totalReceived': {
     configurable: false,
-    get: function () { return this._totalReceived;},
+    get: function () { return this._totalReceived; },
     set: function (num) {
       if (Helpers.isPositiveNumber(num)) {
         this._totalReceived = num;
@@ -99,19 +99,19 @@ Object.defineProperties(Address.prototype, {
   },
   'isWatchOnly': {
     configurable: false,
-    get: function () { return this._priv == null;}
+    get: function () { return this._priv == null; }
   },
   'isEncrypted': {
     configurable: false,
-    get: function () { return Helpers.isBase64(this._priv) && !Helpers.isBase58Key(this._priv);}
+    get: function () { return Helpers.isBase64(this._priv) && !Helpers.isBase58Key(this._priv); }
   },
   'isUnEncrypted': {
     configurable: false,
-    get: function () { return Helpers.isBase58Key(this._priv);}
+    get: function () { return Helpers.isBase58Key(this._priv); }
   },
   'archived': {
     configurable: false,
-    get: function () { return this._tag === 2;},
+    get: function () { return this._tag === 2; },
     set: function (value) {
       if (Helpers.isBoolean(value)) {
         if (value) { // Archive:
@@ -121,12 +121,12 @@ Object.defineProperties(Address.prototype, {
           MyWallet.wallet.getHistory();
         }
         MyWallet.syncWallet();
-      } else { throw 'Error: address.archived must be a boolean';}
+      } else { throw 'Error: address.archived must be a boolean'; }
     }
   },
   'active': {
     configurable: false,
-    get: function () { return !this.archived;},
+    get: function () { return !this.archived; },
     set: function (value) { this.archived = !value; }
   }
 });
@@ -188,9 +188,9 @@ Address.fromString = function (keyOrAddr, label, bipPass) {
           return reject('needsBip38');
         }
         ImportExport.parseBIP38toECPair(keyOrAddr, bipPass,
-          function (key) { resolve(Address.import(key, label));},
-          function ()    { reject('wrongBipPass'); },
-          function ()    { reject('importError');}
+          function (key) { resolve(Address.import(key, label)); },
+          function () { reject('wrongBipPass'); },
+          function () { reject('importError'); }
         );
       } else if (okFormats.indexOf(format) > -1) {
         var k = Helpers.privateKeyStringToKey(keyOrAddr, format);

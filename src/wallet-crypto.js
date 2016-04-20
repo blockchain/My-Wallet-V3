@@ -138,8 +138,8 @@ function encryptWallet (data, password, pbkdf2_iterations, version) {
 }
 
 function decryptWallet (data, password, success, error) {
-  try       { success(decryptWalletSync(data, password)); }
-  catch (e) { error(e && e.message || e);                 }
+  try { success(decryptWalletSync(data, password)); }
+  catch (e) { error(e && e.message || e); }
 }
 
 function decryptWalletSync (data, password) {
@@ -148,8 +148,8 @@ function decryptWalletSync (data, password) {
 
   var wrapper, version, decrypted;
 
-  try       { wrapper = JSON.parse(data); }
-  catch (e) { version = 1;                }
+  try { wrapper = JSON.parse(data); }
+  catch (e) { version = 1; }
 
   if (wrapper) {
     assert(wrapper.payload, 'v2 Wallet error: missing payload');
@@ -202,8 +202,8 @@ function decryptWalletV1 (data, password) {
 
   return decryptFns.reduce(function (acc, decrypt) {
     if (acc) return acc;
-    try       { return JSON.parse(decrypt()); }
-    catch (e) { return null;                  }
+    try { return JSON.parse(decrypt()); }
+    catch (e) { return null; }
   }, null);
 }
 

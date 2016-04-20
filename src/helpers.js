@@ -9,7 +9,7 @@ var shared = require('./shared');
 var ImportExport = require('./import-export');
 
 var Helpers = {};
-Math.log2 = function (x) { return Math.log(x) / Math.LN2;};
+Math.log2 = function (x) { return Math.log(x) / Math.LN2; };
 
 Helpers.isString = function (str) {
   return typeof str == 'string' || str instanceof String;
@@ -130,7 +130,7 @@ Helpers.asyncOnce = function (f, milliseconds, before) {
     };
     var myArgs = new Array();
     // this is needed because arguments is not an 'Array' instance
-    for (var i = 0; i < arguments.length; i++) { myArgs[i] = arguments[i];};
+    for (var i = 0; i < arguments.length; i++) { myArgs[i] = arguments[i]; };
     var myArgs = Helpers.zipLong(Helpers.maybeCompose, myArgs, oldArguments);
     oldArguments = myArgs;
     timer = setTimeout(function () {
@@ -157,7 +157,7 @@ Helpers.zipLong = function (f, xs, ys) {
     return null;
   } else {
     var zs = xs.length > ys.length ? xs : ys;
-    return zs.map(function (v,i) {return f(xs[i],ys[i]);});
+    return zs.map(function (v,i) { return f(xs[i],ys[i]); });
   };
 };
 
@@ -166,7 +166,7 @@ Helpers.zip3 = function (xs, ys, zs) {
   if (!(xs instanceof Array && ys instanceof Array && zs instanceof Array)) {
     return null;
   } else {
-    return xs.map(function (v,i) {return [xs[i],ys[i],zs[i]];});
+    return xs.map(function (v,i) { return [xs[i],ys[i],zs[i]]; });
   };
 };
 
@@ -174,8 +174,8 @@ Helpers.maybeCompose = function (f, g) {
   if (f instanceof Function && g instanceof Function) {
     return f.compose(g);
   } else {
-    if (f instanceof Function) {return f};
-    if (g instanceof Function) {return g};
+    if (f instanceof Function) { return f};
+    if (g instanceof Function) { return g};
     //otherwise
     return f;
   };
@@ -201,7 +201,7 @@ Helpers.guessFee = function (nInputs, nOutputs, feePerKb) {
 // password scorer
 Helpers.scorePassword = function (password) {
 
-  if (!Helpers.isString(password)) {return 0};
+  if (!Helpers.isString(password)) { return 0};
 
   var patternsList = [
      [0.25, /^[\d\s]+$/]
@@ -221,18 +221,18 @@ Helpers.scorePassword = function (password) {
     ,[1, /^.*$/]
   ];
 
-  var hasDigits = function (str) { return /[0-9]/.test(str);};
-  var hasLowerCase = function (str) { return /[a-z]/.test(str);};
-  var hasUpperCase = function (str) { return /[A-Z]/.test(str);};
-  var hasSymbol    = function (str) { return /[^0-9a-zA-z]/.test(str);};
+  var hasDigits = function (str) { return /[0-9]/.test(str); };
+  var hasLowerCase = function (str) { return /[a-z]/.test(str); };
+  var hasUpperCase = function (str) { return /[A-Z]/.test(str); };
+  var hasSymbol    = function (str) { return /[^0-9a-zA-z]/.test(str); };
   var computeSet   = function (str) {
-    var maxChar = Math.max.apply(Math,str.split('').map(function (c) {return c.charCodeAt(0);}));
+    var maxChar = Math.max.apply(Math,str.split('').map(function (c) { return c.charCodeAt(0); }));
     return maxChar + 256 - maxChar % 256;
   };
 
   var base = function (str) {
     var tuples = [[10,hasDigits(str)],[26,hasLowerCase(str)],[26,hasUpperCase(str)]];
-    var bases = tuples.filter(function (t) {return t[1]}).map(function (t) {return t[0]});
+    var bases = tuples.filter(function (t) { return t[1]}).map(function (t) { return t[0]});
     var setSize = hasSymbol(str) ? computeSet(str) : bases.reduce(Helpers.add, 0);
     var ret = setSize === 0 ? 1 : setSize;
     return ret;
@@ -243,7 +243,7 @@ Helpers.scorePassword = function (password) {
   };
 
   var quality = function (str) {
-    var pats = patternsList.filter(function (p) {return p[1].test(str);}).map(function (p) {return p[0]});
+    var pats = patternsList.filter(function (p) { return p[1].test(str); }).map(function (p) { return p[0]});
     return Math.min.apply(Math, pats);
   };
 
@@ -383,9 +383,9 @@ Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
         return reject('needsBip38');
       }
       ImportExport.parseBIP38toECPair(priv, bipPass,
-        function (key) { resolve(key);},
-        function ()    { reject('wrongBipPass'); },
-        function ()    { reject('importError');}
+        function (key) { resolve(key); },
+        function () { reject('wrongBipPass'); },
+        function () { reject('importError'); }
       );
     }
     else if (okFormats.indexOf(format) > -1) {

@@ -416,7 +416,7 @@ function syncWallet (successcallback, errorcallback) {
   if (!MyWallet.wallet || !MyWallet.wallet.sharedKey
       || MyWallet.wallet.sharedKey.length === 0
       || MyWallet.wallet.sharedKey.length !== 36)
-    { throw 'Cannot backup wallet now. Shared key is not set'; };
+ { throw 'Cannot backup wallet now. Shared key is not set'; };
 
   WalletStore.disableLogout();
 
@@ -448,7 +448,7 @@ function syncWallet (successcallback, errorcallback) {
         WalletStore.sendEvent('on_backup_wallet_start');
         WalletStore.setEncryptedWalletData(crypted);
         var new_checksum = WalletStore.getPayloadChecksum();
-        var data =  {
+        var data = {
           length: crypted.length,
           payload: crypted,
           checksum: new_checksum,
@@ -553,7 +553,7 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
 MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
   var walletSuccess = function (guid, sharedKey, password) {
     WalletStore.unsafeSetPassword(password);
-    var runSuccess = function () {success({ guid: guid, sharedKey: sharedKey, password: password});};
+    var runSuccess = function () { success({guid: guid, sharedKey: sharedKey, password: password}); };
     MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password, undefined, startedRestoreHDWallet, accountProgress).then(runSuccess).catch(error);
   };
   WalletSignup.generateNewWallet(inputedPassword, inputedEmail, null, walletSuccess, error, true, generateUUIDProgress, decryptWalletProgress);
