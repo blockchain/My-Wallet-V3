@@ -84,8 +84,8 @@ describe 'TransactionList', ->
       txList.pushTxs({ txType: 'sent', hash: "1234"})
       txList.pushTxs({ txType: 'sent', hash: "3234"})
 
-      ios = txList.transactionsForIOS
-      
+      ios = txList.transactionsForIOS()
+
       expect(ios.length).toEqual(2)
       expect(ios[0].myHash).toEqual('1234')
       expect(ios[1].myHash).toEqual('3234')
