@@ -273,7 +273,7 @@ MyWallet.login = function ( user_guid
 
     var two_factor_auth_key = two_factor_auth.code;
 
-    switch(two_factor_auth.type) {
+    switch (two_factor_auth.type) {
       case 2: // email
       case 4: // sms
       case 5: // Google Auth

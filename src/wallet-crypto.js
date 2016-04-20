@@ -212,7 +212,7 @@ function cipherFunction (password, sharedKey, pbkdf2Iterations, operation) {
   var id = function (msg) { return msg; };
   if (!password || !sharedKey || !pbkdf2Iterations) { return id; }
   else {
-    switch(operation) {
+    switch (operation) {
       case 'enc':
         return function (msg) {
           return encryptSecretWithSecondPassword(msg, password, sharedKey, pbkdf2Iterations);

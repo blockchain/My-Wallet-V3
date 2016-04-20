@@ -51,7 +51,7 @@ var WalletStore = (function () {
     },
     get2FATypeString: function () {
       var stringType = '';
-      switch(real_auth_type){
+      switch (real_auth_type){
       case 0: stringType = null; break;
       case 1: stringType = 'Yubikey'; break;
       case 2: stringType = 'Email'; break;
