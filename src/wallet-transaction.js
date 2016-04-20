@@ -120,7 +120,7 @@ function isAccount (x) {
 }
 
 function isLegacy (x) {
-  return MyWallet.wallet.containsLegacyAddress(x.addr);
+  return MyWallet.wallet.containsLegacyAddress(x.addr) && !MyWallet.wallet.key(x.addr).archived;
 }
 
 function isAccountChange (x) {
