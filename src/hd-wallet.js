@@ -218,7 +218,7 @@ HDWallet.prototype.toJSON = function () {
   return hdwallet;
 };
 
-HDWallet.reviver = function (k,v) {
+HDWallet.reviver = function (k, v) {
   if (k === '') return new HDWallet(v);
   return v;
 }

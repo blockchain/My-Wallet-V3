@@ -30,9 +30,9 @@ KeyRing.prototype.init = function (extendedKey, cache) {
   if (this._receiveChain && this._changeChain) return this;
   if (extendedKey || cache.receiveAccount && cache.changeAccount) {
     this._receiveChain = cache.receiveAccount
-      ? new KeyChain(null,null,cache.receiveAccount ) : new KeyChain(extendedKey,0);
+      ? new KeyChain(null, null, cache.receiveAccount ) : new KeyChain(extendedKey, 0);
     this._changeChain = cache.changeAccount
-      ? new KeyChain(null,null,cache.changeAccount ) : new KeyChain(extendedKey,1);
+      ? new KeyChain(null, null, cache.changeAccount ) : new KeyChain(extendedKey, 1);
   }
   return this;
 };
@@ -42,7 +42,7 @@ KeyRing.prototype.privateKeyFromPath = function (path) {
   var components = path.split('/');
   assert(components[0] === 'M', 'Invalid Path prefix');
   assert(components[1] === '0' || components[1] === '1'
-    ,'Invalid Path: change/receive index out of bounds');
+    , 'Invalid Path: change/receive index out of bounds');
   assert(components.length === 3, 'Invalid Path length');
   if (this._receiveChain.isNeutered) return null;
   var receiveOrChange = parseInt(components[1]);

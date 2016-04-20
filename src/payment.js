@@ -71,9 +71,9 @@ function Payment (payment) {
     balance: 0, // sum of all unspents values with any filtering     [ payment.sumOfCoins ]
     finalFee: 0, // final absolute fee that it is going to be used no matter how was obtained (advanced or regular send)
     changeAmount: 0, // final change
-    absoluteFeeBounds: [0,0,0,0,0,0], // fee bounds (absolute) per fixed amount
-    sweepFees: [0,0,0,0,0,0], // sweep absolute fee per each fee per kb (1,2,3,4,5,6)
-    maxSpendableAmounts: [0,0,0,0,0,0],  // max amount per each fee-per-kb
+    absoluteFeeBounds: [0, 0, 0, 0, 0, 0], // fee bounds (absolute) per fixed amount
+    sweepFees: [0, 0, 0, 0, 0, 0], // sweep absolute fee per each fee per kb (1, 2, 3, 4, 5, 6)
+    maxSpendableAmounts: [0, 0, 0, 0, 0, 0],  // max amount per each fee-per-kb
     confEstimation: "unknown",
     txSize: 0 // transaciton size
   };

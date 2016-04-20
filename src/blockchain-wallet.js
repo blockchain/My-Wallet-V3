@@ -57,7 +57,7 @@ function Wallet (object) {
   // address book in json is [{address: 'address1', label: 'label1'} , ... ]
   // address book in memory is {address1: 'label1', address2: 'label2'}
   this._address_book = obj.address_book ?
-    obj.address_book.reduce(function (o,a) {
+    obj.address_book.reduce(function (o, a) {
                               var address = a.address || a.addr;
                               o[address] = a.label;
                               return o;
@@ -400,7 +400,7 @@ Wallet.prototype.getBalancesForArchived = function () {
       return MyWallet.wallet.key(addr).archived === true;
   });
 
-  return API.getHistory(archivedAddrs, 0 ,0, 1).then(updateBalances.bind(this));
+  return API.getHistory(archivedAddrs, 0 , 0, 1).then(updateBalances.bind(this));
 };
 ////////////////////////////////////////////////////////////////////////////////
 Wallet.prototype.toJSON = function () {
@@ -604,7 +604,7 @@ Wallet.prototype.decrypt = function (pw, success, error, decrypting, syncing) {
   return this;
 };
 
-Wallet.reviver = function (k,v) {
+Wallet.reviver = function (k, v) {
   if (k === '') { return new Wallet(v); }
   return v;
 };

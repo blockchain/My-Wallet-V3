@@ -131,7 +131,7 @@ Object.defineProperties(Address.prototype, {
   }
 });
 
-Address.factory = function (o,a) {
+Address.factory = function (o, a) {
   if (a instanceof Object && !(a instanceof Address)) {
     o[a.addr] = new Address(a);
   } else {
@@ -209,7 +209,7 @@ Address.new = function (label) {
   return Address.import(key, label);
 };
 
-Address.reviver = function (k,v) {
+Address.reviver = function (k, v) {
   if (k === '') return new Address(v);
   return v;
 };

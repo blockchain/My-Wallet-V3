@@ -75,21 +75,21 @@ Helpers.isValidLabel = function (text) {
 Helpers.isInRange = function (val, min, max) {
   return min <= val && val < max;
 };
-Helpers.add = function (x,y) {
+Helpers.add = function (x, y) {
   return x + y;
 };
-Helpers.and = function (x,y) {
+Helpers.and = function (x, y) {
   return x && y;
 };
-Helpers.or = function (x,y) {
+Helpers.or = function (x, y) {
   return x || y;
 };
-Helpers.i = function (pred1,pred2) {
+Helpers.i = function (pred1, pred2) {
   return function (element) {
     return pred1(element) && pred2(element);
   };
 };
-Helpers.o = function (pred1,pred2) {
+Helpers.o = function (pred1, pred2) {
   return function (element) {
     return pred1(element) || pred2(element);
   };
@@ -157,7 +157,7 @@ Helpers.zipLong = function (f, xs, ys) {
     return null;
   } else {
     var zs = xs.length > ys.length ? xs : ys;
-    return zs.map(function (v,i) { return f(xs[i],ys[i]); });
+    return zs.map(function (v, i) { return f(xs[i], ys[i]); });
   };
 };
 
@@ -166,7 +166,7 @@ Helpers.zip3 = function (xs, ys, zs) {
   if (!(xs instanceof Array && ys instanceof Array && zs instanceof Array)) {
     return null;
   } else {
-    return xs.map(function (v,i) { return [xs[i],ys[i],zs[i]]; });
+    return xs.map(function (v, i) { return [xs[i], ys[i], zs[i]]; });
   };
 };
 
@@ -226,12 +226,12 @@ Helpers.scorePassword = function (password) {
   var hasUpperCase = function (str) { return /[A-Z]/.test(str); };
   var hasSymbol = function (str) { return /[^0-9a-zA-z]/.test(str); };
   var computeSet = function (str) {
-    var maxChar = Math.max.apply(Math,str.split('').map(function (c) { return c.charCodeAt(0); }));
+    var maxChar = Math.max.apply(Math, str.split('').map(function (c) { return c.charCodeAt(0); }));
     return maxChar + 256 - maxChar % 256;
   };
 
   var base = function (str) {
-    var tuples = [[10,hasDigits(str)],[26,hasLowerCase(str)],[26,hasUpperCase(str)]];
+    var tuples = [[10, hasDigits(str)], [26, hasLowerCase(str)], [26, hasUpperCase(str)]];
     var bases = tuples.filter(function (t) { return t[1]}).map(function (t) { return t[0]});
     var setSize = hasSymbol(str) ? computeSet(str) : bases.reduce(Helpers.add, 0);
     var ret = setSize === 0 ? 1 : setSize;
@@ -239,7 +239,7 @@ Helpers.scorePassword = function (password) {
   };
 
   var entropy = function (str) {
-    return Math.log2(Math.pow(base(str),str.length));
+    return Math.log2(Math.pow(base(str), str.length));
   };
 
   var quality = function (str) {

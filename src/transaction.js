@@ -39,7 +39,7 @@ var Transaction = function (payment, emitter) {
   assert(unspentOutputs && unspentOutputs.length > 0, {error: 'NO_UNSPENT_OUTPUTS'});
   var transaction = new Bitcoin.TransactionBuilder();
   // add all outputs
-  function addOutput (e, i) {transaction.addOutput(toAddresses[i],amounts[i]); }
+  function addOutput (e, i) {transaction.addOutput(toAddresses[i], amounts[i]); }
   toAddresses.map(addOutput);
 
   // add all inputs
@@ -177,15 +177,15 @@ Transaction.filterUsableCoins = function (coins, feePerKb) {
 Transaction.maxAvailableAmount = function (usableCoins, feePerKb) {
   var len = usableCoins.length;
   var fee = Transaction.guessFee(len, 2, feePerKb);
-  return {"amount": usableCoins.reduce(function(a,e) { a = a + e.value; return a; }, 0) - fee, "fee": fee};
+  return {"amount": usableCoins.reduce(function(a, e) { a = a + e.value; return a; }, 0) - fee, "fee": fee};
 };
 
 Transaction.sumOfCoins = function (coins) {
-  return coins.reduce(function(a,e) { a = a + e.value; return a; }, 0);
+  return coins.reduce(function(a, e) { a = a + e.value; return a; }, 0);
 };
 
 Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
-  var amount = amounts.reduce(Helpers.add,0);
+  var amount = amounts.reduce(Helpers.add, 0);
   var nouts = amounts.length;
   var sorted = usableCoins.sort(function (a, b) { return b.value - a.value });
   var len = sorted.length;
