@@ -99,7 +99,7 @@ Transaction.prototype.sortBIP69 = function () {
     return x.compare(y) || a[0].index - b[0].index
   };
 
-  var compareOutputs = function(a, b) {
+  var compareOutputs = function (a, b) {
     return (a.value - b.value) || (a.script).compare(b.script)
   };
   var mix = Helpers.zip3(this.transaction.tx.ins, this.privateKeys, this.addressesOfInputs);
@@ -212,7 +212,7 @@ Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
   return {"coins": [], "fee": 0};
 };
 
-Transaction.confirmationEstimation = function(absoluteFees, fee) {
+Transaction.confirmationEstimation = function (absoluteFees, fee) {
   var len = absoluteFees.length;
   for (var i = 0; i < len; i++) {
     if (absoluteFees[i] > 0 && fee >= absoluteFees[i]) {

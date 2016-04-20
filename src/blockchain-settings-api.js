@@ -114,7 +114,7 @@ function toggleSave2FA (val, success, error) {
 }
 
 function updateAuthType (val, success, error) {
-  updateKV('update-auth-type', val, function() {
+  updateKV('update-auth-type', val, function () {
     WalletStore.setRealAuthType(val);
     typeof(success) === 'function' && success();
   }, error);

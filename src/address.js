@@ -201,7 +201,7 @@ Address.fromString = function (keyOrAddr, label, bipPass) {
   return new Promise(asyncParse);
 };
 
-Address.new = function(label) {
+Address.new = function (label) {
   var key = Bitcoin.ECPair.makeRandom({
     rng: RNG.run.bind(RNG),
     compressed: true

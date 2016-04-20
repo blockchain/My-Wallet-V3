@@ -11,7 +11,7 @@ var hash256 = Bitcoin.crypto.hash256;
 
 var ImportExport = new function () {
 
-  this.parseBIP38toECPair = function(base58Encrypted, passphrase, success, wrong_password, error) {
+  this.parseBIP38toECPair = function (base58Encrypted, passphrase, success, wrong_password, error) {
     var hex;
 
     // Unicode NFC normalization
@@ -68,7 +68,7 @@ var ImportExport = new function () {
     var decrypted;
     var AES_opts = { mode: WalletCrypto.AES.ECB, padding: WalletCrypto.pad.NoPadding };
 
-    var verifyHashAndReturn = function() {
+    var verifyHashAndReturn = function () {
       var tmpkey = new Bitcoin.ECPair(decrypted, null, {compressed: isCompPoint});
 
       var base58Address = tmpkey.getAddress();

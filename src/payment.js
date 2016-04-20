@@ -170,7 +170,7 @@ Payment.prototype.publish = function () {
 };
 
 Payment.prototype.printJSON = function () {
-  var printJSON = function(p) {console.log(JSON.stringify(p, null, 2)); }
+  var printJSON = function (p) {console.log(JSON.stringify(p, null, 2)); }
   this.sideEffect(printJSON);
   return this;
 };
@@ -386,7 +386,7 @@ Payment.prebuild = function (absoluteFee) {
     payment.balance = Transaction.sumOfCoins(payment.coins);
 
     // compute max spendable limits per each fee-per-kb
-    var maxSpendablesPerFeePerKb = function(e) {
+    var maxSpendablesPerFeePerKb = function (e) {
       var c = Transaction.filterUsableCoins(payment.coins, e.fee);
       var s = Transaction.maxAvailableAmount(c, e.fee);
       return s.amount;
@@ -418,7 +418,7 @@ Payment.prebuild = function (absoluteFee) {
       }
 
       // compute absolute fee bounds for 1,2,3,4,5,6 block confirmations
-      var toAbsoluteFee = function(e) {
+      var toAbsoluteFee = function (e) {
         var c = Transaction.filterUsableCoins(payment.coins, e.fee);
         var s = Transaction.selectCoins(c, payment.amounts, e.fee, false);
         return s.fee;
@@ -444,8 +444,8 @@ Payment.build = function () {
   }.bind(this);
 };
 
-Payment.sign = function(password) {
-  return function(payment) {
+Payment.sign = function (password) {
+  return function (payment) {
     var importWIF = function (WIF) {
       MyWallet.wallet.importLegacyAddress(WIF, "Redeemed code.", password)
         .then(function(A) {A.archived = true; });

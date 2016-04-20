@@ -394,7 +394,7 @@ Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
     }
     else { reject('unknown key format'); }
   }
-  var predicate = function(key) {
+  var predicate = function (key) {
     var a = key.getAddress();
     return a === address? Base58.encode(key.d.toBuffer(32)) : null;
   }
