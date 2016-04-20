@@ -2,7 +2,7 @@
 
 module.exports = Block;
 
-function Block (object){
+function Block (object) {
   var obj = object || {};
   this._hash       = obj.hash || 'emptyBlock';
   this._time       = obj.time || 0;
@@ -29,7 +29,7 @@ Object.defineProperties(Block.prototype, {
   }
 });
 
-Block.prototype.toJSON = function (){
+Block.prototype.toJSON = function () {
   return {
     hash       : this.hash,
     time       : this.time,

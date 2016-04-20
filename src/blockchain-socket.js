@@ -56,14 +56,14 @@ BlockchainSocket.prototype._initialize = function (onOpen, onMessage, onClose) {
   }
 };
 
-BlockchainSocket.prototype.ping = function (){
+BlockchainSocket.prototype.ping = function () {
   this.send(this.msgPing());
   var connect = this.reconnect.bind(this);
   var close = this.close.bind(this);
   this.pingTimeoutPID = setTimeout(connect.compose(close), this.pingTimeout);
 };
 
-BlockchainSocket.prototype.close = function (){
+BlockchainSocket.prototype.close = function () {
   if (this.socket) { this.socket.close();}
   this.socket = null;
   clearInterval(this.pingIntervalPID);

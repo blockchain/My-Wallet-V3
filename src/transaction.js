@@ -89,7 +89,7 @@ Transaction.prototype.addPrivateKeys = function (privateKeys) {
  * BIP69: Sort outputs lexicographycally
  */
 
-Transaction.prototype.sortBIP69 = function (){
+Transaction.prototype.sortBIP69 = function () {
 
   var compareInputs = function (a, b) {
     var hasha = new Buffer(a[0].hash);
@@ -104,9 +104,9 @@ Transaction.prototype.sortBIP69 = function (){
   };
   var mix = Helpers.zip3(this.transaction.tx.ins, this.privateKeys, this.addressesOfInputs);
   mix.sort(compareInputs);
-  this.transaction.tx.ins = mix.map(function (a){return a[0];});
-  this.privateKeys        = mix.map(function (a){return a[1];});
-  this.addressesOfInputs  = mix.map(function (a){return a[2];});
+  this.transaction.tx.ins = mix.map(function (a) {return a[0];});
+  this.privateKeys        = mix.map(function (a) {return a[1];});
+  this.addressesOfInputs  = mix.map(function (a) {return a[2];});
   this.transaction.tx.outs.sort(compareOutputs);
 };
 /**
@@ -148,7 +148,7 @@ function sortUnspentOutputs (unspentOutputs) {
     }
   }
 
-  unspent.sort(function (o1, o2){
+  unspent.sort(function (o1, o2) {
     return o2.value - o1.value;
   });
 
@@ -168,23 +168,23 @@ Transaction.guessFee = function (nInputs, nOutputs, feePerKb) {
   return Math.ceil(feePerKb * (sizeBytes / 1000));
 };
 
-Transaction.filterUsableCoins = function (coins, feePerKb){
+Transaction.filterUsableCoins = function (coins, feePerKb) {
   if (!Array.isArray(coins)) return [];
   var icost = Transaction.inputCost(feePerKb);
   return coins.filter(function(c) { return c.value >= icost });
 };
 
-Transaction.maxAvailableAmount = function (usableCoins, feePerKb){
+Transaction.maxAvailableAmount = function (usableCoins, feePerKb) {
   var len = usableCoins.length;
   var fee = Transaction.guessFee(len, 2, feePerKb);
-  return {"amount": usableCoins.reduce(function(a,e){a = a + e.value; return a},0) - fee, "fee" : fee};
+  return {"amount": usableCoins.reduce(function(a,e) {a = a + e.value; return a},0) - fee, "fee" : fee};
 };
 
-Transaction.sumOfCoins = function (coins){
-  return coins.reduce(function(a,e){a = a + e.value; return a},0);
+Transaction.sumOfCoins = function (coins) {
+  return coins.reduce(function(a,e) {a = a + e.value; return a},0);
 };
 
-Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee){
+Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
   var amount = amounts.reduce(Helpers.add,0);
   var nouts  = amounts.length;
   var sorted = usableCoins.sort(function (a, b) { return b.value - a.value });

@@ -25,7 +25,7 @@ Object.defineProperties(KeyRing.prototype, {
   }
 });
 
-KeyRing.prototype.init = function (extendedKey, cache){
+KeyRing.prototype.init = function (extendedKey, cache) {
   cache = cache || {};
   if (this._receiveChain && this._changeChain) return this;
   if (extendedKey || cache.receiveAccount && cache.changeAccount) {
@@ -52,7 +52,7 @@ KeyRing.prototype.privateKeyFromPath = function (path) {
     this._changeChain.getPrivateKey(index) ;
 };
 
-KeyRing.prototype.toJSON = function (){
+KeyRing.prototype.toJSON = function () {
   var cacheJSON = {
     receiveAccount : this._receiveChain.xpub,
     changeAccount  : this._changeChain.xpub

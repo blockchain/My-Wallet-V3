@@ -51,7 +51,7 @@ var WalletStore = (function () {
     },
     get2FATypeString: function () {
       var stringType = '';
-      switch (real_auth_type){
+      switch (real_auth_type) {
       case 0: stringType = null; break;
       case 1: stringType = 'Yubikey'; break;
       case 2: stringType = 'Email'; break;
@@ -108,37 +108,37 @@ var WalletStore = (function () {
     getCounter: function () {
       return counter;
     },
-    setSyncPubKeys: function (bool){
+    setSyncPubKeys: function (bool) {
       sync_pubkeys = bool;
     },
-    isSyncPubKeys: function (){
+    isSyncPubKeys: function () {
       return sync_pubkeys;
     },
-    isSynchronizedWithServer: function (){
+    isSynchronizedWithServer: function () {
       return isSynchronizedWithServer;
     },
-    setIsSynchronizedWithServer: function (bool){
+    setIsSynchronizedWithServer: function (bool) {
       isSynchronizedWithServer = bool;
     },
-    addEventListener: function (func){
+    addEventListener: function (func) {
       event_listeners.push(func);
     },
-    sendEvent: function (event_name, obj){
+    sendEvent: function (event_name, obj) {
       for (var listener in event_listeners) {
         event_listeners[listener](event_name, obj);
       }
     },
-    isCorrectMainPassword: function (candidate){
+    isCorrectMainPassword: function (candidate) {
       return password === candidate;
     },
-    changePassword: function (new_password, success, error){
+    changePassword: function (new_password, success, error) {
       password = new_password;
       MyWallet.syncWallet(success, error);
     },
-    unsafeSetPassword: function (newPassword){
+    unsafeSetPassword: function (newPassword) {
       password = newPassword;
     },
-    getPassword: function (){
+    getPassword: function () {
       return password;
     },
     getLogoutTime: function () {

@@ -10,7 +10,7 @@ var MyWallet = require('./wallet'); // This cyclic import should be avoided once
 ////////////////////////////////////////////////////////////////////////////////
 // HDAccount Class
 
-function HDAccount (object){
+function HDAccount (object) {
 
   var self = this;
   var obj = object || {};
@@ -24,7 +24,7 @@ function HDAccount (object){
   this._network  = obj.network || Bitcoin.networks.bitcoin;
 
   this._address_labels = [];
-  obj.address_labels.map(function (e){self._address_labels[e.index] = e.label;});
+  obj.address_labels.map(function (e) {self._address_labels[e.index] = e.label;});
 
   // computed properties
   this._keyRing       = new KeyRing(obj.xpub, obj.cache);
@@ -46,7 +46,7 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function () { return this._label;},
     set: function (str) {
-      if (Helpers.isValidLabel(str)){
+      if (Helpers.isValidLabel(str)) {
         this._label = str;
         MyWallet.syncWallet();
       }else{
@@ -77,7 +77,7 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function () { return this._archived;},
     set: function (value) {
-      if (Helpers.isBoolean(value)){
+      if (Helpers.isBoolean(value)) {
         this._archived = value;
         MyWallet.syncWallet();
         if (!value) { // Unarchive
@@ -143,7 +143,7 @@ Object.defineProperties(HDAccount.prototype, {
     get: function () {
       var denseArray = [];
       this._address_labels
-        .map(function (lab,ind){denseArray.push({'index': ind, 'label': lab})});
+        .map(function (lab,ind) {denseArray.push({'index': ind, 'label': lab})});
       return denseArray;
     }
   },
@@ -153,7 +153,7 @@ Object.defineProperties(HDAccount.prototype, {
       var denseArray = [];
       var outerThis = this;
       this._address_labels
-        .map(function (lab,i){denseArray.push(outerThis.receiveAddressAtIndex(i))});
+        .map(function (lab,i) {denseArray.push(outerThis.receiveAddressAtIndex(i))});
       return denseArray;
     }
   },
@@ -201,7 +201,7 @@ Object.defineProperties(HDAccount.prototype, {
  * Purpose is a constant set to 44' following the BIP43 recommendation
  * Registered coin types: 0' for Bitcoin
  */
-HDAccount.fromAccountMasterKey = function (accountZero, index, label){
+HDAccount.fromAccountMasterKey = function (accountZero, index, label) {
 
   assert(accountZero, 'Account MasterKey must be given to create an account.');
   var account    = new HDAccount();
@@ -221,7 +221,7 @@ HDAccount.fromWalletMasterKey = function (masterkey, index, label) {
   return HDAccount.fromAccountMasterKey(accountZero, index, label);
 };
 
-HDAccount.fromExtPublicKey = function (extPublicKey, index, label){
+HDAccount.fromExtPublicKey = function (extPublicKey, index, label) {
   // this is creating a read-only account
   assert(Helpers.isXpubKey(extPublicKey)
       , 'Extended public key must be given to create an account.');
@@ -231,7 +231,7 @@ HDAccount.fromExtPublicKey = function (extPublicKey, index, label){
   return a;
 };
 
-HDAccount.fromExtPrivateKey = function (extPrivateKey, index, label){
+HDAccount.fromExtPrivateKey = function (extPrivateKey, index, label) {
 
   assert(Helpers.isXprivKey(extPrivateKey)
       , 'Extended private key must be given to create an account.');
@@ -239,7 +239,7 @@ HDAccount.fromExtPrivateKey = function (extPrivateKey, index, label){
   return HDAccount.fromAccountMasterKey(accountZero, index, label);
 };
 
-HDAccount.factory = function (o){
+HDAccount.factory = function (o) {
   if (o instanceof Object && !(o instanceof HDAccount)) {
     return new HDAccount(o);
   }
@@ -248,7 +248,7 @@ HDAccount.factory = function (o){
 ////////////////////////////////////////////////////////////////////////////////
 // JSON SERIALIZER
 
-HDAccount.prototype.toJSON = function (){
+HDAccount.prototype.toJSON = function () {
 
   // should we add checks on the serializer too?
   var hdaccount = {
@@ -263,7 +263,7 @@ HDAccount.prototype.toJSON = function (){
   return hdaccount;
 };
 
-HDAccount.reviver = function (k,v){
+HDAccount.reviver = function (k,v) {
   if (k === '') return new HDAccount(v);
   return v;
 };
@@ -275,7 +275,7 @@ HDAccount.prototype.incrementReceiveIndex = function () {
   return this;
 };
 HDAccount.prototype.incrementReceiveIndexIfLast = function (index) {
-  if (this._receiveIndex === index){
+  if (this._receiveIndex === index) {
     this.incrementReceiveIndex();
   }
   return this;
@@ -316,7 +316,7 @@ HDAccount.prototype.receiveAddressAtIndex = function (index) {
   return this._keyRing.receive.getAddress(index);
 };
 
-HDAccount.prototype.encrypt = function (cipher){
+HDAccount.prototype.encrypt = function (cipher) {
   if (!this._xpriv) return this;
   var xpriv = cipher? cipher(this._xpriv) : this._xpriv;
   if (!xpriv) { throw 'Error Encoding account extended private key'; }
@@ -324,7 +324,7 @@ HDAccount.prototype.encrypt = function (cipher){
   return this;
 };
 
-HDAccount.prototype.decrypt = function (cipher){
+HDAccount.prototype.decrypt = function (cipher) {
   if (!this._xpriv) return this;
   var xpriv = cipher? cipher(this._xpriv) : this._xpriv;
   if (!xpriv) { throw 'Error Decoding account extended private key'; }
@@ -332,7 +332,7 @@ HDAccount.prototype.decrypt = function (cipher){
   return this;
 };
 
-HDAccount.prototype.persist = function (){
+HDAccount.prototype.persist = function () {
   if (!this._temporal_xpriv) return this;
   this._xpriv = this._temporal_xpriv;
   delete this._temporal_xpriv;

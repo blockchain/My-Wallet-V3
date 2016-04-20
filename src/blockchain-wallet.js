@@ -48,7 +48,7 @@ function Wallet (object) {
 
   // paidTo dictionary
   this._paidTo = obj.paidTo || {};
-  if (this.isUpgradedToHD){
+  if (this.isUpgradedToHD) {
     Helpers.merge(this._paidTo, this.hdwallet._paidTo); // move paidTo from the wrong place
     delete this.hdwallet._paidTo;
   }
@@ -57,7 +57,7 @@ function Wallet (object) {
   // address book in json is [{address: 'address1', label: 'label1'} , ... ]
   // address book in memory is {address1: 'label1', address2: 'label2'}
   this._address_book = obj.address_book ?
-    obj.address_book.reduce(function (o,a){
+    obj.address_book.reduce(function (o,a) {
                               var address = a.address || a.addr;
                               o[address] = a.label;
                               return o;
@@ -172,17 +172,17 @@ Object.defineProperties(Wallet.prototype, {
   },
   'addresses': {
     configurable: false,
-    get: function (){return Object.keys(this._addresses);}
+    get: function () {return Object.keys(this._addresses);}
   },
   'activeAddresses': {
     configurable: false,
-    get: function (){return this.activeKeys.map(function (k){return k.address;});}
+    get: function () {return this.activeKeys.map(function (k) {return k.address;});}
   },
   'spendableActiveAddresses': {
     configurable: false,
-    get: function (){return this.activeKeys
-                        .filter(function (k){return !k.isWatchOnly;})
-                          .map(function (k){return k.address;});}
+    get: function () {return this.activeKeys
+                        .filter(function (k) {return !k.isWatchOnly;})
+                          .map(function (k) {return k.address;});}
   },
   'key': {
     configurable: false,
@@ -200,12 +200,12 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () {
       var that = this;
-      return that.addresses.map(function (a){return that.key(a)});
+      return that.addresses.map(function (a) {return that.key(a)});
     }
   },
   'activeKeys': {
     configurable: false,
-    get: function (){return this.keys.filter(function (a){return !a.archived;})}
+    get: function () {return this.keys.filter(function (a) {return !a.archived;})}
   },
   'hdwallet': {
     configurable: false,
@@ -222,12 +222,12 @@ Object.defineProperties(Wallet.prototype, {
     get: function () {
       var operation = undefined;
       if (this.isDoubleEncrypted) {
-        operation = function (k){return k.isEncrypted;}
+        operation = function (k) {return k.isEncrypted;}
       }
       else { // no double encryption activated
-        operation = function (k){return k.isUnEncrypted;}
+        operation = function (k) {return k.isUnEncrypted;}
       }
-      var A = this.keys.filter(function (k){return !k.isWatchOnly;})
+      var A = this.keys.filter(function (k) {return !k.isWatchOnly;})
                        .map(operation)
                        .reduce(Helpers.and, true);
       var W = this._hd_wallets.map(operation)
@@ -239,7 +239,7 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () {
       return this.activeKeys
-                 .map(function (k){return k.balance;})
+                 .map(function (k) {return k.balance;})
                  .reduce(Helpers.add, 0);
     }
   },
@@ -247,8 +247,8 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () {
       return this.hdwallet.accounts
-                 .filter(function (a){return !a.archived;})
-                 .map(function (a){return a.balance;})
+                 .filter(function (a) {return !a.archived;})
+                 .map(function (a) {return a.balance;})
                  .reduce(Helpers.add, 0);
     }
   },
@@ -272,8 +272,8 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () {
       return this.activeKeys
-                 .filter(function (k){return !k.isWatchOnly;})
-                 .map(function (k){return k.balance;})
+                 .filter(function (k) {return !k.isWatchOnly;})
+                 .map(function (k) {return k.balance;})
                  .reduce(Helpers.add, 0);
     }
   },
@@ -283,7 +283,7 @@ Object.defineProperties(Wallet.prototype, {
   },
   'defaultPbkdf2Iterations':{
     configurable: false,
-    get: function (){return 5000;}
+    get: function () {return 5000;}
   },
   'latestBlock': {
     configurable: false,
@@ -342,7 +342,7 @@ Wallet.prototype._updateWalletInfo = function (obj) {
   var updateAccountAndAddressesInfo = function (e) {
     if (this.isUpgradedToHD) {
       var account = this.hdwallet.activeAccount(e.address);
-      if (account){
+      if (account) {
         account.balance      = e.final_balance;
         account.n_tx         = e.n_tx;
         account.lastUsedReceiveIndex = e.account_index;
@@ -354,7 +354,7 @@ Wallet.prototype._updateWalletInfo = function (obj) {
       }
     }
     var address = this.activeKey(e.address);
-    if (address){
+    if (address) {
       address.balance       = e.final_balance;
       address.totalReceived = e.total_received;
       address.totalSent     = e.total_sent;
@@ -380,7 +380,7 @@ Wallet.prototype.fetchTransactions = function () {
 ////////////////////////////////////////////////////////////////////////////////
 
 Wallet.prototype.getBalancesForArchived = function () {
-  var updateBalance = function (key){
+  var updateBalance = function (key) {
     if (this.containsLegacyAddress(key.address)) {
       this.key(key.address).balance = key.final_balance;
     }
@@ -396,11 +396,11 @@ Wallet.prototype.getBalancesForArchived = function () {
   return API.getHistory(archivedAddrs, 0 ,0, 1).then(updateBalances.bind(this));
 };
 ////////////////////////////////////////////////////////////////////////////////
-Wallet.prototype.toJSON = function (){
+Wallet.prototype.toJSON = function () {
 
   function addressBookToJSON (addressBook) {
     return Object.keys(addressBook)
-             .map(function (a){ return {addr: a, label: addressBook[a]};});
+             .map(function (a) { return {addr: a, label: addressBook[a]};});
   }
 
   return {
@@ -491,7 +491,7 @@ Wallet.prototype.containsLegacyAddress = function (address) {
   return this._addresses.hasOwnProperty(address);
 };
 
-Wallet.prototype.newLegacyAddress = function (label, pw, success, error){
+Wallet.prototype.newLegacyAddress = function (label, pw, success, error) {
   try {
     // This method might throw if the RNG fails:
     var ad = Address.new(label);
@@ -509,7 +509,7 @@ Wallet.prototype.newLegacyAddress = function (label, pw, success, error){
   return ad;
 };
 
-Wallet.prototype.deleteLegacyAddress = function (a){
+Wallet.prototype.deleteLegacyAddress = function (a) {
   assert(a, 'Error: address needed');
   if (typeof this._addresses === 'object') {
     delete this._addresses[a.address];
@@ -519,7 +519,7 @@ Wallet.prototype.deleteLegacyAddress = function (a){
   return false;
 };
 
-// Wallet.prototype.setDefaultPbkdf2Iterations = function (){
+// Wallet.prototype.setDefaultPbkdf2Iterations = function () {
 //   this._pbkdf2_iterations = 5000;
 //   MyWallet.syncWallet();
 //   return this;
@@ -533,7 +533,7 @@ Wallet.prototype.validateSecondPassword = function (inputString) {
   return password_hash === this._dpasswordhash;
 };
 
-Wallet.prototype.encrypt = function (pw, success, error, encrypting, syncing){
+Wallet.prototype.encrypt = function (pw, success, error, encrypting, syncing) {
   encrypting && encrypting();
   try {
     if (!this.isDoubleEncrypted) {
@@ -547,7 +547,7 @@ Wallet.prototype.encrypt = function (pw, success, error, encrypting, syncing){
       return this;
     }
   }
-  catch (e){
+  catch (e) {
     console.log('wallet encryption failure');
     error && error(e);
     return false;
@@ -564,7 +564,7 @@ Wallet.prototype.encrypt = function (pw, success, error, encrypting, syncing){
   return this;
 };
 
-Wallet.prototype.decrypt = function (pw, success, error, decrypting, syncing){
+Wallet.prototype.decrypt = function (pw, success, error, decrypting, syncing) {
   decrypting && decrypting();
   try {
     if (this.isDoubleEncrypted) {
@@ -578,7 +578,7 @@ Wallet.prototype.decrypt = function (pw, success, error, decrypting, syncing){
       return this;
     }
   }
-  catch (e){
+  catch (e) {
     console.log('wallet decryption failure');
     error && error(e);
     return false;
@@ -595,20 +595,20 @@ Wallet.prototype.decrypt = function (pw, success, error, decrypting, syncing){
   return this;
 };
 
-Wallet.reviver = function (k,v){
+Wallet.reviver = function (k,v) {
   if (k === '') return new Wallet(v);
   return v;
 };
 
 function isAccountNonUsed (account, progress) {
-  var isNonUsed = function (obj){
+  var isNonUsed = function (obj) {
     if (progress) { progress(obj);}
     return obj.addresses[0].account_index === 0 && obj.addresses[0].change_index === 0;
   };
   return API.getHistory([account.extendedPublicKey], 0, 0, 50).then(isNonUsed);
 }
 
-Wallet.prototype.restoreHDWallet = function (mnemonic, bip39Password, pw, startedRestoreHDWallet, progress){
+Wallet.prototype.restoreHDWallet = function (mnemonic, bip39Password, pw, startedRestoreHDWallet, progress) {
   // wallet restoration
   startedRestoreHDWallet && startedRestoreHDWallet();
   var self = this;
@@ -622,7 +622,7 @@ Wallet.prototype.restoreHDWallet = function (mnemonic, bip39Password, pw, starte
   var accountIndex  = 1;
   var AccountsGap = 10;
 
-  var untilNEmptyAccounts = function (n){
+  var untilNEmptyAccounts = function (n) {
     var go = function (nonused) {
       if (nonused) { return untilNEmptyAccounts(n-1);}
       else { return untilNEmptyAccounts(AccountsGap);}
@@ -637,7 +637,7 @@ Wallet.prototype.restoreHDWallet = function (mnemonic, bip39Password, pw, starte
     }
   };
 
-  var saveAndReturn = function (){
+  var saveAndReturn = function () {
     return new Promise(MyWallet.syncWallet);
   };
 
@@ -682,7 +682,7 @@ Wallet.prototype.disableNotifications = function (success, error) {
 };
 
 // creating a new wallet object
-Wallet.new = function (guid, sharedKey, firstAccountLabel, success, error, isHD){
+Wallet.new = function (guid, sharedKey, firstAccountLabel, success, error, isHD) {
   isHD = Helpers.isBoolean(isHD) ? isHD : true;
   var object = {
     guid              : guid,
@@ -714,7 +714,7 @@ Wallet.new = function (guid, sharedKey, firstAccountLabel, success, error, isHD)
 };
 
 // adding and hd wallet to an existing wallet, used by frontend and iOs
-Wallet.prototype.newHDWallet = function (firstAccountLabel, pw, success, error){
+Wallet.prototype.newHDWallet = function (firstAccountLabel, pw, success, error) {
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, 'enc');
   try {
     var newHDwallet = HDWallet.new(encoder);
@@ -730,7 +730,7 @@ Wallet.prototype.newHDWallet = function (firstAccountLabel, pw, success, error){
   return newHDwallet;
 };
 
-Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosave){
+Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosave) {
   if (!this.isUpgradedToHD) { return false; };
   var index = Helpers.isPositiveInteger(hdwalletIndex) ? hdwalletIndex : 0;
   var cipher = undefined;
@@ -740,53 +740,53 @@ Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosav
   var newAccount = this._hd_wallets[index].newAccount(label, cipher).lastAccount;
   try { // MyWallet.ws.send can fail when restoring from mnemonic because it is not initialized.
    MyWallet.ws.send(MyWallet.ws.msgXPUBSub(newAccount.extendedPublicKey));
-  } catch (e){}
+  } catch (e) {}
   if (!(nosave === true)) MyWallet.syncWallet();
   typeof(success) === 'function' && success();
   return newAccount;
 };
 
-Wallet.prototype.getPaidTo = function (txHash){
+Wallet.prototype.getPaidTo = function (txHash) {
   return this._paidTo[txHash];
 };
 
-Wallet.prototype.getAddressBookLabel = function (address){
+Wallet.prototype.getAddressBookLabel = function (address) {
   return this._address_book[address];
 };
 
-Wallet.prototype.addAddressBookEntry = function (address, label){
+Wallet.prototype.addAddressBookEntry = function (address, label) {
   this._address_book[address] = label;
   MyWallet.syncWallet();
 };
 
-Wallet.prototype.removeAddressBookEntry = function (address){
+Wallet.prototype.removeAddressBookEntry = function (address) {
   delete this._address_book[address];
   MyWallet.syncWallet();
 };
 
-Wallet.prototype.getNote = function (txHash){
+Wallet.prototype.getNote = function (txHash) {
   return this._tx_notes[txHash];
 };
 
-Wallet.prototype.setNote = function (txHash, text){
+Wallet.prototype.setNote = function (txHash, text) {
   assert(text, 'Error: note must have message text')
   this._tx_notes[txHash] = text;
   MyWallet.syncWallet();
 };
 
-Wallet.prototype.deleteNote = function (txHash){
+Wallet.prototype.deleteNote = function (txHash) {
   delete this._tx_notes[txHash];
   MyWallet.syncWallet();
 };
 
-Wallet.prototype.getMnemonic = function (password){
+Wallet.prototype.getMnemonic = function (password) {
   var seedHex = this.isDoubleEncrypted ?
     WalletCrypto.decryptSecretWithSecondPassword(
       this.hdwallet.seedHex, password, this.sharedKey, this.pbkdf2_iterations) : this.hdwallet.seedHex;
   return BIP39.entropyToMnemonic(seedHex);
 };
 
-Wallet.prototype.changePbkdf2Iterations = function (newIterations, password){
+Wallet.prototype.changePbkdf2Iterations = function (newIterations, password) {
   assert(Helpers.isPositiveInteger(newIterations), 'wallet.pbkdf2_iterations must be a positive integer');
   if (newIterations !== this._pbkdf2_iterations) {
     if (this.isDoubleEncrypted) {

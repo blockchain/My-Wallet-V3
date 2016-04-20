@@ -12,7 +12,7 @@ var ImportExport = require('./import-export');
 var WalletCrypto = require('./wallet-crypto');
 ////////////////////////////////////////////////////////////////////////////////
 // Address class
-function Address (object){
+function Address (object) {
   // private members
   var obj = object || {};
   this._addr  = obj.addr;
@@ -132,7 +132,7 @@ Object.defineProperties(Address.prototype, {
   }
 });
 
-Address.factory = function (o,a){
+Address.factory = function (o,a) {
   if (a instanceof Object && !(a instanceof Address)) {
     o[a.addr] = new Address(a);
   }
@@ -142,7 +142,7 @@ Address.factory = function (o,a){
   return o;
 };
 
-Address.import = function (key, label){
+Address.import = function (key, label) {
   var object = {
     addr                   : null,
     priv                   : null,
@@ -151,7 +151,7 @@ Address.import = function (key, label){
     created_device_version : shared.APP_VERSION
   };
 
-  switch (true){
+  switch (true) {
     case Helpers.isBitcoinAddress(key):
       object.addr = key;
       object.priv = null;
@@ -176,7 +176,7 @@ Address.import = function (key, label){
   return address;
 };
 
-Address.fromString = function (keyOrAddr, label, bipPass){
+Address.fromString = function (keyOrAddr, label, bipPass) {
   var asyncParse = function (resolve, reject) {
     if (Helpers.isBitcoinAddress(keyOrAddr)) {
       return resolve(Address.import(keyOrAddr, label));
@@ -205,7 +205,7 @@ Address.fromString = function (keyOrAddr, label, bipPass){
   return new Promise(asyncParse);
 };
 
-Address.new = function(label){
+Address.new = function(label) {
   var key = Bitcoin.ECPair.makeRandom({
     rng: RNG.run.bind(RNG),
     compressed: true
@@ -213,12 +213,12 @@ Address.new = function(label){
   return Address.import(key, label);
 };
 
-Address.reviver = function (k,v){
+Address.reviver = function (k,v) {
   if (k === '') return new Address(v);
   return v;
 };
 
-Address.prototype.toJSON = function (){
+Address.prototype.toJSON = function () {
   var address = {
     addr   : this.address,
     priv   : this.priv,
@@ -246,7 +246,7 @@ Address.prototype.signMessage = function (message, secondPassword) {
   return Bitcoin.message.sign(keyPair, message).toString('base64');
 };
 
-Address.prototype.encrypt = function (cipher){
+Address.prototype.encrypt = function (cipher) {
   if (!this._priv) return this;
   var priv = cipher ? cipher(this._priv) : this._priv;
   if (!priv) { throw 'Error Encoding key'; }
@@ -254,7 +254,7 @@ Address.prototype.encrypt = function (cipher){
   return this;
 };
 
-Address.prototype.decrypt = function (cipher){
+Address.prototype.decrypt = function (cipher) {
   if (!this._priv) return this;
   var priv = cipher ? cipher(this._priv) : this._priv;
   if (!priv) { throw 'Error Decoding key'; }
@@ -262,7 +262,7 @@ Address.prototype.decrypt = function (cipher){
   return this;
 };
 
-Address.prototype.persist = function (){
+Address.prototype.persist = function () {
   if (!this._temporal_priv) return this;
   this._priv = this._temporal_priv;
   delete this._temporal_priv;

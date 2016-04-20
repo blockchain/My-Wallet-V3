@@ -346,7 +346,7 @@ var ImportExport = new function () {
       }
 
       function arraycopy (src, srcPos, dest, destPos, length) {
-        while (length-- ){
+        while (length-- ) {
           dest[destPos++] = src[srcPos++];
         }
       }

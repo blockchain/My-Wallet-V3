@@ -516,7 +516,7 @@ function syncWallet (successcallback, errorcallback) {
   }
 
 }
-MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function (){
+MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function () {
   console.log('SAVE CALLED...');
   WalletStore.setIsSynchronizedWithServer(false);
 });

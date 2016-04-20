@@ -10,7 +10,7 @@ var MyWallet      = require('./wallet');
 var Bitcoin = require('bitcoinjs-lib');
 ////////////////////////////////////////////////////////////////////////////////
 // API class
-function API (){
+function API () {
   // private members
   this.ROOT_URL           = 'https://blockchain.info/';
   this.AJAX_RETRY_DEFAULT = 2;
@@ -110,7 +110,7 @@ API.prototype.handleNTPResponse = function (obj, clientTime) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Definition of API
-API.prototype.getBalances = function (addresses){
+API.prototype.getBalances = function (addresses) {
   var data = {
       active : addresses.join('|')
     , simple: true
@@ -120,7 +120,7 @@ API.prototype.getBalances = function (addresses){
   return this.retry(this.request.bind(this, 'POST', 'multiaddr', data));
 };
 
-API.prototype.getBalanceForRedeemCode = function (privatekey){
+API.prototype.getBalanceForRedeemCode = function (privatekey) {
 
   var format = Helpers.detectPrivateKeyFormat(privatekey);
   if (format == null) { return Promise.reject('Unknown private key format'); }
@@ -129,13 +129,13 @@ API.prototype.getBalanceForRedeemCode = function (privatekey){
   var aU = new ECPair(privateKeyToSweep.d, null, {compressed: false}).getAddress();
   var totalBalance = function (data) {
     return Object.keys(data)
-                 .map(function (a){ return data[a].final_balance;})
+                 .map(function (a) { return data[a].final_balance;})
                  .reduce(Helpers.add, 0);
   }
   return API.getBalances([aC, aU]).then(totalBalance)
 };
 
-API.prototype.getFiatAtTime = function (time, value, currencyCode){
+API.prototype.getFiatAtTime = function (time, value, currencyCode) {
   var data = {
       value : value
     , currency: currencyCode
@@ -147,13 +147,13 @@ API.prototype.getFiatAtTime = function (time, value, currencyCode){
   return this.retry(this.request.bind(this, 'GET', 'frombtc', data));
 };
 
-API.prototype.getTicker = function (){
+API.prototype.getTicker = function () {
   var data = { format: 'json' , api_code : this.API_CODE};
   // return this.request('GET', 'ticker', data);
   return this.retry(this.request.bind(this, 'GET', 'ticker', data));
 };
 
-API.prototype.getUnspent = function (fromAddresses, confirmations){
+API.prototype.getUnspent = function (fromAddresses, confirmations) {
   var data = {
       active : fromAddresses.join('|')
     , confirmations : Helpers.isPositiveNumber(confirmations) ? confirmations : -1
@@ -188,7 +188,7 @@ API.prototype.getHistory = function (addresses, tx_filter, offset, n, syncBool) 
   return this.retry(this.request.bind(this, 'POST', 'multiaddr', data, null, syncBool));
 };
 
-API.prototype.securePost = function (url, data){
+API.prototype.securePost = function (url, data) {
 
   var clone = Helpers.merge({}, data);
   if (!Helpers.isValidGUID(data.guid)) { clone.guid = MyWallet.wallet.guid; }
@@ -226,7 +226,7 @@ API.prototype.securePostCallbacks = function (url, data, success, error) {
 
 
 //01000000013e095250cb35129c7dee081b8c89b4bff69f72222a25c45ba9747a704a6d0bcd010000006b4830450221009b4f6619b1499ea19494aec34c36fdeac9146b9f87f010b7ebf1eb8a1b590c6e02202f5d9b0cfa4107d586b5b370494b9932eba1411468af06e431001932c12bf245012103cf91e6b06d1a2432721559a010ee67e98f8ef0421b15cca66dc9717ac1af8d1effffffff0210270000000000001976a91402549a8a872fbe54721a899e5ac2a87daac2358088acf0ba0400000000001976a9148ee77b3dd0e33783c11a6c28473d16e9b63dc38588ac00000000
-API.prototype.pushTx = function (txHex, note){
+API.prototype.pushTx = function (txHex, note) {
   assert(txHex, 'transaction required');
 
   var data = {

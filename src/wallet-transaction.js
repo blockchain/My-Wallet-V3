@@ -6,7 +6,7 @@ var Helpers     = require('./helpers');
 var MyWallet    = require('./wallet');
 var WalletStore = require('./wallet-store');
 ////////////////////////////////////////////////////////////////////////////////
-function Tx (object){
+function Tx (object) {
   var obj = object || {};
   // original properties
   var setConfirmations = function (tx_block_height) {
@@ -127,7 +127,7 @@ function isAccountChange (x) {
   return (isAccount(x) && x.xpub.path.split('/')[1] === '1');
 }
 
-function accountPath (x){
+function accountPath (x) {
   return account(x).index + x.xpub.path.substr(1);
 }
 
@@ -225,14 +225,14 @@ function isCoinBase (input) {
   return (input == null || input.prev_out == null || input.prev_out.addr == null);
 }
 
-Tx.factory = function (o){
+Tx.factory = function (o) {
   if (o instanceof Object && !(o instanceof Tx)) {
     return new Tx(o);
   }
   else { return o; }
 };
 
-Tx.IOSfactory = function (tx){
+Tx.IOSfactory = function (tx) {
   return {
     time          : tx.time,
     result        : tx.result,

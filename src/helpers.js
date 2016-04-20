@@ -11,10 +11,10 @@ var ImportExport = require('./import-export');
 var Helpers = {};
 Math.log2 = function (x) { return Math.log(x) / Math.LN2;};
 
-Helpers.isString = function (str){
+Helpers.isString = function (str) {
   return typeof str == 'string' || str instanceof String;
 };
-Helpers.isKey = function (bitcoinKey){
+Helpers.isKey = function (bitcoinKey) {
   return Helpers.isInstanceOf(bitcoinKey, Bitcoin.ECPair);
 };
 Helpers.isInstanceOf = function (object, theClass) {
@@ -44,19 +44,19 @@ Helpers.isXprivKey = function (k) {
 Helpers.isXpubKey = function (k) {
   return Helpers.isString(k) && k.substring(0, 4) === 'xpub';
 };
-Helpers.isAlphaNum = function (str){
+Helpers.isAlphaNum = function (str) {
   return Helpers.isString(str) && /^[\-+,._\w\d\s]+$/.test(str);
 };
-Helpers.isHex = function (str){
+Helpers.isHex = function (str) {
   return Helpers.isString(str) && /^[A-Fa-f0-9]+$/.test(str);
 };
-Helpers.isSeedHex = function (str){
+Helpers.isSeedHex = function (str) {
   return Helpers.isString(str) && /^[A-Fa-f0-9]{32}$/.test(str);
 };
-Helpers.isBase64 = function (str){
+Helpers.isBase64 = function (str) {
   return Helpers.isString(str) && /^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789=+\/]+$/.test(str);
 };
-Helpers.isNumber = function (num){
+Helpers.isNumber = function (num) {
   return typeof num == 'number' && !isNaN(num);
 };
 Helpers.isPositiveNumber = function (num) {
@@ -65,45 +65,45 @@ Helpers.isPositiveNumber = function (num) {
 Helpers.isPositiveInteger = function (num) {
   return Helpers.isPositiveNumber(num) && num % 1 == 0;
 };
-Helpers.isNotNumber = function (num){
+Helpers.isNotNumber = function (num) {
   return !Helpers.isNumber(num)
 };
-Helpers.isBoolean = function (value){
+Helpers.isBoolean = function (value) {
   return typeof(value) === 'boolean';
 };
-Helpers.isValidLabel = function (text){
+Helpers.isValidLabel = function (text) {
   return Helpers.isString(text);
 };
-Helpers.isInRange = function (val, min, max){
+Helpers.isInRange = function (val, min, max) {
   return min <= val && val < max;
 };
-Helpers.add = function (x,y){
+Helpers.add = function (x,y) {
   return x + y;
 };
-Helpers.and = function (x,y){
+Helpers.and = function (x,y) {
   return x && y;
 };
-Helpers.or = function (x,y){
+Helpers.or = function (x,y) {
   return x || y;
 };
-Helpers.i = function (pred1,pred2){
+Helpers.i = function (pred1,pred2) {
   return function (element) {
     return pred1(element) && pred2(element);
   };
 };
-Helpers.o = function (pred1,pred2){
+Helpers.o = function (pred1,pred2) {
   return function (element) {
     return pred1(element) || pred2(element);
   };
 };
-Helpers.isValidSharedKey = function (sharedKey){
+Helpers.isValidSharedKey = function (sharedKey) {
   return Helpers.isString(sharedKey) && sharedKey.length === 36;
 };
-Helpers.isValidGUID = function (guid){
+Helpers.isValidGUID = function (guid) {
   return Helpers.isString(guid);
 };
 // Return a memoized version of function f
-Helpers.memoize = function (f){
+Helpers.memoize = function (f) {
   var cache = {};
   return function () {
     var key = arguments.length + Array.prototype.join.call(arguments, ',');
@@ -121,7 +121,7 @@ Helpers.isEmptyArray = function (x) {
 };
 // Return an async version of f that it will run after miliseconds
 // no matter how many times you call the new function, it will run only once
-Helpers.asyncOnce = function (f, milliseconds, before){
+Helpers.asyncOnce = function (f, milliseconds, before) {
   var timer = null;
   var oldArguments = new Array();
   return function () {
@@ -135,7 +135,7 @@ Helpers.asyncOnce = function (f, milliseconds, before){
     for (var i = 0; i < arguments.length; i++) { myArgs[i] = arguments[i];};
     var myArgs = Helpers.zipLong(Helpers.maybeCompose, myArgs, oldArguments);
     oldArguments = myArgs;
-    timer = setTimeout(function (){
+    timer = setTimeout(function () {
                          f.apply(this, myArgs);
                          oldArguments = new Array();
                        }, milliseconds);
@@ -155,25 +155,25 @@ Helpers.merge = function (o, p) {
 
 Helpers.zipLong = function (f, xs, ys) {
 
-  if (!(f instanceof Function && xs instanceof Array && ys instanceof Array)){
+  if (!(f instanceof Function && xs instanceof Array && ys instanceof Array)) {
     return null;
   } else{
     var zs = xs.length > ys.length ? xs : ys;
-    return zs.map(function (v,i){return f(xs[i],ys[i]);});
+    return zs.map(function (v,i) {return f(xs[i],ys[i]);});
   };
 };
 
 Helpers.zip3 = function (xs, ys, zs) {
 
-  if (!(xs instanceof Array && ys instanceof Array && zs instanceof Array)){
+  if (!(xs instanceof Array && ys instanceof Array && zs instanceof Array)) {
     return null;
   } else{
-    return xs.map(function (v,i){return [xs[i],ys[i],zs[i]];});
+    return xs.map(function (v,i) {return [xs[i],ys[i],zs[i]];});
   };
 };
 
 Helpers.maybeCompose = function (f, g) {
-  if (f instanceof Function && g instanceof Function){
+  if (f instanceof Function && g instanceof Function) {
     return f.compose(g);
   } else{
     if (f instanceof Function) {return f};
@@ -201,7 +201,7 @@ Helpers.guessFee = function (nInputs, nOutputs, feePerKb) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // password scorer
-Helpers.scorePassword = function (password){
+Helpers.scorePassword = function (password) {
 
   if (!Helpers.isString(password)) {return 0};
 
@@ -228,13 +228,13 @@ Helpers.scorePassword = function (password){
   var hasUpperCase = function (str) { return /[A-Z]/.test(str);};
   var hasSymbol    = function (str) { return /[^0-9a-zA-z]/.test(str);};
   var computeSet   = function (str) {
-    var maxChar = Math.max.apply(Math,str.split('').map(function (c){return c.charCodeAt(0);}));
+    var maxChar = Math.max.apply(Math,str.split('').map(function (c) {return c.charCodeAt(0);}));
     return maxChar + 256 - maxChar % 256;
   };
 
   var base = function (str) {
     var tuples = [[10,hasDigits(str)],[26,hasLowerCase(str)],[26,hasUpperCase(str)]];
-    var bases = tuples.filter(function (t){return t[1]}).map(function (t){return t[0]});
+    var bases = tuples.filter(function (t) {return t[1]}).map(function (t) {return t[0]});
     var setSize = hasSymbol(str) ? computeSet(str) : bases.reduce(Helpers.add, 0);
     var ret = setSize === 0 ? 1 : setSize;
     return ret;
@@ -245,7 +245,7 @@ Helpers.scorePassword = function (password){
   };
 
   var quality = function (str) {
-    var pats = patternsList.filter(function (p){return p[1].test(str);}).map(function (p){return p[0]});
+    var pats = patternsList.filter(function (p) {return p[1].test(str);}).map(function (p) {return p[0]});
     return Math.min.apply(Math, pats);
   };
 
@@ -390,7 +390,7 @@ Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
     }
     else { reject('unknown key format'); }
   }
-  var predicate = function(key){
+  var predicate = function(key) {
     var a = key.getAddress();
     return a === address? Base58.encode(key.d.toBuffer(32)) : null;
   }

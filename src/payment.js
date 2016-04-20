@@ -355,7 +355,7 @@ Payment.from = function (origin) {
 Payment.updateFees = function () {
   return function (payment) {
     return API.getFees().then(
-          function (fees){
+          function (fees) {
             payment.fees = fees;
             payment.feePerKb = fees.default.fee;
             return payment;
@@ -386,13 +386,13 @@ Payment.prebuild = function (absoluteFee) {
     payment.balance     = Transaction.sumOfCoins(payment.coins);
 
     // compute max spendable limits per each fee-per-kb
-    var maxSpendablesPerFeePerKb = function(e){
+    var maxSpendablesPerFeePerKb = function(e) {
       var c = Transaction.filterUsableCoins(payment.coins, e.fee);
       var s = Transaction.maxAvailableAmount(c, e.fee);
       return s.amount;
     }
     payment.maxSpendableAmounts = payment.fees.estimate.map(maxSpendablesPerFeePerKb);
-    payment.sweepFees = payment.maxSpendableAmounts.map(function(v){return payment.balance - v;});
+    payment.sweepFees = payment.maxSpendableAmounts.map(function(v) {return payment.balance - v;});
 
     // if amounts defined refresh computations
     if (Array.isArray(payment.amounts) && payment.amounts.length > 0) {
@@ -418,7 +418,7 @@ Payment.prebuild = function (absoluteFee) {
       }
 
       // compute absolute fee bounds for 1,2,3,4,5,6 block confirmations
-      var toAbsoluteFee = function(e){
+      var toAbsoluteFee = function(e) {
         var c = Transaction.filterUsableCoins(payment.coins, e.fee);
         var s = Transaction.selectCoins(c, payment.amounts, e.fee, false);
         return s.fee;
@@ -448,7 +448,7 @@ Payment.sign = function(password) {
   return function(payment) {
     var importWIF = function (WIF) {
       MyWallet.wallet.importLegacyAddress(WIF, "Redeemed code.", password)
-        .then(function(A){A.archived = true;});
+        .then(function(A) {A.archived = true;});
     };
 
     if (!payment.transaction) throw 'This transaction hasn\'t been built yet';
