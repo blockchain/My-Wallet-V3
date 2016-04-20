@@ -25,15 +25,13 @@ Helpers.isBitcoinAddress = function (candidate) {
     var d = Bitcoin.address.fromBase58Check(candidate);
     var n = Bitcoin.networks.bitcoin;
     return d.version === n.pubKeyHash || d.version === n.scriptHash
-  }
-  catch (e) { return false; };
+  } catch (e) { return false; };
 };
 Helpers.isBitcoinPrivateKey = function (candidate) {
   try {
     Bitcoin.ECPair.fromWIF(candidate);
     return true;
-  }
-  catch (e) { return false; };
+  } catch (e) { return false; };
 };
 Helpers.isBase58Key = function (str) {
   return Helpers.isString(str) && /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{40,44}$/.test(str);
@@ -157,7 +155,7 @@ Helpers.zipLong = function (f, xs, ys) {
 
   if (!(f instanceof Function && xs instanceof Array && ys instanceof Array)) {
     return null;
-  } else{
+  } else {
     var zs = xs.length > ys.length ? xs : ys;
     return zs.map(function (v,i) {return f(xs[i],ys[i]);});
   };
@@ -167,7 +165,7 @@ Helpers.zip3 = function (xs, ys, zs) {
 
   if (!(xs instanceof Array && ys instanceof Array && zs instanceof Array)) {
     return null;
-  } else{
+  } else {
     return xs.map(function (v,i) {return [xs[i],ys[i],zs[i]];});
   };
 };
@@ -175,7 +173,7 @@ Helpers.zip3 = function (xs, ys, zs) {
 Helpers.maybeCompose = function (f, g) {
   if (f instanceof Function && g instanceof Function) {
     return f.compose(g);
-  } else{
+  } else {
     if (f instanceof Function) {return f};
     if (g instanceof Function) {return g};
     //otherwise
@@ -322,25 +320,31 @@ Helpers.privateKeyStringToKey = function (value, format) {
 
 Helpers.detectPrivateKeyFormat = function (key) {
   // 51 characters base58, always starts with a '5'
-  if (/^5[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/.test(key))
+  if (/^5[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/.test(key)) {
     return 'sipa';
+  }
 
   //52 character compressed starts with L or K
-  if (/^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key))
+  if (/^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key)) {
     return 'compsipa';
+  }
 
   // 40-44 characters base58
-  if (Helpers.isBase58Key(key))
+  if (Helpers.isBase58Key(key)) {
     return 'base58';
+  }
 
-  if (/^[A-Fa-f0-9]{64}$/.test(key))
+  if (/^[A-Fa-f0-9]{64}$/.test(key)) {
     return 'hex';
+  }
 
-  if (/^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789=+\/]{44}$/.test(key))
+  if (/^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789=+\/]{44}$/.test(key)) {
     return 'base64';
+  }
 
-  if (/^6P[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{56}$/.test(key))
+  if (/^6P[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{56}$/.test(key)) {
     return 'bip38';
+  }
 
   if (/^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{21}$/.test(key) ||
       /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{25}$/.test(key) ||

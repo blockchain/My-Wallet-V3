@@ -217,8 +217,7 @@ Transaction.confirmationEstimation = function(absoluteFees, fee) {
   for (var i = 0; i < len; i++) {
     if (absoluteFees[i] > 0 && fee >= absoluteFees[i]) {
       return i+1;
-    }
-    else{
+    } else {
       if (absoluteFees[i] > 0 && (i+1 === len)) { return Infinity; }
     }
   }

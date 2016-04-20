@@ -51,8 +51,7 @@ Object.defineProperties(HDWallet.prototype, {
       if (this.isValidAccountIndex(value)) {
         this._default_account_idx = value;
         MyWallet.syncWallet();
-      }
-      else{
+      } else {
         throw 'Error: unvalid default index account';
       }
     }
@@ -179,8 +178,9 @@ HDWallet.restore = function (seedHex, bip39Password, cipher) {
 HDWallet.factory = function (o) {
   if (o instanceof Object && !(o instanceof HDWallet)) {
     return new HDWallet(o);
+  } else {
+    return o;
   }
-  else { return o; }
 };
 
 HDWallet.prototype.newAccount = function (label, cipher) {
@@ -269,8 +269,9 @@ HDWallet.prototype.decrypt = function (cipher) {
 };
 
 HDWallet.prototype.persist = function () {
-  if (this._temporal_seedHex === undefined || this._temporal_bip39Password === undefined)
-    {return this;}
+  if (this._temporal_seedHex === undefined || this._temporal_bip39Password === undefined) {
+    return this;
+  }
   this._seedHex = this._temporal_seedHex;
   this._bip39Password = this._temporal_bip39Password;
   delete this._temporal_seedHex;

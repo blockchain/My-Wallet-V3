@@ -49,9 +49,7 @@ Object.defineProperties(Address.prototype, {
       if (Helpers.isValidLabel(str) || str == null) {
         this._label = str === ''? undefined : str;
         MyWallet.syncWallet();
-      }
-      else
-        { throw 'Error: address.label must be an alphanumeric string'; }
+      } else { throw 'Error: address.label must be an alphanumeric string'; }
     }
   },
   'created_time': {
@@ -70,30 +68,33 @@ Object.defineProperties(Address.prototype, {
     configurable: false,
     get: function () { return this._balance;},
     set: function (num) {
-      if (Helpers.isPositiveNumber(num))
+      if (Helpers.isPositiveNumber(num)) {
         this._balance = num;
-      else
+      } else {
         throw 'Error: address.balance must be a positive number';
+      }
     }
   },
   'totalSent': {
     configurable: false,
     get: function () { return this._totalSent;},
     set: function (num) {
-      if (Helpers.isPositiveNumber(num))
+      if (Helpers.isPositiveNumber(num)) {
         this._totalSent = num;
-      else
+      } else {
         throw 'Error: address.totalSent must be a positive number';
+      }
     }
   },
   'totalReceived': {
     configurable: false,
     get: function () { return this._totalReceived;},
     set: function (num) {
-      if (Helpers.isPositiveNumber(num))
+      if (Helpers.isPositiveNumber(num)) {
         this._totalReceived = num;
-      else
+      } else {
         throw 'Error: address.totalReceived must be a positive number';
+      }
     }
   },
   'isWatchOnly': {
@@ -120,9 +121,7 @@ Object.defineProperties(Address.prototype, {
           MyWallet.wallet.getHistory();
         }
         MyWallet.syncWallet();
-      }
-      else
-        { throw 'Error: address.archived must be a boolean';}
+      } else { throw 'Error: address.archived must be a boolean';}
     }
   },
   'active': {
@@ -135,8 +134,7 @@ Object.defineProperties(Address.prototype, {
 Address.factory = function (o,a) {
   if (a instanceof Object && !(a instanceof Address)) {
     o[a.addr] = new Address(a);
-  }
-  else {
+  } else {
     o[a.address] = a;
   }
   return o;
@@ -194,12 +192,10 @@ Address.fromString = function (keyOrAddr, label, bipPass) {
           function ()    { reject('wrongBipPass'); },
           function ()    { reject('importError');}
         );
-      }
-      else if (okFormats.indexOf(format) > -1) {
+      } else if (okFormats.indexOf(format) > -1) {
         var k = Helpers.privateKeyStringToKey(keyOrAddr, format);
         return resolve(Address.import(k, label));
-      }
-      else { reject('unknown key format'); }
+      } else { reject('unknown key format'); }
     }
   };
   return new Promise(asyncParse);

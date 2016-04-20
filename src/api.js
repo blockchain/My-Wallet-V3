@@ -238,10 +238,11 @@ API.prototype.pushTx = function (txHex, note) {
   if (note) data.note = note;
 
   var responseTXHASH = function (responseText) {
-    if (responseText.indexOf('Transaction Submitted') > -1)
-      { return true;}
-    else
-      { return responseText;}
+    if (responseText.indexOf('Transaction Submitted') > -1) {
+      return true;
+    } else {
+      return responseText;
+    }
   };
 
   return this.request('POST', 'pushtx', data).then(responseTXHASH);

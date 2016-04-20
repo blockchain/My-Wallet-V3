@@ -49,7 +49,7 @@ Object.defineProperties(HDAccount.prototype, {
       if (Helpers.isValidLabel(str)) {
         this._label = str;
         MyWallet.syncWallet();
-      }else{
+      } else {
         throw 'Error: account.label must be an alphanumeric string';
       }
     }
@@ -58,19 +58,21 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function () { return this._balance;},
     set: function (num) {
-      if (Helpers.isPositiveNumber(num))
+      if (Helpers.isPositiveNumber(num)) {
         this._balance = num;
-      else
+      } else {
         throw 'Error: account.balance must be a positive number';
+      }
     }
   },
   'n_tx': {
     get: function () { return this._n_tx;},
     set: function (num) {
-      if (Helpers.isPositiveInteger(num))
+      if (Helpers.isPositiveInteger(num)) {
         this._n_tx = num;
-      else
+      } else {
         throw 'Error: account.n_tx must be a positive integer';
+      }
     }
   },
   'archived': {
@@ -84,8 +86,7 @@ Object.defineProperties(HDAccount.prototype, {
           // we should define a way to update only the account, not the whole wallet
           MyWallet.wallet.getHistory();
         }
-      }
-      else{
+      } else {
         throw 'Error: account.archived must be a boolean';
       }
     }
@@ -99,20 +100,22 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function () { return this._receiveIndex;},
     set: function (value) {
-      if (Helpers.isPositiveInteger(value))
+      if (Helpers.isPositiveInteger(value)) {
         this._receiveIndex = value;
-      else
-        throw 'Error: account.receiveIndex must be a number';
+      } else {
+          throw 'Error: account.receiveIndex must be a number';
+      }
     }
   },
   'lastUsedReceiveIndex': {
     configurable: false,
     get: function () { return this._lastUsedReceiveIndex;},
     set: function (value) {
-      if (Helpers.isPositiveInteger(value))
+      if (Helpers.isPositiveInteger(value)) {
         this._lastUsedReceiveIndex = value;
-      else
+      } else {
         throw 'Error: account.lastUsedReceiveIndex must be a number';
+      }
     }
   },
   'maxLabeledReceiveIndex' : {
@@ -132,10 +135,11 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function () { return this._changeIndex;},
     set: function (value) {
-      if (Helpers.isPositiveInteger(value))
+      if (Helpers.isPositiveInteger(value)) {
         this._changeIndex = value;
-      else
+      } else {
         throw 'Error: account.changeIndex must be a number';
+      }
     }
   },
   'receivingAddressesLabels': {
@@ -242,8 +246,9 @@ HDAccount.fromExtPrivateKey = function (extPrivateKey, index, label) {
 HDAccount.factory = function (o) {
   if (o instanceof Object && !(o instanceof HDAccount)) {
     return new HDAccount(o);
+  } else {
+    return o;
   }
-  else { return o; }
 };
 ////////////////////////////////////////////////////////////////////////////////
 // JSON SERIALIZER

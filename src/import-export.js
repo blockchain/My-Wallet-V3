@@ -192,7 +192,7 @@ var ImportExport = new function () {
           postMessage([i, Bslice]);
         };
       } else {
-        for(var i = 0; i < p; i++) {
+        for (var i = 0; i < p; i++) {
           smix(B, i * 128 * r, r, N, V, XY);
         }
       }
@@ -353,7 +353,7 @@ var ImportExport = new function () {
 
       function arraycopy32 (src, srcPos, dest, destPos, length) {
         var i = length>>5;
-        while(i--) {
+        while (i--) {
           dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
           dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
           dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];

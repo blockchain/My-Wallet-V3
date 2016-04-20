@@ -130,30 +130,33 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () { return this._totalSent;},
     set: function (value) {
-      if (Helpers.isPositiveNumber(value))
+      if (Helpers.isPositiveNumber(value)) {
         this._totalSent = value;
-      else
+      } else {
         throw 'Error: wallet.totalSent must be a positive number';
+      }
     }
   },
   'totalReceived': {
     configurable: false,
     get: function () { return this._totalReceived;},
     set: function (value) {
-      if (Helpers.isPositiveNumber(value))
+      if (Helpers.isPositiveNumber(value)) {
         this._totalReceived = value;
-      else
+      } else {
         throw 'Error: wallet.totalReceived must be a positive number';
+      }
     }
   },
   'finalBalance': {
     configurable: false,
     get: function () { return this._finalBalance;},
     set: function (value) {
-      if (Helpers.isPositiveNumber(value))
+      if (Helpers.isPositiveNumber(value)) {
         this._finalBalance = value;
-      else
+      } else {
         throw 'Error: wallet.finalBalance must be a positive number';
+      }
     }
   },
   'txList': {
@@ -164,10 +167,11 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () { return this._numberTxTotal;},
     set: function (value) {
-      if (Helpers.isPositiveInteger(value))
+      if (Helpers.isPositiveInteger(value)) {
         this._numberTxTotal = value;
-      else
+      } else {
         throw 'Error: wallet.numberTx must be a positive integer';
+      }
     }
   },
   'addresses': {
@@ -180,9 +184,11 @@ Object.defineProperties(Wallet.prototype, {
   },
   'spendableActiveAddresses': {
     configurable: false,
-    get: function () {return this.activeKeys
-                        .filter(function (k) {return !k.isWatchOnly;})
-                          .map(function (k) {return k.address;});}
+    get: function () {
+      return this.activeKeys
+          .filter(function (k) {return !k.isWatchOnly;})
+          .map(function (k) {return k.address;});
+    }
   },
   'key': {
     configurable: false,
@@ -223,8 +229,7 @@ Object.defineProperties(Wallet.prototype, {
       var operation = undefined;
       if (this.isDoubleEncrypted) {
         operation = function (k) {return k.isEncrypted;}
-      }
-      else { // no double encryption activated
+      } else { // no double encryption activated
         operation = function (k) {return k.isUnEncrypted;}
       }
       var A = this.keys.filter(function (k) {return !k.isWatchOnly;})
@@ -293,8 +298,7 @@ Object.defineProperties(Wallet.prototype, {
       if (b != null) {
         this._latestBlock = b;
         WalletStore.sendEvent('did_set_latest_block');
-      }
-      else {
+      } else {
         throw 'Error: tried to set wrong wallet.latestBlock';
       }
     }
@@ -318,12 +322,15 @@ Object.defineProperties(Wallet.prototype, {
 Wallet.prototype._updateWalletInfo = function (obj) {
 
   if (obj.info) {
-    if (obj.info.symbol_local)
+    if (obj.info.symbol_local) {
       shared.setLocalSymbol(obj.info.symbol_local);
-    if (obj.info.symbol_btc)
+    }
+    if (obj.info.symbol_btc) {
       shared.setBTCSymbol(obj.info.symbol_btc);
-    if (obj.info.notice)
+    }
+    if (obj.info.notice) {
       WalletStore.sendEvent('msg', {type: 'error', message: obj.info.notice});
+    }
   }
 
   if (obj.wallet == null) {
@@ -435,7 +442,7 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
       } else {
          if (this.key(newKey.address).isWatchOnly) {
            watchOnlyKey = this._addresses[newKey.address];
-         }  else {
+         } else {
           throw 'privateKeyOfAnotherNonWatchOnlyAddress'
          }
       }
@@ -541,13 +548,11 @@ Wallet.prototype.encrypt = function (pw, success, error, encrypting, syncing) {
       var f = function (element) {element.encrypt(g);};
       this.keys.forEach(f);
       this._hd_wallets.forEach(f);
-    }
-    else {
+    } else {
       // already encrypted
       return this;
     }
-  }
-  catch (e) {
+  } catch (e) {
     console.log('wallet encryption failure');
     error && error(e);
     return false;
@@ -559,8 +564,11 @@ Wallet.prototype.encrypt = function (pw, success, error, encrypting, syncing) {
   this.keys.forEach(p);
   this._hd_wallets.forEach(p);
   syncing && syncing();
-  if (success) { MyWallet.syncWallet(success.bind(undefined, this));}
-  else {MyWallet.syncWallet();};
+  if (success) {
+    MyWallet.syncWallet(success.bind(undefined, this));
+  } else {
+    MyWallet.syncWallet();
+  }
   return this;
 };
 
@@ -572,13 +580,11 @@ Wallet.prototype.decrypt = function (pw, success, error, decrypting, syncing) {
       var f = function (element) {element.decrypt(g);};
       this.keys.forEach(f);
       this._hd_wallets.forEach(f);
-    }
-    else {
+    } else {
       // already decrypted
       return this;
     }
-  }
-  catch (e) {
+  } catch (e) {
     console.log('wallet decryption failure');
     error && error(e);
     return false;
@@ -590,13 +596,16 @@ Wallet.prototype.decrypt = function (pw, success, error, decrypting, syncing) {
   this.keys.forEach(p);
   this._hd_wallets.forEach(p);
   syncing && syncing();
-  if (success) { MyWallet.syncWallet(success.bind(undefined, this));}
-  else {MyWallet.syncWallet();}
+  if (success) {
+    MyWallet.syncWallet(success.bind(undefined, this));
+  } else {
+    MyWallet.syncWallet();
+  }
   return this;
 };
 
 Wallet.reviver = function (k,v) {
-  if (k === '') return new Wallet(v);
+  if (k === '') { return new Wallet(v); }
   return v;
 };
 
@@ -624,13 +633,16 @@ Wallet.prototype.restoreHDWallet = function (mnemonic, bip39Password, pw, starte
 
   var untilNEmptyAccounts = function (n) {
     var go = function (nonused) {
-      if (nonused) { return untilNEmptyAccounts(n-1);}
-      else { return untilNEmptyAccounts(AccountsGap);}
+      if (nonused) {
+        return untilNEmptyAccounts(n-1);
+      } else {
+        return untilNEmptyAccounts(AccountsGap);
+      }
     };
     if (n === 0) {
       self.hdwallet._accounts.splice(-AccountsGap);
       return true;
-    } else{
+    } else {
       accountIndex++;
       account = self.newAccount('My Bitcoin Wallet ' + accountIndex.toString(), pw, 0, undefined, true);
       return isAccountNonUsed(account, progress).then(go);
@@ -794,8 +806,7 @@ Wallet.prototype.changePbkdf2Iterations = function (newIterations, password) {
       this._pbkdf2_iterations = newIterations;         // sec pass iterations
       WalletStore.setPbkdf2Iterations(newIterations);  // main pass iterations
       this.encrypt(password);
-    }
-    else { // no double encrypted wallet
+    } else { // no double encrypted wallet
       this._pbkdf2_iterations = newIterations;        // sec pass iterations
       WalletStore.setPbkdf2Iterations(newIterations); // main pass iterations
       MyWallet.syncWallet();

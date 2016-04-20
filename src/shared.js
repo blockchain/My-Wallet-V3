@@ -25,7 +25,9 @@ module.exports = {
 function myprint (x) {console.log(x);}
 
 function setLocalSymbol (new_symbol) {
-  if (!new_symbol) return;
+  if (!new_symbol) {
+    return;
+  }
 
   if (symbol === symbol_local) {
     symbol_local = new_symbol;
@@ -40,7 +42,9 @@ function getLocalSymbol () {
 }
 
 function setBTCSymbol (new_symbol) {
-  if (!new_symbol) return;
+  if (!new_symbol) {
+    return;
+  }
 
   if (symbol === symbol_btc) {
     symbol_btc = new_symbol;
@@ -57,8 +61,9 @@ function getBTCSymbol () {
 var _sounds = {};
 function playSound (id) {
   try {
-    if (!_sounds[id])
-      _sounds[id] = new Audio('/'+resource+id+'.wav');
+    if (!_sounds[id]) {
+      _sounds[id] = new Audio('/' + resource + id + '.wav');
+    }
 
     _sounds[id].play();
   } catch (e) { }

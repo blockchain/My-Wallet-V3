@@ -92,8 +92,9 @@ function didDecryptWallet (success) {
 MyWallet.getWallet = function (success, error) {
   var data = {method : 'wallet.aes.json', format : 'json'};
 
-  if (WalletStore.getPayloadChecksum() && WalletStore.getPayloadChecksum().length > 0)
+  if (WalletStore.getPayloadChecksum() && WalletStore.getPayloadChecksum().length > 0) {
     data.checksum = WalletStore.getPayloadChecksum();
+  }
 
   API.securePostCallbacks('wallet', data, function (obj) {
     if (!obj.payload || obj.payload == 'Not modified') {
@@ -560,8 +561,9 @@ MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, recovery
 
 // used frontend and mywallet
 MyWallet.logout = function (force) {
-  if (!force && WalletStore.isLogoutDisabled())
+  if (!force && WalletStore.isLogoutDisabled()) {
     return;
+  }
   var reload = function () {
     try { window.location.reload(); } catch (e) {
       console.log(e);
