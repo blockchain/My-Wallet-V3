@@ -142,11 +142,11 @@ Address.factory = function (o,a) {
 
 Address.import = function (key, label) {
   var object = {
-    addr                   : null,
-    priv                   : null,
-    created_time           : Date.now(),
-    created_device_name    : shared.APP_NAME,
-    created_device_version : shared.APP_VERSION
+    addr: null,
+    priv: null,
+    created_time: Date.now(),
+    created_device_name: shared.APP_NAME,
+    created_device_version: shared.APP_VERSION
   };
 
   switch (true) {
@@ -216,13 +216,13 @@ Address.reviver = function (k,v) {
 
 Address.prototype.toJSON = function () {
   var address = {
-    addr   : this.address,
-    priv   : this.priv,
-    tag    : this.tag,
-    label  : this.label,
-    created_time           : this.created_time,
-    created_device_name    : this.created_device_name,
-    created_device_version : this.created_device_version
+    addr: this.address,
+    priv: this.priv,
+    tag: this.tag,
+    label: this.label,
+    created_time: this.created_time,
+    created_device_name: this.created_device_name,
+    created_device_version: this.created_device_version
   };
   return address;
 };

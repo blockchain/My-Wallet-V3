@@ -79,12 +79,12 @@ BlockchainSocket.prototype.send = function (message) {
 
 BlockchainSocket.prototype.msgWalletSub = function (myGUID) {
   if (myGUID == null) { return ""; }
-  var m = { op   : 'wallet_sub', guid : myGUID };
+  var m = { op: 'wallet_sub', guid: myGUID };
   return JSON.stringify(m);
 };
 
 BlockchainSocket.prototype.msgBlockSub = function () {
-  var m = { op   : 'blocks_sub' };
+  var m = { op: 'blocks_sub' };
   return JSON.stringify(m);
 };
 
@@ -92,7 +92,7 @@ BlockchainSocket.prototype.msgAddrSub = function (addresses) {
   if (addresses == null) { return ""; }
   var addressArray = Helpers.toArrayFormat(addresses);
   var toMsg = function (address) {
-    var m = { op   : 'addr_sub', addr : address };
+    var m = { op: 'addr_sub', addr: address };
     return JSON.stringify(m);
   }
   return addressArray.map(toMsg).reduce(Helpers.add, "");
@@ -102,14 +102,14 @@ BlockchainSocket.prototype.msgXPUBSub = function (xpubs) {
   if (xpubs == null) { return ""; }
   var xpubsArray = Helpers.toArrayFormat(xpubs);
   var toMsg = function (myxpub) {
-    var m = { op   : 'xpub_sub', xpub : myxpub };
+    var m = { op: 'xpub_sub', xpub: myxpub };
     return JSON.stringify(m);
   }
   return xpubsArray.map(toMsg).reduce(Helpers.add, "");
 };
 
 BlockchainSocket.prototype.msgPing = function () {
-  var m = { op : 'ping'};
+  var m = { op: 'ping'};
   return JSON.stringify(m);
 };
 

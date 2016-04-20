@@ -54,8 +54,8 @@ KeyRing.prototype.privateKeyFromPath = function (path) {
 
 KeyRing.prototype.toJSON = function () {
   var cacheJSON = {
-    receiveAccount : this._receiveChain.xpub,
-    changeAccount  : this._changeChain.xpub
+    receiveAccount: this._receiveChain.xpub,
+    changeAccount: this._changeChain.xpub
   };
   return cacheJSON;
 };

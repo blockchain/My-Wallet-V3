@@ -19,8 +19,8 @@ function postTokenEndpoint (method, token, extraParams) {
 
   var params = {
     token: token,
-    method : method,
-    api_code : API.API_CODE
+    method: method,
+    api_code: API.API_CODE
   };
 
   for (var k in extraParams) {

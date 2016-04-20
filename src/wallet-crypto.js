@@ -10,8 +10,8 @@ var SUPPORTED_ENCRYPTION_VERSION = 3
   , BLOCK_BIT_LEN = 128;
 
 var ALGO = {
-  SHA1    : 'sha1',
-  SHA256  : 'sha256'
+  SHA1: 'sha1',
+  SHA256: 'sha256'
 };
 
 var NoPadding = {
@@ -83,9 +83,9 @@ var Iso97971 = {
 };
 
 var AES = {
-  CBC : 'aes-256-cbc',
-  OFB : 'aes-256-ofb',
-  ECB : 'aes-256-ecb',
+  CBC: 'aes-256-cbc',
+  OFB: 'aes-256-ofb',
+  ECB: 'aes-256-ecb',
 
   /*
   *   Encrypt / Decrypt with aes-256
@@ -182,21 +182,21 @@ function decryptWalletV1 (data, password) {
 
     // v1: OFB, nopad, 1 iteration
     decryptDataWithPassword.bind(null, data, password, 1, {
-      mode    : AES.OFB,
-      padding : NoPadding
+      mode: AES.OFB,
+      padding: NoPadding
     }),
 
     // v1: OFB, ISO7816, 1 iteration
     // ISO/IEC 9797-1 Padding method 2 is the same as ISO/IEC 7816-4:2005
     decryptDataWithPassword.bind(null, data, password, 1, {
-      mode    : AES.OFB,
-      padding : Iso97971
+      mode: AES.OFB,
+      padding: Iso97971
     }),
 
     // v1: CBC, ISO10126, 1 iteration
     decryptDataWithPassword.bind(null, data, password, 1, {
-      mode    : AES.CBC,
-      padding : Iso10126
+      mode: AES.CBC,
+      padding: Iso10126
     })
   ];
 

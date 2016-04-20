@@ -118,7 +118,7 @@ Object.defineProperties(HDAccount.prototype, {
       }
     }
   },
-  'maxLabeledReceiveIndex' : {
+  'maxLabeledReceiveIndex': {
     configurable: false,
     get: function () {
       var keys = Object.keys(this._address_labels).map(function (k) {
@@ -257,12 +257,12 @@ HDAccount.prototype.toJSON = function () {
 
   // should we add checks on the serializer too?
   var hdaccount = {
-    label         : this._label,
-    archived      : this._archived,
-    xpriv         : this._xpriv,
-    xpub          : this._xpub,
+    label: this._label,
+    archived: this._archived,
+    xpriv: this._xpriv,
+    xpub: this._xpub,
     address_labels: this.receivingAddressesLabels,
-    cache         : this._keyRing
+    cache: this._keyRing
   };
 
   return hdaccount;

@@ -177,7 +177,7 @@ Transaction.filterUsableCoins = function (coins, feePerKb) {
 Transaction.maxAvailableAmount = function (usableCoins, feePerKb) {
   var len = usableCoins.length;
   var fee = Transaction.guessFee(len, 2, feePerKb);
-  return {"amount": usableCoins.reduce(function(a,e) { a = a + e.value; return a; }, 0) - fee, "fee" : fee};
+  return {"amount": usableCoins.reduce(function(a,e) { a = a + e.value; return a; }, 0) - fee, "fee": fee};
 };
 
 Transaction.sumOfCoins = function (coins) {

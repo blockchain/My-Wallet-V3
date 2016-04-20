@@ -234,14 +234,14 @@ Tx.factory = function (o) {
 
 Tx.IOSfactory = function (tx) {
   return {
-    time          : tx.time,
-    result        : tx.result,
-    amount        : tx.amount,
-    confirmations : tx.confirmations,
-    myHash        : tx.hash,
-    txType        : tx.txType,
-    block_height  : tx.block_height,
-    fromWatchOnly : tx.fromWatchOnly,
-    toWatchOnly   : tx.toWatchOnly,
+    time: tx.time,
+    result: tx.result,
+    amount: tx.amount,
+    confirmations: tx.confirmations,
+    myHash: tx.hash,
+    txType: tx.txType,
+    block_height: tx.block_height,
+    fromWatchOnly: tx.fromWatchOnly,
+    toWatchOnly: tx.toWatchOnly,
   };
 };

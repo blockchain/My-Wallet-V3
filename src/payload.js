@@ -25,9 +25,9 @@ function Payload (object) {
 
 Payload.prototype.toJSON = function () {
   return {
-    pbkdf2_iterations : this._pbkdf2_iterations,
-    version           : this._version,
-    payload           : this._payload // encrypted wallet (string)
+    pbkdf2_iterations: this._pbkdf2_iterations,
+    version: this._version,
+    payload: this._payload // encrypted wallet (string)
   };
 };
 

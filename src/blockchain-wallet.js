@@ -411,23 +411,23 @@ Wallet.prototype.toJSON = function () {
   }
 
   return {
-    guid              : this.guid,
-    sharedKey         : this.sharedKey,
-    double_encryption : this.isDoubleEncrypted,
-    dpasswordhash     : this.dpasswordhash,
-    options           : {
-      pbkdf2_iterations        : this.pbkdf2_iterations,
-      fee_per_kb               : this.fee_per_kb,
-      html5_notifications      : this._html5_notifications,
-      logout_time              : this._logout_time
+    guid: this.guid,
+    sharedKey: this.sharedKey,
+    double_encryption: this.isDoubleEncrypted,
+    dpasswordhash: this.dpasswordhash,
+    options: {
+      pbkdf2_iterations: this.pbkdf2_iterations,
+      fee_per_kb: this.fee_per_kb,
+      html5_notifications: this._html5_notifications,
+      logout_time: this._logout_time
     },
-    address_book      : addressBookToJSON(this._address_book),
-    tx_notes          : this._tx_notes,
+    address_book: addressBookToJSON(this._address_book),
+    tx_notes: this._tx_notes,
     // tx_tags           : this._tx_tags,
-    tx_names          : this._tx_names,
-    keys              : this.keys,
-    paidTo            : this._paidTo,
-    hd_wallets        : Helpers.isEmptyArray(this._hd_wallets) ? undefined : this._hd_wallets
+    tx_names: this._tx_names,
+    keys: this.keys,
+    paidTo: this._paidTo,
+    hd_wallets: Helpers.isEmptyArray(this._hd_wallets) ? undefined : this._hd_wallets
   };
 };
 
@@ -697,14 +697,14 @@ Wallet.prototype.disableNotifications = function (success, error) {
 Wallet.new = function (guid, sharedKey, firstAccountLabel, success, error, isHD) {
   isHD = Helpers.isBoolean(isHD) ? isHD : true;
   var object = {
-    guid              : guid,
-    sharedKey         : sharedKey,
-    double_encryption : false,
+    guid: guid,
+    sharedKey: sharedKey,
+    double_encryption: false,
     options: {
-      pbkdf2_iterations  : 5000,
+      pbkdf2_iterations: 5000,
       html5_notifications: false,
-      fee_per_kb         : 10000,
-      logout_time        : 600000
+      fee_per_kb: 10000,
+      logout_time: 600000
     }
   };
   MyWallet.wallet = new Wallet(object);

@@ -31,10 +31,10 @@ Object.defineProperties(Block.prototype, {
 
 Block.prototype.toJSON = function () {
   return {
-    hash       : this.hash,
-    time       : this.time,
-    blockIndex : this.blockIndex,
-    height     : this.height
+    hash: this.hash,
+    time: this.time,
+    blockIndex: this.blockIndex,
+    height: this.height
   };
 };
 

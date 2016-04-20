@@ -52,10 +52,10 @@ function generateUUIDs (count) {
 function resendTwoFactorSms (user_guid) {
 
   var data = {
-    format : 'json',
-    resend_code : true,
-    ct : Date.now(),
-    api_code : API.API_CODE
+    format: 'json',
+    resend_code: true,
+    ct: Date.now(),
+    api_code: API.API_CODE
   };
 
   return API.request('GET', 'wallet/' + user_guid, data, true, false)
@@ -72,10 +72,10 @@ function recoverGuid (user_email, captcha) {
 
   var data = {
     method: 'recover-wallet',
-    email : user_email,
+    email: user_email,
     captcha: captcha,
-    ct : Date.now(),
-    api_code : API.API_CODE
+    ct: Date.now(),
+    api_code: API.API_CODE
   };
 
   return API.request('POST', 'wallet', data, true)
@@ -84,7 +84,7 @@ function recoverGuid (user_email, captcha) {
 
 function checkWalletChecksum (payload_checksum, success, error) {
   assert(payload_checksum, 'Payload checksum missing');
-  var data = {method : 'wallet.aes.json', format : 'json', checksum : payload_checksum};
+  var data = {method: 'wallet.aes.json', format: 'json', checksum: payload_checksum};
 
   API.securePostCallbacks('wallet', data, function (obj) {
     if (!obj.payload || obj.payload == 'Not modified') {
@@ -121,8 +121,8 @@ function requestTwoFactorReset (
     secret_phrase: secret,
     message: message,
     kaptcha: captcha,
-    ct : Date.now(),
-    api_code : API.API_CODE
+    ct: Date.now(),
+    api_code: API.API_CODE
   };
 
   return API.request('POST', 'wallet', data, true)
@@ -164,10 +164,10 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
       length: crypted.length,
       payload: crypted,
       checksum: new_checksum,
-      method : 'insert',
-      format : 'plain',
-      sharedKey : sharedKey,
-      guid : guid
+      method: 'insert',
+      format: 'plain',
+      sharedKey: sharedKey,
+      guid: guid
     };
 
     Helpers.merge(post_data, extra);

@@ -24,7 +24,7 @@ function generateNewWallet (password, email, firstAccountName, success, error, i
 
     // Upgrade to HD immediately:
     var saveWallet = function () {
-      WalletNetwork.insertWallet(guid, sharedKey, password, {email : email}, decryptWalletProgress).then(function () {
+      WalletNetwork.insertWallet(guid, sharedKey, password, {email: email}, decryptWalletProgress).then(function () {
         success(guid, sharedKey, password);
       }, function (e) {
         error(e);

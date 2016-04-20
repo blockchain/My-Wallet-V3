@@ -162,11 +162,11 @@ HDWallet.restore = function (seedHex, bip39Password, cipher) {
   assert(Helpers.isSeedHex(seedHex), 'hdwallet.seedHex must exist and be a seed hex');
   if (!Helpers.isString(bip39Password)) bip39Password = '';
   var hdwallet = {
-    seed_hex            : seedHex,
-    passphrase          : bip39Password,
-    mnemonic_verified   : false,
-    default_account_idx : 0,
-    accounts            : []
+    seed_hex: seedHex,
+    passphrase: bip39Password,
+    mnemonic_verified: false,
+    default_account_idx: 0,
+    accounts: []
   };
   var newHDwallet = new HDWallet(hdwallet);
   if (cipher) {
@@ -208,12 +208,12 @@ HDWallet.prototype.newAccount = function (label, cipher) {
 HDWallet.prototype.toJSON = function () {
 
   var hdwallet = {
-    seed_hex            : this._seedHex,
-    passphrase          : this._bip39Password,
-    mnemonic_verified   : this._mnemonic_verified,
-    default_account_idx : this._default_account_idx,
+    seed_hex: this._seedHex,
+    passphrase: this._bip39Password,
+    mnemonic_verified: this._mnemonic_verified,
+    default_account_idx: this._default_account_idx,
     // paidTo              : this._paidTo,
-    accounts            : this._accounts
+    accounts: this._accounts
   };
   return hdwallet;
 };

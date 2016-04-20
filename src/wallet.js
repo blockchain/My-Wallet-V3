@@ -90,7 +90,7 @@ function didDecryptWallet (success) {
 //success(modified true/false)
 // used locally and iOS
 MyWallet.getWallet = function (success, error) {
-  var data = {method : 'wallet.aes.json', format : 'json'};
+  var data = {method: 'wallet.aes.json', format: 'json'};
 
   if (WalletStore.getPayloadChecksum() && WalletStore.getPayloadChecksum().length > 0) {
     data.checksum = WalletStore.getPayloadChecksum();
@@ -166,7 +166,7 @@ function decryptAndInitializeWallet (success, error, decrypt_success, build_hd_s
 // used in the frontend
 MyWallet.makePairingCode = function (success, error) {
   try {
-    API.securePostCallbacks('wallet', { method : 'pairing-encryption-password' }, function (encryption_phrase) {
+    API.securePostCallbacks('wallet', { method: 'pairing-encryption-password' }, function (encryption_phrase) {
       var pwHex = new Buffer(WalletStore.getPassword()).toString('hex');
       var encrypted = WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + pwHex, encryption_phrase, 10);
       success('1|' + MyWallet.wallet.guid + '|' + encrypted);
@@ -202,7 +202,7 @@ MyWallet.login = function ( user_guid
   );
 
   var clientTime = (new Date()).getTime();
-  var data = { format : 'json', resend_code : null, ct : clientTime, api_code : API.API_CODE };
+  var data = { format: 'json', resend_code: null, ct: clientTime, api_code: API.API_CODE };
 
   if (shared_key) { data.sharedKey = shared_key; }
 
@@ -295,7 +295,7 @@ MyWallet.login = function ( user_guid
      wrong_two_factor_code(response);
     };
 
-    var myData = { guid: guid, payload: two_factor_auth_key, length : two_factor_auth_key.length,  method : 'get-wallet', format : 'plain', api_code : API.API_CODE};
+    var myData = { guid: guid, payload: two_factor_auth_key, length: two_factor_auth_key.length,  method: 'get-wallet', format: 'plain', api_code: API.API_CODE};
     API.request('POST', 'wallet', myData, true, false).then(success).catch(error);
   };
 
@@ -329,7 +329,7 @@ MyWallet.pollForSessionGUID = function (successCallback) {
 
   if (WalletStore.isPolling()) return;
   WalletStore.setIsPolling(true);
-  var data = {format : 'json'};
+  var data = {format: 'json'};
   var success = function (obj) {
     if (obj.guid) {
       WalletStore.setIsPolling(false);
@@ -452,9 +452,9 @@ function syncWallet (successcallback, errorcallback) {
           length: crypted.length,
           payload: crypted,
           checksum: new_checksum,
-          method : method,
-          format : 'plain',
-          language : WalletStore.getLanguage()
+          method: method,
+          format: 'plain',
+          language: WalletStore.getLanguage()
         };
 
         if (Helpers.isHex(oldChecksum)) {
@@ -569,7 +569,7 @@ MyWallet.logout = function (force) {
       console.log(e);
     }
   };
-  var data = {format : 'plain', api_code : API.API_CODE};
+  var data = {format: 'plain', api_code: API.API_CODE};
   WalletStore.sendEvent('logging_out');
 
   API.request("GET", 'wallet/logout', data, true, false).then(reload).catch(reload);
