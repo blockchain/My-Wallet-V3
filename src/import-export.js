@@ -258,6 +258,7 @@ var ImportExport = new function () {
         arraycopy(B32, 0, x, 0, 16);
 
         for (i = 8; i > 0; i -= 2) {
+          /*eslint-disable */
           x[ 4] ^= R(x[ 0]+x[12], 7);  x[ 8] ^= R(x[ 4]+x[ 0], 9);
           x[12] ^= R(x[ 8]+x[ 4],13);  x[ 0] ^= R(x[12]+x[ 8],18);
           x[ 9] ^= R(x[ 5]+x[ 1], 7);  x[13] ^= R(x[ 9]+x[ 5], 9);
@@ -274,6 +275,7 @@ var ImportExport = new function () {
           x[ 9] ^= R(x[ 8]+x[11],13);  x[10] ^= R(x[ 9]+x[ 8],18);
           x[12] ^= R(x[15]+x[14], 7);  x[13] ^= R(x[12]+x[15], 9);
           x[14] ^= R(x[13]+x[12],13);  x[15] ^= R(x[14]+x[13],18);
+          /*eslint-enable */
         }
 
         for (i = 0; i < 16; ++i) B32[i] = x[i] + B32[i];
