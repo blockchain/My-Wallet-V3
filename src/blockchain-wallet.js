@@ -17,7 +17,7 @@ var MyWallet = require('./wallet'); // This cyclic import should be avoided once
 var API = require('./api');
 var shared = require('./shared');
 var BlockchainSettingsAPI = require('./blockchain-settings-api');
-var KeyRing  = require('./keyring');
+var KeyRing = require('./keyring');
 var TxList = require('./transaction-list');
 var Block = require('./bitcoin-block');
 
@@ -26,20 +26,20 @@ var Block = require('./bitcoin-block');
 
 function Wallet (object) {
 
-  var obj        = object || {};
-  obj.options    = obj.options || {};
-  obj.keys       = obj.keys || [];
+  var obj = object || {};
+  obj.options = obj.options || {};
+  obj.keys = obj.keys || [];
   obj.hd_wallets = obj.hd_wallets || [];
 
-  this._guid              = obj.guid;
-  this._sharedKey         = obj.sharedKey;
+  this._guid = obj.guid;
+  this._sharedKey = obj.sharedKey;
   this._double_encryption = obj.double_encryption || false;
-  this._dpasswordhash     = obj.dpasswordhash;
+  this._dpasswordhash = obj.dpasswordhash;
   //options
-  this._pbkdf2_iterations        = obj.options.pbkdf2_iterations;
-  this._fee_per_kb               = obj.options.fee_per_kb == null ? 10000 : obj.options.fee_per_kb;
-  this._html5_notifications      = obj.options.html5_notifications;
-  this._logout_time              = obj.options.logout_time;
+  this._pbkdf2_iterations = obj.options.pbkdf2_iterations;
+  this._fee_per_kb = obj.options.fee_per_kb == null ? 10000 : obj.options.fee_per_kb;
+  this._html5_notifications = obj.options.html5_notifications;
+  this._logout_time = obj.options.logout_time;
 
   // legacy addresses list
   this._addresses = obj.keys ? obj.keys.reduce(Address.factory, {}) : undefined;
@@ -73,12 +73,12 @@ function Wallet (object) {
   this._tx_names = obj.tx_names || [];
 
   // fetched data from the server
-  this._totalSent       = 0;
-  this._totalReceived   = 0;
-  this._finalBalance    = 0;
-  this._numberTxTotal   = 0;
+  this._totalSent = 0;
+  this._totalReceived = 0;
+  this._finalBalance = 0;
+  this._numberTxTotal = 0;
   this._txList = new TxList();
-  this._latestBlock    = null;
+  this._latestBlock = null;
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -334,27 +334,27 @@ Wallet.prototype._updateWalletInfo = function (obj) {
   }
 
   if (obj.wallet == null) {
-    this.totalSent       = 0;
-    this.totalReceived   = 0;
-    this.finalBalance    = 0;
-    this.numberTxTotal   = 0;
+    this.totalSent = 0;
+    this.totalReceived = 0;
+    this.finalBalance = 0;
+    this.numberTxTotal = 0;
     return true;
   }
 
-  this.totalSent     = obj.wallet.total_sent;
+  this.totalSent = obj.wallet.total_sent;
   this.totalReceived = obj.wallet.total_received;
-  this.finalBalance  = obj.wallet.final_balance;
+  this.finalBalance = obj.wallet.final_balance;
   this.numberTxTotal = obj.wallet.n_tx;
 
   var updateAccountAndAddressesInfo = function (e) {
     if (this.isUpgradedToHD) {
       var account = this.hdwallet.activeAccount(e.address);
       if (account) {
-        account.balance      = e.final_balance;
-        account.n_tx         = e.n_tx;
+        account.balance = e.final_balance;
+        account.n_tx = e.n_tx;
         account.lastUsedReceiveIndex = e.account_index;
         account.receiveIndex = Math.max(account.lastUsedReceiveIndex, account.maxLabeledReceiveIndex);
-        account.changeIndex  = e.change_index;
+        account.changeIndex = e.change_index;
         if (account.getLabelForReceivingAddress(account.receiveIndex)) {
           account.incrementReceiveIndex();
         }
@@ -362,9 +362,9 @@ Wallet.prototype._updateWalletInfo = function (obj) {
     }
     var address = this.activeKey(e.address);
     if (address) {
-      address.balance       = e.final_balance;
+      address.balance = e.final_balance;
       address.totalReceived = e.total_received;
-      address.totalSent     = e.total_sent;
+      address.totalSent = e.total_sent;
     }
   };
   this.latestBlock = obj.info.latest_block;
@@ -590,7 +590,7 @@ Wallet.prototype.decrypt = function (pw, success, error, decrypting, syncing) {
     return false;
   }
   // if encryption finished well, then save
-  this._dpasswordhash     = undefined;
+  this._dpasswordhash = undefined;
   this._double_encryption = false;
   var p = function (element) { element.persist(); };
   this.keys.forEach(p);
@@ -622,13 +622,13 @@ Wallet.prototype.restoreHDWallet = function (mnemonic, bip39Password, pw, starte
   startedRestoreHDWallet && startedRestoreHDWallet();
   var self = this;
   var seedHex = BIP39.mnemonicToEntropy(mnemonic);
-  var pass39  = Helpers.isString(bip39Password) ? bip39Password : '';
+  var pass39 = Helpers.isString(bip39Password) ? bip39Password : '';
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, 'enc');
   var newHDwallet = HDWallet.restore(seedHex, pass39, encoder);
   this._hd_wallets[0] = newHDwallet;
   var account = this.newAccount('My Bitcoin Wallet 1', pw, 0, undefined, true);
   API.getHistory([account.extendedPublicKey], 0, 0, 50).then(progress);
-  var accountIndex  = 1;
+  var accountIndex = 1;
   var AccountsGap = 10;
 
   var untilNEmptyAccounts = function (n) {

@@ -1,15 +1,15 @@
 'use strict';
 
-var assert  = require('assert')
-  , EventEmitter  = require('events')
+var assert = require('assert')
+  , EventEmitter = require('events')
   , Helpers = require('./helpers')
-  , Tx      = require('./wallet-transaction');
+  , Tx = require('./wallet-transaction');
 
 var TransactionList = function (loadNumber) {
   var DEFAULT_TX_LOAD = 50;
-  this._loadNumber    = loadNumber || DEFAULT_TX_LOAD;
-  this._transactions  = [];
-  this._events        = new EventEmitter();
+  this._loadNumber = loadNumber || DEFAULT_TX_LOAD;
+  this._transactions = [];
+  this._events = new EventEmitter();
 };
 
 Object.defineProperties(TransactionList.prototype, {

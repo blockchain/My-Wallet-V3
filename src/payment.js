@@ -1,14 +1,14 @@
 'use strict';
 
-var Bitcoin       = require('bitcoinjs-lib');
-var MyWallet      = require('./wallet');
-var WalletCrypto  = require('./wallet-crypto');
-var Transaction   = require('./transaction');
-var API           = require('./api');
-var Helpers       = require('./helpers');
-var KeyRing       = require('./keyring');
-var EventEmitter  = require('events');
-var util          = require('util');
+var Bitcoin = require('bitcoinjs-lib');
+var MyWallet = require('./wallet');
+var WalletCrypto = require('./wallet-crypto');
+var Transaction = require('./transaction');
+var API = require('./api');
+var Helpers = require('./helpers');
+var KeyRing = require('./keyring');
+var EventEmitter = require('events');
+var util = require('util');
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Payment Class
@@ -228,8 +228,8 @@ Payment.to = function (destinations) {
 Payment.useAll = function (absoluteFee) {
   return function (payment) {
     if (Helpers.isPositiveNumber(absoluteFee)) {
-      var balance       = payment.balance ? payment.balance : 0;
-      payment.amounts   = (balance - absoluteFee) > 0 ? [balance - absoluteFee] : [];
+      var balance = payment.balance ? payment.balance : 0;
+      payment.amounts = (balance - absoluteFee) > 0 ? [balance - absoluteFee] : [];
     } else {
       payment.amounts = payment.sweepAmount ? [payment.sweepAmount] : [];
     }
@@ -260,31 +260,31 @@ Payment.amount = function (amounts, absoluteFee) {
 };
 
 Payment.from = function (origin) {
-  var that       = this;
-  var addresses  = null;
-  var change     = null;
-  var pkFormat   = Helpers.detectPrivateKeyFormat(origin);
-  var wifs       = []; // only used fromPrivateKey
-  var fromAccId  = null;
-  var watchOnly  = false;
-
+  var that = this;
+  var addresses = null;
+  var change = null;
+  var pkFormat = Helpers.detectPrivateKeyFormat(origin);
+  var wifs = []; // only used fromPrivateKey
+  var fromAccId = null;
+  var watchOnly = false;
+  
   switch (true) {
     // no origin => assume origin = all the legacy addresses (non - watchOnly)
     case origin === null || origin === undefined || origin === '':
       addresses = MyWallet.wallet.spendableActiveAddresses;
-      change    = addresses[0];
+      change = addresses[0];
       break;
     // single bitcoin address
     case Helpers.isBitcoinAddress(origin):
       addresses = [origin];
-      change    = origin;
+      change = origin;
       break;
     // single account index
     case Helpers.isPositiveInteger(origin) &&
          (origin < MyWallet.wallet.hdwallet.accounts.length):
       var fromAccount = MyWallet.wallet.hdwallet.accounts[origin];
       addresses = [fromAccount.extendedPublicKey];
-      change    = fromAccount.changeAddress;
+      change = fromAccount.changeAddress;
       fromAccId = origin;
       break;
     // multiple legacy addresses
@@ -292,11 +292,11 @@ Payment.from = function (origin) {
          origin.length > 0 &&
          origin.every(Helpers.isBitcoinAddress):
       addresses = origin;
-      change    = addresses[0];
+      change = addresses[0];
       break;
     // from PrivateKey
     case (pkFormat !== null):
-      var key    = Helpers.privateKeyStringToKey(origin, pkFormat);
+      var key = Helpers.privateKeyStringToKey(origin, pkFormat);
       key.compressed = false;
       var addrUncomp = key.getAddress();
       var uWIF = key.toWIF();
@@ -308,30 +308,30 @@ Payment.from = function (origin) {
       var ckey = MyWallet.wallet.key(addrComp);
 
       if (ukey && ukey.isWatchOnly) {
-        wifs      = [uWIF];
+        wifs = [uWIF];
         addresses = [addrUncomp];
-        change    = addrUncomp;
+        change = addrUncomp;
         watchOnly = true;
       } else if (ckey && ckey.isWatchOnly) {
-        wifs      = [cWIF];
+        wifs = [cWIF];
         addresses = [addrComp];
-        change    = addrComp;
+        change = addrComp;
         watchOnly = true;
       } else {
-        wifs      = [cWIF, uWIF];
+        wifs = [cWIF, uWIF];
         addresses = [addrComp, addrUncomp];
-        change    = addrComp;
+        change = addrComp;
       }
       break;
     default:
       console.log('No origin set.')
   } // fi switch
   return function (payment) {
-    payment.from           = addresses;
-    payment.change         = change;
-    payment.wifKeys        = wifs;
+    payment.from = addresses;
+    payment.change = change;
+    payment.wifKeys = wifs;
     payment.fromAccountIdx = fromAccId;
-    payment.fromWatchOnly  = watchOnly;
+    payment.fromWatchOnly = watchOnly;
 
     return getUnspentCoins(addresses).then(
       function (coins) {
@@ -374,16 +374,16 @@ Payment.prebuild = function (absoluteFee) {
 
   return function (payment) {
 
-    var totalFee      = null;
+    var totalFee = null;
     var selectedCoins = [];
-    var txSize        = 0;
-    var dust          = Bitcoin.networks.bitcoin.dustThreshold;
+    var txSize = 0;
+    var dust = Bitcoin.networks.bitcoin.dustThreshold;
 
-    var usableCoins   = Transaction.filterUsableCoins(payment.coins, payment.feePerKb);
+    var usableCoins = Transaction.filterUsableCoins(payment.coins, payment.feePerKb);
     var max = Transaction.maxAvailableAmount(usableCoins, payment.feePerKb);
     payment.sweepAmount = max.amount;
-    payment.sweepFee    = max.fee;
-    payment.balance     = Transaction.sumOfCoins(payment.coins);
+    payment.sweepFee = max.fee;
+    payment.balance = Transaction.sumOfCoins(payment.coins);
 
     // compute max spendable limits per each fee-per-kb
     var maxSpendablesPerFeePerKb = function(e) {
@@ -403,7 +403,7 @@ Payment.prebuild = function (absoluteFee) {
       } else {
         var s = Transaction.selectCoins(usableCoins, payment.amounts, payment.feePerKb, false);
       }
-      payment.finalFee      = s.fee;
+      payment.finalFee = s.fee;
       payment.selectedCoins = s.coins;
       payment.txSize = Transaction.guessSize(payment.selectedCoins.length, payment.amounts.length +1 );
       var c = Transaction.sumOfCoins(payment.selectedCoins) - payment.amounts.reduce(Helpers.add, 0) - payment.finalFee;
@@ -506,7 +506,7 @@ function getUnspentCoins (addressList) {
 
 function getKey(priv, addr) {
   var format = Helpers.detectPrivateKeyFormat(priv);
-  var key    = Helpers.privateKeyStringToKey(priv, format);
+  var key = Helpers.privateKeyStringToKey(priv, format);
   var ckey = new Bitcoin.ECPair(key.d, null, {compressed: true});
   var ukey = new Bitcoin.ECPair(key.d, null, {compressed: false});
   if (ckey.getAddress() === addr) { return ckey; }

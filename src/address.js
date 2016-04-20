@@ -2,12 +2,12 @@
 
 module.exports = Address;
 ////////////////////////////////////////////////////////////////////////////////
-var Base58   = require('bs58');
-var RNG      = require('./rng');
-var Bitcoin  = require('bitcoinjs-lib');
-var Helpers  = require('./helpers');
+var Base58 = require('bs58');
+var RNG = require('./rng');
+var Bitcoin = require('bitcoinjs-lib');
+var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
-var shared   = require('./shared');
+var shared = require('./shared');
 var ImportExport = require('./import-export');
 var WalletCrypto = require('./wallet-crypto');
 ////////////////////////////////////////////////////////////////////////////////
@@ -15,17 +15,17 @@ var WalletCrypto = require('./wallet-crypto');
 function Address (object) {
   // private members
   var obj = object || {};
-  this._addr  = obj.addr;
-  this._priv  = obj.priv;
+  this._addr = obj.addr;
+  this._priv = obj.priv;
   this._label = obj.label;
-  this._tag   = obj.tag || 0;  //default is non-archived
-  this._created_time            = obj.created_time;
-  this._created_device_name     = obj.created_device_name;
-  this._created_device_version  = obj.created_device_version;
+  this._tag = obj.tag || 0;  //default is non-archived
+  this._created_time = obj.created_time;
+  this._created_device_name = obj.created_device_name;
+  this._created_device_version = obj.created_device_version;
   // non saved properties
-  this._balance                 = null; // updated from the server
-  this._totalSent               = null;
-  this._totalReceived           = null;
+  this._balance = null; // updated from the server
+  this._totalSent = null;
+  this._totalReceived = null;
 }
 
 // public members
@@ -170,7 +170,7 @@ Address.import = function (key, label) {
   //initialization
   var address = new Address(object);
   address._label = label;
-  address._tag   = 0; // non-archived
+  address._tag = 0; // non-archived
   return address;
 };
 
@@ -180,7 +180,7 @@ Address.fromString = function (keyOrAddr, label, bipPass) {
       return resolve(Address.import(keyOrAddr, label));
     } else {
       // Import private key
-      var format    = Helpers.detectPrivateKeyFormat(keyOrAddr)
+      var format = Helpers.detectPrivateKeyFormat(keyOrAddr)
         , okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
 
       if (format === 'bip38') {

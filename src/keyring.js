@@ -2,7 +2,7 @@
 
 module.exports = KeyRing;
 ////////////////////////////////////////////////////////////////////////////////
-var assert  = require('assert');
+var assert = require('assert');
 var KeyChain = require('./keychain');
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -10,7 +10,7 @@ var KeyChain = require('./keychain');
 
 function KeyRing (extendedKey, cache) {
   this._receiveChain = null;
-  this._changeChain  = null;
+  this._changeChain = null;
   this.init(extendedKey, cache);
 }
 
@@ -31,7 +31,7 @@ KeyRing.prototype.init = function (extendedKey, cache) {
   if (extendedKey || cache.receiveAccount && cache.changeAccount) {
     this._receiveChain = cache.receiveAccount
       ? new KeyChain(null,null,cache.receiveAccount ) : new KeyChain(extendedKey,0);
-    this._changeChain  = cache.changeAccount
+    this._changeChain = cache.changeAccount
       ? new KeyChain(null,null,cache.changeAccount ) : new KeyChain(extendedKey,1);
   }
   return this;

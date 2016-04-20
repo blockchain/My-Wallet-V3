@@ -2,8 +2,8 @@
 
 module.exports = Tx;
 ////////////////////////////////////////////////////////////////////////////////
-var Helpers     = require('./helpers');
-var MyWallet    = require('./wallet');
+var Helpers = require('./helpers');
+var MyWallet = require('./wallet');
 var WalletStore = require('./wallet-store');
 ////////////////////////////////////////////////////////////////////////////////
 function Tx (object) {
@@ -18,24 +18,24 @@ function Tx (object) {
     return conf;
   }
 
-  this.balance          = obj.balance;
-  this.block_height     = obj.block_height;
-  this.hash             = obj.hash;
-  this.inputs           = obj.inputs || [];
-  this.lock_time        = obj.lock_time;
-  this.out              = obj.out  || [];
-  this.relayed_by       = obj.relayed_by;
-  this._result          = obj.result;
-  this.size             = obj.size;
-  this.time             = obj.time;
-  this.tx_index         = obj.tx_index;
-  this.ver              = obj.ver;
-  this.vin_sz           = obj.vin_sz;
-  this.vout_sz          = obj.vout_sz;
-  this.double_spend     = obj.double_spend;
-  this.publicNote       = obj.note;
-  this.note             = MyWallet.wallet.getNote(this.hash);
-  this.confirmations    = setConfirmations(this.block_height);
+  this.balance = obj.balance;
+  this.block_height = obj.block_height;
+  this.hash = obj.hash;
+  this.inputs = obj.inputs || [];
+  this.lock_time = obj.lock_time;
+  this.out = obj.out  || [];
+  this.relayed_by = obj.relayed_by;
+  this._result = obj.result;
+  this.size = obj.size;
+  this.time = obj.time;
+  this.tx_index = obj.tx_index;
+  this.ver = obj.ver;
+  this.vin_sz = obj.vin_sz;
+  this.vout_sz = obj.vout_sz;
+  this.double_spend = obj.double_spend;
+  this.publicNote = obj.note;
+  this.note = MyWallet.wallet.getNote(this.hash);
+  this.confirmations = setConfirmations(this.block_height);
 
   // computed properties
   var initialOut = {
@@ -60,9 +60,9 @@ function Tx (object) {
   }
   var pins = this.inputs.reduce(procIns.bind(this), initialIn);
   this.processedInputs = pins.taggedIns;
-  this.totalIn        = pins.totalIn;
-  this.internalSpend  = pins.internalSpend;
-  this.fromWatchOnly  = pins.fromWatchOnly;
+  this.totalIn = pins.totalIn;
+  this.internalSpend = pins.internalSpend;
+  this.fromWatchOnly = pins.fromWatchOnly;
 
   this.fee = isCoinBase(this.inputs[0]) ? 0 : this.totalIn - this.totalOut;
   this.result = this._result ? this._result : this.internalReceive - this.internalSpend;

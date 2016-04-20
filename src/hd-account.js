@@ -3,9 +3,9 @@
 module.exports = HDAccount;
 ////////////////////////////////////////////////////////////////////////////////
 var Bitcoin = require('bitcoinjs-lib');
-var assert  = require('assert');
+var assert = require('assert');
 var Helpers = require('./helpers');
-var KeyRing  = require('./keyring');
+var KeyRing = require('./keyring');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 ////////////////////////////////////////////////////////////////////////////////
 // HDAccount Class
@@ -17,24 +17,24 @@ function HDAccount (object) {
   obj.cache = obj.cache || {};
   obj.address_labels = obj.address_labels || [];
   // serializable data
-  this._label    = obj.label;
+  this._label = obj.label;
   this._archived = obj.archived || false;
-  this._xpriv    = obj.xpriv;
-  this._xpub     = obj.xpub;
-  this._network  = obj.network || Bitcoin.networks.bitcoin;
+  this._xpriv = obj.xpriv;
+  this._xpub = obj.xpub;
+  this._network = obj.network || Bitcoin.networks.bitcoin;
 
   this._address_labels = [];
   obj.address_labels.map(function (e) {self._address_labels[e.index] = e.label; });
 
   // computed properties
-  this._keyRing       = new KeyRing(obj.xpub, obj.cache);
-  this._receiveIndex  = 0;
+  this._keyRing = new KeyRing(obj.xpub, obj.cache);
+  this._receiveIndex = 0;
   // The highest receive index with transactions, as returned by the server:
   this._lastUsedReceiveIndex = 0;
-  this._changeIndex   = 0;
-  this._n_tx          = 0;
-  this._balance       = null;
-  this._index         = Helpers.isPositiveInteger(obj.index) ? obj.index : null;
+  this._changeIndex = 0;
+  this._n_tx = 0;
+  this._balance = null;
+  this._index = Helpers.isPositiveInteger(obj.index) ? obj.index : null;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -208,11 +208,11 @@ Object.defineProperties(HDAccount.prototype, {
 HDAccount.fromAccountMasterKey = function (accountZero, index, label) {
 
   assert(accountZero, 'Account MasterKey must be given to create an account.');
-  var account    = new HDAccount();
+  var account = new HDAccount();
   account._index = Helpers.isPositiveInteger(index) ? index : null;
-  account._label  = label;
+  account._label = label;
   account._xpriv = accountZero.toBase58();
-  account._xpub  = accountZero.neutered().toBase58();
+  account._xpub = accountZero.neutered().toBase58();
   account._keyRing.init(account._xpub, null);
   return account;
 };

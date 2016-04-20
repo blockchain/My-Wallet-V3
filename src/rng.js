@@ -3,17 +3,17 @@
 module.exports = new RNG();
 
 var randomBytes = require('randombytes');
-var API         = require('./api');
-var Buffer      = require('buffer').Buffer;
-var assert      = require('assert');
-var Helpers     = require('./helpers');
+var API = require('./api');
+var Buffer = require('buffer').Buffer;
+var assert = require('assert');
+var Helpers = require('./helpers');
 
 function RNG () {
-  this.ACTION    = 'GET';
+  this.ACTION = 'GET';
   // API is undefined at this point
-  // this.URL       = API.API_ROOT_URL + 'v2/randombytes'
-  this.FORMAT    = 'hex';  // raw, hex, base64
-  this.BYTES     = 32;
+  // this.URL = API.API_ROOT_URL + 'v2/randombytes'
+  this.FORMAT = 'hex';  // raw, hex, base64
+  this.BYTES = 32;
 }
 
 

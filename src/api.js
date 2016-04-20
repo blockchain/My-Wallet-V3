@@ -2,21 +2,21 @@
 
 module.exports = new API();
 ////////////////////////////////////////////////////////////////////////////////
-var assert        = require('assert');
-var Helpers       = require('./helpers');
-var WalletStore   = require('./wallet-store');
-var WalletCrypto  = require('./wallet-crypto');
-var MyWallet      = require('./wallet');
+var assert = require('assert');
+var Helpers = require('./helpers');
+var WalletStore = require('./wallet-store');
+var WalletCrypto = require('./wallet-crypto');
+var MyWallet = require('./wallet');
 var Bitcoin = require('bitcoinjs-lib');
 ////////////////////////////////////////////////////////////////////////////////
 // API class
 function API () {
   // private members
-  this.ROOT_URL           = 'https://blockchain.info/';
+  this.ROOT_URL = 'https://blockchain.info/';
   this.AJAX_RETRY_DEFAULT = 2;
-  this.API_CODE           = '1770d5d9-bcea-4d28-ad21-6cbd5be018a8';
+  this.API_CODE = '1770d5d9-bcea-4d28-ad21-6cbd5be018a8';
   this.SERVER_TIME_OFFSET = null;
-  this.AJAX_TIMEOUT       = 60000;
+  this.AJAX_TIMEOUT = 60000;
 }
 
 // encodeFormData :: Object -> url encoded params
@@ -30,9 +30,9 @@ API.prototype.encodeFormData = function (data) {
 
 ////////////////////////////////////////////////////////////////////////////////
 API.prototype.request = function (action, method, data, withCred) {
-  var url   = this.ROOT_URL + method
-    , body  = this.encodeFormData(data)
-    , time  = (new Date()).getTime();
+  var url = this.ROOT_URL + method
+    , body = this.encodeFormData(data)
+    , time = (new Date()).getTime();
 
   var options = {
     method      : action,
@@ -207,15 +207,15 @@ API.prototype.securePost = function (url, data) {
                  SKHashHex.substring(i, i+=4)+'-'+
                  SKHashHex.substring(i, i+=12);
 
-    clone.sharedKey                 = tSKUID;
-    clone.sKTimestamp               = timestamp;
-    clone.sKDebugHexHash            = SKHashHex;
-    clone.sKDebugTimeOffset         = this.SERVER_TIME_OFFSET;
+    clone.sharedKey = tSKUID;
+    clone.sKTimestamp = timestamp;
+    clone.sKDebugHexHash = SKHashHex;
+    clone.sKDebugTimeOffset = this.SERVER_TIME_OFFSET;
     clone.sKDebugOriginalClientTime = now;
-    clone.sKDebugOriginalSharedKey  = sharedKey;
+    clone.sKDebugOriginalSharedKey = sharedKey;
   }
-  clone.api_code                  = this.API_CODE;
-  clone.format                    = data.format ? data.format : 'plain';
+  clone.api_code = this.API_CODE;
+  clone.format = data.format ? data.format : 'plain';
 
   return this.retry(this.request.bind(this, 'POST', url, clone, true));
 };

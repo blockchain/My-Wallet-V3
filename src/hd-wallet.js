@@ -3,7 +3,7 @@
 module.exports = HDWallet;
 ////////////////////////////////////////////////////////////////////////////////
 var Bitcoin = require('bitcoinjs-lib');
-var assert  = require('assert');
+var assert = require('assert');
 var Helpers = require('./helpers');
 var HDAccount = require('./hd-account');
 var BIP39 = require('bip39');
@@ -19,16 +19,16 @@ function HDWallet (object) {
   }
 
   // private members
-  var obj      = object || {};
+  var obj = object || {};
   obj.accounts = obj.accounts || [];
-  obj.paidTo   = obj.paidTo || {};
+  obj.paidTo = obj.paidTo || {};
 
-  this._seedHex             = obj.seed_hex;
-  this._bip39Password       = obj.passphrase;
-  this._mnemonic_verified   = obj.mnemonic_verified;
+  this._seedHex = obj.seed_hex;
+  this._bip39Password = obj.passphrase;
+  this._mnemonic_verified = obj.mnemonic_verified;
   this._default_account_idx = obj.default_account_idx;
   this._accounts = obj.accounts.map(addAccount);
-  this._paidTo              = obj.paidTo;
+  this._paidTo = obj.paidTo;
 }
 
 Object.defineProperties(HDWallet.prototype, {
@@ -139,7 +139,7 @@ function decryptPassphrase (bip39Password, cipher) {
 }
 
 function getMasterHex (seedHex, bip39Password, cipher) {
-  var mnemonic   = decryptMnemonic(seedHex, cipher);
+  var mnemonic = decryptMnemonic(seedHex, cipher);
   var passphrase = decryptPassphrase(bip39Password, cipher);
   return BIP39.mnemonicToSeed(mnemonic, passphrase);
 }
@@ -153,7 +153,7 @@ function getMasterHex (seedHex, bip39Password, cipher) {
 
 HDWallet.new = function (cipher) {
   var mnemonic = BIP39.generateMnemonic(undefined, RNG.run.bind(RNG));
-  var seedHex  = BIP39.mnemonicToEntropy(mnemonic);
+  var seedHex = BIP39.mnemonicToEntropy(mnemonic);
   return HDWallet.restore(seedHex, '', cipher);
 };
 
@@ -185,19 +185,19 @@ HDWallet.factory = function (o) {
 
 HDWallet.prototype.newAccount = function (label, cipher) {
 
-  var accIndex   = this._accounts.length;
+  var accIndex = this._accounts.length;
   var dec = undefined;
   var enc = undefined;
 
   if (cipher) {
-    dec    = cipher('dec');
-    enc    = cipher('enc');
+    dec = cipher('dec');
+    enc = cipher('enc');
   }
 
   var masterhex = getMasterHex(this._seedHex, this._bip39Password, dec);
-  var network   = Bitcoin.networks.bitcoin;
+  var network = Bitcoin.networks.bitcoin;
   var masterkey = Bitcoin.HDNode.fromSeedBuffer(masterhex, network);
-  var account   = HDAccount.fromWalletMasterKey(masterkey, accIndex, label);
+  var account = HDAccount.fromWalletMasterKey(masterkey, accIndex, label);
   account.encrypt(enc).persist();
   this._accounts.push(account);
   return this;

@@ -1,10 +1,10 @@
 'use strict';
 
-var assert      = require('assert');
-var Bitcoin     = require('bitcoinjs-lib');
+var assert = require('assert');
+var Bitcoin = require('bitcoinjs-lib');
 var randomBytes = require('randombytes');
-var Helpers     = require('./helpers');
-var Buffer      = require('buffer').Buffer;
+var Helpers = require('./helpers');
+var Buffer = require('buffer').Buffer;
 
 // Error messages that can be seen by the user should take the form of:
 // {error: "NOT_GOOD", some_param: 1}
@@ -13,11 +13,11 @@ var Buffer      = require('buffer').Buffer;
 var Transaction = function (payment, emitter) {
 
   var unspentOutputs = payment.selectedCoins;
-  var toAddresses    = payment.to;
-  var amounts        = payment.amounts;
-  var fee            = payment.finalFee;
-  var changeAddress  = payment.change;
-  var BITCOIN_DUST   = Bitcoin.networks.bitcoin.dustThreshold;
+  var toAddresses = payment.to;
+  var amounts = payment.amounts;
+  var fee = payment.finalFee;
+  var changeAddress = payment.change;
+  var BITCOIN_DUST = Bitcoin.networks.bitcoin.dustThreshold;
 
   if (!Array.isArray(toAddresses) && toAddresses != null) {toAddresses = [toAddresses]; }
   if (!Array.isArray(amounts) && amounts != null) {amounts = [amounts]; }
@@ -105,8 +105,8 @@ Transaction.prototype.sortBIP69 = function () {
   var mix = Helpers.zip3(this.transaction.tx.ins, this.privateKeys, this.addressesOfInputs);
   mix.sort(compareInputs);
   this.transaction.tx.ins = mix.map(function (a) { return a[0]; });
-  this.privateKeys        = mix.map(function (a) { return a[1]; });
-  this.addressesOfInputs  = mix.map(function (a) { return a[2]; });
+  this.privateKeys = mix.map(function (a) { return a[1]; });
+  this.addressesOfInputs = mix.map(function (a) { return a[2]; });
   this.transaction.tx.outs.sort(compareOutputs);
 };
 /**
@@ -164,7 +164,7 @@ Transaction.guessSize = function (nInputs, nOutputs) {
 };
 
 Transaction.guessFee = function (nInputs, nOutputs, feePerKb) {
-  var sizeBytes  = Transaction.guessSize(nInputs, nOutputs);
+  var sizeBytes = Transaction.guessSize(nInputs, nOutputs);
   return Math.ceil(feePerKb * (sizeBytes / 1000));
 };
 
@@ -186,7 +186,7 @@ Transaction.sumOfCoins = function (coins) {
 
 Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
   var amount = amounts.reduce(Helpers.add,0);
-  var nouts  = amounts.length;
+  var nouts = amounts.length;
   var sorted = usableCoins.sort(function (a, b) { return b.value - a.value });
   var len = sorted.length;
   var sel = [];

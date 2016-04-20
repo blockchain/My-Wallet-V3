@@ -1,6 +1,6 @@
 
 var WebSocket = require('ws');
-var Helpers   = require('./helpers');
+var Helpers = require('./helpers');
 
 function BlockchainSocket () {
   this.wsUrl = 'wss://blockchain.info/inv';

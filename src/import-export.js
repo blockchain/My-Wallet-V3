@@ -245,11 +245,11 @@ var ImportExport = new function () {
 
       function salsa20_8 (B) {
         var B32 = new Array(32);
-        var x   = new Array(32);
+        var x = new Array(32);
         var i;
 
         for (i = 0; i < 16; i++) {
-          B32[i]  = (B[i * 4 + 0] & 0xff) << 0;
+          B32[i] = (B[i * 4 + 0] & 0xff) << 0;
           B32[i] |= (B[i * 4 + 1] & 0xff) << 8;
           B32[i] |= (B[i * 4 + 2] & 0xff) << 16;
           B32[i] |= (B[i * 4 + 3] & 0xff) << 24;
@@ -337,7 +337,7 @@ var ImportExport = new function () {
 
         bi += (2 * r - 1) * 64;
 
-        n  = (B[bi + 0] & 0xff) << 0;
+        n = (B[bi + 0] & 0xff) << 0;
         n |= (B[bi + 1] & 0xff) << 8;
         n |= (B[bi + 2] & 0xff) << 16;
         n |= (B[bi + 3] & 0xff) << 24;

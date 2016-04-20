@@ -193,7 +193,7 @@ Helpers.guessSize = function (nInputs, nOutputs) {
 };
 
 Helpers.guessFee = function (nInputs, nOutputs, feePerKb) {
-  var sizeBytes  = Helpers.guessSize(nInputs, nOutputs);
+  var sizeBytes = Helpers.guessSize(nInputs, nOutputs);
   return Math.ceil(feePerKb * (sizeBytes / 1000));
 };
 
@@ -224,8 +224,8 @@ Helpers.scorePassword = function (password) {
   var hasDigits = function (str) { return /[0-9]/.test(str); };
   var hasLowerCase = function (str) { return /[a-z]/.test(str); };
   var hasUpperCase = function (str) { return /[A-Z]/.test(str); };
-  var hasSymbol    = function (str) { return /[^0-9a-zA-z]/.test(str); };
-  var computeSet   = function (str) {
+  var hasSymbol = function (str) { return /[^0-9a-zA-z]/.test(str); };
+  var computeSet = function (str) {
     var maxChar = Math.max.apply(Math,str.split('').map(function (c) { return c.charCodeAt(0); }));
     return maxChar + 256 - maxChar % 256;
   };
@@ -376,7 +376,7 @@ Helpers.isValidPrivateKey = function (candidate) {
 
 Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
   var asyncParse = function (resolve, reject) {
-    var format    = Helpers.detectPrivateKeyFormat(priv)
+    var format = Helpers.detectPrivateKeyFormat(priv)
       , okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
     if (format === 'bip38') {
       if (bipPass == undefined || bipPass === '') {
