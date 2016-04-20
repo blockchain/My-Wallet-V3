@@ -392,7 +392,7 @@ Payment.prebuild = function (absoluteFee) {
       return s.amount;
     }
     payment.maxSpendableAmounts = payment.fees.estimate.map(maxSpendablesPerFeePerKb);
-    payment.sweepFees = payment.maxSpendableAmounts.map(function(v) { return payment.balance - v; });
+    payment.sweepFees = payment.maxSpendableAmounts.map(function (v) { return payment.balance - v; });
 
     // if amounts defined refresh computations
     if (Array.isArray(payment.amounts) && payment.amounts.length > 0) {
@@ -448,7 +448,7 @@ Payment.sign = function (password) {
   return function (payment) {
     var importWIF = function (WIF) {
       MyWallet.wallet.importLegacyAddress(WIF, "Redeemed code.", password)
-        .then(function(A) {A.archived = true; });
+        .then(function (A) {A.archived = true; });
     };
 
     if (!payment.transaction) throw 'This transaction hasn\'t been built yet';

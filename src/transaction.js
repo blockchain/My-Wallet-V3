@@ -171,17 +171,17 @@ Transaction.guessFee = function (nInputs, nOutputs, feePerKb) {
 Transaction.filterUsableCoins = function (coins, feePerKb) {
   if (!Array.isArray(coins)) return [];
   var icost = Transaction.inputCost(feePerKb);
-  return coins.filter(function(c) { return c.value >= icost });
+  return coins.filter(function (c) { return c.value >= icost });
 };
 
 Transaction.maxAvailableAmount = function (usableCoins, feePerKb) {
   var len = usableCoins.length;
   var fee = Transaction.guessFee(len, 2, feePerKb);
-  return {"amount": usableCoins.reduce(function(a, e) { a = a + e.value; return a; }, 0) - fee, "fee": fee};
+  return {"amount": usableCoins.reduce(function (a, e) { a = a + e.value; return a; }, 0) - fee, "fee": fee};
 };
 
 Transaction.sumOfCoins = function (coins) {
-  return coins.reduce(function(a, e) { a = a + e.value; return a; }, 0);
+  return coins.reduce(function (a, e) { a = a + e.value; return a; }, 0);
 };
 
 Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
