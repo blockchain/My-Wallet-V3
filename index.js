@@ -38,6 +38,7 @@ module.exports = {
   Transaction: require('./src/transaction'),
   // Wallet: require('./blockchain-wallet'),
   Address: require('./src/address'),
+  // Profile: require('./src/profile'),
   // HDAccount: require('./hd-account'),
   // HDWallet: require('./hd-wallet'),
   // KeyChain: require('./keychain'),

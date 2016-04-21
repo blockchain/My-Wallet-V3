@@ -72,6 +72,7 @@ module.exports = function (config) {
       'tests/wallet_spec.js.coffee',
       'tests/bip38_spec.js.coffee',
       'tests/address_spec.js.coffee',
+      'tests/profile_spec.js.coffee',
       'tests/keychain_spec.js.coffee',
       'tests/keyring_spec.js.coffee',
       'tests/hdaccount_spec.js.coffee',

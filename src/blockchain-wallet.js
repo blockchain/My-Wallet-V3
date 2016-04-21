@@ -19,6 +19,7 @@ var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var KeyRing = require('./keyring');
 var TxList = require('./transaction-list');
 var Block = require('./bitcoin-block');
+var Profile = require('./profile');
 
 // Wallet
 
@@ -42,6 +43,8 @@ function Wallet (object) {
   this._addresses = obj.keys ? obj.keys.reduce(Address.factory, {}) : undefined;
   // hdwallets list
   this._hd_wallets = obj.hd_wallets ? obj.hd_wallets.map(HDWallet.factory) : undefined;
+
+  this._profile = new Profile(obj.profile);
 
   // address book list
   // address book in json is [{address: 'address1', label: 'label1'} , ... ]
@@ -211,6 +214,10 @@ Object.defineProperties(Wallet.prototype, {
     get: function () {
       return !(this._hd_wallets == null || this._hd_wallets.length === 0);
     }
+  },
+  'profile': {
+    configurable: false,
+    get: function () { return this._profile; }
   },
   'isEncryptionConsistent': {
     configurable: false,
@@ -411,7 +418,8 @@ Wallet.prototype.toJSON = function () {
     // tx_tags           : this._tx_tags,
     tx_names: this._tx_names,
     keys: this.keys,
-    hd_wallets: Helpers.isEmptyArray(this._hd_wallets) ? undefined : this._hd_wallets
+    hd_wallets: Helpers.isEmptyArray(this._hd_wallets) ? undefined : this._hd_wallets,
+    profile: this._profile
   };
 };
 
