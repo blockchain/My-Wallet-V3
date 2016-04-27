@@ -89,7 +89,6 @@ function Payment (payment) {
   // payment.fromAccountIdx :: Integer
   // payment.fromWatchOnly  :: Boolean
   // payment.transaction    :: Transaction
-  // payment.note           :: String
 }
 util.inherits(Payment, EventEmitter);
 ////////////////////////////////////////////////////////////////////////////////
@@ -142,12 +141,6 @@ Payment.prototype.useAll = function (absoluteFee) {
 
 Payment.prototype.updateFees = function () {
   this.payment = this.payment.then(Payment.updateFees());
-  this.sideEffect(this.emit.bind(this, 'update'));
-  return this;
-};
-
-Payment.prototype.note = function (note) {
-  this.payment = this.payment.then(Payment.note(note));
   this.sideEffect(this.emit.bind(this, 'update'));
   return this;
 };
@@ -240,14 +233,6 @@ Payment.useAll = function (absoluteFee) {
     } else {
       payment.amounts = payment.sweepAmount ? [payment.sweepAmount] : [];
     }
-    return Promise.resolve(payment);
-  };
-};
-
-Payment.note = function (note) {
-  var publicNote = Helpers.isString(note) ? note : null;
-  return function (payment) {
-    payment.note = publicNote;
     return Promise.resolve(payment);
   };
 };
@@ -484,15 +469,9 @@ Payment.publish = function () {
       throw e.message || e.responseText || e;
     };
 
-    var getValue = function(coin) {return coin.value;};
-    var isSmall = function(value) {return value < 500000;};
-    var anySmall = payment.transaction.tx.outs.map(getValue).some(isSmall);
-    if(anySmall && payment.note !== undefined && payment.note !== null)
-      {throw 'There is an output too small to publish a note';}
-
     payment.transaction = payment.transaction.build();
 
-    return API.pushTx(payment.transaction.toHex(), payment.note)
+    return API.pushTx(payment.transaction.toHex())
       .then(success).catch(handleError);
   };
 };

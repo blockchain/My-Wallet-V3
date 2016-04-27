@@ -161,13 +161,3 @@ describe 'Payment', ->
       payment.amount(5000)
       payment.fee(1000)
       expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ finalFee: 1000 }), done)
-
-  describe 'note', ->
-
-    it 'should not set a non string note', (done) ->
-      payment.note(1234)
-      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ note: null }), done)
-
-    it 'should set a valid note', (done) ->
-      payment.note('this is a valid note')
-      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ note: 'this is a valid note' }), done)
