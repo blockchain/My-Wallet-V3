@@ -108,7 +108,11 @@ MyWallet.getWallet = function (success, error) {
 
       if (success) success();
     }, function () {
-      if (error) error();
+      // When re-fetching the wallet after a remote update, if we can't decrypt
+      // it, logout for safety.
+      MyWallet.logout(true);
+      if (error) error(
+      );
     });
   }, function (e) {
     if (error) error();
