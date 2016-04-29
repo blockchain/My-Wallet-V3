@@ -16,35 +16,35 @@ function Payment (payment) {
   EventEmitter.call(this);
 
   var serverFeeFallback = {
-    "default": {
-      "fee": 35000.00,
-      "surge": false,
-      "ok": true
+    'default': {
+      'fee': 35000.00,
+      'surge': false,
+      'ok': true
     },
-    "estimate": [{
-      "fee": 45000.0,
-      "surge": false,
-      "ok": true
+    'estimate': [{
+      'fee': 45000.0,
+      'surge': false,
+      'ok': true
     }, {
-      "fee": 35000.00,
-      "surge": false,
-      "ok": true
+      'fee': 35000.00,
+      'surge': false,
+      'ok': true
     }, {
-      "fee": 22000.0,
-      "surge": false,
-      "ok": true
+      'fee': 22000.0,
+      'surge': false,
+      'ok': true
     }, {
-      "fee": 19000.0,
-      "surge": false,
-      "ok": true
+      'fee': 19000.0,
+      'surge': false,
+      'ok': true
     }, {
-      "fee": 15000.0,
-      "surge": false,
-      "ok": true
+      'fee': 15000.0,
+      'surge': false,
+      'ok': true
     }, {
-      "fee": 12000.0,
-      "surge": false,
-      "ok": true
+      'fee': 12000.0,
+      'surge': false,
+      'ok': true
     }]
   };
 
@@ -65,7 +65,7 @@ function Payment (payment) {
     absoluteFeeBounds: [0, 0, 0, 0, 0, 0], // fee bounds (absolute) per fixed amount
     sweepFees: [0, 0, 0, 0, 0, 0], // sweep absolute fee per each fee per kb (1, 2, 3, 4, 5, 6)
     maxSpendableAmounts: [0, 0, 0, 0, 0, 0],  // max amount per each fee-per-kb
-    confEstimation: "unknown",
+    confEstimation: 'unknown',
     txSize: 0 // transaciton size
   };
 
@@ -433,7 +433,7 @@ Payment.build = function () {
 Payment.sign = function (password) {
   return function (payment) {
     var importWIF = function (WIF) {
-      MyWallet.wallet.importLegacyAddress(WIF, "Redeemed code.", password)
+      MyWallet.wallet.importLegacyAddress(WIF, 'Redeemed code.', password)
         .then(function (A) {A.archived = true; });
     };
 

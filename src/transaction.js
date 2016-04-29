@@ -174,7 +174,7 @@ Transaction.filterUsableCoins = function (coins, feePerKb) {
 Transaction.maxAvailableAmount = function (usableCoins, feePerKb) {
   var len = usableCoins.length;
   var fee = Transaction.guessFee(len, 2, feePerKb);
-  return {"amount": usableCoins.reduce(function (a, e) { a = a + e.value; return a; }, 0) - fee, "fee": fee};
+  return {'amount': usableCoins.reduce(function (a, e) { a = a + e.value; return a; }, 0) - fee, 'fee': fee};
 };
 
 Transaction.sumOfCoins = function (coins) {
@@ -195,7 +195,7 @@ Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
       var coin = sorted[i];
       accAm = accAm + coin.value;
       sel.push(coin);
-      if (accAm >= fee + amount) { return {"coins": sel, "fee": fee}; }
+      if (accAm >= fee + amount) { return {'coins': sel, 'fee': fee}; }
     }
   } else {
     for (var i = 0; i < len; i++) {
@@ -203,10 +203,10 @@ Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
       accAm = accAm + coin.value;
       accFee = Transaction.guessFee(i + 1, nouts + 1, fee);
       sel.push(coin);
-      if (accAm >= accFee + amount) { return {"coins": sel, "fee": accFee}; }
+      if (accAm >= accFee + amount) { return {'coins': sel, 'fee': accFee}; }
     }
   }
-  return {"coins": [], "fee": 0};
+  return {'coins': [], 'fee': 0};
 };
 
 Transaction.confirmationEstimation = function (absoluteFees, fee) {
