@@ -394,7 +394,7 @@ Wallet.prototype.getBalancesForArchived = function () {
     return MyWallet.wallet.key(addr).archived === true;
   });
 
-  return API.getHistory(archivedAddrs, 0 , 0, 1).then(updateBalances.bind(this));
+  return API.getHistory(archivedAddrs, 0, 0, 1).then(updateBalances.bind(this));
 };
 
 Wallet.prototype.toJSON = function () {

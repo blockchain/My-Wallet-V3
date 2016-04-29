@@ -18,7 +18,7 @@ module.exports = function (karma) {
 
     // logLevel: karma.LOG_DEBUG,
 
-    reporters: ['progress','coverage'],
+    reporters: ['progress', 'coverage'],
 
     coverageReporter: {
       reporters: [
