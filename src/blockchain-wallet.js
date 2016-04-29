@@ -2,7 +2,6 @@
 
 module.exports = Wallet;
 
-
 // dependencies
 var assert = require('assert');
 var Bitcoin = require('bitcoinjs-lib');
@@ -20,7 +19,6 @@ var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var KeyRing = require('./keyring');
 var TxList = require('./transaction-list');
 var Block = require('./bitcoin-block');
-
 
 // Wallet
 
@@ -317,7 +315,6 @@ Object.defineProperties(Wallet.prototype, {
   }
 });
 
-
 // update-wallet-balances after multiaddr call
 Wallet.prototype._updateWalletInfo = function (obj) {
 
@@ -384,7 +381,6 @@ Wallet.prototype.fetchTransactions = function () {
   return API.getHistory(this.context, 0, this.txList.fetched, this.txList.loadNumber)
     .then(this._updateWalletInfo.bind(this));
 };
-
 
 Wallet.prototype.getBalancesForArchived = function () {
   var updateBalance = function (key) {

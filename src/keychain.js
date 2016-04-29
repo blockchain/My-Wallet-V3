@@ -6,7 +6,6 @@ var Bitcoin = require('bitcoinjs-lib');
 var assert = require('assert');
 var Helpers = require('./helpers');
 
-
 // keychain
 function KeyChain (extendedKey, index, cache) {
   this._chainRoot = null;

@@ -37,7 +37,6 @@ function HDAccount (object) {
   this._index = Helpers.isPositiveInteger(obj.index) ? obj.index : null;
 }
 
-
 // PUBLIC PROPERTIES
 
 Object.defineProperties(HDAccount.prototype, {
@@ -195,7 +194,6 @@ Object.defineProperties(HDAccount.prototype, {
   }
 });
 
-
 // CONSTRUCTORS
 
 /* BIP 44 defines the following 5 levels in BIP32 path:
@@ -270,8 +268,6 @@ HDAccount.reviver = function (k, v) {
   if (k === '') return new HDAccount(v);
   return v;
 };
-
-
 
 HDAccount.prototype.incrementReceiveIndex = function () {
   this._receiveIndex++;

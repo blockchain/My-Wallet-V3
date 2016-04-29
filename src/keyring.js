@@ -5,7 +5,6 @@ module.exports = KeyRing;
 var assert = require('assert');
 var KeyChain = require('./keychain');
 
-
 // keyring: A collection of keychains
 
 function KeyRing (extendedKey, cache) {

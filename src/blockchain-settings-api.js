@@ -6,7 +6,6 @@ var WalletStore = require('./wallet-store.js');
 var MyWallet = require('./wallet.js');
 var API = require('./api');
 
-
 function get_account_info (success, error) {
   API.securePostCallbacks('wallet', {method: 'get-info', format: 'json'}, function (data) {
     typeof (success) === 'function' && success(data);

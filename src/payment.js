@@ -10,9 +10,7 @@ var KeyRing = require('./keyring');
 var EventEmitter = require('events');
 var util = require('util');
 
-
 // Payment Class
-
 
 function Payment (payment) {
   EventEmitter.call(this);
@@ -167,8 +165,6 @@ Payment.prototype.printJSON = function () {
   this.sideEffect(printJSON);
   return this;
 };
-
-
 
 Payment.return = function (payment) {
   var p = payment ? payment : {}
@@ -473,12 +469,9 @@ Payment.publish = function () {
   };
 };
 
-
 module.exports = Payment;
 
-
 // Helper functions
-
 
 // getUnspentCoins :: [address] -> Promise [coins]
 function getUnspentCoins (addressList) {
@@ -507,7 +500,6 @@ function getKey(priv, addr) {
   return key;
 }
 
-
 // obtain private key for an address
 // from Address
 function getKeyForAddress (password, addr) {
@@ -532,7 +524,6 @@ function getKeyForPath(extendedPrivateKey, neededPrivateKeyPath) {
   var keyring = new KeyRing(extendedPrivateKey);
   return keyring.privateKeyFromPath(neededPrivateKeyPath).keyPair;
 }
-
 
 // getPrivateKeys :: password -> payment -> [private key]
 function getPrivateKeys (password, payment) {

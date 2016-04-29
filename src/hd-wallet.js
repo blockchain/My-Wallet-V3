@@ -223,7 +223,6 @@ HDWallet.reviver = function (k, v) {
   return v;
 }
 
-
 // methods
 
 HDWallet.prototype.verifyMnemonic = function () {
@@ -244,7 +243,6 @@ HDWallet.prototype.activeAccount = function (xpub) {
   var r = !a || a.archived ? null : a;
   return r;
 };
-
 
 // account managment
 

@@ -197,7 +197,6 @@ Helpers.guessFee = function (nInputs, nOutputs, feePerKb) {
   return Math.ceil(feePerKb * (sizeBytes / 1000));
 };
 
-
 // password scorer
 Helpers.scorePassword = function (password) {
 

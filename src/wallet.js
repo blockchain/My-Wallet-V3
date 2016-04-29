@@ -120,8 +120,6 @@ MyWallet.getWallet = function (success, error) {
   });
 };
 
-
-
 function decryptAndInitializeWallet (success, error, decrypt_success, build_hd_success) {
   assert(success, 'Success callback required');
   assert(error, 'Error callback required');
@@ -161,8 +159,6 @@ function decryptAndInitializeWallet (success, error, decrypt_success, build_hd_s
   );
 }
 
-
-
 // used in the frontend
 MyWallet.makePairingCode = function (success, error) {
   try {
@@ -177,7 +173,6 @@ MyWallet.makePairingCode = function (success, error) {
     error(e);
   }
 };
-
 
 MyWallet.login = function (user_guid, shared_key, inputedPassword, twoFA, success, needs_two_factor_code,
                            wrong_two_factor_code, authorization_required, other_error, fetch_success,
@@ -314,7 +309,6 @@ MyWallet.login = function (user_guid, shared_key, inputedPassword, twoFA, succes
   }
 };
 
-
 // used locally
 MyWallet.pollForSessionGUID = function (successCallback) {
 
@@ -343,7 +337,6 @@ MyWallet.pollForSessionGUID = function (successCallback) {
   API.request('GET', 'wallet/poll-for-session-guid', data, true, false).then(success).catch(error);
 };
 // used locally
-
 
 MyWallet.initializeWallet = function (pw, success, other_error, decrypt_success, build_hd_success) {
   assert(success, 'Success callback required');
@@ -374,9 +367,6 @@ MyWallet.initializeWallet = function (pw, success, other_error, decrypt_success,
   );
 };
 
-
-
-
 // used on iOS
 MyWallet.getIsInitialized = function () {
   return isInitialized;
@@ -388,7 +378,6 @@ function setIsInitialized () {
   socketConnect();
   isInitialized = true;
 }
-
 
 // This should replace backup functions
 function syncWallet (successcallback, errorcallback) {

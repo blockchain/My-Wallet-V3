@@ -147,7 +147,6 @@ var ImportExport = new function () {
     }
   };
 
-
   var MAX_VALUE = 2147483647;
   var workerUrl = null;
 

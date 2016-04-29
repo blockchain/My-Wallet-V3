@@ -16,7 +16,6 @@ function RNG () {
   this.BYTES = 32;
 }
 
-
 // xor :: Buffer -> Buffer -> Buffer
 RNG.prototype.xor = function (a, b) {
   assert(

@@ -2,10 +2,8 @@
 
 module.exports = Payload;
 
-
 // dependencies
 var assert = require('assert');
-
 
 // Payload
 function Payload (object) {

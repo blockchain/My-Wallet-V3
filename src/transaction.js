@@ -137,7 +137,6 @@ Transaction.prototype.sign = function () {
   return transaction;
 };
 
-
 function sortUnspentOutputs (unspentOutputs) {
   var unspent = [];
 

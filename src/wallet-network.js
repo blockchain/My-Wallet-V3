@@ -6,7 +6,6 @@ var WalletCrypto = require('./wallet-crypto');
 var MyWallet = require('./wallet');
 var assert = require('assert');
 
-
 function handleError (msg) {
   return function (e) {
     var errMsg = e.responseJSON && e.responseJSON.initial_error
