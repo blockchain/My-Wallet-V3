@@ -224,23 +224,23 @@ MyWallet.login = function (user_guid, shared_key, inputedPassword, twoFA, succes
     };
 
     var error = function (e) {
-       console.log(e);
-       var obj = 'object' === typeof e ? e : JSON.parse(e);
-       if (obj && obj.initial_error && !obj.authorization_required) {
-         other_error(obj.initial_error);
-         return;
-       }
-       WalletStore.sendEvent('did_fail_set_guid');
-       if (obj.authorization_required && typeof (authorization_required) === 'function') {
-         authorization_required(function () {
-           MyWallet.pollForSessionGUID(function () {
-             tryToFetchWalletJSON(guid, successCallback);
-           });
-         });
-       }
-       if (obj.initial_error) {
-         WalletStore.sendEvent('msg', {type: 'error', message: obj.initial_error});
-       }
+      console.log(e);
+      var obj = 'object' === typeof e ? e : JSON.parse(e);
+      if (obj && obj.initial_error && !obj.authorization_required) {
+        other_error(obj.initial_error);
+        return;
+      }
+      WalletStore.sendEvent('did_fail_set_guid');
+      if (obj.authorization_required && typeof (authorization_required) === 'function') {
+        authorization_required(function () {
+          MyWallet.pollForSessionGUID(function () {
+            tryToFetchWalletJSON(guid, successCallback);
+          });
+        });
+      }
+      if (obj.initial_error) {
+        WalletStore.sendEvent('msg', {type: 'error', message: obj.initial_error});
+      }
     };
     API.request('GET', 'wallet/' + guid, data, true, false).then(success).catch(error);
   };
@@ -259,8 +259,8 @@ MyWallet.login = function (user_guid, shared_key, inputedPassword, twoFA, succes
       return;
     }
     if (two_factor_auth.code.length == 0 || two_factor_auth.code.length > 255) {
-     other_error('You must enter a Two Factor Authentication code');
-     return;
+      other_error('You must enter a Two Factor Authentication code');
+      return;
     }
 
     var two_factor_auth_key = two_factor_auth.code;
@@ -270,20 +270,20 @@ MyWallet.login = function (user_guid, shared_key, inputedPassword, twoFA, succes
       case 4: // sms
       case 5: // Google Auth
         two_factor_auth_key = two_factor_auth_key.toUpperCase();
-      break;
+        break;
     }
 
     var success = function (data) {
-     if (data == null || data.length == 0) {
-       other_error('Server Return Empty Wallet Data');
-       return;
-     }
-     if (data != 'Not modified') { WalletStore.setEncryptedWalletData(data); }
-     successCallback(data);
+      if (data == null || data.length == 0) {
+        other_error('Server Return Empty Wallet Data');
+        return;
+      }
+      if (data != 'Not modified') { WalletStore.setEncryptedWalletData(data); }
+      successCallback(data);
     };
     var error = function (response) {
-     WalletStore.setRestoringWallet(false);
-     wrong_two_factor_code(response);
+      WalletStore.setRestoringWallet(false);
+      wrong_two_factor_code(response);
     };
 
     var myData = { guid: guid, payload: two_factor_auth_key, length: two_factor_auth_key.length,  method: 'get-wallet', format: 'plain', api_code: API.API_CODE};
@@ -292,11 +292,11 @@ MyWallet.login = function (user_guid, shared_key, inputedPassword, twoFA, succes
 
   var didFetchWalletJSON = function (obj) {
     if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
-     WalletStore.setEncryptedWalletData(obj.payload);
+      WalletStore.setEncryptedWalletData(obj.payload);
     }
 
     if (obj.language && WalletStore.getLanguage() != obj.language) {
-     WalletStore.setLanguage(obj.language);
+      WalletStore.setLanguage(obj.language);
     }
     MyWallet.initializeWallet(inputedPassword, success, other_error, decrypt_success, build_hd_success);
   }
@@ -394,10 +394,10 @@ function setIsInitialized () {
 function syncWallet (successcallback, errorcallback) {
 
   var panic = function (e) {
-      console.log('Panic ' + e);
-      window.location.replace('/');
-      throw 'Save disabled.';
-      // kick out of the wallet in a inconsistent state to prevent save
+    console.log('Panic ' + e);
+    window.location.replace('/');
+    throw 'Save disabled.';
+    // kick out of the wallet in a inconsistent state to prevent save
   };
 
   if (MyWallet.wallet.isEncryptionConsistent === false) {
@@ -478,7 +478,7 @@ function syncWallet (successcallback, errorcallback) {
                     WalletStore.enableLogout();
                     WalletStore.sendEvent('on_backup_wallet_success');
                     successcallback && successcallback();
-                    },
+                  },
                   function () {
                     _errorcallback('Checksum Did Not Match Expected Value');
                     WalletStore.enableLogout();
@@ -486,9 +486,9 @@ function syncWallet (successcallback, errorcallback) {
               );
             },
             function (e) {
-            WalletStore.enableLogout();
-            _errorcallback(e);
-          }
+              WalletStore.enableLogout();
+              _errorcallback(e);
+            }
         );
 
       } catch (e) {

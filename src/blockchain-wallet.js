@@ -58,10 +58,10 @@ function Wallet (object) {
   // address book in memory is {address1: 'label1', address2: 'label2'}
   this._address_book = obj.address_book ?
     obj.address_book.reduce(function (o, a) {
-                              var address = a.address || a.addr;
-                              o[address] = a.label;
-                              return o;
-                            }, {}) : {};
+      var address = a.address || a.addr;
+      o[address] = a.label;
+      return o;
+    }, {}) : {};
 
   // tx_notes dictionary
   this._tx_notes = obj.tx_notes || {};
@@ -397,7 +397,7 @@ Wallet.prototype.getBalancesForArchived = function () {
     return obj;
   };
   var archivedAddrs = this.addresses.filter(function (addr) {
-      return MyWallet.wallet.key(addr).archived === true;
+    return MyWallet.wallet.key(addr).archived === true;
   });
 
   return API.getHistory(archivedAddrs, 0 , 0, 1).then(updateBalances.bind(this));
@@ -440,11 +440,11 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
         console.log(newKey);
         return this.importLegacyAddress(privateKey, null, secPass, bipPass);
       } else {
-         if (this.key(newKey.address).isWatchOnly) {
-           watchOnlyKey = this._addresses[newKey.address];
-         } else {
+        if (this.key(newKey.address).isWatchOnly) {
+          watchOnlyKey = this._addresses[newKey.address];
+        } else {
           throw 'privateKeyOfAnotherNonWatchOnlyAddress'
-         }
+        }
       }
 
     }
@@ -751,7 +751,7 @@ Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosav
   }
   var newAccount = this._hd_wallets[index].newAccount(label, cipher).lastAccount;
   try { // MyWallet.ws.send can fail when restoring from mnemonic because it is not initialized.
-   MyWallet.ws.send(MyWallet.ws.msgXPUBSub(newAccount.extendedPublicKey));
+    MyWallet.ws.send(MyWallet.ws.msgXPUBSub(newAccount.extendedPublicKey));
   } catch (e) {}
   if (!(nosave === true)) MyWallet.syncWallet();
   typeof (success) === 'function' && success();

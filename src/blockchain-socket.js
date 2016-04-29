@@ -21,7 +21,7 @@ if (!(typeof window === 'undefined')) {
     this['on'+event] = callback;
   };
   WebSocket.prototype.once = function (event, callback) {
-      var self = this;
+    var self = this;
     this['on'+event] = function () {
       callback.apply(callback, arguments);
       self['on'+event] = null;

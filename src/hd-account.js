@@ -103,7 +103,7 @@ Object.defineProperties(HDAccount.prototype, {
       if (Helpers.isPositiveInteger(value)) {
         this._receiveIndex = value;
       } else {
-          throw 'Error: account.receiveIndex must be a number';
+        throw 'Error: account.receiveIndex must be a number';
       }
     }
   },
@@ -162,9 +162,9 @@ Object.defineProperties(HDAccount.prototype, {
     }
   },
   'extendedPublicKey': {
-     configurable: false,
-     get: function () { return this._xpub; }
-   },
+    configurable: false,
+    get: function () { return this._xpub; }
+  },
   'extendedPrivateKey': {
     configurable: false,
     get: function () { return this._xpriv; }

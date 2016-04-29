@@ -134,9 +134,9 @@ Helpers.asyncOnce = function (f, milliseconds, before) {
     var myArgs = Helpers.zipLong(Helpers.maybeCompose, myArgs, oldArguments);
     oldArguments = myArgs;
     timer = setTimeout(function () {
-                         f.apply(this, myArgs);
-                         oldArguments = new Array();
-                       }, milliseconds);
+      f.apply(this, myArgs);
+      oldArguments = new Array();
+    }, milliseconds);
   };
 };
 
@@ -182,10 +182,10 @@ Helpers.maybeCompose = function (f, g) {
 };
 
 Function.prototype.compose = function (g) {
-     var fn = this;
-     return function () {
-         return fn.call(this, g.apply(this, arguments));
-   };
+  var fn = this;
+  return function () {
+    return fn.call(this, g.apply(this, arguments));
+  };
 };
 
 Helpers.guessSize = function (nInputs, nOutputs) {

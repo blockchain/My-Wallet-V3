@@ -23,7 +23,7 @@ function API () {
 API.prototype.encodeFormData = function (data) {
   if (!data) return '';
   var encoded = Object.keys(data).map(function (k) {
-      return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]);
+    return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]);
   }).join('&');
   return encoded;
 };
@@ -256,7 +256,7 @@ API.prototype.getFees = function () {
 
   var checkStatus = function (response) {
     if (response.status >= 200 && response.status < 300) {
-        return response.json();
+      return response.json();
     } else {
       return response.text().then(Promise.reject.bind(Promise));
     }
