@@ -84,5 +84,5 @@ try {
 }
 // The current 'shift' value - BTC = 1, mBTC = 3, uBTC = 6
 function sShift (symbol) {
-  return (satoshi / symbol.conversion).toString().length-1;
+  return (satoshi / symbol.conversion).toString().length - 1;
 }

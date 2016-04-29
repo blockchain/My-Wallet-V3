@@ -624,7 +624,7 @@ Wallet.prototype.restoreHDWallet = function (mnemonic, bip39Password, pw, starte
   var untilNEmptyAccounts = function (n) {
     var go = function (nonused) {
       if (nonused) {
-        return untilNEmptyAccounts(n-1);
+        return untilNEmptyAccounts(n - 1);
       } else {
         return untilNEmptyAccounts(AccountsGap);
       }
@@ -722,7 +722,7 @@ Wallet.prototype.newHDWallet = function (firstAccountLabel, pw, success, error) 
   } catch (e) { error(e); return; }
   this._hd_wallets.push(newHDwallet);
   var label = firstAccountLabel ? firstAccountLabel : 'My Bitcoin Wallet';
-  var account = this.newAccount(label, pw, this._hd_wallets.length-1, true);
+  var account = this.newAccount(label, pw, this._hd_wallets.length - 1, true);
   var guid = this.guid;
   MyWallet.syncWallet(function (res) {
     success();

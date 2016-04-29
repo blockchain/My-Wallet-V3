@@ -312,7 +312,7 @@ HDAccount.prototype.receiveAddressAtIndex = function (index) {
 
 HDAccount.prototype.encrypt = function (cipher) {
   if (!this._xpriv) return this;
-  var xpriv = cipher? cipher(this._xpriv) : this._xpriv;
+  var xpriv = cipher ? cipher(this._xpriv) : this._xpriv;
   if (!xpriv) { throw 'Error Encoding account extended private key'; }
   this._temporal_xpriv = xpriv;
   return this;
@@ -320,7 +320,7 @@ HDAccount.prototype.encrypt = function (cipher) {
 
 HDAccount.prototype.decrypt = function (cipher) {
   if (!this._xpriv) return this;
-  var xpriv = cipher? cipher(this._xpriv) : this._xpriv;
+  var xpriv = cipher ? cipher(this._xpriv) : this._xpriv;
   if (!xpriv) { throw 'Error Decoding account extended private key'; }
   this._temporal_xpriv = xpriv;
   return this;

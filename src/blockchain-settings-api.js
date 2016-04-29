@@ -24,7 +24,7 @@ function updateKV (method, value, success, error, extra) {
 
   extra = extra || '';
 
-  API.securePostCallbacks('wallet'+extra, { length: (value+'').length, payload: value+'', method: method }, function (data) {
+  API.securePostCallbacks('wallet' + extra, { length: (value + '').length, payload: value + '', method: method }, function (data) {
     WalletStore.sendEvent('msg', {type: 'success', message: method + '-success: ' + data});
 
     typeof (success) === 'function' && success();
@@ -160,7 +160,7 @@ function confirmTwoFactorGoogleAuthenticator (code, success, error) {
   updateKV('update-auth-type', 4, function () {
     WalletStore.setRealAuthType(4);
     typeof (success) === 'function' && success();
-  }, error, '?code='+code);
+  }, error, '?code=' + code);
 }
 
 /**

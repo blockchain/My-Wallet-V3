@@ -125,7 +125,7 @@ Transaction.prototype.sign = function () {
   var transaction = this.transaction;
 
   for (var i = 0; i < transaction.inputs.length; i++) {
-    this.emitter.emit('on_sign_progress', i+1);
+    this.emitter.emit('on_sign_progress', i + 1);
     var key = this.privateKeys[i];
     transaction.sign(i, key);
     assert(transaction.inputs[i].scriptType === 'pubkeyhash', 'Error creating input script');
@@ -157,7 +157,7 @@ Transaction.inputCost = function (feePerKb) {
 };
 Transaction.guessSize = function (nInputs, nOutputs) {
   if (nInputs < 1 || nOutputs < 1) { return 0; }
-  return (nInputs*148 + nOutputs*34 + 10);
+  return (nInputs * 148 + nOutputs * 34 + 10);
 };
 
 Transaction.guessFee = function (nInputs, nOutputs, feePerKb) {
@@ -201,7 +201,7 @@ Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
     for (var i = 0; i < len; i++) {
       var coin = sorted[i];
       accAm = accAm + coin.value;
-      accFee = Transaction.guessFee(i+1, nouts+1, fee);
+      accFee = Transaction.guessFee(i + 1, nouts + 1, fee);
       sel.push(coin);
       if (accAm >= accFee + amount) { return {"coins": sel, "fee": accFee}; }
     }
@@ -213,9 +213,9 @@ Transaction.confirmationEstimation = function (absoluteFees, fee) {
   var len = absoluteFees.length;
   for (var i = 0; i < len; i++) {
     if (absoluteFees[i] > 0 && fee >= absoluteFees[i]) {
-      return i+1;
+      return i + 1;
     } else {
-      if (absoluteFees[i] > 0 && (i+1 === len)) { return Infinity; }
+      if (absoluteFees[i] > 0 && (i + 1 === len)) { return Infinity; }
     }
   }
   return null;

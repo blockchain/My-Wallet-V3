@@ -187,7 +187,7 @@ Function.prototype.compose = function (g) {
 };
 
 Helpers.guessSize = function (nInputs, nOutputs) {
-  return (nInputs*148 + nOutputs*34 + 10);
+  return (nInputs * 148 + nOutputs * 34 + 10);
 };
 
 Helpers.guessFee = function (nInputs, nOutputs, feePerKb) {
@@ -244,7 +244,7 @@ Helpers.scorePassword = function (password) {
   };
 
   var entropyWeighted = function (str) {
-    return quality(str)*entropy(str);
+    return quality(str) * entropy(str);
   };
 
   return entropyWeighted(password);
@@ -389,7 +389,7 @@ Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
   }
   var predicate = function (key) {
     var a = key.getAddress();
-    return a === address? Base58.encode(key.d.toBuffer(32)) : null;
+    return a === address ? Base58.encode(key.d.toBuffer(32)) : null;
   }
   return new Promise(asyncParse).then(predicate);
 };

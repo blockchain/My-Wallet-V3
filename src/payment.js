@@ -15,7 +15,7 @@ var util = require('util');
 function Payment (payment) {
   EventEmitter.call(this);
 
-  var serverFeeFallback ={
+  var serverFeeFallback = {
     "default": {
       "fee": 35000.00,
       "surge": false,
@@ -391,9 +391,9 @@ Payment.prebuild = function (absoluteFee) {
       }
       payment.finalFee = s.fee;
       payment.selectedCoins = s.coins;
-      payment.txSize = Transaction.guessSize(payment.selectedCoins.length, payment.amounts.length +1 );
+      payment.txSize = Transaction.guessSize(payment.selectedCoins.length, payment.amounts.length + 1 );
       var c = Transaction.sumOfCoins(payment.selectedCoins) - payment.amounts.reduce(Helpers.add, 0) - payment.finalFee;
-      payment.changeAmount = c > 0? c : 0;
+      payment.changeAmount = c > 0 ? c : 0;
 
       // change consumption
       if (payment.changeAmount > 0 && payment.changeAmount < dust) {

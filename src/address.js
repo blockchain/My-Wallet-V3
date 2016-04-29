@@ -47,7 +47,7 @@ Object.defineProperties(Address.prototype, {
     get: function () { return this._label; },
     set: function (str) {
       if (Helpers.isValidLabel(str) || str == null) {
-        this._label = str === ''? undefined : str;
+        this._label = str === '' ? undefined : str;
         MyWallet.syncWallet();
       } else { throw 'Error: address.label must be an alphanumeric string'; }
     }

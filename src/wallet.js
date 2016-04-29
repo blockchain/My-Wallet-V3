@@ -65,7 +65,7 @@ function socketConnect () {
 
   function onOpen () {
     WalletStore.sendEvent('ws_on_open');
-    var accounts = MyWallet.wallet.hdwallet? MyWallet.wallet.hdwallet.activeXpubs : [];
+    var accounts = MyWallet.wallet.hdwallet ? MyWallet.wallet.hdwallet.activeXpubs : [];
     var msg = MyWallet.ws.msgOnOpen(MyWallet.wallet.guid, MyWallet.wallet.activeAddresses, accounts);
     MyWallet.ws.send(msg);
   }

@@ -85,9 +85,9 @@ var ImportExport = new function () {
       var addresshash = Buffer(hex.slice(3, 7));
 
       ImportExport.Crypto_scrypt(passphrase, addresshash, 16384, 8, 8, 64, function (derivedBytes) {
-        var k = derivedBytes.slice(32, 32+32);
+        var k = derivedBytes.slice(32, 32 + 32);
 
-        var decryptedBytes = WalletCrypto.AES.decrypt(Buffer(hex.slice(7, 7+32)), k, null, AES_opts);
+        var decryptedBytes = WalletCrypto.AES.decrypt(Buffer(hex.slice(7, 7 + 32)), k, null, AES_opts);
         for (var x = 0; x < 32; x++) { decryptedBytes[x] ^= derivedBytes[x]; }
 
         decrypted = BigInteger.fromBuffer(decryptedBytes);
@@ -95,7 +95,7 @@ var ImportExport = new function () {
         verifyHashAndReturn();
       });
     } else {
-      var ownerentropy = hex.slice(7, 7+8);
+      var ownerentropy = hex.slice(7, 7 + 8);
       var ownersalt = Buffer(!hasLotSeq ? ownerentropy : ownerentropy.slice(0, 4));
 
       ImportExport.Crypto_scrypt(passphrase, ownersalt, 16384, 8, 8, 32, function (prefactorA) {
@@ -112,24 +112,24 @@ var ImportExport = new function () {
 
         var passpoint = kp.getPublicKeyBuffer();
 
-        var encryptedpart2 = Buffer(hex.slice(23, 23+16));
+        var encryptedpart2 = Buffer(hex.slice(23, 23 + 16));
 
-        var addresshashplusownerentropy = Buffer(hex.slice(3, 3+12));
+        var addresshashplusownerentropy = Buffer(hex.slice(3, 3 + 12));
 
         ImportExport.Crypto_scrypt(passpoint, addresshashplusownerentropy, 1024, 1, 1, 64, function (derived) {
           var k = derived.slice(32);
 
           var unencryptedpart2Bytes = WalletCrypto.AES.decrypt(encryptedpart2, k, null, AES_opts);
 
-          for (var i = 0; i < 16; i++) { unencryptedpart2Bytes[i] ^= derived[i+16]; }
+          for (var i = 0; i < 16; i++) { unencryptedpart2Bytes[i] ^= derived[i + 16]; }
 
-          var encryptedpart1 = Buffer.concat([Buffer(hex.slice(15, 15+8)), Buffer(unencryptedpart2Bytes.slice(0, 0+8))]);
+          var encryptedpart1 = Buffer.concat([Buffer(hex.slice(15, 15 + 8)), Buffer(unencryptedpart2Bytes.slice(0, 0 + 8))]);
 
           var unencryptedpart1Bytes = WalletCrypto.AES.decrypt(encryptedpart1, k, null, AES_opts);
 
           for (var i = 0; i < 16; i++) { unencryptedpart1Bytes[i] ^= derived[i]; }
 
-          var seedb = Buffer.concat([Buffer(unencryptedpart1Bytes.slice(0, 0+16)), Buffer(unencryptedpart2Bytes.slice(8, 8+8))]);
+          var seedb = Buffer.concat([Buffer(unencryptedpart1Bytes.slice(0, 0 + 16)), Buffer(unencryptedpart2Bytes.slice(8, 8 + 8))]);
 
           var factorb = hash256(seedb);
 
@@ -286,7 +286,7 @@ var ImportExport = new function () {
       }
 
       function blockxor (S, Si, D, Di, len) {
-        var i = len>>6;
+        var i = len >> 6;
         while (i--) {
           D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
           D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
@@ -350,7 +350,7 @@ var ImportExport = new function () {
       }
 
       function arraycopy32 (src, srcPos, dest, destPos, length) {
-        var i = length>>5;
+        var i = length >> 5;
         while (i--) {
           dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
           dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];

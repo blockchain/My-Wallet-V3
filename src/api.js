@@ -192,11 +192,11 @@ API.prototype.securePost = function (url, data) {
     var timestamp = parseInt((now - this.SERVER_TIME_OFFSET) / 10000);
     var SKHashHex = WalletCrypto.sha256(sharedKey.toLowerCase() + timestamp).toString('hex');
     var i = 0;
-    var tSKUID = SKHashHex.substring(i, i+=8)+'-'+
-                 SKHashHex.substring(i, i+=4)+'-'+
-                 SKHashHex.substring(i, i+=4)+'-'+
-                 SKHashHex.substring(i, i+=4)+'-'+
-                 SKHashHex.substring(i, i+=12);
+    var tSKUID = SKHashHex.substring(i, i += 8) + '-' +
+                 SKHashHex.substring(i, i += 4) + '-' +
+                 SKHashHex.substring(i, i += 4) + '-' +
+                 SKHashHex.substring(i, i += 4) + '-' +
+                 SKHashHex.substring(i, i += 12);
 
     clone.sharedKey = tSKUID;
     clone.sKTimestamp = timestamp;
