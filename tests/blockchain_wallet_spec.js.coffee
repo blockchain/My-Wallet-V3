@@ -524,20 +524,47 @@ describe "Blockchain-Wallet", ->
       it ".getPaidTo", ->
         pending()
 
-      it ".getAddressBookLabel", ->
-        pending()
+      describe "addressbook label", ->
 
-      it ".getNote", ->
-        pending()
+        it "should be set, persisted and deleted", ->
+          expect(wallet.getAddressBookLabel("1hash")).toEqual(undefined)
 
-      it ".setNote", ->
-        pending()
+          wallet.addAddressBookEntry("1hash", "Rent payment")
+          expect(MyWallet.syncWallet).toHaveBeenCalled()
 
-      it ".deleteNote", ->
-        pending()
+          expect(wallet.getAddressBookLabel("1hash")).toEqual("Rent payment")
 
-      it ".getMnemonic", ->
-        pending()
+          wallet.removeAddressBookEntry("1hash")
+          expect(MyWallet.syncWallet).toHaveBeenCalled()
+
+          expect(wallet.getAddressBookLabel("hash")).toEqual(undefined)
+
+      describe "notes", ->
+
+        it "should be set, persisted and deleted", ->
+          expect(wallet.getNote("hash")).toEqual(undefined)
+
+          wallet.setNote("hash", "Rent payment")
+          expect(MyWallet.syncWallet).toHaveBeenCalled()
+
+          expect(wallet.getNote("hash")).toEqual("Rent payment")
+
+          wallet.deleteNote("hash")
+          expect(MyWallet.syncWallet).toHaveBeenCalled()
+
+          expect(wallet.getNote("hash")).toEqual(undefined)
+
+      describe ".getMnemonic", ->
+        it "should return the mnemonic if the wallet is not encrypted", ->
+          expect(wallet.getMnemonic()).toEqual("lawn couch clay slab oxygen vicious denial couple ski alley spawn wisdom")
+
+        it "should fail to return the mnemonic if the wallet is encrypted and the provided password is wrong", ->
+          wallet.encrypt("test")
+          expect(() -> wallet.getMnemonic("nottest")).toThrow()
+
+        it "should return the mnemonic if the wallet is encrypted", ->
+          wallet.encrypt("test")
+          expect(wallet.getMnemonic("test")).toEqual("lawn couch clay slab oxygen vicious denial couple ski alley spawn wisdom")
 
       describe ".changePbkdf2Iterations", ->
         it "should be change the number of iterations when called correctly", ->
@@ -625,3 +652,24 @@ describe "Blockchain-Wallet", ->
         rwall = JSON.parse(json1, Wallet.reviver)
         json2     = JSON.stringify(rwall, null, 2)
         expect(json1).toEqual(json2)
+
+    describe "_getPrivateKey", ->
+
+      it "should not compute private keys for non existent accounts", ->
+        expect(() -> wallet._getPrivateKey(-1, 'm/0/1')).toThrow()
+
+      it "should not compute private keys for invalid paths accounts", ->
+        expect(() -> wallet._getPrivateKey(0, 10)).toThrow()
+
+      it "should compute correct private keys with an unencrypted wallet", ->
+        expect(wallet._getPrivateKey(0, 'M/0/14')).toEqual('KzP1z5HqMg5KAjgoqnkpszjXHo3bCnjxGAdb59fnE2bkSqfCTdyR')
+
+      it "should fail if encrypted and second password false", ->
+        wallet.encrypt("batteryhorsestaple")
+
+        expect(() -> wallet._getPrivateKey(0, 'M/0/14', 'batteryhorsestaple0')).toThrow()
+
+      it "should compute correct private keys with an encrypted wallet", ->
+        wallet.encrypt("batteryhorsestaple")
+
+        expect(wallet._getPrivateKey(0, 'M/0/14', 'batteryhorsestaple')).toEqual('KzP1z5HqMg5KAjgoqnkpszjXHo3bCnjxGAdb59fnE2bkSqfCTdyR')
