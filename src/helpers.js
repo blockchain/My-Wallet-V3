@@ -152,7 +152,6 @@ Helpers.merge = function (o, p) {
 };
 
 Helpers.zipLong = function (f, xs, ys) {
-
   if (!(f instanceof Function && xs instanceof Array && ys instanceof Array)) {
     return null;
   } else {
@@ -162,7 +161,6 @@ Helpers.zipLong = function (f, xs, ys) {
 };
 
 Helpers.zip3 = function (xs, ys, zs) {
-
   if (!(xs instanceof Array && ys instanceof Array && zs instanceof Array)) {
     return null;
   } else {
@@ -199,7 +197,6 @@ Helpers.guessFee = function (nInputs, nOutputs, feePerKb) {
 
 // password scorer
 Helpers.scorePassword = function (password) {
-
   if (!Helpers.isString(password)) { return 0};
 
   var patternsList = [
@@ -251,7 +248,6 @@ Helpers.scorePassword = function (password) {
   };
 
   return entropyWeighted(password);
-
 };
 
 Helpers.getHostName = function () {
@@ -303,7 +299,6 @@ Helpers.privateKeyStringToKey = function (value, format) {
     tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
     tbytes.shift();
     key_bytes = tbytes.slice(0, tbytes.length - 4);
-
   } else if (format == 'compsipa') {
     var tbytes = Helpers.buffertoByteArray(Base58.decode(value));
     tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
@@ -349,7 +344,6 @@ Helpers.detectPrivateKeyFormat = function (key) {
       /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{25}$/.test(key) ||
       /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{29}$/.test(key) ||
       /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{30}$/.test(key)) {
-
     var testBytes = Bitcoin.crypto.sha256(key + '?');
 
     if (testBytes[0] === 0x00 || testBytes[0] === 0x01)

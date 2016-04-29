@@ -74,7 +74,6 @@ RNG.prototype.run = function (nBytes) {
     );
 
     return combinedH;
-
   } catch (e) {
     console.log('Error: RNG.run');
     console.log(e);

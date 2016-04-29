@@ -12,7 +12,6 @@ var MyWallet = require('./wallet'); // This cyclic import should be avoided once
 
 // Address class
 function HDWallet (object) {
-
   function addAccount (o, index) {
     o.index = index;
     return HDAccount.factory(o);
@@ -158,7 +157,6 @@ HDWallet.new = function (cipher) {
 };
 
 HDWallet.restore = function (seedHex, bip39Password, cipher) {
-
   assert(Helpers.isSeedHex(seedHex), 'hdwallet.seedHex must exist and be a seed hex');
   if (!Helpers.isString(bip39Password)) bip39Password = '';
   var hdwallet = {
@@ -184,7 +182,6 @@ HDWallet.factory = function (o) {
 };
 
 HDWallet.prototype.newAccount = function (label, cipher) {
-
   var accIndex = this._accounts.length;
   var dec = undefined;
   var enc = undefined;
@@ -206,7 +203,6 @@ HDWallet.prototype.newAccount = function (label, cipher) {
 // JSON serializer
 
 HDWallet.prototype.toJSON = function () {
-
   var hdwallet = {
     seed_hex: this._seedHex,
     passphrase: this._bip39Password,

@@ -9,7 +9,6 @@ var API = require('./api');
 function get_account_info (success, error) {
   API.securePostCallbacks('wallet', {method: 'get-info', format: 'json'}, function (data) {
     typeof (success) === 'function' && success(data);
-
   }, function (data) {
     var response = data.responseText || 'Error Downloading Account Settings';
     WalletStore.sendEvent('msg', {type: 'error', message: response});
@@ -89,7 +88,6 @@ function update_password_hint2 (value, success, error) {
 
   var isBad = isBadPasswordHint(value);
   isBad ? error(isBad) : updateKV('update-password-hint2', value, success, error);
-
 }
 
 function change_email (email, success, error) {

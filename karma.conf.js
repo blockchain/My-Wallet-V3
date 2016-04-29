@@ -1,5 +1,4 @@
 module.exports = function (karma) {
-
   var configuration = {
     basePath : './',
 

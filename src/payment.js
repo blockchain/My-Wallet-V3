@@ -360,9 +360,7 @@ Payment.updateFees = function () {
 };
 
 Payment.prebuild = function (absoluteFee) {
-
   return function (payment) {
-
     var totalFee = null;
     var selectedCoins = [];
     var txSize = 0;
@@ -385,7 +383,6 @@ Payment.prebuild = function (absoluteFee) {
 
     // if amounts defined refresh computations
     if (Array.isArray(payment.amounts) && payment.amounts.length > 0) {
-
       // coin selection
       if (Helpers.isPositiveNumber(absoluteFee)) {
         var s = Transaction.selectCoins(payment.coins, payment.amounts, absoluteFee, true);
@@ -452,7 +449,6 @@ Payment.sign = function (password) {
 
 Payment.publish = function () {
   return function (payment) {
-
     var success = function () {
       payment.txid = payment.transaction.getId();
       return payment;
@@ -475,7 +471,6 @@ module.exports = Payment;
 
 // getUnspentCoins :: [address] -> Promise [coins]
 function getUnspentCoins (addressList) {
-
   var processCoins = function (obj) {
     var processCoin = function (utxo) {
       var txBuffer = new Buffer(utxo.tx_hash, 'hex');

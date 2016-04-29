@@ -10,7 +10,6 @@ var WalletCrypto = require('./wallet-crypto');
 var hash256 = Bitcoin.crypto.hash256;
 
 var ImportExport = new function () {
-
   this.parseBIP38toECPair = function (base58Encrypted, passphrase, success, wrong_password, error) {
     var hex;
 
@@ -86,7 +85,6 @@ var ImportExport = new function () {
       var addresshash = Buffer(hex.slice(3, 7));
 
       ImportExport.Crypto_scrypt(passphrase, addresshash, 16384, 8, 8, 64, function (derivedBytes) {
-
         var k = derivedBytes.slice(32, 32+32);
 
         var decryptedBytes = WalletCrypto.AES.decrypt(Buffer(hex.slice(7, 7+32)), k, null, AES_opts);
@@ -101,7 +99,6 @@ var ImportExport = new function () {
       var ownersalt = Buffer(!hasLotSeq ? ownerentropy : ownerentropy.slice(0, 4));
 
       ImportExport.Crypto_scrypt(passphrase, ownersalt, 16384, 8, 8, 32, function (prefactorA) {
-
         var passfactor;
 
         if (!hasLotSeq) {
@@ -378,7 +375,6 @@ var ImportExport = new function () {
       }
     } // scryptCore
   };
-
 };
 
 module.exports = ImportExport;

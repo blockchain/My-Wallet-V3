@@ -23,7 +23,6 @@ var Block = require('./bitcoin-block');
 // Wallet
 
 function Wallet (object) {
-
   var obj = object || {};
   obj.options = obj.options || {};
   obj.keys = obj.keys || [];
@@ -317,7 +316,6 @@ Object.defineProperties(Wallet.prototype, {
 
 // update-wallet-balances after multiaddr call
 Wallet.prototype._updateWalletInfo = function (obj) {
-
   if (obj.info) {
     if (obj.info.symbol_local) {
       shared.setLocalSymbol(obj.info.symbol_local);
@@ -400,7 +398,6 @@ Wallet.prototype.getBalancesForArchived = function () {
 };
 
 Wallet.prototype.toJSON = function () {
-
   function addressBookToJSON (addressBook) {
     return Object.keys(addressBook)
              .map(function (a) { return {addr: a, label: addressBook[a]}; });
@@ -428,7 +425,6 @@ Wallet.prototype.toJSON = function () {
 };
 
 Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bipPass) {
-
   var modifyAddress = function (newKey) {
     var watchOnlyKey = this._addresses[addr];
     if (newKey.address !== watchOnlyKey.address) {
@@ -442,7 +438,6 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
           throw 'privateKeyOfAnotherNonWatchOnlyAddress'
         }
       }
-
     }
     watchOnlyKey._priv = newKey._priv;
     if (this.isDoubleEncrypted) {
@@ -529,7 +524,6 @@ Wallet.prototype.deleteLegacyAddress = function (a) {
 // };
 
 Wallet.prototype.validateSecondPassword = function (inputString) {
-
   // old wallets default_iterations is 10
   var it = !this._pbkdf2_iterations ? 10 : this._pbkdf2_iterations;
   var password_hash = WalletCrypto.hashNTimes(this._sharedKey + inputString, it);
@@ -686,7 +680,6 @@ Wallet.prototype.disableNotifications = function (success, error) {
       error();
     }
   );
-
 };
 
 // creating a new wallet object

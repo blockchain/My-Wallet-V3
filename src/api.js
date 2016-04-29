@@ -57,7 +57,6 @@ API.prototype.request = function (action, method, data, withCred) {
         return response.json();
       } else {
         return response.text();
-
       }
     } else {
       return response.text().then(Promise.reject.bind(Promise));
@@ -117,7 +116,6 @@ API.prototype.getBalances = function (addresses) {
 };
 
 API.prototype.getBalanceForRedeemCode = function (privatekey) {
-
   var format = Helpers.detectPrivateKeyFormat(privatekey);
   if (format == null) { return Promise.reject('Unknown private key format'); }
   var privateKeyToSweep = Helpers.privateKeyStringToKey(privatekey, format);
@@ -160,7 +158,6 @@ API.prototype.getUnspent = function (fromAddresses, confirmations) {
 };
 
 API.prototype.getHistory = function (addresses, tx_filter, offset, n, syncBool) {
-
   var clientTime = (new Date()).getTime();
   offset = offset || 0;
   n = n || 0;
@@ -180,12 +177,10 @@ API.prototype.getHistory = function (addresses, tx_filter, offset, n, syncBool) 
   if (tx_filter !== undefined && tx_filter !== null) {
     data.filter = tx_filter;
   }
-
   return this.retry(this.request.bind(this, 'POST', 'multiaddr', data, null, syncBool));
 };
 
 API.prototype.securePost = function (url, data) {
-
   var clone = Helpers.merge({}, data);
   if (!Helpers.isValidGUID(data.guid)) { clone.guid = MyWallet.wallet.guid; }
   if (!data.sharedKey) {
@@ -244,7 +239,6 @@ API.prototype.pushTx = function (txHex, note) {
 };
 
 API.prototype.getFees = function () {
-
   var handleNetworkError = function () {
     return Promise.reject({ initial_error: 'Connectivity error, failed to send network request' });
   };

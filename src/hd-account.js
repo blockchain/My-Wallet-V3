@@ -11,7 +11,6 @@ var MyWallet = require('./wallet'); // This cyclic import should be avoided once
 // HDAccount Class
 
 function HDAccount (object) {
-
   var self = this;
   var obj = object || {};
   obj.cache = obj.cache || {};
@@ -204,7 +203,6 @@ Object.defineProperties(HDAccount.prototype, {
  * Registered coin types: 0' for Bitcoin
  */
 HDAccount.fromAccountMasterKey = function (accountZero, index, label) {
-
   assert(accountZero, 'Account MasterKey must be given to create an account.');
   var account = new HDAccount();
   account._index = Helpers.isPositiveInteger(index) ? index : null;
@@ -216,7 +214,6 @@ HDAccount.fromAccountMasterKey = function (accountZero, index, label) {
 };
 
 HDAccount.fromWalletMasterKey = function (masterkey, index, label) {
-
   assert(masterkey, 'Wallet MasterKey must be given to create an account.');
   assert(Helpers.isPositiveInteger(index), 'Derivation index must be a positive integer.');
   var accountZero = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(index);
@@ -233,7 +230,6 @@ HDAccount.fromExtPublicKey = function (extPublicKey, index, label) {
 };
 
 HDAccount.fromExtPrivateKey = function (extPrivateKey, index, label) {
-
   assert(Helpers.isXprivKey(extPrivateKey), 'Extended private key must be given to create an account.');
   var accountZero = Bitcoin.HDNode.fromBase58(extPrivateKey);
   return HDAccount.fromAccountMasterKey(accountZero, index, label);
@@ -250,7 +246,6 @@ HDAccount.factory = function (o) {
 // JSON SERIALIZER
 
 HDAccount.prototype.toJSON = function () {
-
   // should we add checks on the serializer too?
   var hdaccount = {
     label: this._label,

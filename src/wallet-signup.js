@@ -32,7 +32,6 @@ function generateNewWallet (password, email, firstAccountName, success, error, i
     };
 
     Wallet.new(guid, sharedKey, firstAccountName, saveWallet, error, isHD);
-
   }).catch(error);
 }
 

@@ -42,7 +42,6 @@ BlockchainSocket.prototype.connect = function (onOpen, onMessage, onClose) {
 };
 
 BlockchainSocket.prototype._initialize = function (onOpen, onMessage, onClose) {
-
   if (!this.socket || this.socket.readyState === 3) {
     try {
       this.pingIntervalPID = setInterval(this.ping.bind(this), this.pingInterval);

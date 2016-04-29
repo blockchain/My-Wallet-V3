@@ -43,5 +43,4 @@ Payload.fromWallet = function (walletObject) {
   // encrypt the wallet to generate payload
   o.version = 3; // if upgraded to hd 3 else 2
   return new Payload(o);
-
 };

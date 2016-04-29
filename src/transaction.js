@@ -11,7 +11,6 @@ var Buffer = require('buffer').Buffer;
 // Error messages that should only appear during development can be any string.
 
 var Transaction = function (payment, emitter) {
-
   var unspentOutputs = payment.selectedCoins;
   var toAddresses = payment.to;
   var amounts = payment.amounts;
@@ -90,7 +89,6 @@ Transaction.prototype.addPrivateKeys = function (privateKeys) {
  */
 
 Transaction.prototype.sortBIP69 = function () {
-
   var compareInputs = function (a, b) {
     var hasha = new Buffer(a[0].hash);
     var hashb = new Buffer(b[0].hash);

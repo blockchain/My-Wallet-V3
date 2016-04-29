@@ -25,7 +25,6 @@ function handleResponse (obj) {
 }
 
 function generateUUIDs (count) {
-
   var data = {
     format: 'json',
     n: count,
@@ -49,7 +48,6 @@ function generateUUIDs (count) {
  */
 // used in the frontend and in iOS
 function resendTwoFactorSms (user_guid) {
-
   var data = {
     format: 'json',
     resend_code: true,
@@ -68,7 +66,6 @@ function resendTwoFactorSms (user_guid) {
  */
 // used in the frontend
 function recoverGuid (user_email, captcha) {
-
   var data = {
     method: 'recover-wallet',
     email: user_email,
@@ -111,7 +108,6 @@ function requestTwoFactorReset (
   secret,
   message,
   captcha) {
-
   var data = {
     method: 'reset-two-factor-form',
     guid: user_guid,

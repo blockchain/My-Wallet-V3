@@ -50,17 +50,14 @@ function socketConnect () {
 
         MyWallet.getWallet();
       }
-
     } else if (obj.op == 'utx') {
       WalletStore.sendEvent('on_tx_received');
       var sendOnTx = WalletStore.sendEvent.bind(null, 'on_tx');
       MyWallet.wallet.getHistory().then(sendOnTx);
-
     }  else if (obj.op == 'block') {
       var sendOnBlock = WalletStore.sendEvent.bind(null, 'on_block');
       MyWallet.wallet.getHistory().then(sendOnBlock);
       MyWallet.wallet.latestBlock = obj.x;
-
     }  else if (obj.op == 'pong') {
       clearTimeout(MyWallet.ws.pingTimeoutPID);
     }
@@ -80,7 +77,6 @@ function socketConnect () {
 
 // used two times
 function didDecryptWallet (success) {
-
   // We need to check if the wallet has changed
   MyWallet.getWallet();
   success();
@@ -177,7 +173,6 @@ MyWallet.makePairingCode = function (success, error) {
 MyWallet.login = function (user_guid, shared_key, inputedPassword, twoFA, success, needs_two_factor_code,
                            wrong_two_factor_code, authorization_required, other_error, fetch_success,
                            decrypt_success, build_hd_success) {
-
   assert(success, 'Success callback required');
   assert(other_error, 'Error callback required');
   assert(twoFA !== undefined, '2FA code must be null or set');
@@ -193,7 +188,6 @@ MyWallet.login = function (user_guid, shared_key, inputedPassword, twoFA, succes
   if (shared_key) { data.sharedKey = shared_key; }
 
   var tryToFetchWalletJSON = function (guid, successCallback) {
-
     var success = function (obj) {
       fetch_success && fetch_success();
       // Even if Two Factor is enabled, some settings need to be saved here,
@@ -241,7 +235,6 @@ MyWallet.login = function (user_guid, shared_key, inputedPassword, twoFA, succes
   };
 
   var tryToFetchWalletWith2FA = function (guid, two_factor_auth, successCallback) {
-
     if (Helpers.isString(two_factor_auth)) {
       two_factor_auth = {
         type: null,
@@ -311,7 +304,6 @@ MyWallet.login = function (user_guid, shared_key, inputedPassword, twoFA, succes
 
 // used locally
 MyWallet.pollForSessionGUID = function (successCallback) {
-
   if (WalletStore.isPolling()) return;
   WalletStore.setIsPolling(true);
   var data = {format: 'json'};
@@ -381,7 +373,6 @@ function setIsInitialized () {
 
 // This should replace backup functions
 function syncWallet (successcallback, errorcallback) {
-
   var panic = function (e) {
     console.log('Panic ' + e);
     window.location.replace('/');
@@ -479,7 +470,6 @@ function syncWallet (successcallback, errorcallback) {
               _errorcallback(e);
             }
         );
-
       } catch (e) {
         _errorcallback(e);
         WalletStore.enableLogout();
@@ -493,7 +483,6 @@ function syncWallet (successcallback, errorcallback) {
     _errorcallback(e);
     WalletStore.enableLogout();
   }
-
 }
 MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function () {
   console.log('SAVE CALLED...');
