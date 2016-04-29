@@ -74,8 +74,7 @@ var WalletStore = (function () {
       if (!data || data.length == 0) {
         encrypted_wallet_data = null;
         payload_checksum = null;
-      }
-      else {
+      } else {
         encrypted_wallet_data = data;
         payload_checksum = this.generatePayloadChecksum();
       }

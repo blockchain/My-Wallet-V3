@@ -35,8 +35,7 @@ function socketConnect () {
     }
     try {
       obj = JSON.parse(message);
-    }
-    catch (e) {
+    } catch (e) {
       console.log('Websocket error: could not parse message data as JSON: ' + message);
       return;
     }
@@ -386,8 +385,9 @@ function syncWallet (successcallback, errorcallback) {
 
   if (!MyWallet.wallet || !MyWallet.wallet.sharedKey
       || MyWallet.wallet.sharedKey.length === 0
-      || MyWallet.wallet.sharedKey.length !== 36)
- { throw 'Cannot backup wallet now. Shared key is not set'; }
+      || MyWallet.wallet.sharedKey.length !== 36) {
+    throw 'Cannot backup wallet now. Shared key is not set';
+  }
 
   WalletStore.disableLogout();
 

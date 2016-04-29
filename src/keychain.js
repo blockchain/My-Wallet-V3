@@ -41,8 +41,7 @@ KeyChain.prototype.init = function (extendedKey, index, cache) {
   // otherwise we generate it using extendedKey and index
   if (cache) {
     this._chainRoot = Bitcoin.HDNode.fromBase58(cache);
-  }
-  else {
+  } else {
     this._chainRoot = extendedKey && Helpers.isPositiveInteger(index) && index >= 0
       ? Bitcoin.HDNode.fromBase58(extendedKey).derive(index) : undefined;
   }

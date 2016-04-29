@@ -59,8 +59,7 @@ var Transaction = function (payment, emitter) {
     // Add to list of needed private keys
     if (output.xpub) {
       this.pathsOfNeededPrivateKeys.push(output.xpub.path);
-    }
-    else {
+    } else {
       this.addressesOfNeededPrivateKeys.push(address);
     }
   }

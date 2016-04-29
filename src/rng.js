@@ -112,8 +112,7 @@ RNG.prototype.getServerEntropy = function (nBytes) {
     );
 
     return B;
-  }
-  else {
+  } else {
     throw 'Received not ok status: ' + request.status;
   }
 };

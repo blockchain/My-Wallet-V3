@@ -228,8 +228,7 @@ function isCoinBase (input) {
 Tx.factory = function (o) {
   if (o instanceof Object && !(o instanceof Tx)) {
     return new Tx(o);
-  }
-  else { return o; }
+  } else { return o; }
 };
 
 Tx.IOSfactory = function (tx) {

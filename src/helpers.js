@@ -380,12 +380,12 @@ Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
         function () { reject('wrongBipPass'); },
         function () { reject('importError'); }
       );
-    }
-    else if (okFormats.indexOf(format) > -1) {
+    } else if (okFormats.indexOf(format) > -1) {
       var k = Helpers.privateKeyStringToKey(priv, format);
       return resolve(k);
+    } else {
+      reject('unknown key format');
     }
-    else { reject('unknown key format'); }
   };
   var predicate = function (key) {
     var a = key.getAddress();

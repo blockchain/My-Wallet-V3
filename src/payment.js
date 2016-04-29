@@ -186,9 +186,10 @@ Payment.to = function (destinations) {
   };
   var accountToAddress = function (i) {
     if (Helpers.isPositiveInteger(i)) {
-      return MyWallet.wallet.hdwallet.accounts[i].receiveAddress; }
-    else {
-      return i; }
+      return MyWallet.wallet.hdwallet.accounts[i].receiveAddress;
+    } else {
+      return i;
+    }
   };
   switch (true) {
     // single bitcoin address
@@ -490,8 +491,11 @@ function getKey(priv, addr) {
   var key = Helpers.privateKeyStringToKey(priv, format);
   var ckey = new Bitcoin.ECPair(key.d, null, {compressed: true});
   var ukey = new Bitcoin.ECPair(key.d, null, {compressed: false});
-  if (ckey.getAddress() === addr) { return ckey; }
-  else if (ukey.getAddress() === addr) { return ukey; }
+  if (ckey.getAddress() === addr) {
+    return ckey;
+  } else if (ukey.getAddress() === addr) {
+    return ukey;
+  }
   return key;
 }
 
