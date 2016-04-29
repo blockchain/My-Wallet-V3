@@ -226,6 +226,12 @@ describe "Helpers", ->
 
     # (148 * input + 34 * outputs + 10) (10 = overhead)
     describe "standard formula", ->
+      it 'should return 0 for 0 input, 1 output', ->
+        expect(Helpers.guessSize(0,1)).toEqual(0)
+
+      it 'should work for 1 input, 0 output', ->
+        expect(Helpers.guessSize(1,0)).toEqual(0)
+
       it 'should work for 1 input, 1 output', ->
         expect(Helpers.guessSize(1,1)).toEqual(192)
 
