@@ -71,19 +71,19 @@ Object.defineProperties(HDWallet.prototype, {
       return this._accounts.filter(function (a) { return !a.archived});
     }
   },
-  'xpubs':{
+  'xpubs': {
     configurable: false,
     get: function () {
       return this._accounts.map(function (a) { return (a.extendedPublicKey)});
     }
   },
-  'activeXpubs':{
+  'activeXpubs': {
     configurable: false,
     get: function () {
       return this.activeAccounts.map(function (a) { return (a.extendedPublicKey)});
     }
   },
-  'balanceActiveAccounts':{
+  'balanceActiveAccounts': {
     configurable: false,
     get: function () {
       var balances = this.activeAccounts.map(function (k) { return k.balance; });
@@ -107,7 +107,7 @@ Object.defineProperties(HDWallet.prototype, {
                              .reduce(Helpers.and, true);
     }
   },
-  'lastAccount':{
+  'lastAccount': {
     configurable: false,
     get: function () {
       return this._accounts[this._accounts.length-1];

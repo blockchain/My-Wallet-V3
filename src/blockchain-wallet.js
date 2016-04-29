@@ -214,13 +214,13 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () { return this._hd_wallets[0]; }
   },
-  'isUpgradedToHD':{
+  'isUpgradedToHD': {
     configurable: false,
     get: function () {
       return !(this._hd_wallets == null || this._hd_wallets.length === 0);
     }
   },
-  'isEncryptionConsistent':{
+  'isEncryptionConsistent': {
     configurable: false,
     get: function () {
       var operation = undefined;
@@ -237,7 +237,7 @@ Object.defineProperties(Wallet.prototype, {
       return A && W;
     }
   },
-  'balanceActiveLegacy':{
+  'balanceActiveLegacy': {
     configurable: false,
     get: function () {
       return this.activeKeys
@@ -245,7 +245,7 @@ Object.defineProperties(Wallet.prototype, {
                  .reduce(Helpers.add, 0);
     }
   },
-  'balanceActiveAccounts':{
+  'balanceActiveAccounts': {
     configurable: false,
     get: function () {
       return this.hdwallet.accounts
@@ -254,13 +254,13 @@ Object.defineProperties(Wallet.prototype, {
                  .reduce(Helpers.add, 0);
     }
   },
-  'balanceActive':{
+  'balanceActive': {
     configurable: false,
     get: function () {
       return this.balanceActiveLegacy + this.balanceActiveAccounts;
     }
   },
-  'balanceSpendableActive':{
+  'balanceSpendableActive': {
     configurable: false,
     get: function () {
       if (this.isUpgradedToHD) {
@@ -270,7 +270,7 @@ Object.defineProperties(Wallet.prototype, {
       }
     }
   },
-  'balanceSpendableActiveLegacy':{
+  'balanceSpendableActiveLegacy': {
     configurable: false,
     get: function () {
       return this.activeKeys
@@ -279,11 +279,11 @@ Object.defineProperties(Wallet.prototype, {
                  .reduce(Helpers.add, 0);
     }
   },
-  'addressBook':{
+  'addressBook': {
     configurable: false,
     get: function () { return this._address_book; }
   },
-  'defaultPbkdf2Iterations':{
+  'defaultPbkdf2Iterations': {
     configurable: false,
     get: function () { return 5000; }
   },
@@ -300,7 +300,7 @@ Object.defineProperties(Wallet.prototype, {
       }
     }
   },
-  'logoutTime':{
+  'logoutTime': {
     configurable: false,
     get: function () { return this._logout_time; },
     set: function (t) {

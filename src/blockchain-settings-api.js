@@ -180,7 +180,7 @@ function resendEmailConfirmation (email, success, error) {
  * @param {function ()} error Error callback function.
  */
 function verifyEmail (code, success, error) {
-  API.securePostCallbacks('wallet', { payload:code, length: code.length, method: 'verify-email' }, function (data) {
+  API.securePostCallbacks('wallet', { payload: code, length: code.length, method: 'verify-email' }, function (data) {
     WalletStore.sendEvent('msg', {type: 'success', message: data});
     typeof (success) === 'function' && success(data);
   }, function (data) {
@@ -196,7 +196,7 @@ function verifyEmail (code, success, error) {
  * @param {function ()} error Error callback function.
  */
 function verifyMobile (code, success, error) {
-  API.securePostCallbacks('wallet', { payload:code, length: code.length, method: 'verify-sms' }, function (data) {
+  API.securePostCallbacks('wallet', { payload: code, length: code.length, method: 'verify-sms' }, function (data) {
     WalletStore.sendEvent('msg', {type: 'success', message: data});
     typeof (success) === 'function' && success(data);
   }, function (data) {

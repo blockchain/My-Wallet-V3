@@ -16,35 +16,35 @@ function Payment (payment) {
   EventEmitter.call(this);
 
   var serverFeeFallback ={
-    "default":{
-      "fee":35000.00,
-      "surge":false,
-      "ok":true
+    "default": {
+      "fee": 35000.00,
+      "surge": false,
+      "ok": true
     },
-    "estimate":[{
-      "fee":45000.0,
-      "surge":false,
-      "ok":true
+    "estimate": [{
+      "fee": 45000.0,
+      "surge": false,
+      "ok": true
     }, {
-      "fee":35000.00,
-      "surge":false,
-      "ok":true
+      "fee": 35000.00,
+      "surge": false,
+      "ok": true
     }, {
-      "fee":22000.0,
-      "surge":false,
-      "ok":true
+      "fee": 22000.0,
+      "surge": false,
+      "ok": true
     }, {
-      "fee":19000.0,
-      "surge":false,
-      "ok":true
+      "fee": 19000.0,
+      "surge": false,
+      "ok": true
     }, {
-      "fee":15000.0,
-      "surge":false,
-      "ok":true
+      "fee": 15000.0,
+      "surge": false,
+      "ok": true
     }, {
-      "fee":12000.0,
-      "surge":false,
-      "ok":true
+      "fee": 12000.0,
+      "surge": false,
+      "ok": true
     }]
   };
 
