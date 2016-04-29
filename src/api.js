@@ -8,6 +8,8 @@ var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var MyWallet = require('./wallet');
 var Bitcoin = require('bitcoinjs-lib');
+var ECPair = Bitcoin.ECPair;
+
 
 // API class
 function API () {

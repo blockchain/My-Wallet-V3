@@ -1,6 +1,5 @@
 'use strict';
 
-var assert = require('assert');
 var EventEmitter = require('events');
 var Helpers = require('./helpers');
 var Tx = require('./wallet-transaction');

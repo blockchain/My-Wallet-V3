@@ -2,7 +2,6 @@
 
 var assert = require('assert');
 var Bitcoin = require('bitcoinjs-lib');
-var randomBytes = require('randombytes');
 var Helpers = require('./helpers');
 var Buffer = require('buffer').Buffer;
 

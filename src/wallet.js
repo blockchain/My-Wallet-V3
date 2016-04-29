@@ -3,8 +3,6 @@
 var MyWallet = module.exports = {};
 
 var assert = require('assert');
-var Bitcoin = require('bitcoinjs-lib');
-var ECPair = Bitcoin.ECPair;
 var Buffer = require('buffer').Buffer;
 
 var WalletStore = require('./wallet-store');

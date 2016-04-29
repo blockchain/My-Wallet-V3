@@ -4,7 +4,6 @@ module.exports = Wallet;
 
 // dependencies
 var assert = require('assert');
-var Bitcoin = require('bitcoinjs-lib');
 var BIP39 = require('bip39');
 
 var WalletStore = require('./wallet-store');
