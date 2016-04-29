@@ -24,14 +24,14 @@ Helpers.isBitcoinAddress = function (candidate) {
   try {
     var d = Bitcoin.address.fromBase58Check(candidate);
     var n = Bitcoin.networks.bitcoin;
-    return d.version === n.pubKeyHash || d.version === n.scriptHash
-  } catch (e) { return false; };
+    return d.version === n.pubKeyHash || d.version === n.scriptHash;
+  } catch (e) { return false; }
 };
 Helpers.isBitcoinPrivateKey = function (candidate) {
   try {
     Bitcoin.ECPair.fromWIF(candidate);
     return true;
-  } catch (e) { return false; };
+  } catch (e) { return false; }
 };
 Helpers.isBase58Key = function (str) {
   return Helpers.isString(str) && /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{40,44}$/.test(str);
@@ -64,7 +64,7 @@ Helpers.isPositiveInteger = function (num) {
   return Helpers.isPositiveNumber(num) && num % 1 == 0;
 };
 Helpers.isNotNumber = function (num) {
-  return !Helpers.isNumber(num)
+  return !Helpers.isNumber(num);
 };
 Helpers.isBoolean = function (value) {
   return typeof (value) === 'boolean';
@@ -123,14 +123,14 @@ Helpers.asyncOnce = function (f, milliseconds, before) {
   var timer = null;
   var oldArguments = new Array();
   return function () {
-    before && before()
+    before && before();
     if (timer) {
       clearTimeout(timer);
       timer = null;
-    };
+    }
     var myArgs = new Array();
     // this is needed because arguments is not an 'Array' instance
-    for (var i = 0; i < arguments.length; i++) { myArgs[i] = arguments[i]; };
+    for (var i = 0; i < arguments.length; i++) { myArgs[i] = arguments[i]; }
     var myArgs = Helpers.zipLong(Helpers.maybeCompose, myArgs, oldArguments);
     oldArguments = myArgs;
     timer = setTimeout(function () {
@@ -157,7 +157,7 @@ Helpers.zipLong = function (f, xs, ys) {
   } else {
     var zs = xs.length > ys.length ? xs : ys;
     return zs.map(function (v, i) { return f(xs[i], ys[i]); });
-  };
+  }
 };
 
 Helpers.zip3 = function (xs, ys, zs) {
@@ -165,18 +165,18 @@ Helpers.zip3 = function (xs, ys, zs) {
     return null;
   } else {
     return xs.map(function (v, i) { return [xs[i], ys[i], zs[i]]; });
-  };
+  }
 };
 
 Helpers.maybeCompose = function (f, g) {
   if (f instanceof Function && g instanceof Function) {
     return f.compose(g);
   } else {
-    if (f instanceof Function) { return f};
-    if (g instanceof Function) { return g};
+    if (f instanceof Function) { return f; }
+    if (g instanceof Function) { return g; }
     // otherwise
     return f;
-  };
+  }
 };
 
 Function.prototype.compose = function (g) {
@@ -197,7 +197,7 @@ Helpers.guessFee = function (nInputs, nOutputs, feePerKb) {
 
 // password scorer
 Helpers.scorePassword = function (password) {
-  if (!Helpers.isString(password)) { return 0};
+  if (!Helpers.isString(password)) { return 0; }
 
   var patternsList = [
     [0.25, /^[\d\s]+$/],
@@ -228,7 +228,7 @@ Helpers.scorePassword = function (password) {
 
   var base = function (str) {
     var tuples = [[10, hasDigits(str)], [26, hasLowerCase(str)], [26, hasUpperCase(str)]];
-    var bases = tuples.filter(function (t) { return t[1]}).map(function (t) { return t[0]});
+    var bases = tuples.filter(function (t) { return t[1]; }).map(function (t) { return t[0]; });
     var setSize = hasSymbol(str) ? computeSet(str) : bases.reduce(Helpers.add, 0);
     var ret = setSize === 0 ? 1 : setSize;
     return ret;
@@ -239,7 +239,7 @@ Helpers.scorePassword = function (password) {
   };
 
   var quality = function (str) {
-    var pats = patternsList.filter(function (p) { return p[1].test(str); }).map(function (p) { return p[0]});
+    var pats = patternsList.filter(function (p) { return p[1].test(str); }).map(function (p) { return p[0]; });
     return Math.min.apply(Math, pats);
   };
 
@@ -359,7 +359,7 @@ Helpers.isValidBIP39Mnemonic = function (mnemonic) {
 Helpers.isValidPrivateKey = function (candidate) {
   try {
     var format = Helpers.detectPrivateKeyFormat(candidate);
-    if (format == 'bip38') { return true }
+    if (format == 'bip38') { return true; }
     var key = Helpers.privateKeyStringToKey(candidate, format);
     return key.getAddress();
   } catch (e) {
@@ -386,11 +386,11 @@ Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
       return resolve(k);
     }
     else { reject('unknown key format'); }
-  }
+  };
   var predicate = function (key) {
     var a = key.getAddress();
     return a === address ? Base58.encode(key.d.toBuffer(32)) : null;
-  }
+  };
   return new Promise(asyncParse).then(predicate);
 };
 

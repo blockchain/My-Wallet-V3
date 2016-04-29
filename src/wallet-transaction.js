@@ -16,7 +16,7 @@ function Tx (object) {
       conf = lastBlock.height - tx_block_height + 1;
     }
     return conf;
-  }
+  };
 
   this.balance = obj.balance;
   this.block_height = obj.block_height;
@@ -216,7 +216,7 @@ function computeTxType(Tx) {
       v = 'received';
       break;
     default:
-      v = 'complex'
+      v = 'complex';
   }
   return v;
 }

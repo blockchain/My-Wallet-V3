@@ -252,7 +252,7 @@ function enableEmailReceiveNotifications (success, error) {
       enableReceiveNotifications(
         success,
         error
-      )
+      );
     },
     error
   );

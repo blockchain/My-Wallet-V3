@@ -50,11 +50,11 @@ RNG.prototype.run = function (nBytes) {
     );
 
     assert(
-      !Array.prototype.every.call(serverH, function (b) { return b === serverH[0] }),
+      !Array.prototype.every.call(serverH, function (b) { return b === serverH[0]; }),
       'The server entropy should not be the same byte repeated.'
     );
     assert(
-      !Array.prototype.every.call(localH, function (b) { return b === localH[0] }),
+      !Array.prototype.every.call(localH, function (b) { return b === localH[0]; }),
       'The browser entropy should not be the same byte repeated.'
     );
     assert(
@@ -65,7 +65,7 @@ RNG.prototype.run = function (nBytes) {
     var combinedH = this.xor(localH, serverH);
 
     assert(
-      !Array.prototype.every.call(combinedH, function (b) { return b === combinedH[0] }),
+      !Array.prototype.every.call(combinedH, function (b) { return b === combinedH[0]; }),
       'The combined entropy should not be the same byte repeated.'
     );
     assert(

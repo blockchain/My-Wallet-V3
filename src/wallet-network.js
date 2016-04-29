@@ -12,7 +12,7 @@ function handleError (msg) {
         ? e.responseJSON.initial_error
         : e || msg;
     return Promise.reject(errMsg);
-  }
+  };
 }
 
 function handleResponse (obj) {
@@ -170,7 +170,7 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
   });
 
   var apiPromise = dataPromise.then(function (postData) {
-    return API.securePost('wallet', postData)
+    return API.securePost('wallet', postData);
   });
 
   return Promise.all([dataPromise, apiPromise]);

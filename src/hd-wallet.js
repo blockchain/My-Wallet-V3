@@ -62,25 +62,25 @@ Object.defineProperties(HDWallet.prototype, {
   'accounts': {
     configurable: false,
     get: function () {
-      return this._accounts.map(function (a) { return a});
+      return this._accounts.map(function (a) { return a; });
     }
   },
   'activeAccounts': {
     configurable: false,
     get: function () {
-      return this._accounts.filter(function (a) { return !a.archived});
+      return this._accounts.filter(function (a) { return !a.archived; });
     }
   },
   'xpubs': {
     configurable: false,
     get: function () {
-      return this._accounts.map(function (a) { return (a.extendedPublicKey)});
+      return this._accounts.map(function (a) { return (a.extendedPublicKey); });
     }
   },
   'activeXpubs': {
     configurable: false,
     get: function () {
-      return this.activeAccounts.map(function (a) { return (a.extendedPublicKey)});
+      return this.activeAccounts.map(function (a) { return (a.extendedPublicKey); });
     }
   },
   'balanceActiveAccounts': {
@@ -129,7 +129,7 @@ function decryptMnemonic (seedHex, cipher) {
 }
 
 function decryptPassphrase (bip39Password, cipher) {
-  if (bip39Password === '') { return bip39Password}
+  if (bip39Password === '') { return bip39Password; }
   if (cipher) {
     return cipher(bip39Password);
   } else {
@@ -217,7 +217,7 @@ HDWallet.prototype.toJSON = function () {
 HDWallet.reviver = function (k, v) {
   if (k === '') return new HDWallet(v);
   return v;
-}
+};
 
 // methods
 
@@ -229,7 +229,7 @@ HDWallet.prototype.verifyMnemonic = function () {
 
 HDWallet.prototype.account = function (xpub) {
   var f = this._accounts
-            .filter(function (a) { return a.extendedPublicKey === xpub});
+            .filter(function (a) { return a.extendedPublicKey === xpub; });
   var r = f.length === 0 ? null : f[0];
   return r;
 };

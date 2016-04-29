@@ -223,7 +223,7 @@ function cipherFunction (password, sharedKey, pbkdf2Iterations, operation) {
         };
       default:
         return id;
-    };
+    }
   }
 }
 

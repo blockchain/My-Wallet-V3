@@ -208,7 +208,7 @@ Object.defineProperties(Wallet.prototype, {
   },
   'activeKeys': {
     configurable: false,
-    get: function () { return this.keys.filter(function (a) { return !a.archived; })}
+    get: function () { return this.keys.filter(function (a) { return !a.archived; }); }
   },
   'hdwallet': {
     configurable: false,
@@ -225,9 +225,9 @@ Object.defineProperties(Wallet.prototype, {
     get: function () {
       var operation = undefined;
       if (this.isDoubleEncrypted) {
-        operation = function (k) { return k.isEncrypted; }
+        operation = function (k) { return k.isEncrypted; };
       } else { // no double encryption activated
-        operation = function (k) { return k.isUnEncrypted; }
+        operation = function (k) { return k.isUnEncrypted; };
       }
       var A = this.keys.filter(function (k) { return !k.isWatchOnly; })
                        .map(operation)
@@ -291,7 +291,7 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () { return this._latestBlock; },
     set: function (json) {
-      var b = Block.fromJSON(json)
+      var b = Block.fromJSON(json);
       if (b != null) {
         this._latestBlock = b;
         WalletStore.sendEvent('did_set_latest_block');
@@ -435,7 +435,7 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
         if (this.key(newKey.address).isWatchOnly) {
           watchOnlyKey = this._addresses[newKey.address];
         } else {
-          throw 'privateKeyOfAnotherNonWatchOnlyAddress'
+          throw 'privateKeyOfAnotherNonWatchOnlyAddress';
         }
       }
     }
@@ -455,7 +455,7 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
   } else if (!this.key(addr).isWatchOnly) {
     return Promise.reject('addressNotWatchOnly');
   } else {
-    return Address.fromString(privateKey, null, bipPass).then(modifyAddress)
+    return Address.fromString(privateKey, null, bipPass).then(modifyAddress);
   }
 };
 
@@ -481,7 +481,7 @@ Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) 
     return ad;
   }.bind(this);
 
-  return Address.fromString(addr, label, bipPass).then(importAddress)
+  return Address.fromString(addr, label, bipPass).then(importAddress);
 };
 
 Wallet.prototype.containsLegacyAddress = function (address) {
@@ -645,7 +645,7 @@ Wallet.prototype.restoreHDWallet = function (mnemonic, bip39Password, pw, starte
 
   // it returns a promise of the newHDWallet
   return untilNEmptyAccounts(AccountsGap)
-    .then(saveAndReturn)
+    .then(saveAndReturn);
 };
 
 // Enables email notifications for receiving bitcoins. Only for imported
@@ -663,7 +663,7 @@ Wallet.prototype.enableNotifications = function (success, error) {
     function () {
       error();
     }
-  )
+  );
 };
 
 Wallet.prototype.disableNotifications = function (success, error) {
@@ -732,7 +732,7 @@ Wallet.prototype.newHDWallet = function (firstAccountLabel, pw, success, error) 
 };
 
 Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosave) {
-  if (!this.isUpgradedToHD) { return false; };
+  if (!this.isUpgradedToHD) { return false; }
   var index = Helpers.isPositiveInteger(hdwalletIndex) ? hdwalletIndex : 0;
   var cipher = undefined;
   if (this.isDoubleEncrypted) {
@@ -770,7 +770,7 @@ Wallet.prototype.getNote = function (txHash) {
 };
 
 Wallet.prototype.setNote = function (txHash, text) {
-  assert(text, 'Error: note must have message text')
+  assert(text, 'Error: note must have message text');
   this._tx_notes[txHash] = text;
   MyWallet.syncWallet();
 };

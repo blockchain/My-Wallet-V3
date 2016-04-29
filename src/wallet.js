@@ -209,7 +209,7 @@ MyWallet.login = function (user_guid, shared_key, inputedPassword, twoFA, succes
         needs_two_factor_code(obj.auth_type);
         return;
       }
-      successCallback(obj)
+      successCallback(obj);
     };
 
     var error = function (e) {
@@ -287,17 +287,17 @@ MyWallet.login = function (user_guid, shared_key, inputedPassword, twoFA, succes
       WalletStore.setLanguage(obj.language);
     }
     MyWallet.initializeWallet(inputedPassword, success, other_error, decrypt_success, build_hd_success);
-  }
+  };
 
   if (twoFA == null) {
-    tryToFetchWalletJSON(user_guid, didFetchWalletJSON)
+    tryToFetchWalletJSON(user_guid, didFetchWalletJSON);
   } else {
     // If 2FA is enabled and we already fetched the wallet before, don't fetch
     // it again
     if (user_guid === WalletStore.getGuid() && WalletStore.getEncryptedWalletData()) {
       MyWallet.initializeWallet(inputedPassword, success, other_error, decrypt_success, build_hd_success);
     } else {
-      tryToFetchWalletWith2FA(user_guid, twoFA, didFetchWalletJSON)
+      tryToFetchWalletWith2FA(user_guid, twoFA, didFetchWalletJSON);
     }
   }
 };
@@ -311,7 +311,7 @@ MyWallet.pollForSessionGUID = function (successCallback) {
     if (obj.guid) {
       WalletStore.setIsPolling(false);
       WalletStore.sendEvent('msg', {type: 'success', message: 'Authorization Successful'});
-      successCallback()
+      successCallback();
     } else {
       if (WalletStore.getCounter() < 600) {
         WalletStore.incrementCounter();
@@ -322,10 +322,10 @@ MyWallet.pollForSessionGUID = function (successCallback) {
         WalletStore.setIsPolling(false);
       }
     }
-  }
+  };
   var error = function () {
     WalletStore.setIsPolling(false);
-  }
+  };
   API.request('GET', 'wallet/poll-for-session-guid', data, true, false).then(success).catch(error);
 };
 // used locally
@@ -387,7 +387,7 @@ function syncWallet (successcallback, errorcallback) {
   if (!MyWallet.wallet || !MyWallet.wallet.sharedKey
       || MyWallet.wallet.sharedKey.length === 0
       || MyWallet.wallet.sharedKey.length !== 36)
- { throw 'Cannot backup wallet now. Shared key is not set'; };
+ { throw 'Cannot backup wallet now. Shared key is not set'; }
 
   WalletStore.disableLogout();
 
@@ -437,7 +437,7 @@ function syncWallet (successcallback, errorcallback) {
             MyWallet.wallet.hdwallet.accounts != undefined
           ) ? [].concat.apply([],
             MyWallet.wallet.hdwallet.accounts.map(function (account) {
-              return account.labeledReceivingAddresses
+              return account.labeledReceivingAddresses;
             })) : [];
           data.active = [].concat.apply([],
             [

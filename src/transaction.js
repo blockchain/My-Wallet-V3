@@ -94,11 +94,11 @@ Transaction.prototype.sortBIP69 = function () {
     var hashb = new Buffer(b[0].hash);
     var x = [].reverse.call(hasha);
     var y = [].reverse.call(hashb);
-    return x.compare(y) || a[0].index - b[0].index
+    return x.compare(y) || a[0].index - b[0].index;
   };
 
   var compareOutputs = function (a, b) {
-    return (a.value - b.value) || (a.script).compare(b.script)
+    return (a.value - b.value) || (a.script).compare(b.script);
   };
   var mix = Helpers.zip3(this.transaction.tx.ins, this.privateKeys, this.addressesOfInputs);
   mix.sort(compareInputs);
@@ -168,7 +168,7 @@ Transaction.guessFee = function (nInputs, nOutputs, feePerKb) {
 Transaction.filterUsableCoins = function (coins, feePerKb) {
   if (!Array.isArray(coins)) return [];
   var icost = Transaction.inputCost(feePerKb);
-  return coins.filter(function (c) { return c.value >= icost });
+  return coins.filter(function (c) { return c.value >= icost; });
 };
 
 Transaction.maxAvailableAmount = function (usableCoins, feePerKb) {
@@ -184,7 +184,7 @@ Transaction.sumOfCoins = function (coins) {
 Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
   var amount = amounts.reduce(Helpers.add, 0);
   var nouts = amounts.length;
-  var sorted = usableCoins.sort(function (a, b) { return b.value - a.value });
+  var sorted = usableCoins.sort(function (a, b) { return b.value - a.value; });
   var len = sorted.length;
   var sel = [];
   var accAm = 0;
@@ -219,5 +219,5 @@ Transaction.confirmationEstimation = function (absoluteFees, fee) {
     }
   }
   return null;
-}
+};
 module.exports = Transaction;

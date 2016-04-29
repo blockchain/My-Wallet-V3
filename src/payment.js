@@ -161,13 +161,13 @@ Payment.prototype.publish = function () {
 };
 
 Payment.prototype.printJSON = function () {
-  var printJSON = function (p) {console.log(JSON.stringify(p, null, 2)); }
+  var printJSON = function (p) {console.log(JSON.stringify(p, null, 2)); };
   this.sideEffect(printJSON);
   return this;
 };
 
 Payment.return = function (payment) {
-  var p = payment ? payment : {}
+  var p = payment ? payment : {};
   return Promise.resolve(p);
 };
 
@@ -206,7 +206,7 @@ Payment.to = function (destinations) {
       formatDest = destinations.map(accountToAddress);
       break;
     default:
-      console.log('No destination set.')
+      console.log('No destination set.');
   } // fi switch
   return function (payment) {
     payment.to = formatDest;
@@ -313,7 +313,7 @@ Payment.from = function (origin) {
       }
       break;
     default:
-      console.log('No origin set.')
+      console.log('No origin set.');
   } // fi switch
   return function (payment) {
     payment.from = addresses;
@@ -377,7 +377,7 @@ Payment.prebuild = function (absoluteFee) {
       var c = Transaction.filterUsableCoins(payment.coins, e.fee);
       var s = Transaction.maxAvailableAmount(c, e.fee);
       return s.amount;
-    }
+    };
     payment.maxSpendableAmounts = payment.fees.estimate.map(maxSpendablesPerFeePerKb);
     payment.sweepFees = payment.maxSpendableAmounts.map(function (v) { return payment.balance - v; });
 
@@ -408,7 +408,7 @@ Payment.prebuild = function (absoluteFee) {
         var c = Transaction.filterUsableCoins(payment.coins, e.fee);
         var s = Transaction.selectCoins(c, payment.amounts, e.fee, false);
         return s.fee;
-      }
+      };
       payment.absoluteFeeBounds = payment.fees.estimate.map(toAbsoluteFee);
 
       // estimation of confirmation in number of blocks
@@ -480,7 +480,7 @@ function getUnspentCoins (addressList) {
     };
     obj.unspent_outputs.forEach(processCoin);
     return obj.unspent_outputs;
-  }
+  };
 
   return API.getUnspent(addressList, -1).then(processCoins);
 }
@@ -528,14 +528,14 @@ function getPrivateKeys (password, payment) {
   if (Helpers.isPositiveInteger(payment.fromAccountIdx)) {
     var xpriv = getXPRIV(password, payment.fromAccountIdx);
     privateKeys = transaction.pathsOfNeededPrivateKeys.map(getKeyForPath.bind(this, xpriv));
-  };
+  }
   // if from Addresses
   if (payment.from && payment.from.every(Helpers.isBitcoinAddress) && !payment.fromWatchOnly) {
     privateKeys = transaction.addressesOfNeededPrivateKeys.map(getKeyForAddress.bind(this, password));
-  };
+  }
   // if from Watch Only
   if (payment.from && Helpers.isBitcoinAddress(payment.from[0]) && payment.fromWatchOnly) {
     privateKeys = transaction.addressesOfNeededPrivateKeys.map(getKey.bind(null, payment.wifKeys[0]));
-  };
+  }
   return privateKeys;
-};
+}

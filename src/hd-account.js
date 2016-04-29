@@ -145,7 +145,7 @@ Object.defineProperties(HDAccount.prototype, {
     get: function () {
       var denseArray = [];
       this._address_labels
-        .map(function (lab, ind) {denseArray.push({'index': ind, 'label': lab})});
+        .map(function (lab, ind) {denseArray.push({'index': ind, 'label': lab}); });
       return denseArray;
     }
   },
@@ -155,7 +155,7 @@ Object.defineProperties(HDAccount.prototype, {
       var denseArray = [];
       var outerThis = this;
       this._address_labels
-        .map(function (lab, i) {denseArray.push(outerThis.receiveAddressAtIndex(i))});
+        .map(function (lab, i) {denseArray.push(outerThis.receiveAddressAtIndex(i)); });
       return denseArray;
     }
   },
