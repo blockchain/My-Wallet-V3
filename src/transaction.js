@@ -134,15 +134,6 @@ Transaction.prototype.sign = function () {
 Transaction.inputCost = function (feePerKb) {
   return Math.ceil(feePerKb * 0.148);
 };
-Transaction.guessSize = function (nInputs, nOutputs) {
-  if (nInputs < 1 || nOutputs < 1) { return 0; }
-  return (nInputs * 148 + nOutputs * 34 + 10);
-};
-
-Transaction.guessFee = function (nInputs, nOutputs, feePerKb) {
-  var sizeBytes = Transaction.guessSize(nInputs, nOutputs);
-  return Math.ceil(feePerKb * (sizeBytes / 1000));
-};
 
 Transaction.filterUsableCoins = function (coins, feePerKb) {
   if (!Array.isArray(coins)) return [];
@@ -152,8 +143,8 @@ Transaction.filterUsableCoins = function (coins, feePerKb) {
 
 Transaction.maxAvailableAmount = function (usableCoins, feePerKb) {
   var len = usableCoins.length;
-  var fee = Transaction.guessFee(len, 2, feePerKb);
-  return {'amount': usableCoins.reduce(function (a, e) { a = a + e.value; return a; }, 0) - fee, 'fee': fee};
+  var fee = Helpers.guessFee(len, 2, feePerKb);
+  return {"amount": usableCoins.reduce(function(a,e){a = a + e.value; return a},0) - fee, "fee" : fee};
 };
 
 Transaction.sumOfCoins = function (coins) {
@@ -180,7 +171,7 @@ Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
     for (var ii = 0; ii < len; ii++) {
       var coin2 = sorted[ii];
       accAm = accAm + coin2.value;
-      accFee = Transaction.guessFee(ii + 1, nouts + 1, fee);
+      accFee = Helpers.guessFee(ii + 1, nouts + 1, fee);
       sel.push(coin2);
       if (accAm >= accFee + amount) { return {'coins': sel, 'fee': accFee}; }
     }

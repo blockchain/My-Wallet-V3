@@ -29,13 +29,9 @@ API =
   getUnspent: (addresses, conf) -> Promise.resolve(unspent)
   getFees: () -> Promise.resolve(fees)
 
-Helpers =
-   guessFee: (nInputs, nOutputs, feePerKb) -> nInputs * 100
-
 Payment = proxyquire('../src/payment', {
   './wallet': MyWallet
-  './api': API,
-  './helpers': Helpers
+  './api': API
 })
 
 describe 'Payment', ->

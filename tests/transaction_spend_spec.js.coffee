@@ -290,26 +290,10 @@ describe "Transaction", ->
       ic = Transaction.inputCost(10000);
       expect(ic).toBe(1480)
 
-    it "Transaction.guessSize should be zero", ->
-      s = Transaction.guessSize(0,10);
-      expect(s).toBe(0)
-
-    it "Transaction.guessSize should be zero", ->
-      s = Transaction.guessSize(10,0);
-      expect(s).toBe(0)
-
-    it "Transaction.guessSize should be right", ->
-      s = Transaction.guessSize(10,10);
-      expect(s).toBe(1830)
-
-    it "Transaction.guessFee should be right", ->
-      s = Transaction.guessFee(11,7, 25000);
-      expect(s).toBe(46900)
-
     it "Transaction.filterUsableCoins should return an empty array if given a bad argument", ->
       s = Transaction.filterUsableCoins(1, 1000000);
       expect(s).toEqual([])
-
+    
     it "Transaction.filterUsableCoins should filter all coins", ->
       s = Transaction.filterUsableCoins(data.unspentMock, 1000000);
       expect(s).toEqual([])
