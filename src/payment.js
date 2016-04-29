@@ -362,9 +362,6 @@ Payment.updateFees = function () {
 
 Payment.prebuild = function (absoluteFee) {
   return function (payment) {
-    var totalFee = null;
-    var selectedCoins = [];
-    var txSize = 0;
     var dust = Bitcoin.networks.bitcoin.dustThreshold;
 
     var usableCoins = Transaction.filterUsableCoins(payment.coins, payment.feePerKb);
@@ -385,10 +382,11 @@ Payment.prebuild = function (absoluteFee) {
     // if amounts defined refresh computations
     if (Array.isArray(payment.amounts) && payment.amounts.length > 0) {
       // coin selection
+      var s;
       if (Helpers.isPositiveNumber(absoluteFee)) {
-        var s = Transaction.selectCoins(payment.coins, payment.amounts, absoluteFee, true);
+        s = Transaction.selectCoins(payment.coins, payment.amounts, absoluteFee, true);
       } else {
-        var s = Transaction.selectCoins(usableCoins, payment.amounts, payment.feePerKb, false);
+        s = Transaction.selectCoins(usableCoins, payment.amounts, payment.feePerKb, false);
       }
       payment.finalFee = s.fee;
       payment.selectedCoins = s.coins;
@@ -435,7 +433,7 @@ Payment.sign = function (password) {
   return function (payment) {
     var importWIF = function (WIF) {
       MyWallet.wallet.importLegacyAddress(WIF, 'Redeemed code.', password)
-        .then(function (A) {A.archived = true; });
+        .then(function (A) { A.archived = true; });
     };
 
     if (!payment.transaction) throw 'This transaction hasn\'t been built yet';
@@ -503,9 +501,9 @@ function getKey (priv, addr) {
 // from Address
 function getKeyForAddress (password, addr) {
   var k = MyWallet.wallet.key(addr).priv;
-  var privateKeyBase58 = password == null ? k :
-    WalletCrypto.decryptSecretWithSecondPassword(k, password,
-        MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
+  var privateKeyBase58 = password == null ? k
+      : WalletCrypto.decryptSecretWithSecondPassword(k, password,
+          MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
   return getKey(privateKeyBase58, addr);
 }
 

@@ -183,8 +183,8 @@ HDWallet.factory = function (o) {
 
 HDWallet.prototype.newAccount = function (label, cipher) {
   var accIndex = this._accounts.length;
-  var dec = undefined;
-  var enc = undefined;
+  var dec;
+  var enc;
 
   if (cipher) {
     dec = cipher('dec');

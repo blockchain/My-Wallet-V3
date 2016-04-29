@@ -10,7 +10,6 @@ var MyWallet = require('./wallet');
 var Bitcoin = require('bitcoinjs-lib');
 var ECPair = Bitcoin.ECPair;
 
-
 // API class
 function API () {
   // private members
@@ -191,7 +190,7 @@ API.prototype.securePost = function (url, data) {
     // Rather than sending the shared key plain text
     // send a hash using a totp scheme
     var now = new Date().getTime();
-    var timestamp = parseInt((now - this.SERVER_TIME_OFFSET) / 10000);
+    var timestamp = parseInt((now - this.SERVER_TIME_OFFSET) / 10000, 10);
     var SKHashHex = WalletCrypto.sha256(sharedKey.toLowerCase() + timestamp).toString('hex');
     var i = 0;
     var tSKUID = SKHashHex.substring(i, i += 8) + '-' +

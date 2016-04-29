@@ -52,12 +52,13 @@ function Wallet (object) {
   // address book list
   // address book in json is [{address: 'address1', label: 'label1'} , ... ]
   // address book in memory is {address1: 'label1', address2: 'label2'}
-  this._address_book = obj.address_book ?
-    obj.address_book.reduce(function (o, a) {
-      var address = a.address || a.addr;
-      o[address] = a.label;
-      return o;
-    }, {}) : {};
+  this._address_book = obj.address_book
+      ? obj.address_book.reduce(function (o, a) {
+        var address = a.address || a.addr;
+        o[address] = a.label;
+        return o;
+      }, {})
+      : {};
 
   // tx_notes dictionary
   this._tx_notes = obj.tx_notes || {};
@@ -222,7 +223,7 @@ Object.defineProperties(Wallet.prototype, {
   'isEncryptionConsistent': {
     configurable: false,
     get: function () {
-      var operation = undefined;
+      var operation;
       if (this.isDoubleEncrypted) {
         operation = function (k) { return k.isEncrypted; };
       } else { // no double encryption activated
@@ -721,8 +722,7 @@ Wallet.prototype.newHDWallet = function (firstAccountLabel, pw, success, error) 
   } catch (e) { error(e); return; }
   this._hd_wallets.push(newHDwallet);
   var label = firstAccountLabel ? firstAccountLabel : 'My Bitcoin Wallet';
-  var account = this.newAccount(label, pw, this._hd_wallets.length - 1, true);
-  var guid = this.guid;
+  this.newAccount(label, pw, this._hd_wallets.length - 1, true);
   MyWallet.syncWallet(function (res) {
     success();
   }, error);
@@ -733,7 +733,7 @@ Wallet.prototype.newHDWallet = function (firstAccountLabel, pw, success, error) 
 Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosave) {
   if (!this.isUpgradedToHD) { return false; }
   var index = Helpers.isPositiveInteger(hdwalletIndex) ? hdwalletIndex : 0;
-  var cipher = undefined;
+  var cipher;
   if (this.isDoubleEncrypted) {
     cipher = WalletCrypto.cipherFunction.bind(undefined, pw, this._sharedKey, this._pbkdf2_iterations);
   }
@@ -780,9 +780,9 @@ Wallet.prototype.deleteNote = function (txHash) {
 };
 
 Wallet.prototype.getMnemonic = function (password) {
-  var seedHex = this.isDoubleEncrypted ?
-    WalletCrypto.decryptSecretWithSecondPassword(
-      this.hdwallet.seedHex, password, this.sharedKey, this.pbkdf2_iterations) : this.hdwallet.seedHex;
+  var seedHex = this.isDoubleEncrypted
+      ? WalletCrypto.decryptSecretWithSecondPassword(this.hdwallet.seedHex, password, this.sharedKey, this.pbkdf2_iterations)
+      : this.hdwallet.seedHex;
   return BIP39.entropyToMnemonic(seedHex);
 };
 
@@ -807,9 +807,9 @@ Wallet.prototype.getPrivateKeyForAddress = function (address, secondPassword) {
   assert(address, 'Error: address must be defined');
   var pk = null;
   if (!address.isWatchOnly) {
-    pk = this.isDoubleEncrypted ?
-      WalletCrypto.decryptSecretWithSecondPassword(
-        address.priv, secondPassword, this.sharedKey, this.pbkdf2_iterations) : address.priv;
+    pk = this.isDoubleEncrypted
+        ? WalletCrypto.decryptSecretWithSecondPassword(address.priv, secondPassword, this.sharedKey, this.pbkdf2_iterations)
+        : address.priv;
   }
   return pk;
 };
@@ -818,9 +818,9 @@ Wallet.prototype._getPrivateKey = function (accountIndex, path, secondPassword) 
   assert(this.hdwallet.isValidAccountIndex(accountIndex), 'Error: account non-existent');
   assert(Helpers.isString(path), 'Error: path must be an string of the form \'M/0/27\'');
   var maybeXpriv = this.hdwallet.accounts[accountIndex].extendedPrivateKey;
-  var xpriv = this.isDoubleEncrypted ?
-    WalletCrypto.decryptSecretWithSecondPassword(
-      maybeXpriv, secondPassword, this.sharedKey, this.pbkdf2_iterations) : maybeXpriv;
+  var xpriv = this.isDoubleEncrypted
+      ? WalletCrypto.decryptSecretWithSecondPassword(maybeXpriv, secondPassword, this.sharedKey, this.pbkdf2_iterations)
+      : maybeXpriv;
   var kr = new KeyRing(xpriv, null);
   return kr.privateKeyFromPath(path).keyPair.toWIF();
 };

@@ -20,8 +20,6 @@ var Transaction = function (payment, emitter) {
   if (!Array.isArray(toAddresses) && toAddresses != null) { toAddresses = [toAddresses]; }
   if (!Array.isArray(amounts) && amounts != null) { amounts = [amounts]; }
 
-  var network = Bitcoin.networks.bitcoin;
-
   assert(toAddresses, 'Missing destination address');
   assert(amounts, 'Missing amount to pay');
 
@@ -49,7 +47,7 @@ var Transaction = function (payment, emitter) {
     transaction.addInput(Array.prototype.reverse.call(transactionHashBuffer), output.index);
 
     // Generate address from output script and add to private list so we can check if the private keys match the inputs later
-    var scriptBuffer = Buffer(output.script, "hex");
+    var scriptBuffer = Buffer(output.script, 'hex');
     assert.notEqual(Bitcoin.script.classifyOutput(scriptBuffer), 'nonstandard', {error: 'STRANGE_SCRIPT'});
     var address = Bitcoin.address.fromOutputScript(scriptBuffer).toString();
     assert(address, {error: 'CANNOT_DECODE_OUTPUT_ADDRESS', tx_hash: output.tx_hash});
@@ -122,11 +120,11 @@ Transaction.prototype.sign = function () {
 
   var transaction = this.transaction;
 
-  for (var i = 0; i < transaction.inputs.length; i++) {
-    this.emitter.emit('on_sign_progress', i + 1);
-    var key = this.privateKeys[i];
-    transaction.sign(i, key);
-    assert(transaction.inputs[i].scriptType === 'pubkeyhash', 'Error creating input script');
+  for (var ii = 0; ii < transaction.inputs.length; ii++) {
+    this.emitter.emit('on_sign_progress', ii + 1);
+    var key = this.privateKeys[ii];
+    transaction.sign(ii, key);
+    assert(transaction.inputs[ii].scriptType === 'pubkeyhash', 'Error creating input script');
   }
 
   this.emitter.emit('on_finish_signing');
@@ -196,11 +194,11 @@ Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
       if (accAm >= fee + amount) { return {'coins': sel, 'fee': fee}; }
     }
   } else {
-    for (var i = 0; i < len; i++) {
-      var coin = sorted[i];
-      accAm = accAm + coin.value;
-      accFee = Transaction.guessFee(i + 1, nouts + 1, fee);
-      sel.push(coin);
+    for (var ii = 0; ii < len; ii++) {
+      var coin2 = sorted[ii];
+      accAm = accAm + coin2.value;
+      accFee = Transaction.guessFee(ii + 1, nouts + 1, fee);
+      sel.push(coin2);
       if (accAm >= accFee + amount) { return {'coins': sel, 'fee': accFee}; }
     }
   }

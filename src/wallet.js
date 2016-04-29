@@ -105,8 +105,7 @@ MyWallet.getWallet = function (success, error) {
       // When re-fetching the wallet after a remote update, if we can't decrypt
       // it, logout for safety.
       MyWallet.logout(true);
-      if (error) error(
-      );
+      if (error) { error(); }
     });
   }, function (e) {
     if (error) error();
@@ -381,9 +380,9 @@ function syncWallet (successcallback, errorcallback) {
     panic('The wallet was not fully enc/decrypted');
   }
 
-  if (!MyWallet.wallet || !MyWallet.wallet.sharedKey
-      || MyWallet.wallet.sharedKey.length === 0
-      || MyWallet.wallet.sharedKey.length !== 36) {
+  if (!MyWallet.wallet || !MyWallet.wallet.sharedKey ||
+      MyWallet.wallet.sharedKey.length === 0 ||
+      MyWallet.wallet.sharedKey.length !== 36) {
     throw 'Cannot backup wallet now. Shared key is not set';
   }
 
@@ -472,11 +471,10 @@ function syncWallet (successcallback, errorcallback) {
         _errorcallback(e);
         WalletStore.enableLogout();
       }
-    },
-                               function (e) {
-                                 console.log(e);
-                                 throw('Decryption failed');
-                               });
+    }, function (e) {
+      console.log(e);
+      throw 'Decryption failed';
+    });
   } catch (e) {
     _errorcallback(e);
     WalletStore.enableLogout();
@@ -500,11 +498,11 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
   WalletSignup.generateNewWallet(inputedPassword, inputedEmail, firstAccountName, function (createdGuid, createdSharedKey, createdPassword) {
     if (languageCode) {
       WalletStore.setLanguage(languageCode);
-      BlockchainSettingsAPI.change_language(languageCode, (function () {}));
+      BlockchainSettingsAPI.change_language(languageCode, function () {});
     }
 
     if (currencyCode) {
-      BlockchainSettingsAPI.change_local_currency(currencyCode, (function () {}));
+      BlockchainSettingsAPI.change_local_currency(currencyCode, function () {});
     }
 
     WalletStore.unsafeSetPassword(createdPassword);

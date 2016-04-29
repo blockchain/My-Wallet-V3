@@ -120,7 +120,7 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function () {
       var keys = Object.keys(this._address_labels).map(function (k) {
-        return parseInt(k);
+        return parseInt(k, 10);
       });
       if (keys.length == 0) {
         return -1;

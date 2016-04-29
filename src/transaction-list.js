@@ -15,11 +15,9 @@ Object.defineProperties(TransactionList.prototype, {
   'transactions': {
     configurable: false,
     value: function (identity) {
-      return identity == null || identity === '' ?
-        this._transactions :
-        this._transactions.filter(function (tx) {
-          return tx.belongsTo(identity);
-        });
+      return identity == null || identity === ''
+          ? this._transactions
+          : this._transactions.filter(function (tx) { return tx.belongsTo(identity); });
     }
   },
   'transactionsForIOS': {

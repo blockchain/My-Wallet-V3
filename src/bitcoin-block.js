@@ -40,8 +40,9 @@ Block.prototype.toJSON = function () {
 
 Block.fromJSON = function (json) {
   // block height is the only property we require
-  if (json == null || json.height == null)
+  if (json == null || json.height == null) {
     return null;
-  else
+  } else {
     return new Block(json);
+  }
 };

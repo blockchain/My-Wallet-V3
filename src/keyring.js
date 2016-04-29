@@ -44,11 +44,11 @@ KeyRing.prototype.privateKeyFromPath = function (path) {
     , 'Invalid Path: change/receive index out of bounds');
   assert(components.length === 3, 'Invalid Path length');
   if (this._receiveChain.isNeutered) return null;
-  var receiveOrChange = parseInt(components[1]);
-  var index = parseInt(components[2]);
-  return receiveOrChange === 0 ?
-    this._receiveChain.getPrivateKey(index) :
-    this._changeChain.getPrivateKey(index);
+  var receiveOrChange = parseInt(components[1], 10);
+  var index = parseInt(components[2], 10);
+  return receiveOrChange === 0
+      ? this._receiveChain.getPrivateKey(index)
+      : this._changeChain.getPrivateKey(index);
 };
 
 KeyRing.prototype.toJSON = function () {

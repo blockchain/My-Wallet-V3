@@ -121,29 +121,28 @@ Helpers.isEmptyArray = function (x) {
 // no matter how many times you call the new function, it will run only once
 Helpers.asyncOnce = function (f, milliseconds, before) {
   var timer = null;
-  var oldArguments = new Array();
+  var oldArguments = [];
   return function () {
     before && before();
     if (timer) {
       clearTimeout(timer);
       timer = null;
     }
-    var myArgs = new Array();
+    var myArgs = [];
     // this is needed because arguments is not an 'Array' instance
     for (var i = 0; i < arguments.length; i++) { myArgs[i] = arguments[i]; }
-    var myArgs = Helpers.zipLong(Helpers.maybeCompose, myArgs, oldArguments);
+    myArgs = Helpers.zipLong(Helpers.maybeCompose, myArgs, oldArguments);
     oldArguments = myArgs;
     timer = setTimeout(function () {
       f.apply(this, myArgs);
-      oldArguments = new Array();
+      oldArguments = [];
     }, milliseconds);
   };
 };
 
 // merges the properties of two objects
 Helpers.merge = function (o, p) {
-  var prop = undefined;
-  for (prop in p) {
+  for (var prop in p) {
     if (!o.hasOwnProperty(prop)) {
       o[prop] = p[prop];
     }
@@ -285,6 +284,7 @@ function parseMiniKey (miniKey) {
 
 Helpers.privateKeyStringToKey = function (value, format) {
   var key_bytes = null;
+  var tbytes;
 
   if (format == 'base58') {
     key_bytes = Helpers.buffertoByteArray(Base58.decode(value));
@@ -295,12 +295,12 @@ Helpers.privateKeyStringToKey = function (value, format) {
   } else if (format == 'mini') {
     key_bytes = Helpers.buffertoByteArray(parseMiniKey(value));
   } else if (format == 'sipa') {
-    var tbytes = Helpers.buffertoByteArray(Base58.decode(value));
+    tbytes = Helpers.buffertoByteArray(Base58.decode(value));
     tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
     tbytes.shift();
     key_bytes = tbytes.slice(0, tbytes.length - 4);
   } else if (format == 'compsipa') {
-    var tbytes = Helpers.buffertoByteArray(Base58.decode(value));
+    tbytes = Helpers.buffertoByteArray(Base58.decode(value));
     tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
     tbytes.shift();
     tbytes.pop();
@@ -346,8 +346,9 @@ Helpers.detectPrivateKeyFormat = function (key) {
       /^S[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{30}$/.test(key)) {
     var testBytes = Bitcoin.crypto.sha256(key + '?');
 
-    if (testBytes[0] === 0x00 || testBytes[0] === 0x01)
+    if (testBytes[0] === 0x00 || testBytes[0] === 0x01) {
       return 'mini';
+    }
   }
   return null;
 };
@@ -395,16 +396,16 @@ Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
 };
 
 function parseValueBitcoin (valueString) {
-  var valueString = valueString.toString();
+  valueString = valueString.toString();
   // TODO: Detect other number formats (e.g. comma as decimal separator)
   var valueComp = valueString.split('.');
   var integralPart = valueComp[0];
   var fractionalPart = valueComp[1] || '0';
   while (fractionalPart.length < 8) fractionalPart += '0';
   fractionalPart = fractionalPart.replace(/^0+/g, '');
-  var value = BigInteger.valueOf(parseInt(integralPart));
+  var value = BigInteger.valueOf(parseInt(integralPart, 10));
   value = value.multiply(BigInteger.valueOf(100000000));
-  value = value.add(BigInteger.valueOf(parseInt(fractionalPart)));
+  value = value.add(BigInteger.valueOf(parseInt(fractionalPart, 10)));
   return value;
 }
 

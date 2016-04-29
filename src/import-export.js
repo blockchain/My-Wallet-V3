@@ -126,7 +126,7 @@ var ImportExport = new function () {
 
           var unencryptedpart1Bytes = WalletCrypto.AES.decrypt(encryptedpart1, k, null, AES_opts);
 
-          for (var i = 0; i < 16; i++) { unencryptedpart1Bytes[i] ^= derived[i]; }
+          for (var ii = 0; ii < 16; ii++) { unencryptedpart1Bytes[ii] ^= derived[ii]; }
 
           var seedb = Buffer.concat([Buffer(unencryptedpart1Bytes.slice(0, 0 + 16)), Buffer(unencryptedpart2Bytes.slice(8, 8 + 8))]);
 
@@ -144,7 +144,6 @@ var ImportExport = new function () {
   };
 
   var MAX_VALUE = 2147483647;
-  var workerUrl = null;
 
   this.Crypto_scrypt = function (passwd, salt, N, r, p, dkLen, callback) {
     if (N == 0 || (N & (N - 1)) != 0) throw Error('N must be > 0 and a power of 2');
@@ -173,12 +172,16 @@ var ImportExport = new function () {
 
     // using this function to enclose everything needed to create a worker (but also invokable directly for synchronous use)
     function scryptCore () {
-      var XY = [], V = [];
+      var XY = [];
+      var V = [];
 
       if (typeof B === 'undefined') {
         onmessage = function (event) {
           var data = event.data;
-          var N = data[0], r = data[1], p = data[2], B = data[3], i = data[4];
+          var N = data[0];
+          var r = data[1];
+          var B = data[3];
+          var i = data[4];
 
           var Bslice = [];
           arraycopy32(B, i * 128 * r, Bslice, 0, 128 * r);
