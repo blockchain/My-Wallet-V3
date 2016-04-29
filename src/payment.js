@@ -100,7 +100,7 @@ Payment.prototype.to = function (destinations) {
 };
 
 Payment.prototype.from = function (origin, absoluteFee) {
-  this.payment = this.payment.then(Payment.from(origin, absoluteFee));
+  this.payment = this.payment.then(Payment.from.bind(this, origin, absoluteFee)());
   this.then(Payment.prebuild(absoluteFee));
   return this;
 };
@@ -260,6 +260,7 @@ Payment.amount = function (amounts, absoluteFee) {
 };
 
 Payment.from = function (origin) {
+  var that       = this;
   var addresses  = null;
   var change     = null;
   var pkFormat   = Helpers.detectPrivateKeyFormat(origin);
@@ -340,6 +341,9 @@ Payment.from = function (origin) {
     ).catch(
       // this could fail for network issues or no-balance
       function (error) {
+        if (error !== 'No free outputs to spend') {
+          that.emit('error', {error:'ERR_FETCH_UNSPENT' });
+        }
         console.log(error);
         payment.coins = [];
         return payment;
