@@ -108,7 +108,7 @@ BlockchainSocket.prototype.msgXPUBSub = function (xpubs) {
 };
 
 BlockchainSocket.prototype.msgPing = function () {
-  var m = { op: 'ping'};
+  var m = { op: 'ping' };
   return JSON.stringify(m);
 };
 

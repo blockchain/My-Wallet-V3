@@ -22,8 +22,8 @@ module.exports = function (karma) {
 
     coverageReporter: {
       reporters: [
-        { type : 'html', dir : 'coverage/'},
-        { type : 'lcov', dir : 'coverage-lcov/'}
+        { type : 'html', dir : 'coverage/' },
+        { type : 'lcov', dir : 'coverage-lcov/' }
       ],
 
       subdir: '.',

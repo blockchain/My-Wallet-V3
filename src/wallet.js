@@ -271,7 +271,7 @@ MyWallet.login = function (user_guid, shared_key, inputedPassword, twoFA, succes
       wrong_two_factor_code(response);
     };
 
-    var myData = { guid: guid, payload: two_factor_auth_key, length: two_factor_auth_key.length,  method: 'get-wallet', format: 'plain', api_code: API.API_CODE};
+    var myData = { guid: guid, payload: two_factor_auth_key, length: two_factor_auth_key.length,  method: 'get-wallet', format: 'plain', api_code: API.API_CODE };
     API.request('POST', 'wallet', myData, true, false).then(success).catch(error);
   };
 

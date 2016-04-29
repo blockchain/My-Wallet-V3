@@ -144,7 +144,7 @@ API.prototype.getFiatAtTime = function (time, value, currencyCode) {
 };
 
 API.prototype.getTicker = function () {
-  var data = { format: 'json', api_code: this.API_CODE};
+  var data = { format: 'json', api_code: this.API_CODE };
   // return this.request('GET', 'ticker', data);
   return this.retry(this.request.bind(this, 'GET', 'ticker', data));
 };
