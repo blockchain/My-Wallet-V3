@@ -277,8 +277,8 @@ var ImportExport = new function () {
 
         for (i = 0; i < 16; i++) {
           var bi = i * 4;
-          B[bi + 0] = (B32[i] >> 0  & 0xff);
-          B[bi + 1] = (B32[i] >> 8  & 0xff);
+          B[bi + 0] = (B32[i] >> 0 & 0xff);
+          B[bi + 1] = (B32[i] >> 8 & 0xff);
           B[bi + 2] = (B32[i] >> 16 & 0xff);
           B[bi + 3] = (B32[i] >> 24 & 0xff);
         }
@@ -343,7 +343,7 @@ var ImportExport = new function () {
       }
 
       function arraycopy (src, srcPos, dest, destPos, length) {
-        while (length-- ) {
+        while (length--) {
           dest[destPos++] = src[srcPos++];
         }
       }

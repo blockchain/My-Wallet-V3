@@ -1,10 +1,10 @@
 module.exports = function (karma) {
   var configuration = {
-    basePath : './',
+    basePath: './',
 
     frameworks: ['jasmine', 'browserify'],
 
-    browsers : ['PhantomJS'],
+    browsers: ['PhantomJS'],
 
     browserNoActivityTimeout: 60000,
 
@@ -22,15 +22,15 @@ module.exports = function (karma) {
 
     coverageReporter: {
       reporters: [
-        { type : 'html', dir : 'coverage/' },
-        { type : 'lcov', dir : 'coverage-lcov/' }
+        { type: 'html', dir: 'coverage/' },
+        { type: 'lcov', dir: 'coverage-lcov/' }
       ],
 
-      subdir: '.',
+      subdir: '.'
     },
 
     preprocessors: {
-      'tests/**/*.coffee' : ['browserify']
+      'tests/**/*.coffee': ['browserify']
     },
 
     browserify: {

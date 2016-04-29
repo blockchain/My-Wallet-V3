@@ -29,9 +29,9 @@ KeyRing.prototype.init = function (extendedKey, cache) {
   if (this._receiveChain && this._changeChain) return this;
   if (extendedKey || cache.receiveAccount && cache.changeAccount) {
     this._receiveChain = cache.receiveAccount
-      ? new KeyChain(null, null, cache.receiveAccount ) : new KeyChain(extendedKey, 0);
+      ? new KeyChain(null, null, cache.receiveAccount) : new KeyChain(extendedKey, 0);
     this._changeChain = cache.changeAccount
-      ? new KeyChain(null, null, cache.changeAccount ) : new KeyChain(extendedKey, 1);
+      ? new KeyChain(null, null, cache.changeAccount) : new KeyChain(extendedKey, 1);
   }
   return this;
 };
@@ -48,7 +48,7 @@ KeyRing.prototype.privateKeyFromPath = function (path) {
   var index = parseInt(components[2]);
   return receiveOrChange === 0 ?
     this._receiveChain.getPrivateKey(index) :
-    this._changeChain.getPrivateKey(index) ;
+    this._changeChain.getPrivateKey(index);
 };
 
 KeyRing.prototype.toJSON = function () {

@@ -49,7 +49,9 @@ Object.defineProperties(Address.prototype, {
       if (Helpers.isValidLabel(str) || str == null) {
         this._label = str === '' ? undefined : str;
         MyWallet.syncWallet();
-      } else { throw 'Error: address.label must be an alphanumeric string'; }
+      } else {
+        throw 'Error: address.label must be an alphanumeric string';
+      }
     }
   },
   'created_time': {
@@ -121,7 +123,9 @@ Object.defineProperties(Address.prototype, {
           MyWallet.wallet.getHistory();
         }
         MyWallet.syncWallet();
-      } else { throw 'Error: address.archived must be a boolean'; }
+      } else {
+        throw 'Error: address.archived must be a boolean';
+      }
     }
   },
   'active': {

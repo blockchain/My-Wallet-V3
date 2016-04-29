@@ -440,7 +440,7 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
     }
     watchOnlyKey._priv = newKey._priv;
     if (this.isDoubleEncrypted) {
-      if (!secPass) {throw 'Error: second password needed'; }
+      if (!secPass) { throw 'Error: second password needed'; }
       if (!this.validateSecondPassword(secPass)) { throw 'Error: wrong second password'; }
       var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, 'enc');
       watchOnlyKey.encrypt(cipher).persist();
@@ -468,8 +468,8 @@ Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) 
       }
     }
     if (this.isDoubleEncrypted) {
-      if (!secPass) {throw 'Error: second password needed'; }
-      if (!this.validateSecondPassword(secPass)) {throw 'Error: wrong second password'; }
+      if (!secPass) { throw 'Error: second password needed'; }
+      if (!this.validateSecondPassword(secPass)) { throw 'Error: wrong second password'; }
       var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, 'enc');
       ad.encrypt(cipher).persist();
     }
@@ -696,7 +696,7 @@ Wallet.new = function (guid, sharedKey, firstAccountLabel, success, error, isHD)
     }
   };
   MyWallet.wallet = new Wallet(object);
-  var label = firstAccountLabel ||  'My Bitcoin Wallet';
+  var label = firstAccountLabel || 'My Bitcoin Wallet';
   try {
     // wallet or address generation could fail because of the RNG
     if (isHD) {

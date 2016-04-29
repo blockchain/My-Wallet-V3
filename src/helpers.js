@@ -143,7 +143,7 @@ Helpers.asyncOnce = function (f, milliseconds, before) {
 // merges the properties of two objects
 Helpers.merge = function (o, p) {
   var prop = undefined;
-  for(prop in p) {
+  for (prop in p) {
     if (!o.hasOwnProperty(prop)) {
       o[prop] = p[prop];
     }

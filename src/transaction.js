@@ -17,13 +17,13 @@ var Transaction = function (payment, emitter) {
   var changeAddress = payment.change;
   var BITCOIN_DUST = Bitcoin.networks.bitcoin.dustThreshold;
 
-  if (!Array.isArray(toAddresses) && toAddresses != null) {toAddresses = [toAddresses]; }
-  if (!Array.isArray(amounts) && amounts != null) {amounts = [amounts]; }
+  if (!Array.isArray(toAddresses) && toAddresses != null) { toAddresses = [toAddresses]; }
+  if (!Array.isArray(amounts) && amounts != null) { amounts = [amounts]; }
 
   var network = Bitcoin.networks.bitcoin;
 
   assert(toAddresses, 'Missing destination address');
-  assert(amounts,     'Missing amount to pay');
+  assert(amounts, 'Missing amount to pay');
 
   this.emitter = emitter;
   this.amount = amounts.reduce(Helpers.add, 0);
@@ -37,7 +37,7 @@ var Transaction = function (payment, emitter) {
   assert(unspentOutputs && unspentOutputs.length > 0, {error: 'NO_UNSPENT_OUTPUTS'});
   var transaction = new Bitcoin.TransactionBuilder();
   // add all outputs
-  function addOutput (e, i) {transaction.addOutput(toAddresses[i], amounts[i]); }
+  function addOutput (e, i) { transaction.addOutput(toAddresses[i], amounts[i]); }
   toAddresses.map(addOutput);
 
   // add all inputs

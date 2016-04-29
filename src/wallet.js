@@ -51,11 +51,11 @@ function socketConnect () {
       WalletStore.sendEvent('on_tx_received');
       var sendOnTx = WalletStore.sendEvent.bind(null, 'on_tx');
       MyWallet.wallet.getHistory().then(sendOnTx);
-    }  else if (obj.op == 'block') {
+    } else if (obj.op == 'block') {
       var sendOnBlock = WalletStore.sendEvent.bind(null, 'on_block');
       MyWallet.wallet.getHistory().then(sendOnBlock);
       MyWallet.wallet.latestBlock = obj.x;
-    }  else if (obj.op == 'pong') {
+    } else if (obj.op == 'pong') {
       clearTimeout(MyWallet.ws.pingTimeoutPID);
     }
   }
@@ -271,7 +271,7 @@ MyWallet.login = function (user_guid, shared_key, inputedPassword, twoFA, succes
       wrong_two_factor_code(response);
     };
 
-    var myData = { guid: guid, payload: two_factor_auth_key, length: two_factor_auth_key.length,  method: 'get-wallet', format: 'plain', api_code: API.API_CODE };
+    var myData = { guid: guid, payload: two_factor_auth_key, length: two_factor_auth_key.length, method: 'get-wallet', format: 'plain', api_code: API.API_CODE };
     API.request('POST', 'wallet', myData, true, false).then(success).catch(error);
   };
 
@@ -402,7 +402,7 @@ function syncWallet (successcallback, errorcallback) {
     var method = 'update';
     var data = JSON.stringify(MyWallet.wallet, null, 2);
     var crypted = WalletCrypto.encryptWallet(data, WalletStore.getPassword(),
-        WalletStore.getPbkdf2Iterations(), MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0 );
+        WalletStore.getPbkdf2Iterations(), MyWallet.wallet.isUpgradedToHD ? 3.0 : 2.0);
 
     if (crypted.length == 0) {
       throw 'Error encrypting the JSON output';

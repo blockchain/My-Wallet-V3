@@ -13,7 +13,7 @@ function get_account_info (success, error) {
     var response = data.responseText || 'Error Downloading Account Settings';
     WalletStore.sendEvent('msg', {type: 'error', message: response});
 
-    typeof (error) === 'function' &&  error();
+    typeof (error) === 'function' && error();
   });
 }
 
@@ -31,7 +31,7 @@ function updateKV (method, value, success, error, extra) {
   }, function (data) {
     WalletStore.sendEvent('msg', {type: 'error', message: method + '-error: ' + data});
 
-    typeof (error) === 'function' &&  error();
+    typeof (error) === 'function' && error();
   });
 }
 
@@ -152,7 +152,7 @@ function setTwoFactorGoogleAuthenticator (success, error) {
     typeof (success) === 'function' && success(google_secret_url);
   }, function (data) {
     WalletStore.sendEvent('msg', {type: 'error', message: data.responseText});
-    typeof (error) === 'function' &&  error(data.responseText);
+    typeof (error) === 'function' && error(data.responseText);
   });
 }
 
@@ -185,7 +185,7 @@ function verifyEmail (code, success, error) {
     typeof (success) === 'function' && success(data);
   }, function (data) {
     WalletStore.sendEvent('msg', {type: 'error', message: data});
-    typeof (error) === 'function' &&  error();
+    typeof (error) === 'function' && error();
   });
 }
 
@@ -201,7 +201,7 @@ function verifyMobile (code, success, error) {
     typeof (success) === 'function' && success(data);
   }, function (data) {
     WalletStore.sendEvent('msg', {type: 'error', message: data});
-    typeof (error) === 'function' &&  error();
+    typeof (error) === 'function' && error();
   });
 }
 
@@ -211,7 +211,7 @@ function getActivityLogs (success, error) {
   }, function (data) {
     var response = data.responseText || 'Error Downloading Activity Logs';
     WalletStore.sendEvent('msg', {type: 'error', message: response});
-    typeof (error) === 'function' &&  error();
+    typeof (error) === 'function' && error();
   });
 }
 
@@ -225,7 +225,7 @@ function enableEmailNotifications (success, error) {
   }, function (data) {
     var response = data.responseText || 'Error Enabling Email Notifications';
     WalletStore.sendEvent('msg', {type: 'error', message: response});
-    typeof (error) === 'function' &&  error();
+    typeof (error) === 'function' && error();
   });
 }
 
@@ -239,7 +239,7 @@ function enableReceiveNotifications (success, error) {
   }, function (data) {
     var response = data.responseText || 'Error Enabling Receive Notifications';
     WalletStore.sendEvent('msg', {type: 'error', message: response});
-    typeof (error) === 'function' &&  error();
+    typeof (error) === 'function' && error();
   });
 }
 

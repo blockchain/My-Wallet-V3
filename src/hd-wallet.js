@@ -243,7 +243,7 @@ HDWallet.prototype.activeAccount = function (xpub) {
 // account managment
 
 HDWallet.prototype.encrypt = function (cipher) {
-  function f (acc) {acc.encrypt(cipher); }
+  function f (acc) { acc.encrypt(cipher); }
   this._accounts.forEach(f);
   this._temporal_seedHex = cipher(this._seedHex);
   this._temporal_bip39Password = this._bip39Password === ''
@@ -253,7 +253,7 @@ HDWallet.prototype.encrypt = function (cipher) {
 };
 
 HDWallet.prototype.decrypt = function (cipher) {
-  function f (acc) {acc.decrypt(cipher); }
+  function f (acc) { acc.decrypt(cipher); }
   this._accounts.forEach(f);
   this._temporal_seedHex = cipher(this._seedHex);
   this._temporal_bip39Password = this._bip39Password === ''
@@ -270,7 +270,7 @@ HDWallet.prototype.persist = function () {
   this._bip39Password = this._temporal_bip39Password;
   delete this._temporal_seedHex;
   delete this._temporal_bip39Password;
-  function f (acc) {acc.persist(); }
+  function f (acc) { acc.persist(); }
   this._accounts.forEach(f);
   return this;
 };

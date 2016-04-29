@@ -23,7 +23,7 @@ function HDAccount (object) {
   this._network = obj.network || Bitcoin.networks.bitcoin;
 
   this._address_labels = [];
-  obj.address_labels.map(function (e) {self._address_labels[e.index] = e.label; });
+  obj.address_labels.map(function (e) { self._address_labels[e.index] = e.label; });
 
   // computed properties
   this._keyRing = new KeyRing(obj.xpub, obj.cache);
@@ -145,7 +145,7 @@ Object.defineProperties(HDAccount.prototype, {
     get: function () {
       var denseArray = [];
       this._address_labels
-        .map(function (lab, ind) {denseArray.push({'index': ind, 'label': lab}); });
+        .map(function (lab, ind) { denseArray.push({'index': ind, 'label': lab}); });
       return denseArray;
     }
   },
@@ -155,7 +155,7 @@ Object.defineProperties(HDAccount.prototype, {
       var denseArray = [];
       var outerThis = this;
       this._address_labels
-        .map(function (lab, i) {denseArray.push(outerThis.receiveAddressAtIndex(i)); });
+        .map(function (lab, i) { denseArray.push(outerThis.receiveAddressAtIndex(i)); });
       return denseArray;
     }
   },

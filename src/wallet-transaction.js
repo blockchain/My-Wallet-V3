@@ -21,7 +21,7 @@ function Tx (object) {
   this.hash = obj.hash;
   this.inputs = obj.inputs || [];
   this.lock_time = obj.lock_time;
-  this.out = obj.out  || [];
+  this.out = obj.out || [];
   this.relayed_by = obj.relayed_by;
   this._result = obj.result;
   this.size = obj.size;
@@ -79,7 +79,7 @@ Object.defineProperties(Tx.prototype, {
   }
 });
 
-function procOuts(acc, output) {
+function procOuts (acc, output) {
   var tagOut = tagCoin(output);
   acc.taggedOuts.push(tagOut);
   if (tagOut.isWatchOnly) {
@@ -96,11 +96,11 @@ function procOuts(acc, output) {
   return acc;
 }
 
-function procIns(acc, input) {
+function procIns (acc, input) {
   var f = tagCoin.compose(unpackInput.bind(this));
   var tagIn = f(input);
   acc.taggedIns.push(tagIn);
-  acc.fromWatchOnly =  acc.fromWatchOnly || tagIn.isWatchOnly || false;
+  acc.fromWatchOnly = acc.fromWatchOnly || tagIn.isWatchOnly || false;
   if (tagIn.coinType !== 'external') {
     acc.internalSpend = acc.internalSpend + tagIn.amount;
   }
@@ -108,7 +108,7 @@ function procIns(acc, input) {
   return acc;
 }
 
-function belongsTo(tx, id) {
+function belongsTo (tx, id) {
   return tx.processedInputs.concat(tx.processedOutputs).some(function (p) { return p.identity == id; });
 }
 // var memoizedBelongsTo = Helpers.memoize(belongsTo);
@@ -182,7 +182,7 @@ function unpackInput (input) {
   }
 }
 
-function computeAmount(Tx) {
+function computeAmount (Tx) {
   var am = 0;
   switch (Tx.txType) {
     case 'transfer':
@@ -200,7 +200,7 @@ function computeAmount(Tx) {
   return am;
 }
 
-function computeTxType(Tx) {
+function computeTxType (Tx) {
   var v = null;
   var impactNoFee = Tx.result + Tx.fee;
   switch (true) {

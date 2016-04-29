@@ -161,7 +161,7 @@ Payment.prototype.publish = function () {
 };
 
 Payment.prototype.printJSON = function () {
-  var printJSON = function (p) {console.log(JSON.stringify(p, null, 2)); };
+  var printJSON = function (p) { console.log(JSON.stringify(p, null, 2)); };
   this.sideEffect(printJSON);
   return this;
 };
@@ -392,7 +392,7 @@ Payment.prebuild = function (absoluteFee) {
       }
       payment.finalFee = s.fee;
       payment.selectedCoins = s.coins;
-      payment.txSize = Transaction.guessSize(payment.selectedCoins.length, payment.amounts.length + 1 );
+      payment.txSize = Transaction.guessSize(payment.selectedCoins.length, payment.amounts.length + 1);
       var c = Transaction.sumOfCoins(payment.selectedCoins) - payment.amounts.reduce(Helpers.add, 0) - payment.finalFee;
       payment.changeAmount = c > 0 ? c : 0;
 
@@ -486,7 +486,7 @@ function getUnspentCoins (addressList) {
   return API.getUnspent(addressList, -1).then(processCoins);
 }
 
-function getKey(priv, addr) {
+function getKey (priv, addr) {
   var format = Helpers.detectPrivateKeyFormat(priv);
   var key = Helpers.privateKeyStringToKey(priv, format);
   var ckey = new Bitcoin.ECPair(key.d, null, {compressed: true});
@@ -519,7 +519,7 @@ function getXPRIV (password, accountIndex) {
 }
 
 // getKeyForPath :: xpriv -> path -> ECPair
-function getKeyForPath(extendedPrivateKey, neededPrivateKeyPath) {
+function getKeyForPath (extendedPrivateKey, neededPrivateKeyPath) {
   var keyring = new KeyRing(extendedPrivateKey);
   return keyring.privateKeyFromPath(neededPrivateKeyPath).keyPair;
 }
