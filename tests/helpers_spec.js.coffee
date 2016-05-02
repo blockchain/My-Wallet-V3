@@ -74,13 +74,6 @@ describe "Helpers", ->
       expect(Helpers.and(1, 1)).toBeTruthy()
       expect(Helpers.and(0, 0)).toBeFalsy()
 
-  describe "or", ->
-    it "should work", ->
-      expect(Helpers.or(0, 1)).toBeTruthy()
-      expect(Helpers.or(1, 0)).toBeTruthy()
-      expect(Helpers.or(1, 1)).toBeTruthy()
-      expect(Helpers.or(0, 0)).toBeFalsy()
-
   describe "isBitcoinPrivateKey", ->
     it "should recognize valid private keys", ->
       expect(Helpers.isBitcoinPrivateKey("5JFXNQvtFZSobCCRPxnTZiW1PDVnXvGBg5XeuUDoUCi8LRsV3gn")).toBeTruthy()
