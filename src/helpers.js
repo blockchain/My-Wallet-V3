@@ -83,14 +83,6 @@ Helpers.add = function (x,y){
 Helpers.and = function (x,y){
   return x && y;
 };
-Helpers.or = function (x,y){
-  return x || y;
-};
-Helpers.i = function (pred1,pred2){
-  return function (element) {
-    return pred1(element) && pred2(element);
-  };
-};
 Helpers.o = function (pred1,pred2){
   return function (element) {
     return pred1(element) || pred2(element);
