@@ -1,60 +1,51 @@
 'use strict';
 
-var Bitcoin       = require('bitcoinjs-lib');
-var MyWallet      = require('./wallet');
-var WalletCrypto  = require('./wallet-crypto');
-var Transaction   = require('./transaction');
-var API           = require('./api');
-var Helpers       = require('./helpers');
-var KeyRing       = require('./keyring');
-var EventEmitter  = require('events');
-var util          = require('util');
+var Bitcoin = require('bitcoinjs-lib');
+var MyWallet = require('./wallet');
+var WalletCrypto = require('./wallet-crypto');
+var Transaction = require('./transaction');
+var API = require('./api');
+var Helpers = require('./helpers');
+var KeyRing = require('./keyring');
+var EventEmitter = require('events');
+var util = require('util');
 
-////////////////////////////////////////////////////////////////////////////////
-//// Payment Class
-////////////////////////////////////////////////////////////////////////////////
+// Payment Class
 
 function Payment (payment) {
   EventEmitter.call(this);
 
-  var serverFeeFallback ={
-     "default":{
-        "fee":35000.00,
-        "surge":false,
-        "ok":true
-     },
-     "estimate":[
-        {
-           "fee":45000.0,
-           "surge":false,
-           "ok":true
-        },
-        {
-           "fee":35000.00,
-           "surge":false,
-           "ok":true
-        },
-        {
-           "fee":22000.0,
-           "surge":false,
-           "ok":true
-        },
-        {
-           "fee":19000.0,
-           "surge":false,
-           "ok":true
-        },
-        {
-           "fee":15000.0,
-           "surge":false,
-           "ok":true
-        },
-        {
-           "fee":12000.0,
-           "surge":false,
-           "ok":true
-        }
-     ]
+  var serverFeeFallback = {
+    'default': {
+      'fee': 35000.00,
+      'surge': false,
+      'ok': true
+    },
+    'estimate': [{
+      'fee': 45000.0,
+      'surge': false,
+      'ok': true
+    }, {
+      'fee': 35000.00,
+      'surge': false,
+      'ok': true
+    }, {
+      'fee': 22000.0,
+      'surge': false,
+      'ok': true
+    }, {
+      'fee': 19000.0,
+      'surge': false,
+      'ok': true
+    }, {
+      'fee': 15000.0,
+      'surge': false,
+      'ok': true
+    }, {
+      'fee': 12000.0,
+      'surge': false,
+      'ok': true
+    }]
   };
 
   var initialState = {
@@ -71,10 +62,10 @@ function Payment (payment) {
     balance: 0, // sum of all unspents values with any filtering     [ payment.sumOfCoins ]
     finalFee: 0, // final absolute fee that it is going to be used no matter how was obtained (advanced or regular send)
     changeAmount: 0, // final change
-    absoluteFeeBounds: [0,0,0,0,0,0], // fee bounds (absolute) per fixed amount
-    sweepFees: [0,0,0,0,0,0], // sweep absolute fee per each fee per kb (1,2,3,4,5,6)
-    maxSpendableAmounts: [0,0,0,0,0,0],  // max amount per each fee-per-kb
-    confEstimation: "unknown",
+    absoluteFeeBounds: [0, 0, 0, 0, 0, 0], // fee bounds (absolute) per fixed amount
+    sweepFees: [0, 0, 0, 0, 0, 0], // sweep absolute fee per each fee per kb (1, 2, 3, 4, 5, 6)
+    maxSpendableAmounts: [0, 0, 0, 0, 0, 0],  // max amount per each fee-per-kb
+    confEstimation: 'unknown',
     txSize: 0 // transaciton size
   };
 
@@ -91,7 +82,7 @@ function Payment (payment) {
   // payment.transaction    :: Transaction
 }
 util.inherits(Payment, EventEmitter);
-////////////////////////////////////////////////////////////////////////////////
+
 // Payment instance methods (can be chained)
 Payment.prototype.to = function (destinations) {
   this.payment = this.payment.then(Payment.to(destinations));
@@ -170,15 +161,13 @@ Payment.prototype.publish = function () {
 };
 
 Payment.prototype.printJSON = function () {
-  var printJSON = function(p) {console.log(JSON.stringify(p, null, 2));}
+  var printJSON = function (p) { console.log(JSON.stringify(p, null, 2)); };
   this.sideEffect(printJSON);
   return this;
 };
 
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
 Payment.return = function (payment) {
-  var p = payment ? payment : {}
+  var p = payment ? payment : {};
   return Promise.resolve(p);
 };
 
@@ -197,9 +186,10 @@ Payment.to = function (destinations) {
   };
   var accountToAddress = function (i) {
     if (Helpers.isPositiveInteger(i)) {
-      return MyWallet.wallet.hdwallet.accounts[i].receiveAddress;}
-    else {
-      return i;}
+      return MyWallet.wallet.hdwallet.accounts[i].receiveAddress;
+    } else {
+      return i;
+    }
   };
   switch (true) {
     // single bitcoin address
@@ -217,7 +207,7 @@ Payment.to = function (destinations) {
       formatDest = destinations.map(accountToAddress);
       break;
     default:
-      console.log('No destination set.')
+      console.log('No destination set.');
   } // fi switch
   return function (payment) {
     payment.to = formatDest;
@@ -228,8 +218,8 @@ Payment.to = function (destinations) {
 Payment.useAll = function (absoluteFee) {
   return function (payment) {
     if (Helpers.isPositiveNumber(absoluteFee)) {
-      var balance       = payment.balance ? payment.balance : 0;
-      payment.amounts   = (balance - absoluteFee) > 0 ? [balance - absoluteFee] : [];
+      var balance = payment.balance ? payment.balance : 0;
+      payment.amounts = (balance - absoluteFee) > 0 ? [balance - absoluteFee] : [];
     } else {
       payment.amounts = payment.sweepAmount ? [payment.sweepAmount] : [];
     }
@@ -260,31 +250,31 @@ Payment.amount = function (amounts, absoluteFee) {
 };
 
 Payment.from = function (origin) {
-  var that       = this;
-  var addresses  = null;
-  var change     = null;
-  var pkFormat   = Helpers.detectPrivateKeyFormat(origin);
-  var wifs       = []; // only used fromPrivateKey
-  var fromAccId  = null;
-  var watchOnly  = false;
-
+  var that = this;
+  var addresses = null;
+  var change = null;
+  var pkFormat = Helpers.detectPrivateKeyFormat(origin);
+  var wifs = []; // only used fromPrivateKey
+  var fromAccId = null;
+  var watchOnly = false;
+  
   switch (true) {
     // no origin => assume origin = all the legacy addresses (non - watchOnly)
     case origin === null || origin === undefined || origin === '':
       addresses = MyWallet.wallet.spendableActiveAddresses;
-      change    = addresses[0];
+      change = addresses[0];
       break;
     // single bitcoin address
     case Helpers.isBitcoinAddress(origin):
       addresses = [origin];
-      change    = origin;
+      change = origin;
       break;
     // single account index
     case Helpers.isPositiveInteger(origin) &&
          (origin < MyWallet.wallet.hdwallet.accounts.length):
       var fromAccount = MyWallet.wallet.hdwallet.accounts[origin];
       addresses = [fromAccount.extendedPublicKey];
-      change    = fromAccount.changeAddress;
+      change = fromAccount.changeAddress;
       fromAccId = origin;
       break;
     // multiple legacy addresses
@@ -292,11 +282,11 @@ Payment.from = function (origin) {
          origin.length > 0 &&
          origin.every(Helpers.isBitcoinAddress):
       addresses = origin;
-      change    = addresses[0];
+      change = addresses[0];
       break;
     // from PrivateKey
     case (pkFormat !== null):
-      var key    = Helpers.privateKeyStringToKey(origin, pkFormat);
+      var key = Helpers.privateKeyStringToKey(origin, pkFormat);
       key.compressed = false;
       var addrUncomp = key.getAddress();
       var uWIF = key.toWIF();
@@ -308,30 +298,30 @@ Payment.from = function (origin) {
       var ckey = MyWallet.wallet.key(addrComp);
 
       if (ukey && ukey.isWatchOnly) {
-        wifs      = [uWIF];
+        wifs = [uWIF];
         addresses = [addrUncomp];
-        change    = addrUncomp;
+        change = addrUncomp;
         watchOnly = true;
       } else if (ckey && ckey.isWatchOnly) {
-        wifs      = [cWIF];
+        wifs = [cWIF];
         addresses = [addrComp];
-        change    = addrComp;
+        change = addrComp;
         watchOnly = true;
       } else {
-        wifs      = [cWIF, uWIF];
+        wifs = [cWIF, uWIF];
         addresses = [addrComp, addrUncomp];
-        change    = addrComp;
+        change = addrComp;
       }
       break;
     default:
-      console.log('No origin set.')
+      console.log('No origin set.');
   } // fi switch
   return function (payment) {
-    payment.from           = addresses;
-    payment.change         = change;
-    payment.wifKeys        = wifs;
+    payment.from = addresses;
+    payment.change = change;
+    payment.wifKeys = wifs;
     payment.fromAccountIdx = fromAccId;
-    payment.fromWatchOnly  = watchOnly;
+    payment.fromWatchOnly = watchOnly;
 
     return getUnspentCoins(addresses).then(
       function (coins) {
@@ -355,7 +345,7 @@ Payment.from = function (origin) {
 Payment.updateFees = function () {
   return function (payment) {
     return API.getFees().then(
-          function (fees){
+          function (fees) {
             payment.fees = fees;
             payment.feePerKb = fees.default.fee;
             return payment;
@@ -371,43 +361,38 @@ Payment.updateFees = function () {
 };
 
 Payment.prebuild = function (absoluteFee) {
-
   return function (payment) {
+    var dust = Bitcoin.networks.bitcoin.dustThreshold;
 
-    var totalFee      = null;
-    var selectedCoins = [];
-    var txSize        = 0;
-    var dust          = Bitcoin.networks.bitcoin.dustThreshold;
-
-    var usableCoins   = Transaction.filterUsableCoins(payment.coins, payment.feePerKb);
+    var usableCoins = Transaction.filterUsableCoins(payment.coins, payment.feePerKb);
     var max = Transaction.maxAvailableAmount(usableCoins, payment.feePerKb);
     payment.sweepAmount = max.amount;
-    payment.sweepFee    = max.fee;
-    payment.balance     = Transaction.sumOfCoins(payment.coins);
+    payment.sweepFee = max.fee;
+    payment.balance = Transaction.sumOfCoins(payment.coins);
 
     // compute max spendable limits per each fee-per-kb
-    var maxSpendablesPerFeePerKb = function(e){
+    var maxSpendablesPerFeePerKb = function (e) {
       var c = Transaction.filterUsableCoins(payment.coins, e.fee);
       var s = Transaction.maxAvailableAmount(c, e.fee);
       return s.amount;
-    }
+    };
     payment.maxSpendableAmounts = payment.fees.estimate.map(maxSpendablesPerFeePerKb);
-    payment.sweepFees = payment.maxSpendableAmounts.map(function(v){return payment.balance - v;});
+    payment.sweepFees = payment.maxSpendableAmounts.map(function (v) { return payment.balance - v; });
 
     // if amounts defined refresh computations
     if (Array.isArray(payment.amounts) && payment.amounts.length > 0) {
-
       // coin selection
+      var s;
       if (Helpers.isPositiveNumber(absoluteFee)) {
-        var s = Transaction.selectCoins(payment.coins, payment.amounts, absoluteFee, true);
+        s = Transaction.selectCoins(payment.coins, payment.amounts, absoluteFee, true);
       } else {
-        var s = Transaction.selectCoins(usableCoins, payment.amounts, payment.feePerKb, false);
+        s = Transaction.selectCoins(usableCoins, payment.amounts, payment.feePerKb, false);
       }
-      payment.finalFee      = s.fee;
+      payment.finalFee = s.fee;
       payment.selectedCoins = s.coins;
-      payment.txSize = Transaction.guessSize(payment.selectedCoins.length, payment.amounts.length +1 );
+      payment.txSize = Transaction.guessSize(payment.selectedCoins.length, payment.amounts.length + 1);
       var c = Transaction.sumOfCoins(payment.selectedCoins) - payment.amounts.reduce(Helpers.add, 0) - payment.finalFee;
-      payment.changeAmount = c > 0? c : 0;
+      payment.changeAmount = c > 0 ? c : 0;
 
       // change consumption
       if (payment.changeAmount > 0 && payment.changeAmount < dust) {
@@ -418,11 +403,11 @@ Payment.prebuild = function (absoluteFee) {
       }
 
       // compute absolute fee bounds for 1,2,3,4,5,6 block confirmations
-      var toAbsoluteFee = function(e){
+      var toAbsoluteFee = function (e) {
         var c = Transaction.filterUsableCoins(payment.coins, e.fee);
         var s = Transaction.selectCoins(c, payment.amounts, e.fee, false);
         return s.fee;
-      }
+      };
       payment.absoluteFeeBounds = payment.fees.estimate.map(toAbsoluteFee);
 
       // estimation of confirmation in number of blocks
@@ -444,11 +429,11 @@ Payment.build = function () {
   }.bind(this);
 };
 
-Payment.sign = function(password) {
-  return function(payment) {
+Payment.sign = function (password) {
+  return function (payment) {
     var importWIF = function (WIF) {
-      MyWallet.wallet.importLegacyAddress(WIF, "Redeemed code.", password)
-        .then(function(A){A.archived = true;});
+      MyWallet.wallet.importLegacyAddress(WIF, 'Redeemed code.', password)
+        .then(function (A) { A.archived = true; });
     };
 
     if (!payment.transaction) throw 'This transaction hasn\'t been built yet';
@@ -463,7 +448,6 @@ Payment.sign = function(password) {
 
 Payment.publish = function () {
   return function (payment) {
-
     var success = function () {
       payment.txid = payment.transaction.getId();
       return payment;
@@ -480,16 +464,12 @@ Payment.publish = function () {
   };
 };
 
-////////////////////////////////////////////////////////////////////////////////
 module.exports = Payment;
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
+
 // Helper functions
 
-//////////////////////////////////////////////////////////////////////////////
 // getUnspentCoins :: [address] -> Promise [coins]
 function getUnspentCoins (addressList) {
-
   var processCoins = function (obj) {
     var processCoin = function (utxo) {
       var txBuffer = new Buffer(utxo.tx_hash, 'hex');
@@ -499,52 +479,49 @@ function getUnspentCoins (addressList) {
     };
     obj.unspent_outputs.forEach(processCoin);
     return obj.unspent_outputs;
-  }
+  };
 
   return API.getUnspent(addressList, -1).then(processCoins);
 }
 
-function getKey(priv, addr) {
+function getKey (priv, addr) {
   var format = Helpers.detectPrivateKeyFormat(priv);
-  var key    = Helpers.privateKeyStringToKey(priv, format);
+  var key = Helpers.privateKeyStringToKey(priv, format);
   var ckey = new Bitcoin.ECPair(key.d, null, {compressed: true});
   var ukey = new Bitcoin.ECPair(key.d, null, {compressed: false});
-  if (ckey.getAddress() === addr) {return ckey;}
-  else if (ukey.getAddress() === addr) {return ukey;}
+  if (ckey.getAddress() === addr) {
+    return ckey;
+  } else if (ukey.getAddress() === addr) {
+    return ukey;
+  }
   return key;
 }
 
-////////////////////////////////////////////////////////////////////////////////
 // obtain private key for an address
 // from Address
 function getKeyForAddress (password, addr) {
   var k = MyWallet.wallet.key(addr).priv;
-  var privateKeyBase58 = password == null ? k :
-    WalletCrypto.decryptSecretWithSecondPassword( k
-                                                , password
-                                                , MyWallet.wallet.sharedKey
-                                                , MyWallet.wallet.pbkdf2_iterations);
+  var privateKeyBase58 = password == null ? k
+      : WalletCrypto.decryptSecretWithSecondPassword(k, password,
+          MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
   return getKey(privateKeyBase58, addr);
 }
-////////////////////////////////////////////////////////////////////////////////
+
 // getXPRIV :: password -> index -> xpriv
 function getXPRIV (password, accountIndex) {
   var fromAccount = MyWallet.wallet.hdwallet.accounts[accountIndex];
   return fromAccount.extendedPrivateKey == null || password == null
     ? fromAccount.extendedPrivateKey
-    : WalletCrypto.decryptSecretWithSecondPassword( fromAccount.extendedPrivateKey
-                                                  , password
-                                                  , MyWallet.wallet.sharedKey
-                                                  , MyWallet.wallet.pbkdf2_iterations);
-};
-////////////////////////////////////////////////////////////////////////////////
+    : WalletCrypto.decryptSecretWithSecondPassword(fromAccount.extendedPrivateKey, password,
+      MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
+}
+
 // getKeyForPath :: xpriv -> path -> ECPair
-function getKeyForPath(extendedPrivateKey, neededPrivateKeyPath) {
+function getKeyForPath (extendedPrivateKey, neededPrivateKeyPath) {
   var keyring = new KeyRing(extendedPrivateKey);
   return keyring.privateKeyFromPath(neededPrivateKeyPath).keyPair;
-};
+}
 
-////////////////////////////////////////////////////////////////////////////////
 // getPrivateKeys :: password -> payment -> [private key]
 function getPrivateKeys (password, payment) {
   var transaction = payment.transaction;
@@ -553,14 +530,14 @@ function getPrivateKeys (password, payment) {
   if (Helpers.isPositiveInteger(payment.fromAccountIdx)) {
     var xpriv = getXPRIV(password, payment.fromAccountIdx);
     privateKeys = transaction.pathsOfNeededPrivateKeys.map(getKeyForPath.bind(this, xpriv));
-  };
+  }
   // if from Addresses
   if (payment.from && payment.from.every(Helpers.isBitcoinAddress) && !payment.fromWatchOnly) {
     privateKeys = transaction.addressesOfNeededPrivateKeys.map(getKeyForAddress.bind(this, password));
-  };
+  }
   // if from Watch Only
   if (payment.from && Helpers.isBitcoinAddress(payment.from[0]) && payment.fromWatchOnly) {
     privateKeys = transaction.addressesOfNeededPrivateKeys.map(getKey.bind(null, payment.wifKeys[0]));
-  };
+  }
   return privateKeys;
-};
+}

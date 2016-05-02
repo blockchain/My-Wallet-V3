@@ -6,14 +6,13 @@ var WalletCrypto = require('./wallet-crypto');
 var MyWallet = require('./wallet');
 var assert = require('assert');
 
-
 function handleError (msg) {
   return function (e) {
     var errMsg = e.responseJSON && e.responseJSON.initial_error
         ? e.responseJSON.initial_error
         : e || msg;
     return Promise.reject(errMsg);
-  }
+  };
 }
 
 function handleResponse (obj) {
@@ -26,7 +25,6 @@ function handleResponse (obj) {
 }
 
 function generateUUIDs (count) {
-
   var data = {
     format: 'json',
     n: count,
@@ -50,12 +48,11 @@ function generateUUIDs (count) {
  */
 // used in the frontend and in iOS
 function resendTwoFactorSms (user_guid) {
-
   var data = {
-    format : 'json',
-    resend_code : true,
-    ct : Date.now(),
-    api_code : API.API_CODE
+    format: 'json',
+    resend_code: true,
+    ct: Date.now(),
+    api_code: API.API_CODE
   };
 
   return API.request('GET', 'wallet/' + user_guid, data, true, false)
@@ -69,13 +66,12 @@ function resendTwoFactorSms (user_guid) {
  */
 // used in the frontend
 function recoverGuid (user_email, captcha) {
-
   var data = {
     method: 'recover-wallet',
-    email : user_email,
+    email: user_email,
     captcha: captcha,
-    ct : Date.now(),
-    api_code : API.API_CODE
+    ct: Date.now(),
+    api_code: API.API_CODE
   };
 
   return API.request('POST', 'wallet', data, true)
@@ -84,7 +80,7 @@ function recoverGuid (user_email, captcha) {
 
 function checkWalletChecksum (payload_checksum, success, error) {
   assert(payload_checksum, 'Payload checksum missing');
-  var data = {method : 'wallet.aes.json', format : 'json', checksum : payload_checksum};
+  var data = {method: 'wallet.aes.json', format: 'json', checksum: payload_checksum};
 
   API.securePostCallbacks('wallet', data, function (obj) {
     if (!obj.payload || obj.payload == 'Not modified') {
@@ -112,7 +108,6 @@ function requestTwoFactorReset (
   secret,
   message,
   captcha) {
-
   var data = {
     method: 'reset-two-factor-form',
     guid: user_guid,
@@ -121,8 +116,8 @@ function requestTwoFactorReset (
     secret_phrase: secret,
     message: message,
     kaptcha: captcha,
-    ct : Date.now(),
-    api_code : API.API_CODE
+    ct: Date.now(),
+    api_code: API.API_CODE
   };
 
   return API.request('POST', 'wallet', data, true)
@@ -139,8 +134,8 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
     // var data = MyWallet.makeCustomWalletJSON(null, guid, sharedKey);
     var data = JSON.stringify(MyWallet.wallet, null, 2);
 
-    //Everything looks ok, Encrypt the JSON output
-    var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.wallet.defaultPbkdf2Iterations,  MyWallet.wallet.isUpgradedToHD ?  3.0 : 2.0);
+    // Everything looks ok, Encrypt the JSON output
+    var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.wallet.defaultPbkdf2Iterations, MyWallet.wallet.isUpgradedToHD ? 3.0 : 2.0);
 
     if (crypted.length == 0) {
       return reject('Error encrypting the JSON output');
@@ -148,14 +143,14 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
 
     decryptWalletProgress && decryptWalletProgress();
 
-    //Now Decrypt the it again to double check for any possible corruption
+    // Now Decrypt the it again to double check for any possible corruption
     try {
       WalletCrypto.decryptWalletSync(crypted, password);
     } catch (e) {
       return reject(e);
     }
 
-    //SHA256 new_checksum verified by server in case of corruption during transit
+    // SHA256 new_checksum verified by server in case of corruption during transit
     var new_checksum = WalletCrypto.sha256(crypted).toString('hex');
 
     extra = extra || {};
@@ -164,10 +159,10 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
       length: crypted.length,
       payload: crypted,
       checksum: new_checksum,
-      method : 'insert',
-      format : 'plain',
-      sharedKey : sharedKey,
-      guid : guid
+      method: 'insert',
+      format: 'plain',
+      sharedKey: sharedKey,
+      guid: guid
     };
 
     Helpers.merge(post_data, extra);
@@ -175,7 +170,7 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
   });
 
   var apiPromise = dataPromise.then(function (postData) {
-    return API.securePost('wallet', postData)
+    return API.securePost('wallet', postData);
   });
 
   return Promise.all([dataPromise, apiPromise]);

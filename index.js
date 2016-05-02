@@ -13,7 +13,7 @@ try {
     var versionStart = navigator.userAgent.toLowerCase().indexOf('applewebkit') + 12;
     var version = navigator.userAgent.substr(versionStart, 1);
 
-    if (version && typeof(parseInt(version)) === 'number' && parseInt(version) < 6) {
+    if (version && typeof (parseInt(version, 10)) === 'number' && parseInt(version, 10) < 6) {
       Buffer.TYPED_ARRAY_SUPPORT = true;
     }
   }

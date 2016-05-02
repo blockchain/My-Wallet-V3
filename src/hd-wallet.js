@@ -1,94 +1,92 @@
 'use strict';
 
 module.exports = HDWallet;
-////////////////////////////////////////////////////////////////////////////////
+
 var Bitcoin = require('bitcoinjs-lib');
-var assert  = require('assert');
+var assert = require('assert');
 var Helpers = require('./helpers');
 var HDAccount = require('./hd-account');
 var BIP39 = require('bip39');
 var RNG = require('./rng');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
-////////////////////////////////////////////////////////////////////////////////
-// Address class
-function HDWallet (object){
 
-  function addAccount (o, index){
+// Address class
+function HDWallet (object) {
+  function addAccount (o, index) {
     o.index = index;
     return HDAccount.factory(o);
   }
 
   // private members
-  var obj      = object || {};
+  var obj = object || {};
   obj.accounts = obj.accounts || [];
-  obj.paidTo   = obj.paidTo || {};
+  obj.paidTo = obj.paidTo || {};
 
-  this._seedHex             = obj.seed_hex;
-  this._bip39Password       = obj.passphrase;
-  this._mnemonic_verified   = obj.mnemonic_verified;
+  this._seedHex = obj.seed_hex;
+  this._bip39Password = obj.passphrase;
+  this._mnemonic_verified = obj.mnemonic_verified;
   this._default_account_idx = obj.default_account_idx;
   this._accounts = obj.accounts.map(addAccount);
-  this._paidTo              = obj.paidTo;
+  this._paidTo = obj.paidTo;
 }
 
 Object.defineProperties(HDWallet.prototype, {
   'seedHex': {
     configurable: false,
-    get: function () { return this._seedHex;}
+    get: function () { return this._seedHex; }
   },
   'bip39Password': {
     configurable: false,
-    get: function () { return this._bip39Password;}
+    get: function () { return this._bip39Password; }
   },
   'isMnemonicVerified': {
     configurable: false,
-    get: function () { return this._mnemonic_verified;}
+    get: function () { return this._mnemonic_verified; }
   },
   'defaultAccountIndex': {
     configurable: false,
-    get: function () { return this._default_account_idx;},
+    get: function () { return this._default_account_idx; },
     set: function (value) {
-      if(this.isValidAccountIndex(value)){
+      if (this.isValidAccountIndex(value)) {
         this._default_account_idx = value;
         MyWallet.syncWallet();
-      }
-      else{
+      } else {
         throw 'Error: unvalid default index account';
       }
     }
   },
   'defaultAccount': {
     configurable: false,
-    get: function () {return this._accounts[this._default_account_idx];}
+    get: function () { return this._accounts[this._default_account_idx]; }
   },
   'accounts': {
     configurable: false,
     get: function () {
-      return this._accounts.map(function (a){return a});
+      return this._accounts.map(function (a) { return a; });
     }
   },
   'activeAccounts': {
     configurable: false,
     get: function () {
-      return this._accounts.filter(function (a){return !a.archived});
+      return this._accounts.filter(function (a) { return !a.archived; });
     }
   },
-  'xpubs':{
+  'xpubs': {
     configurable: false,
     get: function () {
-      return this._accounts.map(function (a){return (a.extendedPublicKey)});
+      return this._accounts.map(function (a) { return (a.extendedPublicKey); });
     }
   },
-  'activeXpubs':{
+  'activeXpubs': {
     configurable: false,
     get: function () {
-      return this.activeAccounts.map(function (a){return (a.extendedPublicKey)});
+      return this.activeAccounts.map(function (a) { return (a.extendedPublicKey); });
     }
   },
-  'balanceActiveAccounts':{
+  'balanceActiveAccounts': {
     configurable: false,
     get: function () {
-      var balances = this.activeAccounts.map(function (k){return k.balance;});
+      var balances = this.activeAccounts.map(function (k) { return k.balance; });
       if (balances.some(Helpers.isNotNumber)) return null;
       return balances.reduce(Helpers.add, 0);
     }
@@ -97,7 +95,7 @@ Object.defineProperties(HDWallet.prototype, {
     configurable: false,
     get: function () {
       var isSeedEnc = Helpers.isBase64(this._seedHex) && !Helpers.isSeedHex(this._seedHex);
-      return isSeedEnc && this._accounts.map(function (a){return a.isEncrypted;})
+      return isSeedEnc && this._accounts.map(function (a) { return a.isEncrypted; })
                                           .reduce(Helpers.and, true);
     }
   },
@@ -105,20 +103,20 @@ Object.defineProperties(HDWallet.prototype, {
     configurable: false,
     get: function () {
       var isSeedUnEnc = Helpers.isSeedHex(this._seedHex);
-      return isSeedUnEnc && this._accounts.map(function (a){return a.isUnEncrypted;})
+      return isSeedUnEnc && this._accounts.map(function (a) { return a.isUnEncrypted; })
                              .reduce(Helpers.and, true);
     }
   },
-  'lastAccount':{
+  'lastAccount': {
     configurable: false,
     get: function () {
-      return this._accounts[this._accounts.length-1];
+      return this._accounts[this._accounts.length - 1];
     }
   }
 });
-////////////////////////////////////////////////////////////////////////////////
+
 // non exposed functions
-function decryptMnemonic (seedHex, cipher){
+function decryptMnemonic (seedHex, cipher) {
   if (cipher) {
     return BIP39.entropyToMnemonic(cipher(seedHex));
   } else {
@@ -130,8 +128,8 @@ function decryptMnemonic (seedHex, cipher){
   }
 }
 
-function decryptPassphrase (bip39Password, cipher){
-  if (bip39Password === '') {return bip39Password}
+function decryptPassphrase (bip39Password, cipher) {
+  if (bip39Password === '') { return bip39Password; }
   if (cipher) {
     return cipher(bip39Password);
   } else {
@@ -139,12 +137,12 @@ function decryptPassphrase (bip39Password, cipher){
   }
 }
 
-function getMasterHex (seedHex, bip39Password, cipher){
-  var mnemonic   = decryptMnemonic(seedHex, cipher);
+function getMasterHex (seedHex, bip39Password, cipher) {
+  var mnemonic = decryptMnemonic(seedHex, cipher);
   var passphrase = decryptPassphrase(bip39Password, cipher);
   return BIP39.mnemonicToSeed(mnemonic, passphrase);
 }
-////////////////////////////////////////////////////////////////////////////////
+
 // Constructors
 
 // we need 3 actions
@@ -152,22 +150,21 @@ function getMasterHex (seedHex, bip39Password, cipher){
 // load hdwallet
 // restore hdwallet
 
-HDWallet.new = function (cipher){
+HDWallet.new = function (cipher) {
   var mnemonic = BIP39.generateMnemonic(undefined, RNG.run.bind(RNG));
-  var seedHex  = BIP39.mnemonicToEntropy(mnemonic);
+  var seedHex = BIP39.mnemonicToEntropy(mnemonic);
   return HDWallet.restore(seedHex, '', cipher);
 };
 
-HDWallet.restore = function (seedHex, bip39Password, cipher){
-
+HDWallet.restore = function (seedHex, bip39Password, cipher) {
   assert(Helpers.isSeedHex(seedHex), 'hdwallet.seedHex must exist and be a seed hex');
   if (!Helpers.isString(bip39Password)) bip39Password = '';
   var hdwallet = {
-    seed_hex            : seedHex,
-    passphrase          : bip39Password,
-    mnemonic_verified   : false,
-    default_account_idx : 0,
-    accounts            : []
+    seed_hex: seedHex,
+    passphrase: bip39Password,
+    mnemonic_verified: false,
+    default_account_idx: 0,
+    accounts: []
   };
   var newHDwallet = new HDWallet(hdwallet);
   if (cipher) {
@@ -176,80 +173,77 @@ HDWallet.restore = function (seedHex, bip39Password, cipher){
   return newHDwallet;
 };
 
-HDWallet.factory = function (o){
+HDWallet.factory = function (o) {
   if (o instanceof Object && !(o instanceof HDWallet)) {
     return new HDWallet(o);
+  } else {
+    return o;
   }
-  else { return o; }
 };
 
-HDWallet.prototype.newAccount = function (label, cipher){
-
-  var accIndex   = this._accounts.length;
-  var dec = undefined;
-  var enc = undefined;
+HDWallet.prototype.newAccount = function (label, cipher) {
+  var accIndex = this._accounts.length;
+  var dec;
+  var enc;
 
   if (cipher) {
-    dec    = cipher('dec');
-    enc    = cipher('enc');
+    dec = cipher('dec');
+    enc = cipher('enc');
   }
 
   var masterhex = getMasterHex(this._seedHex, this._bip39Password, dec);
-  var network   = Bitcoin.networks.bitcoin;
+  var network = Bitcoin.networks.bitcoin;
   var masterkey = Bitcoin.HDNode.fromSeedBuffer(masterhex, network);
-  var account   = HDAccount.fromWalletMasterKey(masterkey, accIndex, label);
+  var account = HDAccount.fromWalletMasterKey(masterkey, accIndex, label);
   account.encrypt(enc).persist();
   this._accounts.push(account);
   return this;
 };
-////////////////////////////////////////////////////////////////////////////////
+
 // JSON serializer
 
-HDWallet.prototype.toJSON = function (){
-
+HDWallet.prototype.toJSON = function () {
   var hdwallet = {
-    seed_hex            : this._seedHex,
-    passphrase          : this._bip39Password,
-    mnemonic_verified   : this._mnemonic_verified,
-    default_account_idx : this._default_account_idx,
+    seed_hex: this._seedHex,
+    passphrase: this._bip39Password,
+    mnemonic_verified: this._mnemonic_verified,
+    default_account_idx: this._default_account_idx,
     // paidTo              : this._paidTo,
-    accounts            : this._accounts
+    accounts: this._accounts
   };
   return hdwallet;
 };
 
-HDWallet.reviver = function (k,v){
+HDWallet.reviver = function (k, v) {
   if (k === '') return new HDWallet(v);
   return v;
-}
+};
 
-////////////////////////////////////////////////////////////////////////////////
 // methods
 
-HDWallet.prototype.verifyMnemonic = function (){
+HDWallet.prototype.verifyMnemonic = function () {
   this._mnemonic_verified = true;
   MyWallet.syncWallet();
   return this;
 };
 
-HDWallet.prototype.account = function (xpub){
+HDWallet.prototype.account = function (xpub) {
   var f = this._accounts
-            .filter(function (a){return a.extendedPublicKey === xpub});
+            .filter(function (a) { return a.extendedPublicKey === xpub; });
   var r = f.length === 0 ? null : f[0];
   return r;
 };
 
-HDWallet.prototype.activeAccount = function (xpub){
+HDWallet.prototype.activeAccount = function (xpub) {
   var a = this.account(xpub);
   var r = !a || a.archived ? null : a;
   return r;
 };
 
-////////////////////////////////////////////////////////////////////////////////
 // account managment
 
-HDWallet.prototype.encrypt = function (cipher){
-  function f (acc) {acc.encrypt(cipher);}
+HDWallet.prototype.encrypt = function (cipher) {
+  function f (acc) { acc.encrypt(cipher); }
   this._accounts.forEach(f);
   this._temporal_seedHex = cipher(this._seedHex);
   this._temporal_bip39Password = this._bip39Password === ''
@@ -258,8 +252,8 @@ HDWallet.prototype.encrypt = function (cipher){
   return this;
 };
 
-HDWallet.prototype.decrypt = function (cipher){
-  function f (acc) {acc.decrypt(cipher);}
+HDWallet.prototype.decrypt = function (cipher) {
+  function f (acc) { acc.decrypt(cipher); }
   this._accounts.forEach(f);
   this._temporal_seedHex = cipher(this._seedHex);
   this._temporal_bip39Password = this._bip39Password === ''
@@ -268,19 +262,20 @@ HDWallet.prototype.decrypt = function (cipher){
   return this;
 };
 
-HDWallet.prototype.persist = function (){
-  if (this._temporal_seedHex === undefined || this._temporal_bip39Password === undefined)
-    {return this;}
+HDWallet.prototype.persist = function () {
+  if (this._temporal_seedHex === undefined || this._temporal_bip39Password === undefined) {
+    return this;
+  }
   this._seedHex = this._temporal_seedHex;
   this._bip39Password = this._temporal_bip39Password;
   delete this._temporal_seedHex;
   delete this._temporal_bip39Password;
-  function f (acc) {acc.persist();}
+  function f (acc) { acc.persist(); }
   this._accounts.forEach(f);
   return this;
 };
 
 // checkers
-HDWallet.prototype.isValidAccountIndex = function (index){
+HDWallet.prototype.isValidAccountIndex = function (index) {
   return Helpers.isPositiveInteger(index) && index < this._accounts.length;
 };

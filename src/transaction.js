@@ -1,31 +1,27 @@
 'use strict';
 
-var assert      = require('assert');
-var Bitcoin     = require('bitcoinjs-lib');
-var randomBytes = require('randombytes');
-var Helpers     = require('./helpers');
-var Buffer      = require('buffer').Buffer;
+var assert = require('assert');
+var Bitcoin = require('bitcoinjs-lib');
+var Helpers = require('./helpers');
+var Buffer = require('buffer').Buffer;
 
 // Error messages that can be seen by the user should take the form of:
 // {error: "NOT_GOOD", some_param: 1}
 // Error messages that should only appear during development can be any string.
 
 var Transaction = function (payment, emitter) {
-
   var unspentOutputs = payment.selectedCoins;
-  var toAddresses    = payment.to;
-  var amounts        = payment.amounts;
-  var fee            = payment.finalFee;
-  var changeAddress  = payment.change;
-  var BITCOIN_DUST   = Bitcoin.networks.bitcoin.dustThreshold;
+  var toAddresses = payment.to;
+  var amounts = payment.amounts;
+  var fee = payment.finalFee;
+  var changeAddress = payment.change;
+  var BITCOIN_DUST = Bitcoin.networks.bitcoin.dustThreshold;
 
-  if (!Array.isArray(toAddresses) && toAddresses != null) {toAddresses = [toAddresses];}
-  if (!Array.isArray(amounts) && amounts != null) {amounts = [amounts];}
-
-  var network = Bitcoin.networks.bitcoin;
+  if (!Array.isArray(toAddresses) && toAddresses != null) { toAddresses = [toAddresses]; }
+  if (!Array.isArray(amounts) && amounts != null) { amounts = [amounts]; }
 
   assert(toAddresses, 'Missing destination address');
-  assert(amounts,     'Missing amount to pay');
+  assert(amounts, 'Missing amount to pay');
 
   this.emitter = emitter;
   this.amount = amounts.reduce(Helpers.add, 0);
@@ -39,7 +35,7 @@ var Transaction = function (payment, emitter) {
   assert(unspentOutputs && unspentOutputs.length > 0, {error: 'NO_UNSPENT_OUTPUTS'});
   var transaction = new Bitcoin.TransactionBuilder();
   // add all outputs
-  function addOutput (e, i) {transaction.addOutput(toAddresses[i],amounts[i]);}
+  function addOutput (e, i) { transaction.addOutput(toAddresses[i], amounts[i]); }
   toAddresses.map(addOutput);
 
   // add all inputs
@@ -51,7 +47,7 @@ var Transaction = function (payment, emitter) {
     transaction.addInput(Array.prototype.reverse.call(transactionHashBuffer), output.index);
 
     // Generate address from output script and add to private list so we can check if the private keys match the inputs later
-    var scriptBuffer = Buffer(output.script, "hex");
+    var scriptBuffer = Buffer(output.script, 'hex');
     assert.notEqual(Bitcoin.script.classifyOutput(scriptBuffer), 'nonstandard', {error: 'STRANGE_SCRIPT'});
     var address = Bitcoin.address.fromOutputScript(scriptBuffer).toString();
     assert(address, {error: 'CANNOT_DECODE_OUTPUT_ADDRESS', tx_hash: output.tx_hash});
@@ -60,8 +56,7 @@ var Transaction = function (payment, emitter) {
     // Add to list of needed private keys
     if (output.xpub) {
       this.pathsOfNeededPrivateKeys.push(output.xpub.path);
-    }
-    else {
+    } else {
       this.addressesOfNeededPrivateKeys.push(address);
     }
   }
@@ -89,24 +84,23 @@ Transaction.prototype.addPrivateKeys = function (privateKeys) {
  * BIP69: Sort outputs lexicographycally
  */
 
-Transaction.prototype.sortBIP69 = function (){
-
+Transaction.prototype.sortBIP69 = function () {
   var compareInputs = function (a, b) {
     var hasha = new Buffer(a[0].hash);
     var hashb = new Buffer(b[0].hash);
     var x = [].reverse.call(hasha);
     var y = [].reverse.call(hashb);
-    return x.compare(y) || a[0].index - b[0].index
+    return x.compare(y) || a[0].index - b[0].index;
   };
 
-  var compareOutputs = function(a, b) {
-    return (a.value - b.value) || (a.script).compare(b.script)
+  var compareOutputs = function (a, b) {
+    return (a.value - b.value) || (a.script).compare(b.script);
   };
   var mix = Helpers.zip3(this.transaction.tx.ins, this.privateKeys, this.addressesOfInputs);
   mix.sort(compareInputs);
-  this.transaction.tx.ins = mix.map(function (a){return a[0];});
-  this.privateKeys        = mix.map(function (a){return a[1];});
-  this.addressesOfInputs  = mix.map(function (a){return a[2];});
+  this.transaction.tx.ins = mix.map(function (a) { return a[0]; });
+  this.privateKeys = mix.map(function (a) { return a[1]; });
+  this.addressesOfInputs = mix.map(function (a) { return a[2]; });
   this.transaction.tx.outs.sort(compareOutputs);
 };
 /**
@@ -126,17 +120,16 @@ Transaction.prototype.sign = function () {
 
   var transaction = this.transaction;
 
-  for (var i = 0; i < transaction.inputs.length; i++) {
-    this.emitter.emit('on_sign_progress', i+1);
-    var key = this.privateKeys[i];
-    transaction.sign(i, key);
-    assert(transaction.inputs[i].scriptType === 'pubkeyhash', 'Error creating input script');
+  for (var ii = 0; ii < transaction.inputs.length; ii++) {
+    this.emitter.emit('on_sign_progress', ii + 1);
+    var key = this.privateKeys[ii];
+    transaction.sign(ii, key);
+    assert(transaction.inputs[ii].scriptType === 'pubkeyhash', 'Error creating input script');
   }
 
   this.emitter.emit('on_finish_signing');
   return transaction;
 };
-
 
 function sortUnspentOutputs (unspentOutputs) {
   var unspent = [];
@@ -148,7 +141,7 @@ function sortUnspentOutputs (unspentOutputs) {
     }
   }
 
-  unspent.sort(function (o1, o2){
+  unspent.sort(function (o1, o2) {
     return o2.value - o1.value;
   });
 
@@ -159,35 +152,35 @@ Transaction.inputCost = function (feePerKb) {
   return Math.ceil(feePerKb * 0.148);
 };
 Transaction.guessSize = function (nInputs, nOutputs) {
-  if (nInputs < 1 || nOutputs < 1) { return 0;}
-  return (nInputs*148 + nOutputs*34 + 10);
+  if (nInputs < 1 || nOutputs < 1) { return 0; }
+  return (nInputs * 148 + nOutputs * 34 + 10);
 };
 
 Transaction.guessFee = function (nInputs, nOutputs, feePerKb) {
-  var sizeBytes  = Transaction.guessSize(nInputs, nOutputs);
+  var sizeBytes = Transaction.guessSize(nInputs, nOutputs);
   return Math.ceil(feePerKb * (sizeBytes / 1000));
 };
 
-Transaction.filterUsableCoins = function (coins, feePerKb){
+Transaction.filterUsableCoins = function (coins, feePerKb) {
   if (!Array.isArray(coins)) return [];
   var icost = Transaction.inputCost(feePerKb);
-  return coins.filter(function(c) { return c.value >= icost });
+  return coins.filter(function (c) { return c.value >= icost; });
 };
 
-Transaction.maxAvailableAmount = function (usableCoins, feePerKb){
+Transaction.maxAvailableAmount = function (usableCoins, feePerKb) {
   var len = usableCoins.length;
   var fee = Transaction.guessFee(len, 2, feePerKb);
-  return {"amount": usableCoins.reduce(function(a,e){a = a + e.value; return a},0) - fee, "fee" : fee};
+  return {'amount': usableCoins.reduce(function (a, e) { a = a + e.value; return a; }, 0) - fee, 'fee': fee};
 };
 
-Transaction.sumOfCoins = function (coins){
-  return coins.reduce(function(a,e){a = a + e.value; return a},0);
+Transaction.sumOfCoins = function (coins) {
+  return coins.reduce(function (a, e) { a = a + e.value; return a; }, 0);
 };
 
-Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee){
-  var amount = amounts.reduce(Helpers.add,0);
-  var nouts  = amounts.length;
-  var sorted = usableCoins.sort(function (a, b) { return b.value - a.value });
+Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
+  var amount = amounts.reduce(Helpers.add, 0);
+  var nouts = amounts.length;
+  var sorted = usableCoins.sort(function (a, b) { return b.value - a.value; });
   var len = sorted.length;
   var sel = [];
   var accAm = 0;
@@ -198,30 +191,29 @@ Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee){
       var coin = sorted[i];
       accAm = accAm + coin.value;
       sel.push(coin);
-      if (accAm >= fee + amount) { return {"coins": sel, "fee": fee}; }
+      if (accAm >= fee + amount) { return {'coins': sel, 'fee': fee}; }
     }
   } else {
-    for (var i = 0; i < len; i++) {
-      var coin = sorted[i];
-      accAm = accAm + coin.value;
-      accFee = Transaction.guessFee(i+1, nouts+1, fee);
-      sel.push(coin);
-      if (accAm >= accFee + amount) { return {"coins": sel, "fee": accFee}; }
+    for (var ii = 0; ii < len; ii++) {
+      var coin2 = sorted[ii];
+      accAm = accAm + coin2.value;
+      accFee = Transaction.guessFee(ii + 1, nouts + 1, fee);
+      sel.push(coin2);
+      if (accAm >= accFee + amount) { return {'coins': sel, 'fee': accFee}; }
     }
   }
-  return {"coins": [], "fee": 0};
+  return {'coins': [], 'fee': 0};
 };
 
-Transaction.confirmationEstimation = function(absoluteFees, fee) {
+Transaction.confirmationEstimation = function (absoluteFees, fee) {
   var len = absoluteFees.length;
   for (var i = 0; i < len; i++) {
     if (absoluteFees[i] > 0 && fee >= absoluteFees[i]) {
-      return i+1;
-    }
-    else{
-      if (absoluteFees[i] > 0 && (i+1 === len)) { return Infinity; }
+      return i + 1;
+    } else {
+      if (absoluteFees[i] > 0 && (i + 1 === len)) { return Infinity; }
     }
   }
   return null;
-}
+};
 module.exports = Transaction;

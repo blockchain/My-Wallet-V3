@@ -1,17 +1,17 @@
 'use strict';
 
-var crypto  = require('crypto')
-  , assert  = require('assert')
-  , sjcl    = require('sjcl');
+var crypto = require('crypto');
+var assert = require('assert');
+var sjcl = require('sjcl');
 
-var SUPPORTED_ENCRYPTION_VERSION = 3
-  , SALT_BYTES = 16
-  , KEY_BIT_LEN = 256
-  , BLOCK_BIT_LEN = 128;
+var SUPPORTED_ENCRYPTION_VERSION = 3;
+var SALT_BYTES = 16;
+var KEY_BIT_LEN = 256;
+var BLOCK_BIT_LEN = 128;
 
 var ALGO = {
-  SHA1    : 'sha1',
-  SHA256  : 'sha256'
+  SHA1: 'sha1',
+  SHA256: 'sha256'
 };
 
 var NoPadding = {
@@ -35,8 +35,8 @@ var ZeroPadding = {
   */
 
   pad: function (dataBytes, nBytesPerBlock) {
-    var nPaddingBytes = nBytesPerBlock - dataBytes.length % nBytesPerBlock
-      , zeroBytes = new Buffer(nPaddingBytes).fill(0x00);
+    var nPaddingBytes = nBytesPerBlock - dataBytes.length % nBytesPerBlock;
+    var zeroBytes = new Buffer(nPaddingBytes).fill(0x00);
     return Buffer.concat([ dataBytes, zeroBytes ]);
   },
 
@@ -53,9 +53,9 @@ var Iso10126 = {
   */
 
   pad: function (dataBytes, nBytesPerBlock) {
-    var nPaddingBytes = nBytesPerBlock - dataBytes.length % nBytesPerBlock
-      , paddingBytes  = crypto.randomBytes(nPaddingBytes - 1)
-      , endByte       = new Buffer([ nPaddingBytes ]);
+    var nPaddingBytes = nBytesPerBlock - dataBytes.length % nBytesPerBlock;
+    var paddingBytes = crypto.randomBytes(nPaddingBytes - 1);
+    var endByte = new Buffer([ nPaddingBytes ]);
     return Buffer.concat([ dataBytes, paddingBytes, endByte ]);
   },
 
@@ -83,9 +83,9 @@ var Iso97971 = {
 };
 
 var AES = {
-  CBC : 'aes-256-cbc',
-  OFB : 'aes-256-ofb',
-  ECB : 'aes-256-ecb',
+  CBC: 'aes-256-cbc',
+  OFB: 'aes-256-ofb',
+  ECB: 'aes-256-ecb',
 
   /*
   *   Encrypt / Decrypt with aes-256
@@ -138,8 +138,11 @@ function encryptWallet (data, password, pbkdf2_iterations, version) {
 }
 
 function decryptWallet (data, password, success, error) {
-  try       { success(decryptWalletSync(data, password)); }
-  catch (e) { error(e && e.message || e);                 }
+  try {
+    success(decryptWalletSync(data, password));
+  } catch (e) {
+    error(e && e.message || e);
+  }
 }
 
 function decryptWalletSync (data, password) {
@@ -148,8 +151,11 @@ function decryptWalletSync (data, password) {
 
   var wrapper, version, decrypted;
 
-  try       { wrapper = JSON.parse(data); }
-  catch (e) { version = 1;                }
+  try {
+    wrapper = JSON.parse(data);
+  } catch (e) {
+    version = 1;
+  }
 
   if (wrapper) {
     assert(wrapper.payload, 'v2 Wallet error: missing payload');
@@ -182,37 +188,41 @@ function decryptWalletV1 (data, password) {
 
     // v1: OFB, nopad, 1 iteration
     decryptDataWithPassword.bind(null, data, password, 1, {
-      mode    : AES.OFB,
-      padding : NoPadding
+      mode: AES.OFB,
+      padding: NoPadding
     }),
 
     // v1: OFB, ISO7816, 1 iteration
     // ISO/IEC 9797-1 Padding method 2 is the same as ISO/IEC 7816-4:2005
     decryptDataWithPassword.bind(null, data, password, 1, {
-      mode    : AES.OFB,
-      padding : Iso97971
+      mode: AES.OFB,
+      padding: Iso97971
     }),
 
     // v1: CBC, ISO10126, 1 iteration
     decryptDataWithPassword.bind(null, data, password, 1, {
-      mode    : AES.CBC,
-      padding : Iso10126
+      mode: AES.CBC,
+      padding: Iso10126
     })
   ];
 
   return decryptFns.reduce(function (acc, decrypt) {
     if (acc) return acc;
-    try       { return JSON.parse(decrypt()); }
-    catch (e) { return null;                  }
+    try {
+      return JSON.parse(decrypt());
+    } catch (e) {
+      return null;
+    }
   }, null);
 }
 
 function cipherFunction (password, sharedKey, pbkdf2Iterations, operation) {
   // operation can be 'enc' or 'dec'
   var id = function (msg) { return msg; };
-  if (!password || !sharedKey || !pbkdf2Iterations) { return id; }
-  else {
-    switch(operation) {
+  if (!password || !sharedKey || !pbkdf2Iterations) {
+    return id;
+  } else {
+    switch (operation) {
       case 'enc':
         return function (msg) {
           return encryptSecretWithSecondPassword(msg, password, sharedKey, pbkdf2Iterations);
@@ -223,7 +233,7 @@ function cipherFunction (password, sharedKey, pbkdf2Iterations, operation) {
         };
       default:
         return id;
-    };
+    }
   }
 }
 
@@ -244,13 +254,13 @@ function encryptDataWithPassword (data, password, iterations) {
   assert(password, 'password missing');
   assert(iterations, 'iterations missing');
 
-  var salt      = crypto.randomBytes(SALT_BYTES)
-    , key       = stretchPassword(password, salt, iterations, KEY_BIT_LEN)
-    , dataBytes = new Buffer(data, 'utf8')
-    , options   = { mode: AES.CBC, padding: Iso10126 };
+  var salt = crypto.randomBytes(SALT_BYTES);
+  var key = stretchPassword(password, salt, iterations, KEY_BIT_LEN);
+  var dataBytes = new Buffer(data, 'utf8');
+  var options = { mode: AES.CBC, padding: Iso10126 };
 
-  var encryptedBytes  = AES.encrypt(dataBytes, key, salt, options)
-    , payload         = Buffer.concat([ salt, encryptedBytes ]);
+  var encryptedBytes = AES.encrypt(dataBytes, key, salt, options);
+  var payload = Buffer.concat([ salt, encryptedBytes ]);
 
   return payload.toString('base64');
 }
@@ -263,10 +273,10 @@ function decryptDataWithPassword (data, password, iterations, options) {
   options = options || {};
   options.padding = options.padding || Iso10126;
 
-  var dataHex = new Buffer(data, 'base64')
-    , salt    = dataHex.slice(0, SALT_BYTES)
-    , payload = dataHex.slice(SALT_BYTES)
-    , key     = stretchPassword(password, salt, iterations, KEY_BIT_LEN);
+  var dataHex = new Buffer(data, 'base64');
+  var salt = dataHex.slice(0, SALT_BYTES);
+  var payload = dataHex.slice(SALT_BYTES);
+  var key = stretchPassword(password, salt, iterations, KEY_BIT_LEN);
 
   var decryptedBytes = AES.decrypt(payload, key, salt, options);
   return decryptedBytes.toString('utf8');
@@ -276,7 +286,7 @@ function stretchPassword (password, salt, iterations, keylen) {
   assert(salt, 'salt missing');
   assert(password, 'password missing');
   assert(iterations, 'iterations missing');
-  assert(typeof(sjcl.hash.sha1) === 'function', 'missing sha1, make sure sjcl is configured correctly');
+  assert(typeof (sjcl.hash.sha1) === 'function', 'missing sha1, make sure sjcl is configured correctly');
 
   var hmacSHA1 = function (key) {
     var hasher = new sjcl.misc.hmac(key, sjcl.hash.sha1);

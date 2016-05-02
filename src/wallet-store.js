@@ -4,22 +4,21 @@ var MyWallet = require('./wallet');
 var WalletCrypto = require('./wallet-crypto');
 
 var WalletStore = (function () {
-  var password; //Password
-  var guid; //Wallet identifier
+  var password; // Password
+  var guid; // Wallet identifier
   var language = 'en';
   var pbkdf2_iterations = 5000; // pbkdf2_interations of the main password (to encrypt the full payload)
   var disable_logout = false;
-  var real_auth_type = 0; //The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
-  var encrypted_wallet_data; //Encrypted wallet data (Base64, AES 256)
-  var payload_checksum; //SHA256 hash of the current wallet.aes.json
+  var real_auth_type = 0; // The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
+  var encrypted_wallet_data; // Encrypted wallet data (Base64, AES 256)
+  var payload_checksum; // SHA256 hash of the current wallet.aes.json
   var isPolling = false;
   var isRestoringWallet = false;
   var counter = 0;
   var sync_pubkeys = false;
   var isSynchronizedWithServer = true;
-  var event_listeners = []; //Emits Did decrypt wallet event (used on claim page)
+  var event_listeners = []; // Emits Did decrypt wallet event (used on claim page)
 
-  ////////////////////////////////////////////////////////////////////////////
   return {
     setPbkdf2Iterations: function (iterations) {
       pbkdf2_iterations = iterations;
@@ -51,14 +50,14 @@ var WalletStore = (function () {
     },
     get2FATypeString: function () {
       var stringType = '';
-      switch(real_auth_type){
-      case 0: stringType = null; break;
-      case 1: stringType = 'Yubikey'; break;
-      case 2: stringType = 'Email'; break;
-      case 3: stringType = 'Yubikey MtGox - Unsupported'; break;
-      case 4: stringType = 'Google Auth'; break;
-      case 5: stringType = 'SMS'; break;
-      default: stringType = null; break;
+      switch (real_auth_type) {
+        case 0: stringType = null; break;
+        case 1: stringType = 'Yubikey'; break;
+        case 2: stringType = 'Email'; break;
+        case 3: stringType = 'Yubikey MtGox - Unsupported'; break;
+        case 4: stringType = 'Google Auth'; break;
+        case 5: stringType = 'SMS'; break;
+        default: stringType = null; break;
       }
       return stringType;
     },
@@ -75,8 +74,7 @@ var WalletStore = (function () {
       if (!data || data.length == 0) {
         encrypted_wallet_data = null;
         payload_checksum = null;
-      }
-      else {
+      } else {
         encrypted_wallet_data = data;
         payload_checksum = this.generatePayloadChecksum();
       }
@@ -108,37 +106,37 @@ var WalletStore = (function () {
     getCounter: function () {
       return counter;
     },
-    setSyncPubKeys: function (bool){
+    setSyncPubKeys: function (bool) {
       sync_pubkeys = bool;
     },
-    isSyncPubKeys: function (){
+    isSyncPubKeys: function () {
       return sync_pubkeys;
     },
-    isSynchronizedWithServer: function (){
+    isSynchronizedWithServer: function () {
       return isSynchronizedWithServer;
     },
-    setIsSynchronizedWithServer: function (bool){
+    setIsSynchronizedWithServer: function (bool) {
       isSynchronizedWithServer = bool;
     },
-    addEventListener: function (func){
+    addEventListener: function (func) {
       event_listeners.push(func);
     },
-    sendEvent: function (event_name, obj){
+    sendEvent: function (event_name, obj) {
       for (var listener in event_listeners) {
         event_listeners[listener](event_name, obj);
       }
     },
-    isCorrectMainPassword: function (candidate){
+    isCorrectMainPassword: function (candidate) {
       return password === candidate;
     },
-    changePassword: function (new_password, success, error){
+    changePassword: function (new_password, success, error) {
       password = new_password;
       MyWallet.syncWallet(success, error);
     },
-    unsafeSetPassword: function (newPassword){
+    unsafeSetPassword: function (newPassword) {
       password = newPassword;
     },
-    getPassword: function (){
+    getPassword: function () {
       return password;
     },
     getLogoutTime: function () {

@@ -3,19 +3,18 @@
 module.exports = new RNG();
 
 var randomBytes = require('randombytes');
-var API         = require('./api');
-var Buffer      = require('buffer').Buffer;
-var assert      = require('assert');
-var Helpers     = require('./helpers');
+var API = require('./api');
+var Buffer = require('buffer').Buffer;
+var assert = require('assert');
+var Helpers = require('./helpers');
 
 function RNG () {
-  this.ACTION    = 'GET';
+  this.ACTION = 'GET';
   // API is undefined at this point
-  // this.URL       = API.API_ROOT_URL + 'v2/randombytes'
-  this.FORMAT    = 'hex';  // raw, hex, base64
-  this.BYTES     = 32;
+  // this.URL = API.API_ROOT_URL + 'v2/randombytes'
+  this.FORMAT = 'hex';  // raw, hex, base64
+  this.BYTES = 32;
 }
-
 
 // xor :: Buffer -> Buffer -> Buffer
 RNG.prototype.xor = function (a, b) {
@@ -51,11 +50,11 @@ RNG.prototype.run = function (nBytes) {
     );
 
     assert(
-      !Array.prototype.every.call(serverH, function (b) { return b === serverH[0] }),
+      !Array.prototype.every.call(serverH, function (b) { return b === serverH[0]; }),
       'The server entropy should not be the same byte repeated.'
     );
     assert(
-      !Array.prototype.every.call(localH, function (b) { return b === localH[0] }),
+      !Array.prototype.every.call(localH, function (b) { return b === localH[0]; }),
       'The browser entropy should not be the same byte repeated.'
     );
     assert(
@@ -66,7 +65,7 @@ RNG.prototype.run = function (nBytes) {
     var combinedH = this.xor(localH, serverH);
 
     assert(
-      !Array.prototype.every.call(combinedH, function (b) { return b === combinedH[0] }),
+      !Array.prototype.every.call(combinedH, function (b) { return b === combinedH[0]; }),
       'The combined entropy should not be the same byte repeated.'
     );
     assert(
@@ -75,7 +74,6 @@ RNG.prototype.run = function (nBytes) {
     );
 
     return combinedH;
-
   } catch (e) {
     console.log('Error: RNG.run');
     console.log(e);
@@ -93,8 +91,7 @@ RNG.prototype.getServerEntropy = function (nBytes) {
   nBytes = Helpers.isPositiveInteger(nBytes) ? nBytes : this.BYTES;
   var request = new XMLHttpRequest();
   var data = { bytes: nBytes, format: this.FORMAT };
-  var url = API.API_ROOT_URL + 'v2/randombytes'
- + '?' + API.encodeFormData(data);
+  var url = API.API_ROOT_URL + 'v2/randombytes' + '?' + API.encodeFormData(data);
 
   request.open(this.ACTION, url, false);
   request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
@@ -114,8 +111,7 @@ RNG.prototype.getServerEntropy = function (nBytes) {
     );
 
     return B;
-  }
-  else {
+  } else {
     throw 'Received not ok status: ' + request.status;
   }
 };

@@ -10,16 +10,17 @@ function postTokenEndpoint (method, token, extraParams) {
   assert(extraParams, 'Extra params dictionary required');
 
   var handleResponse = function (res) {
-    if (res && res.success !== undefined)
+    if (res && res.success !== undefined) {
       return res.success ? res : Promise.reject(res);
-    else
-      return Promise.reject({ error: 'TOKEN_ENDPOINT_UNEXPECTED_RESPONSE' });
+    } else {
+      return Promise.reject({error: 'TOKEN_ENDPOINT_UNEXPECTED_RESPONSE'});
+    }
   };
 
   var params = {
     token: token,
-    method : method,
-    api_code : API.API_CODE
+    method: method,
+    api_code: API.API_CODE
   };
 
   for (var k in extraParams) {

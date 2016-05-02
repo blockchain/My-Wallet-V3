@@ -1,12 +1,10 @@
 'use strict';
 
 module.exports = Tx;
-////////////////////////////////////////////////////////////////////////////////
-var Helpers     = require('./helpers');
-var MyWallet    = require('./wallet');
-var WalletStore = require('./wallet-store');
-////////////////////////////////////////////////////////////////////////////////
-function Tx (object){
+
+var MyWallet = require('./wallet');
+
+function Tx (object) {
   var obj = object || {};
   // original properties
   var setConfirmations = function (tx_block_height) {
@@ -16,35 +14,35 @@ function Tx (object){
       conf = lastBlock.height - tx_block_height + 1;
     }
     return conf;
-  }
+  };
 
-  this.balance          = obj.balance;
-  this.block_height     = obj.block_height;
-  this.hash             = obj.hash;
-  this.inputs           = obj.inputs || [];
-  this.lock_time        = obj.lock_time;
-  this.out              = obj.out  || [];
-  this.relayed_by       = obj.relayed_by;
-  this._result          = obj.result;
-  this.size             = obj.size;
-  this.time             = obj.time;
-  this.tx_index         = obj.tx_index;
-  this.ver              = obj.ver;
-  this.vin_sz           = obj.vin_sz;
-  this.vout_sz          = obj.vout_sz;
-  this.double_spend     = obj.double_spend;
-  this.publicNote       = obj.note;
-  this.note             = MyWallet.wallet.getNote(this.hash);
-  this.confirmations    = setConfirmations(this.block_height);
+  this.balance = obj.balance;
+  this.block_height = obj.block_height;
+  this.hash = obj.hash;
+  this.inputs = obj.inputs || [];
+  this.lock_time = obj.lock_time;
+  this.out = obj.out || [];
+  this.relayed_by = obj.relayed_by;
+  this._result = obj.result;
+  this.size = obj.size;
+  this.time = obj.time;
+  this.tx_index = obj.tx_index;
+  this.ver = obj.ver;
+  this.vin_sz = obj.vin_sz;
+  this.vout_sz = obj.vout_sz;
+  this.double_spend = obj.double_spend;
+  this.publicNote = obj.note;
+  this.note = MyWallet.wallet.getNote(this.hash);
+  this.confirmations = setConfirmations(this.block_height);
 
   // computed properties
   var initialOut = {
-      taggedOuts: []
-    , toWatchOnly: false
-    , totalOut: 0
-    , internalReceive: 0
-    , changeAmount: 0
-  }
+    taggedOuts: [],
+    toWatchOnly: false,
+    totalOut: 0,
+    internalReceive: 0,
+    changeAmount: 0
+  };
   var pouts = this.out.reduce(procOuts, initialOut);
   this.processedOutputs = pouts.taggedOuts;
   this.toWatchOnly = pouts.toWatchOnly;
@@ -53,16 +51,16 @@ function Tx (object){
   this.changeAmount = pouts.changeAmount;
 
   var initialIn = {
-      taggedIns: []
-    , fromWatchOnly: false
-    , totalIn: 0
-    , internalSpend: 0
-  }
+    taggedIns: [],
+    fromWatchOnly: false,
+    totalIn: 0,
+    internalSpend: 0
+  };
   var pins = this.inputs.reduce(procIns.bind(this), initialIn);
   this.processedInputs = pins.taggedIns;
-  this.totalIn        = pins.totalIn;
-  this.internalSpend  = pins.internalSpend;
-  this.fromWatchOnly  = pins.fromWatchOnly;
+  this.totalIn = pins.totalIn;
+  this.internalSpend = pins.internalSpend;
+  this.fromWatchOnly = pins.fromWatchOnly;
 
   this.fee = isCoinBase(this.inputs[0]) ? 0 : this.totalIn - this.totalOut;
   this.result = this._result ? this._result : this.internalReceive - this.internalSpend;
@@ -81,7 +79,7 @@ Object.defineProperties(Tx.prototype, {
   }
 });
 
-function procOuts(acc, output) {
+function procOuts (acc, output) {
   var tagOut = tagCoin(output);
   acc.taggedOuts.push(tagOut);
   if (tagOut.isWatchOnly) {
@@ -98,11 +96,11 @@ function procOuts(acc, output) {
   return acc;
 }
 
-function procIns(acc, input) {
+function procIns (acc, input) {
   var f = tagCoin.compose(unpackInput.bind(this));
   var tagIn = f(input);
   acc.taggedIns.push(tagIn);
-  acc.fromWatchOnly =  acc.fromWatchOnly || tagIn.isWatchOnly || false;
+  acc.fromWatchOnly = acc.fromWatchOnly || tagIn.isWatchOnly || false;
   if (tagIn.coinType !== 'external') {
     acc.internalSpend = acc.internalSpend + tagIn.amount;
   }
@@ -110,7 +108,7 @@ function procIns(acc, input) {
   return acc;
 }
 
-function belongsTo(tx, id) {
+function belongsTo (tx, id) {
   return tx.processedInputs.concat(tx.processedOutputs).some(function (p) { return p.identity == id; });
 }
 // var memoizedBelongsTo = Helpers.memoize(belongsTo);
@@ -127,7 +125,7 @@ function isAccountChange (x) {
   return (isAccount(x) && x.xpub.path.split('/')[1] === '1');
 }
 
-function accountPath (x){
+function accountPath (x) {
   return account(x).index + x.xpub.path.substr(1);
 }
 
@@ -184,7 +182,7 @@ function unpackInput (input) {
   }
 }
 
-function computeAmount(Tx) {
+function computeAmount (Tx) {
   var am = 0;
   switch (Tx.txType) {
     case 'transfer':
@@ -202,7 +200,7 @@ function computeAmount(Tx) {
   return am;
 }
 
-function computeTxType(Tx) {
+function computeTxType (Tx) {
   var v = null;
   var impactNoFee = Tx.result + Tx.fee;
   switch (true) {
@@ -216,7 +214,7 @@ function computeTxType(Tx) {
       v = 'received';
       break;
     default:
-      v = 'complex'
+      v = 'complex';
   }
   return v;
 }
@@ -225,23 +223,22 @@ function isCoinBase (input) {
   return (input == null || input.prev_out == null || input.prev_out.addr == null);
 }
 
-Tx.factory = function (o){
+Tx.factory = function (o) {
   if (o instanceof Object && !(o instanceof Tx)) {
     return new Tx(o);
-  }
-  else { return o; }
+  } else { return o; }
 };
 
-Tx.IOSfactory = function (tx){
+Tx.IOSfactory = function (tx) {
   return {
-    time          : tx.time,
-    result        : tx.result,
-    amount        : tx.amount,
-    confirmations : tx.confirmations,
-    myHash        : tx.hash,
-    txType        : tx.txType,
-    block_height  : tx.block_height,
-    fromWatchOnly : tx.fromWatchOnly,
-    toWatchOnly   : tx.toWatchOnly,
+    time: tx.time,
+    result: tx.result,
+    amount: tx.amount,
+    confirmations: tx.confirmations,
+    myHash: tx.hash,
+    txType: tx.txType,
+    block_height: tx.block_height,
+    fromWatchOnly: tx.fromWatchOnly,
+    toWatchOnly: tx.toWatchOnly
   };
 };

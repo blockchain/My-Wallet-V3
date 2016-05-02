@@ -1,6 +1,5 @@
 'use strict';
 
-var assert = require('assert');
 var Bitcoin = require('bitcoinjs-lib');
 var BigInteger = require('bigi');
 var Base58 = require('bs58');
@@ -10,8 +9,7 @@ var WalletCrypto = require('./wallet-crypto');
 var hash256 = Bitcoin.crypto.hash256;
 
 var ImportExport = new function () {
-
-  this.parseBIP38toECPair = function(base58Encrypted, passphrase, success, wrong_password, error) {
+  this.parseBIP38toECPair = function (base58Encrypted, passphrase, success, wrong_password, error) {
     var hex;
 
     // Unicode NFC normalization
@@ -68,7 +66,7 @@ var ImportExport = new function () {
     var decrypted;
     var AES_opts = { mode: WalletCrypto.AES.ECB, padding: WalletCrypto.pad.NoPadding };
 
-    var verifyHashAndReturn = function() {
+    var verifyHashAndReturn = function () {
       var tmpkey = new Bitcoin.ECPair(decrypted, null, {compressed: isCompPoint});
 
       var base58Address = tmpkey.getAddress();
@@ -86,10 +84,9 @@ var ImportExport = new function () {
       var addresshash = Buffer(hex.slice(3, 7));
 
       ImportExport.Crypto_scrypt(passphrase, addresshash, 16384, 8, 8, 64, function (derivedBytes) {
+        var k = derivedBytes.slice(32, 32 + 32);
 
-        var k = derivedBytes.slice(32, 32+32);
-
-        var decryptedBytes = WalletCrypto.AES.decrypt(Buffer(hex.slice(7, 7+32)), k, null, AES_opts);
+        var decryptedBytes = WalletCrypto.AES.decrypt(Buffer(hex.slice(7, 7 + 32)), k, null, AES_opts);
         for (var x = 0; x < 32; x++) { decryptedBytes[x] ^= derivedBytes[x]; }
 
         decrypted = BigInteger.fromBuffer(decryptedBytes);
@@ -97,11 +94,10 @@ var ImportExport = new function () {
         verifyHashAndReturn();
       });
     } else {
-      var ownerentropy = hex.slice(7, 7+8);
+      var ownerentropy = hex.slice(7, 7 + 8);
       var ownersalt = Buffer(!hasLotSeq ? ownerentropy : ownerentropy.slice(0, 4));
 
       ImportExport.Crypto_scrypt(passphrase, ownersalt, 16384, 8, 8, 32, function (prefactorA) {
-
         var passfactor;
 
         if (!hasLotSeq) {
@@ -115,24 +111,24 @@ var ImportExport = new function () {
 
         var passpoint = kp.getPublicKeyBuffer();
 
-        var encryptedpart2 = Buffer(hex.slice(23, 23+16));
+        var encryptedpart2 = Buffer(hex.slice(23, 23 + 16));
 
-        var addresshashplusownerentropy = Buffer(hex.slice(3, 3+12));
+        var addresshashplusownerentropy = Buffer(hex.slice(3, 3 + 12));
 
         ImportExport.Crypto_scrypt(passpoint, addresshashplusownerentropy, 1024, 1, 1, 64, function (derived) {
           var k = derived.slice(32);
 
           var unencryptedpart2Bytes = WalletCrypto.AES.decrypt(encryptedpart2, k, null, AES_opts);
 
-          for (var i = 0; i < 16; i++) { unencryptedpart2Bytes[i] ^= derived[i+16]; }
+          for (var i = 0; i < 16; i++) { unencryptedpart2Bytes[i] ^= derived[i + 16]; }
 
-          var encryptedpart1 = Buffer.concat([Buffer(hex.slice(15, 15+8)), Buffer(unencryptedpart2Bytes.slice(0, 0+8))]);
+          var encryptedpart1 = Buffer.concat([Buffer(hex.slice(15, 15 + 8)), Buffer(unencryptedpart2Bytes.slice(0, 0 + 8))]);
 
           var unencryptedpart1Bytes = WalletCrypto.AES.decrypt(encryptedpart1, k, null, AES_opts);
 
-          for (var i = 0; i < 16; i++) { unencryptedpart1Bytes[i] ^= derived[i]; }
+          for (var ii = 0; ii < 16; ii++) { unencryptedpart1Bytes[ii] ^= derived[ii]; }
 
-          var seedb = Buffer.concat([Buffer(unencryptedpart1Bytes.slice(0, 0+16)), Buffer(unencryptedpart2Bytes.slice(8, 8+8))]);
+          var seedb = Buffer.concat([Buffer(unencryptedpart1Bytes.slice(0, 0 + 16)), Buffer(unencryptedpart2Bytes.slice(8, 8 + 8))]);
 
           var factorb = hash256(seedb);
 
@@ -147,9 +143,7 @@ var ImportExport = new function () {
     }
   };
 
-
   var MAX_VALUE = 2147483647;
-  var workerUrl = null;
 
   this.Crypto_scrypt = function (passwd, salt, N, r, p, dkLen, callback) {
     if (N == 0 || (N & (N - 1)) != 0) throw Error('N must be > 0 and a power of 2');
@@ -157,11 +151,11 @@ var ImportExport = new function () {
     if (N > MAX_VALUE / 128 / r) throw Error('Parameter N is too large');
     if (r > MAX_VALUE / 128 / p) throw Error('Parameter r is too large');
 
-    if(!Buffer.isBuffer(passwd)) {
+    if (!Buffer.isBuffer(passwd)) {
       passwd = new Buffer(passwd, 'utf8');
     }
 
-    if(!Buffer.isBuffer(salt)) {
+    if (!Buffer.isBuffer(salt)) {
       salt = new Buffer(salt, 'utf8');
     }
 
@@ -178,12 +172,16 @@ var ImportExport = new function () {
 
     // using this function to enclose everything needed to create a worker (but also invokable directly for synchronous use)
     function scryptCore () {
-      var XY = [], V = [];
+      var XY = [];
+      var V = [];
 
       if (typeof B === 'undefined') {
         onmessage = function (event) {
           var data = event.data;
-          var N = data[0], r = data[1], p = data[2], B = data[3], i = data[4];
+          var N = data[0];
+          var r = data[1];
+          var B = data[3];
+          var i = data[4];
 
           var Bslice = [];
           arraycopy32(B, i * 128 * r, Bslice, 0, 128 * r);
@@ -192,7 +190,7 @@ var ImportExport = new function () {
           postMessage([i, Bslice]);
         };
       } else {
-        for(var i = 0; i < p; i++) {
+        for (var i = 0; i < p; i++) {
           smix(B, i * 128 * r, r, N, V, XY);
         }
       }
@@ -245,11 +243,11 @@ var ImportExport = new function () {
 
       function salsa20_8 (B) {
         var B32 = new Array(32);
-        var x   = new Array(32);
+        var x = new Array(32);
         var i;
 
         for (i = 0; i < 16; i++) {
-          B32[i]  = (B[i * 4 + 0] & 0xff) << 0;
+          B32[i] = (B[i * 4 + 0] & 0xff) << 0;
           B32[i] |= (B[i * 4 + 1] & 0xff) << 8;
           B32[i] |= (B[i * 4 + 2] & 0xff) << 16;
           B32[i] |= (B[i * 4 + 3] & 0xff) << 24;
@@ -258,6 +256,7 @@ var ImportExport = new function () {
         arraycopy(B32, 0, x, 0, 16);
 
         for (i = 8; i > 0; i -= 2) {
+          /*eslint-disable */
           x[ 4] ^= R(x[ 0]+x[12], 7);  x[ 8] ^= R(x[ 4]+x[ 0], 9);
           x[12] ^= R(x[ 8]+x[ 4],13);  x[ 0] ^= R(x[12]+x[ 8],18);
           x[ 9] ^= R(x[ 5]+x[ 1], 7);  x[13] ^= R(x[ 9]+x[ 5], 9);
@@ -274,21 +273,22 @@ var ImportExport = new function () {
           x[ 9] ^= R(x[ 8]+x[11],13);  x[10] ^= R(x[ 9]+x[ 8],18);
           x[12] ^= R(x[15]+x[14], 7);  x[13] ^= R(x[12]+x[15], 9);
           x[14] ^= R(x[13]+x[12],13);  x[15] ^= R(x[14]+x[13],18);
+          /*eslint-enable */
         }
 
         for (i = 0; i < 16; ++i) B32[i] = x[i] + B32[i];
 
         for (i = 0; i < 16; i++) {
           var bi = i * 4;
-          B[bi + 0] = (B32[i] >> 0  & 0xff);
-          B[bi + 1] = (B32[i] >> 8  & 0xff);
+          B[bi + 0] = (B32[i] >> 0 & 0xff);
+          B[bi + 1] = (B32[i] >> 8 & 0xff);
           B[bi + 2] = (B32[i] >> 16 & 0xff);
           B[bi + 3] = (B32[i] >> 24 & 0xff);
         }
       }
 
       function blockxor (S, Si, D, Di, len) {
-        var i = len>>6;
+        var i = len >> 6;
         while (i--) {
           D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
           D[Di++] ^= S[Si++]; D[Di++] ^= S[Si++];
@@ -337,7 +337,7 @@ var ImportExport = new function () {
 
         bi += (2 * r - 1) * 64;
 
-        n  = (B[bi + 0] & 0xff) << 0;
+        n = (B[bi + 0] & 0xff) << 0;
         n |= (B[bi + 1] & 0xff) << 8;
         n |= (B[bi + 2] & 0xff) << 16;
         n |= (B[bi + 3] & 0xff) << 24;
@@ -346,14 +346,14 @@ var ImportExport = new function () {
       }
 
       function arraycopy (src, srcPos, dest, destPos, length) {
-        while (length-- ){
+        while (length--) {
           dest[destPos++] = src[srcPos++];
         }
       }
 
       function arraycopy32 (src, srcPos, dest, destPos, length) {
-        var i = length>>5;
-        while(i--) {
+        var i = length >> 5;
+        while (i--) {
           dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
           dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
           dest[destPos++] = src[srcPos++]; dest[destPos++] = src[srcPos++];
@@ -377,7 +377,6 @@ var ImportExport = new function () {
       }
     } // scryptCore
   };
-
 };
 
 module.exports = ImportExport;

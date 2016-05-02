@@ -1,12 +1,11 @@
 'use strict';
 
 module.exports = KeyChain;
-////////////////////////////////////////////////////////////////////////////////
+
 var Bitcoin = require('bitcoinjs-lib');
-var assert  = require('assert');
+var assert = require('assert');
 var Helpers = require('./helpers');
 
-////////////////////////////////////////////////////////////////////////////////
 // keychain
 function KeyChain (extendedKey, index, cache) {
   this._chainRoot = null;
@@ -23,7 +22,7 @@ function KeyChain (extendedKey, index, cache) {
 Object.defineProperties(KeyChain.prototype, {
   'xpub': {
     configurable: false,
-    get: function () { return this._chainRoot ? this._chainRoot.neutered().toBase58() : null;}
+    get: function () { return this._chainRoot ? this._chainRoot.neutered().toBase58() : null; }
   },
   'isNeutered': {
     configurable: false,
@@ -42,8 +41,7 @@ KeyChain.prototype.init = function (extendedKey, index, cache) {
   // otherwise we generate it using extendedKey and index
   if (cache) {
     this._chainRoot = Bitcoin.HDNode.fromBase58(cache);
-  }
-  else {
+  } else {
     this._chainRoot = extendedKey && Helpers.isPositiveInteger(index) && index >= 0
       ? Bitcoin.HDNode.fromBase58(extendedKey).derive(index) : undefined;
   }

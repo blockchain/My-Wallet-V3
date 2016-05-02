@@ -1,26 +1,23 @@
 'use strict';
 
-var assert  = require('assert')
-  , EventEmitter  = require('events')
-  , Helpers = require('./helpers')
-  , Tx      = require('./wallet-transaction');
+var EventEmitter = require('events');
+var Helpers = require('./helpers');
+var Tx = require('./wallet-transaction');
 
 var TransactionList = function (loadNumber) {
   var DEFAULT_TX_LOAD = 50;
-  this._loadNumber    = loadNumber || DEFAULT_TX_LOAD;
-  this._transactions  = [];
-  this._events        = new EventEmitter();
+  this._loadNumber = loadNumber || DEFAULT_TX_LOAD;
+  this._transactions = [];
+  this._events = new EventEmitter();
 };
 
 Object.defineProperties(TransactionList.prototype, {
   'transactions': {
     configurable: false,
     value: function (identity) {
-      return identity == null || identity === '' ?
-        this._transactions :
-        this._transactions.filter(function (tx) {
-          return tx.belongsTo(identity);
-        });
+      return identity == null || identity === ''
+          ? this._transactions
+          : this._transactions.filter(function (tx) { return tx.belongsTo(identity); });
     }
   },
   'transactionsForIOS': {
