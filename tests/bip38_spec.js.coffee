@@ -3,91 +3,9 @@ ECPair = Bitcoin.ECPair
 BigInteger = require('bigi')
 
 ImportExport = require('../src/import-export')
+WalletCrypto = require('../src/wallet-crypto')
 
-describe "Crypto_scrypt", ->
 
-  observer =
-    callback: (hash) ->
-
-  beforeEach ->
-    # overrride as a temporary solution
-    window.setTimeout = (myFunction) -> myFunction()
-
-  # Crypto_scrypt test vectors can be found at the end of this document:
-  ## http://www.tarsnap.com/scrypt/scrypt.pdf
-
-  it "Official test vector 1 should work", ->
-    spyOn(observer, "callback")
-    expected = "77d6576238657b203b19ca42c18a0497f16b4844e3074ae8dfdffa3fede21442\
-                fcd0069ded0948f8326a753a0fc81f17e8d3e0fb2e0d3628cf35e20c38d18906"
-    ImportExport.Crypto_scrypt "", "" , 16, 1, 1, 64, observer.callback
-    expect(observer.callback).toHaveBeenCalled()
-    computed = observer.callback.calls.argsFor(0)[0].toString("hex")
-    expect(expected).toEqual(computed)
-
-  # Not using official test vectors 2-4, because they are too slow. Using
-  # Haskell generated test vectors below instead.
-
-  # Disabled because it is too slow
-  # it "Official test vector 2 should work", ->
-  #   spyOn(observer, "callback")
-  #   expected = "fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b3731\
-  #               622eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640"
-  #   ImportExport.Crypto_scrypt "password", "NaCl" , 1024, 8, 16, 64, observer.callback
-  #   expect(observer.callback).toHaveBeenCalled()
-  #   computed = observer.callback.calls.argsFor(0)[0].toString("hex")
-  #   expect(expected).toEqual(computed)
-
-  # Disabled because it is too slow
-  # it "Official test vector 3 should work", ->
-  #   spyOn(observer, "callback")
-  #   expected = "7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2\
-  #               d5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887"
-  #   ImportExport.Crypto_scrypt "pleaseletmein", "SodiumChloride", 16384, 8, 1, 64, observer.callback
-  #   expect(observer.callback).toHaveBeenCalled()
-  #   computed = observer.callback.calls.argsFor(0)[0].toString("hex")
-  #   expect(expected).toEqual(computed)
-
-  # Disabled because it is too slow and PhantomJS runs out of memory
-  # it "Official test vector 4 should work", ->
-  #   spyOn(observer, "callback")
-  #   expected = "2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa47\
-  #               8e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4"
-  #   ImportExport.Crypto_scrypt "pleaseletmein", "SodiumChloride" , 1048576, 8, 1, 64, observer.callback
-  #   expect(observer.callback).toHaveBeenCalled()
-  #   computed = observer.callback.calls.argsFor(0)[0].toString("hex")
-  #   expect(expected).toEqual(computed)
-
-  # The next test vectors for crypto scrypt have been generated using this lib:
-  ## https://hackage.haskell.org/package/scrypt-0.3.2/docs/Crypto-Scrypt.html
-
-  it "haskell generated test vector 1 should work", ->
-    spyOn(observer, "callback")
-    expected = "53019da47bc9fbdc4f719183e08d149bc1cd6b5bf3ab24df8a7c69daed193c69\
-                2d0d56d4c2af3ce3f98a317671bdb40afb15aaf4f08146cffbc4ccdd66817402"
-    ImportExport.Crypto_scrypt "suchCrypto", "soSalty" , 16, 8, 1, 64, observer.callback
-    expect(observer.callback).toHaveBeenCalled()
-    computed = observer.callback.calls.argsFor(0)[0].toString("hex")
-    expect(expected).toEqual(computed)
-
-  it "haskell generated test vector 2 should work", ->
-    spyOn(observer, "callback")
-    expected = "56f5f2c4809f3ab95ecc334e64450392bf6f1f7187653b1ba920f39b4c44b2d6\
-                b47a243c70b2c3444bc31cfec9c57893dd39fa0688bd8a5d1cdcbe08b17b432b"
-    ImportExport.Crypto_scrypt "ΜΟΛΩΝ", "ΛΑΒΕ" , 32, 4, 4, 64, observer.callback
-    expect(observer.callback).toHaveBeenCalled()
-    computed = observer.callback.calls.argsFor(0)[0].toString("hex")
-    expect(expected).toEqual(computed)
-
-  it "haskell generated test vector 3 should work", ->
-    spyOn(observer, "callback")
-    expected = "f890a6beae1dc3f627f9d9bcca8a96950b11758beb1edf1b072c8b8522d15562\
-                9db68aba34619e1ae45b4b6b2917bcb8fd1698b536124df69d5c36d7f28fbe0e"
-    ImportExport.Crypto_scrypt "ϓ␀𐐀💩", "ϓ␀𐐀💩" , 64, 2, 2, 64, observer.callback
-    expect(observer.callback).toHaveBeenCalled()
-    computed = observer.callback.calls.argsFor(0)[0].toString("hex")
-    expect(expected).toEqual(computed)
-################################################################################
 describe "BIP38", ->
 
   observer =
@@ -104,7 +22,7 @@ describe "BIP38", ->
     localStorage.clear()
 
     # mock used inside parseBIP38toECPair
-    spyOn(ImportExport, "Crypto_scrypt").and.callFake(
+    spyOn(WalletCrypto, "scrypt").and.callFake(
       (password, salt, N, r, p, dkLen, callback) ->
         # preimages of Crypto_scrypt
         wrongPassword = "WRONG_PASSWORD" + "e957a24a" + "16384" + "8" + "8" + "64"
@@ -239,7 +157,7 @@ describe "BIP38", ->
 
       ImportExport.parseBIP38toECPair  pk ,pw ,observer.success, observer.wrong_password
 
-      expect(ImportExport.Crypto_scrypt).toHaveBeenCalled()
+      expect(WalletCrypto.scrypt).toHaveBeenCalled()
 
       # Doesn't work:
       # expect(observer.success).toHaveBeenCalledWith(k)
