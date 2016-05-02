@@ -74,13 +74,6 @@ describe "Helpers", ->
       expect(Helpers.and(1, 1)).toBeTruthy()
       expect(Helpers.and(0, 0)).toBeFalsy()
 
-  describe "or", ->
-    it "should work", ->
-      expect(Helpers.or(0, 1)).toBeTruthy()
-      expect(Helpers.or(1, 0)).toBeTruthy()
-      expect(Helpers.or(1, 1)).toBeTruthy()
-      expect(Helpers.or(0, 0)).toBeFalsy()
-
   describe "isBitcoinPrivateKey", ->
     it "should recognize valid private keys", ->
       expect(Helpers.isBitcoinPrivateKey("5JFXNQvtFZSobCCRPxnTZiW1PDVnXvGBg5XeuUDoUCi8LRsV3gn")).toBeTruthy()
@@ -377,3 +370,21 @@ describe "Helpers", ->
     it "should recognize BIP-38 keys", ->
       expect(Helpers.isValidPrivateKey("6PRMUxAWM4XyK8b3wyJRpTwvDdmCKakuP6aGxr3D8MuUaCWVLXM2wnGUCT")).toBeTruthy()
       expect(Helpers.isValidPrivateKey("6PRVWUbkzzsbcVac2qwfssoUJAN1Xhrg6bNk8J7Nzm5H7kxEbn2Nh2ZoGg")).toBeTruthy()
+
+  describe "verifyMessage", ->
+
+    it "should verify valid messages", ->
+      expect(Helpers.verifyMessage("1LGAzcG9dafqtW8eHkFUPjkDKemjv5dxKd", "HxvX3mVUI4cQgpKB98bjl/NOYi2BiaSZEsdfCulyJ7GAWrfP/9WkDazCe45lyhWPZQwZKnYZILz5h3SHn4xFPzg=", "Wright, it is not the same as if I sign Craig Wright, Satoshi.")).toBeTruthy()
+
+    it "should not verify invalid messages", ->
+      expect(Helpers.verifyMessage("12cbQLTFMXRnSzktFkuoG3eHoMeFtpTu3S", "IH+xpXCKouEcd0E8Hv3NkrYWbhq0P7pAQpI1GcQ2hF2AAsqL2o4agDE8V81i071/bTMz00YKw2YRMoyFMzThZwM=", "Wright, it is not the same as if I sign Craig Wright, Satoshi.")).toBeFalsy()
+
+
+  describe "precisionToSatoshiBN", ->
+
+    it "should parse valid strings with fractional values", ->
+      expect(Helpers.precisionToSatoshiBN("21.0349756").intValue()).toEqual(new BigInteger("2103497560").intValue())
+
+
+    it "should parse valid strings with fractional values", ->
+      expect(Helpers.precisionToSatoshiBN("1").intValue()).toEqual(new BigInteger("100000000").intValue())
