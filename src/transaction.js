@@ -137,6 +137,24 @@ Transaction.prototype.sign = function () {
   return transaction;
 };
 
+
+function sortUnspentOutputs (unspentOutputs) {
+  var unspent = [];
+
+  for (var key in unspentOutputs) {
+    var output = unspentOutputs[key];
+    if (!output.pending) {
+      unspent.push(output);
+    }
+  }
+
+  unspent.sort(function (o1, o2){
+    return o2.value - o1.value;
+  });
+
+  return unspent;
+}
+
 Transaction.inputCost = function (feePerKb) {
   return Math.ceil(feePerKb * 0.148);
 };
