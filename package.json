@@ -29,6 +29,9 @@
     "disc:min": "browserify --full-paths index.js | uglifyjs | discify --open",
     "test": "./node_modules/karma/bin/karma start karma.conf.js"
   },
+  "browser": {
+    "ws": "./src/ws-browser.js"
+  },
   "dependencies": {
     "bigi": "1.4.*",
     "bip39": "2.1.*",
@@ -39,7 +42,7 @@
     "randombytes": "^2.0.1",
     "sjcl": "1.0.*",
     "unorm": "^1.4.1",
-    "ws": "0.8.*"
+    "ws": "1.1.*"
   },
   "devDependencies": {
     "browserify": "13.*",
