@@ -4,6 +4,7 @@ Address    = undefined
 Wallet     = undefined
 HDWallet   = undefined
 WalletStore = undefined
+BlockchainSettingsAPI = undefined
 
 describe "Blockchain-Wallet", ->
   wallet = undefined
@@ -98,6 +99,23 @@ describe "Blockchain-Wallet", ->
       getTransaction: (hash) -> walletStoreTxs.filter(
         (tx) -> tx.hash == hash
       )[0]
+      setSyncPubKeys: (boolean) ->
+    }
+
+    BlockchainSettingsAPI = {
+      shouldFail: false
+      enableEmailReceiveNotifications: (success, error) ->
+        if BlockchainSettingsAPI.shouldFail
+          error()
+        else
+          success()
+
+      disableAllNotifications: (success, error) ->
+        if BlockchainSettingsAPI.shouldFail
+          error()
+        else
+          success()
+
     }
 
     stubs = {
@@ -105,8 +123,10 @@ describe "Blockchain-Wallet", ->
       './address' : Address,
       './helpers' : Helpers,
       './hd-wallet': HDWallet,
-      './wallet-store' : WalletStore
+      './wallet-store' : WalletStore,
+      './blockchain-settings-api': BlockchainSettingsAPI,
     }
+
     Wallet = proxyquire('../src/blockchain-wallet', stubs)
 
     spyOn(MyWallet, "syncWallet").and.callThrough()
@@ -424,10 +444,24 @@ describe "Blockchain-Wallet", ->
             expect(MyWallet.syncWallet).toHaveBeenCalled()
 
 
-      it ".deleteLegacyAddress", ->
-        wallet.deleteLegacyAddress(wallet.keys[0])
-        expect(wallet.keys.length).toEqual(2)
-        expect(MyWallet.syncWallet).toHaveBeenCalled()
+      describe ".deleteLegacyAddress", ->
+
+        it "should delete existing legacy addresses", ->
+          expect(wallet.deleteLegacyAddress(wallet.keys[0])).toBeTruthy()
+          expect(wallet.keys.length).toEqual(2)
+          expect(MyWallet.syncWallet).toHaveBeenCalled()
+
+        it "should do nothing when trying to delete non existing legacy addresses", ->
+          expect(wallet.keys.length).toEqual(3)
+          expect(wallet.deleteLegacyAddress(Address.new("testing"))).toBeFalsy()
+          expect(wallet.keys.length).toEqual(3)
+          expect(MyWallet.syncWallet).not.toHaveBeenCalled()
+
+        it "should do nothing with bad arguments", ->
+          expect(wallet.keys.length).toEqual(3)
+          expect(wallet.deleteLegacyAddress("1KM7w12SkjzJ1FYV2g1UCMzHjv3pkMgkEb")).toBeFalsy()
+          expect(wallet.keys.length).toEqual(3)
+          expect(MyWallet.syncWallet).not.toHaveBeenCalled()
 
       it ".validateSecondPassword", ->
         wallet.encrypt("batteryhorsestaple")
@@ -518,8 +552,35 @@ describe "Blockchain-Wallet", ->
           wallet.newHDWallet("ACC-LABEL", null, cb.success, cb.error)
           expect(cb.error).toHaveBeenCalled()
 
-      it ".newAccount", ->
-        pending()
+      describe ".newAccount", ->
+        cb =
+          success: () ->
+
+        beforeEach ->
+          spyOn(cb, "success")
+
+        it "should do nothing for a wallet that hasn't been upgraded", ->
+          wallet = new Wallet()
+          expect(wallet.newAccount("Coffee fund")).toBeFalsy()
+
+        it "should use the first hdwallet if no index is provided", ->
+          expect(wallet.newAccount("Coffee fund")).toEqual(wallet._hd_wallets[0].lastAccount)
+          expect(MyWallet.syncWallet).toHaveBeenCalled()
+
+        it "should call the success callback if provided", ->
+          wallet.newAccount("Coffee fund", undefined, 0, cb.success)
+          expect(cb.success).toHaveBeenCalled()
+          expect(MyWallet.syncWallet).toHaveBeenCalled()
+
+        it "should not call syncWallet if nosave is set to true", ->
+          wallet.newAccount("Coffee fund", undefined, 0, cb.success, true)
+          expect(MyWallet.syncWallet).not.toHaveBeenCalled()
+
+        it "should work with encrypted wallets", ->
+          wallet.encrypt("batteryhorsestaple")
+          wallet.newAccount("Coffee fund", "batteryhorsestaple", 0, cb.success)
+          expect(cb.success).toHaveBeenCalled()
+          expect(MyWallet.syncWallet).toHaveBeenCalled()
 
       it ".getPaidTo", ->
         pending()
@@ -673,3 +734,58 @@ describe "Blockchain-Wallet", ->
         wallet.encrypt("batteryhorsestaple")
 
         expect(wallet._getPrivateKey(0, 'M/0/14', 'batteryhorsestaple')).toEqual('KzP1z5HqMg5KAjgoqnkpszjXHo3bCnjxGAdb59fnE2bkSqfCTdyR')
+
+    describe "notifications", ->
+      cb =
+        success: () ->
+        error: () ->
+
+      beforeEach ->
+        spyOn(cb, "success")
+        spyOn(cb, "error")
+        spyOn(WalletStore, "setSyncPubKeys")
+        BlockchainSettingsAPI.shouldFail = false
+
+      describe ".enableNotifications", ->
+
+        it "should require success and error callbacks", ->
+          expect(() -> wallet.enableNotifications()).toThrow()
+          expect(() -> wallet.enableNotifications(cb.success)).toThrow()
+          expect(() -> wallet.enableNotifications(cb.success, cb.error)).not.toThrow()
+
+        it "should call setSyncPubKeys and syncWallet if successful", ->
+          wallet.enableNotifications(cb.success, cb.error)
+          expect(MyWallet.syncWallet).toHaveBeenCalled()
+          expect(WalletStore.setSyncPubKeys).toHaveBeenCalledWith(true)
+          expect(cb.success).toHaveBeenCalled()
+          expect(cb.error).not.toHaveBeenCalled()
+
+        it "should not call setSyncPubKeys and syncWallet if successful", ->
+          BlockchainSettingsAPI.shouldFail = true
+          wallet.enableNotifications(cb.success, cb.error)
+          expect(MyWallet.syncWallet).not.toHaveBeenCalled()
+          expect(WalletStore.setSyncPubKeys).not.toHaveBeenCalled()
+          expect(cb.success).not.toHaveBeenCalled()
+          expect(cb.error).toHaveBeenCalled()
+
+      describe ".disableNotifications", ->
+
+        it "should require success and error callbacks", ->
+          expect(() -> wallet.disableNotifications()).toThrow()
+          expect(() -> wallet.disableNotifications(cb.success)).toThrow()
+          expect(() -> wallet.disableNotifications(cb.success, cb.error)).not.toThrow()
+
+        it "should call setSyncPubKeys and syncWallet if successful", ->
+          wallet.disableNotifications(cb.success, cb.error)
+          expect(MyWallet.syncWallet).toHaveBeenCalled()
+          expect(WalletStore.setSyncPubKeys).toHaveBeenCalledWith(false)
+          expect(cb.success).toHaveBeenCalled()
+          expect(cb.error).not.toHaveBeenCalled()
+
+        it "should not call setSyncPubKeys and syncWallet if successful", ->
+          BlockchainSettingsAPI.shouldFail = true
+          wallet.disableNotifications(cb.success, cb.error)
+          expect(MyWallet.syncWallet).not.toHaveBeenCalled()
+          expect(WalletStore.setSyncPubKeys).not.toHaveBeenCalled()
+          expect(cb.success).not.toHaveBeenCalled()
+          expect(cb.error).toHaveBeenCalled()
