@@ -401,8 +401,13 @@ function parseValueBitcoin (valueString) {
   return value;
 }
 
+// The current 'shift' value - BTC = 1, mBTC = 3, uBTC = 6
+function sShift (symbol) {
+  return (shared.satoshi / symbol.conversion).toString().length - 1;
+}
+
 Helpers.precisionToSatoshiBN = function (x) {
-  return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, shared.sShift(shared.getBTCSymbol())).toString()));
+  return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, sShift(shared.getBTCSymbol())).toString()));
 };
 
 Helpers.verifyMessage = function (address, signature, message) {
