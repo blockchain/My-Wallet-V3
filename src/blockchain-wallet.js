@@ -509,7 +509,7 @@ Wallet.prototype.newLegacyAddress = function (label, pw, success, error) {
 
 Wallet.prototype.deleteLegacyAddress = function (a) {
   assert(a, 'Error: address needed');
-  if (typeof this._addresses === 'object') {
+  if (this.containsLegacyAddress(a)) {
     delete this._addresses[a.address];
     MyWallet.syncWallet();
     return true;
