@@ -3,12 +3,6 @@ var symbol_btc = {code: 'BTC', symbol: 'BTC', name: 'Bitcoin', conversion: satos
 var symbol_local = {'conversion': 0, 'symbol': '$', 'name': 'U.S. dollar', 'symbolAppearsAfter': false, 'local': true, 'code': 'USD'}; // Users local currency object
 var symbol = symbol_btc; // Active currency object
 var resource = 'Resources/';
-var war_checksum;
-var min = true; // whether to load minified scripts
-var APP_VERSION = '3.0'; // Need some way to set this dynamically
-var APP_NAME = 'javascript_web';
-var IMPORTED_APP_NAME = 'external'; // Need some way to set this dynamically
-var IMPORTED_APP_VERSION = '0';
 
 module.exports = {
   APP_NAME: 'javascript_web',
@@ -18,8 +12,7 @@ module.exports = {
   satoshi: satoshi,
   setLocalSymbol: setLocalSymbol,
   setBTCSymbol: setBTCSymbol,
-  playSound: playSound,
-  sShift: sShift
+  playSound: playSound
 };
 
 function setLocalSymbol (new_symbol) {
@@ -79,8 +72,4 @@ try {
     }
   }
 } catch (e) {
-}
-// The current 'shift' value - BTC = 1, mBTC = 3, uBTC = 6
-function sShift (symbol) {
-  return (satoshi / symbol.conversion).toString().length - 1;
 }
