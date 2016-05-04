@@ -204,7 +204,7 @@ Helpers.scorePassword = function (password) {
     [0.25, /^[a-z\s]+[._!\- @*#]$/],
     [0.25, /^[A-Z\s]+[._!\- @*#]$/],
     [0.5, /^[a-zA-Z\s]+[._!\- @*#]$/],
-    [0.25, /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]+$/],
+    [0, /^[a-zA-Z0-9_]+@[a-zA-Z0-9]+\.[a-zA-Z]+$/],  // email must always score bad
     [1, /^.*$/]
   ];
 
