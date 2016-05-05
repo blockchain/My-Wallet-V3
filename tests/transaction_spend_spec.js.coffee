@@ -383,7 +383,50 @@ describe "Transaction", ->
       isAbsFee = true
       s = Transaction.selectCoins(coins, amounts, fee, isAbsFee);
       expect(s).toEqual({"coins": [{value: 30000}], "fee": 10000})
-      
+
+    it "should be able to filter addresses", ->
+      coins = [{value: 40000, script: 'a'},{value: 30000, script: 'b'},{value: 20000, script: 'b'},{value: 10000, 'script': 'c'}]
+      amounts = [10000, 30000]
+      fee = 10000
+      isAbsFee = true
+      s = Transaction.selectCoins(coins, amounts, fee, isAbsFee, true);
+      expect(s).toEqual({"coins": [{value: 30000, script: 'b'},{value: 20000, script: 'b'}], "fee": 10000})
+
+  describe ".filterCoinsByAddress", ->
+
+    it "should return an empty set of coins if the payment cannot be made", ->
+      coins = [{value: 40000, script: 'a'},{value: 30000, script: 'a'},{value: 20000, script: 'b'},{value: 10000, script: 'b'}]
+      amounts = [200000]
+      fee = 10000
+      isAbsFee = true
+      s = Transaction.filterCoinsByAddress(coins, amounts, fee, isAbsFee);
+
+      expect(s).toEqual([])
+
+    it "should return coins from one address only if possible", ->
+      coins = [{value: 40000, script: 'a'},{value: 30000, script: 'b'},{value: 20000, script: 'a'},{value: 10000, script: 'b'}]
+      amounts = [50000]
+      fee = 10000
+      isAbsFee = true
+      s = Transaction.filterCoinsByAddress(coins, amounts, fee, isAbsFee);
+      expect(s).toEqual([{value: 40000, script: 'a'},{value: 20000, script: 'a'}])
+
+    it "should return coins from several addresses only if impossible to do otherwise", ->
+      coins = [{value: 40000, script: 'a'},{value: 30000, script: 'b'},{value: 20000, script: 'a'},{value: 10000, script: 'b'}]
+      amounts = [60000]
+      fee = 10000
+      isAbsFee = true
+      s = Transaction.filterCoinsByAddress(coins, amounts, fee, isAbsFee);
+      expect(s).toEqual([{value: 40000, script: 'a'},{value: 20000, script: 'a'},{value: 30000, script: 'b'},{value: 10000, script: 'b'}])
+
+    it "should work with dynamic fees", ->
+      coins = [{value: 40000, script: 'a'},{value: 30000, script: 'b'},{value: 20000, script: 'a'},{value: 10000, script: 'b'}]
+      amounts = [50000]
+      fee = 10000
+      isAbsFee = false
+      s = Transaction.filterCoinsByAddress(coins, amounts, fee, isAbsFee);
+      expect(s).toEqual([{value: 40000, script: 'a'},{value: 20000, script: 'a'}])
+
   describe ".selectCoinsWithoutChange", ->
 
     it "without coins should return empty list", ->
