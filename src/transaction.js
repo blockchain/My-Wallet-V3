@@ -254,12 +254,22 @@ Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee, fi
   var sorted = usableCoins.sort(function (a, b) { return b.value - a.value; });
   var len = sorted.length;
 
+  // If possible, create a change output of at least 0.01 BTC
+  var MIN_CHANGE = 1000000;
+  var sweepFee = isAbsoluteFee ? fee : Transaction.guessFee(len, nouts, fee);
+  var spendableBalance = usableCoins.reduce(function(a, b) { return a + b.value; }, 0) - sweepFee;
+
+  var target = amount;
+  if (spendableBalance > amount + MIN_CHANGE) {
+    target = amount + MIN_CHANGE;
+  }
+
   if (isAbsoluteFee) {
     for (var i = 0; i < len; i++) {
       var coin = sorted[i];
       accAm = accAm + coin.value;
       sel.push(coin);
-      if (accAm >= fee + amount) { return {'coins': sel, 'fee': fee}; }
+      if (accAm >= fee + target) { return {'coins': sel, 'fee': fee}; }
     }
   } else {
     for (var ii = 0; ii < len; ii++) {
@@ -267,7 +277,7 @@ Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee, fi
       accAm = accAm + coin2.value;
       accFee = Transaction.guessFee(ii + 1, nouts + 1, fee);
       sel.push(coin2);
-      if (accAm >= accFee + amount) { return {'coins': sel, 'fee': accFee}; }
+      if (accAm >= accFee + target) { return {'coins': sel, 'fee': accFee}; }
     }
   }
   return {'coins': [], 'fee': 0};

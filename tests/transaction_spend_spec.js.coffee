@@ -392,6 +392,14 @@ describe "Transaction", ->
       s = Transaction.selectCoins(coins, amounts, fee, isAbsFee, true);
       expect(s).toEqual({"coins": [{value: 30000, script: 'b'},{value: 20000, script: 'b'}], "fee": 10000})
 
+    it "should create change outputs > 0.01 BTC if possible", ->
+      coins = [{value: 1100000},{value: 300000},{value: 20000},{value: 10000}]
+      amounts = [100000,200000]
+      fee = 10000
+      isAbsFee = true
+      s = Transaction.selectCoins(coins, amounts, fee, isAbsFee);
+      expect(s).toEqual({"coins": [{value: 1100000},{value: 300000}], "fee": 10000})
+
   describe ".filterCoinsByAddress", ->
 
     it "should return an empty set of coins if the payment cannot be made", ->
