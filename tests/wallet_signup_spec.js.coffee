@@ -14,7 +14,7 @@ WalletNetwork =
       new Promise((resolve) -> resolve())
 
 Wallet =
-  new: (a, b, c, cb) -> cb()
+  new: (guid, sharedKey, mnemonic, bip39Password, firstAccountLabel, success, error) -> success()
 
 stubs =
   './blockchain-wallet': Wallet
@@ -31,7 +31,7 @@ describe "WalletSignup", ->
 
     it "should not generate a wallet with a password longer than 256 chars", ->
       password = (new Array(1024)).join("x")
-      expect(() -> WalletSignup.generateNewWallet(password, 'a@a.co', 'My Wallet')).toThrow()
+      expect(() -> WalletSignup.generateNewWallet(password, 'a@a.co', undefined, undefined, 'My Wallet')).toThrow()
 
     describe "it should not generate a wallet with bad UUIDs", ->
 
@@ -46,7 +46,7 @@ describe "WalletSignup", ->
         spyOn(observers, "progress")
 
         WalletNetwork.generateBadUUIDs = true
-        WalletSignup.generateNewWallet('pass', 'a@a.co', 'My Wallet', observers.success, observers.error, true, observers.progress)
+        WalletSignup.generateNewWallet('pass', 'a@a.co', undefined, undefined, 'My Wallet', observers.success, observers.error, observers.progress)
 
       it "", ->
         expect(observers.success).not.toHaveBeenCalled()
@@ -69,7 +69,7 @@ describe "WalletSignup", ->
         spyOn(observers, "error").and.callThrough()
         spyOn(observers, "progress")
 
-        WalletSignup.generateNewWallet('totot', 'a@a.co', 'My Wallet', observers.success, observers.error, undefined, observers.progress)
+        WalletSignup.generateNewWallet('totot', 'a@a.co', undefined, undefined, 'My Wallet', observers.success, observers.error, observers.progress)
 
       it "", ->
         expect(observers.success).toHaveBeenCalled()
@@ -91,7 +91,7 @@ describe "WalletSignup", ->
         spyOn(observers, "progress")
 
         WalletNetwork.failInsertion = true
-        WalletSignup.generateNewWallet('totot', 'a@a.co', 'My Wallet', observers.success, observers.error, undefined, observers.progress)
+        WalletSignup.generateNewWallet('totot', 'a@a.co', undefined, undefined, 'My Wallet', observers.success, observers.error, observers.progress)
 
       it "", ->
         expect(observers.success).not.toHaveBeenCalled()

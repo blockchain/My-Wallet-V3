@@ -5,8 +5,13 @@ WalletStore = {
   setRealAuthType: () ->
   setSyncPubKeys: () ->
 }
+
 WalletCrypto = {}
-WalletSignup = {}
+
+WalletSignup = {
+  generateNewWallet: () ->
+}
+
 API =
   securePostCallbacks: () ->
   request: (action, method, data, withCred) ->
@@ -19,14 +24,29 @@ API =
         catch: (cb) ->
       }
 
+BIP39 = {
+    generateMnemonic: (str, rng, wlist) ->
+      mnemonic = "bicycle balcony prefer kid flower pole goose crouch century lady worry flavor"
+      seed = rng(32)
+      if seed = "random" then mnemonic else "failure"
+  }
+RNG = {
+  run: (input) ->
+    if RNG.shouldThrow
+      throw 'Connection failed'
+    "random"
+}
 
-stubs = { './wallet-store': WalletStore, './wallet-crypto': WalletCrypto, './wallet-signup': WalletSignup, './api': API}
+stubs = {
+  './wallet-store': WalletStore,
+  './wallet-crypto': WalletCrypto,
+  './wallet-signup': WalletSignup,
+  './api': API,
+  'bip39': BIP39,
+  './rng' : RNG
+}
 
 MyWallet = proxyquire('../src/wallet', stubs)
-
-# TODO only to get coverage report until there are tests for these files:
-BlockchainSettingsAPI = proxyquire('../src/blockchain-settings-api', {})
-
 
 describe "Wallet", ->
 
@@ -289,3 +309,47 @@ describe "Wallet", ->
 
         expect(API.request).toHaveBeenCalled()
         expect(API.request.calls.argsFor(0)[2].payload).toEqual("abcdef123")
+
+  describe "recoverFromMnemonic", ->
+    beforeEach ->
+      spyOn(WalletSignup, "generateNewWallet").and.callFake((password, email, mnemonic, bip39Password, firstAccountName, success, error, generateUUIDProgress, decryptWalletProgress) ->
+        success("1234", "shared", password)
+      )
+      spyOn(WalletStore, "unsafeSetPassword")
+
+    it "should generate a new wallet", ->
+      MyWallet.recoverFromMnemonic("a@b.com", "secret", "nuclear bunker sphaghetti monster dim sum sauce", undefined, (() ->))
+      expect(WalletSignup.generateNewWallet).toHaveBeenCalled()
+      expect(WalletSignup.generateNewWallet.calls.argsFor(0)[0]).toEqual("secret")
+      expect(WalletSignup.generateNewWallet.calls.argsFor(0)[1]).toEqual("a@b.com")
+      expect(WalletSignup.generateNewWallet.calls.argsFor(0)[2]).toEqual("nuclear bunker sphaghetti monster dim sum sauce")
+
+    it "should call unsafeSetPassword", ->
+      MyWallet.recoverFromMnemonic("a@b.com", "secret", "nuclear bunker sphaghetti monster dim sum sauce", undefined, (() ->))
+      expect(WalletStore.unsafeSetPassword).toHaveBeenCalledWith("secret")
+
+    it "should pass guid, shared key and password upon success", ->
+      obs = {
+        success: () ->
+      }
+      spyOn(obs, "success")
+
+      MyWallet.recoverFromMnemonic("a@b.com", "secret", "nuclear bunker sphaghetti monster dim sum sauce", undefined, obs.success)
+      expect(obs.success).toHaveBeenCalledWith({ guid: '1234', sharedKey: 'shared', password: 'secret' })
+
+  describe "createNewWallet", ->
+    beforeEach ->
+      spyOn(BIP39, "generateMnemonic").and.callThrough()
+      spyOn(RNG, "run").and.callThrough()
+
+    it "should call BIP39.generateMnemonic with our RNG", ->
+      w = MyWallet.createNewWallet()
+      expect(BIP39.generateMnemonic).toHaveBeenCalled()
+      expect(RNG.run).toHaveBeenCalled()
+
+    it "should throw if RNG throws", ->
+      # E.g. because there was a network failure.
+      # This assumes BIP39.generateMnemonic does not rescue a throw
+      # inside the RNG
+      RNG.shouldThrow = true
+      expect(() -> MyWallet.createNewWallet()).toThrow('Connection failed')

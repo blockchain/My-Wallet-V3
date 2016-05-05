@@ -5,6 +5,7 @@ module.exports = Wallet;
 // dependencies
 var assert = require('assert');
 var BIP39 = require('bip39');
+var RNG = require('./rng');
 
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
@@ -608,14 +609,15 @@ function isAccountNonUsed (account, progress) {
 }
 
 Wallet.prototype.restoreHDWallet = function (mnemonic, bip39Password, pw, startedRestoreHDWallet, progress) {
+  assert(mnemonic, "BIP 39 mnemonic required")
   // wallet restoration
   startedRestoreHDWallet && startedRestoreHDWallet();
   var self = this;
   var seedHex = BIP39.mnemonicToEntropy(mnemonic);
   var pass39 = Helpers.isString(bip39Password) ? bip39Password : '';
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, 'enc');
-  var newHDwallet = HDWallet.restore(seedHex, pass39, encoder);
-  this._hd_wallets[0] = newHDwallet;
+  var hd = HDWallet.restore(seedHex, pass39, encoder);
+  this._hd_wallets[0] = hd;
   var account = this.newAccount('My Bitcoin Wallet 1', pw, 0, undefined, true);
   API.getHistory([account.extendedPublicKey], 0, 0, 50).then(progress);
   var accountIndex = 1;
@@ -643,7 +645,7 @@ Wallet.prototype.restoreHDWallet = function (mnemonic, bip39Password, pw, starte
     return new Promise(MyWallet.syncWallet);
   };
 
-  // it returns a promise of the newHDWallet
+  // it returns a promise of the new HDWallet
   return untilNEmptyAccounts(AccountsGap)
     .then(saveAndReturn);
 };
@@ -683,8 +685,9 @@ Wallet.prototype.disableNotifications = function (success, error) {
 };
 
 // creating a new wallet object
-Wallet.new = function (guid, sharedKey, firstAccountLabel, success, error, isHD) {
-  isHD = Helpers.isBoolean(isHD) ? isHD : true;
+Wallet.new = function (guid, sharedKey, mnemonic, bip39Password, firstAccountLabel, success, error) {
+  assert(mnemonic, "BIP 39 mnemonic required")
+
   var object = {
     guid: guid,
     sharedKey: sharedKey,
@@ -699,35 +702,29 @@ Wallet.new = function (guid, sharedKey, firstAccountLabel, success, error, isHD)
   MyWallet.wallet = new Wallet(object);
   var label = firstAccountLabel || 'My Bitcoin Wallet';
   try {
-    // wallet or address generation could fail because of the RNG
-    if (isHD) {
-      // hd wallet
-      var newHDwallet = HDWallet.new();
-      MyWallet.wallet._hd_wallets.push(newHDwallet);
-      newHDwallet.newAccount(label);
-    } else {
-      // legacy wallet (generate address)
-      var ad = Address.new(label);
-      MyWallet.wallet._addresses[ad.address] = ad;
-    }
+    var hd = HDWallet.new(mnemonic, bip39Password);
+    MyWallet.wallet._hd_wallets.push(hd);
+    hd.newAccount(label);
   } catch (e) { error(e); return; }
   success(MyWallet.wallet);
 };
 
-// adding and hd wallet to an existing wallet, used by frontend and iOs
-Wallet.prototype.newHDWallet = function (firstAccountLabel, pw, success, error) {
+// Adds an HD wallet to an existing wallet, used by frontend and iOs
+Wallet.prototype.upgradeToV3 = function (firstAccountLabel, pw, success, error) {
+
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, 'enc');
   try {
-    var newHDwallet = HDWallet.new(encoder);
+    var mnemonic = BIP39.generateMnemonic(undefined, RNG.run.bind(RNG));
+    var hd = HDWallet.new(mnemonic, undefined, encoder);
   } catch (e) { error(e); return; }
-  this._hd_wallets.push(newHDwallet);
+  this._hd_wallets.push(hd);
   var label = firstAccountLabel ? firstAccountLabel : 'My Bitcoin Wallet';
   this.newAccount(label, pw, this._hd_wallets.length - 1, true);
   MyWallet.syncWallet(function (res) {
     success();
   }, error);
 
-  return newHDwallet;
+  return hd;
 };
 
 Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosave) {

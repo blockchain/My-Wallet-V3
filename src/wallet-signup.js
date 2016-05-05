@@ -6,11 +6,9 @@ var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
 var WalletNetwork = require('./wallet-network');
 
-function generateNewWallet (password, email, firstAccountName, success, error, isHD, generateUUIDProgress, decryptWalletProgress) {
+function generateNewWallet (password, email, mnemonic, bip39Password, firstAccountName, success, error, generateUUIDProgress, decryptWalletProgress) {
   assert(password.length <= 255, 'Passwords must be shorter than 256 characters');
   assert(!navigator.userAgent.match(/MeeGo/i), 'MeeGo browser currently not supported.'); // User reported this browser generated an invalid private key
-
-  isHD = Helpers.isBoolean(isHD) ? isHD : true;
 
   generateUUIDProgress && generateUUIDProgress();
 
@@ -22,7 +20,6 @@ function generateNewWallet (password, email, firstAccountName, success, error, i
       error('Error generating wallet identifier');
     }
 
-    // Upgrade to HD immediately:
     var saveWallet = function () {
       WalletNetwork.insertWallet(guid, sharedKey, password, {email: email}, decryptWalletProgress).then(function () {
         success(guid, sharedKey, password);
@@ -31,7 +28,7 @@ function generateNewWallet (password, email, firstAccountName, success, error, i
       });
     };
 
-    Wallet.new(guid, sharedKey, firstAccountName, saveWallet, error, isHD);
+    Wallet.new(guid, sharedKey, mnemonic, bip39Password, firstAccountName, saveWallet, error);
   }).catch(error);
 }
 

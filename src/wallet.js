@@ -14,6 +14,8 @@ var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
 var BlockchainSocket = require('./blockchain-socket');
 var BlockchainSettingsAPI = require('./blockchain-settings-api');
+var RNG = require('./rng');
+var BIP39 = require('bip39');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -492,10 +494,12 @@ MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function () {
  * @param {string} currencyCode language code (e.g. en)
  * @param {function (string, string, string)} success callback function with guid, sharedkey and password
  * @param {function (string)} error callback function with error message
+ * @param {string} mnemonic: optional BIP 39 mnemonic
+ * @param {string} bip39Password: optional BIP 39 passphrase
  */
  // used on mywallet, iOS and frontend
-MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, success, error, isHD) {
-  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, firstAccountName, function (createdGuid, createdSharedKey, createdPassword) {
+MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, successCallback, errorCallback) {
+  var success = function (createdGuid, createdSharedKey, createdPassword) {
     if (languageCode) {
       WalletStore.setLanguage(languageCode);
       BlockchainSettingsAPI.change_language(languageCode, function () {});
@@ -506,20 +510,21 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
     }
 
     WalletStore.unsafeSetPassword(createdPassword);
-    success(createdGuid, createdSharedKey, createdPassword);
-  }, function (e) {
-    error(e);
-  }, isHD);
+    successCallback(createdGuid, createdSharedKey, createdPassword);
+  };
+
+  var mnemonic = BIP39.generateMnemonic(undefined, RNG.run.bind(RNG));
+
+  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, undefined, firstAccountName, success, errorCallback);
 };
 
 // used on frontend
-MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, recoveryMnemonic, bip39Password, success, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
+MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic, bip39Password, success, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
   var walletSuccess = function (guid, sharedKey, password) {
     WalletStore.unsafeSetPassword(password);
-    var runSuccess = function () { success({guid: guid, sharedKey: sharedKey, password: password}); };
-    MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password, undefined, startedRestoreHDWallet, accountProgress).then(runSuccess).catch(error);
+    success({guid: guid, sharedKey: sharedKey, password: password});
   };
-  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, null, walletSuccess, error, true, generateUUIDProgress, decryptWalletProgress);
+  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, bip39Password, null, walletSuccess, error, generateUUIDProgress, decryptWalletProgress);
 };
 
 // used frontend and mywallet
