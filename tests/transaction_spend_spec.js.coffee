@@ -342,7 +342,9 @@ describe "Transaction", ->
       m = Transaction.sumOfCoins(coins);
       expect(m).toBe(0)
 
-    it "Transaction.selectCoins empty list with fee-per-kb", ->
+  describe ".selectCoins()", ->
+
+    it "empty list with fee-per-kb", ->
       coins = []
       amounts = [10000]
       fee = 10000
@@ -350,7 +352,7 @@ describe "Transaction", ->
       s = Transaction.selectCoins(coins, amounts, fee, isAbsFee);
       expect(s).toEqual({"coins": [], "fee": 0})
 
-    it "Transaction.selectCoins empty list with fee-per-kb", ->
+    it "empty list with fee-per-kb", ->
       coins = []
       amounts = [10000]
       fee = 10000
@@ -358,7 +360,7 @@ describe "Transaction", ->
       s = Transaction.selectCoins(coins, amounts, fee, isAbsFee);
       expect(s).toEqual({"coins": [], "fee": 0})
 
-    it "Transaction.selectCoins with fee-Per-kb", ->
+    it "with fee-Per-kb", ->
       coins = [{value: 40000},{value: 30000},{value: 20000},{value: 10000}]
       amounts = [10000,30000]
       fee = 10000
@@ -366,7 +368,7 @@ describe "Transaction", ->
       s = Transaction.selectCoins(coins, amounts, fee, isAbsFee);
       expect(s).toEqual({"coins": [{value: 40000},{value: 30000}], "fee": 4080})
 
-    it "Transaction.selectCoins with absolute fee", ->
+    it "with absolute fee", ->
       coins = [{value: 40000},{value: 30000},{value: 20000},{value: 10000}]
       amounts = [10000,30000]
       fee = 10000
@@ -374,6 +376,98 @@ describe "Transaction", ->
       s = Transaction.selectCoins(coins, amounts, fee, isAbsFee);
       expect(s).toEqual({"coins": [{value: 40000},{value: 30000}], "fee": 10000})
 
+    it "with coin matching amount + absolute fee", ->
+      coins = [{value: 40000},{value: 30000},{value: 20000},{value: 10000}]
+      amounts = [20000]
+      fee = 10000
+      isAbsFee = true
+      s = Transaction.selectCoins(coins, amounts, fee, isAbsFee);
+      expect(s).toEqual({"coins": [{value: 30000}], "fee": 10000})
+      
+  describe ".selectCoinsWithoutChange", ->
+
+    it "without coins should return empty list", ->
+      coins = []
+      amounts = [10000]
+      fee = 10000
+      isAbsFee = false
+      s = Transaction.selectCoinsWithoutChange(coins, amounts.reduce(Helpers.add, 0), amounts.length, fee, isAbsFee);
+      expect(s).toEqual({"coins": [], "fee": 0})
+
+    it "absolute fee, one output, no match", ->
+      coins = [{value: 20001},{value: 19999},{value: 10000},{value: 30000}]
+      amounts = [10000]
+      fee = 10000
+      isAbsFee = true
+      s = Transaction.selectCoinsWithoutChange(coins, amounts.reduce(Helpers.add, 0), amounts.length, fee, isAbsFee);
+      expect(s).toEqual({"coins": [], "fee": 0})
+
+    it "absolute fee, several outputs, no match", ->
+      coins = [{value: 20001},{value: 19999},{value: 10000},{value: 34999}, {value: 35001}]
+      amounts = [10000, 15000]
+      fee = 10000
+      isAbsFee = true
+      s = Transaction.selectCoinsWithoutChange(coins, amounts.reduce(Helpers.add, 0), amounts.length, fee, isAbsFee);
+      expect(s).toEqual({"coins": [], "fee": 0})
+
+    it "absolute fee, one output, match", ->
+      coins = [{value: 40000},{value: 30000},{value: 20000},{value: 10000}]
+      amounts = [10000, 20000]
+      fee = 10000
+      isAbsFee = true
+      s = Transaction.selectCoinsWithoutChange(coins, amounts.reduce(Helpers.add, 0), amounts.length, fee, isAbsFee);
+      expect(s).toEqual({"coins": [{value: 40000}], "fee": 10000})
+
+    it "absolute fee, several outputs, match", ->
+      coins = [{value: 20001},{value: 19999},{value: 10000},{value: 34999}, {value: 35001}, {value: 35000}]
+      amounts = [10000, 15000]
+      fee = 10000
+      isAbsFee = true
+      s = Transaction.selectCoinsWithoutChange(coins, amounts.reduce(Helpers.add, 0), amounts.length, fee, isAbsFee);
+      expect(s).toEqual({"coins": [{value: 35000}], "fee": 10000})
+
+    it "with coin matching amount + absolute fee", ->
+      coins = [{value: 40000},{value: 30000},{value: 20000},{value: 10000}]
+      amounts = [20000]
+      fee = 10000
+      isAbsFee = true
+      s = Transaction.selectCoinsWithoutChange(coins, amounts.reduce(Helpers.add, 0), amounts.length, fee, isAbsFee);
+      expect(s).toEqual({"coins": [{value: 30000}], "fee": 10000})
+
+    it "dynamic fee, one output, no match", ->
+      coins = [{value: 20001},{value: 19999},{value: 10000},{value: 30000}]
+      amounts = [25000]
+      fee = 10000
+      isAbsFee = true
+      s = Transaction.selectCoinsWithoutChange(coins, amounts.reduce(Helpers.add, 0), amounts.length, fee, isAbsFee);
+      expect(s).toEqual({"coins": [], "fee": 0})
+
+    it "dynamic fee, several outputs, no match", ->
+      coins = [{value: 20001},{value: 19999},{value: 10000},{value: 34999}, {value: 35001}]
+      amounts = [15000, 15000]
+      fee = 10000
+      isAbsFee = true
+      s = Transaction.selectCoinsWithoutChange(coins, amounts.reduce(Helpers.add, 0), amounts.length, fee, isAbsFee);
+      expect(s).toEqual({"coins": [], "fee": 0})
+
+    it "dynamic fee, one output, match", ->
+      coins = [{value: 40000},{value: 30000},{value: 20000},{value: 10000}]
+      amounts = [10000, 20000]
+      fee = 10000
+      isAbsFee = true
+      s = Transaction.selectCoinsWithoutChange(coins, amounts.reduce(Helpers.add, 0), amounts.length, fee, isAbsFee);
+      expect(s).toEqual({"coins": [{value: 40000}], "fee": 10000})
+
+    it "dynamic fee, several outputs, match", ->
+      coins = [{value: 20001},{value: 19999},{value: 10000},{value: 34999}, {value: 35001}, {value: 35000}]
+      amounts = [10000, 15000]
+      fee = 10000
+      isAbsFee = true
+      s = Transaction.selectCoinsWithoutChange(coins, amounts.reduce(Helpers.add, 0), amounts.length, fee, isAbsFee);
+      expect(s).toEqual({"coins": [{value: 35000}], "fee": 10000})
+
+  describe ".confirmationEstimation()", ->
+  
     it "Transaction.confirmationEstimation with absolute fee", ->
       feeRanges = [60000,50000,40000,30000,20000,10000]
       fee = 12000

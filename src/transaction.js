@@ -160,6 +160,25 @@ Transaction.sumOfCoins = function (coins) {
   return coins.reduce(function (a, e) { a = a + e.value; return a; }, 0);
 };
 
+Transaction.selectCoinsWithoutChange = function(coins, amount, nouts, fee, isAbsoluteFee) {
+  var minFee = isAbsoluteFee ? fee : Transaction.guessFee(1, nouts, fee);
+  var totalTxValue = minFee + amount;
+  var threshold = isAbsoluteFee ? 0 : Bitcoin.networks.bitcoin.dustThreshold;
+
+  // If an unspent output matches 0 <= value - totalTxValue <= threshold, it is returned
+  var len = coins.length;
+  for (var i = 0; i < len; i++) {
+    var change = coins[i].value - totalTxValue;
+
+    if (change >= 0 && change <= threshold) {
+      return {'coins': [coins[i]], 'fee': minFee};
+    }
+  }
+
+  return {'coins': [], 'fee': 0};
+
+};
+
 Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
   var amount = amounts.reduce(Helpers.add, 0);
   var nouts = amounts.length;
@@ -168,6 +187,12 @@ Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
   var sel = [];
   var accAm = 0;
   var accFee = 0;
+
+  // Try to find an output that can fulfill the transaction without change
+  var noChange = Transaction.selectCoinsWithoutChange(usableCoins, amount, nouts, fee, isAbsoluteFee);
+  if (noChange.coins.length > 0) {
+    return noChange;
+  }
 
   if (isAbsoluteFee) {
     for (var i = 0; i < len; i++) {
