@@ -22,7 +22,7 @@ else
   TAG_ARG:=
 endif
 
-Changelog.md:
+Changelog.md: node_modules
 	node_modules/git-changelog/tasks/command.js $(TAG_ARG) -f "Changelog.md" -g "^fix|^feat|^docs|^refactor|^chore|^test|BREAKING" -i "" -a "Blockchain Wallet V3" --repo_url "https://github.com/blockchain/My-Wallet-V3"
 
 clean:
