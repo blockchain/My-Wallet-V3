@@ -5,6 +5,8 @@ Wallet     = undefined
 HDWallet   = undefined
 WalletStore = undefined
 BlockchainSettingsAPI = undefined
+BIP39 = undefined
+RNG = undefined
 
 describe "Blockchain-Wallet", ->
   wallet = undefined
@@ -118,6 +120,19 @@ describe "Blockchain-Wallet", ->
 
     }
 
+    BIP39 = {
+        generateMnemonic: (str, rng, wlist) ->
+          mnemonic = "bicycle balcony prefer kid flower pole goose crouch century lady worry flavor"
+          seed = rng(32)
+          if seed = "random" then mnemonic else "failure"
+      }
+    RNG = {
+      run: (input) ->
+        if RNG.shouldThrow
+          throw 'Connection failed'
+        "random"
+    }
+
     stubs = {
       './wallet'  : MyWallet,
       './address' : Address,
@@ -125,6 +140,8 @@ describe "Blockchain-Wallet", ->
       './hd-wallet': HDWallet,
       './wallet-store' : WalletStore,
       './blockchain-settings-api': BlockchainSettingsAPI,
+      'bip39': BIP39,
+      './rng' : RNG
     }
 
     Wallet = proxyquire('../src/blockchain-wallet', stubs)
@@ -379,23 +396,15 @@ describe "Blockchain-Wallet", ->
           spyOn(cb, "success")
           spyOn(cb, "error")
 
-        it "should successCallback for non-hd", ->
-          Wallet.new("GUID","SHARED-KEY","ACC-LABEL", cb.success, cb.error, false)
-          expect(cb.success).toHaveBeenCalled()
-
-        it "should successCallback for hd", ->
-          Wallet.new("GUID","SHARED-KEY","ACC-LABEL", cb.success, cb.error, true)
+        it "should successCallback", ->
+          Wallet.new("GUID","SHARED-KEY", "water cow drink milk powder", undefined, "ACC-LABEL", cb.success, cb.error)
           expect(cb.success).toHaveBeenCalled()
 
         describe "(error control)", ->
-          it "should errorCallback if non-HD and address generation fail", ->
-            Address.shouldThrow = true
-            Wallet.new("GUID","SHARED-KEY","ACC-LABEL", cb.success, cb.error, false)
-            expect(cb.error).toHaveBeenCalled()
 
-          it "should errorCallback if HD and seed generation fail", ->
+          it "should errorCallback if HD seed generation fail", ->
             HDWallet.shouldThrow = true
-            Wallet.new("GUID","SHARED-KEY","ACC-LABEL", cb.success, cb.error, true)
+            Wallet.new("GUID","SHARED-KEY","ACC-LABEL", undefined, undefined, cb.success, cb.error)
             expect(cb.error).toHaveBeenCalled()
 
       describe ".newLegacyAddress", ->
@@ -533,7 +542,7 @@ describe "Blockchain-Wallet", ->
       it ".restoreHDWallet", ->
         pending()
 
-      describe ".newHDWallet", ->
+      describe ".upgradeToV3", ->
         cb =
           success: () ->
           error: () ->
@@ -542,15 +551,25 @@ describe "Blockchain-Wallet", ->
           spyOn(cb, "success")
           spyOn(cb, "error")
           spyOn(wallet, "newAccount").and.callFake(()->)
+          spyOn(BIP39, "generateMnemonic").and.callThrough()
+          spyOn(RNG, "run").and.callThrough()
 
         it "should successCallback", ->
-          wallet.newHDWallet("ACC-LABEL", null, cb.success, cb.error)
+          wallet.upgradeToV3("ACC-LABEL", null, cb.success, cb.error)
           expect(cb.success).toHaveBeenCalled()
 
-        it "should errorCallback if HDWallet.new fails", ->
-          spyOn(HDWallet, "new").and.callFake(() -> raise("RNG failed") )
-          wallet.newHDWallet("ACC-LABEL", null, cb.success, cb.error)
-          expect(cb.error).toHaveBeenCalled()
+        it "should call BIP39.generateMnemonic with our RNG", ->
+          wallet.upgradeToV3("ACC-LABEL", null, cb.success, cb.error)
+          expect(BIP39.generateMnemonic).toHaveBeenCalled()
+          expect(RNG.run).toHaveBeenCalled()
+
+        it "should throw if RNG throws", ->
+          # E.g. because there was a network failure.
+          # This assumes BIP39.generateMnemonic does not rescue a throw
+          # inside the RNG
+          RNG.shouldThrow = true
+          wallet.upgradeToV3("ACC-LABEL", null, cb.success, cb.error)
+          expect(cb.error).toHaveBeenCalledWith('Connection failed')
 
       describe ".newAccount", ->
         cb =

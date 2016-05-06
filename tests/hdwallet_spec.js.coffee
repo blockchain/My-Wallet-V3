@@ -1,8 +1,6 @@
 proxyquire = require('proxyquireify')(require)
 MyWallet = undefined
 HDWallet = undefined
-BIP39 = undefined
-RNG = undefined
 
 describe "HDWallet", ->
   wallet = undefined
@@ -117,48 +115,21 @@ describe "HDWallet", ->
     describe "HDWallet.new()", ->
 
       beforeEach ->
-        BIP39 = {
-            generateMnemonic: (str, rng, wlist) ->
-              mnemonic = "bicycle balcony prefer kid flower pole goose crouch century lady worry flavor"
-              seed = rng(32)
-              if seed = "random" then mnemonic else "failure"
-          }
-        RNG = {
-          run: (input) ->
-            if RNG.shouldThrow
-              throw 'Connection failed'
-            "random"
-        }
+
         stubs = {
           './wallet': MyWallet,
-          'bip39': BIP39,
-          './rng' : RNG
         }
-        HDWallet    = proxyquire('../src/hd-wallet', stubs)
-        spyOn(BIP39, "generateMnemonic").and.callThrough()
-        spyOn(RNG, "run").and.callThrough()
 
-      it "should return an hdwallet with a random non-encrypted seedHex", ->
-        hdw = HDWallet.new(null)
+        HDWallet    = proxyquire('../src/hd-wallet', stubs)
+
+      it "should return an hdwallet with the correct non-encrypted seedHex", ->
+        hdw = HDWallet.new("bicycle balcony prefer kid flower pole goose crouch century lady worry flavor" , undefined, null)
         expect(hdw._seedHex).toEqual('15e23aa73d25994f1921a1256f93f72c');
 
       it "should return an hdwallet with a random encrypted seedHex", ->
         encoder = (msg) -> "encrypted-" + msg
-        hdw = HDWallet.new(encoder)
+        hdw = HDWallet.new("bicycle balcony prefer kid flower pole goose crouch century lady worry flavor", undefined, encoder)
         expect(hdw._seedHex).toEqual('encrypted-15e23aa73d25994f1921a1256f93f72c');
-
-      it "should call BIP39.generateMnemonic with our RNG", ->
-
-        hdw = HDWallet.new(null)
-        expect(BIP39.generateMnemonic).toHaveBeenCalled()
-        expect(RNG.run).toHaveBeenCalled()
-
-      it "should throw if RNG throws", ->
-        # E.g. because there was a network failure.
-        # This assumes BIP39.generateMnemonic does not rescue a throw
-        # inside the RNG
-        RNG.shouldThrow = true
-        expect(() -> HDWallet.new(null)).toThrow('Connection failed')
 
     describe "Getter", ->
 
