@@ -522,7 +522,8 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
 MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic, bip39Password, success, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
   var walletSuccess = function (guid, sharedKey, password) {
     WalletStore.unsafeSetPassword(password);
-    success({guid: guid, sharedKey: sharedKey, password: password});
+    var runSuccess = function () { success({guid: guid, sharedKey: sharedKey, password: password}); };
+    MyWallet.wallet.restoreHDWallet(recoveryMnemonic, bip39Password, undefined, startedRestoreHDWallet, accountProgress).then(runSuccess).catch(error);
   };
   WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, bip39Password, null, walletSuccess, error, generateUUIDProgress, decryptWalletProgress);
 };
