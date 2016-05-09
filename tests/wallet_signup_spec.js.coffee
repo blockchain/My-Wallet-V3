@@ -7,11 +7,6 @@ WalletNetwork =
       new Promise((resolve) -> resolve(['a8098c1a-f8', 'b77e160355e']))
     else
       new Promise((resolve) -> resolve(['a8098c1a-f86e-11da-bd1a-00112444be1e', '6fa459ea-ee8a-3ca4-894e-db77e160355e']))
-  insertWallet: () ->
-    if WalletNetwork.failInsertion
-      new Promise((resolve, reject) -> reject())
-    else
-      new Promise((resolve) -> resolve())
 
 Wallet =
   new: (guid, sharedKey, mnemonic, bip39Password, firstAccountLabel, success, error) -> success()
@@ -75,27 +70,3 @@ describe "WalletSignup", ->
         expect(observers.success).toHaveBeenCalled()
         expect(observers.error).not.toHaveBeenCalled()
         expect(observers.progress).toHaveBeenCalled()
-
-    describe "should fail when the wallet insertion fails", ->
-
-      observers = null
-
-      beforeEach (done) ->
-        observers =
-          success: () -> done()
-          error: () -> done()
-          progress: () ->
-
-        spyOn(observers, "success").and.callThrough()
-        spyOn(observers, "error").and.callThrough()
-        spyOn(observers, "progress")
-
-        WalletNetwork.failInsertion = true
-        WalletSignup.generateNewWallet('totot', 'a@a.co', undefined, undefined, 'My Wallet', observers.success, observers.error, observers.progress)
-
-      it "", ->
-        expect(observers.success).not.toHaveBeenCalled()
-        expect(observers.error).toHaveBeenCalled()
-        expect(observers.progress).toHaveBeenCalled()
-
-        WalletNetwork.failInsertion = false

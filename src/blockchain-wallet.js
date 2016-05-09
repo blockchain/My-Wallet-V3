@@ -608,18 +608,11 @@ function isAccountNonUsed (account, progress) {
   return API.getHistory([account.extendedPublicKey], 0, 0, 50).then(isNonUsed);
 }
 
-Wallet.prototype.restoreHDWallet = function (mnemonic, bip39Password, pw, startedRestoreHDWallet, progress) {
-  assert(mnemonic, "BIP 39 mnemonic required")
+Wallet.prototype.scanBip44 = function (secondPassword, startedRestoreHDWallet, progress) {
   // wallet restoration
   startedRestoreHDWallet && startedRestoreHDWallet();
   var self = this;
-  var seedHex = BIP39.mnemonicToEntropy(mnemonic);
-  var pass39 = Helpers.isString(bip39Password) ? bip39Password : '';
-  var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, 'enc');
-  var hd = HDWallet.restore(seedHex, pass39, encoder);
-  this._hd_wallets[0] = hd;
-  var account = this.newAccount('My Bitcoin Wallet 1', pw, 0, undefined, true);
-  API.getHistory([account.extendedPublicKey], 0, 0, 50).then(progress);
+  API.getHistory([self.hdwallet._accounts[0].extendedPublicKey], 0, 0, 50).then(progress);
   var accountIndex = 1;
   var AccountsGap = 10;
 
@@ -636,18 +629,13 @@ Wallet.prototype.restoreHDWallet = function (mnemonic, bip39Password, pw, starte
       return true;
     } else {
       accountIndex++;
-      account = self.newAccount('My Bitcoin Wallet ' + accountIndex.toString(), pw, 0, undefined, true);
+      var account = self.newAccount('My Bitcoin Wallet ' + accountIndex.toString(), secondPassword, 0, undefined, true);
       return isAccountNonUsed(account, progress).then(go);
     }
   };
 
-  var saveAndReturn = function () {
-    return new Promise(MyWallet.syncWallet);
-  };
-
   // it returns a promise of the new HDWallet
-  return untilNEmptyAccounts(AccountsGap)
-    .then(saveAndReturn);
+  return untilNEmptyAccounts(AccountsGap);
 };
 
 // Enables email notifications for receiving bitcoins. Only for imported

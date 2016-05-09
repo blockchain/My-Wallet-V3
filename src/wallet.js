@@ -513,18 +513,37 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
     successCallback(createdGuid, createdSharedKey, createdPassword);
   };
 
+
+  var saveWallet = function (wallet) {
+    WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, {email: inputedEmail}).then(function () {
+      success(wallet.guid, wallet.sharedKey, inputedPassword);
+    }).catch(function (e) {
+      errorCallback(e);
+    });
+  };
+
   var mnemonic = BIP39.generateMnemonic(undefined, RNG.run.bind(RNG));
 
-  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, undefined, firstAccountName, success, errorCallback);
+  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, undefined, firstAccountName, saveWallet, errorCallback);
 };
 
 // used on frontend
-MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic, bip39Password, success, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
-  var walletSuccess = function (guid, sharedKey, password) {
-    WalletStore.unsafeSetPassword(password);
-    success({guid: guid, sharedKey: sharedKey, password: password});
+MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic, bip39Password, successCallback, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
+  var walletGenerated = function (wallet) {
+
+    var saveWallet = function () {
+      WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, {email: inputedEmail}, decryptWalletProgress).then(function () {
+        successCallback({guid: wallet.guid, sharedKey: wallet.sharedKey, password: inputedPassword});
+      }, function (e) {
+        error(e);
+      });
+    };
+
+    WalletStore.unsafeSetPassword(inputedPassword);
+    wallet.scanBip44(undefined, startedRestoreHDWallet, accountProgress).then(saveWallet).catch(error);
   };
-  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, bip39Password, null, walletSuccess, error, generateUUIDProgress, decryptWalletProgress);
+
+  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, bip39Password, null, walletGenerated, error, generateUUIDProgress, decryptWalletProgress);
 };
 
 // used frontend and mywallet

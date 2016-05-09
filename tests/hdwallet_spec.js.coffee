@@ -1,6 +1,7 @@
 proxyquire = require('proxyquireify')(require)
 MyWallet = undefined
 HDWallet = undefined
+BIP39 = undefined
 
 describe "HDWallet", ->
   wallet = undefined
@@ -55,8 +56,15 @@ describe "HDWallet", ->
 
   describe "instance", ->
 
+    BIP39 =
+      mnemonicToEntropy: (mnemonic) ->
+        "0123456789abcdef0123456789abcdef"
+
     beforeEach ->
-      stubs = { './wallet': MyWallet}
+      stubs = {
+        './wallet': MyWallet,
+        'bip39' : BIP39
+      }
       HDWallet    = proxyquire('../src/hd-wallet', stubs)
       wallet = new HDWallet(object)
 
@@ -316,14 +324,6 @@ describe "HDWallet", ->
         fromFactory = HDWallet.factory(wallet)
         expect(fromFactory).toEqual(wallet)
 
-    describe ".restore", ->
-      it "should not restore an invalid hex seed", ->
-        expect(() -> HDWallet.restore("i'm not valid", "password")).toThrow()
-
-      it "should set the password to '' if not a string", ->
-        wallet = HDWallet.restore("0123456789abcdef0123456789abcdef", 4334)
-        expect(wallet._bip39Password).toEqual("")
-
     describe ".newAccount", ->
 
       observer =
@@ -349,7 +349,7 @@ describe "HDWallet", ->
         expect(wallet.accounts[wallet.accounts.length - 1].label).toEqual('Savings')
 
       it "should create a new account without a cipher and with a password", ->
-        wallet = HDWallet.restore("0123456789abcdef0123456789abcdef", "password")
+        wallet = HDWallet.new("mnemonic", "password")
         wallet = wallet.newAccount("Savings")
 
         expect(wallet.accounts.length).toEqual(1)
@@ -362,7 +362,7 @@ describe "HDWallet", ->
         expect(wallet.accounts[wallet.accounts.length - 1].label).toEqual('Savings')
 
       it "should create a new account with a cipher and with a password", ->
-        wallet = HDWallet.restore("0123456789abcdef0123456789abcdef", "password")
+        wallet = HDWallet.new("mnemonic", "password")
         wallet = wallet.newAccount("Savings", observer.cipher)
 
         expect(wallet.accounts.length).toEqual(1)
