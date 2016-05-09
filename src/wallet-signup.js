@@ -20,15 +20,7 @@ function generateNewWallet (password, email, mnemonic, bip39Password, firstAccou
       error('Error generating wallet identifier');
     }
 
-    var saveWallet = function () {
-      WalletNetwork.insertWallet(guid, sharedKey, password, {email: email}, decryptWalletProgress).then(function () {
-        success(guid, sharedKey, password);
-      }, function (e) {
-        error(e);
-      });
-    };
-
-    Wallet.new(guid, sharedKey, mnemonic, bip39Password, firstAccountName, saveWallet, error);
+    Wallet.new(guid, sharedKey, mnemonic, bip39Password, firstAccountName, success, error);
   }).catch(error);
 }
 

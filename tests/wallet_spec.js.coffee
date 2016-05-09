@@ -4,12 +4,31 @@ WalletStore = {
   setGuid: () ->
   setRealAuthType: () ->
   setSyncPubKeys: () ->
+  setLanguage: () ->
+}
+
+BlockchainSettingsAPI = {
+  change_language: () ->
+  change_local_currency: () ->
 }
 
 WalletCrypto = {}
 
+hdwallet = {
+  guid: "1234",
+  sharedKey: "shared"
+  scanBip44: () -> {
+    then: (cb) ->
+      cb()
+      {
+        catch: () ->
+      }
+  }
+}
+
 WalletSignup = {
-  generateNewWallet: () ->
+  generateNewWallet: (inputedPassword, inputedEmail, mnemonic, bip39Password, firstAccountName, successCallback, errorCallback) ->
+    successCallback(hdwallet)
 }
 
 API =
@@ -37,13 +56,23 @@ RNG = {
     "random"
 }
 
+WalletNetwork =
+  insertWallet: () ->
+    console.log(WalletNetwork.failInsertion)
+    if WalletNetwork.failInsertion
+      new Promise((resolve, reject) -> reject())
+    else
+      new Promise((resolve) -> resolve())
+
 stubs = {
   './wallet-store': WalletStore,
   './wallet-crypto': WalletCrypto,
   './wallet-signup': WalletSignup,
   './api': API,
   'bip39': BIP39,
-  './rng' : RNG
+  './rng' : RNG,
+  './wallet-network': WalletNetwork,
+  './blockchain-settings-api' : BlockchainSettingsAPI
 }
 
 MyWallet = proxyquire('../src/wallet', stubs)
@@ -53,6 +82,10 @@ describe "Wallet", ->
   callbacks = undefined
 
   beforeEach ->
+    JasminePromiseMatchers.install()
+
+  afterEach ->
+    JasminePromiseMatchers.uninstall()
 
   describe "makePairingCode()", ->
     success = undefined
@@ -312,9 +345,7 @@ describe "Wallet", ->
 
   describe "recoverFromMnemonic", ->
     beforeEach ->
-      spyOn(WalletSignup, "generateNewWallet").and.callFake((password, email, mnemonic, bip39Password, firstAccountName, success, error, generateUUIDProgress, decryptWalletProgress) ->
-        success("1234", "shared", password)
-      )
+      spyOn(WalletSignup, "generateNewWallet").and.callThrough()
       spyOn(WalletStore, "unsafeSetPassword")
 
     it "should generate a new wallet", ->
@@ -328,14 +359,24 @@ describe "Wallet", ->
       MyWallet.recoverFromMnemonic("a@b.com", "secret", "nuclear bunker sphaghetti monster dim sum sauce", undefined, (() ->))
       expect(WalletStore.unsafeSetPassword).toHaveBeenCalledWith("secret")
 
-    it "should pass guid, shared key and password upon success", ->
+    it "should pass guid, shared key and password upon success", (done) ->
       obs = {
         success: () ->
       }
-      spyOn(obs, "success")
+      spyOn(obs, "success").and.callThrough()
 
       MyWallet.recoverFromMnemonic("a@b.com", "secret", "nuclear bunker sphaghetti monster dim sum sauce", undefined, obs.success)
-      expect(obs.success).toHaveBeenCalledWith({ guid: '1234', sharedKey: 'shared', password: 'secret' })
+
+      result = () ->
+        expect(obs.success).toHaveBeenCalledWith({ guid: '1234', sharedKey: 'shared', password: 'secret' })
+        done()
+
+      setTimeout(result, 1)
+
+    it "should scan address space", ->
+      spyOn(hdwallet, "scanBip44").and.callThrough()
+      MyWallet.recoverFromMnemonic("a@b.com", "secret", "nuclear bunker sphaghetti monster dim sum sauce", undefined, (() ->))
+      expect(hdwallet.scanBip44).toHaveBeenCalled()
 
   describe "createNewWallet", ->
     beforeEach ->
@@ -353,3 +394,26 @@ describe "Wallet", ->
       # inside the RNG
       RNG.shouldThrow = true
       expect(() -> MyWallet.createNewWallet()).toThrow('Connection failed')
+      RNG.shouldThrow = false
+
+    describe "when the wallet insertion fails", ->
+
+      observers = null
+
+      beforeEach (done) ->
+        observers =
+          success: () -> done()
+          error: () -> done()
+
+        spyOn(observers, "success").and.callThrough()
+        spyOn(observers, "error").and.callThrough()
+
+        WalletNetwork.failInsertion = true
+        MyWallet.createNewWallet('a@b.com', "1234", 'My Wallet', 'en', 'usd', observers.success, observers.error)
+
+      it "should fail", ->
+        expect(observers.success).not.toHaveBeenCalled()
+        expect(observers.error).toHaveBeenCalled()
+
+      afterEach ->
+        WalletNetwork.failInsertion = false
