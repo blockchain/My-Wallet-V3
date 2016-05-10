@@ -17,6 +17,7 @@ var shared = require('./shared');
 var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var KeyRing = require('./keyring');
 var TxList = require('./transaction-list');
+var Tx = require('./wallet-transaction');
 var Block = require('./bitcoin-block');
 
 // Wallet
@@ -373,6 +374,58 @@ Wallet.prototype.getHistory = function () {
   return API.getHistory(this.context, 0, 0, this.txList.loadNumber)
     .then(function (obj) { this.txList.wipe(); return obj; }.bind(this))
     .then(this._updateWalletInfo.bind(this));
+};
+
+Wallet.prototype.exportHistory = function (startDate, endDate) {
+  var MS = 1000;
+  var DAY = 86400000;
+  var NOW = Date.now();
+  var context = this.context;
+
+  return Promise.all([
+    API.loadHistoricalPrices(),
+    API.batchFetchTxs(context, startDate, endDate)
+  ]).then(function (results) {
+    var getPriceAtTime = createPriceLookupFn(results[0]);
+    var txs = results[1].map(Tx.factory);
+
+    return txs.map(function (tx) {
+      var time = tx.time * 1000;
+      var amount = Math.abs(tx.amount);
+      return {
+        date: new Date(time),
+        action: tx.txType,
+        description: tx.note,
+        btc: amount,
+        fiat_now: Helpers.toFiat(amount, getPriceAtTime(time)),
+        fiat_then: Helpers.toFiat(amount, getPriceAtTime(NOW)),
+        fee: tx.fee,
+        price_then: getPriceAtTime(time),
+        from: labelInputs(tx.processedInputs),
+        to: labelOutputs(tx.processedOutputs),
+        hash: tx.hash
+      };
+    });
+  });
+
+  function labelInputs (ins) { return ins[0].label || ins[0].address; }
+  function labelOutputs (outs) { return outs.map(function (out) { return out.label || out.address; }).join(';'); }
+
+  function createPriceLookupFn (values) {
+    var firstDate = values[0].x * MS;
+    var lastNormalTime = values[values.length - 2].x * MS;
+    var mostRecentPrice = values[values.length - 1].y;
+
+    var datePriceMap = values.reduce(function (acc, point) {
+      acc[point.x * MS] = point.y;
+      return acc;
+    }, {});
+
+    return function getPriceAtTime (time) {
+      var closestTime = time + (firstDate % DAY - time % DAY);
+      return time > lastNormalTime ? mostRecentPrice : datePriceMap[closestTime];
+    };
+  }
 };
 
 Wallet.prototype.fetchTransactions = function () {

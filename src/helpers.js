@@ -1,5 +1,7 @@
 'use strict';
 
+var SATOSHI = 100000000;
+
 var Bitcoin = require('bitcoinjs-lib');
 var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
@@ -403,6 +405,10 @@ function parseValueBitcoin (valueString) {
 
 Helpers.precisionToSatoshiBN = function (x) {
   return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, shared.sShift(shared.getBTCSymbol())).toString()));
+};
+
+Helpers.toFiat = function (satoshiAmt, conversion) {
+  return (conversion * satoshiAmt / SATOSHI).toFixed(2);
 };
 
 Helpers.verifyMessage = function (address, signature, message) {
