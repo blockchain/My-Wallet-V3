@@ -31,7 +31,7 @@ API.prototype.encodeFormData = function (data) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Permitted extra headers:
-// sessionToken -> "X-Session-ID"
+// sessionToken -> "Authorization Bearer <token>"
 API.prototype.request = function (action, method, data, extraHeaders) {
   var url   = this.ROOT_URL + method
   var body  = data ? this.encodeFormData(data) : ''
@@ -45,7 +45,7 @@ API.prototype.request = function (action, method, data, extraHeaders) {
 
   if(extraHeaders) {
     if(extraHeaders.sessionToken) {
-      options.headers['X-Session-ID'] = extraHeaders.sessionToken;
+      options.headers['Authorization'] = 'Bearer ' + extraHeaders.sessionToken;
     }
   }
 
