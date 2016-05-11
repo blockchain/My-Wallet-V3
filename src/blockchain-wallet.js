@@ -20,6 +20,7 @@ var KeyRing = require('./keyring');
 var TxList = require('./transaction-list');
 var Block = require('./bitcoin-block');
 var Profile = require('./profile');
+var External = require('./external');
 
 // Wallet
 
@@ -45,6 +46,7 @@ function Wallet (object) {
   this._hd_wallets = obj.hd_wallets ? obj.hd_wallets.map(HDWallet.factory) : undefined;
 
   this._profile = new Profile(obj.profile);
+  this._external = new External(obj.external);
 
   // address book list
   // address book in json is [{address: 'address1', label: 'label1'} , ... ]
@@ -218,6 +220,10 @@ Object.defineProperties(Wallet.prototype, {
   'profile': {
     configurable: false,
     get: function () { return this._profile; }
+  },
+  'external': {
+    configurable: false,
+    get: function (){return this._external;}
   },
   'isEncryptionConsistent': {
     configurable: false,
@@ -419,7 +425,8 @@ Wallet.prototype.toJSON = function () {
     tx_names: this._tx_names,
     keys: this.keys,
     hd_wallets: Helpers.isEmptyArray(this._hd_wallets) ? undefined : this._hd_wallets,
-    profile: this._profile
+    profile: this._profile,
+    external: this._external
   };
 };
 
