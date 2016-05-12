@@ -249,10 +249,14 @@ Object.defineProperties(Wallet.prototype, {
   'balanceActiveAccounts': {
     configurable: false,
     get: function () {
-      return this.hdwallet.accounts
-                 .filter(function (a) { return !a.archived; })
-                 .map(function (a) { return a.balance; })
-                 .reduce(Helpers.add, 0);
+      if (this.isUpgradedToHD) {
+        return this.hdwallet.accounts
+                  .filter(function (a) { return !a.archived; })
+                  .map(function (a) { return a.balance; })
+                  .reduce(Helpers.add, 0);
+      } else {
+        return 0;
+      }
     }
   },
   'balanceActive': {
@@ -264,11 +268,7 @@ Object.defineProperties(Wallet.prototype, {
   'balanceSpendableActive': {
     configurable: false,
     get: function () {
-      if (this.isUpgradedToHD) {
         return this.balanceSpendableActiveLegacy + this.balanceActiveAccounts;
-      } else {
-        return this.balanceSpendableActiveLegacy;
-      }
     }
   },
   'balanceSpendableActiveLegacy': {
