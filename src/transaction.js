@@ -31,7 +31,7 @@ var Transaction = function (payment, emitter) {
   this.pathsOfNeededPrivateKeys = [];
 
   assert(toAddresses.length == amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
-  assert(this.amount > BITCOIN_DUST, {error: 'BELOW_DUST_THRESHOLD', amount: this.amount, threshold: BITCOIN_DUST});
+  assert(this.amount >= BITCOIN_DUST, {error: 'BELOW_DUST_THRESHOLD', amount: this.amount, threshold: BITCOIN_DUST});
   assert(unspentOutputs && unspentOutputs.length > 0, {error: 'NO_UNSPENT_OUTPUTS'});
   var transaction = new Bitcoin.TransactionBuilder();
   // add all outputs
@@ -62,7 +62,7 @@ var Transaction = function (payment, emitter) {
   }
   // Consume the change if it would create a very small none standard output
   var changeAmount = total - this.amount - fee;
-  if (changeAmount > BITCOIN_DUST) {
+  if (changeAmount >= BITCOIN_DUST) {
     assert(changeAddress, 'No change address specified');
     transaction.addOutput(changeAddress, changeAmount);
   }
