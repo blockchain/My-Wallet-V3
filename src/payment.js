@@ -257,7 +257,7 @@ Payment.from = function (origin) {
   var wifs = []; // only used fromPrivateKey
   var fromAccId = null;
   var watchOnly = false;
-  
+
   switch (true) {
     // no origin => assume origin = all the legacy addresses (non - watchOnly)
     case origin === null || origin === undefined || origin === '':
@@ -531,9 +531,11 @@ function getPrivateKeys (password, payment) {
     var xpriv = getXPRIV(password, payment.fromAccountIdx);
     privateKeys = transaction.pathsOfNeededPrivateKeys.map(getKeyForPath.bind(this, xpriv));
   }
-  // if from Addresses
+  // if from Addresses or redeem code (private key)
   if (payment.from && payment.from.every(Helpers.isBitcoinAddress) && !payment.fromWatchOnly) {
-    privateKeys = transaction.addressesOfNeededPrivateKeys.map(getKeyForAddress.bind(this, password));
+    privateKeys = payment.wifKeys.length
+      ? transaction.addressesOfNeededPrivateKeys.map(function (a, i) { return getKey(payment.wifKeys[i], a); })
+      : transaction.addressesOfNeededPrivateKeys.map(getKeyForAddress.bind(this, password));
   }
   // if from Watch Only
   if (payment.from && Helpers.isBitcoinAddress(payment.from[0]) && payment.fromWatchOnly) {

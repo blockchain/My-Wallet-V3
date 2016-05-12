@@ -127,7 +127,7 @@ API.prototype.getBalanceForRedeemCode = function (privatekey) {
                  .map(function (a) { return data[a].final_balance; })
                  .reduce(Helpers.add, 0);
   };
-  return API.getBalances([aC, aU]).then(totalBalance);
+  return this.getBalances([aC, aU]).then(totalBalance);
 };
 
 API.prototype.getFiatAtTime = function (time, value, currencyCode) {
