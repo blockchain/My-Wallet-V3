@@ -323,7 +323,9 @@ Payment.from = function (origin) {
     payment.fromAccountIdx = fromAccId;
     payment.fromWatchOnly = watchOnly;
 
-    return getUnspentCoins(addresses).then(
+    return getUnspentCoins(addresses, function onNotice (notice) {
+      that.emit('message', { text: notice });
+    }).then(
       function (coins) {
         payment.coins = coins;
         return payment;
@@ -469,7 +471,7 @@ module.exports = Payment;
 // Helper functions
 
 // getUnspentCoins :: [address] -> Promise [coins]
-function getUnspentCoins (addressList) {
+function getUnspentCoins (addressList, notify) {
   var processCoins = function (obj) {
     var processCoin = function (utxo) {
       var txBuffer = new Buffer(utxo.tx_hash, 'hex');
@@ -477,6 +479,7 @@ function getUnspentCoins (addressList) {
       utxo.hash = txBuffer.toString('hex');
       utxo.index = utxo.tx_output_n;
     };
+    if (obj.notice) notify(obj.notice);
     obj.unspent_outputs.forEach(processCoin);
     return obj.unspent_outputs;
   };
