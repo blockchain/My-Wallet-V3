@@ -101,6 +101,32 @@ Coinify.prototype.signup = function(email, mobile, currency) {
   return promise;
 }
 
+Coinify.prototype.login = function() {
+  var parentThis = this;
+
+  var promise = new Promise(function (resolve, reject) {
+    assert(parentThis._offline_token, 'Offline token required');
+
+    var loginSuccess = function(res) {
+      parentThis._access_token = res.access_token;
+      resolve();
+    };
+
+    var loginFailed = function(e) {
+      reject(e);
+    }
+
+    parentThis.POST('auth', {
+      grant_type: 'offline_token',
+      offline_token: parentThis._offline_token
+    }).then(loginSuccess).catch(loginFailed);
+
+
+  });
+
+  return promise;
+}
+
 Coinify.prototype.POST = function (endpoint, data) {
   var url = this._rootURL + endpoint;
 

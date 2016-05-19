@@ -89,6 +89,8 @@ describe "Coinify", ->
                 })
               else
                 reject("DUPLICATE_EMAIL")
+            else if endpoint == "auth"
+              resolve({access_token: "access-token", token_type: "bearer"})
             else
               reject("Unknown endpoint")
           {
@@ -128,3 +130,24 @@ describe "Coinify", ->
           promise = c.signup("duplicate@blockchain.com", "+1234", "EUR")
           expect(promise).toBeRejectedWith("DUPLICATE_EMAIL", done)
         )
+
+      describe 'login', ->
+        beforeEach ->
+          c._user = "user-1"
+          c._offline_token = "offline-token"
+
+        it 'requires an offline token', ->
+          c._offline_token = undefined
+          promise = c.login()
+          expect(promise).toBeRejectedWith("NO_OFFLINE_TOKEN")
+
+        it 'should POST the offline token to /auth', ->
+          promise = c.login()
+          expect(c.POST).toHaveBeenCalled()
+          expect(c.POST.calls.argsFor(0)[1].offline_token).toEqual('offline-token')
+
+        it 'should store the access token', (done) ->
+          # This is ephemeral, not saved to the wallet.
+          promise = c.login()
+          expect(promise).toBeResolved(done)
+          expect(c._access_token).toEqual("access-token")
