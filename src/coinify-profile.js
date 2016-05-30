@@ -91,6 +91,8 @@ CoinifyProfile.prototype.fetch = function() {
     parentThis._country = res.profile.address.country;
 
     parentThis._did_fetch = true;
+
+    return parentThis;
   })
 }
 

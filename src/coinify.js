@@ -4,6 +4,8 @@ var MyWallet = require('./wallet');
 var Helpers = require('./helpers');
 var API = require('./api');
 var CoinifyProfile = require('./coinify-profile');
+var CoinifyTrade = require('./coinify-trade');
+var HDAccount = require('./hd-account');
 
 var assert  = require('assert');
 
@@ -17,8 +19,8 @@ function Coinify (object) {
   this._auto_login = obj.auto_login;
   this._rootURL = 'https://app-api.coinify.com/';
 
-
   this._profile = new CoinifyProfile(this);
+  this._lastQuote = null;
 }
 
 Object.defineProperties(Coinify.prototype, {
@@ -148,8 +150,138 @@ Coinify.prototype.fetchProfile = function() {
     return this._profile.fetch();
   } else {
     return this.login().then(function() {
-      parentThis._profile.fetch();
+      return parentThis._profile.fetch();
     })
+  }
+}
+
+Coinify.prototype.getQuote = function (amount) {
+  // TODO: mnemonize (taking expiration into account)
+
+  var parentThis = this;
+
+  var processQuote = function(quote) {
+    var expiresAt = new Date(quote.expiryTime);
+
+    parentThis._lastQuote = {
+      id: quote.id,
+      baseCurrency: quote.baseCurrency,
+      quoteCurrency: quote.quoteCurrency,
+      baseAmount: quote.baseAmount,
+      quoteAmount: quote.quoteAmount * 100, // API is in μBTC
+      expiresAt: expiresAt
+    }
+    return Promise.resolve(parentThis._lastQuote);
+  }
+
+  var getQuote = function(profile) {
+    return parentThis.POST('trades/quote', {
+      baseCurrency: profile.defaultCurrency,
+      quoteCurrency: 'BTC',
+      baseAmount: -amount
+    }).then(processQuote);
+  }
+
+  if(this.profile === null) {
+    return this.fetchProfile().then(getQuote);
+  } else {
+    return getQuote(this.profile);
+  }
+
+}
+
+Coinify.prototype.buy = function(amount, account) {
+  assert(account === undefined || Helpers.isInstanceOf(account, HDAccount), "HDAccount");
+  var parentThis = this;
+
+  if(account === undefined) {
+    account = MyWallet.wallet.hdwallet.accounts[0];
+  }
+
+  var receiveAddressIndex = account.receiveIndex;
+
+  var processTrade = function(res) {
+    var trade = new CoinifyTrade(res, parentThis);
+    account.setLabelForReceivingAddress(receiveAddressIndex, 'Coinify order #' + trade.id)
+    return Promise.resolve(trade);
+  }
+
+  var buy = function() {
+
+    return parentThis.POST('trades', {
+      priceQuoteId: parentThis._lastQuote.id,
+      baseCurrency: parentThis._lastQuote.baseCurrency,
+      quoteCurrency: parentThis._lastQuote.quoteCurrency,
+      baseAmount: -amount,
+      transferIn: {
+        medium: "card"
+      },
+      transferOut: {
+        medium: "blockchain",
+        details: {
+          account: account.receiveAddressAtIndex(receiveAddressIndex)
+        }
+      }
+    }).then(processTrade);
+  }
+
+  var tenSecondsFromNow = new Date(new Date() + 10000);
+  if(
+    this._lastQuote === null ||
+    this._lastQuote.baseAmount != amount ||
+    this._lastQuote.expiresAt < tenSecondsFromNow
+  ) {
+    return this.getQuote(amount).then(buy)
+  } else  {
+    return buy()
+  }
+}
+
+Coinify.prototype.getTrades = function() {
+  var parentThis = this;
+
+  var getTrades = function() {
+    return parentThis.GET('trades').then(function (res) {
+      // Endpoint not fully implemented yet, adding some fake data:
+      res = [{
+        baseCurrency:"EUR",
+        quoteCurrency:"BTC",
+        baseAmount:-30,
+        transferIn:{
+          medium:"card",
+          id:4433662222,
+          currency:"USD",
+          amount:100000
+        },
+        transferOut:{
+          medium:"blockchain",
+          details:{
+            account:"1JTpLFmW6CH4PxBzrQj2fMMdqg6CMB45y9"
+          },
+          id:4433662233,
+          currency:"BTC"
+        },
+        traderId:"3",
+        id:113475347,
+        state:"awaiting_transfer_in",
+        quoteAmountExpected:241526674,
+        updateTime:"2016-04-01T12:27:36Z",
+        createTime:"2016-04-01T12:23:19Z"
+      }];
+
+      var output = [];
+      for (var i = 0; i < res.length; i++) {
+        var trade = new CoinifyTrade(res[i], parentThis);
+        output.push(trade);
+      }
+      return Promise.resolve(output);
+    });
+  }
+
+  if(this._access_token) {
+    return getTrades;
+  } else {
+    return this.login().then(getTrades);
   }
 }
 
