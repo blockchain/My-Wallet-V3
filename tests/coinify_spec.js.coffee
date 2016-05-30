@@ -12,7 +12,7 @@ stubs = {
 
 Coinify    = proxyquire('../src/coinify', stubs)
 
-describe "Coinify", ->
+fdescribe "Coinify", ->
 
   c = undefined
 
@@ -103,6 +103,27 @@ describe "Coinify", ->
           }
         )
 
+        spyOn(c, "PATCH").and.callFake((endpoint, data) ->
+          handle = (resolve, reject) ->
+            if endpoint == "traders/me"
+              console.log(data)
+              resolve({
+                profile:
+                  name: (data.profile && data.profile.name) || c._profile._full_name
+                defaultCurrency: data.defaultCurrency || c._profile._default_currency
+              })
+            else
+              reject("Unknown endpoint")
+          {
+            then: (resolve) ->
+              handle(resolve, (() ->))
+              {
+                catch: (reject) ->
+                  handle((() ->), reject)
+              }
+          }
+        )
+
       describe "signup", ->
         it 'requires the country to be set', ->
           MyWallet.wallet.profile.countryCode = null
@@ -151,3 +172,26 @@ describe "Coinify", ->
           promise = c.login()
           expect(promise).toBeResolved(done)
           expect(c._access_token).toEqual("access-token")
+
+      describe 'profile', ->
+        beforeEach ->
+          c._user = "user-1"
+          c._offline_token = "offline-token"
+          c._access_token = "access-token"
+          c._profile._did_fetch = true;
+          c._profile._full_name = "John Doe"
+          c._profile._default_currency = "EUR"
+
+        describe 'fullName', ->
+          it 'can be updated', () ->
+            c.profile.fullName = "Jane Doe"
+            expect(c.PATCH).toHaveBeenCalled()
+            expect(c.PATCH.calls.argsFor(0)[1].profile).toEqual({name: 'Jane Doe'})
+            expect(c.profile.fullName).toEqual('Jane Doe')
+
+        describe 'default currency', ->
+          it 'can be updated', () ->
+            c.profile.defaultCurrency = "USD"
+            expect(c.PATCH).toHaveBeenCalled()
+            expect(c.PATCH.calls.argsFor(0)[1].defaultCurrency).toEqual('USD')
+            expect(c.profile.defaultCurrency).toEqual('USD')

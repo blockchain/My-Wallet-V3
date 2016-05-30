@@ -3,6 +3,7 @@
 var MyWallet = require('./wallet');
 var Helpers = require('./helpers');
 var API = require('./api');
+var CoinifyProfile = require('./coinify-profile');
 
 var assert  = require('assert');
 
@@ -15,6 +16,9 @@ function Coinify (object) {
   this._offline_token = obj.offline_token;
   this._auto_login = obj.auto_login;
   this._rootURL = 'https://app-api.coinify.com/';
+
+
+  this._profile = new CoinifyProfile(this);
 }
 
 Object.defineProperties(Coinify.prototype, {
@@ -33,6 +37,16 @@ Object.defineProperties(Coinify.prototype, {
       this._auto_login = value;
       MyWallet.syncWallet();
     }
+  },
+  'profile' : {
+    configurable: false,
+    get: function () {
+      if(!this._access_token || !this._profile._did_fetch) {
+        return null;
+      } else {
+        return this._profile;
+      }
+    },
   }
 });
 
@@ -85,7 +99,7 @@ Coinify.prototype.signup = function(email, mobile, currency) {
 
     parentThis.POST('signup/trader', {
       email: email,
-      partnerId: null,
+      partnerId: 18,
       defaultCurrency: currency, // ISO 4217
       profile: {
         address: {
@@ -127,15 +141,47 @@ Coinify.prototype.login = function() {
   return promise;
 }
 
+Coinify.prototype.fetchProfile = function() {
+  var parentThis = this;
+
+  if(this._access_token) {
+    return this._profile.fetch();
+  } else {
+    return this.login().then(function() {
+      parentThis._profile.fetch();
+    })
+  }
+}
+
+Coinify.prototype.GET = function (endpoint, data) {
+  return this.request("GET", endpoint, data);
+}
+
 Coinify.prototype.POST = function (endpoint, data) {
+  return this.request("POST", endpoint, data);
+}
+
+Coinify.prototype.PATCH = function (endpoint, data) {
+  return this.request("PATCH", endpoint, data);
+}
+
+Coinify.prototype.request = function (method, endpoint, data) {
   var url = this._rootURL + endpoint;
 
   var options = {
-    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    credentials: 'omit',
-    body: JSON.stringify(data)
+    credentials: 'omit'
   };
+
+  if (this._access_token) {
+    options.headers['Authorization'] = 'Bearer ' + this._access_token;
+  }
+
+  if (method !== 'GET') {
+    options.body = JSON.stringify(data)
+  }
+
+  options.method = method;
 
   var handleNetworkError = function (e) {
     return Promise.reject({ error: 'COINIFY_CONNECT_ERROR', message: e });
