@@ -1,4 +1,4 @@
-module.exports = function (karma) {
+module.exports = function (config) {
   var configuration = {
     basePath: './',
 
@@ -10,8 +10,10 @@ module.exports = function (karma) {
 
     // reportSlowerThan: 50,
 
+    logLevel: config.LOG_WARN,
+
     client: {
-      captureConsole: true
+      captureConsole: false
     },
 
     autoWatch: true,
@@ -85,5 +87,5 @@ module.exports = function (karma) {
     ]
   };
 
-  karma.set(configuration);
+  config.set(configuration);
 };

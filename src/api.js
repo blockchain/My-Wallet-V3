@@ -29,16 +29,25 @@ API.prototype.encodeFormData = function (data) {
   return encoded;
 };
 
-API.prototype.request = function (action, method, data, withCred) {
-  var url = this.ROOT_URL + method;
-  var body = this.encodeFormData(data);
-  var time = (new Date()).getTime();
+////////////////////////////////////////////////////////////////////////////////
+// Permitted extra headers:
+// sessionToken -> "Authorization Bearer <token>"
+API.prototype.request = function (action, method, data, extraHeaders) {
+  var url   = this.ROOT_URL + method
+  var body  = data ? this.encodeFormData(data) : ''
+  var time  = (new Date()).getTime();
 
   var options = {
     method: action,
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    credentials: withCred ? 'include' : 'omit'
+    credentials: 'omit'
   };
+
+  if(extraHeaders) {
+    if(extraHeaders.sessionToken) {
+      options.headers['Authorization'] = 'Bearer ' + extraHeaders.sessionToken;
+    }
+  }
 
   if (action === 'GET') url += '?' + body;
   if (action === 'POST') options.body = body;
@@ -54,6 +63,11 @@ API.prototype.request = function (action, method, data, withCred) {
         response.headers.get('content-type').indexOf('application/json') > -1
       ) {
         return response.json();
+      } else if (
+        response.headers.get('content-type') &&
+        response.headers.get('content-type').indexOf('image/jpeg') > -1
+      ) {
+        return response.blob();
       } else if (data.format === 'json') {
         return response.json();
       } else {
