@@ -31,6 +31,8 @@ function Tx (object) {
   this.vin_sz = obj.vin_sz;
   this.vout_sz = obj.vout_sz;
   this.double_spend = obj.double_spend;
+  this.double_spends = obj.double_spends;
+  this.rbf = obj.rbf;
   this.publicNote = obj.note;
   this.note = MyWallet.wallet.getNote(this.hash);
   this.confirmations = setConfirmations(this.block_height);
