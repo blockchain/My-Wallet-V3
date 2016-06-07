@@ -16,6 +16,9 @@ var BlockchainSocket = require('./blockchain-socket');
 var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var RNG = require('./rng');
 var BIP39 = require('bip39');
+var Bitcoin = require('bitcoinjs-lib');
+// Intentionally not directly included in package.json:
+var createHmac = require('create-hmac');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -524,3 +527,24 @@ MyWallet.logout = function (sessionToken, force) {
 
   API.request("GET", 'wallet/logout', data, headers).then(reload).catch(reload);
 };
+
+// In case of a non-mainstream browser, ensure it correctly implements the
+// math needed to derive addresses from a mnemonic.
+MyWallet.browserCheck = function() {
+  var mnemonic = 'daughter size twenty place alter glass small bid purse october faint beyond';
+  var seed = BIP39.mnemonicToSeed(mnemonic, '');
+  var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed);
+  var account = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(0);
+  var address = account.derive(0).derive(0).getAddress();
+  return address === '1QBWUDG4AFL2kFmbqoZ9y4KsSpQoCTZKRw';
+}
+
+MyWallet.browserCheckFast = function() {
+  var seed = Buffer('9f3ad67c5f1eebbffcc8314cb8a3aacbfa28046fd4b3d0af6965a8c804a603e57f5b551320eca4017267550e5b01e622978c133f2085c5999f7ef57a340d0ae2', 'hex');
+  var hmacSha512Expected =
+    '554d80de8f1747c88d8fb01d27277d0a77ee167886737e91b03da170319858b69ff5840b791b0faaf4b83b54c65886db4ef0f7abc8d0a4e3e10add20681b744f';
+  var hmacSha512 = createHmac('sha512', seed);
+  hmacSha512.update('100 bottles of beer on the wall');
+  var hmacSha512Output = hmacSha512.digest().toString('hex');
+  return hmacSha512Output === hmacSha512Expected;
+}
