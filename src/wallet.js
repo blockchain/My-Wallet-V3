@@ -127,8 +127,8 @@ function decryptAndInitializeWallet (success, error, decrypt_success, build_hd_s
     encryptedWalletData,
     WalletStore.getPassword(),
     function (obj, rootContainer) {
-      decrypt_success && decrypt_success();
       MyWallet.wallet = new Wallet(obj);
+      decrypt_success && decrypt_success();
 
       // this sanity check should be done on the load
       // if (!sharedKey || sharedKey.length == 0 || sharedKey.length != 36) {

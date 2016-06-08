@@ -38,8 +38,7 @@ RNG.prototype.run = function (nBytes) {
   try {
     nBytes = Helpers.isPositiveInteger(nBytes) ? nBytes : this.BYTES;
     var serverH = this.getServerEntropy(nBytes);
-    var localH = randomBytes(nBytes);
-
+    var localH = getRandomBytes ? Buffer(getRandomBytes(nBytes), 'hex') : randomBytes(nBytes);
     assert(
       localH.length > 0,
       'Local entropy should not be empty.'
@@ -97,7 +96,7 @@ RNG.prototype.getServerEntropy = function (nBytes) {
   request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
   request.send(null);
 
-  if (request.status === 200) {
+  if (request.status == 200) {
     assert(
       Helpers.isHex(request.responseText),
       'Non-hex server entropy answer.'
