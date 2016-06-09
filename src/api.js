@@ -271,6 +271,32 @@ API.prototype.getFees = function () {
             .catch(handleNetworkError);
 };
 
+API.prototype.batchFetchTxs = function (context, startDate, endDate, batchSize) {
+  batchSize = isNaN(batchSize) || batchSize > 50 ? 50 : batchSize;
+  var txInTimeInterval = function (tx) { return tx.time * 1000 < startDate && tx.time * 1000 > endDate; };
+  var txBeforeEndDate = function (tx) { return tx.time * 1000 < endDate; };
+  return (function fetchMore (txs) {
+    return this.getHistory(context, 0, txs.length, batchSize)
+      .then(function (obj) {
+        var reachedEnd = obj.txs.length === 0 || obj.txs.some(txBeforeEndDate);
+        var allTxs = txs.concat(obj.txs);
+        return reachedEnd ? allTxs : fetchMore(allTxs);
+      });
+  }.bind(this))([]).then(function (txs) {
+    return txs.filter(txInTimeInterval);
+  });
+};
+
+API.prototype.loadHistoricalPrices = function () {
+  var query = this.encodeFormData({
+    format: 'json',
+    timespan: 'all',
+    api_code: this.API_CODE
+  });
+  return fetch(this.ROOT_URL + 'charts/market-price?' + query)
+    .then(function (r) { return r.json(); }).then(function (r) { return r.values; });
+};
+
 // OLD FUNCTIONS COPIED: Must rewrite this ones (email ,sms)
 // function sendViaEmail(email, tx, privateKey, successCallback, errorCallback) {
 //   try {
