@@ -43,13 +43,6 @@ function Wallet (object) {
   // hdwallets list
   this._hd_wallets = obj.hd_wallets ? obj.hd_wallets.map(HDWallet.factory) : undefined;
 
-  // paidTo dictionary
-  this._paidTo = obj.paidTo || {};
-  if (this.isUpgradedToHD) {
-    Helpers.merge(this._paidTo, this.hdwallet._paidTo); // move paidTo from the wrong place
-    delete this.hdwallet._paidTo;
-  }
-
   // address book list
   // address book in json is [{address: 'address1', label: 'label1'} , ... ]
   // address book in memory is {address1: 'label1', address2: 'label2'}
@@ -420,7 +413,6 @@ Wallet.prototype.toJSON = function () {
     // tx_tags           : this._tx_tags,
     tx_names: this._tx_names,
     keys: this.keys,
-    paidTo: this._paidTo,
     hd_wallets: Helpers.isEmptyArray(this._hd_wallets) ? undefined : this._hd_wallets
   };
 };
@@ -729,10 +721,6 @@ Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosav
   if (!(nosave === true)) MyWallet.syncWallet();
   typeof (success) === 'function' && success();
   return newAccount;
-};
-
-Wallet.prototype.getPaidTo = function (txHash) {
-  return this._paidTo[txHash];
 };
 
 Wallet.prototype.getAddressBookLabel = function (address) {

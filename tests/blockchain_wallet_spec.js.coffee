@@ -43,7 +43,6 @@ describe "Blockchain-Wallet", ->
         'created_device_version': '1.0'
       },
     ]
-    'paidTo': {}
     'hd_wallets': [ {
       'seed_hex': '7e061ca8e579e5e70e9989ca40d342fe'
       'passphrase': ''
@@ -600,9 +599,6 @@ describe "Blockchain-Wallet", ->
           wallet.newAccount("Coffee fund", "batteryhorsestaple", 0, cb.success)
           expect(cb.success).toHaveBeenCalled()
           expect(MyWallet.syncWallet).toHaveBeenCalled()
-
-      it ".getPaidTo", ->
-        pending()
 
       describe "addressbook label", ->
 
