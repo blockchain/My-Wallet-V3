@@ -329,9 +329,9 @@ function fetchWalletWithSharedKey (guid, sharedKey) {
     WalletStore.setSyncPubKeys(obj.sync_pubkeys);
 
     if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
-      resolve(obj)
+      return obj;
     } else {
-      reject("Wallet payload missing, empty or 'not modified'");
+      throw('Wallet payload missing, empty or not modified');
     }
   };
 
