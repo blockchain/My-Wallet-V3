@@ -172,19 +172,18 @@ MyWallet.makePairingCode = function (success, error) {
   }
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// guid: the wallet identifier
-// password: to decrypt the wallet (which happens in the browser)
-// server credentials:
-//   twoFactor: 2FA {type: ..., code: ....} or null
-//   sharedKey: if present, it bypasses 2FA and browser verification
-// callbacks:
-//   needsTwoFactorCode
-//   wrongTwoFactorCode
-//   authorizationRequired: this is a new browser
-//   didFetch: wallet has been downloaded from the server
-//   didDecrypt wallet has been decrypted (with the password)
-//   didBuildHD: HD part of wallet has been constructed in memory
+/* guid: the wallet identifier
+   password: to decrypt the wallet (which happens in the browser)
+   server credentials:
+     twoFactor: 2FA {type: ..., code: ....} or null
+     sharedKey: if present, it bypasses 2FA and browser verification
+   callbacks:
+     needsTwoFactorCode
+     wrongTwoFactorCode
+     authorizationRequired: this is a new browser
+     didFetch: wallet has been downloaded from the server
+     didDecrypt wallet has been decrypted (with the password)
+     didBuildHD: HD part of wallet has been constructed in memory */
 
 MyWallet.login = function (guid, password, credentials, callbacks) {
   assert(credentials.twoFactor !== undefined, '2FA code must be null or set');
@@ -196,7 +195,7 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
   var loginPromise = new Promise(function (resolve, reject) {
     // If the shared key is known, 2FA and browser verification are skipped.
     // No session is needed in that case.
-    if(credentials.sharedKey) {
+    if (credentials.sharedKey) {
       return WalletNetwork.fetchWalletWithSharedKey(guid, credentials.sharedKey)
         .then(function (obj) {
           callbacks.didFetch && callbacks.didFetch();
@@ -216,7 +215,7 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
         // We wait for them to click the link.
         var authorizationRequired = function() {
           var promise = new Promise(function (resolveA, rejectA) {
-            if(typeof(callbacks.authorizationRequired) === 'function') {
+            if (typeof(callbacks.authorizationRequired) === 'function') {
               callbacks.authorizationRequired(function () {
                 WalletNetwork.pollForSessionGUID(token).then(function () {
                   resolveA();
@@ -233,7 +232,7 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
           callbacks.needsTwoFactorCode(token, authType);
         };
 
-        if(credentials.twoFactor) {
+        if (credentials.twoFactor) {
           WalletNetwork.fetchWalletWithTwoFactor(guid, token, credentials.twoFactor)
           .then(function (obj) {
             callbacks.didFetch && callbacks.didFetch();

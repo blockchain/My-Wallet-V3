@@ -204,7 +204,7 @@ function obtainSessionToken () {
 }
 
 function establishSession (token) {
-  if(token) {
+  if (token) {
     return Promise.resolve(token);
   } else {
     return this.obtainSessionToken();
@@ -252,7 +252,7 @@ function fetchWallet (guid, token, needsTwoFactorCode, authorizationRequired) {
 
     var error = function (e) {
        var obj = 'object' === typeof e ? e : JSON.parse(e);
-       if(obj && obj.initial_error && !obj.authorization_required) {
+       if (obj && obj.initial_error && !obj.authorization_required) {
          reject(obj.initial_error);
          return;
        }
@@ -338,7 +338,7 @@ function fetchWalletWithSharedKey (guid, sharedKey) {
   var error = function (e) {
      console.log(e);
      var obj = 'object' === typeof e ? e : JSON.parse(e);
-     if(obj && obj.initial_error) {
+     if (obj && obj.initial_error) {
        reject(obj.initial_error);
        return;
      }

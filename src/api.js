@@ -29,13 +29,12 @@ API.prototype.encodeFormData = function (data) {
   return encoded;
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// Permitted extra headers:
-// sessionToken -> "Authorization Bearer <token>"
+/* Permitted extra headers:
+   sessionToken -> "Authorization Bearer <token>" */
 API.prototype.request = function (action, method, data, extraHeaders) {
-  var url   = this.ROOT_URL + method
-  var body  = data ? this.encodeFormData(data) : ''
-  var time  = (new Date()).getTime();
+  var url = this.ROOT_URL + method;
+  var body = data ? this.encodeFormData(data) : '';
+  var time = (new Date()).getTime();
 
   var options = {
     method: action,
@@ -43,8 +42,8 @@ API.prototype.request = function (action, method, data, extraHeaders) {
     credentials: 'omit'
   };
 
-  if(extraHeaders) {
-    if(extraHeaders.sessionToken) {
+  if (extraHeaders) {
+    if (extraHeaders.sessionToken) {
       options.headers['Authorization'] = 'Bearer ' + extraHeaders.sessionToken;
     }
   }
@@ -172,7 +171,7 @@ API.prototype.getUnspent = function (fromAddresses, confirmations) {
   return this.retry(this.request.bind(this, 'POST', 'unspent', data));
 };
 
-API.prototype.getHistory = function (addresses, tx_filter, offset, n, syncBool) {
+API.prototype.getHistory = function (addresses, txFilter, offset, n, syncBool) {
   var clientTime = (new Date()).getTime();
   offset = offset || 0;
   n = n || 0;
@@ -189,8 +188,8 @@ API.prototype.getHistory = function (addresses, tx_filter, offset, n, syncBool) 
     api_code: this.API_CODE
   };
 
-  if (tx_filter !== undefined && tx_filter !== null) {
-    data.filter = tx_filter;
+  if (txFilter !== undefined && txFilter !== null) {
+    data.filter = txFilter;
   }
   return this.retry(this.request.bind(this, 'POST', 'multiaddr', data, null, syncBool));
 };
