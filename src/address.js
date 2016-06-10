@@ -188,7 +188,7 @@ Address.fromString = function (keyOrAddr, label, bipPass) {
       var okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
 
       if (format === 'bip38') {
-        if (bipPass == undefined || bipPass === '') {
+        if (bipPass === undefined || bipPass === null || bipPass === '') {
           return reject('needsBip38');
         }
         ImportExport.parseBIP38toECPair(keyOrAddr, bipPass,

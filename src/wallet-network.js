@@ -33,7 +33,7 @@ function generateUUIDs (count) {
   };
 
   var extractUUIDs = function (data) {
-    if (!data.uuids || data.uuids.length != count) {
+    if (!data.uuids || data.uuids.length !== count) {
       return Promise.reject('Could not generate uuids');
     }
     return data.uuids;
@@ -94,7 +94,7 @@ function checkWalletChecksum (payload_checksum, success, error) {
   var data = {method: 'wallet.aes.json', format: 'json', checksum: payload_checksum};
 
   API.securePostCallbacks('wallet', data, function (obj) {
-    if (!obj.payload || obj.payload == 'Not modified') {
+    if (!obj.payload || obj.payload === 'Not modified') {
       if (success) success();
     } else if (error) error();
   }, function () {
@@ -153,7 +153,7 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
     // Everything looks ok, Encrypt the JSON output
     var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.wallet.defaultPbkdf2Iterations, MyWallet.wallet.isUpgradedToHD ? 3.0 : 2.0);
 
-    if (crypted.length == 0) {
+    if (crypted.length === 0) {
       return reject('Error encrypting the JSON output');
     }
 
@@ -243,7 +243,7 @@ function fetchWallet (guid, token, needsTwoFactorCode, authorizationRequired) {
       WalletStore.setRealAuthType(obj.real_auth_type);
       WalletStore.setSyncPubKeys(obj.sync_pubkeys);
 
-      if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
+      if (obj.payload && obj.payload.length > 0 && obj.payload !== 'Not modified') {
         resolve(obj);
       } else {
         needsTwoFactorCode(obj.auth_type);
@@ -270,7 +270,7 @@ function fetchWallet (guid, token, needsTwoFactorCode, authorizationRequired) {
 
 function  fetchWalletWithTwoFactor (guid, sessionToken, twoFactor) {
   var promise = new Promise(function (resolve, reject) {
-    if (twoFactor.code.length == 0 || twoFactor.code.length > 255) {
+    if (twoFactor.code.length === 0 || twoFactor.code.length > 255) {
      reject('You must enter a Two Factor Authentication code');
      return;
     }
@@ -286,11 +286,11 @@ function  fetchWalletWithTwoFactor (guid, sessionToken, twoFactor) {
     }
 
     var success = function (data) {
-     if (data == null || data.length == 0) {
+     if (data == null || data.length === 0) {
        otherError('Server Return Empty Wallet Data');
        return;
      }
-     if (data != 'Not modified') { WalletStore.setEncryptedWalletData(data); }
+     if (data !== 'Not modified') { WalletStore.setEncryptedWalletData(data); }
      resolve(data);
     };
     var error = function (response) {
@@ -328,7 +328,7 @@ function fetchWalletWithSharedKey (guid, sharedKey) {
     WalletStore.setRealAuthType(obj.real_auth_type);
     WalletStore.setSyncPubKeys(obj.sync_pubkeys);
 
-    if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
+    if (obj.payload && obj.payload.length > 0 && obj.payload !== 'Not modified') {
       return obj;
     } else {
       throw(new Error('Wallet payload missing, empty or not modified'));

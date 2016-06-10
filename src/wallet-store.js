@@ -71,7 +71,7 @@ var WalletStore = (function () {
       return WalletCrypto.sha256(encrypted_wallet_data).toString('hex');
     },
     setEncryptedWalletData: function (data) {
-      if (!data || data.length == 0) {
+      if (!data || data.length === 0) {
         encrypted_wallet_data = null;
         payload_checksum = null;
       } else {

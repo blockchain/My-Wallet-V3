@@ -497,7 +497,7 @@ function arraycopy32 (src, srcPos, dest, destPos, length) {
 }
 
 function scrypt (passwd, salt, N, r, p, dkLen, callback) {
-  if (N == 0 || (N & (N - 1)) != 0) throw Error('N must be > 0 and a power of 2');
+  if (N === 0 || (N & (N - 1)) !== 0) throw Error('N must be > 0 and a power of 2');
 
   var MAX_VALUE = 2147483647;
   if (N > MAX_VALUE / 128 / r) throw Error('Parameter N is too large');

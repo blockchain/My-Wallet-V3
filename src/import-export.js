@@ -23,10 +23,10 @@ var ImportExport = new function () {
       return;
     }
 
-    if (hex.length != 43) {
+    if (hex.length !== 43) {
       error('Invalid Private Key');
       return;
-    } else if (hex[0] != 0x01) {
+    } else if (hex[0] !== 0x01) {
       error('Invalid Private Key');
       return;
     }
@@ -36,7 +36,7 @@ var ImportExport = new function () {
 
     var checksum = hash256(hex);
 
-    if (checksum[0] != expChecksum[0] || checksum[1] != expChecksum[1] || checksum[2] != expChecksum[2] || checksum[3] != expChecksum[3]) {
+    if (checksum[0] !== expChecksum[0] || checksum[1] !== expChecksum[1] || checksum[2] !== expChecksum[2] || checksum[3] !== expChecksum[3]) {
       error('Invalid Private Key');
       return;
     }
@@ -44,18 +44,18 @@ var ImportExport = new function () {
     var isCompPoint = false;
     var isECMult = false;
     var hasLotSeq = false;
-    if (hex[1] == 0x42) {
-      if (hex[2] == 0xe0) {
+    if (hex[1] === 0x42) {
+      if (hex[2] === 0xe0) {
         isCompPoint = true;
-      } else if (hex[2] != 0xc0) {
+      } else if (hex[2] !== 0xc0) {
         error('Invalid Private Key');
         return;
       }
-    } else if (hex[1] == 0x43) {
+    } else if (hex[1] === 0x43) {
       isECMult = true;
-      isCompPoint = (hex[2] & 0x20) != 0;
-      hasLotSeq = (hex[2] & 0x04) != 0;
-      if ((hex[2] & 0x24) != hex[2]) {
+      isCompPoint = (hex[2] & 0x20) !== 0;
+      hasLotSeq = (hex[2] & 0x04) !== 0;
+      if ((hex[2] & 0x24) !== hex[2]) {
         error('Invalid Private Key');
         return;
       }
@@ -74,7 +74,7 @@ var ImportExport = new function () {
 
       checksum = hash256(base58Address);
 
-      if (checksum[0] != hex[3] || checksum[1] != hex[4] || checksum[2] != hex[5] || checksum[3] != hex[6]) {
+      if (checksum[0] !== hex[3] || checksum[1] !== hex[4] || checksum[2] !== hex[5] || checksum[3] !== hex[6]) {
         wrong_password();
         return;
       }

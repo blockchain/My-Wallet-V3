@@ -43,24 +43,24 @@ function socketConnect () {
       return;
     }
 
-    if (obj.op == 'on_change') {
+    if (obj.op === 'on_change') {
       var old_checksum = WalletStore.generatePayloadChecksum();
       var new_checksum = obj.checksum;
 
-      if (last_on_change != new_checksum && old_checksum != new_checksum) {
+      if (last_on_change !== new_checksum && old_checksum !== new_checksum) {
         last_on_change = new_checksum;
 
         MyWallet.getWallet();
       }
-    } else if (obj.op == 'utx') {
+    } else if (obj.op === 'utx') {
       WalletStore.sendEvent('on_tx_received');
       var sendOnTx = WalletStore.sendEvent.bind(null, 'on_tx');
       MyWallet.wallet.getHistory().then(sendOnTx);
-    } else if (obj.op == 'block') {
+    } else if (obj.op === 'block') {
       var sendOnBlock = WalletStore.sendEvent.bind(null, 'on_block');
       MyWallet.wallet.getHistory().then(sendOnBlock);
       MyWallet.wallet.latestBlock = obj.x;
-    } else if (obj.op == 'pong') {
+    } else if (obj.op === 'pong') {
       clearTimeout(MyWallet.ws.pingTimeoutPID);
     }
   }
@@ -95,7 +95,7 @@ MyWallet.getWallet = function (success, error) {
   }
 
   API.securePostCallbacks('wallet', data, function (obj) {
-    if (!obj.payload || obj.payload == 'Not modified') {
+    if (!obj.payload || obj.payload === 'Not modified') {
       if (success) success();
       return;
     }
@@ -122,7 +122,7 @@ MyWallet.decryptAndInitializeWallet = function(success, error, decrypt_success, 
   assert(error, 'Error callback required');
   var encryptedWalletData = WalletStore.getEncryptedWalletData();
 
-  if (encryptedWalletData == null || encryptedWalletData.length == 0) {
+  if (encryptedWalletData === undefined || encryptedWalletData === null || encryptedWalletData.length === 0) {
     error('No Wallet Data To Decrypt');
     return;
   }
@@ -143,7 +143,8 @@ MyWallet.decryptAndInitializeWallet = function(success, error, decrypt_success, 
         WalletStore.setPbkdf2Iterations(rootContainer.pbkdf2_iterations);
       }
       // If we don't have a checksum then the wallet is probably brand new - so we can generate our own
-      if (WalletStore.getPayloadChecksum() == null || WalletStore.getPayloadChecksum().length == 0) {
+      var checkSum = WalletStore.getPayloadChecksum();
+      if (checkSum === undefined || checkSum === null || checkSum.length === 0) {
         WalletStore.setPayloadChecksum(WalletStore.generatePayloadChecksum());
       }
       if (MyWallet.wallet.isUpgradedToHD === false) {
@@ -275,11 +276,11 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
 }
 
 MyWallet.didFetchWallet = function(obj) {
-  if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
+  if (obj.payload && obj.payload.length > 0 && obj.payload !== 'Not modified') {
    WalletStore.setEncryptedWalletData(obj.payload);
   }
 
-  if (obj.language && WalletStore.getLanguage() != obj.language) {
+  if (obj.language && WalletStore.getLanguage() !== obj.language) {
    WalletStore.setLanguage(obj.language);
   }
 
@@ -369,7 +370,7 @@ function syncWallet (successcallback, errorcallback) {
     var crypted = WalletCrypto.encryptWallet(data, WalletStore.getPassword(),
         WalletStore.getPbkdf2Iterations(), MyWallet.wallet.isUpgradedToHD ? 3.0 : 2.0);
 
-    if (crypted.length == 0) {
+    if (crypted.length === 0) {
       throw new Error('Error encrypting the JSON output');
     }
 
@@ -396,8 +397,8 @@ function syncWallet (successcallback, errorcallback) {
         if (WalletStore.isSyncPubKeys()) {
           // Include HD addresses unless in lame mode:
           var hdAddresses = (
-            MyWallet.wallet.hdwallet != undefined &&
-            MyWallet.wallet.hdwallet.accounts != undefined
+            MyWallet.wallet.hdwallet !== undefined &&
+            MyWallet.wallet.hdwallet.accounts !== undefined
           ) ? [].concat.apply([],
             MyWallet.wallet.hdwallet.accounts.map(function (account) {
               return account.labeledReceivingAddresses;

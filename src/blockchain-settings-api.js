@@ -18,7 +18,7 @@ function get_account_info (success, error) {
 }
 
 function updateKV (method, value, success, error, extra) {
-  if (typeof value == 'string') {
+  if (typeof value === 'string') {
     value = value.trim();
   }
 

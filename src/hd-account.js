@@ -122,7 +122,7 @@ Object.defineProperties(HDAccount.prototype, {
       var keys = Object.keys(this._address_labels).map(function (k) {
         return parseInt(k, 10);
       });
-      if (keys.length == 0) {
+      if (keys.length === 0) {
         return -1;
       } else {
         return Math.max.apply(null, keys);
