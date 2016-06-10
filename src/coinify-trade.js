@@ -17,6 +17,7 @@ function CoinifyTrade (obj, coinify) {
   this._state = obj.state;
   this._createdAt = new Date(obj.createTime);
   this._iSignThisID = obj.transferIn.details.paymentId;
+  this._receiptUrl = obj.receiptUrl;
 }
 
 Object.defineProperties(CoinifyTrade.prototype, {
@@ -66,6 +67,12 @@ Object.defineProperties(CoinifyTrade.prototype, {
     configurable: false,
     get: function () {
       return this._outAmountExpected;
+    }
+  },
+  'receiptUrl' :{
+    configurable: false,
+    get: function () {
+      return this._receiptUrl;
     }
   }
 });
