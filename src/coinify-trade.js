@@ -8,12 +8,15 @@ function CoinifyTrade (obj, coinify) {
   this._coinify = coinify;
 
   this._id = obj.id;
-  this._baseCurrency = obj.baseCurrency;
-  this._quoteCurrency = obj.quoteCurrency;
-  this._baseAmount = obj.baseAmount;
+  this._inCurrency = obj.inCurrency;
+  this._outCurrency = obj.outCurrency;
+  this._inAmount = obj.inAmount;
+  this._medium = obj.transferIn.medium;
+  this._outAmountExpected = obj.outAmountExpected;
   this._receiveAddress = obj.transferOut.details.account;
   this._state = obj.state;
   this._createdAt = new Date(obj.createTime);
+  this._iSignThisID = obj.transferIn.details.paymentId;
 }
 
 Object.defineProperties(CoinifyTrade.prototype, {
@@ -26,7 +29,7 @@ Object.defineProperties(CoinifyTrade.prototype, {
   'iSignThisID' : {
     configurable: false,
     get: function () {
-      return 'cb561519-6627-45fe-9372-79942ec141c4';
+      return this._iSignThisID;
     }
   },
   'createdAt' :{
@@ -35,22 +38,34 @@ Object.defineProperties(CoinifyTrade.prototype, {
       return this._createdAt;
     }
   },
-  'baseCurrency' :{
+  'inCurrency' :{
     configurable: false,
     get: function () {
-      return this._baseCurrency;
+      return this._inCurrency;
     }
   },
-  'quoteCurrency' :{
+  'outCurrency' :{
     configurable: false,
     get: function () {
-      return this._quoteCurrency;
+      return this._outCurrency;
     }
   },
-  'baseAmount' :{
+  'inAmount' :{
     configurable: false,
     get: function () {
-      return this._baseAmount;
+      return this._inAmount;
+    }
+  },
+  'medium' :{
+    configurable: false,
+    get: function () {
+      return this._medium;
+    }
+  },
+  'outAmountExpected' :{
+    configurable: false,
+    get: function () {
+      return this._outAmountExpected;
     }
   }
 });

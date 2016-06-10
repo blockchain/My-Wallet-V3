@@ -242,32 +242,6 @@ Coinify.prototype.getTrades = function() {
 
   var getTrades = function() {
     return parentThis.GET('trades').then(function (res) {
-      // Endpoint not fully implemented yet, adding some fake data:
-      res = [{
-        baseCurrency:"EUR",
-        quoteCurrency:"BTC",
-        baseAmount:-30,
-        transferIn:{
-          medium:"card",
-          id:4433662222,
-          currency:"USD",
-          amount:100000
-        },
-        transferOut:{
-          medium:"blockchain",
-          details:{
-            account:"1JTpLFmW6CH4PxBzrQj2fMMdqg6CMB45y9"
-          },
-          id:4433662233,
-          currency:"BTC"
-        },
-        traderId:"3",
-        id:113475347,
-        state:"awaiting_transfer_in",
-        quoteAmountExpected:241526674,
-        updateTime:"2016-04-01T12:27:36Z",
-        createTime:"2016-04-01T12:23:19Z"
-      }];
 
       var output = [];
       for (var i = 0; i < res.length; i++) {
@@ -279,7 +253,7 @@ Coinify.prototype.getTrades = function() {
   }
 
   if(this._access_token) {
-    return getTrades;
+    return getTrades();
   } else {
     return this.login().then(getTrades);
   }
