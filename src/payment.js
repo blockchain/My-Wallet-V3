@@ -69,7 +69,7 @@ function Payment (payment) {
     txSize: 0 // transaciton size
   };
 
-  var p = payment ? payment : initialState;
+  var p = payment || initialState;
   this.payment = Payment.return(p);
   this.updateFees();
 
@@ -167,7 +167,7 @@ Payment.prototype.printJSON = function () {
 };
 
 Payment.return = function (payment) {
-  var p = payment ? payment : {};
+  var p = payment || {};
   return Promise.resolve(p);
 };
 

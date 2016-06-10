@@ -94,7 +94,7 @@ API.prototype.retry = function (f, n) {
   if (i > 1) {
     return f().then(
         undefined, // pass through success
-        function (err) { return self.retry(f, i - 1); }
+        function () { return self.retry(f, i - 1); }
     );
   } else {
     return f();

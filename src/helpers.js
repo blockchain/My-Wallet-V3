@@ -98,7 +98,10 @@ Helpers.memoize = function (f) {
   return function () {
     var key = arguments.length + Array.prototype.join.call(arguments, ',');
     if (key in cache) return cache[key];
-    else return cache[key] = f.apply(this, arguments);
+    else {
+      var value = cache[key] = f.apply(this, arguments);
+      return value;
+    }
   };
 };
 
@@ -170,7 +173,7 @@ Helpers.maybeCompose = function (f, g) {
   }
 };
 
-Function.prototype.compose = function (g) {
+Function.prototype.compose = function (g) { // eslint-disable-line no-extend-native
   var fn = this;
   return function () {
     return fn.call(this, g.apply(this, arguments));
@@ -257,7 +260,7 @@ Helpers.tor = function () {
   var hostname = Helpers.getHostName();
 
   // NodeJS TOR detection not supported:
-  if ('string' !== typeof hostname) return null;
+  if (typeof hostname !== 'string') return null;
 
   return hostname.slice(-6) === '.onion';
 };
@@ -275,33 +278,33 @@ function parseMiniKey (miniKey) {
 }
 
 Helpers.privateKeyStringToKey = function (value, format) {
-  var key_bytes = null;
+  var keyBytes = null;
   var tbytes;
 
   if (format === 'base58') {
-    key_bytes = Helpers.buffertoByteArray(Base58.decode(value));
+    keyBytes = Helpers.buffertoByteArray(Base58.decode(value));
   } else if (format === 'base64') {
-    key_bytes = Helpers.buffertoByteArray(new Buffer(value, 'base64'));
+    keyBytes = Helpers.buffertoByteArray(new Buffer(value, 'base64'));
   } else if (format === 'hex') {
-    key_bytes = Helpers.buffertoByteArray(new Buffer(value, 'hex'));
+    keyBytes = Helpers.buffertoByteArray(new Buffer(value, 'hex'));
   } else if (format === 'mini') {
-    key_bytes = Helpers.buffertoByteArray(parseMiniKey(value));
+    keyBytes = Helpers.buffertoByteArray(parseMiniKey(value));
   } else if (format === 'sipa') {
     tbytes = Helpers.buffertoByteArray(Base58.decode(value));
     tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
     tbytes.shift();
-    key_bytes = tbytes.slice(0, tbytes.length - 4);
+    keyBytes = tbytes.slice(0, tbytes.length - 4);
   } else if (format === 'compsipa') {
     tbytes = Helpers.buffertoByteArray(Base58.decode(value));
     tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
     tbytes.shift();
     tbytes.pop();
-    key_bytes = tbytes.slice(0, tbytes.length - 4);
+    keyBytes = tbytes.slice(0, tbytes.length - 4);
   } else {
     throw new Error('Unsupported Key Format');
   }
 
-  return new Bitcoin.ECPair(new BigInteger.fromByteArrayUnsigned(key_bytes), null, {compressed: format !== 'sipa'});
+  return new Bitcoin.ECPair(new BigInteger.fromByteArrayUnsigned(keyBytes), null, {compressed: format !== 'sipa'}); // eslint-disable-line new-cap
 };
 
 Helpers.detectPrivateKeyFormat = function (key) {

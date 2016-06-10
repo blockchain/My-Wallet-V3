@@ -28,7 +28,7 @@ MyWallet.ws = new BlockchainSocket();
 function socketConnect () {
   MyWallet.ws.connect(onOpen, onMessage, onClose);
 
-  var last_on_change = null;
+  var lastOnChange = null;
 
   function onMessage (message) {
     var obj = null;
@@ -44,11 +44,11 @@ function socketConnect () {
     }
 
     if (obj.op === 'on_change') {
-      var old_checksum = WalletStore.generatePayloadChecksum();
-      var new_checksum = obj.checksum;
+      var oldChecksum = WalletStore.generatePayloadChecksum();
+      var newChecksum = obj.checksum;
 
-      if (last_on_change !== new_checksum && old_checksum !== new_checksum) {
-        last_on_change = new_checksum;
+      if (lastOnChange !== newChecksum && oldChecksum !== newChecksum) {
+        lastOnChange = newChecksum;
 
         MyWallet.getWallet();
       }
@@ -117,7 +117,7 @@ MyWallet.getWallet = function (success, error) {
   });
 };
 
-MyWallet.decryptAndInitializeWallet = function (success, error, decrypt_success, build_hd_success) {
+MyWallet.decryptAndInitializeWallet = function (success, error, decryptSuccess, buildHdSuccess) {
   assert(success, 'Success callback required');
   assert(error, 'Error callback required');
   var encryptedWalletData = WalletStore.getEncryptedWalletData();
@@ -130,7 +130,7 @@ MyWallet.decryptAndInitializeWallet = function (success, error, decrypt_success,
     encryptedWalletData,
     WalletStore.getPassword(),
     function (obj, rootContainer) {
-      decrypt_success && decrypt_success();
+      decryptSuccess && decryptSuccess();
       MyWallet.wallet = new Wallet(obj);
 
       // this sanity check should be done on the load
@@ -160,9 +160,9 @@ MyWallet.decryptAndInitializeWallet = function (success, error, decrypt_success,
 // used in the frontend
 MyWallet.makePairingCode = function (success, error) {
   try {
-    API.securePostCallbacks('wallet', { method: 'pairing-encryption-password' }, function (encryption_phrase) {
+    API.securePostCallbacks('wallet', { method: 'pairing-encryption-password' }, function (encryptionPhrase) {
       var pwHex = new Buffer(WalletStore.getPassword()).toString('hex');
-      var encrypted = WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + pwHex, encryption_phrase, 10);
+      var encrypted = WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + pwHex, encryptionPhrase, 10);
       success('1|' + MyWallet.wallet.guid + '|' + encrypted);
     }, function (e) {
       error(e);
@@ -214,8 +214,8 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
         // If a new browser is used, the user receives a verification email.
         // We wait for them to click the link.
         var authorizationRequired = function () {
-          var promise = new Promise(function (resolveA, rejectA) {
-            if (typeof(callbacks.authorizationRequired) === 'function') {
+          var promise = new Promise(function (resolveA, rejectA) { // eslint-disable-line promise/param-names
+            if (typeof (callbacks.authorizationRequired) === 'function') {
               callbacks.authorizationRequired(function () {
                 WalletNetwork.pollForSessionGUID(token).then(function () {
                   resolveA();
@@ -284,7 +284,7 @@ MyWallet.didFetchWallet = function (obj) {
   return Promise.resolve();
 };
 
-MyWallet.initializeWallet = function (pw, decrypt_success, build_hd_success) {
+MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
   var promise = new Promise(function (resolve, reject) {
     if (isInitialized || WalletStore.isRestoringWallet()) {
       return;
@@ -311,8 +311,8 @@ MyWallet.initializeWallet = function (pw, decrypt_success, build_hd_success) {
         didDecryptWallet(_success);
       }
       , _error
-      , decrypt_success
-      , build_hd_success
+      , decryptSuccess
+      , buildHdSuccess
     );
   });
   return promise;
@@ -380,11 +380,11 @@ function syncWallet (successcallback, errorcallback) {
         var oldChecksum = WalletStore.getPayloadChecksum();
         WalletStore.sendEvent('on_backup_wallet_start');
         WalletStore.setEncryptedWalletData(crypted);
-        var new_checksum = WalletStore.getPayloadChecksum();
+        var newChecksum = WalletStore.getPayloadChecksum();
         var data = {
           length: crypted.length,
           payload: crypted,
-          checksum: new_checksum,
+          checksum: newChecksum,
           method: method,
           format: 'plain',
           language: WalletStore.getLanguage()
@@ -403,7 +403,7 @@ function syncWallet (successcallback, errorcallback) {
             MyWallet.wallet.hdwallet.accounts.map(function (account) {
               return account.labeledReceivingAddresses;
             })) : [];
-          data.active = [].concat.apply([],
+          data.active = [].concat.apply([], // eslint-disable-line no-useless-call
             [
               MyWallet.wallet.activeAddresses,
               hdAddresses
@@ -416,7 +416,7 @@ function syncWallet (successcallback, errorcallback) {
             data,
             function (data) {
               WalletNetwork.checkWalletChecksum(
-                  new_checksum,
+                  newChecksum,
                   function () {
                     WalletStore.setIsSynchronizedWithServer(true);
                     WalletStore.enableLogout();
@@ -477,7 +477,6 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
     WalletStore.unsafeSetPassword(createdPassword);
     successCallback(createdGuid, createdSharedKey, createdPassword);
   };
-
 
   var saveWallet = function (wallet) {
     WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, {email: inputedEmail}).then(function () {

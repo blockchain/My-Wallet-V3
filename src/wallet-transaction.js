@@ -7,11 +7,11 @@ var MyWallet = require('./wallet');
 function Tx (object) {
   var obj = object || {};
   // original properties
-  var setConfirmations = function (tx_block_height) {
+  var setConfirmations = function (txBlockHeight) {
     var lastBlock = MyWallet.wallet.latestBlock;
     var conf = 0;
-    if (lastBlock && tx_block_height != null && tx_block_height > 0) {
-      conf = lastBlock.height - tx_block_height + 1;
+    if (lastBlock && txBlockHeight != null && txBlockHeight > 0) {
+      conf = lastBlock.height - txBlockHeight + 1;
     }
     return conf;
   };

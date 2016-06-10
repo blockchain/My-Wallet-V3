@@ -3,7 +3,6 @@
 var assert = require('assert');
 
 var Wallet = require('./blockchain-wallet');
-var Helpers = require('./helpers');
 var WalletNetwork = require('./wallet-network');
 
 function generateNewWallet (password, email, mnemonic, bip39Password, firstAccountName, success, error, generateUUIDProgress, decryptWalletProgress) {

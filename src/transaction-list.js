@@ -57,7 +57,7 @@ TransactionList.prototype.pushTxs = function (txs) {
 };
 
 TransactionList.prototype.subscribe = function (listener) {
-  if ('function' !== typeof listener) return;
+  if (typeof listener !== 'function') return;
   this._events.addListener('update', listener);
   return this._events.removeListener.bind(this._events, 'update', listener);
 };

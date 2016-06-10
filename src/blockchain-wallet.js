@@ -103,10 +103,8 @@ Object.defineProperties(Wallet.prototype, {
       switch (true) {
         case !Helpers.isPositiveNumber(value):
           throw new Error('wallet.fee_per_kb must be a positive number');
-          break;
         case value > 1000000:  // 0.01 btc
           throw new Error('wallet.fee_per_kb too high (0.01 btc limit)');
-          break;
         default:
           this._fee_per_kb = value;
           MyWallet.syncWallet();
@@ -519,8 +517,8 @@ Wallet.prototype.deleteLegacyAddress = function (a) {
 Wallet.prototype.validateSecondPassword = function (inputString) {
   // old wallets default_iterations is 10
   var it = !this._pbkdf2_iterations ? 10 : this._pbkdf2_iterations;
-  var password_hash = WalletCrypto.hashNTimes(this._sharedKey + inputString, it);
-  return password_hash === this._dpasswordhash;
+  var passwordHash = WalletCrypto.hashNTimes(this._sharedKey + inputString, it);
+  return passwordHash === this._dpasswordhash;
 };
 
 Wallet.prototype.encrypt = function (pw, success, error, encrypting, syncing) {
@@ -697,7 +695,7 @@ Wallet.prototype.upgradeToV3 = function (firstAccountLabel, pw, success, error) 
     var hd = HDWallet.new(mnemonic, undefined, encoder);
   } catch (e) { error(e); return; }
   this._hd_wallets.push(hd);
-  var label = firstAccountLabel ? firstAccountLabel : 'My Bitcoin Wallet';
+  var label = firstAccountLabel || 'My Bitcoin Wallet';
   this.newAccount(label, pw, this._hd_wallets.length - 1, true);
   MyWallet.syncWallet(function (res) {
     success();
