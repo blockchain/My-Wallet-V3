@@ -117,7 +117,7 @@ MyWallet.getWallet = function (success, error) {
   });
 };
 
-MyWallet.decryptAndInitializeWallet = function(success, error, decrypt_success, build_hd_success) {
+MyWallet.decryptAndInitializeWallet = function (success, error, decrypt_success, build_hd_success) {
   assert(success, 'Success callback required');
   assert(error, 'Error callback required');
   var encryptedWalletData = WalletStore.getEncryptedWalletData();
@@ -199,8 +199,8 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
       return WalletNetwork.fetchWalletWithSharedKey(guid, credentials.sharedKey)
         .then(function (obj) {
           callbacks.didFetch && callbacks.didFetch();
-          MyWallet.didFetchWallet(obj).then(function() {
-            MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function() {
+          MyWallet.didFetchWallet(obj).then(function () {
+            MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
               resolve({guid: guid});
             }).catch(function (e) {
               reject(e);
@@ -210,16 +210,16 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
     } else {
       // Estabish a session to enable 2FA and browser verification:
       WalletNetwork.establishSession(credentials.sessionToken)
-      .then(function(token) {
+      .then(function (token) {
         // If a new browser is used, the user receives a verification email.
         // We wait for them to click the link.
-        var authorizationRequired = function() {
+        var authorizationRequired = function () {
           var promise = new Promise(function (resolveA, rejectA) {
             if (typeof(callbacks.authorizationRequired) === 'function') {
               callbacks.authorizationRequired(function () {
                 WalletNetwork.pollForSessionGUID(token).then(function () {
                   resolveA();
-                }).catch(function(error) {
+                }).catch(function (error) {
                   rejectA(error);
                 });
               });
@@ -236,8 +236,8 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
           WalletNetwork.fetchWalletWithTwoFactor(guid, token, credentials.twoFactor)
           .then(function (obj) {
             callbacks.didFetch && callbacks.didFetch();
-            MyWallet.didFetchWallet(obj).then(function() {
-              MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function() {
+            MyWallet.didFetchWallet(obj).then(function () {
+              MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
                 resolve({guid: guid, sessionToken: token});
               }).catch(function (e) {
                 reject(e);
@@ -252,8 +252,8 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
           WalletNetwork.fetchWallet(guid, token, needsTwoFactorCode, authorizationRequired)
           .then(function (obj) {
             callbacks.didFetch && callbacks.didFetch();
-            MyWallet.didFetchWallet(obj).then(function() {
-              MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function() {
+            MyWallet.didFetchWallet(obj).then(function () {
+              MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
                 resolve({guid: guid, sessionToken: token});
               }).catch(function (e) {
                 reject(e);
@@ -274,7 +274,7 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
   return loginPromise;
 }
 
-MyWallet.didFetchWallet = function(obj) {
+MyWallet.didFetchWallet = function (obj) {
   if (obj.payload && obj.payload.length > 0 && obj.payload !== 'Not modified') {
    WalletStore.setEncryptedWalletData(obj.payload);
   }
@@ -530,7 +530,7 @@ MyWallet.logout = function (sessionToken, force) {
 
 // In case of a non-mainstream browser, ensure it correctly implements the
 // math needed to derive addresses from a mnemonic.
-MyWallet.browserCheck = function() {
+MyWallet.browserCheck = function () {
   var mnemonic = 'daughter size twenty place alter glass small bid purse october faint beyond';
   var seed = BIP39.mnemonicToSeed(mnemonic, '');
   var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed);
@@ -539,7 +539,7 @@ MyWallet.browserCheck = function() {
   return address === '1QBWUDG4AFL2kFmbqoZ9y4KsSpQoCTZKRw';
 }
 
-MyWallet.browserCheckFast = function() {
+MyWallet.browserCheckFast = function () {
   var seed = Buffer('9f3ad67c5f1eebbffcc8314cb8a3aacbfa28046fd4b3d0af6965a8c804a603e57f5b551320eca4017267550e5b01e622978c133f2085c5999f7ef57a340d0ae2', 'hex');
   var hmacSha512Expected =
     '554d80de8f1747c88d8fb01d27277d0a77ee167886737e91b03da170319858b69ff5840b791b0faaf4b83b54c65886db4ef0f7abc8d0a4e3e10add20681b744f';

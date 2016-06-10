@@ -257,7 +257,7 @@ function fetchWallet (guid, token, needsTwoFactorCode, authorizationRequired) {
          return;
        }
        if (obj.authorization_required) {
-         authorizationRequired().then(function() {
+         authorizationRequired().then(function () {
            callGetWalletEndpoint(guid, null, token).then(success).catch(error);
          })
        }
@@ -382,15 +382,15 @@ function pollForSessionGUID (sessionToken) {
 function getCaptchaImage () {
   var self = this;
   var promise = new Promise(function (resolve, reject) {
-    self.obtainSessionToken().then(function(sessionToken) {
-      var success = function(data) {
+    self.obtainSessionToken().then(function (sessionToken) {
+      var success = function (data) {
         resolve({
           image: data,
           sessionToken: sessionToken
         });
       }
 
-      var error = function(e) {
+      var error = function (e) {
         console.log(e);
         reject(e.initial_error);
       }
