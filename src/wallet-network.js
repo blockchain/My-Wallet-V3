@@ -200,7 +200,7 @@ function obtainSessionToken () {
     return data.token;
   };
 
-  return API.request("POST", "sessions").then(processResult);
+  return API.request('POST', 'sessions').then(processResult);
 }
 
 function establishSession (token) {
@@ -216,12 +216,12 @@ function establishSession (token) {
 function callGetWalletEndpoint (guid, sharedKey, sessionToken) {
   var clientTime = (new Date()).getTime();
   var data = { format : 'json', resend_code : null, ct : clientTime, api_code : API.API_CODE };
-  var headers = {}
+  var headers = {};
 
   if (sharedKey) {
     data.sharedKey = sharedKey;
   } else {
-    assert(sessionToken, "Session token required");
+    assert(sessionToken, 'Session token required');
     headers.sessionToken = sessionToken;
   }
   return API.request('GET', 'wallet/' + guid, data, headers);
@@ -229,7 +229,6 @@ function callGetWalletEndpoint (guid, sharedKey, sessionToken) {
 
 function fetchWallet (guid, token, needsTwoFactorCode, authorizationRequired) {
   var promise = new Promise(function (resolve, reject) {
-
     var success = function (obj) {
       if (!obj.guid) {
         WalletStore.sendEvent('msg', {type: 'error', message: 'Server returned null guid.'});
@@ -251,19 +250,19 @@ function fetchWallet (guid, token, needsTwoFactorCode, authorizationRequired) {
     };
 
     var error = function (e) {
-       var obj = 'object' === typeof e ? e : JSON.parse(e);
-       if (obj && obj.initial_error && !obj.authorization_required) {
-         reject(obj.initial_error);
-         return;
-       }
-       if (obj.authorization_required) {
-         authorizationRequired().then(function () {
-           callGetWalletEndpoint(guid, null, token).then(success).catch(error);
-         })
-       }
+      var obj = 'object' === typeof e ? e : JSON.parse(e);
+      if (obj && obj.initial_error && !obj.authorization_required) {
+        reject(obj.initial_error);
+        return;
+      }
+      if (obj.authorization_required) {
+        authorizationRequired().then(function () {
+          callGetWalletEndpoint(guid, null, token).then(success).catch(error);
+        });
+      }
     };
 
-    callGetWalletEndpoint(guid, null, token).then(success).catch(error)
+    callGetWalletEndpoint(guid, null, token).then(success).catch(error);
   });
   return promise;
 }
@@ -271,8 +270,8 @@ function fetchWallet (guid, token, needsTwoFactorCode, authorizationRequired) {
 function  fetchWalletWithTwoFactor (guid, sessionToken, twoFactor) {
   var promise = new Promise(function (resolve, reject) {
     if (twoFactor.code.length === 0 || twoFactor.code.length > 255) {
-     reject('You must enter a Two Factor Authentication code');
-     return;
+      reject('You must enter a Two Factor Authentication code');
+      return;
     }
 
     var two_factor_auth_key = twoFactor.code;
@@ -282,20 +281,20 @@ function  fetchWalletWithTwoFactor (guid, sessionToken, twoFactor) {
       case 4: // sms
       case 5: // Google Auth
         two_factor_auth_key = two_factor_auth_key.toUpperCase();
-      break;
+        break;
     }
 
     var success = function (data) {
-     if (data == null || data.length === 0) {
-       otherError('Server Return Empty Wallet Data');
-       return;
-     }
-     if (data !== 'Not modified') { WalletStore.setEncryptedWalletData(data); }
-     resolve(data);
+      if (data == null || data.length === 0) {
+        otherError('Server Return Empty Wallet Data');
+        return;
+      }
+      if (data !== 'Not modified') { WalletStore.setEncryptedWalletData(data); }
+      resolve(data);
     };
     var error = function (response) {
-     WalletStore.setRestoringWallet(false);
-     reject(response);
+      WalletStore.setRestoringWallet(false);
+      reject(response);
     };
 
     var myData = {
@@ -315,9 +314,7 @@ function  fetchWalletWithTwoFactor (guid, sessionToken, twoFactor) {
 }
 
 function fetchWalletWithSharedKey (guid, sharedKey) {
-
   var success = function (obj) {
-
     if (!obj.guid) {
       throw(new Error('Server returned null guid.'));
     }
@@ -336,17 +333,17 @@ function fetchWalletWithSharedKey (guid, sharedKey) {
   };
 
   var error = function (e) {
-     console.log(e);
-     var obj = 'object' === typeof e ? e : JSON.parse(e);
-     if (obj && obj.initial_error) {
-       reject(obj.initial_error);
-       return;
-     }
+    console.log(e);
+    var obj = 'object' === typeof e ? e : JSON.parse(e);
+    if (obj && obj.initial_error) {
+      reject(obj.initial_error);
+      return;
+    }
 
-     WalletStore.sendEvent('did_fail_set_guid');
+    WalletStore.sendEvent('did_fail_set_guid');
   };
 
-  return callGetWalletEndpoint(guid, sharedKey).then(success).catch(error)
+  return callGetWalletEndpoint(guid, sharedKey).then(success).catch(error);
 }
 
 function pollForSessionGUID (sessionToken) {
@@ -359,7 +356,7 @@ function pollForSessionGUID (sessionToken) {
       if (obj.guid) {
         WalletStore.setIsPolling(false);
         WalletStore.sendEvent('msg', {type: 'success', message: 'Authorization Successful'});
-        resolve()
+        resolve();
       } else {
         if (WalletStore.getCounter() < 600) {
           WalletStore.incrementCounter();
@@ -370,14 +367,14 @@ function pollForSessionGUID (sessionToken) {
           WalletStore.setIsPolling(false);
         }
       }
-    }
+    };
     var error = function () {
       WalletStore.setIsPolling(false);
-    }
+    };
     API.request('GET', 'wallet/poll-for-session-guid', data, headers).then(success).catch(error);
   });
   return promise;
-};
+}
 
 function getCaptchaImage () {
   var self = this;
@@ -388,12 +385,12 @@ function getCaptchaImage () {
           image: data,
           sessionToken: sessionToken
         });
-      }
+      };
 
       var error = function (e) {
         console.log(e);
         reject(e.initial_error);
-      }
+      };
 
       var data = {
         timestamp: new Date().getTime()
@@ -405,8 +402,7 @@ function getCaptchaImage () {
     });
   });
   return promise;
-};
-
+}
 
 module.exports = {
   checkWalletChecksum: checkWalletChecksum,

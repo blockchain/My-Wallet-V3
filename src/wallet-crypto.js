@@ -521,7 +521,6 @@ function scrypt (passwd, salt, N, r, p, dkLen, callback) {
   }
 
   callback(pbkdf2(passwd, B, 1, dkLen, ALGO.SHA256));
-
 }
 
 module.exports = {

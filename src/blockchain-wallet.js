@@ -261,7 +261,7 @@ Object.defineProperties(Wallet.prototype, {
   'balanceSpendableActive': {
     configurable: false,
     get: function () {
-        return this.balanceSpendableActiveLegacy + this.balanceActiveAccounts;
+      return this.balanceSpendableActiveLegacy + this.balanceActiveAccounts;
     }
   },
   'balanceSpendableActiveLegacy': {
@@ -363,18 +363,18 @@ Wallet.prototype._updateWalletInfo = function (obj) {
   return obj.txs.length;
 };
 
-Wallet.prototype.getHistory = function () {
+Wallet.prototype.getHistory = function () {
   return API.getHistory(this.context, 0, 0, this.txList.loadNumber)
     .then(function (obj) { this.txList.wipe(); return obj; }.bind(this))
     .then(this._updateWalletInfo.bind(this));
 };
 
-Wallet.prototype.fetchTransactions = function () {
+Wallet.prototype.fetchTransactions = function () {
   return API.getHistory(this.context, 0, this.txList.fetched, this.txList.loadNumber)
     .then(this._updateWalletInfo.bind(this));
 };
 
-Wallet.prototype.getBalancesForArchived = function () {
+Wallet.prototype.getBalancesForArchived = function () {
   var updateBalance = function (key) {
     if (this.containsLegacyAddress(key.address)) {
       this.key(key.address).balance = key.final_balance;
@@ -666,7 +666,7 @@ Wallet.prototype.disableNotifications = function (success, error) {
 
 // creating a new wallet object
 Wallet.new = function (guid, sharedKey, mnemonic, bip39Password, firstAccountLabel, success, error) {
-  assert(mnemonic, "BIP 39 mnemonic required")
+  assert(mnemonic, 'BIP 39 mnemonic required');
 
   var object = {
     guid: guid,
@@ -691,7 +691,6 @@ Wallet.new = function (guid, sharedKey, mnemonic, bip39Password, firstAccountLab
 
 // Adds an HD wallet to an existing wallet, used by frontend and iOs
 Wallet.prototype.upgradeToV3 = function (firstAccountLabel, pw, success, error) {
-
   var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, 'enc');
   try {
     var mnemonic = BIP39.generateMnemonic(undefined, RNG.run.bind(RNG));

@@ -334,7 +334,7 @@ Payment.from = function (origin) {
       // this could fail for network issues or no-balance
       function (error) {
         if (error !== 'No free outputs to spend') {
-          that.emit('error', {error:'ERR_FETCH_UNSPENT' });
+          that.emit('error', { error: 'ERR_FETCH_UNSPENT' });
         }
         console.log(error);
         payment.coins = [];

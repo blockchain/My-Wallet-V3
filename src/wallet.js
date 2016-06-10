@@ -155,7 +155,7 @@ MyWallet.decryptAndInitializeWallet = function (success, error, decrypt_success,
     },
     error
   );
-}
+};
 
 // used in the frontend
 MyWallet.makePairingCode = function (success, error) {
@@ -206,7 +206,7 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
               reject(e);
             });
           });
-        })
+        });
     } else {
       // Estabish a session to enable 2FA and browser verification:
       WalletNetwork.establishSession(credentials.sessionToken)
@@ -246,7 +246,6 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
           }).catch(function (e) {
             callbacks.wrongTwoFactorCode(e);
           });
-
         } else {
           // Try without 2FA:
           WalletNetwork.fetchWallet(guid, token, needsTwoFactorCode, authorizationRequired)
@@ -263,32 +262,30 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
             reject(e);
           });
         }
-
       }).catch(function (error) {
         console.log(error.message);
-        reject("Unable to establish session");
+        reject('Unable to establish session');
       });
     }
   });
 
   return loginPromise;
-}
+};
 
 MyWallet.didFetchWallet = function (obj) {
   if (obj.payload && obj.payload.length > 0 && obj.payload !== 'Not modified') {
-   WalletStore.setEncryptedWalletData(obj.payload);
+    WalletStore.setEncryptedWalletData(obj.payload);
   }
 
   if (obj.language && WalletStore.getLanguage() !== obj.language) {
-   WalletStore.setLanguage(obj.language);
+    WalletStore.setLanguage(obj.language);
   }
 
   return Promise.resolve();
-}
+};
 
 MyWallet.initializeWallet = function (pw, decrypt_success, build_hd_success) {
   var promise = new Promise(function (resolve, reject) {
-
     if (isInitialized || WalletStore.isRestoringWallet()) {
       return;
     }
@@ -366,8 +363,12 @@ function syncWallet (successcallback, errorcallback) {
   try {
     var method = 'update';
     var data = JSON.stringify(MyWallet.wallet, null, 2);
-    var crypted = WalletCrypto.encryptWallet(data, WalletStore.getPassword(),
-        WalletStore.getPbkdf2Iterations(), MyWallet.wallet.isUpgradedToHD ? 3.0 : 2.0);
+    var crypted = WalletCrypto.encryptWallet(
+      data,
+      WalletStore.getPassword(),
+      WalletStore.getPbkdf2Iterations(),
+      MyWallet.wallet.isUpgradedToHD ? 3.0 : 2.0
+    );
 
     if (crypted.length === 0) {
       throw new Error('Error encrypting the JSON output');
@@ -494,7 +495,6 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
 // used on frontend
 MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic, bip39Password, successCallback, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
   var walletGenerated = function (wallet) {
-
     var saveWallet = function () {
       WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, {email: inputedEmail}, decryptWalletProgress).then(function () {
         successCallback({guid: wallet.guid, sharedKey: wallet.sharedKey, password: inputedPassword});
@@ -512,8 +512,9 @@ MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic
 
 // used frontend and mywallet
 MyWallet.logout = function (sessionToken, force) {
-  if (!force && WalletStore.isLogoutDisabled())
+  if (!force && WalletStore.isLogoutDisabled()) {
     return;
+  }
 
   var reload = function () {
     try { window.location.reload(); } catch (e) {
@@ -525,7 +526,7 @@ MyWallet.logout = function (sessionToken, force) {
 
   var headers = {sessionToken: sessionToken};
 
-  API.request("GET", 'wallet/logout', data, headers).then(reload).catch(reload);
+  API.request('GET', 'wallet/logout', data, headers).then(reload).catch(reload);
 };
 
 // In case of a non-mainstream browser, ensure it correctly implements the
@@ -537,7 +538,7 @@ MyWallet.browserCheck = function () {
   var account = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(0);
   var address = account.derive(0).derive(0).getAddress();
   return address === '1QBWUDG4AFL2kFmbqoZ9y4KsSpQoCTZKRw';
-}
+};
 
 MyWallet.browserCheckFast = function () {
   var seed = Buffer('9f3ad67c5f1eebbffcc8314cb8a3aacbfa28046fd4b3d0af6965a8c804a603e57f5b551320eca4017267550e5b01e622978c133f2085c5999f7ef57a340d0ae2', 'hex');
@@ -547,4 +548,4 @@ MyWallet.browserCheckFast = function () {
   hmacSha512.update('100 bottles of beer on the wall');
   var hmacSha512Output = hmacSha512.digest().toString('hex');
   return hmacSha512Output === hmacSha512Expected;
-}
+};

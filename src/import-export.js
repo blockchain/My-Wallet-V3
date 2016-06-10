@@ -142,7 +142,7 @@ var ImportExport = new function () {
         });
       });
     }
-  }
+  };
 };
 
 module.exports = ImportExport;
