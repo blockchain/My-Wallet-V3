@@ -49,9 +49,9 @@ function generateUUIDs (count) {
  * @param {string} sessionToken.
  */
 // used in the frontend and in iOS
-function resendTwoFactorSms (user_guid, sessionToken) {
-  assert(user_guid, "wallet identifier required");
-  assert(sessionToken, "Session token required");
+function resendTwoFactorSms (userGuid, sessionToken) {
+  assert(userGuid, 'wallet identifier required');
+  assert(sessionToken, 'Session token required');
 
   var data = {
     format: 'json',
@@ -62,7 +62,7 @@ function resendTwoFactorSms (user_guid, sessionToken) {
 
   var headers = {sessionToken: sessionToken};
 
-  return API.request('GET', 'wallet/' + user_guid, data, headers)
+  return API.request('GET', 'wallet/' + userGuid, data, headers)
     .catch(handleError('Could not resend two factor sms'));
 }
 
@@ -163,7 +163,7 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
     try {
       WalletCrypto.decryptWalletSync(crypted, password);
     } catch (e) {
-      return reject(e);
+      return reject(e.message !== undefined ? e.message : e);
     }
 
     // SHA256 new_checksum verified by server in case of corruption during transit
@@ -319,7 +319,7 @@ function fetchWalletWithSharedKey (guid, sharedKey) {
   var success = function (obj) {
 
     if (!obj.guid) {
-      throw('Server returned null guid.');
+      throw(new Error('Server returned null guid.'));
     }
 
     // Even if Two Factor is enabled, some settings need to be saved here,
@@ -331,7 +331,7 @@ function fetchWalletWithSharedKey (guid, sharedKey) {
     if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
       return obj;
     } else {
-      throw('Wallet payload missing, empty or not modified');
+      throw(new Error('Wallet payload missing, empty or not modified'));
     }
   };
 

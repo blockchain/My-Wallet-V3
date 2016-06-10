@@ -135,7 +135,7 @@ MyWallet.decryptAndInitializeWallet = function(success, error, decrypt_success, 
 
       // this sanity check should be done on the load
       // if (!sharedKey || sharedKey.length == 0 || sharedKey.length != 36) {
-      //   throw 'Shared Key is invalid';
+      //   throw new Error('Shared Key is invalid');
       // }
 
       // TODO: pbkdf2 iterations should be stored correctly on wallet wrapper
@@ -338,7 +338,7 @@ function syncWallet (successcallback, errorcallback) {
   var panic = function (e) {
     console.log('Panic ' + e);
     window.location.replace('/');
-    throw 'Save disabled.';
+    throw new Error('Save disabled.');
     // kick out of the wallet in a inconsistent state to prevent save
   };
 
@@ -349,7 +349,7 @@ function syncWallet (successcallback, errorcallback) {
   if (!MyWallet.wallet || !MyWallet.wallet.sharedKey ||
       MyWallet.wallet.sharedKey.length === 0 ||
       MyWallet.wallet.sharedKey.length !== 36) {
-    throw 'Cannot backup wallet now. Shared key is not set';
+    throw new Error('Cannot backup wallet now. Shared key is not set');
   }
 
   WalletStore.disableLogout();
@@ -370,7 +370,7 @@ function syncWallet (successcallback, errorcallback) {
         WalletStore.getPbkdf2Iterations(), MyWallet.wallet.isUpgradedToHD ? 3.0 : 2.0);
 
     if (crypted.length == 0) {
-      throw 'Error encrypting the JSON output';
+      throw new Error('Error encrypting the JSON output');
     }
 
     // Now Decrypt the it again to double check for any possible corruption
@@ -439,7 +439,7 @@ function syncWallet (successcallback, errorcallback) {
       }
     }, function (e) {
       console.log(e);
-      throw 'Decryption failed';
+      throw new Error('Decryption failed');
     });
   } catch (e) {
     _errorcallback(e);

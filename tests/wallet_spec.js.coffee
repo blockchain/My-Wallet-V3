@@ -107,7 +107,7 @@ BIP39 = {
 RNG = {
   run: (input) ->
     if RNG.shouldThrow
-      throw 'Connection failed'
+      throw new Error('Connection failed');
     "random"
 }
 
@@ -489,7 +489,7 @@ describe "Wallet", ->
       # This assumes BIP39.generateMnemonic does not rescue a throw
       # inside the RNG
       RNG.shouldThrow = true
-      expect(() -> MyWallet.createNewWallet()).toThrow('Connection failed')
+      expect(() -> MyWallet.createNewWallet()).toThrow(Error('Connection failed'))
       RNG.shouldThrow = false
 
     describe "when the wallet insertion fails", ->

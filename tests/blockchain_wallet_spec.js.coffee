@@ -128,7 +128,7 @@ describe "Blockchain-Wallet", ->
     RNG = {
       run: (input) ->
         if RNG.shouldThrow
-          throw 'Connection failed'
+          throw new Error('Connection failed');
         "random"
     }
 
@@ -568,7 +568,7 @@ describe "Blockchain-Wallet", ->
           # inside the RNG
           RNG.shouldThrow = true
           wallet.upgradeToV3("ACC-LABEL", null, cb.success, cb.error)
-          expect(cb.error).toHaveBeenCalledWith('Connection failed')
+          expect(cb.error).toHaveBeenCalledWith(Error('Connection failed'))
 
       describe ".newAccount", ->
         cb =

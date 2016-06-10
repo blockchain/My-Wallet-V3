@@ -269,7 +269,7 @@ Helpers.buffertoByteArray = function (value) {
 function parseMiniKey (miniKey) {
   var check = Bitcoin.crypto.sha256(miniKey + '?');
   if (check[0] !== 0x00) {
-    throw 'Invalid mini key';
+    throw new Error('Invalid mini key');
   }
   return Bitcoin.crypto.sha256(miniKey);
 }
@@ -298,7 +298,7 @@ Helpers.privateKeyStringToKey = function (value, format) {
     tbytes.pop();
     key_bytes = tbytes.slice(0, tbytes.length - 4);
   } else {
-    throw 'Unsupported Key Format';
+    throw new Error('Unsupported Key Format');
   }
 
   return new Bitcoin.ECPair(new BigInteger.fromByteArrayUnsigned(key_bytes), null, {compressed: format !== 'sipa'});

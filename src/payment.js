@@ -438,7 +438,7 @@ Payment.sign = function (password) {
         .then(function (A) { A.archived = true; });
     };
 
-    if (!payment.transaction) throw 'This transaction hasn\'t been built yet';
+    if (!payment.transaction) throw new Error('This transaction hasn\'t been built yet');
     if (Array.isArray(payment.wifKeys) && !payment.fromWatchOnly) payment.wifKeys.forEach(importWIF);
 
     payment.transaction.addPrivateKeys(getPrivateKeys(password, payment));

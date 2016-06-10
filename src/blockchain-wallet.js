@@ -102,10 +102,10 @@ Object.defineProperties(Wallet.prototype, {
     set: function (value) {
       switch (true) {
         case !Helpers.isPositiveNumber(value):
-          throw 'Error: wallet.fee_per_kb must be a positive number';
+          throw new Error('wallet.fee_per_kb must be a positive number');
           break;
         case value > 1000000:  // 0.01 btc
-          throw 'Error: wallet.fee_per_kb too high (0.01 btc limit)';
+          throw new Error('wallet.fee_per_kb too high (0.01 btc limit)');
           break;
         default:
           this._fee_per_kb = value;
@@ -124,7 +124,7 @@ Object.defineProperties(Wallet.prototype, {
       if (Helpers.isPositiveNumber(value)) {
         this._totalSent = value;
       } else {
-        throw 'Error: wallet.totalSent must be a positive number';
+        throw new Error('wallet.totalSent must be a positive number');
       }
     }
   },
@@ -135,7 +135,7 @@ Object.defineProperties(Wallet.prototype, {
       if (Helpers.isPositiveNumber(value)) {
         this._totalReceived = value;
       } else {
-        throw 'Error: wallet.totalReceived must be a positive number';
+        throw new Error('wallet.totalReceived must be a positive number');
       }
     }
   },
@@ -146,7 +146,7 @@ Object.defineProperties(Wallet.prototype, {
       if (Helpers.isPositiveNumber(value)) {
         this._finalBalance = value;
       } else {
-        throw 'Error: wallet.finalBalance must be a positive number';
+        throw new Error('wallet.finalBalance must be a positive number');
       }
     }
   },
@@ -161,7 +161,7 @@ Object.defineProperties(Wallet.prototype, {
       if (Helpers.isPositiveInteger(value)) {
         this._numberTxTotal = value;
       } else {
-        throw 'Error: wallet.numberTx must be a positive integer';
+        throw new Error('wallet.numberTx must be a positive integer');
       }
     }
   },
@@ -290,7 +290,7 @@ Object.defineProperties(Wallet.prototype, {
         this._latestBlock = b;
         WalletStore.sendEvent('did_set_latest_block');
       } else {
-        throw 'Error: tried to set wrong wallet.latestBlock';
+        throw new Error('tried to set wrong wallet.latestBlock');
       }
     }
   },
@@ -302,7 +302,7 @@ Object.defineProperties(Wallet.prototype, {
         this._logout_time = t;
         MyWallet.syncWallet();
       } else {
-        throw 'Error: wallet.logoutTime must be a positive integer in range 60000,86400001';
+        throw new Error('wallet.logoutTime must be a positive integer in range 60000,86400001');
       }
     }
   }
@@ -428,14 +428,14 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
         if (this.key(newKey.address).isWatchOnly) {
           watchOnlyKey = this._addresses[newKey.address];
         } else {
-          throw 'privateKeyOfAnotherNonWatchOnlyAddress';
+          throw new Error('privateKeyOfAnotherNonWatchOnlyAddress');
         }
       }
     }
     watchOnlyKey._priv = newKey._priv;
     if (this.isDoubleEncrypted) {
-      if (!secPass) { throw 'Error: second password needed'; }
-      if (!this.validateSecondPassword(secPass)) { throw 'Error: wrong second password'; }
+      if (!secPass) { throw new Error('second password needed'); }
+      if (!this.validateSecondPassword(secPass)) { throw new Error('wrong second password'); }
       var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, 'enc');
       watchOnlyKey.encrypt(cipher).persist();
     }
@@ -458,12 +458,12 @@ Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) 
       if (this.key(ad.address).isWatchOnly && !ad.isWatchOnly) {
         return this.addKeyToLegacyAddress(addr, ad.address, secPass, bipPass);
       } else {
-        throw 'presentInWallet';
+        throw new Error('presentInWallet');
       }
     }
     if (this.isDoubleEncrypted) {
-      if (!secPass) { throw 'Error: second password needed'; }
-      if (!this.validateSecondPassword(secPass)) { throw 'Error: wrong second password'; }
+      if (!secPass) { throw new Error('second password needed'); }
+      if (!this.validateSecondPassword(secPass)) { throw new Error('wrong second password'); }
       var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, 'enc');
       ad.encrypt(cipher).persist();
     }

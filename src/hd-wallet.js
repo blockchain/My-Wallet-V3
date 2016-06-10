@@ -48,7 +48,7 @@ Object.defineProperties(HDWallet.prototype, {
         this._default_account_idx = value;
         MyWallet.syncWallet();
       } else {
-        throw 'Error: unvalid default index account';
+        throw new Error('unvalid default index account');
       }
     }
   },
@@ -120,7 +120,7 @@ function decryptMnemonic (seedHex, cipher) {
     if (Helpers.isSeedHex(seedHex)) {
       return BIP39.entropyToMnemonic(seedHex);
     } else {
-      throw 'Decryption function needed to get the mnemonic';
+      throw new Error('Decryption function needed to get the mnemonic');
     }
   }
 }

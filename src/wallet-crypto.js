@@ -165,7 +165,7 @@ function decryptWalletSync (data, password) {
   }
 
   if (version > SUPPORTED_ENCRYPTION_VERSION) {
-    throw 'Wallet version ' + version + ' not supported.';
+    throw new Error('Wallet version ' + version + ' not supported.');
   }
 
   try {

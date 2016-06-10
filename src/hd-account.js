@@ -48,7 +48,7 @@ Object.defineProperties(HDAccount.prototype, {
         this._label = str;
         MyWallet.syncWallet();
       } else {
-        throw 'Error: account.label must be an alphanumeric string';
+        throw new Error('account.label must be an alphanumeric string');
       }
     }
   },
@@ -59,7 +59,7 @@ Object.defineProperties(HDAccount.prototype, {
       if (Helpers.isPositiveNumber(num)) {
         this._balance = num;
       } else {
-        throw 'Error: account.balance must be a positive number';
+        throw new Error('account.balance must be a positive number');
       }
     }
   },
@@ -69,7 +69,7 @@ Object.defineProperties(HDAccount.prototype, {
       if (Helpers.isPositiveInteger(num)) {
         this._n_tx = num;
       } else {
-        throw 'Error: account.n_tx must be a positive integer';
+        throw new Error('account.n_tx must be a positive integer');
       }
     }
   },
@@ -85,7 +85,7 @@ Object.defineProperties(HDAccount.prototype, {
           MyWallet.wallet.getHistory();
         }
       } else {
-        throw 'Error: account.archived must be a boolean';
+        throw new Error('account.archived must be a boolean');
       }
     }
   },
@@ -101,7 +101,7 @@ Object.defineProperties(HDAccount.prototype, {
       if (Helpers.isPositiveInteger(value)) {
         this._receiveIndex = value;
       } else {
-        throw 'Error: account.receiveIndex must be a number';
+        throw new Error('account.receiveIndex must be a number');
       }
     }
   },
@@ -112,7 +112,7 @@ Object.defineProperties(HDAccount.prototype, {
       if (Helpers.isPositiveInteger(value)) {
         this._lastUsedReceiveIndex = value;
       } else {
-        throw 'Error: account.lastUsedReceiveIndex must be a number';
+        throw new Error('account.lastUsedReceiveIndex must be a number');
       }
     }
   },
@@ -136,7 +136,7 @@ Object.defineProperties(HDAccount.prototype, {
       if (Helpers.isPositiveInteger(value)) {
         this._changeIndex = value;
       } else {
-        throw 'Error: account.changeIndex must be a number';
+        throw new Error('account.changeIndex must be a number');
       }
     }
   },
@@ -313,7 +313,7 @@ HDAccount.prototype.receiveAddressAtIndex = function (index) {
 HDAccount.prototype.encrypt = function (cipher) {
   if (!this._xpriv) return this;
   var xpriv = cipher ? cipher(this._xpriv) : this._xpriv;
-  if (!xpriv) { throw 'Error Encoding account extended private key'; }
+  if (!xpriv) { throw new Error('Error Encoding account extended private key'); }
   this._temporal_xpriv = xpriv;
   return this;
 };
@@ -321,7 +321,7 @@ HDAccount.prototype.encrypt = function (cipher) {
 HDAccount.prototype.decrypt = function (cipher) {
   if (!this._xpriv) return this;
   var xpriv = cipher ? cipher(this._xpriv) : this._xpriv;
-  if (!xpriv) { throw 'Error Decoding account extended private key'; }
+  if (!xpriv) { throw new Error('Error Decoding account extended private key'); }
   this._temporal_xpriv = xpriv;
   return this;
 };

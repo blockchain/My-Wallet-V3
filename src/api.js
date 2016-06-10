@@ -200,7 +200,7 @@ API.prototype.securePost = function (url, data) {
   if (!Helpers.isValidGUID(data.guid)) { clone.guid = MyWallet.wallet.guid; }
   if (!data.sharedKey) {
     var sharedKey = MyWallet.wallet ? MyWallet.wallet.sharedKey : undefined;
-    if (!Helpers.isValidSharedKey(sharedKey)) throw 'Shared key is invalid';
+    if (!Helpers.isValidSharedKey(sharedKey)) throw new Error('Shared key is invalid');
     // Rather than sending the shared key plain text
     // send a hash using a totp scheme
     var now = new Date().getTime();
