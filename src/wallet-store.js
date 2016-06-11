@@ -144,6 +144,9 @@ var WalletStore = (function () {
     },
     setLogoutTime: function (logout_time) {
       MyWallet.wallet.logoutTime = logout_time;
+    },
+    changeTheme: function (theme) {
+      MyWallet.wallet.theme = theme;
     }
   };
 })();

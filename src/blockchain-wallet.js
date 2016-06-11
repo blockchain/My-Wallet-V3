@@ -37,6 +37,7 @@ function Wallet (object) {
   this._fee_per_kb = obj.options.fee_per_kb == null ? 10000 : obj.options.fee_per_kb;
   this._html5_notifications = obj.options.html5_notifications;
   this._logout_time = obj.options.logout_time;
+  this._theme = obj.options.theme;
 
   // legacy addresses list
   this._addresses = obj.keys ? obj.keys.reduce(Address.factory, {}) : undefined;
@@ -305,6 +306,14 @@ Object.defineProperties(Wallet.prototype, {
         throw 'Error: wallet.logoutTime must be a positive integer in range 60000,86400001';
       }
     }
+  },
+  'theme': {
+    configurable: false,
+    get: function () { return this._theme; },
+    set: function (theme) {
+      this._theme = theme;
+      MyWallet.syncWallet();
+    }
   }
 });
 
@@ -406,7 +415,8 @@ Wallet.prototype.toJSON = function () {
       pbkdf2_iterations: this.pbkdf2_iterations,
       fee_per_kb: this.fee_per_kb,
       html5_notifications: this._html5_notifications,
-      logout_time: this._logout_time
+      logout_time: this._logout_time,
+      theme: this._theme
     },
     address_book: addressBookToJSON(this._address_book),
     tx_notes: this._tx_notes,
@@ -676,7 +686,8 @@ Wallet.new = function (guid, sharedKey, mnemonic, bip39Password, firstAccountLab
       pbkdf2_iterations: 5000,
       html5_notifications: false,
       fee_per_kb: 10000,
-      logout_time: 600000
+      logout_time: 600000,
+      theme: 'Default'
     }
   };
   MyWallet.wallet = new Wallet(object);
