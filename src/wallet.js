@@ -64,9 +64,7 @@ function socketConnect () {
 
   function onOpen () {
     WalletStore.sendEvent('ws_on_open');
-    var accounts = MyWallet.wallet.hdwallet ? MyWallet.wallet.hdwallet.activeXpubs : [];
-    var msg = MyWallet.ws.msgOnOpen(MyWallet.wallet.guid, MyWallet.wallet.activeAddresses, accounts);
-    MyWallet.ws.send(msg);
+    MyWallet.ws.send(MyWallet.getSocketOnOpenMessage);
   }
 
   function onClose () {
@@ -79,6 +77,11 @@ function didDecryptWallet (success) {
   // We need to check if the wallet has changed
   MyWallet.getWallet();
   success();
+}
+
+MyWallet.getSocketOnOpenMessage = function() {
+  var accounts = MyWallet.wallet.hdwallet ? MyWallet.wallet.hdwallet.activeXpubs : [];
+  return MyWallet.ws.msgOnOpen(MyWallet.wallet.guid, MyWallet.wallet.activeAddresses, accounts);
 }
 
 // Fetch a new wallet from the server
