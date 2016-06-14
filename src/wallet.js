@@ -18,7 +18,7 @@ var RNG = require('./rng');
 var BIP39 = require('bip39');
 var Bitcoin = require('bitcoinjs-lib');
 // Intentionally not directly included in package.json:
-var createHmac = require('create-hmac');
+var pbkdf2 = require('pbkdf2').pbkdf2Sync;
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -545,17 +545,59 @@ MyWallet.browserCheck = function () {
   var mnemonic = 'daughter size twenty place alter glass small bid purse october faint beyond';
   var seed = BIP39.mnemonicToSeed(mnemonic, '');
   var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed);
+
   var account = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(0);
   var address = account.derive(0).derive(0).getAddress();
   return address === '1QBWUDG4AFL2kFmbqoZ9y4KsSpQoCTZKRw';
 };
 
+// Takes about 100 ms on a Macbook Pro
 MyWallet.browserCheckFast = function () {
-  var seed = Buffer('9f3ad67c5f1eebbffcc8314cb8a3aacbfa28046fd4b3d0af6965a8c804a603e57f5b551320eca4017267550e5b01e622978c133f2085c5999f7ef57a340d0ae2', 'hex');
-  var hmacSha512Expected =
-    '554d80de8f1747c88d8fb01d27277d0a77ee167886737e91b03da170319858b69ff5840b791b0faaf4b83b54c65886db4ef0f7abc8d0a4e3e10add20681b744f';
-  var hmacSha512 = createHmac('sha512', seed);
-  hmacSha512.update('100 bottles of beer on the wall');
-  var hmacSha512Output = hmacSha512.digest().toString('hex');
-  return hmacSha512Output === hmacSha512Expected;
+  var mnemonic = 'daughter size twenty place alter glass small bid purse october faint beyond';
+
+  var seed = pbkdf2(mnemonic, 'mnemonic', 100, 64, 'sha512');
+  var seedString = seed.toString('hex');
+
+  if (seedString !== '25357208f6fcbde803b4f333e59ce7a0ebe8b77b0390fa8b72899496f50fcc3707c65debf6102b19912cd0ccb36a2332cfebecb53e61b5fa79f11592c825bdda') {
+    return false;
+  }
+
+  seed = Buffer('9f3ad67c5f1eebbffcc8314cb8a3aacbfa28046fd4b3d0af6965a8c804a603e57f5b551320eca4017267550e5b01e622978c133f2085c5999f7ef57a340d0ae2', 'hex');
+
+  // master node -> xpriv (1 ms)
+  var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed);
+  var xpriv = masterkey.toString();
+
+  if (xpriv !== 'xprv9s21ZrQH143K44XyzPUorz65tsvifDFiWZRoqeM69iTeYXd5KbSrz4WEAbWwB2CY6jCGJ2pKdXgw66oQPePPifrpxhWuGoDkumMGCZQwduP') {
+    return false;
+  }
+
+  // xpriv -> xpriv' (100 ms)
+  // var xprivChild = masterkey.derive(0);
+  // if (xprivChild.toString() !== 'xprv9u32fAyAZYdehCkX6YGKSuTd1PnEgrjjPbdUwZ9v1aP2v8Dbr4JCaG4teSc9YNScsXeKGRhSHkimo4W6qefVUnT9eAuiL7yDRMbwf6McJBY') {
+  //   return false;
+  // }
+
+  // xpriv -> xpub, test .neutered() // 100 ms
+  // var xprivChild = Bitcoin.HDNode.fromBase58('xprv9u32fAyAZYdehCkX6YGKSuTd1PnEgrjjPbdUwZ9v1aP2v8Dbr4JCaG4teSc9YNScsXeKGRhSHkimo4W6qefVUnT9eAuiL7yDRMbwf6McJBY');
+  // var xpub = xprivChild.neutered();
+  // if (xpub.toString() !== 'xpub682P4gW4PvBwugpzCZoKp3QMZRcj6KTakpZ5jwZXZuv1nvYkPbcT84PNVk1vSKnf1XtLRfTzuwqRH6y7T2HYKRWohWHLDpEv2sfeqPCAFkH') {
+  //   return false;
+  // }
+
+  var xpub = Bitcoin.HDNode.fromBase58('xpub682P4gW4PvBwugpzCZoKp3QMZRcj6KTakpZ5jwZXZuv1nvYkPbcT84PNVk1vSKnf1XtLRfTzuwqRH6y7T2HYKRWohWHLDpEv2sfeqPCAFkH');
+
+  // xpub -> address // 2 ms
+  if (xpub.getAddress() !== '1MGULYKjmADKfZG6BpWwQQ3qVw622HqhCR') {
+    return false;
+  }
+
+  // xpub -> xpub' // 100 ms
+  var xpubChild = xpub.derive(0);
+
+  if (xpubChild.toString() !== 'xpub6BQQYoWs7yyp2oNXYABTjjfmcJNJN1vHogwZ9qFdRPAfYhh5EDrBH63MHdjv5uvaawU3E3HTDGZ4SWDhwDjtnmP2S7A3EyYoQiZdFaFju5e') {
+    return false;
+  }
+
+  return true;
 };
