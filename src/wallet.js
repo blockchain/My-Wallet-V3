@@ -28,38 +28,7 @@ function socketConnect () {
   var last_on_change = null;
 
   function onMessage (message) {
-    var obj = null;
-
-    if (!(typeof window === 'undefined')) {
-      message = message.data;
-    }
-    try {
-      obj = JSON.parse(message);
-    } catch (e) {
-      console.log('Websocket error: could not parse message data as JSON: ' + message);
-      return;
-    }
-
-    if (obj.op == 'on_change') {
-      var old_checksum = WalletStore.generatePayloadChecksum();
-      var new_checksum = obj.checksum;
-
-      if (last_on_change != new_checksum && old_checksum != new_checksum) {
-        last_on_change = new_checksum;
-
-        MyWallet.getWallet();
-      }
-    } else if (obj.op == 'utx') {
-      WalletStore.sendEvent('on_tx_received');
-      var sendOnTx = WalletStore.sendEvent.bind(null, 'on_tx');
-      MyWallet.wallet.getHistory().then(sendOnTx);
-    } else if (obj.op == 'block') {
-      var sendOnBlock = WalletStore.sendEvent.bind(null, 'on_block');
-      MyWallet.wallet.getHistory().then(sendOnBlock);
-      MyWallet.wallet.latestBlock = obj.x;
-    } else if (obj.op == 'pong') {
-      clearTimeout(MyWallet.ws.pingTimeoutPID);
-    }
+    MyWallet.getSocketOnMessage(message, last_on_change);
   }
 
   function onOpen () {
@@ -77,6 +46,41 @@ function didDecryptWallet (success) {
   // We need to check if the wallet has changed
   MyWallet.getWallet();
   success();
+}
+
+MyWallet.getSocketOnMessage = function(message, lastOnChange) {
+  var obj = null;
+
+  if (!(typeof window === 'undefined') && message.data) {
+    message = message.data;
+  }
+  try {
+    obj = JSON.parse(message);
+  } catch (e) {
+    console.log('Websocket error: could not parse message data as JSON: ' + message);
+    return;
+  }
+
+  if (obj.op == 'on_change') {
+    var old_checksum = WalletStore.generatePayloadChecksum();
+    var new_checksum = obj.checksum;
+
+    if (last_on_change != new_checksum && old_checksum != new_checksum) {
+      last_on_change = new_checksum;
+
+      MyWallet.getWallet();
+    }
+  } else if (obj.op == 'utx') {
+    WalletStore.sendEvent('on_tx_received');
+    var sendOnTx = WalletStore.sendEvent.bind(null, 'on_tx');
+    MyWallet.wallet.getHistory().then(sendOnTx);
+  } else if (obj.op == 'block') {
+    var sendOnBlock = WalletStore.sendEvent.bind(null, 'on_block');
+    MyWallet.wallet.getHistory().then(sendOnBlock);
+    MyWallet.wallet.latestBlock = obj.x;
+  } else if (obj.op == 'pong') {
+    clearTimeout(MyWallet.ws.pingTimeoutPID);
+  }
 }
 
 MyWallet.getSocketOnOpenMessage = function() {
