@@ -1,12 +1,18 @@
 proxyquire = require('proxyquireify')(require)
 
+walletStoreGuid = undefined
+walletStoreEncryptedWalletData = undefined
 WalletStore = {
-  setGuid: () ->
+  setGuid: (guid) ->
+     walletStoreGuid = guid
+  getGuid: () ->
+    walletStoreGuid
   setRealAuthType: () ->
   setSyncPubKeys: () ->
   setLanguage: () ->
-  setEncryptedWalletData: () ->
-  getEncryptedWalletData: () -> "encrypted"
+  setEncryptedWalletData: (data) ->
+    walletStoreEncryptedWalletData = data
+  getEncryptedWalletData: () -> walletStoreEncryptedWalletData || "encrypted"
 }
 
 BlockchainSettingsAPI = {
@@ -71,6 +77,8 @@ WalletNetwork =
           needsTwoFactorCode(1)
         )
       else
+        WalletStore.setGuid(guid)
+        WalletStore.setEncryptedWalletData("encrypted")
         cb({guid: guid, payload: "encrypted"})
       {
         catch: (cb) ->
@@ -78,6 +86,8 @@ WalletNetwork =
 
   fetchWalletWithSharedKey: (guid) ->
     then: (cb) ->
+      WalletStore.setGuid(guid)
+      WalletStore.setEncryptedWalletData("encrypted")
       cb({guid: guid, payload: "encrypted"})
       {
         catch: (cb) ->
@@ -85,6 +95,8 @@ WalletNetwork =
 
   fetchWalletWithTwoFactor: (guid, sessionToken, twoFactorCode) ->
     then: (cb) ->
+      WalletStore.setGuid(guid)
+      WalletStore.setEncryptedWalletData("encrypted")
       cb({guid: guid, payload: "encrypted"})
       {
         catch: (cb) ->
@@ -130,6 +142,8 @@ describe "Wallet", ->
 
   beforeEach ->
     JasminePromiseMatchers.install()
+    WalletStore.setGuid(undefined)
+    WalletStore.setEncryptedWalletData(undefined)
 
   afterEach ->
     JasminePromiseMatchers.uninstall()
@@ -184,9 +198,12 @@ describe "Wallet", ->
       spyOn(MyWallet,"initializeWallet").and.callFake((inputedPassword, didDecrypt, didBuildHD) ->
         {
           then: (cb) ->
-            cb()
+            if(inputedPassword == "password")
+              cb()
             {
               catch: (cb) ->
+                if(inputedPassword != "password")
+                  cb("WRONG_PASSWORD")
             }
         }
       )
@@ -399,6 +416,41 @@ describe "Wallet", ->
 
         expect(promise).toBeResolvedWith(jasmine.objectContaining({guid: "1234"}), done)
         expect(WalletNetwork.fetchWalletWithTwoFactor).not.toHaveBeenCalled()
+
+    describe "wrong password", ->
+      promise = undefined
+
+      beforeEach ->
+        spyOn(WalletNetwork, "fetchWallet").and.callThrough()
+
+        promise = MyWallet.login(
+          "1234",
+          "wrong_password",
+          {
+              twoFactor: null
+              sessionToken: "token"
+          },
+          callbacks
+        )
+
+      it "should fetch the wallet and throw an error", (done) ->
+        expect(promise).toBeRejectedWith("WRONG_PASSWORD", done)
+        expect(WalletNetwork.fetchWallet).toHaveBeenCalled()
+
+      it "should not fetch wallet again at the next attempt", (done) ->
+        # Second attempt:
+        promise = MyWallet.login(
+          "1234",
+          "password",
+          {
+              twoFactor: null
+              sessionToken: "token"
+          },
+          callbacks
+        )
+
+        expect(promise).toBeResolvedWith(jasmine.objectContaining({guid: "1234"}), done)
+        expect(WalletNetwork.fetchWallet.calls.count()).toEqual(1) # First attempt only
 
   describe "didFetchWallet", ->
     beforeEach ->
