@@ -489,7 +489,7 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
   try {
     var mnemonic = BIP39.generateMnemonic(undefined, RNG.run.bind(RNG));
     WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, undefined, firstAccountName, saveWallet, errorCallback);
-  } catch(e) {
+  } catch (e) {
     errorCallback(e);
   }
 };
