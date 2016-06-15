@@ -111,7 +111,12 @@ function procIns (acc, input) {
 }
 
 function belongsTo (tx, id) {
-  return tx.processedInputs.concat(tx.processedOutputs).some(function (p) { return p.identity === id; });
+  return tx.processedInputs.concat(tx.processedOutputs).some(function (p) {
+    return (
+      (p.identity === 'imported' && id === 'imported') ||
+      p.identity === parseInt(id, 10)
+    );
+  });
 }
 // var memoizedBelongsTo = Helpers.memoize(belongsTo);
 
