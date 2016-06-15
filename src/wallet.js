@@ -193,9 +193,17 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
   );
 
   var loginPromise = new Promise(function (resolve, reject) {
-    // If the shared key is known, 2FA and browser verification are skipped.
-    // No session is needed in that case.
-    if (credentials.sharedKey) {
+    if (guid === WalletStore.getGuid() && WalletStore.getEncryptedWalletData()) {
+      // If we already fetched the wallet before (e.g.
+      // after user enters a wrong password), don't fetch it again:
+      MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
+        resolve({guid: guid});
+      }).catch(function (e) {
+        reject(e);
+      });
+    } else if (credentials.sharedKey) {
+      // If the shared key is known, 2FA and browser verification are skipped.
+      // No session is needed in that case.
       return WalletNetwork.fetchWalletWithSharedKey(guid, credentials.sharedKey)
         .then(function (obj) {
           callbacks.didFetch && callbacks.didFetch();
