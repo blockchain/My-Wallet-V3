@@ -486,9 +486,12 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
     });
   };
 
-  var mnemonic = BIP39.generateMnemonic(undefined, RNG.run.bind(RNG));
-
-  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, undefined, firstAccountName, saveWallet, errorCallback);
+  try {
+    var mnemonic = BIP39.generateMnemonic(undefined, RNG.run.bind(RNG));
+    WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, undefined, firstAccountName, saveWallet, errorCallback);
+  } catch(e) {
+    errorCallback(e);
+  }
 };
 
 // used on frontend
