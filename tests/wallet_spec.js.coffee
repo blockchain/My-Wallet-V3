@@ -16,8 +16,8 @@ WalletStore = {
 }
 
 BlockchainSettingsAPI = {
-  change_language: () ->
-  change_local_currency: () ->
+  changeLanguage: () ->
+  changeLocalCurrency: () ->
 }
 
 WalletCrypto = {

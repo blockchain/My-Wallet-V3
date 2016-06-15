@@ -475,11 +475,11 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
   var success = function (createdGuid, createdSharedKey, createdPassword) {
     if (languageCode) {
       WalletStore.setLanguage(languageCode);
-      BlockchainSettingsAPI.change_language(languageCode, function () {});
+      BlockchainSettingsAPI.changeLanguage(languageCode, function () {});
     }
 
     if (currencyCode) {
-      BlockchainSettingsAPI.change_local_currency(currencyCode, function () {});
+      BlockchainSettingsAPI.changeLocalCurrency(currencyCode, function () {});
     }
 
     WalletStore.unsafeSetPassword(createdPassword);
