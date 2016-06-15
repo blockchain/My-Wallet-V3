@@ -12,7 +12,7 @@ var Helpers = {};
 Math.log2 = function (x) { return Math.log(x) / Math.LN2; };
 
 Helpers.isString = function (str) {
-  return typeof str == 'string' || str instanceof String;
+  return typeof str === 'string' || str instanceof String;
 };
 Helpers.isKey = function (bitcoinKey) {
   return Helpers.isInstanceOf(bitcoinKey, Bitcoin.ECPair);
@@ -55,13 +55,13 @@ Helpers.isBase64 = function (str) {
   return Helpers.isString(str) && /^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789=+\/]+$/.test(str);
 };
 Helpers.isNumber = function (num) {
-  return typeof num == 'number' && !isNaN(num);
+  return typeof num === 'number' && !isNaN(num);
 };
 Helpers.isPositiveNumber = function (num) {
   return Helpers.isNumber(num) && num >= 0;
 };
 Helpers.isPositiveInteger = function (num) {
-  return Helpers.isPositiveNumber(num) && num % 1 == 0;
+  return Helpers.isPositiveNumber(num) && num % 1 === 0;
 };
 Helpers.isNotNumber = function (num) {
   return !Helpers.isNumber(num);
@@ -98,7 +98,10 @@ Helpers.memoize = function (f) {
   return function () {
     var key = arguments.length + Array.prototype.join.call(arguments, ',');
     if (key in cache) return cache[key];
-    else return cache[key] = f.apply(this, arguments);
+    else {
+      var value = cache[key] = f.apply(this, arguments);
+      return value;
+    }
   };
 };
 
@@ -170,7 +173,7 @@ Helpers.maybeCompose = function (f, g) {
   }
 };
 
-Function.prototype.compose = function (g) {
+Function.prototype.compose = function (g) { // eslint-disable-line no-extend-native
   var fn = this;
   return function () {
     return fn.call(this, g.apply(this, arguments));
@@ -257,7 +260,7 @@ Helpers.tor = function () {
   var hostname = Helpers.getHostName();
 
   // NodeJS TOR detection not supported:
-  if ('string' !== typeof hostname) return null;
+  if (typeof hostname !== 'string') return null;
 
   return hostname.slice(-6) === '.onion';
 };
@@ -269,39 +272,39 @@ Helpers.buffertoByteArray = function (value) {
 function parseMiniKey (miniKey) {
   var check = Bitcoin.crypto.sha256(miniKey + '?');
   if (check[0] !== 0x00) {
-    throw 'Invalid mini key';
+    throw new Error('Invalid mini key');
   }
   return Bitcoin.crypto.sha256(miniKey);
 }
 
 Helpers.privateKeyStringToKey = function (value, format) {
-  var key_bytes = null;
+  var keyBytes = null;
   var tbytes;
 
-  if (format == 'base58') {
-    key_bytes = Helpers.buffertoByteArray(Base58.decode(value));
-  } else if (format == 'base64') {
-    key_bytes = Helpers.buffertoByteArray(new Buffer(value, 'base64'));
-  } else if (format == 'hex') {
-    key_bytes = Helpers.buffertoByteArray(new Buffer(value, 'hex'));
-  } else if (format == 'mini') {
-    key_bytes = Helpers.buffertoByteArray(parseMiniKey(value));
-  } else if (format == 'sipa') {
+  if (format === 'base58') {
+    keyBytes = Helpers.buffertoByteArray(Base58.decode(value));
+  } else if (format === 'base64') {
+    keyBytes = Helpers.buffertoByteArray(new Buffer(value, 'base64'));
+  } else if (format === 'hex') {
+    keyBytes = Helpers.buffertoByteArray(new Buffer(value, 'hex'));
+  } else if (format === 'mini') {
+    keyBytes = Helpers.buffertoByteArray(parseMiniKey(value));
+  } else if (format === 'sipa') {
     tbytes = Helpers.buffertoByteArray(Base58.decode(value));
     tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
     tbytes.shift();
-    key_bytes = tbytes.slice(0, tbytes.length - 4);
-  } else if (format == 'compsipa') {
+    keyBytes = tbytes.slice(0, tbytes.length - 4);
+  } else if (format === 'compsipa') {
     tbytes = Helpers.buffertoByteArray(Base58.decode(value));
     tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
     tbytes.shift();
     tbytes.pop();
-    key_bytes = tbytes.slice(0, tbytes.length - 4);
+    keyBytes = tbytes.slice(0, tbytes.length - 4);
   } else {
-    throw 'Unsupported Key Format';
+    throw new Error('Unsupported Key Format');
   }
 
-  return new Bitcoin.ECPair(new BigInteger.fromByteArrayUnsigned(key_bytes), null, {compressed: format !== 'sipa'});
+  return new Bitcoin.ECPair(new BigInteger.fromByteArrayUnsigned(keyBytes), null, {compressed: format !== 'sipa'}); // eslint-disable-line new-cap
 };
 
 Helpers.detectPrivateKeyFormat = function (key) {
@@ -352,7 +355,7 @@ Helpers.isValidBIP39Mnemonic = function (mnemonic) {
 Helpers.isValidPrivateKey = function (candidate) {
   try {
     var format = Helpers.detectPrivateKeyFormat(candidate);
-    if (format == 'bip38') { return true; }
+    if (format === 'bip38') { return true; }
     var key = Helpers.privateKeyStringToKey(candidate, format);
     return key.getAddress();
   } catch (e) {
@@ -365,7 +368,7 @@ Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
     var format = Helpers.detectPrivateKeyFormat(priv);
     var okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
     if (format === 'bip38') {
-      if (bipPass == undefined || bipPass === '') {
+      if (bipPass === undefined || bipPass === null || bipPass === '') {
         return reject('needsBip38');
       }
       ImportExport.parseBIP38toECPair(priv, bipPass,

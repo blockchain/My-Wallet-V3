@@ -3,7 +3,6 @@
 var assert = require('assert');
 
 var Wallet = require('./blockchain-wallet');
-var Helpers = require('./helpers');
 var WalletNetwork = require('./wallet-network');
 
 function generateNewWallet (password, email, mnemonic, bip39Password, firstAccountName, success, error, generateUUIDProgress, decryptWalletProgress) {
@@ -16,7 +15,7 @@ function generateNewWallet (password, email, mnemonic, bip39Password, firstAccou
     var guid = uuids[0];
     var sharedKey = uuids[1];
 
-    if (guid.length != 36 || sharedKey.length != 36) {
+    if (guid.length !== 36 || sharedKey.length !== 36) {
       error('Error generating wallet identifier');
     }
 

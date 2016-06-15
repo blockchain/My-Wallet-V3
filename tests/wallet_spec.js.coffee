@@ -107,7 +107,7 @@ BIP39 = {
 RNG = {
   run: (input) ->
     if RNG.shouldThrow
-      throw 'Connection failed'
+      throw new Error('Connection failed');
     "random"
 }
 
@@ -484,22 +484,20 @@ describe "Wallet", ->
       expect(BIP39.generateMnemonic).toHaveBeenCalled()
       expect(RNG.run).toHaveBeenCalled()
 
-    it "should call errorCallback if RNG throws", ->
+    it "should call errorCallback if RNG throws", (done) ->
       # E.g. because there was a network failure.
       # This assumes BIP39.generateMnemonic does not rescue a throw
       # inside the RNG
 
-      observers = null
+      observers =
+        error: () -> done()
 
-      beforeEach (done) ->
-        observers =
-          error: () -> done()
+      spyOn(observers, "error").and.callThrough()
 
-        spyOn(observers, "error").and.callThrough()
+      RNG.shouldThrow = true
+      MyWallet.createNewWallet('a@b.com', "1234", 'My Wallet', 'en', 'usd', observers.success, observers.error)
+      expect(observers.error).toHaveBeenCalledWith('Connection failed')
 
-        RNG.shouldThrow = true
-        MyWallet.createNewWallet('a@b.com', "1234", 'My Wallet', 'en', 'usd', observers.success, observers.error)
-        expect(observers.error).toHaveBeenCalledWith('Connection failed')
       RNG.shouldThrow = false
 
     describe "when the wallet insertion fails", ->

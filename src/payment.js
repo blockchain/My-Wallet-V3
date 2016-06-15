@@ -69,7 +69,7 @@ function Payment (payment) {
     txSize: 0 // transaciton size
   };
 
-  var p = payment ? payment : initialState;
+  var p = payment || initialState;
   this.payment = Payment.return(p);
   this.updateFees();
 
@@ -167,7 +167,7 @@ Payment.prototype.printJSON = function () {
 };
 
 Payment.return = function (payment) {
-  var p = payment ? payment : {};
+  var p = payment || {};
   return Promise.resolve(p);
 };
 
@@ -334,7 +334,7 @@ Payment.from = function (origin) {
       // this could fail for network issues or no-balance
       function (error) {
         if (error !== 'No free outputs to spend') {
-          that.emit('error', {error:'ERR_FETCH_UNSPENT' });
+          that.emit('error', { error: 'ERR_FETCH_UNSPENT' });
         }
         console.log(error);
         payment.coins = [];
@@ -438,7 +438,7 @@ Payment.sign = function (password) {
         .then(function (A) { A.archived = true; });
     };
 
-    if (!payment.transaction) throw 'This transaction hasn\'t been built yet';
+    if (!payment.transaction) throw new Error('This transaction hasn\'t been built yet');
     if (Array.isArray(payment.wifKeys) && !payment.fromWatchOnly) payment.wifKeys.forEach(importWIF);
 
     payment.transaction.addPrivateKeys(getPrivateKeys(password, payment));

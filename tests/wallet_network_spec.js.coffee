@@ -26,14 +26,14 @@ describe "WalletNetwork", ->
               resolve({success: false, message: "Invalid Captcha"})
         else if method == "wallet/1234"
           if API.callFail
-            throw ''
+            throw '';
           else
             resolve('done')
         else if method == "wallet/poll-for-session-guid"
           resolve({guid: "1234"})
         else if action == "POST" && method == "sessions"
           if API.callFail
-            throw ''
+            throw '';
           else
             resolve({token: 'token'})
         else if method == "kaptcha.jpg"
@@ -65,7 +65,7 @@ describe "WalletNetwork", ->
         ['encrypted']
     decryptWalletSync: () ->
       if WalletCrypto.decryptError
-        throw ''
+        throw Error('');
       else
         'decrypted'
     sha256: (msg) -> msg

@@ -6,7 +6,7 @@ var WalletStore = require('./wallet-store.js');
 var MyWallet = require('./wallet.js');
 var API = require('./api');
 
-function get_account_info (success, error) {
+function getAccountInfo (success, error) {
   API.securePostCallbacks('wallet', {method: 'get-info', format: 'json'}, function (data) {
     typeof (success) === 'function' && success(data);
   }, function (data) {
@@ -18,7 +18,7 @@ function get_account_info (success, error) {
 }
 
 function updateKV (method, value, success, error, extra) {
-  if (typeof value == 'string') {
+  if (typeof value === 'string') {
     value = value.trim();
   }
 
@@ -40,27 +40,27 @@ function updateKV (method, value, success, error, extra) {
  * @param {function ()} success success callback function
  * @param {function ()} error error callback function
  */
-function update_IP_lock (ips, success, error) {
+function updateIPlock (ips, success, error) {
   updateKV('update-ip-lock', ips, success, error);
 }
 
-function update_IP_lock_on (enabled, success, error) {
-  updateKV('update-ip-lock-on', enabled ? true : false, success, error);
+function updateIPlockOn (enabled, success, error) {
+  updateKV('update-ip-lock-on', Boolean(enabled), success, error);
 }
 
-function change_language (language, success, error) {
+function changeLanguage (language, success, error) {
   updateKV('update-language', language, success, error);
 }
 
-function change_local_currency (code, success, error) {
+function changeLocalCurrency (code, success, error) {
   updateKV('update-currency', code, success, error);
 }
 
-function change_btc_currency (code, success, error) {
+function changeBtcCurrency (code, success, error) {
   updateKV('update-btc-currency', code, success, error);
 }
 
-function update_tor_ip_block (enabled, success, error) {
+function updateTorIpBlock (enabled, success, error) {
   updateKV('update-block-tor-ips', enabled ? 1 : 0, success, error);
 }
 
@@ -76,21 +76,21 @@ function isBadPasswordHint (value) {
   }
 }
 
-function update_password_hint1 (value, success, error) {
+function updatePasswordHint1 (value, success, error) {
   assert(error && typeof (error) === 'function', 'Error callback required');
 
   var isBad = isBadPasswordHint(value);
   isBad ? error(isBad) : updateKV('update-password-hint1', value, success, error);
 }
 
-function update_password_hint2 (value, success, error) {
+function updatePasswordHint2 (value, success, error) {
   assert(error && typeof (error) === 'function', 'Error callback required');
 
   var isBad = isBadPasswordHint(value);
   isBad ? error(isBad) : updateKV('update-password-hint2', value, success, error);
 }
 
-function change_email (email, success, error) {
+function changeEmail (email, success, error) {
   updateKV('update-email', email, success, error);
 }
 
@@ -107,7 +107,7 @@ function updateLoggingLevel (val, success, error) {
 }
 
 function toggleSave2FA (val, success, error) {
-  updateKV('update-never-save-auth-type', val ? true : false, success, error);
+  updateKV('update-never-save-auth-type', Boolean(val), success, error);
 }
 
 function updateAuthType (val, success, error) {
@@ -148,8 +148,8 @@ function setTwoFactorEmail (success, error) {
 }
 
 function setTwoFactorGoogleAuthenticator (success, error) {
-  API.securePostCallbacks('wallet', { method: 'generate-google-secret' }, function (google_secret_url) {
-    typeof (success) === 'function' && success(google_secret_url);
+  API.securePostCallbacks('wallet', { method: 'generate-google-secret' }, function (googleSecretURL) {
+    typeof (success) === 'function' && success(googleSecretURL);
   }, function (data) {
     WalletStore.sendEvent('msg', {type: 'error', message: data.responseText});
     typeof (error) === 'function' && error(data.responseText);
@@ -276,16 +276,16 @@ function disableAllNotifications (success, error) {
 }
 
 module.exports = {
-  get_account_info: get_account_info,
-  update_IP_lock: update_IP_lock,
-  update_IP_lock_on: update_IP_lock_on,
-  change_language: change_language,
-  change_local_currency: change_local_currency,
-  change_btc_currency: change_btc_currency,
-  update_tor_ip_block: update_tor_ip_block,
-  update_password_hint1: update_password_hint1,
-  update_password_hint2: update_password_hint2,
-  change_email: change_email,
+  getAccountInfo: getAccountInfo,
+  updateIPlock: updateIPlock,
+  updateIPlockOn: updateIPlockOn,
+  changeLanguage: changeLanguage,
+  changeLocalCurrency: changeLocalCurrency,
+  changeBtcCurrency: changeBtcCurrency,
+  updateTorIpBlock: updateTorIpBlock,
+  updatePasswordHint1: updatePasswordHint1,
+  updatePasswordHint2: updatePasswordHint2,
+  changeEmail: changeEmail,
   changeMobileNumber: changeMobileNumber,
   updateLoggingLevel: updateLoggingLevel,
   toggleSave2FA: toggleSave2FA,

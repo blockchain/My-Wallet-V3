@@ -1,6 +1,10 @@
 language: node_js
 node_js:
 - 5.8
+before_install:
+- npm install -g snazzy
+before_script:
+- node_modules/.bin/semistandard --verbose | snazzy
 script: node_modules/karma/bin/karma start karma.conf.js --single-run && grunt coveralls
 notifications:
   slack:

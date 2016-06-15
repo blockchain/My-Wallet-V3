@@ -124,16 +124,16 @@ var AES = {
   }
 };
 
-function encryptWallet (data, password, pbkdf2_iterations, version) {
+function encryptWallet (data, password, pbkdf2Iterations, version) {
   assert(data, 'data missing');
   assert(password, 'password missing');
-  assert(pbkdf2_iterations, 'pbkdf2_iterations missing');
+  assert(pbkdf2Iterations, 'pbkdf2Iterations missing');
   assert(version, 'version missing');
 
   return JSON.stringify({
-    pbkdf2_iterations: pbkdf2_iterations,
+    pbkdf2_iterations: pbkdf2Iterations,
     version: version,
-    payload: encryptDataWithPassword(data, password, pbkdf2_iterations)
+    payload: encryptDataWithPassword(data, password, pbkdf2Iterations)
   });
 }
 
@@ -165,7 +165,7 @@ function decryptWalletSync (data, password) {
   }
 
   if (version > SUPPORTED_ENCRYPTION_VERSION) {
-    throw 'Wallet version ' + version + ' not supported.';
+    throw new Error('Wallet version ' + version + ' not supported.');
   }
 
   try {
@@ -176,7 +176,7 @@ function decryptWalletSync (data, password) {
     decrypted = decryptWalletV1(data, password);
   } finally {
     assert(decrypted, 'Error decrypting wallet, please check that your password is correct');
-    return decrypted;
+    return decrypted; // eslint-disable-line no-unsafe-finally
   }
 }
 
@@ -237,16 +237,16 @@ function cipherFunction (password, sharedKey, pbkdf2Iterations, operation) {
   }
 }
 
-function encryptSecretWithSecondPassword (base58, password, sharedKey, pbkdf2_iterations) {
-  return encryptDataWithPassword(base58, sharedKey + password, pbkdf2_iterations);
+function encryptSecretWithSecondPassword (base58, password, sharedKey, pbkdf2Iterations) {
+  return encryptDataWithPassword(base58, sharedKey + password, pbkdf2Iterations);
 }
 
-function decryptSecretWithSecondPassword (secret, password, sharedKey, pbkdf2_iterations) {
-  return decryptDataWithPassword(secret, sharedKey + password, pbkdf2_iterations);
+function decryptSecretWithSecondPassword (secret, password, sharedKey, pbkdf2Iterations) {
+  return decryptDataWithPassword(secret, sharedKey + password, pbkdf2Iterations);
 }
 
-function decryptPasswordWithProcessedPin (data, password, pbkdf2_iterations) {
-  return decryptDataWithPassword(data, password, pbkdf2_iterations);
+function decryptPasswordWithProcessedPin (data, password, pbkdf2Iterations) {
+  return decryptDataWithPassword(data, password, pbkdf2Iterations);
 }
 
 function encryptDataWithPassword (data, password, iterations) {
@@ -289,7 +289,7 @@ function stretchPassword (password, salt, iterations, keylen) {
   assert(typeof (sjcl.hash.sha1) === 'function', 'missing sha1, make sure sjcl is configured correctly');
 
   var hmacSHA1 = function (key) {
-    var hasher = new sjcl.misc.hmac(key, sjcl.hash.sha1);
+    var hasher = new sjcl.misc.hmac(key, sjcl.hash.sha1); // eslint-disable-line new-cap
     this.encrypt = hasher.encrypt.bind(hasher);
   };
 
@@ -336,7 +336,7 @@ function smix (B, Bi, r, N, V, XY) {
   arraycopy32(XY, Xi, B, Bi, Yi);
 }
 
-function blockmix_salsa8 (BY, Bi, Yi, r) {
+function blockmix_salsa8 (BY, Bi, Yi, r) { // eslint-disable-line camelcase
   var X = [];
   var i;
 
@@ -361,7 +361,7 @@ function R (a, b) {
   return (a << b) | (a >>> (32 - b));
 }
 
-function salsa20_8 (B) {
+function salsa20_8 (B) { // eslint-disable-line camelcase
   var B32 = new Array(32);
   var x = new Array(32);
   var i;
@@ -497,7 +497,7 @@ function arraycopy32 (src, srcPos, dest, destPos, length) {
 }
 
 function scrypt (passwd, salt, N, r, p, dkLen, callback) {
-  if (N == 0 || (N & (N - 1)) != 0) throw Error('N must be > 0 and a power of 2');
+  if (N === 0 || (N & (N - 1)) !== 0) throw Error('N must be > 0 and a power of 2');
 
   var MAX_VALUE = 2147483647;
   if (N > MAX_VALUE / 128 / r) throw Error('Parameter N is too large');
@@ -521,7 +521,6 @@ function scrypt (passwd, salt, N, r, p, dkLen, callback) {
   }
 
   callback(pbkdf2(passwd, B, 1, dkLen, ALGO.SHA256));
-
 }
 
 module.exports = {

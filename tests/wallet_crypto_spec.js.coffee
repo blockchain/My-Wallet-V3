@@ -155,7 +155,7 @@ describe 'WalletCrypto', ->
           spyOn(observers, "success").and.callThrough()
           spyOn(observers, "error").and.callThrough()
 
-          expect(() -> WalletCrypto.decryptWalletSync(wallet.enc, wallet.password)).toThrow("Wallet version 4 not supported.")
+          expect(() -> WalletCrypto.decryptWalletSync(wallet.enc, wallet.password)).toThrow(Error("Wallet version 4 not supported."))
           WalletCrypto.decryptWallet(wallet.enc, wallet.password, observers.success, observers.error)
           expect(observers.success).not.toHaveBeenCalled()
           expect(observers.error).toHaveBeenCalled()

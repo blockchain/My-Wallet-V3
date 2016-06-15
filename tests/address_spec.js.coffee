@@ -55,7 +55,7 @@ Helpers = {
 RNG = {
   run: (input) ->
     if RNG.shouldThrow
-      throw 'Connection failed'
+      throw new Error('Connection failed');
     "1111111111111111111111111111111H"
 }
 
@@ -151,7 +151,7 @@ describe "Address", ->
         # This assumes BitcoinJS ECPair.makeRandom does not rescue a throw
         # inside the RNG, which is the case in version 2.1.4
         RNG.shouldThrow = true
-        expect(() -> Address.new("My New Address")).toThrow('Connection failed')
+        expect(() -> Address.new("My New Address")).toThrow(Error('Connection failed'))
 
   describe "instance", ->
     beforeEach ->
@@ -253,15 +253,15 @@ describe "Address", ->
         expect(WalletCrypto.decryptSecretWithSecondPassword).toHaveBeenCalledWith('encpriv', 'secpass', 'shared_key', 5000)
 
       it 'should fail when not passed a bad message', ->
-        expect(a.signMessage.bind(a)).toThrow('Expected message to be a string')
+        expect(a.signMessage.bind(a)).toThrow(Error('Expected message to be a string'))
 
       it 'should fail when encrypted and second pw is not provided', ->
         a._priv = 'encpriv'
-        expect(a.signMessage.bind(a, 'message')).toThrow('Second password needed to decrypt key')
+        expect(a.signMessage.bind(a, 'message')).toThrow(Error('Second password needed to decrypt key'))
 
       it 'should fail when called on a watch only address', ->
         a._priv = null
-        expect(a.signMessage.bind(a, 'message')).toThrow('Private key needed for message signing')
+        expect(a.signMessage.bind(a, 'message')).toThrow(Error('Private key needed for message signing'))
 
       it 'should convert to base64', ->
         spy = jasmine.createSpy('toString')
