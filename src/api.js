@@ -195,7 +195,7 @@ API.prototype.getHistory = function (addresses, tx_filter, offset, n, syncBool) 
   return this.retry(this.request.bind(this, 'POST', 'multiaddr', data, null, syncBool));
 };
 
-API.prototype.securePost = function (url, data) {
+API.prototype.securePost = function (url, data, extraHeaders) {
   var clone = Helpers.merge({}, data);
   if (!Helpers.isValidGUID(data.guid)) { clone.guid = MyWallet.wallet.guid; }
   if (!data.sharedKey) {
@@ -223,7 +223,7 @@ API.prototype.securePost = function (url, data) {
   clone.api_code = this.API_CODE;
   clone.format = data.format ? data.format : 'plain';
 
-  return this.retry(this.request.bind(this, 'POST', url, clone, true));
+  return this.retry(this.request.bind(this, 'POST', url, clone, extraHeaders));
 };
 
 API.prototype.securePostCallbacks = function (url, data, success, error) {

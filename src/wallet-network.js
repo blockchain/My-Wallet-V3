@@ -141,7 +141,7 @@ function requestTwoFactorReset (
 }
 
 // Save the javascript wallet to the remote server
-function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) {
+function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress, sessionToken) {
   assert(guid, 'GUID missing');
   assert(sharedKey, 'Shared Key missing');
   assert(password, 'Password missing');
@@ -186,7 +186,9 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
   });
 
   var apiPromise = dataPromise.then(function (postData) {
-    return API.securePost('wallet', postData);
+    var headers = {sessionToken: sessionToken};
+
+    return API.securePost('wallet', postData, headers);
   });
 
   return Promise.all([dataPromise, apiPromise]);
