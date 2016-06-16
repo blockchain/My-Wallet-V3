@@ -135,7 +135,6 @@ function decryptAndInitializeWallet (success, error, decrypt_success, build_hd_s
     WalletStore.getPassword(),
     function (obj, rootContainer) {
       MyWallet.wallet = new Wallet(obj);
-      decrypt_success && decrypt_success();
 
       // this sanity check should be done on the load
       // if (!sharedKey || sharedKey.length == 0 || sharedKey.length != 36) {
@@ -154,6 +153,7 @@ function decryptAndInitializeWallet (success, error, decrypt_success, build_hd_s
         WalletStore.sendEvent('hd_wallets_does_not_exist');
       }
       setIsInitialized();
+      decrypt_success && decrypt_success();
       success();
     },
     error
