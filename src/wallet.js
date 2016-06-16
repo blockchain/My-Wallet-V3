@@ -219,6 +219,9 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
       // Estabish a session to enable 2FA and browser verification:
       WalletNetwork.establishSession(credentials.sessionToken)
       .then(function (token) {
+        if (typeof callbacks.newSessionToken === 'function') {
+          callbacks.newSessionToken(token);
+        }
         // If a new browser is used, the user receives a verification email.
         // We wait for them to click the link.
         var authorizationRequired = function () {
@@ -237,7 +240,7 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
         };
 
         var needsTwoFactorCode = function (authType) {
-          callbacks.needsTwoFactorCode(token, authType);
+          callbacks.needsTwoFactorCode(authType);
         };
 
         if (credentials.twoFactor) {
@@ -246,7 +249,7 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
             callbacks.didFetch && callbacks.didFetch();
             MyWallet.didFetchWallet(obj).then(function () {
               MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
-                resolve({guid: guid, sessionToken: token});
+                resolve({guid: guid});
               }).catch(function (e) {
                 reject(e);
               });
@@ -261,7 +264,7 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
             callbacks.didFetch && callbacks.didFetch();
             MyWallet.didFetchWallet(obj).then(function () {
               MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
-                resolve({guid: guid, sessionToken: token});
+                resolve({guid: guid});
               }).catch(function (e) {
                 reject(e);
               });
@@ -472,7 +475,7 @@ MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function () {
  */
  // used on mywallet, iOS and frontend
 MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, successCallback, errorCallback) {
-  var success = function (createdGuid, createdSharedKey, createdPassword) {
+  var success = function (createdGuid, createdSharedKey, createdPassword, sessionToken) {
     if (languageCode) {
       WalletStore.setLanguage(languageCode);
       BlockchainSettingsAPI.changeLanguage(languageCode, function () {});
@@ -483,14 +486,17 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
     }
 
     WalletStore.unsafeSetPassword(createdPassword);
-    successCallback(createdGuid, createdSharedKey, createdPassword);
+    successCallback(createdGuid, createdSharedKey, createdPassword, sessionToken);
   };
 
   var saveWallet = function (wallet) {
-    WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, {email: inputedEmail}).then(function () {
-      success(wallet.guid, wallet.sharedKey, inputedPassword);
-    }).catch(function (e) {
-      errorCallback(e);
+    // Generate a session token to facilitate future login attempts:
+    WalletNetwork.establishSession(null).then(function (sessionToken) {
+      WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, {email: inputedEmail}, undefined, sessionToken).then(function () {
+        success(wallet.guid, wallet.sharedKey, inputedPassword, sessionToken);
+      }).catch(function (e) {
+        errorCallback(e);
+      });
     });
   };
 
@@ -506,10 +512,11 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
 MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic, bip39Password, successCallback, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
   var walletGenerated = function (wallet) {
     var saveWallet = function () {
-      WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, {email: inputedEmail}, decryptWalletProgress).then(function () {
-        successCallback({guid: wallet.guid, sharedKey: wallet.sharedKey, password: inputedPassword});
-      }, function (e) {
-        error(e);
+      // Generate a session token to facilitate future login attempts:
+      WalletNetwork.establishSession(null).then(function (sessionToken) {
+        WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, {email: inputedEmail}, decryptWalletProgress, sessionToken).then(function () {
+          successCallback({guid: wallet.guid, sharedKey: wallet.sharedKey, password: inputedPassword, sessionToken: sessionToken});
+        });
       });
     };
 
