@@ -27,7 +27,7 @@ function postTokenEndpoint (method, token, extraParams) {
     params[k] = extraParams[k];
   }
 
-  return API.request('POST', 'wallet', params, false)
+  return API.request('POST', 'wallet', params)
     .then(handleResponse);
 }
 

@@ -1,11 +1,12 @@
 proxyquire = require('proxyquireify')(require)
 
-describe "MyWallet", ->
+describe "WalletNetwork", ->
 
   API =
     retry: (f) ->
       f()
-    request: (action, method, data) ->
+    request: (action, method, data, headers) ->
+      console.log(action, method, data, headers)
       new Promise (resolve, reject) ->
         if method == "uuid-generator"
           if API.callFail
@@ -28,6 +29,15 @@ describe "MyWallet", ->
             throw ''
           else
             resolve('done')
+        else if method == "wallet/poll-for-session-guid"
+          resolve({guid: "1234"})
+        else if action == "POST" && method == "sessions"
+          if API.callFail
+            throw ''
+          else
+            resolve({token: 'token'})
+        else if method == "kaptcha.jpg"
+          resolve('image')
         else
           reject('bad call')
 
@@ -65,12 +75,16 @@ describe "MyWallet", ->
       defaultPbkdf2Iterations: 10000
       isUpgradedToHD: true
 
-
+  isPolling = false
+  WalletStore =
+    isPolling: () -> isPolling
+    setIsPolling: (val) -> isPolling = val
 
   WalletNetwork = proxyquire('../src/wallet-network', {
     './api': API,
     './wallet-crypto': WalletCrypto,
     './wallet': MyWallet,
+    './wallet-store' : WalletStore
   })
 
   beforeEach ->
@@ -95,14 +109,14 @@ describe "MyWallet", ->
       spyOn(API, "request").and.callThrough()
 
     it "should POST the users email and captcha", (done) ->
-      promise = WalletNetwork.recoverGuid("a@b.com", "eH1hs")
+      promise = WalletNetwork.recoverGuid("token", "a@b.com", "eH1hs")
       expect(promise).toBeResolved(done)
       expect(API.request).toHaveBeenCalled()
       expect(API.request.calls.argsFor(0)[2].email).toEqual('a@b.com')
       expect(API.request.calls.argsFor(0)[2].captcha).toEqual('eH1hs')
 
     it "should resolve if succesful", (done) ->
-      promise = WalletNetwork.recoverGuid("a@b.com", "eH1hs")
+      promise = WalletNetwork.recoverGuid("token", "a@b.com", "eH1hs")
       expect(promise).toBeResolvedWith('Sent email', done)
 
   describe "resendTwoFactorSms", ->
@@ -110,13 +124,18 @@ describe "MyWallet", ->
       spyOn(API, "request").and.callThrough()
 
     it "should GET with resend_code to true", (done) ->
-      WalletNetwork.resendTwoFactorSms("1234").then(() -> done())
+      WalletNetwork.resendTwoFactorSms("1234", "token").then(() -> done())
       expect(API.request).toHaveBeenCalled()
       expect(API.request.calls.argsFor(0)[2].resend_code).toEqual(true)
 
+    it "should pass on the session token", ->
+        WalletNetwork.resendTwoFactorSms("1234", "token").then(() -> done())
+        expect(API.request).toHaveBeenCalled()
+        expect(API.request.calls.argsFor(0)[3].sessionToken).toEqual("token")
+
     it "should not be resolved if the call fails", (done) ->
       API.callFail = true
-      promise = WalletNetwork.resendTwoFactorSms("1234")
+      promise = WalletNetwork.resendTwoFactorSms("1234", "token")
       expect(promise).toBeRejectedWith('Could not resend two factor sms', done)
       API.callFail = false
 
@@ -125,18 +144,18 @@ describe "MyWallet", ->
       spyOn(API, "request").and.callThrough()
 
     it "should POST a captcha and other fields", (done) ->
-      promise = WalletNetwork.requestTwoFactorReset("1234", "a@b.com", "", "", "Hi support", "eH1hs")
+      promise = WalletNetwork.requestTwoFactorReset("token", "1234", "a@b.com", "", "", "Hi support", "eH1hs")
       expect(promise).toBeResolved(done)
 
       expect(API.request).toHaveBeenCalled()
       expect(API.request.calls.argsFor(0)[2].kaptcha).toEqual("eH1hs")
 
     it "should resolve if succesful", (done) ->
-      promise = WalletNetwork.requestTwoFactorReset("1234", "a@b.com", "", "", "Hi support", "eH1hs")
+      promise = WalletNetwork.requestTwoFactorReset("token", "1234", "a@b.com", "", "", "Hi support", "eH1hs")
       expect(promise).toBeResolvedWith('Request Submitted', done)
 
     it "should reject if captcha is invalid", (done) ->
-      promise  = WalletNetwork.requestTwoFactorReset("1234", "a@b.com", "", "", "Hi support", "can't read")
+      promise  = WalletNetwork.requestTwoFactorReset("token", "1234", "a@b.com", "", "", "Hi support", "can't read")
       expect(promise).toBeRejectedWith('Invalid Captcha', done)
 
   describe "insertWallet", ->
@@ -246,3 +265,120 @@ describe "MyWallet", ->
     afterEach ->
       API.callFail = false
       API.badChecksum = false
+
+  describe "obtainSessionToken()", ->
+    it "should POST /sessions", (done) ->
+      promise = WalletNetwork.obtainSessionToken()
+      expect(promise).toBeResolvedWith("token", done)
+
+    it "should fail if network problem", (done) ->
+      API.callFail = true
+      promise = WalletNetwork.obtainSessionToken()
+      expect(promise).toBeRejected(done)
+
+    afterEach ->
+      API.callFail = false
+
+  describe "fetchWallet", ->
+    beforeEach ->
+      spyOn(API, "request").and.callThrough()
+
+      WalletNetwork.fetchWallet(
+        "1234",
+        "token"
+      )
+
+    it "should pass the guid along", ->
+      expect(API.request.calls.argsFor(0)[1]).toEqual("wallet/1234")
+
+    it "should use an X-Session-ID header", ->
+      expect(API.request.calls.argsFor(0)[3].sessionToken).toEqual("token")
+
+  describe "fetchWalletWithSharedKey", ->
+    beforeEach ->
+      spyOn(API, "request").and.callThrough()
+
+      WalletNetwork.fetchWalletWithSharedKey(
+        "1234",
+        "shared-key"
+      )
+
+    it "should pass the guid along", ->
+      expect(API.request.calls.argsFor(0)[1]).toEqual("wallet/1234")
+
+    it "should pass the shared key along", ->
+      expect(API.request.calls.argsFor(0)[2]['sharedKey']).toEqual("shared-key")
+
+    it "should not use an X-Session-ID header", ->
+      expect(API.request.calls.argsFor(0)[3]).toEqual({})
+
+  describe "fetchWalletWithTwoFactor", ->
+    beforeEach ->
+      spyOn(API, "request").and.callThrough()
+
+    it "should pass code (as object) along", ->
+      WalletNetwork.fetchWalletWithTwoFactor(
+        "1234",
+        "token"
+        {type: 5, code: "BF399"}
+      )
+
+      expect(API.request.calls.argsFor(0)[2].payload).toEqual("BF399")
+
+    it "should convert SMS code to upper case", ->
+      WalletNetwork.fetchWalletWithTwoFactor(
+        "1234",
+        "token",
+        {type: 5, code: "bf399"}
+      )
+
+      expect(API.request).toHaveBeenCalled()
+      expect(API.request.calls.argsFor(0)[2].payload).toEqual("BF399")
+
+    it "should not convert Yubikey code to upper case", ->
+      WalletNetwork.fetchWalletWithTwoFactor(
+        "1234",
+        "password",
+        {type: 1, code: "abcdef123"}
+      )
+
+      expect(API.request).toHaveBeenCalled()
+      expect(API.request.calls.argsFor(0)[2].payload).toEqual("abcdef123")
+
+  describe "pollForSessionGUID", ->
+    beforeEach ->
+      WalletStore.setIsPolling(false)
+      spyOn(API, "request").and.callThrough()
+      WalletNetwork.pollForSessionGUID("token")
+
+    it "should call wallet/poll-for-session-guid", ->
+      expect(API.request.calls.argsFor(0)[1]).toEqual("wallet/poll-for-session-guid")
+
+    it "should pass the session token", ->
+      expect(API.request.calls.argsFor(0)[3].sessionToken).toEqual("token")
+
+  describe "getCaptchaImage", ->
+
+    beforeEach ->
+      spyOn(WalletNetwork, "obtainSessionToken").and.callFake(() ->
+        Promise.resolve("token")
+      )
+      spyOn(API, "request").and.callThrough()
+
+    it "should create a new session", ->
+      WalletNetwork.getCaptchaImage()
+      expect(WalletNetwork.obtainSessionToken).toHaveBeenCalled()
+
+    it "should call kaptcha.jpg", (done)->
+      promise = WalletNetwork.getCaptchaImage().then(() ->
+        expect(API.request.calls.argsFor(0)[1]).toEqual("kaptcha.jpg")
+      )
+
+      expect(promise).toBeResolved(done)
+
+    it "should pass session token along", (done)->
+      promise = WalletNetwork.getCaptchaImage().then(() ->
+        expect(API.request.calls.argsFor(0)[3].sessionToken).toEqual("token")
+      )
+
+      expect(promise).toBeResolved(done)

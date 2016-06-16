@@ -16,6 +16,9 @@ var BlockchainSocket = require('./blockchain-socket');
 var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var RNG = require('./rng');
 var BIP39 = require('bip39');
+var Bitcoin = require('bitcoinjs-lib');
+// Intentionally not directly included in package.json:
+var createHmac = require('create-hmac');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -106,7 +109,7 @@ MyWallet.getWallet = function (success, error) {
 
     WalletStore.setEncryptedWalletData(obj.payload);
 
-    decryptAndInitializeWallet(function () {
+    MyWallet.decryptAndInitializeWallet(function () {
       MyWallet.wallet.getHistory();
 
       if (success) success();
@@ -121,7 +124,7 @@ MyWallet.getWallet = function (success, error) {
   });
 };
 
-function decryptAndInitializeWallet (success, error, decrypt_success, build_hd_success) {
+MyWallet.decryptAndInitializeWallet = function(success, error, decrypt_success, build_hd_success) {
   assert(success, 'Success callback required');
   assert(error, 'Error callback required');
   var encryptedWalletData = WalletStore.getEncryptedWalletData();
@@ -175,193 +178,154 @@ MyWallet.makePairingCode = function (success, error) {
   }
 };
 
-MyWallet.login = function (user_guid, shared_key, inputedPassword, twoFA, success, needs_two_factor_code,
-                           wrong_two_factor_code, authorization_required, other_error, fetch_success,
-                           decrypt_success, build_hd_success) {
-  assert(success, 'Success callback required');
-  assert(other_error, 'Error callback required');
-  assert(twoFA !== undefined, '2FA code must be null or set');
+////////////////////////////////////////////////////////////////////////////////
+// guid: the wallet identifier
+// password: to decrypt the wallet (which happens in the browser)
+// server credentials:
+//   twoFactor: 2FA {type: ..., code: ....} or null
+//   sharedKey: if present, it bypasses 2FA and browser verification
+// callbacks:
+//   needsTwoFactorCode
+//   wrongTwoFactorCode
+//   authorizationRequired: this is a new browser
+//   didFetch: wallet has been downloaded from the server
+//   didDecrypt wallet has been decrypted (with the password)
+//   didBuildHD: HD part of wallet has been constructed in memory
+
+MyWallet.login = function (guid, password, credentials, callbacks) {
+  assert(credentials.twoFactor !== undefined, '2FA code must be null or set');
   assert(
-    twoFA === null ||
-    Helpers.isString(twoFA) ||
-    (Helpers.isPositiveInteger(twoFA.type) && Helpers.isString(twoFA.code))
+    credentials.twoFactor === null ||
+    (Helpers.isPositiveInteger(credentials.twoFactor.type) && Helpers.isString(credentials.twoFactor.code))
   );
 
-  var clientTime = (new Date()).getTime();
-  var data = { format: 'json', resend_code: null, ct: clientTime, api_code: API.API_CODE };
-
-  if (shared_key) { data.sharedKey = shared_key; }
-
-  var tryToFetchWalletJSON = function (guid, successCallback) {
-    var success = function (obj) {
-      fetch_success && fetch_success();
-      // Even if Two Factor is enabled, some settings need to be saved here,
-      // because they won't be part of the 2FA response.
-
-      if (!obj.guid) {
-        WalletStore.sendEvent('msg', {type: 'error', message: 'Server returned null guid.'});
-        other_error('Server returned null guid.');
-        return;
-      }
-
-      // I should create a new class to store the encrypted wallet over wallet
-      WalletStore.setGuid(obj.guid);
-      WalletStore.setRealAuthType(obj.real_auth_type);
-      WalletStore.setSyncPubKeys(obj.sync_pubkeys);
-
-      if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
-      } else {
-        needs_two_factor_code(obj.auth_type);
-        return;
-      }
-      successCallback(obj);
-    };
-
-    var error = function (e) {
-      console.log(e);
-      var obj = 'object' === typeof e ? e : JSON.parse(e);
-      if (obj && obj.initial_error && !obj.authorization_required) {
-        other_error(obj.initial_error);
-        return;
-      }
-      WalletStore.sendEvent('did_fail_set_guid');
-      if (obj.authorization_required && typeof (authorization_required) === 'function') {
-        authorization_required(function () {
-          MyWallet.pollForSessionGUID(function () {
-            tryToFetchWalletJSON(guid, successCallback);
+  var loginPromise = new Promise(function (resolve, reject) {
+    // If the shared key is known, 2FA and browser verification are skipped.
+    // No session is needed in that case.
+    if(credentials.sharedKey) {
+      return WalletNetwork.fetchWalletWithSharedKey(guid, credentials.sharedKey)
+        .then(function (obj) {
+          callbacks.didFetch && callbacks.didFetch();
+          MyWallet.didFetchWallet(obj).then(function() {
+            MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function() {
+              resolve({guid: guid});
+            }).catch(function (e) {
+              reject(e);
+            });
           });
-        });
-      }
-      if (obj.initial_error) {
-        WalletStore.sendEvent('msg', {type: 'error', message: obj.initial_error});
-      }
-    };
-    API.request('GET', 'wallet/' + guid, data, true, false).then(success).catch(error);
-  };
+        })
+    } else {
+      // Estabish a session to enable 2FA and browser verification:
+      WalletNetwork.establishSession(credentials.sessionToken)
+      .then(function(token) {
+        // If a new browser is used, the user receives a verification email.
+        // We wait for them to click the link.
+        var authorizationRequired = function() {
+          var promise = new Promise(function (resolveA, rejectA) {
+            if(typeof(callbacks.authorizationRequired) === 'function') {
+              callbacks.authorizationRequired(function () {
+                WalletNetwork.pollForSessionGUID(token).then(function () {
+                  resolveA();
+                }).catch(function(error) {
+                  rejectA(error);
+                });
+              });
+            }
+          });
+          return promise;
+        };
 
-  var tryToFetchWalletWith2FA = function (guid, two_factor_auth, successCallback) {
-    if (Helpers.isString(two_factor_auth)) {
-      two_factor_auth = {
-        type: null,
-        code: two_factor_auth
-      };
+        var needsTwoFactorCode = function (authType) {
+          callbacks.needsTwoFactorCode(token, authType);
+        };
+
+        if(credentials.twoFactor) {
+          WalletNetwork.fetchWalletWithTwoFactor(guid, token, credentials.twoFactor)
+          .then(function (obj) {
+            callbacks.didFetch && callbacks.didFetch();
+            MyWallet.didFetchWallet(obj).then(function() {
+              MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function() {
+                resolve({guid: guid, sessionToken: token});
+              }).catch(function (e) {
+                reject(e);
+              });
+            });
+          }).catch(function (e) {
+            callbacks.wrongTwoFactorCode(e);
+          });
+
+        } else {
+          // Try without 2FA:
+          WalletNetwork.fetchWallet(guid, token, needsTwoFactorCode, authorizationRequired)
+          .then(function (obj) {
+            callbacks.didFetch && callbacks.didFetch();
+            MyWallet.didFetchWallet(obj).then(function() {
+              MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function() {
+                resolve({guid: guid, sessionToken: token});
+              }).catch(function (e) {
+                reject(e);
+              });
+            });
+          }).catch(function (e) {
+            reject(e);
+          });
+        }
+
+      }).catch(function (error) {
+        console.log(error.message);
+        reject("Unable to establish session");
+      });
     }
+  });
 
-    if (two_factor_auth.code == null) {
-      other_error('Two Factor Authentication code this null');
+  return loginPromise;
+}
+
+MyWallet.didFetchWallet = function(obj) {
+  if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
+   WalletStore.setEncryptedWalletData(obj.payload);
+  }
+
+  if (obj.language && WalletStore.getLanguage() != obj.language) {
+   WalletStore.setLanguage(obj.language);
+  }
+
+  return Promise.resolve();
+}
+
+MyWallet.initializeWallet = function (pw, decrypt_success, build_hd_success) {
+  var promise = new Promise(function (resolve, reject) {
+
+    if (isInitialized || WalletStore.isRestoringWallet()) {
       return;
     }
-    if (two_factor_auth.code.length == 0 || two_factor_auth.code.length > 255) {
-      other_error('You must enter a Two Factor Authentication code');
-      return;
+
+    function _success () {
+      resolve();
     }
 
-    var two_factor_auth_key = two_factor_auth.code;
-
-    switch (two_factor_auth.type) {
-      case 2: // email
-      case 4: // sms
-      case 5: // Google Auth
-        two_factor_auth_key = two_factor_auth_key.toUpperCase();
-        break;
-    }
-
-    var success = function (data) {
-      if (data == null || data.length == 0) {
-        other_error('Server Return Empty Wallet Data');
-        return;
-      }
-      if (data != 'Not modified') { WalletStore.setEncryptedWalletData(data); }
-      successCallback(data);
-    };
-    var error = function (response) {
+    function _error (e) {
       WalletStore.setRestoringWallet(false);
-      wrong_two_factor_code(response);
-    };
+      WalletStore.sendEvent('msg', {type: 'error', message: e});
 
-    var myData = { guid: guid, payload: two_factor_auth_key, length: two_factor_auth_key.length, method: 'get-wallet', format: 'plain', api_code: API.API_CODE };
-    API.request('POST', 'wallet', myData, true, false).then(success).catch(error);
-  };
-
-  var didFetchWalletJSON = function (obj) {
-    if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
-      WalletStore.setEncryptedWalletData(obj.payload);
+      WalletStore.sendEvent('error_restoring_wallet');
+      reject(e);
     }
 
-    if (obj.language && WalletStore.getLanguage() != obj.language) {
-      WalletStore.setLanguage(obj.language);
-    }
-    MyWallet.initializeWallet(inputedPassword, success, other_error, decrypt_success, build_hd_success);
-  };
+    WalletStore.setRestoringWallet(true);
+    WalletStore.unsafeSetPassword(pw);
 
-  if (twoFA == null) {
-    tryToFetchWalletJSON(user_guid, didFetchWalletJSON);
-  } else {
-    // If 2FA is enabled and we already fetched the wallet before, don't fetch
-    // it again
-    if (user_guid === WalletStore.getGuid() && WalletStore.getEncryptedWalletData()) {
-      MyWallet.initializeWallet(inputedPassword, success, other_error, decrypt_success, build_hd_success);
-    } else {
-      tryToFetchWalletWith2FA(user_guid, twoFA, didFetchWalletJSON);
-    }
-  }
-};
-
-// used locally
-MyWallet.pollForSessionGUID = function (successCallback) {
-  if (WalletStore.isPolling()) return;
-  WalletStore.setIsPolling(true);
-  var data = {format: 'json'};
-  var success = function (obj) {
-    if (obj.guid) {
-      WalletStore.setIsPolling(false);
-      WalletStore.sendEvent('msg', {type: 'success', message: 'Authorization Successful'});
-      successCallback();
-    } else {
-      if (WalletStore.getCounter() < 600) {
-        WalletStore.incrementCounter();
-        setTimeout(function () {
-          API.request('GET', 'wallet/poll-for-session-guid', data, true, false).then(success).catch(error);
-        }, 2000);
-      } else {
-        WalletStore.setIsPolling(false);
-      }
-    }
-  };
-  var error = function () {
-    WalletStore.setIsPolling(false);
-  };
-  API.request('GET', 'wallet/poll-for-session-guid', data, true, false).then(success).catch(error);
-};
-// used locally
-
-MyWallet.initializeWallet = function (pw, success, other_error, decrypt_success, build_hd_success) {
-  assert(success, 'Success callback required');
-  assert(other_error, 'Error callback required');
-  if (isInitialized || WalletStore.isRestoringWallet()) {
-    return;
-  }
-
-  function _error (e) {
-    WalletStore.setRestoringWallet(false);
-    WalletStore.sendEvent('msg', {type: 'error', message: e});
-
-    WalletStore.sendEvent('error_restoring_wallet');
-    other_error(e);
-  }
-
-  WalletStore.setRestoringWallet(true);
-  WalletStore.unsafeSetPassword(pw);
-
-  decryptAndInitializeWallet(
+    MyWallet.decryptAndInitializeWallet(
       function () {
         WalletStore.setRestoringWallet(false);
-        didDecryptWallet(success);
-      },
-      _error,
-      decrypt_success,
-      build_hd_success
-  );
+        didDecryptWallet(_success);
+      }
+      , _error
+      , decrypt_success
+      , build_hd_success
+    );
+  });
+  return promise;
 };
 
 // used on iOS
@@ -529,9 +493,12 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
     });
   };
 
-  var mnemonic = BIP39.generateMnemonic(undefined, RNG.run.bind(RNG));
-
-  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, undefined, firstAccountName, saveWallet, errorCallback);
+  try {
+    var mnemonic = BIP39.generateMnemonic(undefined, RNG.run.bind(RNG));
+    WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, undefined, firstAccountName, saveWallet, errorCallback);
+  } catch(e) {
+    errorCallback(e);
+  }
 };
 
 // used on frontend
@@ -554,10 +521,10 @@ MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic
 };
 
 // used frontend and mywallet
-MyWallet.logout = function (force) {
-  if (!force && WalletStore.isLogoutDisabled()) {
+MyWallet.logout = function (sessionToken, force) {
+  if (!force && WalletStore.isLogoutDisabled())
     return;
-  }
+
   var reload = function () {
     try { window.location.reload(); } catch (e) {
       console.log(e);
@@ -566,5 +533,28 @@ MyWallet.logout = function (force) {
   var data = {format: 'plain', api_code: API.API_CODE};
   WalletStore.sendEvent('logging_out');
 
-  API.request('GET', 'wallet/logout', data, true, false).then(reload).catch(reload);
+  var headers = {sessionToken: sessionToken};
+
+  API.request("GET", 'wallet/logout', data, headers).then(reload).catch(reload);
 };
+
+// In case of a non-mainstream browser, ensure it correctly implements the
+// math needed to derive addresses from a mnemonic.
+MyWallet.browserCheck = function() {
+  var mnemonic = 'daughter size twenty place alter glass small bid purse october faint beyond';
+  var seed = BIP39.mnemonicToSeed(mnemonic, '');
+  var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed);
+  var account = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(0);
+  var address = account.derive(0).derive(0).getAddress();
+  return address === '1QBWUDG4AFL2kFmbqoZ9y4KsSpQoCTZKRw';
+}
+
+MyWallet.browserCheckFast = function() {
+  var seed = Buffer('9f3ad67c5f1eebbffcc8314cb8a3aacbfa28046fd4b3d0af6965a8c804a603e57f5b551320eca4017267550e5b01e622978c133f2085c5999f7ef57a340d0ae2', 'hex');
+  var hmacSha512Expected =
+    '554d80de8f1747c88d8fb01d27277d0a77ee167886737e91b03da170319858b69ff5840b791b0faaf4b83b54c65886db4ef0f7abc8d0a4e3e10add20681b744f';
+  var hmacSha512 = createHmac('sha512', seed);
+  hmacSha512.update('100 bottles of beer on the wall');
+  var hmacSha512Output = hmacSha512.digest().toString('hex');
+  return hmacSha512Output === hmacSha512Expected;
+}
