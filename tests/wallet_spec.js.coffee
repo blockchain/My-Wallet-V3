@@ -180,6 +180,7 @@ describe "Wallet", ->
       wrongTwoFactorCode: () ->
       authorizationRequired: () ->
       otherError: () ->
+      newSessionToken: () ->
     }
 
     beforeEach ->
@@ -258,7 +259,7 @@ describe "Wallet", ->
 
         expect(WalletNetwork.establishSession).toHaveBeenCalled()
 
-      it "should return guid and session token", (done) ->
+      it "should return guid", (done) ->
         promise = MyWallet.login(
           "1234",
           "password",
@@ -269,7 +270,7 @@ describe "Wallet", ->
         )
 
         expect(promise).toBeResolvedWith(jasmine.objectContaining(
-          {guid: "1234", sessionToken: "new_token"}
+          {guid: "1234"}
         ), done)
 
 
@@ -300,7 +301,21 @@ describe "Wallet", ->
 
         expect(WalletNetwork.establishSession).not.toHaveBeenCalledWith(null)
 
-      it "should ask for 2FA if applicable and include method and session token", ->
+      it "should announce a new session token", ->
+        spyOn(callbacks, "newSessionToken")
+
+        MyWallet.login(
+          "wallet-2fa",
+          "password",
+          {
+              twoFactor: null,
+              sessionToken: null
+          },
+          callbacks
+        )
+        expect(callbacks.newSessionToken).toHaveBeenCalledWith("new_token")
+
+      it "should ask for 2FA if applicable and include method", ->
         spyOn(callbacks, "needsTwoFactorCode")
 
         MyWallet.login(
@@ -312,7 +327,7 @@ describe "Wallet", ->
           },
           callbacks
         )
-        expect(callbacks.needsTwoFactorCode).toHaveBeenCalledWith("token", 1)
+        expect(callbacks.needsTwoFactorCode).toHaveBeenCalledWith(1)
 
     describe "email authoritzation", ->
       promise = undefined
@@ -338,7 +353,7 @@ describe "Wallet", ->
 
       it "should continue login after request is approved", (done) ->
         expect(promise).toBeResolvedWith(jasmine.objectContaining(
-          {guid: "wallet-email-auth", sessionToken: "token"}
+          {guid: "wallet-email-auth"}
         ), done)
 
     describe "email authoritzation and 2FA", ->
@@ -361,8 +376,7 @@ describe "Wallet", ->
 
 
       it "should ask for 2FA after email auth", (done) ->
-        spyOn(callbacks, "needsTwoFactorCode").and.callFake((token, method) ->
-          expect(token).toEqual("token")
+        spyOn(callbacks, "needsTwoFactorCode").and.callFake((method) ->
           expect(method).toEqual(1)
           done()
         )
@@ -371,7 +385,7 @@ describe "Wallet", ->
       beforeEach ->
         spyOn(WalletNetwork, "fetchWalletWithTwoFactor").and.callThrough()
 
-      it "should return guid and session token", (done) ->
+      it "should return guid", (done) ->
         promise = MyWallet.login(
           "1234",
           "password",
@@ -382,7 +396,7 @@ describe "Wallet", ->
           callbacks
         )
 
-        expect(promise).toBeResolvedWith(jasmine.objectContaining({guid: "1234", sessionToken: "token"}), done)
+        expect(promise).toBeResolvedWith(jasmine.objectContaining({guid: "1234"}), done)
 
       it "should call WalletNetwork.fetchWalletWithTwoFactor with the code and session token", (done) ->
         promise = MyWallet.login(
@@ -507,7 +521,7 @@ describe "Wallet", ->
       MyWallet.recoverFromMnemonic("a@b.com", "secret", "nuclear bunker sphaghetti monster dim sum sauce", undefined, (() ->))
       expect(WalletStore.unsafeSetPassword).toHaveBeenCalledWith("secret")
 
-    it "should pass guid, shared key and password upon success", (done) ->
+    it "should pass guid, shared key, password and session token upon success", (done) ->
       obs = {
         success: () ->
       }
@@ -516,7 +530,7 @@ describe "Wallet", ->
       MyWallet.recoverFromMnemonic("a@b.com", "secret", "nuclear bunker sphaghetti monster dim sum sauce", undefined, obs.success)
 
       result = () ->
-        expect(obs.success).toHaveBeenCalledWith({ guid: '1234', sharedKey: 'shared', password: 'secret' })
+        expect(obs.success).toHaveBeenCalledWith({ guid: '1234', sharedKey: 'shared', password: 'secret', sessionToken: 'new_token' })
         done()
 
       setTimeout(result, 1)
