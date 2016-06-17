@@ -14,7 +14,7 @@ dist/application.min.js:
 	npm shrinkwrap --dev
 
 semistandard:
-	node_modules/.bin/semistandard --verbose | snazzy
+	node_modules/.bin/semistandard
 
 # git-changelog uses the most recent tag, which is not what we want after we
 # just tagged a release. Use the previous tag instead.
