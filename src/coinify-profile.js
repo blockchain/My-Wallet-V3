@@ -79,7 +79,10 @@ CoinifyProfile.prototype.fetch = function () {
     parentThis._gender = res.profile.gender;
 
     parentThis._email = res.email;
-    parentThis._mobile = '+' + res.profile.mobile.countryCode + res.profile.mobile.number.replace('-', '');
+
+    if (res.profile.mobile.countryCode) {
+      parentThis._mobile = '+' + res.profile.mobile.countryCode + res.profile.mobile.number.replace('-', '');
+    }
 
     parentThis._default_currency = res.defaultCurrency;
 
