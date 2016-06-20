@@ -1,7 +1,5 @@
 'use strict';
 
-var assert  = require('assert');
-
 module.exports = CoinifyTrade;
 
 function CoinifyTrade (obj, coinify) {
@@ -21,55 +19,55 @@ function CoinifyTrade (obj, coinify) {
 }
 
 Object.defineProperties(CoinifyTrade.prototype, {
-  'id' : {
+  'id': {
     configurable: false,
     get: function () {
       return this._id;
     }
   },
-  'iSignThisID' : {
+  'iSignThisID': {
     configurable: false,
     get: function () {
       return this._iSignThisID;
     }
   },
-  'createdAt' :{
+  'createdAt': {
     configurable: false,
     get: function () {
       return this._createdAt;
     }
   },
-  'inCurrency' :{
+  'inCurrency': {
     configurable: false,
     get: function () {
       return this._inCurrency;
     }
   },
-  'outCurrency' :{
+  'outCurrency': {
     configurable: false,
     get: function () {
       return this._outCurrency;
     }
   },
-  'inAmount' :{
+  'inAmount': {
     configurable: false,
     get: function () {
       return this._inAmount;
     }
   },
-  'medium' :{
+  'medium': {
     configurable: false,
     get: function () {
       return this._medium;
     }
   },
-  'outAmountExpected' :{
+  'outAmountExpected': {
     configurable: false,
     get: function () {
       return this._outAmountExpected;
     }
   },
-  'receiptUrl' :{
+  'receiptUrl': {
     configurable: false,
     get: function () {
       return this._receiptUrl;

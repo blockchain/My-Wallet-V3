@@ -223,7 +223,7 @@ Object.defineProperties(Wallet.prototype, {
   },
   'external': {
     configurable: false,
-    get: function (){return this._external;}
+    get: function () { return this._external; }
   },
   'isEncryptionConsistent': {
     configurable: false,
