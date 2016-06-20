@@ -25,7 +25,7 @@ MyWallet.wallet = undefined;
 MyWallet.ws = new BlockchainSocket();
 
 // used locally
-function socketConnect () {
+MyWallet.socketConnect = function() {
   MyWallet.ws.connect(onOpen, onMessage, onClose);
 
   var last_on_change = null;
@@ -336,7 +336,7 @@ MyWallet.getIsInitialized = function () {
 // used once
 function setIsInitialized () {
   if (isInitialized) return;
-  socketConnect();
+  MyWallet.socketConnect();
   isInitialized = true;
 }
 
