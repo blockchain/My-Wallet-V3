@@ -127,20 +127,17 @@ describe "Coinify", ->
       describe "signup", ->
         it 'requires the country to be set', ->
           MyWallet.wallet.profile.countryCode = null
-          expect(c.signup("info@blockchain.com", "+1234", "EUR")).toBeRejected()
+          expect(c.signup("info@blockchain.com", "EUR")).toBeRejected()
 
 
         it 'requires email', ->
-          expect(c.signup(undefined, "+1234", "EUR")).toBeRejected()
-
-        it 'requires mobile', ->
-          expect(c.signup("info@blockchain.com", undefined , "EUR")).toBeRejected()
+          expect(c.signup(undefined, "EUR")).toBeRejected()
 
         it 'requires default currency', ->
-          expect(c.signup("info@blockchain.com", "+1234", undefined)).toBeRejected()
+          expect(c.signup("info@blockchain.com", undefined)).toBeRejected()
 
         it 'sets a user and offline token', (done) ->
-          promise = c.signup("info@blockchain.com", "+1234", "EUR")
+          promise = c.signup("info@blockchain.com", "EUR")
 
           expect(promise).toBeResolved(done)
           expect(c.user).toEqual("1")
@@ -148,7 +145,7 @@ describe "Coinify", ->
 
 
         it 'lets the user know if email is already registered', ((done) ->
-          promise = c.signup("duplicate@blockchain.com", "+1234", "EUR")
+          promise = c.signup("duplicate@blockchain.com", "EUR")
           expect(promise).toBeRejectedWith("DUPLICATE_EMAIL", done)
         )
 

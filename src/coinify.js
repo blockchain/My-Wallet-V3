@@ -69,10 +69,9 @@ Coinify.prototype.toJSON = function () {
 
 // Country must be set
 // Email must be provided
-// Mobile must be provided
 // Default currency must be provided
-// TODO: email & mobile should be stored in MyWallet after get-info call
-Coinify.prototype.signup = function (email, mobile, currency) {
+// TODO: email should be stored in MyWallet after get-info call
+Coinify.prototype.signup = function (email, currency) {
   var parentThis = this;
 
   var promise = new Promise(function (resolve, reject) {
@@ -80,7 +79,6 @@ Coinify.prototype.signup = function (email, mobile, currency) {
     var countryCode = MyWallet.wallet.profile.countryCode;
     assert(countryCode, 'Country must be set');
     assert(email, 'email required');
-    assert(mobile, 'mobile required');
     assert(currency, 'default currency required');
 
     var signupSuccess = function (res) {
@@ -103,8 +101,7 @@ Coinify.prototype.signup = function (email, mobile, currency) {
       profile: {
         address: {
           country: countryCode
-        },
-        mobile: mobile
+        }
       },
       generateOfflineToken: true
     }).then(signupSuccess).catch(signupFailed);
