@@ -146,8 +146,10 @@ Coinify.prototype.fetchProfile = function () {
   }
 };
 
-Coinify.prototype.getQuote = function (amount) {
+Coinify.prototype.getQuote = function (amount, baseCurrency) {
   // TODO: mnemonize (taking expiration into account)
+
+  assert(!baseCurrency || ['BTC', 'EUR', 'USD', 'DKK'].indexOf(baseCurrency) !== -1, 'Currency not supported');
 
   var parentThis = this;
 
@@ -166,9 +168,12 @@ Coinify.prototype.getQuote = function (amount) {
   };
 
   var getQuote = function (profile) {
+    baseCurrency = baseCurrency || profile.defaultCurrency;
+    var quoteCurrency = baseCurrency === 'BTC' ? profile.defaultCurrency : 'BTC';
+
     return parentThis.POST('trades/quote', {
-      baseCurrency: profile.defaultCurrency,
-      quoteCurrency: 'BTC',
+      baseCurrency: baseCurrency,
+      quoteCurrency: quoteCurrency,
       baseAmount: -amount
     }).then(processQuote);
   };
