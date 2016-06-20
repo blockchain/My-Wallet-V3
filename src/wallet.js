@@ -28,10 +28,10 @@ MyWallet.ws = new BlockchainSocket();
 MyWallet.socketConnect = function() {
   MyWallet.ws.connect(onOpen, onMessage, onClose);
 
-  var last_on_change = null;
+  var lastOnChange = null;
 
   function onMessage (message) {
-    MyWallet.getSocketOnMessage(message, last_on_change);
+    MyWallet.getSocketOnMessage(message, lastOnChange);
   }
 
   function onOpen () {
@@ -68,8 +68,8 @@ MyWallet.getSocketOnMessage = function(message, lastOnChange) {
     var old_checksum = WalletStore.generatePayloadChecksum();
     var new_checksum = obj.checksum;
 
-    if (last_on_change != new_checksum && old_checksum != new_checksum) {
-      last_on_change = new_checksum;
+    if (lastOnChange != new_checksum && old_checksum != new_checksum) {
+      lastOnChange = new_checksum;
 
       MyWallet.getWallet();
     }
