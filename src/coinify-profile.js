@@ -69,6 +69,24 @@ Object.defineProperties(CoinifyProfile.prototype, {
     get: function () {
       return this._zipcode;
     }
+  },
+  'level': {
+    configurable: false,
+    get: function () {
+      return this._level;
+    }
+  },
+  'nextLevel': {
+    configurable: false,
+    get: function () {
+      return this._nextLevel;
+    }
+  },
+  'currentLimits': {
+    configurable: false,
+    get: function () {
+      return this._currentLimits;
+    }
   }
 });
 
@@ -91,6 +109,10 @@ CoinifyProfile.prototype.fetch = function () {
     parentThis._state = res.profile.address.state;
     parentThis._zipcode = res.profile.address.zipcode;
     parentThis._country = res.profile.address.country;
+
+    parentThis._level = res.level;
+    parentThis._nextLevel = res.nextLevel;
+    parentThis._currentLimits = res.currentLimits;
 
     parentThis._did_fetch = true;
 
