@@ -29,13 +29,12 @@ API.prototype.encodeFormData = function (data) {
   return encoded;
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// Permitted extra headers:
-// sessionToken -> "Authorization Bearer <token>"
+/* Permitted extra headers:
+   sessionToken -> "Authorization Bearer <token>" */
 API.prototype.request = function (action, method, data, extraHeaders) {
-  var url   = this.ROOT_URL + method
-  var body  = data ? this.encodeFormData(data) : ''
-  var time  = (new Date()).getTime();
+  var url = this.ROOT_URL + method;
+  var body = data ? this.encodeFormData(data) : '';
+  var time = (new Date()).getTime();
 
   var options = {
     method: action,
@@ -43,8 +42,8 @@ API.prototype.request = function (action, method, data, extraHeaders) {
     credentials: 'omit'
   };
 
-  if(extraHeaders) {
-    if(extraHeaders.sessionToken) {
+  if (extraHeaders) {
+    if (extraHeaders.sessionToken) {
       options.headers['Authorization'] = 'Bearer ' + extraHeaders.sessionToken;
     }
   }
@@ -95,7 +94,7 @@ API.prototype.retry = function (f, n) {
   if (i > 1) {
     return f().then(
         undefined, // pass through success
-        function (err) { return self.retry(f, i - 1); }
+        function () { return self.retry(f, i - 1); }
     );
   } else {
     return f();
@@ -172,7 +171,7 @@ API.prototype.getUnspent = function (fromAddresses, confirmations) {
   return this.retry(this.request.bind(this, 'POST', 'unspent', data));
 };
 
-API.prototype.getHistory = function (addresses, tx_filter, offset, n, syncBool) {
+API.prototype.getHistory = function (addresses, txFilter, offset, n, syncBool) {
   var clientTime = (new Date()).getTime();
   offset = offset || 0;
   n = n || 0;
@@ -189,18 +188,18 @@ API.prototype.getHistory = function (addresses, tx_filter, offset, n, syncBool) 
     api_code: this.API_CODE
   };
 
-  if (tx_filter !== undefined && tx_filter !== null) {
-    data.filter = tx_filter;
+  if (txFilter !== undefined && txFilter !== null) {
+    data.filter = txFilter;
   }
   return this.retry(this.request.bind(this, 'POST', 'multiaddr', data, null, syncBool));
 };
 
-API.prototype.securePost = function (url, data) {
+API.prototype.securePost = function (url, data, extraHeaders) {
   var clone = Helpers.merge({}, data);
   if (!Helpers.isValidGUID(data.guid)) { clone.guid = MyWallet.wallet.guid; }
   if (!data.sharedKey) {
     var sharedKey = MyWallet.wallet ? MyWallet.wallet.sharedKey : undefined;
-    if (!Helpers.isValidSharedKey(sharedKey)) throw 'Shared key is invalid';
+    if (!Helpers.isValidSharedKey(sharedKey)) throw new Error('Shared key is invalid');
     // Rather than sending the shared key plain text
     // send a hash using a totp scheme
     var now = new Date().getTime();
@@ -223,7 +222,7 @@ API.prototype.securePost = function (url, data) {
   clone.api_code = this.API_CODE;
   clone.format = data.format ? data.format : 'plain';
 
-  return this.retry(this.request.bind(this, 'POST', url, clone, true));
+  return this.retry(this.request.bind(this, 'POST', url, clone, extraHeaders));
 };
 
 API.prototype.securePostCallbacks = function (url, data, success, error) {

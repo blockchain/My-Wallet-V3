@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.17.0",
+  "version": "3.18.2",
   "description": "Blockchain.info JavaScript Wallet",
   "homepage": "https://github.com/blockchain/my-wallet-v3",
   "bugs": {
@@ -47,12 +47,13 @@
     "ws": "1.1.*"
   },
   "devDependencies": {
-    "browserify": "13.*",
     "babel-polyfill": "^6.7.2",
+    "browserify": "13.*",
     "browserify-istanbul": "^0.2.1",
     "bs58check": "^1.0.5",
     "coffee-script": "~1.8.0",
     "coffeeify": "^1.0.0",
+    "eslint": "2.*",
     "git-changelog": "sjors/git-changelog#patch-1",
     "grunt": "^0.4.5",
     "grunt-browserify": "5.0.*",
@@ -65,7 +66,6 @@
     "grunt-env": "^0.4.4",
     "grunt-karma-coveralls": "^2.5.4",
     "grunt-preprocess": "^4.1.0",
-    "grunt-semistandard": "^1.0.5",
     "grunt-text-replace": "^0.4.0",
     "jasmine-core": "^2.2.0",
     "jasmine-es6-promise-matchers": "^2.0.1",
@@ -77,6 +77,17 @@
     "karma-osx-reporter": "^0.2.0",
     "karma-phantomjs-launcher": "1.0.*",
     "phantomjs-prebuilt": "2.1.*",
-    "proxyquireify": "^2.0.0"
+    "proxyquireify": "^2.0.0",
+    "semistandard": "8.*"
+  },
+  "semistandard": {
+    "ignore": [
+      "tests/"
+    ],
+    "globals": [
+      "fetch",
+      "XMLHttpRequest",
+      "Audio"
+    ]
   }
 }

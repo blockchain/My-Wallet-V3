@@ -76,7 +76,7 @@ RNG.prototype.run = function (nBytes) {
   } catch (e) {
     console.log('Error: RNG.run');
     console.log(e);
-    throw 'Error generating the entropy' + e;
+    throw new Error('Error generating the entropy' + e);
   }
 };
 
@@ -111,6 +111,6 @@ RNG.prototype.getServerEntropy = function (nBytes) {
 
     return B;
   } else {
-    throw 'Received not ok status: ' + request.status;
+    throw new Error('Received not ok status: ' + request.status);
   }
 };

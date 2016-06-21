@@ -48,7 +48,7 @@ Object.defineProperties(HDWallet.prototype, {
         this._default_account_idx = value;
         MyWallet.syncWallet();
       } else {
-        throw 'Error: unvalid default index account';
+        throw new Error('unvalid default index account');
       }
     }
   },
@@ -120,7 +120,7 @@ function decryptMnemonic (seedHex, cipher) {
     if (Helpers.isSeedHex(seedHex)) {
       return BIP39.entropyToMnemonic(seedHex);
     } else {
-      throw 'Decryption function needed to get the mnemonic';
+      throw new Error('Decryption function needed to get the mnemonic');
     }
   }
 }
@@ -148,7 +148,7 @@ function getMasterHex (seedHex, bip39Password, cipher) {
 // restore hdwallet
 
 HDWallet.new = function (mnemonic, bip39Password, cipher) {
-  assert(mnemonic, "BIP 39 mnemonic required")
+  assert(mnemonic, 'BIP 39 mnemonic required');
   var seedHex = BIP39.mnemonicToEntropy(mnemonic);
 
   if (!Helpers.isString(bip39Password)) bip39Password = '';

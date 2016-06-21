@@ -7,25 +7,25 @@ var WalletStore = (function () {
   var password; // Password
   var guid; // Wallet identifier
   var language = 'en';
-  var pbkdf2_iterations = 5000; // pbkdf2_interations of the main password (to encrypt the full payload)
-  var disable_logout = false;
-  var real_auth_type = 0; // The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
-  var encrypted_wallet_data; // Encrypted wallet data (Base64, AES 256)
-  var payload_checksum; // SHA256 hash of the current wallet.aes.json
+  var pbkdf2Iterations = 5000; // pbkdf2_interations of the main password (to encrypt the full payload)
+  var disableLogout = false;
+  var realAuthType = 0; // The real two factor authentication. Even if there is a problem with the current one (for example error 2FA sending email).
+  var encryptedWalletData; // Encrypted wallet data (Base64, AES 256)
+  var payloadChecksum; // SHA256 hash of the current wallet.aes.json
   var isPolling = false;
   var isRestoringWallet = false;
   var counter = 0;
-  var sync_pubkeys = false;
+  var syncPubkeys = false;
   var isSynchronizedWithServer = true;
-  var event_listeners = []; // Emits Did decrypt wallet event (used on claim page)
+  var eventListeners = []; // Emits Did decrypt wallet event (used on claim page)
 
   return {
     setPbkdf2Iterations: function (iterations) {
-      pbkdf2_iterations = iterations;
+      pbkdf2Iterations = iterations;
       return;
     },
     getPbkdf2Iterations: function () {
-      return pbkdf2_iterations;
+      return pbkdf2Iterations;
     },
     getLanguage: function () {
       return language;
@@ -34,23 +34,23 @@ var WalletStore = (function () {
       language = lan;
     },
     disableLogout: function () {
-      disable_logout = true;
+      disableLogout = true;
     },
     enableLogout: function () {
-      disable_logout = false;
+      disableLogout = false;
     },
     isLogoutDisabled: function () {
-      return disable_logout;
+      return disableLogout;
     },
     setRealAuthType: function (number) {
-      real_auth_type = number;
+      realAuthType = number;
     },
     get2FAType: function () {
-      return real_auth_type;
+      return realAuthType;
     },
     get2FATypeString: function () {
       var stringType = '';
-      switch (real_auth_type) {
+      switch (realAuthType) {
         case 0: stringType = null; break;
         case 1: stringType = 'Yubikey'; break;
         case 2: stringType = 'Email'; break;
@@ -68,25 +68,25 @@ var WalletStore = (function () {
       guid = stringValue;
     },
     generatePayloadChecksum: function () {
-      return WalletCrypto.sha256(encrypted_wallet_data).toString('hex');
+      return WalletCrypto.sha256(encryptedWalletData).toString('hex');
     },
     setEncryptedWalletData: function (data) {
-      if (!data || data.length == 0) {
-        encrypted_wallet_data = null;
-        payload_checksum = null;
+      if (!data || data.length === 0) {
+        encryptedWalletData = null;
+        payloadChecksum = null;
       } else {
-        encrypted_wallet_data = data;
-        payload_checksum = this.generatePayloadChecksum();
+        encryptedWalletData = data;
+        payloadChecksum = this.generatePayloadChecksum();
       }
     },
     getEncryptedWalletData: function () {
-      return encrypted_wallet_data;
+      return encryptedWalletData;
     },
     getPayloadChecksum: function () {
-      return payload_checksum;
+      return payloadChecksum;
     },
     setPayloadChecksum: function (value) {
-      payload_checksum = value;
+      payloadChecksum = value;
     },
     isPolling: function () {
       return isPolling;
@@ -107,10 +107,10 @@ var WalletStore = (function () {
       return counter;
     },
     setSyncPubKeys: function (bool) {
-      sync_pubkeys = bool;
+      syncPubkeys = bool;
     },
     isSyncPubKeys: function () {
-      return sync_pubkeys;
+      return syncPubkeys;
     },
     isSynchronizedWithServer: function () {
       return isSynchronizedWithServer;
@@ -119,18 +119,18 @@ var WalletStore = (function () {
       isSynchronizedWithServer = bool;
     },
     addEventListener: function (func) {
-      event_listeners.push(func);
+      eventListeners.push(func);
     },
-    sendEvent: function (event_name, obj) {
-      for (var listener in event_listeners) {
-        event_listeners[listener](event_name, obj);
+    sendEvent: function (eventName, obj) {
+      for (var listener in eventListeners) {
+        eventListeners[listener](eventName, obj);
       }
     },
     isCorrectMainPassword: function (candidate) {
       return password === candidate;
     },
-    changePassword: function (new_password, success, error) {
-      password = new_password;
+    changePassword: function (newPassword, success, error) {
+      password = newPassword;
       MyWallet.syncWallet(success, error);
     },
     unsafeSetPassword: function (newPassword) {
@@ -140,10 +140,10 @@ var WalletStore = (function () {
       return password;
     },
     getLogoutTime: function () {
-      return MyWallet.wallet._logout_time;
+      return MyWallet.wallet._logoutTime;
     },
-    setLogoutTime: function (logout_time) {
-      MyWallet.wallet.logoutTime = logout_time;
+    setLogoutTime: function (logoutTime) {
+      MyWallet.wallet.logoutTime = logoutTime;
     }
   };
 })();

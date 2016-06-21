@@ -1,17 +1,23 @@
 proxyquire = require('proxyquireify')(require)
 
+walletStoreGuid = undefined
+walletStoreEncryptedWalletData = undefined
 WalletStore = {
-  setGuid: () ->
+  setGuid: (guid) ->
+     walletStoreGuid = guid
+  getGuid: () ->
+    walletStoreGuid
   setRealAuthType: () ->
   setSyncPubKeys: () ->
   setLanguage: () ->
-  setEncryptedWalletData: () ->
-  getEncryptedWalletData: () -> "encrypted"
+  setEncryptedWalletData: (data) ->
+    walletStoreEncryptedWalletData = data
+  getEncryptedWalletData: () -> walletStoreEncryptedWalletData || "encrypted"
 }
 
 BlockchainSettingsAPI = {
-  change_language: () ->
-  change_local_currency: () ->
+  changeLanguage: () ->
+  changeLocalCurrency: () ->
 }
 
 WalletCrypto = {
@@ -71,6 +77,8 @@ WalletNetwork =
           needsTwoFactorCode(1)
         )
       else
+        WalletStore.setGuid(guid)
+        WalletStore.setEncryptedWalletData("encrypted")
         cb({guid: guid, payload: "encrypted"})
       {
         catch: (cb) ->
@@ -78,6 +86,8 @@ WalletNetwork =
 
   fetchWalletWithSharedKey: (guid) ->
     then: (cb) ->
+      WalletStore.setGuid(guid)
+      WalletStore.setEncryptedWalletData("encrypted")
       cb({guid: guid, payload: "encrypted"})
       {
         catch: (cb) ->
@@ -85,6 +95,8 @@ WalletNetwork =
 
   fetchWalletWithTwoFactor: (guid, sessionToken, twoFactorCode) ->
     then: (cb) ->
+      WalletStore.setGuid(guid)
+      WalletStore.setEncryptedWalletData("encrypted")
       cb({guid: guid, payload: "encrypted"})
       {
         catch: (cb) ->
@@ -107,7 +119,7 @@ BIP39 = {
 RNG = {
   run: (input) ->
     if RNG.shouldThrow
-      throw 'Connection failed'
+      throw new Error('Connection failed');
     "random"
 }
 
@@ -130,6 +142,8 @@ describe "Wallet", ->
 
   beforeEach ->
     JasminePromiseMatchers.install()
+    WalletStore.setGuid(undefined)
+    WalletStore.setEncryptedWalletData(undefined)
 
   afterEach ->
     JasminePromiseMatchers.uninstall()
@@ -166,6 +180,7 @@ describe "Wallet", ->
       wrongTwoFactorCode: () ->
       authorizationRequired: () ->
       otherError: () ->
+      newSessionToken: () ->
     }
 
     beforeEach ->
@@ -184,9 +199,12 @@ describe "Wallet", ->
       spyOn(MyWallet,"initializeWallet").and.callFake((inputedPassword, didDecrypt, didBuildHD) ->
         {
           then: (cb) ->
-            cb()
+            if(inputedPassword == "password")
+              cb()
             {
               catch: (cb) ->
+                if(inputedPassword != "password")
+                  cb("WRONG_PASSWORD")
             }
         }
       )
@@ -241,7 +259,7 @@ describe "Wallet", ->
 
         expect(WalletNetwork.establishSession).toHaveBeenCalled()
 
-      it "should return guid and session token", (done) ->
+      it "should return guid", (done) ->
         promise = MyWallet.login(
           "1234",
           "password",
@@ -252,7 +270,7 @@ describe "Wallet", ->
         )
 
         expect(promise).toBeResolvedWith(jasmine.objectContaining(
-          {guid: "1234", sessionToken: "new_token"}
+          {guid: "1234"}
         ), done)
 
 
@@ -283,7 +301,21 @@ describe "Wallet", ->
 
         expect(WalletNetwork.establishSession).not.toHaveBeenCalledWith(null)
 
-      it "should ask for 2FA if applicable and include method and session token", ->
+      it "should announce a new session token", ->
+        spyOn(callbacks, "newSessionToken")
+
+        MyWallet.login(
+          "wallet-2fa",
+          "password",
+          {
+              twoFactor: null,
+              sessionToken: null
+          },
+          callbacks
+        )
+        expect(callbacks.newSessionToken).toHaveBeenCalledWith("new_token")
+
+      it "should ask for 2FA if applicable and include method", ->
         spyOn(callbacks, "needsTwoFactorCode")
 
         MyWallet.login(
@@ -295,7 +327,7 @@ describe "Wallet", ->
           },
           callbacks
         )
-        expect(callbacks.needsTwoFactorCode).toHaveBeenCalledWith("token", 1)
+        expect(callbacks.needsTwoFactorCode).toHaveBeenCalledWith(1)
 
     describe "email authoritzation", ->
       promise = undefined
@@ -321,7 +353,7 @@ describe "Wallet", ->
 
       it "should continue login after request is approved", (done) ->
         expect(promise).toBeResolvedWith(jasmine.objectContaining(
-          {guid: "wallet-email-auth", sessionToken: "token"}
+          {guid: "wallet-email-auth"}
         ), done)
 
     describe "email authoritzation and 2FA", ->
@@ -344,8 +376,7 @@ describe "Wallet", ->
 
 
       it "should ask for 2FA after email auth", (done) ->
-        spyOn(callbacks, "needsTwoFactorCode").and.callFake((token, method) ->
-          expect(token).toEqual("token")
+        spyOn(callbacks, "needsTwoFactorCode").and.callFake((method) ->
           expect(method).toEqual(1)
           done()
         )
@@ -354,7 +385,7 @@ describe "Wallet", ->
       beforeEach ->
         spyOn(WalletNetwork, "fetchWalletWithTwoFactor").and.callThrough()
 
-      it "should return guid and session token", (done) ->
+      it "should return guid", (done) ->
         promise = MyWallet.login(
           "1234",
           "password",
@@ -365,7 +396,7 @@ describe "Wallet", ->
           callbacks
         )
 
-        expect(promise).toBeResolvedWith(jasmine.objectContaining({guid: "1234", sessionToken: "token"}), done)
+        expect(promise).toBeResolvedWith(jasmine.objectContaining({guid: "1234"}), done)
 
       it "should call WalletNetwork.fetchWalletWithTwoFactor with the code and session token", (done) ->
         promise = MyWallet.login(
@@ -399,6 +430,41 @@ describe "Wallet", ->
 
         expect(promise).toBeResolvedWith(jasmine.objectContaining({guid: "1234"}), done)
         expect(WalletNetwork.fetchWalletWithTwoFactor).not.toHaveBeenCalled()
+
+    describe "wrong password", ->
+      promise = undefined
+
+      beforeEach ->
+        spyOn(WalletNetwork, "fetchWallet").and.callThrough()
+
+        promise = MyWallet.login(
+          "1234",
+          "wrong_password",
+          {
+              twoFactor: null
+              sessionToken: "token"
+          },
+          callbacks
+        )
+
+      it "should fetch the wallet and throw an error", (done) ->
+        expect(promise).toBeRejectedWith("WRONG_PASSWORD", done)
+        expect(WalletNetwork.fetchWallet).toHaveBeenCalled()
+
+      it "should not fetch wallet again at the next attempt", (done) ->
+        # Second attempt:
+        promise = MyWallet.login(
+          "1234",
+          "password",
+          {
+              twoFactor: null
+              sessionToken: "token"
+          },
+          callbacks
+        )
+
+        expect(promise).toBeResolvedWith(jasmine.objectContaining({guid: "1234"}), done)
+        expect(WalletNetwork.fetchWallet.calls.count()).toEqual(1) # First attempt only
 
   describe "didFetchWallet", ->
     beforeEach ->
@@ -455,7 +521,7 @@ describe "Wallet", ->
       MyWallet.recoverFromMnemonic("a@b.com", "secret", "nuclear bunker sphaghetti monster dim sum sauce", undefined, (() ->))
       expect(WalletStore.unsafeSetPassword).toHaveBeenCalledWith("secret")
 
-    it "should pass guid, shared key and password upon success", (done) ->
+    it "should pass guid, shared key, password and session token upon success", (done) ->
       obs = {
         success: () ->
       }
@@ -464,7 +530,7 @@ describe "Wallet", ->
       MyWallet.recoverFromMnemonic("a@b.com", "secret", "nuclear bunker sphaghetti monster dim sum sauce", undefined, obs.success)
 
       result = () ->
-        expect(obs.success).toHaveBeenCalledWith({ guid: '1234', sharedKey: 'shared', password: 'secret' })
+        expect(obs.success).toHaveBeenCalledWith({ guid: '1234', sharedKey: 'shared', password: 'secret', sessionToken: 'new_token' })
         done()
 
       setTimeout(result, 1)
@@ -484,22 +550,20 @@ describe "Wallet", ->
       expect(BIP39.generateMnemonic).toHaveBeenCalled()
       expect(RNG.run).toHaveBeenCalled()
 
-    it "should call errorCallback if RNG throws", ->
+    it "should call errorCallback if RNG throws", (done) ->
       # E.g. because there was a network failure.
       # This assumes BIP39.generateMnemonic does not rescue a throw
       # inside the RNG
 
-      observers = null
+      observers =
+        error: () -> done()
 
-      beforeEach (done) ->
-        observers =
-          error: () -> done()
+      spyOn(observers, "error").and.callThrough()
 
-        spyOn(observers, "error").and.callThrough()
+      RNG.shouldThrow = true
+      MyWallet.createNewWallet('a@b.com', "1234", 'My Wallet', 'en', 'usd', observers.success, observers.error)
+      expect(observers.error).toHaveBeenCalledWith('Connection failed')
 
-        RNG.shouldThrow = true
-        MyWallet.createNewWallet('a@b.com', "1234", 'My Wallet', 'en', 'usd', observers.success, observers.error)
-        expect(observers.error).toHaveBeenCalledWith('Connection failed')
       RNG.shouldThrow = false
 
     describe "when the wallet insertion fails", ->

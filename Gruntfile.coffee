@@ -105,11 +105,6 @@ module.exports = (grunt) ->
         dest: 'build'
         ext: '.processed.js'
 
-    semistandard:
-      app:
-        src:
-          ['{,src/}*.js']
-
   grunt.loadNpmTasks 'grunt-browserify'
   grunt.loadNpmTasks 'grunt-contrib-clean'
   grunt.loadNpmTasks 'grunt-contrib-concat'
@@ -120,7 +115,6 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-preprocess'
   grunt.loadNpmTasks 'grunt-text-replace'
   grunt.loadNpmTasks 'grunt-karma-coveralls'
-  grunt.loadNpmTasks 'grunt-semistandard'
 
   grunt.registerTask "default", [
     "build"

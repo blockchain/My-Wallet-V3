@@ -47,7 +47,7 @@ describe "SettingsAPI", ->
   describe "boolean settings", ->
     booleanSettingsField = [
       {
-        func: "update_IP_lock_on",
+        func: "updateIPlockOn",
         endpoint: "update-ip-lock-on"
       },
       {
@@ -85,14 +85,14 @@ describe "SettingsAPI", ->
 
     describe "TOR block", ->
       it "should work without any callbacks", ->
-        SettingsAPI.update_tor_ip_block(true)
+        SettingsAPI.updateTorIpBlock(true)
 
         # Payload must be 0 or 1, not false or true
         expect(API.securePostCallbacks).toHaveBeenCalledWith("wallet", { length: 1, payload: '1', method : "update-block-tor-ips" }, jasmine.anything(), jasmine.anything())
         expect(WalletStore.sendEvent).toHaveBeenCalledWith("msg", {type: "success", message: 'update-block-tor-ips-success: call succeeded'})
 
       it "should work with callbacks", ->
-        SettingsAPI.update_tor_ip_block(false, observers.success, observers.error)
+        SettingsAPI.updateTorIpBlock(false, observers.success, observers.error)
 
         expect(API.securePostCallbacks).toHaveBeenCalledWith("wallet", { length: 1, payload: '0', method : "update-block-tor-ips" }, jasmine.anything(), jasmine.anything())
         expect(WalletStore.sendEvent).toHaveBeenCalledWith("msg", {type: "success", message: 'update-block-tor-ips-success: call succeeded'})
@@ -101,7 +101,7 @@ describe "SettingsAPI", ->
 
       it "should fail if the API call fails", ->
         API.callFailWithoutResponseText = true
-        SettingsAPI.update_tor_ip_block(1, observers.success, observers.error)
+        SettingsAPI.updateTorIpBlock(1, observers.success, observers.error)
 
         expect(API.securePostCallbacks).toHaveBeenCalledWith("wallet", { length: 1, payload: '1', method : 'update-block-tor-ips' }, jasmine.anything(), jasmine.anything())
         expect(WalletStore.sendEvent).toHaveBeenCalledWith("msg", {type: "error", message: 'update-block-tor-ips-error: call failed'})
@@ -111,23 +111,23 @@ describe "SettingsAPI", ->
   describe "string settings", ->
     stringSettingsField = [
       {
-        func: "change_language",
+        func: "changeLanguage",
         endpoint: "update-language"
       },
       {
-        func: "update_IP_lock",
+        func: "updateIPlock",
         endpoint: "update-ip-lock"
       },
       {
-        func: "change_local_currency",
+        func: "changeLocalCurrency",
         endpoint: "update-currency"
       },
       {
-        func: "change_btc_currency",
+        func: "changeBtcCurrency",
         endpoint: "update-btc-currency"
       },
       {
-        func: "change_email",
+        func: "changeEmail",
         endpoint: "update-email"
       },
       {
@@ -208,7 +208,7 @@ describe "SettingsAPI", ->
         errorMessage: 'Error Downloading Activity Logs'
       },
       {
-        func: "get_account_info",
+        func: "getAccountInfo",
         endpoint: "get-info",
         errorMessage: 'Error Downloading Account Settings'
       }
@@ -307,11 +307,11 @@ describe "SettingsAPI", ->
   describe "password hints", ->
     passwordHintFields = [
       {
-        func: "update_password_hint1",
+        func: "updatePasswordHint1",
         endpoint: "update-password-hint1"
       },
       {
-        func: "update_password_hint2",
+        func: "updatePasswordHint2",
         endpoint: "update-password-hint2"
       }
     ]

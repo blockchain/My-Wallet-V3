@@ -33,7 +33,7 @@ function generateUUIDs (count) {
   };
 
   var extractUUIDs = function (data) {
-    if (!data.uuids || data.uuids.length != count) {
+    if (!data.uuids || data.uuids.length !== count) {
       return Promise.reject('Could not generate uuids');
     }
     return data.uuids;
@@ -45,13 +45,13 @@ function generateUUIDs (count) {
 
 /**
  * Fetch information on wallet identfier with resend code set to true
- * @param {string} user_guid User GUID.
+ * @param {string} userGuid User GUID.
  * @param {string} sessionToken.
  */
 // used in the frontend and in iOS
-function resendTwoFactorSms (user_guid, sessionToken) {
-  assert(user_guid, "wallet identifier required");
-  assert(sessionToken, "Session token required");
+function resendTwoFactorSms (userGuid, sessionToken) {
+  assert(userGuid, 'wallet identifier required');
+  assert(sessionToken, 'Session token required');
 
   var data = {
     format: 'json',
@@ -62,20 +62,20 @@ function resendTwoFactorSms (user_guid, sessionToken) {
 
   var headers = {sessionToken: sessionToken};
 
-  return API.request('GET', 'wallet/' + user_guid, data, headers)
+  return API.request('GET', 'wallet/' + userGuid, data, headers)
     .catch(handleError('Could not resend two factor sms'));
 }
 
 /**
  * Trigger an email with the users wallet guid(s)
- * @param {string} user_email Registered mail address.
+ * @param {string} userEmail Registered mail address.
  * @param {string} captcha Spam protection
  */
 // used in the frontend
-function recoverGuid (sessionToken, user_email, captcha) {
+function recoverGuid (sessionToken, userEmail, captcha) {
   var data = {
     method: 'recover-wallet',
-    email: user_email,
+    email: userEmail,
     captcha: captcha,
     ct: Date.now(),
     api_code: API.API_CODE
@@ -89,12 +89,12 @@ function recoverGuid (sessionToken, user_email, captcha) {
     .then(handleResponse).catch(handleError('Could not send recovery email'));
 }
 
-function checkWalletChecksum (payload_checksum, success, error) {
-  assert(payload_checksum, 'Payload checksum missing');
-  var data = {method: 'wallet.aes.json', format: 'json', checksum: payload_checksum};
+function checkWalletChecksum (payloadChecksum, success, error) {
+  assert(payloadChecksum, 'Payload checksum missing');
+  var data = {method: 'wallet.aes.json', format: 'json', checksum: payloadChecksum};
 
   API.securePostCallbacks('wallet', data, function (obj) {
-    if (!obj.payload || obj.payload == 'Not modified') {
+    if (!obj.payload || obj.payload === 'Not modified') {
       if (success) success();
     } else if (error) error();
   }, function () {
@@ -104,9 +104,9 @@ function checkWalletChecksum (payload_checksum, success, error) {
 
 /**
  * Trigger the 2FA reset process
- * @param {string} user_guid User GUID.
- * @param {string} user_email Registered email address.
- * @param {string} user_new_email Optional new email address.
+ * @param {string} userGuid User GUID.
+ * @param {string} userEmail Registered email address.
+ * @param {string} userNewEmail Optional new email address.
  * @param {string} secret
  * @param {string} message
  * @param {string} captcha Spam protection
@@ -114,17 +114,17 @@ function checkWalletChecksum (payload_checksum, success, error) {
 // used in the frontend
 function requestTwoFactorReset (
   sessionToken,
-  user_guid,
-  user_email,
-  user_new_email,
+  userGuid,
+  userEmail,
+  userNewEmail,
   secret,
   message,
   captcha) {
   var data = {
     method: 'reset-two-factor-form',
-    guid: user_guid,
-    email: user_email,
-    contact_email: user_new_email,
+    guid: userGuid,
+    email: userEmail,
+    contact_email: userNewEmail,
     secret_phrase: secret,
     message: message,
     kaptcha: captcha,
@@ -141,7 +141,7 @@ function requestTwoFactorReset (
 }
 
 // Save the javascript wallet to the remote server
-function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) {
+function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress, sessionToken) {
   assert(guid, 'GUID missing');
   assert(sharedKey, 'Shared Key missing');
   assert(password, 'Password missing');
@@ -153,7 +153,7 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
     // Everything looks ok, Encrypt the JSON output
     var crypted = WalletCrypto.encryptWallet(data, password, MyWallet.wallet.defaultPbkdf2Iterations, MyWallet.wallet.isUpgradedToHD ? 3.0 : 2.0);
 
-    if (crypted.length == 0) {
+    if (crypted.length === 0) {
       return reject('Error encrypting the JSON output');
     }
 
@@ -163,30 +163,32 @@ function insertWallet (guid, sharedKey, password, extra, decryptWalletProgress) 
     try {
       WalletCrypto.decryptWalletSync(crypted, password);
     } catch (e) {
-      return reject(e);
+      return reject(e.message !== undefined ? e.message : e);
     }
 
-    // SHA256 new_checksum verified by server in case of corruption during transit
-    var new_checksum = WalletCrypto.sha256(crypted).toString('hex');
+    // SHA256 newChecksum verified by server in case of corruption during transit
+    var newChecksum = WalletCrypto.sha256(crypted).toString('hex');
 
     extra = extra || {};
 
-    var post_data = {
+    var postData = {
       length: crypted.length,
       payload: crypted,
-      checksum: new_checksum,
+      checksum: newChecksum,
       method: 'insert',
       format: 'plain',
       sharedKey: sharedKey,
       guid: guid
     };
 
-    Helpers.merge(post_data, extra);
-    resolve(post_data);
+    Helpers.merge(postData, extra);
+    resolve(postData);
   });
 
   var apiPromise = dataPromise.then(function (postData) {
-    return API.securePost('wallet', postData);
+    var headers = {sessionToken: sessionToken};
+
+    return API.securePost('wallet', postData, headers);
   });
 
   return Promise.all([dataPromise, apiPromise]);
@@ -200,11 +202,11 @@ function obtainSessionToken () {
     return data.token;
   };
 
-  return API.request("POST", "sessions").then(processResult);
+  return API.request('POST', 'sessions').then(processResult);
 }
 
 function establishSession (token) {
-  if(token) {
+  if (token) {
     return Promise.resolve(token);
   } else {
     return this.obtainSessionToken();
@@ -215,13 +217,13 @@ function establishSession (token) {
 // token must be present if sharedKey isn't
 function callGetWalletEndpoint (guid, sharedKey, sessionToken) {
   var clientTime = (new Date()).getTime();
-  var data = { format : 'json', resend_code : null, ct : clientTime, api_code : API.API_CODE };
-  var headers = {}
+  var data = { format: 'json', resend_code: null, ct: clientTime, api_code: API.API_CODE };
+  var headers = {};
 
   if (sharedKey) {
     data.sharedKey = sharedKey;
   } else {
-    assert(sessionToken, "Session token required");
+    assert(sessionToken, 'Session token required');
     headers.sessionToken = sessionToken;
   }
   return API.request('GET', 'wallet/' + guid, data, headers);
@@ -229,7 +231,6 @@ function callGetWalletEndpoint (guid, sharedKey, sessionToken) {
 
 function fetchWallet (guid, token, needsTwoFactorCode, authorizationRequired) {
   var promise = new Promise(function (resolve, reject) {
-
     var success = function (obj) {
       if (!obj.guid) {
         WalletStore.sendEvent('msg', {type: 'error', message: 'Server returned null guid.'});
@@ -243,7 +244,7 @@ function fetchWallet (guid, token, needsTwoFactorCode, authorizationRequired) {
       WalletStore.setRealAuthType(obj.real_auth_type);
       WalletStore.setSyncPubKeys(obj.sync_pubkeys);
 
-      if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
+      if (obj.payload && obj.payload.length > 0 && obj.payload !== 'Not modified') {
         resolve(obj);
       } else {
         needsTwoFactorCode(obj.auth_type);
@@ -251,60 +252,60 @@ function fetchWallet (guid, token, needsTwoFactorCode, authorizationRequired) {
     };
 
     var error = function (e) {
-       var obj = 'object' === typeof e ? e : JSON.parse(e);
-       if(obj && obj.initial_error && !obj.authorization_required) {
-         reject(obj.initial_error);
-         return;
-       }
-       if (obj.authorization_required) {
-         authorizationRequired().then(function() {
-           callGetWalletEndpoint(guid, null, token).then(success).catch(error);
-         })
-       }
+      var obj = typeof e === 'object' ? e : JSON.parse(e);
+      if (obj && obj.initial_error && !obj.authorization_required) {
+        reject(obj.initial_error);
+        return;
+      }
+      if (obj.authorization_required) {
+        authorizationRequired().then(function () {
+          callGetWalletEndpoint(guid, null, token).then(success).catch(error);
+        });
+      }
     };
 
-    callGetWalletEndpoint(guid, null, token).then(success).catch(error)
+    callGetWalletEndpoint(guid, null, token).then(success).catch(error);
   });
   return promise;
 }
 
-function  fetchWalletWithTwoFactor (guid, sessionToken, twoFactor) {
+function fetchWalletWithTwoFactor (guid, sessionToken, twoFactor) {
   var promise = new Promise(function (resolve, reject) {
-    if (twoFactor.code.length == 0 || twoFactor.code.length > 255) {
-     reject('You must enter a Two Factor Authentication code');
-     return;
+    if (twoFactor.code.length === 0 || twoFactor.code.length > 255) {
+      reject('You must enter a Two Factor Authentication code');
+      return;
     }
 
-    var two_factor_auth_key = twoFactor.code;
+    var twoFactorAuthKey = twoFactor.code;
 
-    switch(twoFactor.type) {
+    switch (twoFactor.type) {
       case 2: // email
       case 4: // sms
       case 5: // Google Auth
-        two_factor_auth_key = two_factor_auth_key.toUpperCase();
-      break;
+        twoFactorAuthKey = twoFactorAuthKey.toUpperCase();
+        break;
     }
 
     var success = function (data) {
-     if (data == null || data.length == 0) {
-       otherError('Server Return Empty Wallet Data');
-       return;
-     }
-     if (data != 'Not modified') { WalletStore.setEncryptedWalletData(data); }
-     resolve(data);
+      if (data == null || data.length === 0) {
+        reject('Server Return Empty Wallet Data');
+        return;
+      }
+      if (data !== 'Not modified') { WalletStore.setEncryptedWalletData(data); }
+      resolve(data);
     };
     var error = function (response) {
-     WalletStore.setRestoringWallet(false);
-     reject(response);
+      WalletStore.setRestoringWallet(false);
+      reject(response);
     };
 
     var myData = {
       guid: guid,
-      payload: two_factor_auth_key,
-      length : two_factor_auth_key.length,
-      method : 'get-wallet',
-      format : 'plain',
-      api_code : API.API_CODE
+      payload: twoFactorAuthKey,
+      length: twoFactorAuthKey.length,
+      method: 'get-wallet',
+      format: 'plain',
+      api_code: API.API_CODE
     };
 
     var headers = {sessionToken: sessionToken};
@@ -315,11 +316,9 @@ function  fetchWalletWithTwoFactor (guid, sessionToken, twoFactor) {
 }
 
 function fetchWalletWithSharedKey (guid, sharedKey) {
-
   var success = function (obj) {
-
     if (!obj.guid) {
-      throw('Server returned null guid.');
+      throw (new Error('Server returned null guid.'));
     }
 
     // Even if Two Factor is enabled, some settings need to be saved here,
@@ -328,38 +327,37 @@ function fetchWalletWithSharedKey (guid, sharedKey) {
     WalletStore.setRealAuthType(obj.real_auth_type);
     WalletStore.setSyncPubKeys(obj.sync_pubkeys);
 
-    if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
+    if (obj.payload && obj.payload.length > 0 && obj.payload !== 'Not modified') {
       return obj;
     } else {
-      throw('Wallet payload missing, empty or not modified');
+      throw (new Error('Wallet payload missing, empty or not modified'));
     }
   };
 
   var error = function (e) {
-     console.log(e);
-     var obj = 'object' === typeof e ? e : JSON.parse(e);
-     if(obj && obj.initial_error) {
-       reject(obj.initial_error);
-       return;
-     }
+    console.log(e);
+    var obj = typeof e === 'object' ? e : JSON.parse(e);
+    if (obj && obj.initial_error) {
+      throw (new Error(obj.initial_error));
+    }
 
-     WalletStore.sendEvent('did_fail_set_guid');
+    WalletStore.sendEvent('did_fail_set_guid');
   };
 
-  return callGetWalletEndpoint(guid, sharedKey).then(success).catch(error)
+  return callGetWalletEndpoint(guid, sharedKey).then(success).catch(error);
 }
 
 function pollForSessionGUID (sessionToken) {
   var promise = new Promise(function (resolve, reject) {
     if (WalletStore.isPolling()) return;
     WalletStore.setIsPolling(true);
-    var data = {format : 'json'};
+    var data = {format: 'json'};
     var headers = {sessionToken: sessionToken};
     var success = function (obj) {
       if (obj.guid) {
         WalletStore.setIsPolling(false);
         WalletStore.sendEvent('msg', {type: 'success', message: 'Authorization Successful'});
-        resolve()
+        resolve();
       } else {
         if (WalletStore.getCounter() < 600) {
           WalletStore.incrementCounter();
@@ -370,30 +368,30 @@ function pollForSessionGUID (sessionToken) {
           WalletStore.setIsPolling(false);
         }
       }
-    }
+    };
     var error = function () {
       WalletStore.setIsPolling(false);
-    }
+    };
     API.request('GET', 'wallet/poll-for-session-guid', data, headers).then(success).catch(error);
   });
   return promise;
-};
+}
 
 function getCaptchaImage () {
   var self = this;
   var promise = new Promise(function (resolve, reject) {
-    self.obtainSessionToken().then(function(sessionToken) {
-      var success = function(data) {
+    self.obtainSessionToken().then(function (sessionToken) {
+      var success = function (data) {
         resolve({
           image: data,
           sessionToken: sessionToken
         });
-      }
+      };
 
-      var error = function(e) {
+      var error = function (e) {
         console.log(e);
         reject(e.initial_error);
-      }
+      };
 
       var data = {
         timestamp: new Date().getTime()
@@ -405,8 +403,7 @@ function getCaptchaImage () {
     });
   });
   return promise;
-};
-
+}
 
 module.exports = {
   checkWalletChecksum: checkWalletChecksum,
@@ -417,9 +414,9 @@ module.exports = {
   requestTwoFactorReset: requestTwoFactorReset,
   obtainSessionToken: obtainSessionToken,
   establishSession: establishSession,
-  fetchWalletWithSharedKey : fetchWalletWithSharedKey,
-  fetchWalletWithTwoFactor : fetchWalletWithTwoFactor,
-  fetchWallet : fetchWallet,
-  pollForSessionGUID : pollForSessionGUID,
-  getCaptchaImage : getCaptchaImage
+  fetchWalletWithSharedKey: fetchWalletWithSharedKey,
+  fetchWalletWithTwoFactor: fetchWalletWithTwoFactor,
+  fetchWallet: fetchWallet,
+  pollForSessionGUID: pollForSessionGUID,
+  getCaptchaImage: getCaptchaImage
 };

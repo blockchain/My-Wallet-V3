@@ -18,7 +18,7 @@ var RNG = require('./rng');
 var BIP39 = require('bip39');
 var Bitcoin = require('bitcoinjs-lib');
 // Intentionally not directly included in package.json:
-var createHmac = require('create-hmac');
+var pbkdf2 = require('pbkdf2').pbkdf2Sync;
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -102,7 +102,7 @@ MyWallet.getWallet = function (success, error) {
   }
 
   API.securePostCallbacks('wallet', data, function (obj) {
-    if (!obj.payload || obj.payload == 'Not modified') {
+    if (!obj.payload || obj.payload === 'Not modified') {
       if (success) success();
       return;
     }
@@ -124,12 +124,12 @@ MyWallet.getWallet = function (success, error) {
   });
 };
 
-MyWallet.decryptAndInitializeWallet = function(success, error, decrypt_success, build_hd_success) {
+MyWallet.decryptAndInitializeWallet = function (success, error, decryptSuccess, buildHdSuccess) {
   assert(success, 'Success callback required');
   assert(error, 'Error callback required');
   var encryptedWalletData = WalletStore.getEncryptedWalletData();
 
-  if (encryptedWalletData == null || encryptedWalletData.length == 0) {
+  if (encryptedWalletData === undefined || encryptedWalletData === null || encryptedWalletData.length === 0) {
     error('No Wallet Data To Decrypt');
     return;
   }
@@ -141,7 +141,7 @@ MyWallet.decryptAndInitializeWallet = function(success, error, decrypt_success, 
 
       // this sanity check should be done on the load
       // if (!sharedKey || sharedKey.length == 0 || sharedKey.length != 36) {
-      //   throw 'Shared Key is invalid';
+      //   throw new Error('Shared Key is invalid');
       // }
 
       // TODO: pbkdf2 iterations should be stored correctly on wallet wrapper
@@ -149,26 +149,27 @@ MyWallet.decryptAndInitializeWallet = function(success, error, decrypt_success, 
         WalletStore.setPbkdf2Iterations(rootContainer.pbkdf2_iterations);
       }
       // If we don't have a checksum then the wallet is probably brand new - so we can generate our own
-      if (WalletStore.getPayloadChecksum() == null || WalletStore.getPayloadChecksum().length == 0) {
+      var checkSum = WalletStore.getPayloadChecksum();
+      if (checkSum === undefined || checkSum === null || checkSum.length === 0) {
         WalletStore.setPayloadChecksum(WalletStore.generatePayloadChecksum());
       }
       if (MyWallet.wallet.isUpgradedToHD === false) {
         WalletStore.sendEvent('hd_wallets_does_not_exist');
       }
       setIsInitialized();
-      decrypt_success && decrypt_success();
+      decryptSuccess && decryptSuccess();
       success();
     },
     error
   );
-}
+};
 
 // used in the frontend
 MyWallet.makePairingCode = function (success, error) {
   try {
-    API.securePostCallbacks('wallet', { method: 'pairing-encryption-password' }, function (encryption_phrase) {
+    API.securePostCallbacks('wallet', { method: 'pairing-encryption-password' }, function (encryptionPhrase) {
       var pwHex = new Buffer(WalletStore.getPassword()).toString('hex');
-      var encrypted = WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + pwHex, encryption_phrase, 10);
+      var encrypted = WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + pwHex, encryptionPhrase, 10);
       success('1|' + MyWallet.wallet.guid + '|' + encrypted);
     }, function (e) {
       error(e);
@@ -178,19 +179,18 @@ MyWallet.makePairingCode = function (success, error) {
   }
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// guid: the wallet identifier
-// password: to decrypt the wallet (which happens in the browser)
-// server credentials:
-//   twoFactor: 2FA {type: ..., code: ....} or null
-//   sharedKey: if present, it bypasses 2FA and browser verification
-// callbacks:
-//   needsTwoFactorCode
-//   wrongTwoFactorCode
-//   authorizationRequired: this is a new browser
-//   didFetch: wallet has been downloaded from the server
-//   didDecrypt wallet has been decrypted (with the password)
-//   didBuildHD: HD part of wallet has been constructed in memory
+/* guid: the wallet identifier
+   password: to decrypt the wallet (which happens in the browser)
+   server credentials:
+     twoFactor: 2FA {type: ..., code: ....} or null
+     sharedKey: if present, it bypasses 2FA and browser verification
+   callbacks:
+     needsTwoFactorCode
+     wrongTwoFactorCode
+     authorizationRequired: this is a new browser
+     didFetch: wallet has been downloaded from the server
+     didDecrypt wallet has been decrypted (with the password)
+     didBuildHD: HD part of wallet has been constructed in memory */
 
 MyWallet.login = function (guid, password, credentials, callbacks) {
   assert(credentials.twoFactor !== undefined, '2FA code must be null or set');
@@ -200,33 +200,44 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
   );
 
   var loginPromise = new Promise(function (resolve, reject) {
-    // If the shared key is known, 2FA and browser verification are skipped.
-    // No session is needed in that case.
-    if(credentials.sharedKey) {
+    if (guid === WalletStore.getGuid() && WalletStore.getEncryptedWalletData()) {
+      // If we already fetched the wallet before (e.g.
+      // after user enters a wrong password), don't fetch it again:
+      MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
+        resolve({guid: guid});
+      }).catch(function (e) {
+        reject(e);
+      });
+    } else if (credentials.sharedKey) {
+      // If the shared key is known, 2FA and browser verification are skipped.
+      // No session is needed in that case.
       return WalletNetwork.fetchWalletWithSharedKey(guid, credentials.sharedKey)
         .then(function (obj) {
           callbacks.didFetch && callbacks.didFetch();
-          MyWallet.didFetchWallet(obj).then(function() {
-            MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function() {
+          MyWallet.didFetchWallet(obj).then(function () {
+            MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
               resolve({guid: guid});
             }).catch(function (e) {
               reject(e);
             });
           });
-        })
+        });
     } else {
       // Estabish a session to enable 2FA and browser verification:
       WalletNetwork.establishSession(credentials.sessionToken)
-      .then(function(token) {
+      .then(function (token) {
+        if (typeof callbacks.newSessionToken === 'function') {
+          callbacks.newSessionToken(token);
+        }
         // If a new browser is used, the user receives a verification email.
         // We wait for them to click the link.
-        var authorizationRequired = function() {
-          var promise = new Promise(function (resolveA, rejectA) {
-            if(typeof(callbacks.authorizationRequired) === 'function') {
+        var authorizationRequired = function () {
+          var promise = new Promise(function (resolveA, rejectA) { // eslint-disable-line promise/param-names
+            if (typeof (callbacks.authorizationRequired) === 'function') {
               callbacks.authorizationRequired(function () {
                 WalletNetwork.pollForSessionGUID(token).then(function () {
                   resolveA();
-                }).catch(function(error) {
+                }).catch(function (error) {
                   rejectA(error);
                 });
               });
@@ -236,16 +247,16 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
         };
 
         var needsTwoFactorCode = function (authType) {
-          callbacks.needsTwoFactorCode(token, authType);
+          callbacks.needsTwoFactorCode(authType);
         };
 
-        if(credentials.twoFactor) {
+        if (credentials.twoFactor) {
           WalletNetwork.fetchWalletWithTwoFactor(guid, token, credentials.twoFactor)
           .then(function (obj) {
             callbacks.didFetch && callbacks.didFetch();
-            MyWallet.didFetchWallet(obj).then(function() {
-              MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function() {
-                resolve({guid: guid, sessionToken: token});
+            MyWallet.didFetchWallet(obj).then(function () {
+              MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
+                resolve({guid: guid});
               }).catch(function (e) {
                 reject(e);
               });
@@ -253,15 +264,14 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
           }).catch(function (e) {
             callbacks.wrongTwoFactorCode(e);
           });
-
         } else {
           // Try without 2FA:
           WalletNetwork.fetchWallet(guid, token, needsTwoFactorCode, authorizationRequired)
           .then(function (obj) {
             callbacks.didFetch && callbacks.didFetch();
-            MyWallet.didFetchWallet(obj).then(function() {
-              MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function() {
-                resolve({guid: guid, sessionToken: token});
+            MyWallet.didFetchWallet(obj).then(function () {
+              MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
+                resolve({guid: guid});
               }).catch(function (e) {
                 reject(e);
               });
@@ -270,32 +280,30 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
             reject(e);
           });
         }
-
       }).catch(function (error) {
         console.log(error.message);
-        reject("Unable to establish session");
+        reject('Unable to establish session');
       });
     }
   });
 
   return loginPromise;
-}
+};
 
-MyWallet.didFetchWallet = function(obj) {
-  if (obj.payload && obj.payload.length > 0 && obj.payload != 'Not modified') {
-   WalletStore.setEncryptedWalletData(obj.payload);
+MyWallet.didFetchWallet = function (obj) {
+  if (obj.payload && obj.payload.length > 0 && obj.payload !== 'Not modified') {
+    WalletStore.setEncryptedWalletData(obj.payload);
   }
 
-  if (obj.language && WalletStore.getLanguage() != obj.language) {
-   WalletStore.setLanguage(obj.language);
+  if (obj.language && WalletStore.getLanguage() !== obj.language) {
+    WalletStore.setLanguage(obj.language);
   }
 
   return Promise.resolve();
-}
+};
 
-MyWallet.initializeWallet = function (pw, decrypt_success, build_hd_success) {
+MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
   var promise = new Promise(function (resolve, reject) {
-
     if (isInitialized || WalletStore.isRestoringWallet()) {
       return;
     }
@@ -321,8 +329,8 @@ MyWallet.initializeWallet = function (pw, decrypt_success, build_hd_success) {
         didDecryptWallet(_success);
       }
       , _error
-      , decrypt_success
-      , build_hd_success
+      , decryptSuccess
+      , buildHdSuccess
     );
   });
   return promise;
@@ -345,7 +353,7 @@ function syncWallet (successcallback, errorcallback) {
   var panic = function (e) {
     console.log('Panic ' + e);
     window.location.replace('/');
-    throw 'Save disabled.';
+    throw new Error('Save disabled.');
     // kick out of the wallet in a inconsistent state to prevent save
   };
 
@@ -356,7 +364,7 @@ function syncWallet (successcallback, errorcallback) {
   if (!MyWallet.wallet || !MyWallet.wallet.sharedKey ||
       MyWallet.wallet.sharedKey.length === 0 ||
       MyWallet.wallet.sharedKey.length !== 36) {
-    throw 'Cannot backup wallet now. Shared key is not set';
+    throw new Error('Cannot backup wallet now. Shared key is not set');
   }
 
   WalletStore.disableLogout();
@@ -373,11 +381,15 @@ function syncWallet (successcallback, errorcallback) {
   try {
     var method = 'update';
     var data = JSON.stringify(MyWallet.wallet, null, 2);
-    var crypted = WalletCrypto.encryptWallet(data, WalletStore.getPassword(),
-        WalletStore.getPbkdf2Iterations(), MyWallet.wallet.isUpgradedToHD ? 3.0 : 2.0);
+    var crypted = WalletCrypto.encryptWallet(
+      data,
+      WalletStore.getPassword(),
+      WalletStore.getPbkdf2Iterations(),
+      MyWallet.wallet.isUpgradedToHD ? 3.0 : 2.0
+    );
 
-    if (crypted.length == 0) {
-      throw 'Error encrypting the JSON output';
+    if (crypted.length === 0) {
+      throw new Error('Error encrypting the JSON output');
     }
 
     // Now Decrypt the it again to double check for any possible corruption
@@ -386,11 +398,11 @@ function syncWallet (successcallback, errorcallback) {
         var oldChecksum = WalletStore.getPayloadChecksum();
         WalletStore.sendEvent('on_backup_wallet_start');
         WalletStore.setEncryptedWalletData(crypted);
-        var new_checksum = WalletStore.getPayloadChecksum();
+        var newChecksum = WalletStore.getPayloadChecksum();
         var data = {
           length: crypted.length,
           payload: crypted,
-          checksum: new_checksum,
+          checksum: newChecksum,
           method: method,
           format: 'plain',
           language: WalletStore.getLanguage()
@@ -403,13 +415,13 @@ function syncWallet (successcallback, errorcallback) {
         if (WalletStore.isSyncPubKeys()) {
           // Include HD addresses unless in lame mode:
           var hdAddresses = (
-            MyWallet.wallet.hdwallet != undefined &&
-            MyWallet.wallet.hdwallet.accounts != undefined
+            MyWallet.wallet.hdwallet !== undefined &&
+            MyWallet.wallet.hdwallet.accounts !== undefined
           ) ? [].concat.apply([],
             MyWallet.wallet.hdwallet.accounts.map(function (account) {
               return account.labeledReceivingAddresses;
             })) : [];
-          data.active = [].concat.apply([],
+          data.active = [].concat.apply([], // eslint-disable-line no-useless-call
             [
               MyWallet.wallet.activeAddresses,
               hdAddresses
@@ -422,7 +434,7 @@ function syncWallet (successcallback, errorcallback) {
             data,
             function (data) {
               WalletNetwork.checkWalletChecksum(
-                  new_checksum,
+                  newChecksum,
                   function () {
                     WalletStore.setIsSynchronizedWithServer(true);
                     WalletStore.enableLogout();
@@ -446,7 +458,7 @@ function syncWallet (successcallback, errorcallback) {
       }
     }, function (e) {
       console.log(e);
-      throw 'Decryption failed';
+      throw new Error('Decryption failed');
     });
   } catch (e) {
     _errorcallback(e);
@@ -470,33 +482,35 @@ MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function () {
  */
  // used on mywallet, iOS and frontend
 MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, successCallback, errorCallback) {
-  var success = function (createdGuid, createdSharedKey, createdPassword) {
+  var success = function (createdGuid, createdSharedKey, createdPassword, sessionToken) {
     if (languageCode) {
       WalletStore.setLanguage(languageCode);
-      BlockchainSettingsAPI.change_language(languageCode, function () {});
+      BlockchainSettingsAPI.changeLanguage(languageCode, function () {});
     }
 
     if (currencyCode) {
-      BlockchainSettingsAPI.change_local_currency(currencyCode, function () {});
+      BlockchainSettingsAPI.changeLocalCurrency(currencyCode, function () {});
     }
 
     WalletStore.unsafeSetPassword(createdPassword);
-    successCallback(createdGuid, createdSharedKey, createdPassword);
+    successCallback(createdGuid, createdSharedKey, createdPassword, sessionToken);
   };
 
-
   var saveWallet = function (wallet) {
-    WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, {email: inputedEmail}).then(function () {
-      success(wallet.guid, wallet.sharedKey, inputedPassword);
-    }).catch(function (e) {
-      errorCallback(e);
+    // Generate a session token to facilitate future login attempts:
+    WalletNetwork.establishSession(null).then(function (sessionToken) {
+      WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, {email: inputedEmail}, undefined, sessionToken).then(function () {
+        success(wallet.guid, wallet.sharedKey, inputedPassword, sessionToken);
+      }).catch(function (e) {
+        errorCallback(e);
+      });
     });
   };
 
   try {
     var mnemonic = BIP39.generateMnemonic(undefined, RNG.run.bind(RNG));
     WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, undefined, firstAccountName, saveWallet, errorCallback);
-  } catch(e) {
+  } catch (e) {
     errorCallback(e);
   }
 };
@@ -504,12 +518,12 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
 // used on frontend
 MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic, bip39Password, successCallback, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
   var walletGenerated = function (wallet) {
-
     var saveWallet = function () {
-      WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, {email: inputedEmail}, decryptWalletProgress).then(function () {
-        successCallback({guid: wallet.guid, sharedKey: wallet.sharedKey, password: inputedPassword});
-      }, function (e) {
-        error(e);
+      // Generate a session token to facilitate future login attempts:
+      WalletNetwork.establishSession(null).then(function (sessionToken) {
+        WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, {email: inputedEmail}, decryptWalletProgress, sessionToken).then(function () {
+          successCallback({guid: wallet.guid, sharedKey: wallet.sharedKey, password: inputedPassword, sessionToken: sessionToken});
+        });
       });
     };
 
@@ -522,8 +536,9 @@ MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic
 
 // used frontend and mywallet
 MyWallet.logout = function (sessionToken, force) {
-  if (!force && WalletStore.isLogoutDisabled())
+  if (!force && WalletStore.isLogoutDisabled()) {
     return;
+  }
 
   var reload = function () {
     try { window.location.reload(); } catch (e) {
@@ -535,26 +550,68 @@ MyWallet.logout = function (sessionToken, force) {
 
   var headers = {sessionToken: sessionToken};
 
-  API.request("GET", 'wallet/logout', data, headers).then(reload).catch(reload);
+  API.request('GET', 'wallet/logout', data, headers).then(reload).catch(reload);
 };
 
 // In case of a non-mainstream browser, ensure it correctly implements the
 // math needed to derive addresses from a mnemonic.
-MyWallet.browserCheck = function() {
+MyWallet.browserCheck = function () {
   var mnemonic = 'daughter size twenty place alter glass small bid purse october faint beyond';
   var seed = BIP39.mnemonicToSeed(mnemonic, '');
   var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed);
+
   var account = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(0);
   var address = account.derive(0).derive(0).getAddress();
   return address === '1QBWUDG4AFL2kFmbqoZ9y4KsSpQoCTZKRw';
-}
+};
 
-MyWallet.browserCheckFast = function() {
-  var seed = Buffer('9f3ad67c5f1eebbffcc8314cb8a3aacbfa28046fd4b3d0af6965a8c804a603e57f5b551320eca4017267550e5b01e622978c133f2085c5999f7ef57a340d0ae2', 'hex');
-  var hmacSha512Expected =
-    '554d80de8f1747c88d8fb01d27277d0a77ee167886737e91b03da170319858b69ff5840b791b0faaf4b83b54c65886db4ef0f7abc8d0a4e3e10add20681b744f';
-  var hmacSha512 = createHmac('sha512', seed);
-  hmacSha512.update('100 bottles of beer on the wall');
-  var hmacSha512Output = hmacSha512.digest().toString('hex');
-  return hmacSha512Output === hmacSha512Expected;
-}
+// Takes about 100 ms on a Macbook Pro
+MyWallet.browserCheckFast = function () {
+  var mnemonic = 'daughter size twenty place alter glass small bid purse october faint beyond';
+
+  var seed = pbkdf2(mnemonic, 'mnemonic', 100, 64, 'sha512');
+  var seedString = seed.toString('hex');
+
+  if (seedString !== '25357208f6fcbde803b4f333e59ce7a0ebe8b77b0390fa8b72899496f50fcc3707c65debf6102b19912cd0ccb36a2332cfebecb53e61b5fa79f11592c825bdda') {
+    return false;
+  }
+
+  seed = Buffer('9f3ad67c5f1eebbffcc8314cb8a3aacbfa28046fd4b3d0af6965a8c804a603e57f5b551320eca4017267550e5b01e622978c133f2085c5999f7ef57a340d0ae2', 'hex');
+
+  // master node -> xpriv (1 ms)
+  var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed);
+  var xpriv = masterkey.toString();
+
+  if (xpriv !== 'xprv9s21ZrQH143K44XyzPUorz65tsvifDFiWZRoqeM69iTeYXd5KbSrz4WEAbWwB2CY6jCGJ2pKdXgw66oQPePPifrpxhWuGoDkumMGCZQwduP') {
+    return false;
+  }
+
+  // xpriv -> xpriv' (100 ms)
+  // var xprivChild = masterkey.derive(0);
+  // if (xprivChild.toString() !== 'xprv9u32fAyAZYdehCkX6YGKSuTd1PnEgrjjPbdUwZ9v1aP2v8Dbr4JCaG4teSc9YNScsXeKGRhSHkimo4W6qefVUnT9eAuiL7yDRMbwf6McJBY') {
+  //   return false;
+  // }
+
+  // xpriv -> xpub, test .neutered() // 100 ms
+  // var xprivChild = Bitcoin.HDNode.fromBase58('xprv9u32fAyAZYdehCkX6YGKSuTd1PnEgrjjPbdUwZ9v1aP2v8Dbr4JCaG4teSc9YNScsXeKGRhSHkimo4W6qefVUnT9eAuiL7yDRMbwf6McJBY');
+  // var xpub = xprivChild.neutered();
+  // if (xpub.toString() !== 'xpub682P4gW4PvBwugpzCZoKp3QMZRcj6KTakpZ5jwZXZuv1nvYkPbcT84PNVk1vSKnf1XtLRfTzuwqRH6y7T2HYKRWohWHLDpEv2sfeqPCAFkH') {
+  //   return false;
+  // }
+
+  var xpub = Bitcoin.HDNode.fromBase58('xpub682P4gW4PvBwugpzCZoKp3QMZRcj6KTakpZ5jwZXZuv1nvYkPbcT84PNVk1vSKnf1XtLRfTzuwqRH6y7T2HYKRWohWHLDpEv2sfeqPCAFkH');
+
+  // xpub -> address // 2 ms
+  if (xpub.getAddress() !== '1MGULYKjmADKfZG6BpWwQQ3qVw622HqhCR') {
+    return false;
+  }
+
+  // xpub -> xpub' // 100 ms
+  var xpubChild = xpub.derive(0);
+
+  if (xpubChild.toString() !== 'xpub6BQQYoWs7yyp2oNXYABTjjfmcJNJN1vHogwZ9qFdRPAfYhh5EDrBH63MHdjv5uvaawU3E3HTDGZ4SWDhwDjtnmP2S7A3EyYoQiZdFaFju5e') {
+    return false;
+  }
+
+  return true;
+};

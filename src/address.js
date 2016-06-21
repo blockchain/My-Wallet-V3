@@ -50,7 +50,7 @@ Object.defineProperties(Address.prototype, {
         this._label = str === '' ? undefined : str;
         MyWallet.syncWallet();
       } else {
-        throw 'Error: address.label must be an alphanumeric string';
+        throw new Error('address.label must be an alphanumeric string');
       }
     }
   },
@@ -73,7 +73,7 @@ Object.defineProperties(Address.prototype, {
       if (Helpers.isPositiveNumber(num)) {
         this._balance = num;
       } else {
-        throw 'Error: address.balance must be a positive number';
+        throw new Error('address.balance must be a positive number');
       }
     }
   },
@@ -84,7 +84,7 @@ Object.defineProperties(Address.prototype, {
       if (Helpers.isPositiveNumber(num)) {
         this._totalSent = num;
       } else {
-        throw 'Error: address.totalSent must be a positive number';
+        throw new Error('address.totalSent must be a positive number');
       }
     }
   },
@@ -95,7 +95,7 @@ Object.defineProperties(Address.prototype, {
       if (Helpers.isPositiveNumber(num)) {
         this._totalReceived = num;
       } else {
-        throw 'Error: address.totalReceived must be a positive number';
+        throw new Error('address.totalReceived must be a positive number');
       }
     }
   },
@@ -124,7 +124,7 @@ Object.defineProperties(Address.prototype, {
         }
         MyWallet.syncWallet();
       } else {
-        throw 'Error: address.archived must be a boolean';
+        throw new Error('address.archived must be a boolean');
       }
     }
   },
@@ -168,7 +168,7 @@ Address.import = function (key, label) {
       object.priv = Base58.encode(key.d.toBuffer(32));
       break;
     default:
-      throw 'Error: address import format not supported';
+      throw new Error('address import format not supported');
   }
 
   // initialization
@@ -188,7 +188,7 @@ Address.fromString = function (keyOrAddr, label, bipPass) {
       var okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
 
       if (format === 'bip38') {
-        if (bipPass == undefined || bipPass === '') {
+        if (bipPass === undefined || bipPass === null || bipPass === '') {
           return reject('needsBip38');
         }
         ImportExport.parseBIP38toECPair(keyOrAddr, bipPass,
@@ -232,9 +232,9 @@ Address.prototype.toJSON = function () {
 };
 
 Address.prototype.signMessage = function (message, secondPassword) {
-  if (!Helpers.isString(message)) throw 'Expected message to be a string';
-  if (this.isWatchOnly) throw 'Private key needed for message signing';
-  if (this.isEncrypted && secondPassword == null) throw 'Second password needed to decrypt key';
+  if (!Helpers.isString(message)) throw new Error('Expected message to be a string');
+  if (this.isWatchOnly) throw new Error('Private key needed for message signing');
+  if (this.isEncrypted && secondPassword == null) throw new Error('Second password needed to decrypt key');
 
   var getDecrypted = WalletCrypto.decryptSecretWithSecondPassword.bind(null,
     this.priv, secondPassword, MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
@@ -249,7 +249,7 @@ Address.prototype.signMessage = function (message, secondPassword) {
 Address.prototype.encrypt = function (cipher) {
   if (!this._priv) return this;
   var priv = cipher ? cipher(this._priv) : this._priv;
-  if (!priv) { throw 'Error Encoding key'; }
+  if (!priv) { throw new Error('Error Encoding key'); }
   this._temporal_priv = priv;
   return this;
 };
@@ -257,7 +257,7 @@ Address.prototype.encrypt = function (cipher) {
 Address.prototype.decrypt = function (cipher) {
   if (!this._priv) return this;
   var priv = cipher ? cipher(this._priv) : this._priv;
-  if (!priv) { throw 'Error Decoding key'; }
+  if (!priv) { throw new Error('Error Decoding key'); }
   this._temporal_priv = priv;
   return this;
 };

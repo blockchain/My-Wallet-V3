@@ -1,4 +1,4 @@
-all: clean node_modules test dist/application.min.js Changelog.md
+all: clean node_modules semistandard test dist/application.min.js Changelog.md
 
 node_modules:
 	npm install
@@ -12,6 +12,9 @@ test: build
 dist/application.min.js:
 	grunt dist
 	npm shrinkwrap --dev
+
+semistandard:
+	node_modules/.bin/semistandard --verbose | snazzy
 
 # git-changelog uses the most recent tag, which is not what we want after we
 # just tagged a release. Use the previous tag instead.
