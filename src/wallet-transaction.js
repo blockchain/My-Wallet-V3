@@ -3,6 +3,8 @@
 module.exports = Tx;
 
 var MyWallet = require('./wallet');
+var API = require('./api');
+
 
 function Tx (object) {
   var obj = object || {};
@@ -72,6 +74,20 @@ function Tx (object) {
 
 Tx.prototype.toString = function () {
   return this.hash;
+};
+
+Tx.prototype.updateConfirmationsOnBlock = function () {
+  // if already confirmed tx
+  var updateConf = function(obj) {
+    this.confirmations = setConfirmations(obj.block_height);
+  }
+  if (this.confirmations > 0) {
+    this.confirmations = this.confirmations + 1;
+  }
+  else {
+    // check if the transaction was included in the last block
+    API.getTransaction(this.hash).then(updateConf);
+  }
 };
 
 Object.defineProperties(Tx.prototype, {

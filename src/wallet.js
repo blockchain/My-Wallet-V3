@@ -79,9 +79,10 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
     var sendOnTx = WalletStore.sendEvent.bind(null, 'on_tx');
     MyWallet.wallet.getHistory().then(sendOnTx);
   } else if (obj.op === 'block') {
-    var sendOnBlock = WalletStore.sendEvent.bind(null, 'on_block');
-    MyWallet.wallet.getHistory().then(sendOnBlock);
     MyWallet.wallet.latestBlock = obj.x;
+    var up = function(t){t.updateConfirmationsOnBlock();}
+    MyWallet.wallet.txList._transactions.forEach(up);
+    WalletStore.sendEvent('on_block');
   } else if (obj.op === 'pong') {
     clearTimeout(MyWallet.ws.pingTimeoutPID);
   } else if (obj.op === 'email_verified') {

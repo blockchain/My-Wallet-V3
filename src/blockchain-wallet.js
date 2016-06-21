@@ -601,14 +601,14 @@ function isAccountNonUsed (account, progress) {
     if (progress) { progress(obj); }
     return obj.addresses[0].account_index === 0 && obj.addresses[0].change_index === 0;
   };
-  return API.getHistory([account.extendedPublicKey], 0, 0, 50).then(isNonUsed);
+  return API.getBalances([account.extendedPublicKey]).then(isNonUsed);
 }
 
 Wallet.prototype.scanBip44 = function (secondPassword, startedRestoreHDWallet, progress) {
   // wallet restoration
   startedRestoreHDWallet && startedRestoreHDWallet();
   var self = this;
-  API.getHistory([self.hdwallet._accounts[0].extendedPublicKey], 0, 0, 50).then(progress);
+  API.getBalances([self.hdwallet._accounts[0].extendedPublicKey]).then(progress);
   var accountIndex = 1;
   var AccountsGap = 10;
 
