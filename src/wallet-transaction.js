@@ -5,19 +5,9 @@ module.exports = Tx;
 var MyWallet = require('./wallet');
 var API = require('./api');
 
-
 function Tx (object) {
   var obj = object || {};
   // original properties
-  var setConfirmations = function (txBlockHeight) {
-    var lastBlock = MyWallet.wallet.latestBlock;
-    var conf = 0;
-    if (lastBlock && txBlockHeight != null && txBlockHeight > 0) {
-      conf = lastBlock.height - txBlockHeight + 1;
-    }
-    return conf;
-  };
-
   this.balance = obj.balance;
   this.block_height = obj.block_height;
   this.hash = obj.hash;
@@ -37,7 +27,7 @@ function Tx (object) {
   this.rbf = obj.rbf;
   this.publicNote = obj.note;
   this.note = MyWallet.wallet.getNote(this.hash);
-  this.confirmations = setConfirmations(this.block_height);
+  this.confirmations = Tx.setConfirmations(this.block_height);
 
   // computed properties
   var initialOut = {
@@ -78,13 +68,12 @@ Tx.prototype.toString = function () {
 
 Tx.prototype.updateConfirmationsOnBlock = function () {
   // if already confirmed tx
-  var updateConf = function(obj) {
-    this.confirmations = setConfirmations(obj.block_height);
-  }
+  var updateConf = function (obj) {
+    this.confirmations = Tx.setConfirmations(obj.block_height);
+  };
   if (this.confirmations > 0) {
     this.confirmations = this.confirmations + 1;
-  }
-  else {
+  } else {
     // check if the transaction was included in the last block
     API.getTransaction(this.hash).then(updateConf);
   }
@@ -264,4 +253,13 @@ Tx.IOSfactory = function (tx) {
     fromWatchOnly: tx.fromWatchOnly,
     toWatchOnly: tx.toWatchOnly
   };
+};
+
+Tx.setConfirmations = function (txBlockHeight) {
+  var lastBlock = MyWallet.wallet.latestBlock;
+  var conf = 0;
+  if (lastBlock && txBlockHeight != null && txBlockHeight > 0) {
+    conf = lastBlock.height - txBlockHeight + 1;
+  }
+  return conf;
 };

@@ -129,8 +129,8 @@ API.prototype.getBalances = function (addresses) {
   return this.retry(this.request.bind(this, 'POST', 'balance', data));
 };
 
-API.prototype.getTransaction= function (txhash) {
-  var transaction = 'tx/'+txhash;
+API.prototype.getTransaction = function (txhash) {
+  var transaction = 'tx/' + txhash;
   var data = {
     format: 'json',
     api_code: this.API_CODE

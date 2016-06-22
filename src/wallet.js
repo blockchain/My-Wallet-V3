@@ -80,7 +80,9 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
     MyWallet.wallet.getHistory().then(sendOnTx);
   } else if (obj.op === 'block') {
     MyWallet.wallet.latestBlock = obj.x;
-    var up = function(t){t.updateConfirmationsOnBlock();}
+    var up = function (t){
+      t.updateConfirmationsOnBlock();
+    };
     MyWallet.wallet.txList._transactions.forEach(up);
     WalletStore.sendEvent('on_block');
   } else if (obj.op === 'pong') {
