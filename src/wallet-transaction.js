@@ -66,16 +66,16 @@ Tx.prototype.toString = function () {
   return this.hash;
 };
 
-Tx.prototype.updateConfirmationsOnBlock = function () {
-  // if already confirmed tx
-  var updateConf = function (obj) {
-    this.confirmations = Tx.setConfirmations(obj.block_height);
-  };
+Tx.prototype.updateConfirmationsOnBlock = function (txIndexes) {
+
   if (this.confirmations > 0) {
     this.confirmations = this.confirmations + 1;
   } else {
-    // check if the transaction was included in the last block
-    API.getTransaction(this.hash).then(updateConf);
+    if (txIndexes.indexOf(this.tx_index) >= 0) {
+      // transaction included in the last block
+      this.confirmations = this.confirmations + 1;
+    }
+      // otherwise: Transaction not confirmed
   }
 };
 

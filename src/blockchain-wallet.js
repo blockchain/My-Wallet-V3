@@ -373,38 +373,6 @@ Wallet.prototype.getHistory = function () {
     .then(this._updateWalletInfo.bind(this));
 };
 
-// Wallet.prototype.addTransaction = function (tx) {
-//
-//   this.txList.pushTxs(tx);
-//   var ptx = this.txList._transactions[0];
-//
-//   this.totalReceived = this.totalReceived + ptx.result;
-//   this.finalBalance = this.finalBalance + ptx.result;
-//   this.numberTxTotal = this.numberTxTotal + 1;
-//
-//   var self = this;
-//   ptx.processedOutputs.forEach(function (o) {
-//     switch (true) {
-//       case Helpers.isPositiveNumber(o.identity):
-//         var account = self.hdwallet._accounts[o.identity];
-//         if (account) {
-//           account.balance = account.balance + o.amount;
-//           account.n_tx = account.n_tx + 1;
-//         }
-//         break;
-//       case o.identity === "imported":
-//         var address = self.activeKey(o.address);
-//           if (address) {
-//             address.balance = address.balance + o.amount;
-//             address.totalReceived = address.totalReceived + o.amount;
-//           }
-//         break;
-//       default:
-//         // external
-//     }
-//   });
-// };
-
 Wallet.prototype.fetchTransactions = function () {
   return API.getHistory(this.context, 0, this.txList.fetched, this.txList.loadNumber)
     .then(this._updateWalletInfo.bind(this));
