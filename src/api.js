@@ -133,6 +133,7 @@ API.prototype.getTransaction = function (txhash) {
   var transaction = 'tx/' + txhash;
   var data = {
     format: 'json',
+    cors: 'true',
     api_code: this.API_CODE
   };
   return this.retry(this.request.bind(this, 'GET', transaction, data));
