@@ -25,7 +25,7 @@ MyWallet.wallet = undefined;
 MyWallet.ws = new BlockchainSocket();
 
 // used locally
-MyWallet.socketConnect = function() {
+MyWallet.socketConnect = function () {
   MyWallet.ws.connect(onOpen, onMessage, onClose);
 
   var lastOnChange = null;
@@ -42,7 +42,7 @@ MyWallet.socketConnect = function() {
   function onClose () {
     WalletStore.sendEvent('ws_on_close');
   }
-}
+};
 
 // used two times
 function didDecryptWallet (success) {
@@ -51,7 +51,7 @@ function didDecryptWallet (success) {
   success();
 }
 
-MyWallet.getSocketOnMessage = function(message, lastOnChange) {
+MyWallet.getSocketOnMessage = function (message, lastOnChange) {
   var obj = null;
 
   if (!(typeof window === 'undefined') && message.data) {
@@ -86,12 +86,12 @@ MyWallet.getSocketOnMessage = function(message, lastOnChange) {
   } else if (obj.op === 'email_verified') {
     WalletStore.sendEvent('on_email_verified', obj.x);
   }
-}
+};
 
-MyWallet.getSocketOnOpenMessage = function() {
+MyWallet.getSocketOnOpenMessage = function () {
   var accounts = MyWallet.wallet.hdwallet ? MyWallet.wallet.hdwallet.activeXpubs : [];
   return MyWallet.ws.msgOnOpen(MyWallet.wallet.guid, MyWallet.wallet.activeAddresses, accounts);
-}
+};
 
 // Fetch a new wallet from the server
 // success(modified true/false)
