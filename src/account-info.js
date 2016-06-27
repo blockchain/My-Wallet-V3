@@ -5,7 +5,7 @@ module.exports = AccountInfo;
 function AccountInfo (object) {
   this._email = object.email;
 
-  if (object.sms_number.length > 5) {
+  if (object.sms_number && object.sms_number.length > 5) {
     this._mobile = {
       countryCode: object.sms_number.split(' ')[0].substr(1),
       number: object.sms_number.split(' ')[1]
