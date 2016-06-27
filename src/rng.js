@@ -96,7 +96,7 @@ RNG.prototype.getServerEntropy = function (nBytes) {
   request.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
   request.send(null);
 
-  if (request.status == 200) {
+  if (request.status === 200) {
     assert(
       Helpers.isHex(request.responseText),
       'Non-hex server entropy answer.'
