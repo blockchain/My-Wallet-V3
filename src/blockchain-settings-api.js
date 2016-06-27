@@ -6,6 +6,15 @@ var WalletStore = require('./wallet-store.js');
 var MyWallet = require('./wallet.js');
 var API = require('./api');
 
+function fetchAccountInfo () {
+  return API.securePost('wallet', {method: 'get-info', format: 'json'})
+    .catch(function (data) {
+      var response = data.responseText || 'Error Downloading Account Settings';
+      WalletStore.sendEvent('msg', {type: 'error', message: response});
+    });
+}
+
+// TODO: depricate
 function getAccountInfo (success, error) {
   API.securePostCallbacks('wallet', {method: 'get-info', format: 'json'}, function (data) {
     typeof (success) === 'function' && success(data);
@@ -276,6 +285,7 @@ function disableAllNotifications (success, error) {
 }
 
 module.exports = {
+  fetchAccountInfo: fetchAccountInfo,
   getAccountInfo: getAccountInfo,
   updateIPlock: updateIPlock,
   updateIPlockOn: updateIPlockOn,
