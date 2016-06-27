@@ -62,6 +62,8 @@ function socketConnect () {
       MyWallet.wallet.latestBlock = obj.x;
     } else if (obj.op === 'pong') {
       clearTimeout(MyWallet.ws.pingTimeoutPID);
+    } else if (obj.op === 'email_verified') {
+      WalletStore.sendEvent('on_email_verified', obj.x);
     }
   }
 
