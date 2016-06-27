@@ -19,6 +19,7 @@ var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var KeyRing = require('./keyring');
 var TxList = require('./transaction-list');
 var Block = require('./bitcoin-block');
+var AccountInfo = require('./account-info');
 
 // Wallet
 
@@ -70,6 +71,7 @@ function Wallet (object) {
   this._numberTxTotal = 0;
   this._txList = new TxList();
   this._latestBlock = null;
+  this._accountInfo = null;
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -303,6 +305,10 @@ Object.defineProperties(Wallet.prototype, {
         throw new Error('wallet.logoutTime must be a positive integer in range 60000,86400001');
       }
     }
+  },
+  'accountInfo': {
+    configurable: false,
+    get: function () { return this._accountInfo; }
   }
 });
 
@@ -793,4 +799,12 @@ Wallet.prototype._getPrivateKey = function (accountIndex, path, secondPassword) 
       : maybeXpriv;
   var kr = new KeyRing(xpriv, null);
   return kr.privateKeyFromPath(path).keyPair.toWIF();
+};
+
+Wallet.prototype.fetchAccountInfo = function () {
+  var parentThis = this;
+  return BlockchainSettingsAPI.fetchAccountInfo().then(function (info) {
+    parentThis._accountInfo = new AccountInfo(info);
+    return info; // TODO: handle more here instead of in the frontend / iOs
+  });
 };

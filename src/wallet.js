@@ -64,25 +64,27 @@ MyWallet.getSocketOnMessage = function(message, lastOnChange) {
     return;
   }
 
-  if (obj.op == 'on_change') {
-    var old_checksum = WalletStore.generatePayloadChecksum();
-    var new_checksum = obj.checksum;
+  if (obj.op === 'on_change') {
+    var oldChecksum = WalletStore.generatePayloadChecksum();
+    var newChecksum = obj.checksum;
 
-    if (lastOnChange != new_checksum && old_checksum != new_checksum) {
-      lastOnChange = new_checksum;
+    if (lastOnChange !== newChecksum && oldChecksum !== newChecksum) {
+      lastOnChange = newChecksum;
 
       MyWallet.getWallet();
     }
-  } else if (obj.op == 'utx') {
+  } else if (obj.op === 'utx') {
     WalletStore.sendEvent('on_tx_received');
     var sendOnTx = WalletStore.sendEvent.bind(null, 'on_tx');
     MyWallet.wallet.getHistory().then(sendOnTx);
-  } else if (obj.op == 'block') {
+  } else if (obj.op === 'block') {
     var sendOnBlock = WalletStore.sendEvent.bind(null, 'on_block');
     MyWallet.wallet.getHistory().then(sendOnBlock);
     MyWallet.wallet.latestBlock = obj.x;
-  } else if (obj.op == 'pong') {
+  } else if (obj.op === 'pong') {
     clearTimeout(MyWallet.ws.pingTimeoutPID);
+  } else if (obj.op === 'email_verified') {
+    WalletStore.sendEvent('on_email_verified', obj.x);
   }
 }
 
