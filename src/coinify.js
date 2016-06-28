@@ -5,6 +5,7 @@ var Helpers = require('./helpers');
 var CoinifyProfile = require('./coinify-profile');
 var CoinifyTrade = require('./coinify-trade');
 var HDAccount = require('./hd-account');
+var API = require('./api');
 
 var assert = require('assert');
 
@@ -95,20 +96,40 @@ Coinify.prototype.signup = function () {
       reject(e);
     };
 
-    parentThis.POST('signup/trader', {
-      email: email,
-      partnerId: 18,
-      defaultCurrency: currency, // ISO 4217
-      profile: {
-        address: {
-          country: countryCode
-        }
-      },
-      generateOfflineToken: true
-    }).then(signupSuccess).catch(signupFailed);
+    parentThis.getEmailToken().then(function (emailToken) {
+      parentThis.POST('signup/trader', {
+        email: email,
+        partnerId: 18,
+        defaultCurrency: currency, // ISO 4217
+        profile: {
+          address: {
+            country: countryCode
+          }
+        },
+        trustedEmailValidationToken: emailToken,
+        generateOfflineToken: true
+      }).then(signupSuccess).catch(signupFailed);
+    });
   });
 
   return promise;
+};
+
+Coinify.prototype.getEmailToken = function () {
+  return API.request(
+    'GET',
+    'wallet/signed-email-token',
+    {
+      guid: MyWallet.wallet.guid,
+      sharedKey: MyWallet.wallet.sharedKey
+    }
+  ).then(function (res) {
+    if (res.success) {
+      return res.token;
+    } else {
+      throw new Error('Unable to obtain email verification proof');
+    }
+  });
 };
 
 Coinify.prototype.login = function () {
