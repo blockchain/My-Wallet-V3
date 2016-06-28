@@ -103,7 +103,7 @@ function changeEmail (email, successCallback, error) {
   var success = function (res) {
     MyWallet.wallet.accountInfo.email = email;
     MyWallet.wallet.accountInfo.isEmailVerified = false;
-    successCallback(res);
+    if (typeof successCallback === 'function') successCallback(res);
   };
   updateKV('update-email', email, success, error);
 }
