@@ -24,7 +24,7 @@ var isInitialized = false;
 MyWallet.wallet = undefined;
 MyWallet.ws = new BlockchainSocket();
 
-// used locally
+// used locally and overriden in iOS
 MyWallet.socketConnect = function () {
   MyWallet.ws.connect(onOpen, onMessage, onClose);
 
@@ -51,6 +51,7 @@ function didDecryptWallet (success) {
   success();
 }
 
+// called by native websocket in iOS
 MyWallet.getSocketOnMessage = function (message, lastOnChange) {
   var obj = null;
 
@@ -88,6 +89,7 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
   }
 };
 
+// called by native websocket in iOS
 MyWallet.getSocketOnOpenMessage = function () {
   var accounts = MyWallet.wallet.hdwallet ? MyWallet.wallet.hdwallet.activeXpubs : [];
   return MyWallet.ws.msgOnOpen(MyWallet.wallet.guid, MyWallet.wallet.activeAddresses, accounts);
