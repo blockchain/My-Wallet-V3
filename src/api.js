@@ -179,7 +179,7 @@ API.prototype.getUnspent = function (fromAddresses, confirmations) {
   return this.retry(this.request.bind(this, 'POST', 'unspent', data));
 };
 
-API.prototype.getHistory = function (addresses, txFilter, offset, n, syncBool) {
+API.prototype.getHistory = function (addresses, txFilter, offset, n, syncBool, onlyShow) {
   var clientTime = (new Date()).getTime();
   offset = offset || 0;
   n = n || 0;
@@ -194,6 +194,10 @@ API.prototype.getHistory = function (addresses, txFilter, offset, n, syncBool) {
     language: WalletStore.getLanguage(),
     no_buttons: true
   };
+
+  if (onlyShow) {
+    data.onlyShow = onlyShow.join('|');
+  }
 
   if (txFilter !== undefined && txFilter !== null) {
     data.filter = txFilter;
