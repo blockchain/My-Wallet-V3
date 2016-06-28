@@ -29,7 +29,10 @@ Object.defineProperties(AccountInfo.prototype, {
 
   'email': {
     configurable: false,
-    get: function () { return this._email; }
+    get: function () { return this._email; },
+    set: function (value) {
+      this._email = value;
+    }
   },
   'mobileObject': {
     configurable: false,
