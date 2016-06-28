@@ -8,6 +8,8 @@ var Buffer = require('buffer').Buffer;
 var assert = require('assert');
 var Helpers = require('./helpers');
 
+module.exports.randomBytes = randomBytes;
+
 function RNG () {
   this.ACTION = 'GET';
   // API is undefined at this point
@@ -38,7 +40,8 @@ RNG.prototype.run = function (nBytes) {
   try {
     nBytes = Helpers.isPositiveInteger(nBytes) ? nBytes : this.BYTES;
     var serverH = this.getServerEntropy(nBytes);
-    var localH = getRandomBytes ? Buffer(getRandomBytes(nBytes), 'hex') : randomBytes(nBytes);
+    // Allow iOS to override randomBytes
+    var localH = module.exports.randomBytes(nBytes);
     assert(
       localH.length > 0,
       'Local entropy should not be empty.'
