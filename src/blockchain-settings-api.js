@@ -101,6 +101,7 @@ function updatePasswordHint2 (value, success, error) {
 
 function changeEmail (email, successCallback, error) {
   var success = function (res) {
+    MyWallet.wallet.accountInfo.email = email;
     MyWallet.wallet.accountInfo.isEmailVerified = false;
     successCallback(res);
   };
