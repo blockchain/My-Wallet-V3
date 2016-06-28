@@ -36,7 +36,7 @@ MyWallet.socketConnect = function () {
 
   function onOpen () {
     WalletStore.sendEvent('ws_on_open');
-    MyWallet.ws.send(MyWallet.getSocketOnOpenMessage);
+    MyWallet.ws.send(MyWallet.getSocketOnOpenMessage());
   }
 
   function onClose () {
