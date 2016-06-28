@@ -1,5 +1,8 @@
 'use strict';
 
+var assert = require('assert');
+var Helpers = require('./helpers');
+
 module.exports = AccountInfo;
 
 function AccountInfo (object) {
@@ -44,7 +47,11 @@ Object.defineProperties(AccountInfo.prototype, {
   },
   'isEmailVerified': {
     configurable: false,
-    get: function () { return this._isEmailVerified; }
+    get: function () { return this._isEmailVerified; },
+    set: function (value) {
+      assert(Helpers.isBoolean(value), 'Boolean');
+      this._isEmailVerified = value;
+    }
   },
   'isMobileVerified': {
     configurable: false,
