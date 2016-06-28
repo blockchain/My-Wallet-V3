@@ -67,18 +67,19 @@ Coinify.prototype.toJSON = function () {
   return coinify;
 };
 
-// Country must be set
-// Email must be provided
-// Default currency must be provided
-// TODO: email should be stored in MyWallet after get-info call
-Coinify.prototype.signup = function (email, currency) {
+// Country and default currency must be set
+// Email must be set and verified
+Coinify.prototype.signup = function () {
   var parentThis = this;
 
   var promise = new Promise(function (resolve, reject) {
+    var email = MyWallet.wallet.accountInfo.email;
+    var currency = MyWallet.wallet.accountInfo.currency;
     assert(!parentThis.user, 'Already signed up');
     var countryCode = MyWallet.wallet.profile.countryCode;
     assert(countryCode, 'Country must be set');
     assert(email, 'email required');
+    assert(MyWallet.wallet.accountInfo.isEmailVerified, 'email must be verified');
     assert(currency, 'default currency required');
 
     var signupSuccess = function (res) {
