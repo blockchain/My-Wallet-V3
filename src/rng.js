@@ -40,7 +40,7 @@ RNG.prototype.run = function (nBytes) {
   try {
     nBytes = Helpers.isPositiveInteger(nBytes) ? nBytes : this.BYTES;
     var serverH = this.getServerEntropy(nBytes);
-    // Allow iOS to override randomBytes
+    // Expose randomBytes for iOS to override
     var localH = module.exports.randomBytes(nBytes);
     assert(
       localH.length > 0,

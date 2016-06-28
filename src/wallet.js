@@ -24,7 +24,7 @@ var isInitialized = false;
 MyWallet.wallet = undefined;
 MyWallet.ws = new BlockchainSocket();
 
-// used locally and overriden in iOS
+// used locally and overridden in iOS
 MyWallet.socketConnect = function () {
   MyWallet.ws.connect(onOpen, onMessage, onClose);
 
