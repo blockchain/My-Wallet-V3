@@ -24,61 +24,25 @@ var isInitialized = false;
 MyWallet.wallet = undefined;
 MyWallet.ws = new BlockchainSocket();
 
-// used locally
-function socketConnect () {
+// used locally and overridden in iOS
+MyWallet.socketConnect = function () {
   MyWallet.ws.connect(onOpen, onMessage, onClose);
 
   var lastOnChange = null;
 
   function onMessage (message) {
-    var obj = null;
-
-    if (!(typeof window === 'undefined')) {
-      message = message.data;
-    }
-    try {
-      obj = JSON.parse(message);
-    } catch (e) {
-      console.log('Websocket error: could not parse message data as JSON: ' + message);
-      return;
-    }
-
-    if (obj.op === 'on_change') {
-      var oldChecksum = WalletStore.generatePayloadChecksum();
-      var newChecksum = obj.checksum;
-
-      if (lastOnChange !== newChecksum && oldChecksum !== newChecksum) {
-        lastOnChange = newChecksum;
-
-        MyWallet.getWallet();
-      }
-    } else if (obj.op === 'utx') {
-      WalletStore.sendEvent('on_tx_received');
-      var sendOnTx = WalletStore.sendEvent.bind(null, 'on_tx');
-      MyWallet.wallet.getHistory().then(sendOnTx);
-    } else if (obj.op === 'block') {
-      var sendOnBlock = WalletStore.sendEvent.bind(null, 'on_block');
-      MyWallet.wallet.getHistory().then(sendOnBlock);
-      MyWallet.wallet.latestBlock = obj.x;
-    } else if (obj.op === 'pong') {
-      clearTimeout(MyWallet.ws.pingTimeoutPID);
-    } else if (obj.op === 'email_verified') {
-      MyWallet.wallet.accountInfo.isEmailVerified = Boolean(obj.x);
-      WalletStore.sendEvent('on_email_verified', obj.x);
-    }
+    MyWallet.getSocketOnMessage(message, lastOnChange);
   }
 
   function onOpen () {
     WalletStore.sendEvent('ws_on_open');
-    var accounts = MyWallet.wallet.hdwallet ? MyWallet.wallet.hdwallet.activeXpubs : [];
-    var msg = MyWallet.ws.msgOnOpen(MyWallet.wallet.guid, MyWallet.wallet.activeAddresses, accounts);
-    MyWallet.ws.send(msg);
+    MyWallet.ws.send(MyWallet.getSocketOnOpenMessage());
   }
 
   function onClose () {
     WalletStore.sendEvent('ws_on_close');
   }
-}
+};
 
 // used two times
 function didDecryptWallet (success) {
@@ -86,6 +50,51 @@ function didDecryptWallet (success) {
   MyWallet.getWallet();
   success();
 }
+
+// called by native websocket in iOS
+MyWallet.getSocketOnMessage = function (message, lastOnChange) {
+  var obj = null;
+
+  if (!(typeof window === 'undefined') && message.data) {
+    message = message.data;
+  }
+  try {
+    obj = JSON.parse(message);
+  } catch (e) {
+    console.log('Websocket error: could not parse message data as JSON: ' + message);
+    return;
+  }
+
+  if (obj.op === 'on_change') {
+    var oldChecksum = WalletStore.generatePayloadChecksum();
+    var newChecksum = obj.checksum;
+
+    if (lastOnChange !== newChecksum && oldChecksum !== newChecksum) {
+      lastOnChange = newChecksum;
+
+      MyWallet.getWallet();
+    }
+  } else if (obj.op === 'utx') {
+    WalletStore.sendEvent('on_tx_received');
+    var sendOnTx = WalletStore.sendEvent.bind(null, 'on_tx');
+    MyWallet.wallet.getHistory().then(sendOnTx);
+  } else if (obj.op === 'block') {
+    var sendOnBlock = WalletStore.sendEvent.bind(null, 'on_block');
+    MyWallet.wallet.getHistory().then(sendOnBlock);
+    MyWallet.wallet.latestBlock = obj.x;
+  } else if (obj.op === 'pong') {
+    clearTimeout(MyWallet.ws.pingTimeoutPID);
+  } else if (obj.op === 'email_verified') {
+    MyWallet.wallet.accountInfo.isEmailVerified = Boolean(obj.x);
+    WalletStore.sendEvent('on_email_verified', obj.x);
+  }
+};
+
+// called by native websocket in iOS
+MyWallet.getSocketOnOpenMessage = function () {
+  var accounts = MyWallet.wallet.hdwallet ? MyWallet.wallet.hdwallet.activeXpubs : [];
+  return MyWallet.ws.msgOnOpen(MyWallet.wallet.guid, MyWallet.wallet.activeAddresses, accounts);
+};
 
 // Fetch a new wallet from the server
 // success(modified true/false)
@@ -133,7 +142,6 @@ MyWallet.decryptAndInitializeWallet = function (success, error, decryptSuccess, 
     encryptedWalletData,
     WalletStore.getPassword(),
     function (obj, rootContainer) {
-      decryptSuccess && decryptSuccess();
       MyWallet.wallet = new Wallet(obj);
 
       // this sanity check should be done on the load
@@ -154,6 +162,7 @@ MyWallet.decryptAndInitializeWallet = function (success, error, decryptSuccess, 
         WalletStore.sendEvent('hd_wallets_does_not_exist');
       }
       setIsInitialized();
+      decryptSuccess && decryptSuccess();
       success();
     },
     error
@@ -340,7 +349,7 @@ MyWallet.getIsInitialized = function () {
 // used once
 function setIsInitialized () {
   if (isInitialized) return;
-  socketConnect();
+  MyWallet.socketConnect();
   isInitialized = true;
 }
 

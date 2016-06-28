@@ -116,8 +116,6 @@ describe 'WalletCrypto', ->
 
       spyOn(obj, "success")
 
-      spyOn(WalletCrypto, "stretchPassword").and.returnValue("338f6acb3fa8d4f2373c31a1cfe21dd6684a9ad62b4afff68e19d6b4cdabeea6")
-
       WalletCrypto.decryptWallet(data, password, obj.success, obj.error)
 
       expect(obj.success).toHaveBeenCalled()

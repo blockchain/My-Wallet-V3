@@ -255,7 +255,8 @@ function encryptDataWithPassword (data, password, iterations) {
   assert(iterations, 'iterations missing');
 
   var salt = crypto.randomBytes(SALT_BYTES);
-  var key = stretchPassword(password, salt, iterations, KEY_BIT_LEN);
+  // Expose stretchPassword for iOS to override
+  var key = module.exports.stretchPassword(password, salt, iterations, KEY_BIT_LEN);
   var dataBytes = new Buffer(data, 'utf8');
   var options = { mode: AES.CBC, padding: Iso10126 };
 
@@ -276,7 +277,8 @@ function decryptDataWithPassword (data, password, iterations, options) {
   var dataHex = new Buffer(data, 'base64');
   var salt = dataHex.slice(0, SALT_BYTES);
   var payload = dataHex.slice(SALT_BYTES);
-  var key = stretchPassword(password, salt, iterations, KEY_BIT_LEN);
+  // Expose stretchPassword for iOS to override
+  var key = module.exports.stretchPassword(password, salt, iterations, KEY_BIT_LEN);
 
   var decryptedBytes = AES.decrypt(payload, key, salt, options);
   return decryptedBytes.toString('utf8');
