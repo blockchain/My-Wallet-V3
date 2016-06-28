@@ -85,7 +85,7 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
     } else {
       // there is no reorg
       MyWallet.wallet.latestBlock = obj.x;
-      var up = function (t){
+      var up = function (t) {
         t.updateConfirmationsOnBlock(obj.x.txIndexes);
       };
       MyWallet.wallet.txList._transactions.forEach(up);

@@ -3,7 +3,6 @@
 module.exports = Tx;
 
 var MyWallet = require('./wallet');
-var API = require('./api');
 
 function Tx (object) {
   var obj = object || {};
@@ -67,7 +66,6 @@ Tx.prototype.toString = function () {
 };
 
 Tx.prototype.updateConfirmationsOnBlock = function (txIndexes) {
-
   if (this.confirmations > 0) {
     this.confirmations = this.confirmations + 1;
   } else {
