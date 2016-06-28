@@ -99,7 +99,12 @@ function updatePasswordHint2 (value, success, error) {
   isBad ? error(isBad) : updateKV('update-password-hint2', value, success, error);
 }
 
-function changeEmail (email, success, error) {
+function changeEmail (email, successCallback, error) {
+  var success = function (res) {
+    MyWallet.wallet.accountInfo.email = email;
+    MyWallet.wallet.accountInfo.isEmailVerified = false;
+    if (typeof successCallback === 'function') successCallback(res);
+  };
   updateKV('update-email', email, success, error);
 }
 

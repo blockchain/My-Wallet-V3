@@ -85,6 +85,7 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
   } else if (obj.op === 'pong') {
     clearTimeout(MyWallet.ws.pingTimeoutPID);
   } else if (obj.op === 'email_verified') {
+    MyWallet.wallet.accountInfo.isEmailVerified = Boolean(obj.x);
     WalletStore.sendEvent('on_email_verified', obj.x);
   }
 };

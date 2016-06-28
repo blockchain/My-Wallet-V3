@@ -1,8 +1,14 @@
 proxyquire = require('proxyquireify')(require)
 
-stubs = { }
-AccountInfo = proxyquire('../src/account-info', stubs)
+Helpers = {
+  isBoolean: () -> true
+}
 
+stubs = {
+  './helpers' : Helpers
+}
+
+AccountInfo = proxyquire('../src/account-info', stubs)
 
 describe "AccountInfo", ->
 
@@ -63,6 +69,12 @@ describe "AccountInfo", ->
     it "should get email verification status", ->
       i = new AccountInfo(o)
       expect(i.isEmailVerified).toEqual(false)
+
+    it "should update email verification status", ->
+      o.email_verified = false
+      i = new AccountInfo(o)
+      i.isEmailVerified = true
+      expect(i.isEmailVerified).toEqual(true)
 
     it "should get mobile verification status", ->
       i = new AccountInfo(o)

@@ -5,6 +5,9 @@ MyWallet =
   wallet:
     validateSecondPassword: (pass) -> pass == "second password"
     isDoubleEncrypted: () -> MyWallet.doubleEncrypted
+    accountInfo:
+      email: "a@b.com"
+      isEmailVerified: false
 
 API =
   callFailWithResponseText: false
@@ -21,6 +24,10 @@ WalletStore =
   sendEvent: () ->
   getPassword: () -> "password"
   setRealAuthType: () ->
+
+AccountInfo = {
+  email: "a@b.com"
+}
 
 stubs = {
   './wallet.js': MyWallet,
