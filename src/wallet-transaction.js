@@ -7,15 +7,6 @@ var MyWallet = require('./wallet');
 function Tx (object) {
   var obj = object || {};
   // original properties
-  var setConfirmations = function (txBlockHeight) {
-    var lastBlock = MyWallet.wallet.latestBlock;
-    var conf = 0;
-    if (lastBlock && txBlockHeight != null && txBlockHeight > 0) {
-      conf = lastBlock.height - txBlockHeight + 1;
-    }
-    return conf;
-  };
-
   this.balance = obj.balance;
   this.block_height = obj.block_height;
   this.hash = obj.hash;
@@ -35,7 +26,7 @@ function Tx (object) {
   this.rbf = obj.rbf;
   this.publicNote = obj.note;
   this.note = MyWallet.wallet.getNote(this.hash);
-  this.confirmations = setConfirmations(this.block_height);
+  this.confirmations = Tx.setConfirmations(this.block_height);
 
   // computed properties
   var initialOut = {
@@ -72,6 +63,18 @@ function Tx (object) {
 
 Tx.prototype.toString = function () {
   return this.hash;
+};
+
+Tx.prototype.updateConfirmationsOnBlock = function (txIndexes) {
+  if (this.confirmations > 0) {
+    this.confirmations = this.confirmations + 1;
+  } else {
+    if (txIndexes.indexOf(this.tx_index) >= 0) {
+      // transaction included in the last block
+      this.confirmations = this.confirmations + 1;
+    }
+      // otherwise: Transaction not confirmed
+  }
 };
 
 Object.defineProperties(Tx.prototype, {
@@ -248,4 +251,13 @@ Tx.IOSfactory = function (tx) {
     fromWatchOnly: tx.fromWatchOnly,
     toWatchOnly: tx.toWatchOnly
   };
+};
+
+Tx.setConfirmations = function (txBlockHeight) {
+  var lastBlock = MyWallet.wallet.latestBlock;
+  var conf = 0;
+  if (lastBlock && txBlockHeight != null && txBlockHeight > 0) {
+    conf = lastBlock.height - txBlockHeight + 1;
+  }
+  return conf;
 };
