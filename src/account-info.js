@@ -41,7 +41,9 @@ Object.defineProperties(AccountInfo.prototype, {
   'mobile': {
     configurable: false,
     get: function () {
-      return '+' + this._mobile.countryCode + this._mobile.number.replace(/^0*/, '');
+      return this._mobile == null
+        ? null
+        : '+' + this._mobile.countryCode + this._mobile.number.replace(/^0*/, '');
     }
   },
   'dialCode': {
