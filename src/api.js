@@ -126,7 +126,17 @@ API.prototype.getBalances = function (addresses) {
     format: 'json',
     api_code: this.API_CODE
   };
-  return this.retry(this.request.bind(this, 'POST', 'multiaddr', data));
+  return this.retry(this.request.bind(this, 'POST', 'balance', data));
+};
+
+API.prototype.getTransaction = function (txhash) {
+  var transaction = 'tx/' + txhash;
+  var data = {
+    format: 'json',
+    cors: 'true',
+    api_code: this.API_CODE
+  };
+  return this.retry(this.request.bind(this, 'GET', transaction, data));
 };
 
 API.prototype.getBalanceForRedeemCode = function (privatekey) {

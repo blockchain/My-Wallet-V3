@@ -289,6 +289,14 @@ function disableAllNotifications (success, error) {
   });
 }
 
+function removeAlias () {
+  return API.securePost('wallet', {
+    method: 'remove-alias',
+    length: 0,
+    payload: ''
+  });
+}
+
 module.exports = {
   fetchAccountInfo: fetchAccountInfo,
   getAccountInfo: getAccountInfo,
@@ -316,9 +324,9 @@ module.exports = {
   getActivityLogs: getActivityLogs,
   enableEmailReceiveNotifications: enableEmailReceiveNotifications,
   disableAllNotifications: disableAllNotifications,
+  removeAlias: removeAlias,
   // for tests only
   enableEmailNotifications: enableEmailNotifications,
   enableReceiveNotifications: enableReceiveNotifications,
   updateAuthType: updateAuthType
-
 };

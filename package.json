@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.18.2",
+  "version": "3.19.3",
   "description": "Blockchain.info JavaScript Wallet",
   "homepage": "https://github.com/blockchain/my-wallet-v3",
   "bugs": {
@@ -18,7 +18,8 @@
     "Sjors Provoost",
     "Jaume Pernas",
     "Antoine Le Calvez",
-    "Kevin Woudini"
+    "Kevin Woudini",
+    "Justin Tormey"
   ],
   "main": "index.js",
   "repository": {
