@@ -129,6 +129,16 @@ API.prototype.getBalances = function (addresses) {
   return this.retry(this.request.bind(this, 'POST', 'balance', data));
 };
 
+API.prototype.getMultiAddr = function (addresses) {
+  var data = {
+    active: addresses.join('|'),
+    simple: true,
+    format: 'json',
+    api_code: this.API_CODE
+  };
+  return this.retry(this.request.bind(this, 'POST', 'multiaddr', data));
+};
+
 API.prototype.getTransaction = function (txhash) {
   var transaction = 'tx/' + txhash;
   var data = {
