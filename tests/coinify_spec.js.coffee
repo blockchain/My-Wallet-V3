@@ -27,7 +27,7 @@ stubs = {
 
 Coinify    = proxyquire('../src/coinify', stubs)
 
-fdescribe "Coinify", ->
+describe "Coinify", ->
 
   c = undefined
 
@@ -119,7 +119,10 @@ fdescribe "Coinify", ->
                 })
 
             else if endpoint == "auth"
-              resolve({access_token: "access-token", token_type: "bearer"})
+              if data.offline_token == 'invalid-offline-token'
+                reject({"error":"offline_token_not_found"})
+              else
+                resolve({access_token: "access-token", token_type: "bearer"})
             else
               reject("Unknown endpoint")
           {
@@ -217,6 +220,15 @@ fdescribe "Coinify", ->
           promise = c.login()
           expect(promise).toBeResolved(done)
           expect(c._access_token).toEqual("access-token")
+
+        it 'should store the expiration time', () ->
+          # Pending API change
+          pending()
+
+        it 'should handle token not found error', (done) ->
+          c._offline_token = 'invalid-offline-token'
+          promise = c.login()
+          expect(promise).toBeRejectedWith(jasmine.objectContaining({error: 'offline_token_not_found'}), done)
 
       describe 'profile', ->
         beforeEach ->
