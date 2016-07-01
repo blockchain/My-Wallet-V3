@@ -121,6 +121,8 @@ describe "Coinify", ->
             else if endpoint == "auth"
               if data.offline_token == 'invalid-offline-token'
                 reject({"error":"offline_token_not_found"})
+              else if data.offline_token == 'random-fail-offline-token'
+                reject()
               else
                 resolve({access_token: "access-token", token_type: "bearer"})
             else
@@ -229,6 +231,11 @@ describe "Coinify", ->
           c._offline_token = 'invalid-offline-token'
           promise = c.login()
           expect(promise).toBeRejectedWith(jasmine.objectContaining({error: 'offline_token_not_found'}), done)
+
+        it 'should handle generic failure', (done) ->
+          c._offline_token = 'random-fail-offline-token'
+          promise = c.login()
+          expect(promise).toBeRejected(done)
 
       describe 'profile', ->
         beforeEach ->
