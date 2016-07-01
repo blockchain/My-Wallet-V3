@@ -27,7 +27,7 @@ stubs = {
 
 Coinify    = proxyquire('../src/coinify', stubs)
 
-describe "Coinify", ->
+fdescribe "Coinify", ->
 
   c = undefined
 
@@ -108,13 +108,16 @@ describe "Coinify", ->
         spyOn(c, "POST").and.callFake((endpoint, data) ->
           handle = (resolve, reject) ->
             if endpoint == "signup/trader"
-              if data.email != "duplicate@blockchain.com"
+              if data.email == "duplicate@blockchain.com"
+                reject("DUPLICATE_EMAIL")
+              else if data.email == "fail@blockchain.com"
+                reject("ERROR_MESSAGE")
+              else
                 resolve({
                   trader: {id: "1"}
                   offlineToken: "offline-token"
                 })
-              else
-                reject("DUPLICATE_EMAIL")
+
             else if endpoint == "auth"
               resolve({access_token: "access-token", token_type: "bearer"})
             else
@@ -186,6 +189,12 @@ describe "Coinify", ->
           MyWallet.wallet.accountInfo.email = "duplicate@blockchain.com"
           promise = c.signup()
           expect(promise).toBeRejectedWith("DUPLICATE_EMAIL", done)
+        )
+
+        it 'might fail for an unexpected reason', ((done) ->
+          MyWallet.wallet.accountInfo.email = "fail@blockchain.com"
+          promise = c.signup()
+          expect(promise).toBeRejectedWith("ERROR_MESSAGE", done)
         )
 
       describe 'login', ->
