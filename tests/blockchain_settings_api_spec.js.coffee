@@ -12,9 +12,6 @@ MyWallet =
 API =
   callFailWithResponseText: false
   callFailWithoutResponseText: false
-  securePost: (endpoint, data) ->
-    then: (f) -> f()
-    catch: (e) ->
   securePostCallbacks: (endpoint, data, success, error) ->
     if API.callFailWithoutResponseText
       error('call failed')
@@ -49,10 +46,10 @@ describe "SettingsAPI", ->
   beforeEach ->
     spyOn(WalletStore, "sendEvent")
     spyOn(WalletStore, "setRealAuthType")
-    spyOn(API, "securePost").and.callThrough()
     spyOn(API, "securePostCallbacks").and.callThrough()
     spyOn(observers, "success").and.callThrough()
     spyOn(observers, "error").and.callThrough()
+
 
   describe "boolean settings", ->
     booleanSettingsField = [
@@ -313,12 +310,6 @@ describe "SettingsAPI", ->
           expect(WalletStore.sendEvent).toHaveBeenCalledWith("msg", {type: "error", message: 'call failed'})
           expect(observers.success).not.toHaveBeenCalled()
           expect(observers.error).toHaveBeenCalled()
-
-  describe "alias", ->
-
-    it "should remove", ->
-      SettingsAPI.removeAlias()
-      expect(API.securePost).toHaveBeenCalledWith('wallet', { method: 'remove-alias', length: 0, payload: '' })
 
   describe "password hints", ->
     passwordHintFields = [
