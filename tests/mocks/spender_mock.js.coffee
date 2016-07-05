@@ -92,20 +92,3 @@ spenderM.AccountToAdd.fromHdAccountERROR = [
     extendedPrivateKey: "xprv9zJ1cTHnqzgBP2boCwpP47LBzjGLKXkwYqXoYnV4yrBmstmw6SVtirpvm4GESg9YLn9R386qpmnsrcC5rvrpEJAXSrfqQR3qGtjGv5ddV9g"
   }
 ]
-################################################################################
-spenderM.toEmail = {}
-spenderM.toEmail.key = Bitcoin.ECPair.fromWIF("KzX25APdEb9E1kAdLntYQnhPbrau7LMfKgYJJXvkczsUw6yffkwN")
-spenderM.toEmail.toAddress = "1PqVQh5EM9hfgKFetFAMMyLdJiiKVbNSAr"
-spenderM.toEmail.txID1 = "2d0262b2a63550b0ba1e3c9466ec9f18dd2d7aa261550ceab1fbc00117af07bf"
-spenderM.toEmail.txID2 = "50b8f89a91c8a51a160939cf245493b7b8888c4fa41f08be66bfabf1ed91c902"
-spenderM.toEmail.email = "fotli@pou.cat"
-################################################################################
-spenderM.toMobile = {}
-spenderM.toMobile.keys = {}
-spenderM.toMobile.keys.key = Bitcoin.ECPair.fromWIF("5JgQYR659mLDAZTtiaiBRhShTdXHskurB3Gqrmu1veTs2QfTYv3")
-spenderM.toMobile.keys.miniKey = "SFug1uTW4HSQbg4LUWQciv"
-spenderM.toMobile.toAddress = "1BsM7vuHAtWs1U47R4PfvrgcvS8qmXqVhY"
-spenderM.toMobile.txID1 = "955f6d44ee6ead9a3b40de2166b06366607f973285c9fd003f3052176aeedbfe"
-spenderM.toMobile.txID2 = "7e7a50da870fbf7e1e49b060a558d0495764411871c3c78d14d447fdba1ef88c"
-spenderM.toMobile.phone = "+34630100200"
-################################################################################
