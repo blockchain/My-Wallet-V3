@@ -122,7 +122,6 @@ API.prototype.handleNTPResponse = function (obj, clientTime) {
 API.prototype.getBalances = function (addresses) {
   var data = {
     active: addresses.join('|'),
-    simple: true,
     format: 'json',
     api_code: this.API_CODE
   };

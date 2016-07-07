@@ -542,7 +542,8 @@ MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic
     };
 
     WalletStore.unsafeSetPassword(inputedPassword);
-    wallet.scanBip44(undefined, startedRestoreHDWallet, accountProgress).then(saveWallet).catch(error);
+    startedRestoreHDWallet && startedRestoreHDWallet();
+    wallet.scanBip44(undefined, accountProgress).then(saveWallet).catch(error);
   };
 
   WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, bip39Password, null, walletGenerated, error, generateUUIDProgress, decryptWalletProgress);
