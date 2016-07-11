@@ -1,8 +1,15 @@
+proxyquire = require('proxyquireify')(require)
+
+Crypto = {
+}
+
+stubs = {
+  'crypto': Crypto,
+}
+
+WalletCrypto = proxyquire('../src/wallet-crypto', stubs)
 
 describe 'WalletCrypto', ->
-
-  WalletCrypto = require('../src/wallet-crypto')
-  crypto = require('crypto')
   walletData = require('./data/wallet-data')
 
   describe "stretchPassword()", ->
@@ -22,6 +29,120 @@ describe 'WalletCrypto', ->
       decrypted_password = WalletCrypto.decryptPasswordWithProcessedPin(data, password, pbkdf2_iterations)
 
       expect(decrypted_password).toBe('testtest12')
+
+  describe "encrypt", ->
+    beforeEach ->
+      spyOn(WalletCrypto.Buffer, "concat").and.callFake((array) ->
+        res = array.join('|')
+        {
+          toString: (type) -> "#{ res }|#{ type }"
+        }
+      )
+      spyOn(Crypto, "randomBytes").and.callFake(() ->
+        "random-bytes"
+      )
+
+    data = JSON.stringify({hello: "world"})
+
+    beforeEach ->
+      spyOn(WalletCrypto.AES, "encrypt").and.callFake((dataBytes, key, salt, options) ->
+        "#{ dataBytes }|encrypted-with-#{ salt }+#{ key }"
+      )
+
+    describe "encryptDataWithKey()", ->
+      it "should take JSON string and return Base64 concatenated IV + payload", ->
+        res = WalletCrypto.encryptDataWithKey(data, "aes-256-key", "random")
+
+        expect(res).toEqual("random|#{ data }|encrypted-with-random+aes-256-key|base64")
+
+      it "should generate an IV if not provided", ->
+        res = WalletCrypto.encryptDataWithKey(data, "aes-256-key")
+
+        expect(res).toEqual("random-bytes|#{ data }|encrypted-with-random-bytes+aes-256-key|base64")
+
+    describe "encryptDataWithPassword()", ->
+      pending()
+
+  describe "decrypt", ->
+    data = JSON.stringify({hello: "world"})
+
+    beforeEach ->
+      spyOn(WalletCrypto.AES, "decrypt").and.callFake((payload, key, iv, options) ->
+        payloadComponents = payload.split("|")
+        cryptoComponents = payloadComponents[1].replace('encrypted-with-','').split("+")
+        if cryptoComponents[0] != key
+          throw new Error('Wrong AES key')
+        if cryptoComponents[1] != iv
+          throw new Error('Wrong AES initialization vector')
+        res = payloadComponents[0]
+        {
+          toString: () -> res
+        }
+      )
+
+    describe "decryptBufferWithKey()", ->
+      it "should decrypt when given an IV, payload and key", ->
+        res = WalletCrypto.decryptBufferWithKey(
+          "#{ data }|encrypted-with-aes-256-key+random",
+          'random',
+          'aes-256-key'
+        )
+        expect(res).toEqual(data)
+
+    describe "decryptDataWithKey()", ->
+      it "should decode Base64, extract IV and call decryptBufferWithKey()", ->
+        spyOn(WalletCrypto, "decryptBufferWithKey")
+
+        key = 'c9a429594db2ae5b3df33aa651825073114dc59df230fbf74aeccab2cd99bd59'
+
+        res = WalletCrypto.decryptDataWithKey(
+          'bvOk5Ppz9rPDLwlR1wObQoyPVybs4h+fg0eynTe4u/CePkZOPFvobnTpzGGX10CY',
+          Buffer(key, 'hex')
+        )
+
+        expect(WalletCrypto.decryptBufferWithKey).toHaveBeenCalled()
+        expect(WalletCrypto.decryptBufferWithKey.calls.argsFor(0)[0].toString('hex')).toEqual(
+          '8c8f5726ece21f9f8347b29d37b8bbf09e3e464e3c5be86e74e9cc6197d74098' # Payload
+        )
+        expect(WalletCrypto.decryptBufferWithKey.calls.argsFor(0)[1].toString('hex')).toEqual(
+          '6ef3a4e4fa73f6b3c32f0951d7039b42' # IV
+        )
+        expect(WalletCrypto.decryptBufferWithKey.calls.argsFor(0)[2].toString('hex')).toEqual(
+          key # key
+        )
+
+
+  describe "decryptDataWithPassword()", -> # decrypt()
+    it "should decode Base64, extract IV, stretch pwd and call decryptBufferWithKey()", ->
+      data = "zKHay4ml1+lRidNioY/Da7R5E6ERiwU7bDYsSS2UUH0="
+      spyOn(WalletCrypto, "stretchPassword").and.returnValue Buffer('b484f16b5980e877439f5c65aba87572176548280feda10b730e978911dcc825', 'hex')
+      spyOn(WalletCrypto, "decryptBufferWithKey").and.returnValue 'test'
+
+      res = WalletCrypto.decrypt(data, "1234", 10)
+
+      expect(WalletCrypto.stretchPassword).toHaveBeenCalledWith(
+        '1234',
+        jasmine.anything()
+        10,
+        256
+      )
+      expect(WalletCrypto.stretchPassword.calls.argsFor(0)[1].toString('hex')).toEqual(
+        'cca1dacb89a5d7e95189d362a18fc36b' # salt
+      )
+      expect(WalletCrypto.decryptBufferWithKey).toHaveBeenCalled()
+      expect(WalletCrypto.decryptBufferWithKey.calls.argsFor(0)[0].toString('hex')).toEqual(
+        'b47913a1118b053b6c362c492d94507d' # Encrypted payload
+      )
+
+      expect(WalletCrypto.decryptBufferWithKey.calls.argsFor(0)[1].toString('hex')).toEqual(
+        'cca1dacb89a5d7e95189d362a18fc36b'
+      ) # IV is same as salt used for password stretching
+
+      expect(WalletCrypto.decryptBufferWithKey.calls.argsFor(0)[2].toString('hex')).toEqual(
+       'b484f16b5980e877439f5c65aba87572176548280feda10b730e978911dcc825'
+      ) # The key returned by strechPassword()
+
+      expect(res).toEqual("test")
 
   describe "pairing code", ->
     it "should decrypt", ->
@@ -163,7 +284,7 @@ describe 'WalletCrypto', ->
     v3 = walletData.v3[0]
 
     it 'should encrypt a v3 wallet', ->
-      spyOn(crypto, 'randomBytes').and.callFake((bytes) ->
+      spyOn(Crypto, 'randomBytes').and.callFake((bytes) ->
         salt = new Buffer(v3.iv, 'hex')
         padding = new Buffer(v3.pad, 'hex')
         return if bytes == 16 then salt else padding
@@ -253,9 +374,9 @@ describe 'WalletCrypto', ->
         expect(output[output.length - 1]).toEqual(0x06)
 
       it 'should pad using random bytes', ->
-        spyOn(crypto, 'randomBytes').and.callThrough()
+        spyOn(Crypto, 'randomBytes').and.callThrough()
         pad.Iso10126.pad(input, BLOCK_SIZE_BYTES)
-        expect(crypto.randomBytes).toHaveBeenCalledWith(5)
+        expect(Crypto.randomBytes).toHaveBeenCalledWith(5)
 
       it 'should unpad based on the last byte', ->
         padded = new Buffer(BLOCK_SIZE_BYTES)

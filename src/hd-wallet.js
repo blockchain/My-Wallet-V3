@@ -9,7 +9,6 @@ var HDAccount = require('./hd-account');
 var BIP39 = require('bip39');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 
-// Address class
 function HDWallet (object) {
   function addAccount (o, index) {
     o.index = index;
@@ -134,11 +133,11 @@ function decryptPassphrase (bip39Password, cipher) {
   }
 }
 
-function getMasterHex (seedHex, bip39Password, cipher) {
+HDWallet.getMasterHex = function (seedHex, bip39Password, cipher) {
   var mnemonic = decryptMnemonic(seedHex, cipher);
   var passphrase = decryptPassphrase(bip39Password, cipher);
   return BIP39.mnemonicToSeed(mnemonic, passphrase);
-}
+};
 
 // Constructors
 
@@ -175,19 +174,27 @@ HDWallet.factory = function (o) {
   }
 };
 
-HDWallet.prototype.newAccount = function (label, cipher) {
-  var accIndex = this._accounts.length;
+HDWallet.prototype.getMasterHDNode = function (cipher) {
   var dec;
-  var enc;
 
   if (cipher) {
     dec = cipher('dec');
+  }
+
+  var masterhex = HDWallet.getMasterHex(this._seedHex, this._bip39Password, dec);
+  var network = Bitcoin.networks.bitcoin;
+  return Bitcoin.HDNode.fromSeedBuffer(masterhex, network);
+};
+
+HDWallet.prototype.newAccount = function (label, cipher) {
+  var accIndex = this._accounts.length;
+  var enc;
+
+  if (cipher) {
     enc = cipher('enc');
   }
 
-  var masterhex = getMasterHex(this._seedHex, this._bip39Password, dec);
-  var network = Bitcoin.networks.bitcoin;
-  var masterkey = Bitcoin.HDNode.fromSeedBuffer(masterhex, network);
+  var masterkey = this.getMasterHDNode(cipher);
   var account = HDAccount.fromWalletMasterKey(masterkey, accIndex, label);
   account.encrypt(enc).persist();
   this._accounts.push(account);

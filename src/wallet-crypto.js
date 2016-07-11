@@ -249,6 +249,22 @@ function decryptPasswordWithProcessedPin (data, password, pbkdf2Iterations) {
   return decryptDataWithPassword(data, password, pbkdf2Iterations);
 }
 
+// data: e.g. JSON.stringify({...})
+// key: AES key (256 bit Buffer)
+// iv: optional initialization vector
+// returns: concatenated and Base64 encoded iv + payload
+function encryptDataWithKey (data, key, iv) {
+  iv = iv || crypto.randomBytes(SALT_BYTES);
+
+  var dataBytes = new Buffer(data, 'utf8');
+  var options = { mode: AES.CBC, padding: Iso10126 };
+
+  var encryptedBytes = AES.encrypt(dataBytes, key, iv, options);
+  var payload = Buffer.concat([ iv, encryptedBytes ]);
+
+  return payload.toString('base64');
+}
+
 function encryptDataWithPassword (data, password, iterations) {
   assert(data, 'data missing');
   assert(password, 'password missing');
@@ -257,13 +273,33 @@ function encryptDataWithPassword (data, password, iterations) {
   var salt = crypto.randomBytes(SALT_BYTES);
   // Expose stretchPassword for iOS to override
   var key = module.exports.stretchPassword(password, salt, iterations, KEY_BIT_LEN);
-  var dataBytes = new Buffer(data, 'utf8');
-  var options = { mode: AES.CBC, padding: Iso10126 };
 
-  var encryptedBytes = AES.encrypt(dataBytes, key, salt, options);
-  var payload = Buffer.concat([ salt, encryptedBytes ]);
+  return encryptDataWithKey(data, key, salt);
+}
 
-  return payload.toString('base64');
+// payload: Base64 encoded concatenated payload + iv
+// key: AES key (256 bit Buffer)
+// returns: decrypted payload (e.g. a JSON string)
+function decryptDataWithKey (data, key) {
+  var dataHex = new Buffer(data, 'base64');
+
+  var iv = dataHex.slice(0, SALT_BYTES);
+  var payload = dataHex.slice(SALT_BYTES);
+
+  return this.decryptBufferWithKey(payload, iv, key);
+}
+
+// payload: (Buffer)
+// iv: initialization vector (Buffer)
+// key: AES key (256 bit Buffer)
+// options: (optional)
+// returns: decrypted payload (e.g. a JSON string)
+function decryptBufferWithKey (payload, iv, key, options) {
+  options = options || {};
+  options.padding = options.padding || Iso10126;
+
+  var decryptedBytes = AES.decrypt(payload, key, iv, options);
+  return decryptedBytes.toString('utf8');
 }
 
 function decryptDataWithPassword (data, password, iterations, options) {
@@ -271,17 +307,18 @@ function decryptDataWithPassword (data, password, iterations, options) {
   assert(password, 'password missing');
   assert(iterations, 'iterations missing');
 
-  options = options || {};
-  options.padding = options.padding || Iso10126;
-
   var dataHex = new Buffer(data, 'base64');
-  var salt = dataHex.slice(0, SALT_BYTES);
+
+  var iv = dataHex.slice(0, SALT_BYTES);
   var payload = dataHex.slice(SALT_BYTES);
+
+  //  AES initialization vector is also used as the salt in password stretching
+  var salt = iv;
   // Expose stretchPassword for iOS to override
   var key = module.exports.stretchPassword(password, salt, iterations, KEY_BIT_LEN);
 
-  var decryptedBytes = AES.decrypt(payload, key, salt, options);
-  return decryptedBytes.toString('utf8');
+  var res = module.exports.decryptBufferWithKey(payload, iv, key, options);
+  return res;
 }
 
 function stretchPassword (password, salt, iterations, keylen) {
@@ -530,6 +567,9 @@ module.exports = {
   decryptWallet: decryptWallet,
   decryptWalletSync: decryptWalletSync,
   cipherFunction: cipherFunction,
+  encryptDataWithKey: encryptDataWithKey,
+  decryptBufferWithKey: decryptBufferWithKey,
+  decryptDataWithKey: decryptDataWithKey,
   decryptSecretWithSecondPassword: decryptSecretWithSecondPassword,
   encryptSecretWithSecondPassword: encryptSecretWithSecondPassword,
   decryptPasswordWithProcessedPin: decryptPasswordWithProcessedPin,
@@ -547,5 +587,7 @@ module.exports = {
     ZeroPadding: ZeroPadding,
     Iso10126: Iso10126,
     Iso97971: Iso97971
-  }
+  },
+  // For test purposes:
+  Buffer: Buffer
 };
