@@ -171,7 +171,9 @@ Coinify.prototype.fetchProfile = function () {
 Coinify.prototype.getQuote = function (amount, baseCurrency) {
   // TODO: mnemonize (taking expiration into account)
 
-  assert(!baseCurrency || ['BTC', 'EUR', 'USD', 'DKK'].indexOf(baseCurrency) !== -1, 'Currency not supported');
+  if (!baseCurrency || ['BTC', 'EUR', 'GBP', 'USD', 'DKK'].indexOf(baseCurrency) !== -1) {
+    return Promise.reject('base_currency_not_supported');
+  }
 
   var parentThis = this;
 
