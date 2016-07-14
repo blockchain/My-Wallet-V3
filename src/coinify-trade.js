@@ -61,6 +61,12 @@ Object.defineProperties(CoinifyTrade.prototype, {
       return this._medium;
     }
   },
+  'state': {
+    configurable: false,
+    get: function () {
+      return this._state;
+    }
+  },
   'outAmountExpected': {
     configurable: false,
     get: function () {
