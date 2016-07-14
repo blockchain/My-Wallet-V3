@@ -17,7 +17,8 @@ function AccountInfo (object) {
     this._mobile = null;
   }
 
-  this._dialCode = object.dial_code;
+  this._countryCodeGuess = object.country_code; // Country guess by the backend
+  this._dialCode = object.dial_code; // Dialcode guess by the backend
 
   this._isEmailVerified = Boolean(object.email_verified);
   this._isMobileVerified = Boolean(object.sms_verified);
@@ -45,6 +46,10 @@ Object.defineProperties(AccountInfo.prototype, {
         ? null
         : '+' + this._mobile.countryCode + this._mobile.number.replace(/^0*/, '');
     }
+  },
+  'countryCodeGuess': {
+    configurable: false,
+    get: function () { return this._countryCodeGuess; }
   },
   'dialCode': {
     configurable: false,
