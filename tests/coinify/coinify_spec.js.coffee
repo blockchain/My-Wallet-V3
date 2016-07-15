@@ -21,11 +21,11 @@ API = {
 }
 
 stubs = {
-  './wallet': MyWallet,
-  './api' : API
+  '../wallet': MyWallet,
+  '../api' : API
 }
 
-Coinify    = proxyquire('../src/coinify', stubs)
+Coinify    = proxyquire('../../src/coinify/coinify', stubs)
 
 describe "Coinify", ->
 

@@ -1,11 +1,12 @@
 'use strict';
 
-var MyWallet = require('./wallet');
-var Helpers = require('./helpers');
-var CoinifyProfile = require('./coinify-profile');
-var CoinifyTrade = require('./coinify-trade');
-var HDAccount = require('./hd-account');
-var API = require('./api');
+var CoinifyProfile = require('./profile');
+var CoinifyTrade = require('./trade');
+
+var MyWallet = require('../wallet');
+var Helpers = require('../helpers');
+var HDAccount = require('../hd-account');
+var API = require('../api');
 
 var assert = require('assert');
 

@@ -1,7 +1,7 @@
 'use strict';
 
 var MyWallet = require('./wallet');
-var Coinify = require('./coinify');
+var Coinify = require('./coinify/coinify');
 
 var assert = require('assert');
 

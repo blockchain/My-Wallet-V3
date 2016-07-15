@@ -3,7 +3,7 @@ proxyquire = require('proxyquireify')(require)
 stubs = {
 }
 
-CoinifyProfile    = proxyquire('../src/coinify-profile', stubs)
+CoinifyProfile    = proxyquire('../../src/coinify/profile', stubs)
 
 describe "CoinifyProfile", ->
 
