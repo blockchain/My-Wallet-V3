@@ -2,6 +2,7 @@
 
 var CoinifyProfile = require('./profile');
 var CoinifyTrade = require('./trade');
+var PaymentMethod = require('./payment-method');
 
 var MyWallet = require('../wallet');
 var Helpers = require('../helpers');
@@ -275,6 +276,10 @@ Coinify.prototype.getTrades = function () {
   } else {
     return this.login().then(getTrades);
   }
+};
+
+Coinify.prototype.getPaymentMethods = function (currency) {
+  return PaymentMethod.fetchAll(this, currency);
 };
 
 Coinify.prototype.GET = function (endpoint, data) {
