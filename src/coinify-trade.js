@@ -80,3 +80,23 @@ Object.defineProperties(CoinifyTrade.prototype, {
     }
   }
 });
+
+CoinifyTrade.prototype.cancel = function () {
+  var parentThis = this;
+
+  var processCancel = function (trade) {
+    parentThis._state = trade.state;
+
+    return Promise.resolve();
+  };
+
+  var cancelOrder = function () {
+    return parentThis._coinify.PATCH('trades/' + parentThis._id + '/cancel').then(processCancel);
+  };
+
+  if (this._coinify._access_token) {
+    return cancelOrder();
+  } else {
+    return this._coinify.login().then(cancelOrder);
+  }
+};
