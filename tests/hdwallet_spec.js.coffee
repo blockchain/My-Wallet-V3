@@ -2,9 +2,11 @@ proxyquire = require('proxyquireify')(require)
 MyWallet = undefined
 HDWallet = undefined
 BIP39 = undefined
+Bitcoin = undefined
 
 describe "HDWallet", ->
   wallet = undefined
+  walletSecondPw = undefined
   object =
     'seed_hex': '7e061ca8e579e5e70e9989ca40d342fe'
     'passphrase': ''
@@ -20,6 +22,67 @@ describe "HDWallet", ->
         'receiveAccount': 'xpub6FD59hfbH1UWQA9B8NP1C8bh3jc6i2tpM6b8f4Wi9gHWQttZbBBtEsDDZAiPsw7e3427SzvQsFu2sdubjbZHDQdqYXN6x3hTDCrG5bZFEhB'
         'changeAccount': 'xpub6FD59hfbH1UWRrY38bVLPPLPLxcA1XBqsQgB95AgsSWngxbwqPBMd5Z3of8PNicLwE9peQ9g4SeWWtBTzUKLwfjSioAg73RRh7dJ5rWYxM7'
     } ]
+
+  nodeInstance = (node) ->
+    {
+      toBase58: () -> node
+      derive: (n) ->
+        node + "/#{ n }"
+    }
+
+  Bitcoin = {
+    HDNode: {
+      fromSeedBuffer: (masterHex, network) ->
+        if masterHex == 'bad'
+          throw new Error('bad')
+        new nodeInstance(masterHex.replace('-buffer',''))
+      fromBase58: (base58) ->
+        new nodeInstance(base58.replace('-base58', ''))
+    }
+  }
+
+  hdAccountFactory = (node, label) ->
+    state =
+      isEncrypted: false
+      isUnEncrypted: true
+    persist = () ->
+      this.isEncrypted = state.isEncrypted
+      this.isUnEncrypted = state.isUnEncrypted
+    {
+      encrypt: (cipher) ->
+        if cipher && cipher('test') == null
+          throw new Error('bad cipher')
+        state.isEncrypted = true
+        state.isUnEncrypted = false
+        this._temporal_xpriv = "something"
+        {
+          persist: persist
+        }
+      decrypt: (cipher) ->
+        if cipher && cipher('test') == null
+          throw new Error('bad cipher')
+        state.isEncrypted = false
+        state.isUnEncrypted = true
+        this._temporal_xpriv = "something"
+      persist: persist
+
+      isEncrypted: state.isEncrypted
+      isUnEncrypted: state.isUnEncrypted
+      label: label
+      archived: false
+      extendedPublicKey: node.xpub
+      extendedPrivateKey: node.xpriv
+      toJSON: () -> {}
+    }
+
+  HDAccount = {
+    factory: hdAccountFactory
+
+    fromWalletMasterKey: (masterkey, accIndex, label) ->
+      node = masterkey.deriveHardened(43).deriveHardened(0).deriveHardened(accIndex)
+      account = hdAccountFactory(node, label)
+      account
+  }
 
   beforeEach ->
     MyWallet =
@@ -41,8 +104,6 @@ describe "HDWallet", ->
       expect(wallet._accounts.length).toEqual(0)
 
     it "should transform an Object to an HDAccount", ->
-      HDAccount =
-        factory: () ->
       stubs = { './wallet': MyWallet, './hd-account': HDAccount}
       HDWallet = proxyquire('../src/hd-wallet', stubs)
       spyOn(HDAccount, "factory")
@@ -63,10 +124,14 @@ describe "HDWallet", ->
     beforeEach ->
       stubs = {
         './wallet': MyWallet,
-        'bip39' : BIP39
+        'bip39' : BIP39,
+        'bitcoinjs-lib' : Bitcoin,
+        './hd-account' : HDAccount
       }
       HDWallet    = proxyquire('../src/hd-wallet', stubs)
       wallet = new HDWallet(object)
+      walletSecondPw = HDWallet.new("mnemonic", "password")
+
 
     describe "Setter", ->
 
@@ -178,6 +243,20 @@ describe "HDWallet", ->
       it "defaultAccountIndex", ->
         expect(wallet.defaultAccountIndex).toEqual(0)
 
+      describe "getMasterHDNode", ->
+        it "should be 'm'", ->
+          spyOn(HDWallet,"getMasterHex").and.callFake(() ->
+            "m-buffer"
+          )
+          expect(wallet.getMasterHDNode().toBase58()).toEqual('m')
+
+        it "should throw when the seed hex is bad", ->
+          spyOn(HDWallet,"getMasterHex").and.callFake(() ->
+            "bad"
+          )
+          expect(() -> wallet.getMasterHDNode()).toThrow()
+
+
     describe "Method", ->
 
       it ".isValidAccountIndex should be (0 =< index < #accounts - 1)", ->
@@ -221,7 +300,7 @@ describe "HDWallet", ->
 
     describe ".encrypt", ->
 
-      it 'should fail and don\'t sync when encryption fails', ->
+      it 'should fail and not sync when encryption fails', ->
         wrongEnc = () -> wallet.encrypt(() -> null)
         expect(wrongEnc).toThrow()
         expect(MyWallet.syncWallet).not.toHaveBeenCalled()
@@ -325,6 +404,21 @@ describe "HDWallet", ->
         expect(fromFactory).toEqual(wallet)
 
     describe ".newAccount", ->
+      beforeEach ->
+        mockHDNode = {
+          toBase58: () -> 'm'
+          deriveHardened: (purpose) ->
+            deriveHardened: (coinType) ->
+              deriveHardened: (account) ->
+                acc = "m/#{ purpose }'/#{ coinType }'/#{ account }'"
+                {
+                  toBase58: () -> acc + '-base58'
+                  neutered: () ->
+                    toBase58: () -> acc + '-neutered-base58'
+                }
+        }
+        spyOn(wallet, 'getMasterHDNode').and.returnValue mockHDNode
+        spyOn(walletSecondPw, 'getMasterHDNode').and.returnValue mockHDNode
 
       observer =
         cipher: (mode) ->
@@ -335,13 +429,6 @@ describe "HDWallet", ->
           else
             expect(true).toEqual(false)
 
-      it "should not create a new account without a cipher when the seed hex is bad", ->
-        wallet._seedHex = "i'm a bad seed hex"
-        before = wallet.accounts.length
-        expect(() -> wallet.newAccount("Savings")).toThrow()
-
-        expect(wallet.accounts.length).toEqual(before)
-
       it "should create a new account without a cipher and with an empty passphrase", ->
         wallet = wallet.newAccount("Savings")
 
@@ -349,24 +436,21 @@ describe "HDWallet", ->
         expect(wallet.accounts[wallet.accounts.length - 1].label).toEqual('Savings')
 
       it "should create a new account without a cipher and with a password", ->
-        wallet = HDWallet.new("mnemonic", "password")
-        wallet = wallet.newAccount("Savings")
+        walletSecondPw = walletSecondPw.newAccount("Savings")
 
-        expect(wallet.accounts.length).toEqual(1)
-        expect(wallet.accounts[wallet.accounts.length - 1].label).toEqual('Savings')
+        expect(walletSecondPw.accounts.length).toEqual(1)
+        expect(walletSecondPw.accounts[wallet.accounts.length - 1].label).toEqual('Savings')
 
       it "should create a new account with a cipher and with an empty passphrase", ->
         wallet = wallet.newAccount("Savings", observer.cipher)
-
         expect(wallet.accounts.length).toEqual(2)
         expect(wallet.accounts[wallet.accounts.length - 1].label).toEqual('Savings')
 
       it "should create a new account with a cipher and with a password", ->
-        wallet = HDWallet.new("mnemonic", "password")
-        wallet = wallet.newAccount("Savings", observer.cipher)
+        walletSecondPw = walletSecondPw.newAccount("Savings", observer.cipher)
 
-        expect(wallet.accounts.length).toEqual(1)
-        expect(wallet.accounts[wallet.accounts.length - 1].label).toEqual('Savings')
+        expect(walletSecondPw.accounts.length).toEqual(1)
+        expect(walletSecondPw.accounts[wallet.accounts.length - 1].label).toEqual('Savings')
 
     describe "isUnEncrypted and isEncrypted", ->
       observer =
