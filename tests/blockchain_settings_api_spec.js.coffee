@@ -13,8 +13,14 @@ API =
   callFailWithResponseText: false
   callFailWithoutResponseText: false
   securePost: (endpoint, data) ->
-    then: (f) -> f()
-    catch: (e) ->
+    then: (success, error) ->
+      if API.callFailWithoutResponseText
+        error('call failed')
+      else if API.callFailWithResponseText
+        error({responseText: 'call failed'})
+      else
+        success('call succeeded')
+    catch: () ->
   securePostCallbacks: (endpoint, data, success, error) ->
     if API.callFailWithoutResponseText
       error('call failed')
@@ -260,6 +266,7 @@ describe "SettingsAPI", ->
           expect(observers.error).toHaveBeenCalled()
 
   describe "custom settings", ->
+
     customSettingsFields = [
       {
         func: "disableAllNotifications",
@@ -291,7 +298,7 @@ describe "SettingsAPI", ->
         it "should work with callbacks", ->
           SettingsAPI[setting.func](observers.success, observers.error)
 
-          expect(API.securePostCallbacks).toHaveBeenCalledWith("wallet", { length: setting.length, payload: setting.payload, method : setting.endpoint }, jasmine.anything(), jasmine.anything())
+          expect(API.securePost).toHaveBeenCalledWith("wallet", { length: setting.length, payload: setting.payload, method : setting.endpoint })
           expect(observers.success).toHaveBeenCalled()
           expect(observers.error).not.toHaveBeenCalled()
 
@@ -299,7 +306,7 @@ describe "SettingsAPI", ->
           API.callFailWithoutResponseText = true
           SettingsAPI[setting.func](observers.success, observers.error)
 
-          expect(API.securePostCallbacks).toHaveBeenCalledWith("wallet", { length: setting.length, payload: setting.payload, method : setting.endpoint }, jasmine.anything(), jasmine.anything())
+          expect(API.securePost).toHaveBeenCalledWith("wallet", { length: setting.length, payload: setting.payload, method : setting.endpoint })
           expect(WalletStore.sendEvent).toHaveBeenCalledWith("msg", {type: "error", message: setting.errorMessage})
           expect(observers.success).not.toHaveBeenCalled()
           expect(observers.error).toHaveBeenCalled()
@@ -309,10 +316,58 @@ describe "SettingsAPI", ->
 
           SettingsAPI[setting.func](observers.success, observers.error)
 
-          expect(API.securePostCallbacks).toHaveBeenCalledWith("wallet", { length: setting.length, payload: setting.payload, method : setting.endpoint }, jasmine.anything(), jasmine.anything())
+          expect(API.securePost).toHaveBeenCalledWith("wallet", { length: setting.length, payload: setting.payload, method : setting.endpoint })
           expect(WalletStore.sendEvent).toHaveBeenCalledWith("msg", {type: "error", message: 'call failed'})
           expect(observers.success).not.toHaveBeenCalled()
           expect(observers.error).toHaveBeenCalled()
+
+  describe "updateNotificationsType", ->
+    method = 'update-notifications-type'
+
+    vectors = [{
+      args: [{ email: false, sms: false }]
+      length: 1,
+      payload: 0
+    }, {
+      args: [{ email: true, sms: false }]
+      length: 1,
+      payload: 1
+    }, {
+      args: [{ email: false, sms: true }]
+      length: 2,
+      payload: 32
+    }, {
+      args: [{ email: true, sms: true }]
+      length: 2,
+      payload: 33
+    }]
+
+    vectors.forEach (v) ->
+      it "should send #{v.payload} when email is #{v.email} and sms is #{v.sms}", ->
+        SettingsAPI.updateNotificationsType.apply(null, v.args)
+        expect(API.securePost).toHaveBeenCalledWith('wallet', { method: method, length: v.length, payload: v.payload })
+
+  describe "updateNotificationsOn", ->
+    method = 'update-notifications-on'
+
+    vectors = [{
+      args: [{ send: true, receive: true }]
+      length: 1,
+      payload: 0
+    }, {
+      args: [{ send: true, receive: false }]
+      length: 1,
+      payload: 1
+    }, {
+      args: [{ send: false, receive: true }]
+      length: 1,
+      payload: 2
+    }]
+
+    vectors.forEach (v) ->
+      it "should send #{v.payload} when email is #{v.email} and sms is #{v.sms}", ->
+        SettingsAPI.updateNotificationsOn.apply(null, v.args)
+        expect(API.securePost).toHaveBeenCalledWith('wallet', { method: method, length: v.length, payload: v.payload })
 
   describe "alias", ->
 
@@ -510,7 +565,7 @@ describe "SettingsAPI", ->
 
       expect(observers.success).toHaveBeenCalled()
       expect(observers.error).not.toHaveBeenCalled()
-      expect(API.securePostCallbacks).toHaveBeenCalledTimes(2)
+      expect(API.securePost).toHaveBeenCalledTimes(2)
 
     it "should fail if any API call fails", ->
       API.callFailWithoutResponseText = true
