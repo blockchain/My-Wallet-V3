@@ -230,11 +230,7 @@ function getActivityLogs (success, error) {
 }
 
 function enableEmailNotifications (success, error) {
-  API.securePostCallbacks('wallet', {
-    method: 'update-notifications-type',
-    length: 1,
-    payload: 1
-  }, function (data) {
+  updateNotificationsType({ email: true }).then(function (data) {
     typeof (success) === 'function' && success(data);
   }, function (data) {
     var response = data.responseText || 'Error Enabling Email Notifications';
@@ -244,11 +240,7 @@ function enableEmailNotifications (success, error) {
 }
 
 function enableReceiveNotifications (success, error) {
-  API.securePostCallbacks('wallet', {
-    method: 'update-notifications-on',
-    length: 1,
-    payload: 2
-  }, function (data) {
+  updateNotificationsOn({ receive: true }).then(function (data) {
     typeof (success) === 'function' && success(data);
   }, function (data) {
     var response = data.responseText || 'Error Enabling Receive Notifications';
@@ -262,12 +254,7 @@ function enableEmailReceiveNotifications (success, error) {
   assert(error && typeof (error) === 'function', 'Error callback required');
 
   enableEmailNotifications(
-    function () {
-      enableReceiveNotifications(
-        success,
-        error
-      );
-    },
+    function () { enableReceiveNotifications(success, error); },
     error
   );
 }
@@ -276,16 +263,39 @@ function disableAllNotifications (success, error) {
   assert(success && typeof (success) === 'function', 'Success callback required');
   assert(error && typeof (error) === 'function', 'Error callback required');
 
-  API.securePostCallbacks('wallet', {
-    method: 'update-notifications-type',
-    length: 1,
-    payload: 0
-  }, function (data) {
-    success(data);
-  }, function (data) {
+  updateNotificationsType({}).then(success, function (data) {
     var response = data.responseText || 'Error Disabling Receive Notifications';
-    WalletStore.sendEvent('msg', {type: 'error', message: response});
+    WalletStore.sendEvent('msg', { type: 'error', message: response });
     error();
+  });
+}
+
+function updateNotificationsType (types) {
+  assert(typeof types === 'object', 'Must pass an object of notification types');
+
+  var payload = [
+    types.email ? 1 << 0 : 0,
+    types.http ? 1 << 2 : 0,
+    types.sms ? 1 << 5 : 0
+  ].reduce(function (acc, n) {
+    return acc | n;
+  });
+
+  return API.securePost('wallet', {
+    method: 'update-notifications-type',
+    length: String(payload).length,
+    payload: payload
+  });
+}
+
+function updateNotificationsOn (on) {
+  on = on || {};
+  assert(on.send || on.receive, 'Must have notifications for sending or receiving');
+
+  return API.securePost('wallet', {
+    method: 'update-notifications-on',
+    length: 1,
+    payload: on.send && on.receive ? 0 : (on.send ? 1 : 2)
   });
 }
 
@@ -322,6 +332,8 @@ module.exports = {
   verifyEmail: verifyEmail,
   verifyMobile: verifyMobile,
   getActivityLogs: getActivityLogs,
+  updateNotificationsType: updateNotificationsType,
+  updateNotificationsOn: updateNotificationsOn,
   enableEmailReceiveNotifications: enableEmailReceiveNotifications,
   disableAllNotifications: disableAllNotifications,
   removeAlias: removeAlias,

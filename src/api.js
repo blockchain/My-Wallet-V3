@@ -122,7 +122,6 @@ API.prototype.handleNTPResponse = function (obj, clientTime) {
 API.prototype.getBalances = function (addresses) {
   var data = {
     active: addresses.join('|'),
-    simple: true,
     format: 'json',
     api_code: this.API_CODE
   };
@@ -279,38 +278,3 @@ API.prototype.getFees = function () {
             .then(checkStatus)
             .catch(handleNetworkError);
 };
-
-// OLD FUNCTIONS COPIED: Must rewrite this ones (email ,sms)
-// function sendViaEmail(email, tx, privateKey, successCallback, errorCallback) {
-//   try {
-//     MyWallet.securePost('send-via', {
-//       type : 'email',
-//       to : email,
-//       priv : privateKey,
-//       hash : tx.getHash().toString('hex')
-//     }, function (data) {
-//       successCallback(data);
-//     }, function (data) {
-//       errorCallback(data ? data.responseText : null);
-//     });
-//   } catch (e) {
-//     errorCallback(e);
-//   }
-// };
-//
-// function sendViaSMS(number, tx, privateKey, successCallback, errorCallback) {
-//   try {
-//     MyWallet.securePost('send-via', {
-//       type : 'sms',
-//       to : number,
-//       priv : privateKey,
-//       hash : tx.getHash().toString('hex')
-//     }, function () {
-//       successCallback();
-//     }, function (data) {
-//       errorCallback(data ? data.responseText : null);
-//     });
-//   } catch (e) {
-//     errorCallback(e);
-//   }
-// };

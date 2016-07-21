@@ -428,19 +428,17 @@ function syncWallet (successcallback, errorcallback) {
 
         if (WalletStore.isSyncPubKeys()) {
           // Include HD addresses unless in lame mode:
-          var hdAddresses = (
-            MyWallet.wallet.hdwallet !== undefined &&
-            MyWallet.wallet.hdwallet.accounts !== undefined
-          ) ? [].concat.apply([],
-            MyWallet.wallet.hdwallet.accounts.map(function (account) {
-              return account.labeledReceivingAddresses;
-            })) : [];
-          data.active = [].concat.apply([], // eslint-disable-line no-useless-call
-            [
-              MyWallet.wallet.activeAddresses,
-              hdAddresses
-            ]
-          ).join('|');
+          var hdAddresses = [];
+          if (MyWallet.wallet.hdwallet !== undefined && MyWallet.wallet.hdwallet.accounts !== undefined) {
+            var subscribeAccount = function (acc) {
+              var ri = acc.receiveIndex;
+              var labeled = acc.labeledReceivingAddresses ? acc.labeledReceivingAddresses : [];
+              var getAddress = function (i) { return acc.receiveAddressAtIndex(i + ri); };
+              return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map(getAddress).concat(labeled);
+            };
+            hdAddresses = MyWallet.wallet.hdwallet.accounts.map(subscribeAccount).reduce(function (a, b) { return a.concat(b); }, []);
+          }
+          data.active = hdAddresses.concat(MyWallet.wallet.activeAddresses).join('|');
         }
 
         API.securePostCallbacks(
@@ -542,7 +540,8 @@ MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic
     };
 
     WalletStore.unsafeSetPassword(inputedPassword);
-    wallet.scanBip44(undefined, startedRestoreHDWallet, accountProgress).then(saveWallet).catch(error);
+    startedRestoreHDWallet && startedRestoreHDWallet();
+    wallet.scanBip44(undefined, accountProgress).then(saveWallet).catch(error);
   };
 
   WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, bip39Password, null, walletGenerated, error, generateUUIDProgress, decryptWalletProgress);

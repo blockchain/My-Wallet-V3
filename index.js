@@ -37,11 +37,6 @@ module.exports = {
   RNG: require('./src/rng'),
   Transaction: require('./src/transaction'),
   Address: require('./src/address'),
-  // Profile: require('./src/profile'),
-  // External: require('./src/external'),
-  // HDAccount: require('./hd-account'),
-  // KeyChain: require('./keychain'),
-  // KeyRing: require('./keyring'),
+  Metadata: require('./src/metadata'),
   Bitcoin: require('bitcoinjs-lib')
-  // BIP39: require('bip39')
 };

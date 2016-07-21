@@ -613,27 +613,22 @@ Wallet.reviver = function (k, v) {
 
 function isAccountNonUsed (account, progress) {
   var isNonUsed = function (obj) {
-    if (progress) { progress(obj); }
-    return obj.addresses[0].account_index === 0 && obj.addresses[0].change_index === 0;
+    var result = obj[account.extendedPublicKey];
+    progress && progress(result);
+    return result.total_received === 0;
   };
   return API.getBalances([account.extendedPublicKey]).then(isNonUsed);
 }
 
-Wallet.prototype.scanBip44 = function (secondPassword, startedRestoreHDWallet, progress) {
-  // wallet restoration
-  startedRestoreHDWallet && startedRestoreHDWallet();
+Wallet.prototype.scanBip44 = function (secondPassword, progress) {
   var self = this;
-  API.getBalances([self.hdwallet._accounts[0].extendedPublicKey]).then(progress);
   var accountIndex = 1;
   var AccountsGap = 10;
+  isAccountNonUsed(self.hdwallet._accounts[0], progress);
 
   var untilNEmptyAccounts = function (n) {
     var go = function (nonused) {
-      if (nonused) {
-        return untilNEmptyAccounts(n - 1);
-      } else {
-        return untilNEmptyAccounts(AccountsGap);
-      }
+      return untilNEmptyAccounts(nonused ? n - 1 : AccountsGap);
     };
     if (n === 0) {
       self.hdwallet._accounts.splice(-AccountsGap);
@@ -645,7 +640,6 @@ Wallet.prototype.scanBip44 = function (secondPassword, startedRestoreHDWallet, p
     }
   };
 
-  // it returns a promise of the new HDWallet
   return untilNEmptyAccounts(AccountsGap);
 };
 
