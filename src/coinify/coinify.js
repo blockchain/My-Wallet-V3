@@ -212,6 +212,7 @@ Coinify.prototype.getQuote = function (amount, baseCurrency) {
 };
 
 Coinify.prototype.buy = function (amount, account) {
+  assert(amount > 0, 'Amount must be positive');
   assert(account === undefined || Helpers.isInstanceOf(account, HDAccount), 'HDAccount');
   var parentThis = this;
 
@@ -248,7 +249,7 @@ Coinify.prototype.buy = function (amount, account) {
   var tenSecondsFromNow = new Date(new Date() + 10000);
   if (
     this._lastQuote === null ||
-    this._lastQuote.baseAmount !== amount ||
+    this._lastQuote.baseAmount !== -amount ||
     this._lastQuote.expiresAt < tenSecondsFromNow
   ) {
     return this.getQuote(amount).then(buy);
