@@ -78,6 +78,12 @@ Object.defineProperties(CoinifyTrade.prototype, {
     get: function () {
       return this._receiptUrl;
     }
+  },
+  'receiveAddress': {
+    configurable: false,
+    get: function () {
+      return this._receiveAddress;
+    }
   }
 });
 

@@ -211,8 +211,9 @@ Coinify.prototype.getQuote = function (amount, baseCurrency) {
   }
 };
 
-Coinify.prototype.buy = function (amount, account) {
+Coinify.prototype.buy = function (amount, baseCurrency, account) {
   assert(amount > 0, 'Amount must be positive');
+  assert(baseCurrency, 'Base currency required');
   assert(account === undefined || Helpers.isInstanceOf(account, HDAccount), 'HDAccount');
   var parentThis = this;
 
@@ -228,34 +229,23 @@ Coinify.prototype.buy = function (amount, account) {
     return Promise.resolve(trade);
   };
 
-  var buy = function () {
-    return parentThis.POST('trades', {
-      priceQuoteId: parentThis._lastQuote.id,
-      baseCurrency: parentThis._lastQuote.baseCurrency,
-      quoteCurrency: parentThis._lastQuote.quoteCurrency,
-      baseAmount: -amount,
-      transferIn: {
-        medium: 'card'
-      },
-      transferOut: {
-        medium: 'blockchain',
-        details: {
-          account: account.receiveAddressAtIndex(receiveAddressIndex)
-        }
-      }
-    }).then(processTrade);
-  };
+  assert(this._lastQuote !== null, 'You must first obtain a quote');
+  assert(this._lastQuote.baseAmount === -amount, 'Amount must match last quote');
+  assert(this._lastQuote.baseCurrency === baseCurrency, 'Currency must match last quote');
+  assert(this._lastQuote.expiresAt > new Date(), 'Quote expired');
 
-  var tenSecondsFromNow = new Date(new Date() + 10000);
-  if (
-    this._lastQuote === null ||
-    this._lastQuote.baseAmount !== -amount ||
-    this._lastQuote.expiresAt < tenSecondsFromNow
-  ) {
-    return this.getQuote(amount).then(buy);
-  } else {
-    return buy();
-  }
+  return parentThis.POST('trades', {
+    priceQuoteId: parentThis._lastQuote.id,
+    transferIn: {
+      medium: 'card'
+    },
+    transferOut: {
+      medium: 'blockchain',
+      details: {
+        account: account.receiveAddressAtIndex(receiveAddressIndex)
+      }
+    }
+  }).then(processTrade);
 };
 
 Coinify.prototype.getTrades = function () {
