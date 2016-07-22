@@ -98,8 +98,6 @@ CoinifyTrade.prototype.removeLabeledAddress = function () {
 
   var index = account.indexOfreceiveAddress(this.receiveAddress);
 
-  console.log(index);
-
   if (index) {
     account.removeLabelForReceivingAddress(index);
   }
@@ -204,6 +202,20 @@ CoinifyTrade.fetchAll = function (coinify) {
       for (var i = 0; i < res.length; i++) {
         var trade = new CoinifyTrade(res[i], coinify);
         coinify._trades.push(trade);
+
+        // Remove labeled address if trade is cancelled, rejected or expired
+        // This is not 100% accurate, because that would require either
+        // generating all labeled addresses (slow) or storing the receive index
+        // of each pending trade on the metadata server (we may do this later).
+        var account = MyWallet.wallet.hdwallet.accounts[0];
+        var labels = account.receivingAddressesLabels;
+        if (['rejected', 'cancelled', 'expired'].indexOf(trade.state) > -1) {
+          for (var j = 0; j < labels.length; j++) {
+            if (labels[j].label === 'Coinify order #' + trade.id) {
+              account.removeLabelForReceivingAddress(labels[j].index);
+            }
+          }
+        }
       }
       return Promise.resolve(coinify._trades);
     });
