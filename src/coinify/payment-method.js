@@ -80,7 +80,7 @@ PaymentMethod.fetchAll = function (coinify, currency) {
     });
   };
 
-  if (coinify._access_token) {
+  if (coinify.isLoggedIn) {
     return getPaymentMethods();
   } else {
     return coinify.login().then(getPaymentMethods);

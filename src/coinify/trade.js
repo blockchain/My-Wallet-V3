@@ -2,6 +2,8 @@
 
 var WalletStore = require('../wallet-store');
 var API = require('../api');
+var assert = require('assert');
+var MyWallet = require('../wallet');
 
 module.exports = CoinifyTrade;
 
@@ -90,20 +92,35 @@ Object.defineProperties(CoinifyTrade.prototype, {
   }
 });
 
+CoinifyTrade.prototype.removeLabeledAddress = function () {
+  console.log('removeLabeledAddress()');
+  var account = MyWallet.wallet.hdwallet.accounts[0];
+
+  var index = account.indexOfreceiveAddress(this.receiveAddress);
+
+  console.log(index);
+
+  if (index) {
+    account.removeLabelForReceivingAddress(index);
+  }
+};
+
 CoinifyTrade.prototype.cancel = function () {
-  var parentThis = this;
+  var self = this;
 
   var processCancel = function (trade) {
-    parentThis._state = trade.state;
+    self._state = trade.state;
+
+    self.removeLabeledAddress.bind(self)();
 
     return Promise.resolve();
   };
 
   var cancelOrder = function () {
-    return parentThis._coinify.PATCH('trades/' + parentThis._id + '/cancel').then(processCancel);
+    return self._coinify.PATCH('trades/' + self._id + '/cancel').then(processCancel);
   };
 
-  if (this._coinify._access_token) {
+  if (this._coinify.isLoggedIn) {
     return cancelOrder();
   } else {
     return this._coinify.login().then(cancelOrder);
@@ -141,4 +158,39 @@ CoinifyTrade.prototype.bitcoinReceived = function () {
     });
   });
   return promise;
+};
+
+CoinifyTrade.buy = function (quote, coinify) {
+  assert(quote, 'Quote required');
+
+  /* If we want to support buying to another account, we need to store
+     the account index and receive address index for each trade in the
+     metadata service. */
+  var account = MyWallet.wallet.hdwallet.accounts[0];
+
+  var receiveAddressIndex = account.receiveIndex;
+
+  // Respect the GAP limit:
+  if (receiveAddressIndex - account.lastUsedReceiveIndex >= 19) {
+    return Promise.reject('gap_limit');
+  }
+
+  var processTrade = function (res) {
+    var trade = new CoinifyTrade(res, coinify);
+    account.setLabelForReceivingAddress(receiveAddressIndex, 'Coinify order #' + trade.id);
+    return Promise.resolve(trade);
+  };
+
+  return coinify.POST('trades', {
+    priceQuoteId: quote.id,
+    transferIn: {
+      medium: 'card'
+    },
+    transferOut: {
+      medium: 'blockchain',
+      details: {
+        account: account.receiveAddressAtIndex(receiveAddressIndex)
+      }
+    }
+  }).then(processTrade);
 };

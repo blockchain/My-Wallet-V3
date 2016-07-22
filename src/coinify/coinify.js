@@ -6,7 +6,6 @@ var PaymentMethod = require('./payment-method');
 
 var MyWallet = require('../wallet');
 var Helpers = require('../helpers');
-var HDAccount = require('../hd-account');
 var API = require('../api');
 
 var assert = require('assert');
@@ -23,6 +22,8 @@ function Coinify (object) {
 
   this._profile = new CoinifyProfile(this);
   this._lastQuote = null;
+
+  this._loginExpiresAt = null;
 
   this._trades = [];
 }
@@ -47,7 +48,7 @@ Object.defineProperties(Coinify.prototype, {
   'profile': {
     configurable: false,
     get: function () {
-      if (!this._access_token || !this._profile._did_fetch) {
+      if (!this._profile._did_fetch) {
         return null;
       } else {
         return this._profile;
@@ -58,6 +59,13 @@ Object.defineProperties(Coinify.prototype, {
     configurable: false,
     get: function () {
       return this._trades;
+    }
+  },
+  'isLoggedIn': {
+    configurable: false,
+    get: function () {
+      var tenSecondsAgo = new Date(new Date().getTime() - 10000);
+      return Boolean(this._access_token) && this._loginExpiresAt > tenSecondsAgo;
     }
   }
 });
@@ -150,6 +158,7 @@ Coinify.prototype.login = function () {
 
     var loginSuccess = function (res) {
       parentThis._access_token = res.access_token;
+      parentThis._loginExpiresAt = new Date(new Date().getTime() + res.expires_in * 1000);
       resolve();
     };
 
@@ -169,7 +178,7 @@ Coinify.prototype.login = function () {
 Coinify.prototype.fetchProfile = function () {
   var parentThis = this;
 
-  if (this._access_token) {
+  if (this.isLoggedIn) {
     return this._profile.fetch();
   } else {
     return this.login().then(function () {
@@ -219,42 +228,17 @@ Coinify.prototype.getQuote = function (amount, baseCurrency) {
   }
 };
 
-Coinify.prototype.buy = function (amount, baseCurrency, account) {
-  assert(amount > 0, 'Amount must be positive');
-  assert(baseCurrency, 'Base currency required');
-  assert(account === undefined || Helpers.isInstanceOf(account, HDAccount), 'HDAccount');
-  var parentThis = this;
-
-  if (account === undefined) {
-    account = MyWallet.wallet.hdwallet.accounts[0];
-  }
-
-  var receiveAddressIndex = account.receiveIndex;
-
-  var processTrade = function (res) {
-    var trade = new CoinifyTrade(res, parentThis);
-    account.setLabelForReceivingAddress(receiveAddressIndex, 'Coinify order #' + trade.id);
-    parentThis.trades.push(trade);
-    return Promise.resolve(trade);
-  };
-
+Coinify.prototype.buy = function (amount, baseCurrency) {
   assert(this._lastQuote !== null, 'You must first obtain a quote');
   assert(this._lastQuote.baseAmount === -amount, 'Amount must match last quote');
   assert(this._lastQuote.baseCurrency === baseCurrency, 'Currency must match last quote');
   assert(this._lastQuote.expiresAt > new Date(), 'Quote expired');
 
-  return parentThis.POST('trades', {
-    priceQuoteId: parentThis._lastQuote.id,
-    transferIn: {
-      medium: 'card'
-    },
-    transferOut: {
-      medium: 'blockchain',
-      details: {
-        account: account.receiveAddressAtIndex(receiveAddressIndex)
-      }
-    }
-  }).then(processTrade);
+  var self = this;
+
+  return CoinifyTrade.buy(this._lastQuote, self).then(function (trade) {
+    self.trades.push(trade);
+  });
 };
 
 Coinify.prototype.getTrades = function () {
@@ -271,7 +255,7 @@ Coinify.prototype.getTrades = function () {
     });
   };
 
-  if (this._access_token) {
+  if (this.isLoggedIn) {
     return getTrades();
   } else {
     return this.login().then(getTrades);
@@ -302,7 +286,7 @@ Coinify.prototype.request = function (method, endpoint, data) {
     credentials: 'omit'
   };
 
-  if (this._access_token) {
+  if (this.isLoggedIn) {
     options.headers['Authorization'] = 'Bearer ' + this._access_token;
   }
 
