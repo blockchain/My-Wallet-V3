@@ -1,6 +1,7 @@
 'use strict';
 
 var WalletStore = require('../wallet-store');
+var API = require('../api');
 
 module.exports = CoinifyTrade;
 
@@ -109,18 +110,33 @@ CoinifyTrade.prototype.cancel = function () {
   }
 };
 
+// Checks the balance for the receive address and monitors the websocket if needed:
+// Call this method long before the user completes the purchase:
+// trade.bitcoinReceived.then(() => ...);
 CoinifyTrade.prototype.bitcoinReceived = function () {
   var self = this;
   var promise = new Promise(function (resolve, reject) {
-    WalletStore.addEventListener((event, data) => {
-      if (event === 'on_tx_received') {
-        if (data['out']) {
-          for (var i = 0; i < data['out'].length; i++) {
-            if (data['out'][i].addr === self.receiveAddress) {
-              resolve(data['out'][i].value);
+    // Check if we already got it:
+    API.getBalances([self.receiveAddress]).then(function (res) {
+      var totalReceived = 0;
+      if (res[self.receiveAddress]) {
+        totalReceived = res[self.receiveAddress].total_received;
+      }
+      if (totalReceived > 0) {
+        resolve(totalReceived);
+      } else {
+        // Monitor websocket for receive notification:
+        WalletStore.addEventListener((event, data) => {
+          if (event === 'on_tx_received') {
+            if (data['out']) {
+              for (var i = 0; i < data['out'].length; i++) {
+                if (data['out'][i].addr === self.receiveAddress) {
+                  resolve(data['out'][i].value);
+                }
+              }
             }
           }
-        }
+        });
       }
     });
   });
