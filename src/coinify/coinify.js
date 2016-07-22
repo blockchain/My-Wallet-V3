@@ -236,30 +236,11 @@ Coinify.prototype.buy = function (amount, baseCurrency) {
 
   var self = this;
 
-  return CoinifyTrade.buy(this._lastQuote, self).then(function (trade) {
-    self.trades.push(trade);
-  });
+  return CoinifyTrade.buy(this._lastQuote, self);
 };
 
 Coinify.prototype.getTrades = function () {
-  var self = this;
-
-  var getTrades = function () {
-    return self.GET('trades').then(function (res) {
-      self._trades.length = 0; // empty array without losing reference
-      for (var i = 0; i < res.length; i++) {
-        var trade = new CoinifyTrade(res[i], self);
-        self._trades.push(trade);
-      }
-      return Promise.resolve(self._trades);
-    });
-  };
-
-  if (this.isLoggedIn) {
-    return getTrades();
-  } else {
-    return this.login().then(getTrades);
-  }
+  return CoinifyTrade.fetchAll(this);
 };
 
 Coinify.prototype.getPaymentMethods = function (currency) {

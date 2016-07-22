@@ -178,7 +178,8 @@ CoinifyTrade.buy = function (quote, coinify) {
   var processTrade = function (res) {
     var trade = new CoinifyTrade(res, coinify);
     account.setLabelForReceivingAddress(receiveAddressIndex, 'Coinify order #' + trade.id);
-    return Promise.resolve(trade);
+    coinify._trades.push(trade);
+    return trade;
   };
 
   return coinify.POST('trades', {
@@ -193,4 +194,24 @@ CoinifyTrade.buy = function (quote, coinify) {
       }
     }
   }).then(processTrade);
+};
+
+// Fetches the latest trades and updates coinify._trades
+CoinifyTrade.fetchAll = function (coinify) {
+  var getTrades = function () {
+    return coinify.GET('trades').then(function (res) {
+      coinify._trades.length = 0; // empty array without losing reference
+      for (var i = 0; i < res.length; i++) {
+        var trade = new CoinifyTrade(res[i], coinify);
+        coinify._trades.push(trade);
+      }
+      return Promise.resolve(coinify._trades);
+    });
+  };
+
+  if (coinify.isLoggedIn) {
+    return getTrades();
+  } else {
+    return coinify.login().then(getTrades);
+  }
 };
