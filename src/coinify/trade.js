@@ -1,5 +1,7 @@
 'use strict';
 
+var WalletStore = require('../wallet-store');
+
 module.exports = CoinifyTrade;
 
 function CoinifyTrade (obj, coinify) {
@@ -105,4 +107,22 @@ CoinifyTrade.prototype.cancel = function () {
   } else {
     return this._coinify.login().then(cancelOrder);
   }
+};
+
+CoinifyTrade.prototype.bitcoinReceived = function () {
+  var self = this;
+  var promise = new Promise(function (resolve, reject) {
+    WalletStore.addEventListener((event, data) => {
+      if (event === 'on_tx_received') {
+        if (data['out']) {
+          for (var i = 0; i < data['out'].length; i++) {
+            if (data['out'][i].addr === self.receiveAddress) {
+              resolve(data['out'][i].value);
+            }
+          }
+        }
+      }
+    });
+  });
+  return promise;
 };
