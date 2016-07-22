@@ -23,6 +23,8 @@ function Coinify (object) {
 
   this._profile = new CoinifyProfile(this);
   this._lastQuote = null;
+
+  this._trades = [];
 }
 
 Object.defineProperties(Coinify.prototype, {
@@ -50,6 +52,12 @@ Object.defineProperties(Coinify.prototype, {
       } else {
         return this._profile;
       }
+    }
+  },
+  'trades': {
+    configurable: false,
+    get: function () {
+      return this._trades;
     }
   }
 });
@@ -249,16 +257,16 @@ Coinify.prototype.buy = function (amount, baseCurrency, account) {
 };
 
 Coinify.prototype.getTrades = function () {
-  var parentThis = this;
+  var self = this;
 
   var getTrades = function () {
-    return parentThis.GET('trades').then(function (res) {
-      var output = [];
+    return self.GET('trades').then(function (res) {
+      self._trades.length = 0; // empty array without losing reference
       for (var i = 0; i < res.length; i++) {
-        var trade = new CoinifyTrade(res[i], parentThis);
-        output.push(trade);
+        var trade = new CoinifyTrade(res[i], self);
+        self._trades.push(trade);
       }
-      return Promise.resolve(output);
+      return Promise.resolve(self._trades);
     });
   };
 
