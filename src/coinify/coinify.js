@@ -234,6 +234,7 @@ Coinify.prototype.buy = function (amount, baseCurrency, account) {
   var processTrade = function (res) {
     var trade = new CoinifyTrade(res, parentThis);
     account.setLabelForReceivingAddress(receiveAddressIndex, 'Coinify order #' + trade.id);
+    parentThis.trades.push(trade);
     return Promise.resolve(trade);
   };
 
