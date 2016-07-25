@@ -104,6 +104,7 @@ CoinifyProfile.prototype.fetch = function () {
 
     parentThis._default_currency = res.defaultCurrency;
 
+    // TODO: use new Address(res.profile.address);
     parentThis._street = res.profile.address.street;
     parentThis._city = res.profile.address.city;
     parentThis._state = res.profile.address.state;

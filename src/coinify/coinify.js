@@ -228,15 +228,16 @@ Coinify.prototype.getQuote = function (amount, baseCurrency) {
   }
 };
 
-Coinify.prototype.buy = function (amount, baseCurrency) {
+Coinify.prototype.buy = function (amount, baseCurrency, medium) {
   assert(this._lastQuote !== null, 'You must first obtain a quote');
   assert(this._lastQuote.baseAmount === -amount, 'Amount must match last quote');
   assert(this._lastQuote.baseCurrency === baseCurrency, 'Currency must match last quote');
   assert(this._lastQuote.expiresAt > new Date(), 'Quote expired');
+  assert(medium === 'bank' || medium === 'card', 'Specify bank or card');
 
   var self = this;
 
-  return CoinifyTrade.buy(this._lastQuote, self);
+  return CoinifyTrade.buy(this._lastQuote, medium, self);
 };
 
 Coinify.prototype.getTrades = function () {

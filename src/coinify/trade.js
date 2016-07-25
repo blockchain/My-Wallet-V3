@@ -4,6 +4,7 @@ var WalletStore = require('../wallet-store');
 var API = require('../api');
 var assert = require('assert');
 var MyWallet = require('../wallet');
+var BankAccount = require('./bank-account');
 
 module.exports = CoinifyTrade;
 
@@ -15,6 +16,9 @@ function CoinifyTrade (obj, coinify) {
   this._outCurrency = obj.outCurrency;
   this._inAmount = obj.inAmount;
   this._medium = obj.transferIn.medium;
+  if (this._medium === 'bank') {
+    this._bankAccount = new BankAccount(obj.transferIn.details);
+  }
   this._outAmountExpected = obj.outAmountExpected;
   this._receiveAddress = obj.transferOut.details.account;
   this._state = obj.state;
@@ -34,6 +38,12 @@ Object.defineProperties(CoinifyTrade.prototype, {
     configurable: false,
     get: function () {
       return this._iSignThisID;
+    }
+  },
+  'bankAccount': {
+    configurable: false,
+    get: function () {
+      return this._bankAccount;
     }
   },
   'createdAt': {
@@ -93,7 +103,6 @@ Object.defineProperties(CoinifyTrade.prototype, {
 });
 
 CoinifyTrade.prototype.removeLabeledAddress = function () {
-  console.log('removeLabeledAddress()');
   var account = MyWallet.wallet.hdwallet.accounts[0];
 
   var index = account.indexOfreceiveAddress(this.receiveAddress);
@@ -158,7 +167,7 @@ CoinifyTrade.prototype.bitcoinReceived = function () {
   return promise;
 };
 
-CoinifyTrade.buy = function (quote, coinify) {
+CoinifyTrade.buy = function (quote, medium, coinify) {
   assert(quote, 'Quote required');
 
   /* If we want to support buying to another account, we need to store
@@ -183,7 +192,7 @@ CoinifyTrade.buy = function (quote, coinify) {
   return coinify.POST('trades', {
     priceQuoteId: quote.id,
     transferIn: {
-      medium: 'card'
+      medium: medium
     },
     transferOut: {
       medium: 'blockchain',
