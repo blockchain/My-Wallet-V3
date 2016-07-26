@@ -25,6 +25,7 @@ function CoinifyTrade (obj, coinify) {
   this._createdAt = new Date(obj.createTime);
   this._iSignThisID = obj.transferIn.details.paymentId;
   this._receiptUrl = obj.receiptUrl;
+  this._bitcoinReceived = null;
 }
 
 Object.defineProperties(CoinifyTrade.prototype, {
@@ -99,6 +100,12 @@ Object.defineProperties(CoinifyTrade.prototype, {
     get: function () {
       return this._receiveAddress;
     }
+  },
+  'bitcoinReceived': {
+    configurable: false,
+    get: function () {
+      return this._bitcoinReceived;
+    }
   }
 });
 
@@ -136,8 +143,8 @@ CoinifyTrade.prototype.cancel = function () {
 
 // Checks the balance for the receive address and monitors the websocket if needed:
 // Call this method long before the user completes the purchase:
-// trade.bitcoinReceived.then(() => ...);
-CoinifyTrade.prototype.bitcoinReceived = function () {
+// trade.watchAddress.then(() => ...);
+CoinifyTrade.prototype.watchAddress = function () {
   var self = this;
   var promise = new Promise(function (resolve, reject) {
     // Check if we already got it:
@@ -226,7 +233,8 @@ CoinifyTrade.fetchAll = function (coinify) {
           }
         }
       }
-      return Promise.resolve(coinify._trades);
+
+      return CoinifyTrade.checkCompletedTrades(coinify);
     });
   };
 
@@ -235,4 +243,22 @@ CoinifyTrade.fetchAll = function (coinify) {
   } else {
     return coinify.login().then(getTrades);
   }
+};
+
+CoinifyTrade.checkCompletedTrades = function (coinify) {
+  var isCompleted = function (trade) {
+    return trade.state === 'completed' || trade.state === 'completed_test';
+  };
+  var getReceiveAddress = function (obj) { return obj.receiveAddress; };
+  var completedTrades = coinify._trades.filter(isCompleted);
+  var receiveAddresses = completedTrades.map(getReceiveAddress);
+  return API.getBalances(receiveAddresses).then(function (res) {
+    for (var i = 0; i < completedTrades.length; i++) {
+      var trade = completedTrades[i];
+      if (res[trade.receiveAddress]) {
+        trade._bitcoinReceived = res[trade.receiveAddress].total_received > 0;
+      }
+    }
+    return Promise.resolve(coinify._trades);
+  });
 };
