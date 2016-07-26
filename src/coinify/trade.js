@@ -252,6 +252,9 @@ CoinifyTrade.checkCompletedTrades = function (coinify) {
   var getReceiveAddress = function (obj) { return obj.receiveAddress; };
   var completedTrades = coinify._trades.filter(isCompleted);
   var receiveAddresses = completedTrades.map(getReceiveAddress);
+  if (receiveAddresses.length === 0) {
+    return Promise.resolve(coinify._trades);
+  }
   return API.getBalances(receiveAddresses).then(function (res) {
     for (var i = 0; i < completedTrades.length; i++) {
       var trade = completedTrades[i];
