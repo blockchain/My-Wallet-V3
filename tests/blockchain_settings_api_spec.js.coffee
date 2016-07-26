@@ -8,19 +8,28 @@ MyWallet =
     accountInfo:
       email: "a@b.com"
       isEmailVerified: false
+  syncWallet: ->
 
 API =
   callFailWithResponseText: false
   callFailWithoutResponseText: false
   securePost: (endpoint, data) ->
-    then: (success, error) ->
-      if API.callFailWithoutResponseText
-        error('call failed')
-      else if API.callFailWithResponseText
-        error({responseText: 'call failed'})
-      else
-        success('call succeeded')
-    catch: () ->
+    promise =
+      then: (success, error) ->
+        if API.callFailWithoutResponseText
+          error('call failed')
+        else if API.callFailWithResponseText
+          error({responseText: 'call failed'})
+        else
+          success('call succeeded')
+      catch: ->
+    if data.method == 'update-notifications-type'
+      then: (success) ->
+        if !API.callFailWithoutResponseText && !API.callFailWithResponseText
+          success()
+        promise
+    else
+      return promise
   securePostCallbacks: (endpoint, data, success, error) ->
     if API.callFailWithoutResponseText
       error('call failed')
@@ -33,6 +42,7 @@ WalletStore =
   sendEvent: () ->
   getPassword: () -> "password"
   setRealAuthType: () ->
+  setSyncPubKeys: ->
 
 AccountInfo = {
   email: "a@b.com"
@@ -342,10 +352,31 @@ describe "SettingsAPI", ->
       payload: 33
     }]
 
+    beforeEach ->
+      spyOn(MyWallet, 'syncWallet')
+      spyOn(WalletStore, 'setSyncPubKeys')
+
     vectors.forEach (v) ->
       it "should send #{v.payload} when email is #{v.email} and sms is #{v.sms}", ->
         SettingsAPI.updateNotificationsType.apply(null, v.args)
         expect(API.securePost).toHaveBeenCalledWith('wallet', { method: method, length: v.length, payload: v.payload })
+
+    it "should call syncWallet if successful", ->
+      SettingsAPI.updateNotificationsType({})
+      expect(MyWallet.syncWallet).toHaveBeenCalled()
+
+    it "should not call syncWallet if unsuccessful", ->
+      API.callFailWithoutResponseText = true
+      SettingsAPI.updateNotificationsType({})
+      expect(MyWallet.syncWallet).not.toHaveBeenCalled()
+
+    it "should set syncPubKeys to true if enabling notifications", ->
+      SettingsAPI.updateNotificationsType({ email: true })
+      expect(WalletStore.setSyncPubKeys).toHaveBeenCalledWith(true)
+
+    it "should set syncPubKeys to false if disabling notifications", ->
+      SettingsAPI.updateNotificationsType({})
+      expect(WalletStore.setSyncPubKeys).toHaveBeenCalledWith(false)
 
   describe "updateNotificationsOn", ->
     method = 'update-notifications-on'

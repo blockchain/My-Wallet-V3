@@ -768,39 +768,9 @@ describe "Blockchain-Wallet", ->
           expect(() -> wallet.enableNotifications(cb.success)).toThrow()
           expect(() -> wallet.enableNotifications(cb.success, cb.error)).not.toThrow()
 
-        it "should call setSyncPubKeys and syncWallet if successful", ->
-          wallet.enableNotifications(cb.success, cb.error)
-          expect(MyWallet.syncWallet).toHaveBeenCalled()
-          expect(WalletStore.setSyncPubKeys).toHaveBeenCalledWith(true)
-          expect(cb.success).toHaveBeenCalled()
-          expect(cb.error).not.toHaveBeenCalled()
-
-        it "should not call setSyncPubKeys and syncWallet if successful", ->
-          BlockchainSettingsAPI.shouldFail = true
-          wallet.enableNotifications(cb.success, cb.error)
-          expect(MyWallet.syncWallet).not.toHaveBeenCalled()
-          expect(WalletStore.setSyncPubKeys).not.toHaveBeenCalled()
-          expect(cb.success).not.toHaveBeenCalled()
-          expect(cb.error).toHaveBeenCalled()
-
       describe ".disableNotifications", ->
 
         it "should require success and error callbacks", ->
           expect(() -> wallet.disableNotifications()).toThrow()
           expect(() -> wallet.disableNotifications(cb.success)).toThrow()
           expect(() -> wallet.disableNotifications(cb.success, cb.error)).not.toThrow()
-
-        it "should call setSyncPubKeys and syncWallet if successful", ->
-          wallet.disableNotifications(cb.success, cb.error)
-          expect(MyWallet.syncWallet).toHaveBeenCalled()
-          expect(WalletStore.setSyncPubKeys).toHaveBeenCalledWith(false)
-          expect(cb.success).toHaveBeenCalled()
-          expect(cb.error).not.toHaveBeenCalled()
-
-        it "should not call setSyncPubKeys and syncWallet if successful", ->
-          BlockchainSettingsAPI.shouldFail = true
-          wallet.disableNotifications(cb.success, cb.error)
-          expect(MyWallet.syncWallet).not.toHaveBeenCalled()
-          expect(WalletStore.setSyncPubKeys).not.toHaveBeenCalled()
-          expect(cb.success).not.toHaveBeenCalled()
-          expect(cb.error).toHaveBeenCalled()
