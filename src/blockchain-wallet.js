@@ -633,33 +633,13 @@ Wallet.prototype.scanBip44 = function (secondPassword, progress) {
 Wallet.prototype.enableNotifications = function (success, error) {
   assert(success, 'Success callback required');
   assert(error, 'Error callback required');
-
-  BlockchainSettingsAPI.enableEmailReceiveNotifications(
-    function () {
-      WalletStore.setSyncPubKeys(true);
-      MyWallet.syncWallet();
-      success();
-    },
-    function () {
-      error();
-    }
-  );
+  BlockchainSettingsAPI.enableEmailReceiveNotifications(success, error);
 };
 
 Wallet.prototype.disableNotifications = function (success, error) {
   assert(success, 'Success callback required');
   assert(error, 'Error callback required');
-
-  BlockchainSettingsAPI.disableAllNotifications(
-    function () {
-      WalletStore.setSyncPubKeys(false);
-      MyWallet.syncWallet();
-      success();
-    },
-    function () {
-      error();
-    }
-  );
+  BlockchainSettingsAPI.disableAllNotifications(success, error);
 };
 
 // creating a new wallet object
