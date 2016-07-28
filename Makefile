@@ -1,4 +1,4 @@
-all: clean node_modules semistandard test dist/application.min.js Changelog.md
+all: clean node_modules semistandard test dist/application.min.js changelog
 
 node_modules:
 	npm install
@@ -25,8 +25,8 @@ else
   TAG_ARG:=
 endif
 
-Changelog.md: node_modules
-	node_modules/git-changelog/tasks/command.js $(TAG_ARG) -f "Changelog.md" -g "^fix|^feat|^docs|^refactor|^chore|^test|BREAKING" -i "" -a "Blockchain Wallet V3" --repo_url "https://github.com/blockchain/My-Wallet-V3"
+changelog: node_modules
+	node_modules/git-changelog/tasks/command.js $(TAG_ARG)
 
 clean:
 	rm -rf build dist node_modules npm-shrinkwrap.json Changelog.md
