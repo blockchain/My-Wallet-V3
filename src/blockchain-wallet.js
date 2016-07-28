@@ -45,9 +45,7 @@ function Wallet (object) {
   this._addresses = obj.keys ? obj.keys.reduce(Address.factory, {}) : undefined;
   // hdwallets list
   this._hd_wallets = obj.hd_wallets ? obj.hd_wallets.map(HDWallet.factory) : undefined;
-
   this._profile = new Profile(obj.profile);
-  this._external = new External(obj.external);
 
   // address book list
   // address book in json is [{address: 'address1', label: 'label1'} , ... ]
@@ -77,6 +75,7 @@ function Wallet (object) {
   this._txList = new TxList();
   this._latestBlock = null;
   this._accountInfo = null;
+  this._external = null;
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -431,8 +430,7 @@ Wallet.prototype.toJSON = function () {
     tx_names: this._tx_names,
     keys: this.keys,
     hd_wallets: Helpers.isEmptyArray(this._hd_wallets) ? undefined : this._hd_wallets,
-    profile: this._profile,
-    external: this._external
+    profile: this._profile
   };
 };
 
@@ -816,4 +814,9 @@ Wallet.prototype.fetchAccountInfo = function () {
     parentThis._accountInfo = new AccountInfo(info);
     return info; // TODO: handle more here instead of in the frontend / iOs
   });
+};
+
+Wallet.prototype.loadExternal = function () {
+  this._external = new External();
+  return this._external.fetchOrCreate();
 };

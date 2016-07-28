@@ -109,15 +109,8 @@ metadata.update({
 */
 Metadata.prototype.update = function (data) {
   var self = this;
-
   var payload = JSON.stringify(data);
-
-  if (payload === JSON.stringify(self._value)) {
-    return Promise.resolve();
-  }
-
   var encryptedPayload = WalletCrypto.encryptDataWithKey(payload, this._encryptionKey);
-
   var encryptedPayloadSignature = Bitcoin.message.sign(
     this._signatureKeyPair,
     encryptedPayload

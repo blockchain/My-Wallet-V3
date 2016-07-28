@@ -4,11 +4,11 @@ var MyWallet = module.exports = {};
 
 var assert = require('assert');
 var Buffer = require('buffer').Buffer;
-
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var WalletSignup = require('./wallet-signup');
 var WalletNetwork = require('./wallet-network');
+var External = require('./external');
 var API = require('./api');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
@@ -347,7 +347,8 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
       , buildHdSuccess
     );
   });
-  return promise;
+  // load metadata buy-sell
+  return promise.then(MyWallet.wallet.loadExternal.bind(MyWallet.wallet));
 };
 
 // used on iOS

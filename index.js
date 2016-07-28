@@ -38,5 +38,6 @@ module.exports = {
   Transaction: require('./src/transaction'),
   Address: require('./src/address'),
   Metadata: require('./src/metadata'),
-  Bitcoin: require('bitcoinjs-lib')
+  Bitcoin: require('bitcoinjs-lib'),
+  External: require('./src/external')
 };
