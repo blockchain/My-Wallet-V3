@@ -64,7 +64,8 @@ Object.defineProperties(Coinify.prototype, {
   'isLoggedIn': {
     configurable: false,
     get: function () {
-      var tenSecondsAgo = new Date(new Date().getTime() - 10000);
+      // Debug: + 60 * 19 * 1000 expires the login after 1 minute
+      var tenSecondsAgo = new Date(new Date().getTime() + 10000);
       return Boolean(this._access_token) && this._loginExpiresAt > tenSecondsAgo;
     }
   }
@@ -151,6 +152,7 @@ Coinify.prototype.getEmailToken = function () {
 };
 
 Coinify.prototype.login = function () {
+  console.log('Login...');
   var parentThis = this;
 
   var promise = new Promise(function (resolve, reject) {
@@ -165,7 +167,7 @@ Coinify.prototype.login = function () {
     var loginFailed = function (e) {
       reject(e);
     };
-
+    console.log('POST aut');
     parentThis.POST('auth', {
       grant_type: 'offline_token',
       offline_token: parentThis._offline_token
@@ -194,12 +196,15 @@ Coinify.prototype.getQuote = function (amount, baseCurrency) {
     return Promise.reject('base_currency_not_supported');
   }
 
-  var parentThis = this;
+  var self = this;
 
   var processQuote = function (quote) {
     var expiresAt = new Date(quote.expiryTime);
 
-    parentThis._lastQuote = {
+    // Debug, make quote expire in 15 seconds:
+    // expiresAt = new Date(new Date().getTime() + 15 * 1000);
+
+    self._lastQuote = {
       id: quote.id,
       baseCurrency: quote.baseCurrency,
       quoteCurrency: quote.quoteCurrency,
@@ -207,14 +212,14 @@ Coinify.prototype.getQuote = function (amount, baseCurrency) {
       quoteAmount: quote.quoteAmount * 100, // API is in μBTC
       expiresAt: expiresAt
     };
-    return Promise.resolve(parentThis._lastQuote);
+    return Promise.resolve(self._lastQuote);
   };
 
   var getQuote = function (profile) {
     baseCurrency = baseCurrency || profile.defaultCurrency;
     var quoteCurrency = baseCurrency === 'BTC' ? profile.defaultCurrency : 'BTC';
 
-    return parentThis.POST('trades/quote', {
+    return self.POST('trades/quote', {
       baseCurrency: baseCurrency,
       quoteCurrency: quoteCurrency,
       baseAmount: -amount
@@ -224,7 +229,11 @@ Coinify.prototype.getQuote = function (amount, baseCurrency) {
   if (this.profile === null) {
     return this.fetchProfile().then(getQuote);
   } else {
-    return getQuote(this.profile);
+    if (!this.isLoggedIn) {
+      return this.login().then(function () { getQuote(self.profile); });
+    } else {
+      return getQuote(this.profile);
+    }
   }
 };
 
@@ -237,7 +246,17 @@ Coinify.prototype.buy = function (amount, baseCurrency, medium) {
 
   var self = this;
 
-  return CoinifyTrade.buy(this._lastQuote, medium, self);
+  var doBuy = function () {
+    return CoinifyTrade.buy(self._lastQuote, medium, self);
+  };
+
+  console.log('Check login status');
+  if (!this.isLoggedIn) {
+    console.log('Not logged in');
+    return this.login().then(doBuy);
+  } else {
+    return doBuy();
+  }
 };
 
 Coinify.prototype.getTrades = function () {
