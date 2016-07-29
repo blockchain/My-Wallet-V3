@@ -1,16 +1,14 @@
 'use strict';
 
-var MyWallet = require('./wallet');
-var Coinify  = require('./coinify/coinify');
+var Coinify = require('./coinify/coinify');
 var Metadata = require('./metadata');
-var assert = require('assert');
-var EXTERNAL_METADATA_CODE = 3;
+var METADATA_TYPE_EXTERNAL = 3;
 
 module.exports = External;
 
 function External () {
-  this._metadata = new Metadata(EXTERNAL_METADATA_CODE);
-  this._coinify  = null;
+  this._metadata = new Metadata(METADATA_TYPE_EXTERNAL);
+  this._coinify = null;
 }
 
 Object.defineProperties(External.prototype, {
@@ -35,9 +33,9 @@ External.prototype.fetchOrCreate = function () {
     } else {
       this._coinify = object.coinify ? new Coinify(object.coinify, this) : undefined;
       return this;
-    };
+    }
   };
-  return this._metadata.fetch().then(createOrPopulate.bind(this))
+  return this._metadata.fetch().then(createOrPopulate.bind(this));
 };
 
 External.prototype.save = function () {

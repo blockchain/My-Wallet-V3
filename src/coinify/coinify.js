@@ -86,13 +86,12 @@ Coinify.prototype.save = function () {
 // Country and default currency must be set
 // Email must be set and verified
 Coinify.prototype.signup = function () {
-
   var runChecks = function () {
-    assert(!this.user                                 , 'Already signed up');
-    assert(MyWallet.wallet.profile.countryCode        , 'Country must be set');
-    assert(MyWallet.wallet.accountInfo.email          , 'email required');
+    assert(!this.user, 'Already signed up');
+    assert(MyWallet.wallet.profile.countryCode, 'Country must be set');
+    assert(MyWallet.wallet.accountInfo.email, 'email required');
     assert(MyWallet.wallet.accountInfo.isEmailVerified, 'email must be verified');
-    assert(MyWallet.wallet.accountInfo.currency       , 'default currency required');
+    assert(MyWallet.wallet.accountInfo.currency, 'default currency required');
   };
 
   var postEmailToken = function (emailToken) {
@@ -140,7 +139,6 @@ Coinify.prototype.getEmailToken = function () {
 };
 
 Coinify.prototype.login = function () {
-  console.log('Login...');
   var parentThis = this;
 
   var promise = new Promise(function (resolve, reject) {
@@ -155,7 +153,6 @@ Coinify.prototype.login = function () {
     var loginFailed = function (e) {
       reject(e);
     };
-    console.log('POST aut');
     parentThis.POST('auth', {
       grant_type: 'offline_token',
       offline_token: parentThis._offline_token
