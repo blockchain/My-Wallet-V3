@@ -45,9 +45,10 @@ External.prototype.save = function () {
 
 External.prototype.wipe = function () {
   this._metadata.update({}).then(this.fetchOrCreate.bind(this));
+  this._coinify = undefined;
 };
 
 External.prototype.addCoinify = function () {
   assert(!this._coinify, 'Already added');
-  this._coinify = Coinify.new();
+  this._coinify = Coinify.new(this);
 };
