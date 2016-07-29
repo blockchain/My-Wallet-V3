@@ -2,6 +2,8 @@
 
 var Coinify = require('./coinify/coinify');
 var Metadata = require('./metadata');
+var assert = require('assert');
+
 var METADATA_TYPE_EXTERNAL = 3;
 
 module.exports = External;
@@ -28,7 +30,6 @@ External.prototype.toJSON = function () {
 External.prototype.fetchOrCreate = function () {
   var createOrPopulate = function (object) {
     if (object === null) { // entry non exitent
-      this._coinify = Coinify.new(this);
       return this._metadata.create(this);
     } else {
       this._coinify = object.coinify ? new Coinify(object.coinify, this) : undefined;
@@ -40,4 +41,13 @@ External.prototype.fetchOrCreate = function () {
 
 External.prototype.save = function () {
   return this._metadata.update(this);
+};
+
+External.prototype.wipe = function () {
+  this._metadata.update({}).then(this.fetchOrCreate.bind(this));
+};
+
+External.prototype.addCoinify = function () {
+  assert(!this._coinify, 'Already added');
+  this._coinify = Coinify.new();
 };

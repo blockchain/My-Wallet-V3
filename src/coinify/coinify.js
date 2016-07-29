@@ -94,7 +94,8 @@ Coinify.prototype.signup = function () {
     assert(MyWallet.wallet.accountInfo.currency, 'default currency required');
   };
 
-  var postEmailToken = function (emailToken) {
+  var doSignup = function (emailToken) {
+    assert(emailToken, 'email token missing');
     return this.POST('signup/trader', {
       email: MyWallet.wallet.accountInfo.email,
       partnerId: 18,
@@ -116,8 +117,8 @@ Coinify.prototype.signup = function () {
   };
 
   return Promise.resolve().then(runChecks.bind(this))
-                          .then(this.getEmailToken())
-                          .then(postEmailToken.bind(this))
+                          .then(this.getEmailToken.bind(this))
+                          .then(doSignup.bind(this))
                           .then(saveMetadata.bind(this));
 };
 
@@ -235,9 +236,7 @@ Coinify.prototype.buy = function (amount, baseCurrency, medium) {
     return CoinifyTrade.buy(self._lastQuote, medium, self);
   };
 
-  console.log('Check login status');
   if (!this.isLoggedIn) {
-    console.log('Not logged in');
     return this.login().then(doBuy);
   } else {
     return doBuy();
