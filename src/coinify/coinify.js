@@ -12,9 +12,9 @@ var assert = require('assert');
 
 module.exports = Coinify;
 
-function Coinify (object) {
+function Coinify (object, parent) {
   var obj = object || {};
-
+  this._parent = parent; // parent this of external (for save)
   this._user = obj.user;
   this._offline_token = obj.offline_token;
   this._auto_login = obj.auto_login;
@@ -42,7 +42,7 @@ Object.defineProperties(Coinify.prototype, {
         'Boolean'
       );
       this._auto_login = value;
-      MyWallet.syncWallet();
+      this.save();
     }
   },
   'profile': {
@@ -71,12 +71,6 @@ Object.defineProperties(Coinify.prototype, {
   }
 });
 
-Coinify.factory = function (o) {
-  if (o instanceof Object && !(o instanceof Coinify)) {
-    return new Coinify(o);
-  } else { return o; }
-};
-
 Coinify.prototype.toJSON = function () {
   var coinify = {
     user: this._user,
@@ -86,52 +80,46 @@ Coinify.prototype.toJSON = function () {
 
   return coinify;
 };
-
+Coinify.prototype.save = function () {
+  return this._parent.save();
+};
 // Country and default currency must be set
 // Email must be set and verified
 Coinify.prototype.signup = function () {
-  var parentThis = this;
 
-  var promise = new Promise(function (resolve, reject) {
-    var email = MyWallet.wallet.accountInfo.email;
-    var currency = MyWallet.wallet.accountInfo.currency;
-    assert(!parentThis.user, 'Already signed up');
-    var countryCode = MyWallet.wallet.profile.countryCode;
-    assert(countryCode, 'Country must be set');
-    assert(email, 'email required');
+  var runChecks = function () {
+    assert(!this.user                                 , 'Already signed up');
+    assert(MyWallet.wallet.profile.countryCode        , 'Country must be set');
+    assert(MyWallet.wallet.accountInfo.email          , 'email required');
     assert(MyWallet.wallet.accountInfo.isEmailVerified, 'email must be verified');
-    assert(currency, 'default currency required');
+    assert(MyWallet.wallet.accountInfo.currency       , 'default currency required');
+  };
 
-    var signupSuccess = function (res) {
-      parentThis._user = res.trader.id;
-      parentThis._offline_token = res.offlineToken;
-
-      MyWallet.syncWallet();
-
-      resolve();
-    };
-
-    var signupFailed = function (e) {
-      reject(e);
-    };
-
-    parentThis.getEmailToken().then(function (emailToken) {
-      parentThis.POST('signup/trader', {
-        email: email,
-        partnerId: 18,
-        defaultCurrency: currency, // ISO 4217
-        profile: {
-          address: {
-            country: countryCode
-          }
-        },
-        trustedEmailValidationToken: emailToken,
-        generateOfflineToken: true
-      }).then(signupSuccess).catch(signupFailed);
+  var postEmailToken = function (emailToken) {
+    return this.POST('signup/trader', {
+      email: MyWallet.wallet.accountInfo.email,
+      partnerId: 18,
+      defaultCurrency: MyWallet.wallet.accountInfo.currency, // ISO 4217
+      profile: {
+        address: {
+          country: MyWallet.wallet.profile.countryCode
+        }
+      },
+      trustedEmailValidationToken: emailToken,
+      generateOfflineToken: true
     });
-  });
+  };
 
-  return promise;
+  var saveMetadata = function (res) {
+    this._user = res.trader.id;
+    this._offline_token = res.offlineToken;
+    return this.save();
+  };
+
+  return Promise.resolve().then(runChecks.bind(this))
+                          .then(this.getEmailToken())
+                          .then(postEmailToken.bind(this))
+                          .then(saveMetadata.bind(this));
 };
 
 Coinify.prototype.getEmailToken = function () {
@@ -314,15 +302,10 @@ Coinify.prototype.request = function (method, endpoint, data) {
     .then(checkStatus);
 };
 
-Coinify.reviver = function (k, v) {
-  if (k === '') return new Coinify(v);
-  return v;
-};
-
-Coinify.new = function () {
+Coinify.new = function (parent) {
   var object = {
     auto_login: true
   };
-  var coinify = new Coinify(object);
+  var coinify = new Coinify(object, parent);
   return coinify;
 };

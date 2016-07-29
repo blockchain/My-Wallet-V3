@@ -1,16 +1,16 @@
 'use strict';
 
 var MyWallet = require('./wallet');
-var Coinify = require('./coinify/coinify');
-
+var Coinify  = require('./coinify/coinify');
+var Metadata = require('./metadata');
 var assert = require('assert');
+var EXTERNAL_METADATA_CODE = 3;
 
 module.exports = External;
 
-function External (object) {
-  var obj = object || {};
-
-  this._coinify = obj.coinify ? new Coinify(obj.coinify) : undefined;
+function External () {
+  this._metadata = new Metadata(EXTERNAL_METADATA_CODE);
+  this._coinify  = null;
 }
 
 Object.defineProperties(External.prototype, {
@@ -20,27 +20,26 @@ Object.defineProperties(External.prototype, {
   }
 });
 
-External.factory = function (o) {
-  if (o instanceof Object && !(o instanceof External)) {
-    return new External(o);
-  } else { return o; }
-};
-
 External.prototype.toJSON = function () {
   var external = {
     coinify: this._coinify
   };
-
   return external;
 };
 
-External.prototype.addCoinify = function () {
-  assert(!this._coinify, 'Already added');
-  this._coinify = Coinify.new();
-  MyWallet.syncWallet();
+External.prototype.fetchOrCreate = function () {
+  var createOrPopulate = function (object) {
+    if (object === null) { // entry non exitent
+      this._coinify = Coinify.new(this);
+      return this._metadata.create(this);
+    } else {
+      this._coinify = object.coinify ? new Coinify(object.coinify, this) : undefined;
+      return this;
+    };
+  };
+  return this._metadata.fetch().then(createOrPopulate.bind(this))
 };
 
-External.reviver = function (k, v) {
-  if (k === '') return new External(v);
-  return v;
+External.prototype.save = function () {
+  return this._metadata.update(this);
 };
