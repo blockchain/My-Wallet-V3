@@ -85,10 +85,18 @@ Coinify.prototype.save = function () {
 };
 // Country and default currency must be set
 // Email must be set and verified
-Coinify.prototype.signup = function () {
+Coinify.prototype.signup = function (countryCode) {
   var runChecks = function () {
     assert(!this.user, 'Already signed up');
-    assert(MyWallet.wallet.profile.countryCode, 'Country must be set');
+
+    assert(
+      countryCode &&
+      Helpers.isString(countryCode) &&
+      countryCode.length === 2 &&
+      countryCode.match(/[a-zA-Z]{2}/),
+      'ISO 3166-1 alpha-2'
+    );
+
     assert(MyWallet.wallet.accountInfo.email, 'email required');
     assert(MyWallet.wallet.accountInfo.isEmailVerified, 'email must be verified');
     assert(MyWallet.wallet.accountInfo.currency, 'default currency required');
@@ -102,7 +110,7 @@ Coinify.prototype.signup = function () {
       defaultCurrency: MyWallet.wallet.accountInfo.currency, // ISO 4217
       profile: {
         address: {
-          country: MyWallet.wallet.profile.countryCode
+          country: countryCode.toUpperCase()
         }
       },
       trustedEmailValidationToken: emailToken,
