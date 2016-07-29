@@ -24,6 +24,8 @@ function AccountInfo (object) {
   this._isMobileVerified = Boolean(object.sms_verified);
 
   this._currency = object.currency;
+
+  this._invited = object.invited;
 }
 
 Object.defineProperties(AccountInfo.prototype, {
@@ -70,5 +72,9 @@ Object.defineProperties(AccountInfo.prototype, {
   'currency': {
     configurable: false,
     get: function () { return this._currency; }
+  },
+  'invited': {
+    configurable: false,
+    get: function () { return this._invited; }
   }
 });
