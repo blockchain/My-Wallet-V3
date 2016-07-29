@@ -2,6 +2,7 @@
 
 var CoinifyProfile = require('./profile');
 var CoinifyTrade = require('./trade');
+var CoinifyKYC = require('./kyc');
 var PaymentMethod = require('./payment-method');
 
 var MyWallet = require('../wallet');
@@ -26,6 +27,7 @@ function Coinify (object, parent) {
   this._loginExpiresAt = null;
 
   this._trades = [];
+  this._kycs = [];
 }
 
 Object.defineProperties(Coinify.prototype, {
@@ -59,6 +61,12 @@ Object.defineProperties(Coinify.prototype, {
     configurable: false,
     get: function () {
       return this._trades;
+    }
+  },
+  'kycs': {
+    configurable: false,
+    get: function () {
+      return this._kycs;
     }
   },
   'isLoggedIn': {
@@ -255,6 +263,24 @@ Coinify.prototype.getTrades = function () {
   return CoinifyTrade.fetchAll(this);
 };
 
+Coinify.prototype.triggerKYC = function () {
+  var self = this;
+
+  var doKYC = function () {
+    return CoinifyKYC.trigger(self);
+  };
+
+  if (!this.isLoggedIn) {
+    return this.login().then(doKYC);
+  } else {
+    return doKYC();
+  }
+};
+
+Coinify.prototype.getKYCs = function () {
+  return CoinifyKYC.fetchAll(this);
+};
+
 Coinify.prototype.getPaymentMethods = function (currency) {
   return PaymentMethod.fetchAll(this, currency);
 };
@@ -294,7 +320,9 @@ Coinify.prototype.request = function (method, endpoint, data) {
   };
 
   var checkStatus = function (response) {
-    if (response.status >= 200 && response.status < 300) {
+    if (response.status === 204) {
+      return;
+    } else if (response.status >= 200 && response.status < 300) {
       return response.json();
     } else {
       return response.text().then(Promise.reject.bind(Promise));

@@ -174,6 +174,23 @@ CoinifyTrade.prototype.watchAddress = function () {
   return promise;
 };
 
+CoinifyTrade.prototype.fakeBankTransfer = function () {
+  var self = this;
+
+  var fakeBankTransfer = function () {
+    return self._coinify.POST('trades/' + self._id + '/test/bank-transfer', {
+      sendAmount: self.inAmount,
+      currency: self.inCurrency
+    });
+  };
+
+  if (this._coinify.isLoggedIn) {
+    return fakeBankTransfer();
+  } else {
+    return this._coinify.login().then(fakeBankTransfer);
+  }
+};
+
 CoinifyTrade.buy = function (quote, medium, coinify) {
   assert(quote, 'Quote required');
 
