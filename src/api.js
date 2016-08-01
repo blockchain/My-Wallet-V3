@@ -278,3 +278,14 @@ API.prototype.getFees = function () {
             .then(checkStatus)
             .catch(handleNetworkError);
 };
+
+API.prototype.exportHistory = function (active, currency, options) {
+  options = options || {};
+  var data = {
+    active: Array.isArray(active) ? active.join('|') : active,
+    currency: currency
+  };
+  if (options.start) data.start = options.start;
+  if (options.end) data.end = options.end;
+  return this.request('GET', 'v2/export-history', data);
+};
