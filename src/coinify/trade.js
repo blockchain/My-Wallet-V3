@@ -10,22 +10,9 @@ module.exports = CoinifyTrade;
 
 function CoinifyTrade (obj, coinify) {
   this._coinify = coinify;
-
   this._id = obj.id;
-  this._inCurrency = obj.inCurrency;
-  this._outCurrency = obj.outCurrency;
-  this._inAmount = obj.inAmount;
-  this._medium = obj.transferIn.medium;
-  if (this._medium === 'bank') {
-    this._bankAccount = new BankAccount(obj.transferIn.details);
-  }
-  this._outAmountExpected = obj.outAmountExpected;
-  this._receiveAddress = obj.transferOut.details.account;
-  this._state = obj.state;
   this._createdAt = new Date(obj.createTime);
-  this._iSignThisID = obj.transferIn.details.paymentId;
-  this._receiptUrl = obj.receiptUrl;
-  this._bitcoinReceived = null;
+  this.set(obj);
 }
 
 Object.defineProperties(CoinifyTrade.prototype, {
@@ -108,6 +95,23 @@ Object.defineProperties(CoinifyTrade.prototype, {
     }
   }
 });
+
+CoinifyTrade.prototype.set = function (obj) {
+  this._inCurrency = obj.inCurrency;
+  this._outCurrency = obj.outCurrency;
+  this._inAmount = obj.inAmount;
+  this._medium = obj.transferIn.medium;
+  if (this._medium === 'bank') {
+    this._bankAccount = new BankAccount(obj.transferIn.details);
+  }
+  this._outAmountExpected = obj.outAmountExpected;
+  this._receiveAddress = obj.transferOut.details.account;
+  this._state = obj.state;
+  this._iSignThisID = obj.transferIn.details.paymentId;
+  this._receiptUrl = obj.receiptUrl;
+  this._bitcoinReceived = null;
+  return this;
+};
 
 CoinifyTrade.prototype.removeLabeledAddress = function () {
   var account = MyWallet.wallet.hdwallet.accounts[0];
@@ -259,6 +263,17 @@ CoinifyTrade.fetchAll = function (coinify) {
     return getTrades();
   } else {
     return coinify.login().then(getTrades);
+  }
+};
+
+CoinifyTrade.prototype.refresh = function () {
+  var updateTrade = function () {
+    return this._coinify.GET('trades/' + this._id).then(this.set.bind(this));
+  };
+  if (this._coinify.isLoggedIn) {
+    return updateTrade.bind(this)();
+  } else {
+    return this._coinify.login().then(updateTrade.bind(this));
   }
 };
 
