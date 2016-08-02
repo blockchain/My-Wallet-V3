@@ -69,6 +69,12 @@ Object.defineProperties(Coinify.prototype, {
       return this._kycs;
     }
   },
+  'paymentMethods': {
+    configurable: false,
+    get: function () {
+      return this._payment_methods;
+    }
+  },
   'isLoggedIn': {
     configurable: false,
     get: function () {
@@ -281,8 +287,10 @@ Coinify.prototype.getKYCs = function () {
   return CoinifyKYC.fetchAll(this);
 };
 
-Coinify.prototype.getPaymentMethods = function (currency) {
-  return PaymentMethod.fetchAll(this, currency);
+Coinify.prototype.getPaymentMethods = function (inCurrency, outCurrency) {
+  assert(inCurrency, 'In currency required');
+  assert(outCurrency, 'Out currency required');
+  return PaymentMethod.fetchAll(inCurrency, outCurrency, this);
 };
 
 Coinify.prototype.GET = function (endpoint, data) {
@@ -309,7 +317,9 @@ Coinify.prototype.request = function (method, endpoint, data) {
     options.headers['Authorization'] = 'Bearer ' + this._access_token;
   }
 
-  if (method !== 'GET') {
+  if (method === 'GET') {
+    url += '?' + API.encodeFormData(data);
+  } else {
     options.body = JSON.stringify(data);
   }
 

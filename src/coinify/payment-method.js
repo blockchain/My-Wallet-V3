@@ -7,11 +7,17 @@ function PaymentMethod (obj, coinify) {
   this._inMedium = obj.inMedium;
   this._outMedium = obj.outMedium;
   this._name = obj.name;
+
   this._inCurrencies = obj.inCurrencies;
   this._outCurrencies = obj.outCurrencies;
-  this._fixedFee = obj.fixedFee;
-  this._fixedFeeCurrency = obj.fixedFeeCurrency;
-  this._percentageFee = obj.percentageFee;
+
+  this._inCurrency = obj.inCurrency;
+  this._outCurrency = obj.outCurrency;
+
+  this._inFixedFee = obj.inFixedFee;
+  this._outFixedFee = obj.outFixedFee;
+  this._inPercentageFee = obj.inPercentageFee;
+  this._outPercentageFee = obj.outPercentageFee;
 }
 
 Object.defineProperties(PaymentMethod.prototype, {
@@ -45,34 +51,50 @@ Object.defineProperties(PaymentMethod.prototype, {
       return this._outCurrencies;
     }
   },
-  'fixedFee': {
+  'inCurrency': {
     configurable: false,
     get: function () {
-      return this._fixedFee;
+      return this._inCurrency;
     }
   },
-  'fixedFeeCurrency': {
+  'outCurrency': {
     configurable: false,
     get: function () {
-      return this._fixedFeeCurrency;
+      return this._outCurrency;
     }
   },
-  'percentageFee': {
+  'inFixedFee': {
     configurable: false,
     get: function () {
-      return this._percentageFee;
+      return this._inFixedFee;
+    }
+  },
+  'outFixedFee': {
+    configurable: false,
+    get: function () {
+      return this._outFixedFee;
+    }
+  },
+  'inPercentageFee': {
+    configurable: false,
+    get: function () {
+      return this._inPercentageFee;
+    }
+  },
+  'outPercentageFee': {
+    configurable: false,
+    get: function () {
+      return this._outPercentageFee;
     }
   }
 });
 
-PaymentMethod.fetchAll = function (coinify, currency) {
+PaymentMethod.fetchAll = function (inCurrency, outCurrency, coinify) {
   var getPaymentMethods = function () {
-    var params = null;
-    if (currency) {
-      params = {fixedFeeCurrency: currency};
-    }
+    var params = {inCurrency: inCurrency, outCurrency: outCurrency};
+    var output = [];
     return coinify.GET('trades/payment-methods', params).then(function (res) {
-      var output = [];
+      output.length = 0;
       for (var i = 0; i < res.length; i++) {
         output.push(new PaymentMethod(res[i], coinify));
       }
