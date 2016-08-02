@@ -196,6 +196,7 @@ function resendEmailConfirmation (email, success, error) {
 function verifyEmail (code, success, error) {
   API.securePostCallbacks('wallet', { payload: code, length: code.length, method: 'verify-email' }, function (data) {
     WalletStore.sendEvent('msg', {type: 'success', message: data});
+    MyWallet.wallet.accountInfo.isEmailVerified = true;
     typeof (success) === 'function' && success(data);
   }, function (data) {
     WalletStore.sendEvent('msg', {type: 'error', message: data});
