@@ -91,7 +91,10 @@ Object.defineProperties(PaymentMethod.prototype, {
 
 PaymentMethod.fetchAll = function (inCurrency, outCurrency, coinify) {
   var getPaymentMethods = function () {
-    var params = {inCurrency: inCurrency, outCurrency: outCurrency};
+    var params = {};
+    if (inCurrency) { params.inCurrency = inCurrency; }
+    if (outCurrency) { params.outCurrency = outCurrency; }
+
     var output = [];
     return coinify.GET('trades/payment-methods', params).then(function (res) {
       output.length = 0;

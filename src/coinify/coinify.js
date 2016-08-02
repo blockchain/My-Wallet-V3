@@ -293,6 +293,48 @@ Coinify.prototype.getPaymentMethods = function (inCurrency, outCurrency) {
   return PaymentMethod.fetchAll(inCurrency, outCurrency, this);
 };
 
+Coinify.prototype.getBuyMethods = function () {
+  return PaymentMethod.fetchAll(undefined, 'BTC', this);
+};
+
+Coinify.prototype.getBuyCurrencies = function () {
+  var getCurrencies = function (paymentMethods) {
+    var currencies = [];
+    for (var i = 0; i < paymentMethods.length; i++) {
+      var paymentMethod = paymentMethods[i];
+      for (var j = 0; j < paymentMethod.inCurrencies.length; j++) {
+        var inCurrency = paymentMethod.inCurrencies[j];
+        if (currencies.indexOf(inCurrency) === -1) {
+          currencies.push(paymentMethod.inCurrencies[j]);
+        }
+      }
+    }
+    return currencies;
+  };
+  return this.getBuyMethods().then(getCurrencies);
+};
+
+Coinify.prototype.getSellMethods = function () {
+  return PaymentMethod.fetchAll('BTC', undefined, this);
+};
+
+Coinify.prototype.getSellCurrencies = function () {
+  var getCurrencies = function (paymentMethods) {
+    var currencies = [];
+    for (var i = 0; i < paymentMethods.length; i++) {
+      var paymentMethod = paymentMethods[i];
+      for (var j = 0; j < paymentMethod.outCurrencies.length; j++) {
+        var outCurrency = paymentMethod.outCurrencies[j];
+        if (currencies.indexOf(outCurrency) === -1) {
+          currencies.push(paymentMethod.outCurrencies[j]);
+        }
+      }
+    }
+    return currencies;
+  };
+  return this.getSellMethods().then(getCurrencies);
+};
+
 Coinify.prototype.GET = function (endpoint, data) {
   return this.request('GET', endpoint, data);
 };
