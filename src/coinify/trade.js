@@ -161,7 +161,7 @@ CoinifyTrade.prototype.watchAddress = function () {
         resolve(totalReceived);
       } else {
         // Monitor websocket for receive notification:
-        WalletStore.addEventListener((event, data) => {
+        WalletStore.addEventListener(function (event, data) {
           if (event === 'on_tx_received') {
             if (data['out']) {
               for (var i = 0; i < data['out'].length; i++) {

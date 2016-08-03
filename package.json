@@ -89,5 +89,8 @@
       "XMLHttpRequest",
       "Audio"
     ]
+  },
+  "engines" : {
+    "node" : "5.8"
   }
 }
