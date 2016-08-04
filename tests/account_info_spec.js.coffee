@@ -18,7 +18,7 @@ describe "AccountInfo", ->
     # Typical result from get-info:
     o =
       btc_currency: "BTC"
-      notifications_type: []
+      notifications_type: [32]
       language: "nl"
       notifications_on: 2,
       ip_lock_on:0,
@@ -87,3 +87,23 @@ describe "AccountInfo", ->
     it "should get the users currency", ->
       i = new AccountInfo(o)
       expect(i.currency).toEqual("EUR")
+
+    it "should get the notification status", ->
+      i = new AccountInfo(o)
+      expect(i.notifications.email).toEqual(false)
+      expect(i.notifications.sms).toEqual(true)
+
+    it "should have email notifications enabled", ->
+      o.notifications_type = [1]
+      i = new AccountInfo(o)
+      expect(i.notifications.email).toEqual(true)
+
+    it "should have SMS notifications enabled", ->
+      o.notifications_type = [32]
+      i = new AccountInfo(o)
+      expect(i.notifications.sms).toEqual(true)
+
+    it "should have HTTP notifications enabled", ->
+      o.notifications_type = [4]
+      i = new AccountInfo(o)
+      expect(i.notifications.http).toEqual(true)

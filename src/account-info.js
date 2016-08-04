@@ -26,6 +26,17 @@ function AccountInfo (object) {
   this._currency = object.currency;
 
   this._invited = object.invited;
+
+  var notifications = {};
+  if (object.notifications_type) {
+    var mapped = object.notifications_type.map(Math.log2);
+    notifications = {
+      email: Boolean(~mapped.indexOf(0)),
+      http: Boolean(~mapped.indexOf(2)),
+      sms: Boolean(~mapped.indexOf(5))
+    };
+  }
+  this._notifications = notifications;
 }
 
 Object.defineProperties(AccountInfo.prototype, {
@@ -76,5 +87,9 @@ Object.defineProperties(AccountInfo.prototype, {
   'invited': {
     configurable: false,
     get: function () { return this._invited; }
+  },
+  'notifications': {
+    configurable: false,
+    get: function () { return this._notifications; }
   }
 });

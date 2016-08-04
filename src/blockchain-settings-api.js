@@ -282,11 +282,17 @@ function updateNotificationsType (types) {
     return acc | n;
   });
 
+  var success = function (result) {
+    WalletStore.setSyncPubKeys(payload !== 0);
+    MyWallet.syncWallet();
+    return result;
+  };
+
   return API.securePost('wallet', {
     method: 'update-notifications-type',
     length: String(payload).length,
     payload: payload
-  });
+  }).then(success);
 }
 
 function updateNotificationsOn (on) {
