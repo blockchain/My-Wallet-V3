@@ -4,6 +4,7 @@ var CoinifyProfile = require('./profile');
 var CoinifyTrade = require('./trade');
 var CoinifyKYC = require('./kyc');
 var PaymentMethod = require('./payment-method');
+var ExchangeRate = require('./exchange-rate');
 
 var MyWallet = require('../wallet');
 var Helpers = require('../helpers');
@@ -28,6 +29,8 @@ function Coinify (object, parent) {
 
   this._trades = [];
   this._kycs = [];
+
+  this.exchangeRate = new ExchangeRate(this);
 }
 
 Object.defineProperties(Coinify.prototype, {
