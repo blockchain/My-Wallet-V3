@@ -34,13 +34,13 @@ Object.defineProperties(CoinifyKYC.prototype, {
   'createdAt': {
     configurable: false,
     get: function () {
-      return this._created_at;
+      return this._createdAt;
     }
   },
   'updatedAt': {
     configurable: false,
     get: function () {
-      return this._updated_at;
+      return this._updatedAt;
     }
   }
 });
