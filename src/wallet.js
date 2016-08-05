@@ -316,13 +316,13 @@ MyWallet.didFetchWallet = function (obj) {
 };
 
 MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
-  var promise = new Promise(function (resolve, reject) {
+  var doInitialize = function () {
     if (isInitialized || WalletStore.isRestoringWallet()) {
       return;
     }
 
     function _success () {
-      resolve();
+      return;
     }
 
     function _error (e) {
@@ -330,7 +330,7 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
       WalletStore.sendEvent('msg', {type: 'error', message: e});
 
       WalletStore.sendEvent('error_restoring_wallet');
-      reject(e);
+      throw e;
     }
 
     WalletStore.setRestoringWallet(true);
@@ -345,9 +345,14 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
       , decryptSuccess
       , buildHdSuccess
     );
-  });
+  };
   // load metadata buy-sell
-  return promise.then(MyWallet.wallet.loadExternal.bind(MyWallet.wallet));
+
+  var loadExternal = function () {
+    MyWallet.wallet.loadExternal.bind(MyWallet.wallet)();
+  };
+
+  return Promise.resolve().then(doInitialize).then(loadExternal);
 };
 
 // used on iOS
