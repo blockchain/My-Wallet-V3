@@ -200,13 +200,27 @@ Coinify.prototype.fetchProfile = function () {
   }
 };
 
-Coinify.prototype.getQuote = function (amount, baseCurrency) {
-  // TODO: mnemonize (taking expiration into account)
-
-  if (baseCurrency && ['BTC', 'EUR', 'GBP', 'USD', 'DKK'].indexOf(baseCurrency) === -1) {
+Coinify.prototype.getBuyQuote = function (amount, baseCurrency) {
+  assert(baseCurrency, 'Specify currency');
+  // Use (and cache) getBuyCurrencies()
+  if (['BTC', 'EUR', 'GBP', 'USD', 'DKK'].indexOf(baseCurrency) === -1) {
     return Promise.reject('base_currency_not_supported');
   }
 
+  return this.getQuote(-amount, baseCurrency);
+};
+
+Coinify.prototype.getSellQuote = function (amount, baseCurrency) {
+  assert(baseCurrency, 'Specify currency');
+  // Use (and cache) getBuyCurrencies()
+  if (['BTC', 'EUR', 'GBP', 'USD', 'DKK'].indexOf(baseCurrency) === -1) {
+    return Promise.reject('base_currency_not_supported');
+  }
+
+  return this.getQuote(amount, baseCurrency);
+};
+
+Coinify.prototype.getQuote = function (amount, baseCurrency) {
   var self = this;
 
   var processQuote = function (quote) {
@@ -220,7 +234,7 @@ Coinify.prototype.getQuote = function (amount, baseCurrency) {
       baseCurrency: quote.baseCurrency,
       quoteCurrency: quote.quoteCurrency,
       baseAmount: quote.baseAmount,
-      quoteAmount: quote.quoteAmount * 100, // API is in μBTC
+      quoteAmount: quote.quoteAmount,
       expiresAt: expiresAt
     };
     return Promise.resolve(self._lastQuote);
@@ -233,7 +247,7 @@ Coinify.prototype.getQuote = function (amount, baseCurrency) {
     return self.POST('trades/quote', {
       baseCurrency: baseCurrency,
       quoteCurrency: quoteCurrency,
-      baseAmount: -amount
+      baseAmount: amount
     }).then(processQuote);
   };
 
