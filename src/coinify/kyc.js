@@ -4,13 +4,16 @@ module.exports = CoinifyKYC;
 
 function CoinifyKYC (obj, coinify) {
   this._coinify = coinify;
-
   this._id = obj.id;
+  this._createdAt = new Date(obj.createTime);
+  this.set(obj);
+}
+
+CoinifyKYC.prototype.set = function (obj) {
   this._state = obj.state;
   this._iSignThisID = obj.externalId;
-  this._createdAt = new Date(obj.createTime);
   this._updatedAt = new Date(obj.updateTime);
-}
+};
 
 Object.defineProperties(CoinifyKYC.prototype, {
   'id': {
@@ -44,6 +47,17 @@ Object.defineProperties(CoinifyKYC.prototype, {
     }
   }
 });
+
+CoinifyKYC.prototype.refresh = function () {
+  var updateTrade = function () {
+    return this._coinify.GET('kyc/' + this._id).then(this.set.bind(this));
+  };
+  if (this._coinify.isLoggedIn) {
+    return updateTrade.bind(this)();
+  } else {
+    return this._coinify.login().then(updateTrade.bind(this));
+  }
+};
 
 CoinifyKYC.trigger = function (coinify) {
   var processKYC = function (res) {
