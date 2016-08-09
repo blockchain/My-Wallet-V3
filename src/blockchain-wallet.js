@@ -790,6 +790,12 @@ Wallet.prototype.fetchAccountInfo = function () {
 };
 
 Wallet.prototype.loadExternal = function () {
-  this._external = new External();
-  return this._external.fetchOrCreate();
+  // patch (buy-sell does not work with double encryption for now)
+  if (this.isDoubleEncrypted === true) {
+    return Promise.resolve()
+  }
+  else {
+    this._external = new External();
+    return this._external.fetchOrCreate();
+  }
 };
