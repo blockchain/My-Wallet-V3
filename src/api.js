@@ -32,6 +32,9 @@ API.prototype.encodeFormData = function (data) {
 /* Permitted extra headers:
    sessionToken -> "Authorization Bearer <token>" */
 API.prototype.request = function (action, method, data, extraHeaders) {
+  data = data || {};
+  if (this.API_CODE != null) data.api_code = this.API_CODE;
+
   var url = this.ROOT_URL + method;
   var body = data ? this.encodeFormData(data) : '';
   var time = (new Date()).getTime();
@@ -122,8 +125,7 @@ API.prototype.handleNTPResponse = function (obj, clientTime) {
 API.prototype.getBalances = function (addresses) {
   var data = {
     active: addresses.join('|'),
-    format: 'json',
-    api_code: this.API_CODE
+    format: 'json'
   };
   return this.retry(this.request.bind(this, 'POST', 'balance', data));
 };
@@ -132,8 +134,7 @@ API.prototype.getTransaction = function (txhash) {
   var transaction = 'tx/' + txhash;
   var data = {
     format: 'json',
-    cors: 'true',
-    api_code: this.API_CODE
+    cors: 'true'
   };
   return this.retry(this.request.bind(this, 'GET', transaction, data));
 };
@@ -158,14 +159,13 @@ API.prototype.getFiatAtTime = function (time, value, currencyCode) {
     currency: currencyCode,
     time: time,
     textual: false,
-    nosavecurrency: true,
-    api_code: this.API_CODE
+    nosavecurrency: true
   };
   return this.retry(this.request.bind(this, 'GET', 'frombtc', data));
 };
 
 API.prototype.getTicker = function () {
-  var data = { format: 'json', api_code: this.API_CODE };
+  var data = { format: 'json' };
   // return this.request('GET', 'ticker', data);
   return this.retry(this.request.bind(this, 'GET', 'ticker', data));
 };
@@ -174,8 +174,7 @@ API.prototype.getUnspent = function (fromAddresses, confirmations) {
   var data = {
     active: fromAddresses.join('|'),
     confirmations: Helpers.isPositiveNumber(confirmations) ? confirmations : -1,
-    format: 'json',
-    api_code: this.API_CODE
+    format: 'json'
   };
   return this.retry(this.request.bind(this, 'POST', 'unspent', data));
 };
@@ -193,8 +192,7 @@ API.prototype.getHistory = function (addresses, txFilter, offset, n, syncBool) {
     ct: clientTime,
     n: n,
     language: WalletStore.getLanguage(),
-    no_buttons: true,
-    api_code: this.API_CODE
+    no_buttons: true
   };
 
   if (txFilter !== undefined && txFilter !== null) {
@@ -228,7 +226,6 @@ API.prototype.securePost = function (url, data, extraHeaders) {
     clone.sKDebugOriginalClientTime = now;
     clone.sKDebugOriginalSharedKey = sharedKey;
   }
-  clone.api_code = this.API_CODE;
   clone.format = data.format ? data.format : 'plain';
 
   return this.retry(this.request.bind(this, 'POST', url, clone, extraHeaders));
@@ -244,7 +241,6 @@ API.prototype.pushTx = function (txHex, note) {
 
   var data = {
     tx: txHex,
-    api_code: this.API_CODE,
     format: 'plain'
   };
 
