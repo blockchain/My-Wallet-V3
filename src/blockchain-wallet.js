@@ -766,17 +766,16 @@ Wallet.prototype.getPrivateKeyForAddress = function (address, secondPassword) {
 
 Wallet.prototype.getWIFForAddress = function (address, secondPassword) {
   assert(address, 'Error: address must be defined');
-  var pkString = this.getPrivateKeyForAddress(address,secondPassword);
+  var pkString = this.getPrivateKeyForAddress(address, secondPassword);
   if (pkString != null) {
     var key = Helpers.privateKeyStringToKey(pkString, 'base58');
-      if (key.getAddress() !== address.address) {
-        key.compressed = !key.compressed;
-      }
-      return key.toWIF()
+    if (key.getAddress() !== address.address) {
+      key.compressed = !key.compressed;
     }
-    else {
-      return null;
-    }
+    return key.toWIF();
+  } else {
+    return null;
+  }
 };
 Wallet.prototype._getPrivateKey = function (accountIndex, path, secondPassword) {
   assert(this.hdwallet.isValidAccountIndex(accountIndex), 'Error: account non-existent');
