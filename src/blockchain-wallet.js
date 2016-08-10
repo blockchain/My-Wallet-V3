@@ -764,8 +764,6 @@ Wallet.prototype.getPrivateKeyForAddress = function (address, secondPassword) {
   return pk;
 };
 
-  var keyPair = Helpers.privateKeyStringToKey(priv, 'base58');
-
 Wallet.prototype.getWIFForAddress = function (address, secondPassword) {
   assert(address, 'Error: address must be defined');
   var pkString = this.getPrivateKeyForAddress(address,secondPassword);
