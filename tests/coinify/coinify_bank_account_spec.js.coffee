@@ -41,7 +41,7 @@ beforeEach ->
 afterEach ->
   JasminePromiseMatchers.uninstall()
 
-fdescribe "Coinify: Bank account", ->
+describe "Coinify: Bank account", ->
 
   describe "constructor", ->
     it "coinify reference must be preserved", ->
