@@ -25,7 +25,7 @@ function AccountInfo (object) {
 
   this._currency = object.currency;
 
-  this._invited = object.invited;
+  this._invited = object.invited || false;
 
   var notifications = {};
   if (object.notifications_type) {
