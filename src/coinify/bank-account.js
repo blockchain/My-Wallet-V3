@@ -73,6 +73,12 @@ Object.defineProperties(BankAccount.prototype, {
     get: function () {
       return this._holder_address;
     }
+  },
+  'referenceText': {
+    configurable: false,
+    get: function () {
+      return this._referenceText;
+    }
   }
   // 'createdAt': {
   //   configurable: false,
