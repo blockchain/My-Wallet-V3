@@ -248,14 +248,17 @@ Coinify.prototype.getQuote = function (amount, baseCurrency) {
       baseCurrency: baseCurrency,
       quoteCurrency: quoteCurrency,
       baseAmount: amount
-    }).then(processQuote);
+    });
   };
 
+  if (this._offline_token == null) {
+    return getQuote();
+  }
   if (this.profile === null) {
-    return this.fetchProfile().then(getQuote);
+    return this.fetchProfile().then(getQuote).then(processQuote);
   } else {
     if (!this.isLoggedIn) {
-      return this.login().then(function () { getQuote(self.profile); });
+      return this.login().then(function () { getQuote(self.profile); }).then(processQuote);
     } else {
       return getQuote(this.profile);
     }
