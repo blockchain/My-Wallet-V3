@@ -260,7 +260,7 @@ Coinify.prototype.getQuote = function (amount, baseCurrency) {
     if (!this.isLoggedIn) {
       return this.login().then(function () { getQuote(self.profile); }).then(processQuote);
     } else {
-      return getQuote(this.profile);
+      return getQuote(this.profile).then(processQuote);
     }
   }
 };
