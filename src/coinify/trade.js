@@ -5,6 +5,8 @@ var API = require('../api');
 var assert = require('assert');
 var Helpers = require('../helpers');
 var MyWallet = require('../wallet');
+var TX = require('../wallet-transaction');
+
 var BankAccount = require('./bank-account');
 
 module.exports = CoinifyTrade;
@@ -93,6 +95,12 @@ Object.defineProperties(CoinifyTrade.prototype, {
     configurable: false,
     get: function () {
       return this._bitcoinReceived;
+    }
+  },
+  'confirmed': {
+    configurable: false,
+    get: function () {
+      return this._confirmed || this._confirmations >= 3;
     }
   }
 });
@@ -260,18 +268,22 @@ CoinifyTrade.buy = function (quote, medium, coinify) {
 CoinifyTrade.fetchAll = function (coinify) {
   var getTrades = function () {
     return coinify.GET('trades').then(function (res) {
-      var didCleanup = false;
+      var didChange = false;
       for (var i = 0; i < res.length; i++) {
         var trade;
         for (var k = 0; k < coinify._trades.length; k++) {
           if (coinify._trades[k]._id === res[i].id) {
             trade = coinify._trades[k];
+            if (trade.state !== res[i].state) {
+              didChange = true;
+            }
             trade.set(res[i]);
           }
         }
         if (trade === undefined) {
           trade = new CoinifyTrade(res[i], coinify);
           coinify._trades.push(trade);
+          didChange = true;
         }
 
         // Remove labeled address if trade is cancelled, rejected or expired
@@ -279,13 +291,13 @@ CoinifyTrade.fetchAll = function (coinify) {
           var account = MyWallet.wallet.hdwallet.accounts[trade._account_index];
           if (['rejected', 'cancelled', 'expired'].indexOf(trade.state) > -1) {
             account.removeLabelForReceivingAddress(trade._receive_index);
-            didCleanup = true;
+            didChange = true;
           }
         }
         trade = undefined;
       }
 
-      if (didCleanup) {
+      if (didChange) {
         return coinify.save().then(function () {
           return CoinifyTrade.checkCompletedTrades(coinify);
         });
@@ -317,20 +329,40 @@ CoinifyTrade.checkCompletedTrades = function (coinify) {
   var isCompleted = function (trade) {
     return trade.state === 'completed' || trade.state === 'completed_test';
   };
+  var isUnconfirmed = function (trade) {
+    return !trade.confirmed;
+  };
   var getReceiveAddress = function (obj) { return obj.receiveAddress; };
-  var completedTrades = coinify._trades.filter(isCompleted);
-  var receiveAddresses = completedTrades.map(getReceiveAddress);
+  var unconfirmedCompletedTrades = coinify._trades
+                                    .filter(isCompleted)
+                                    .filter(isUnconfirmed);
+  var receiveAddresses = unconfirmedCompletedTrades.map(getReceiveAddress);
   if (receiveAddresses.length === 0) {
     return Promise.resolve(coinify._trades);
   }
+
   return API.getBalances(receiveAddresses).then(function (res) {
-    for (var i = 0; i < completedTrades.length; i++) {
-      var trade = completedTrades[i];
+    var promises = [];
+    for (var i = 0; i < unconfirmedCompletedTrades.length; i++) {
+      var trade = unconfirmedCompletedTrades[i];
       if (res[trade.receiveAddress]) {
-        trade._bitcoinReceived = res[trade.receiveAddress].total_received > 0;
+        trade._bitcoinReceived = res[trade.receiveAddress].total_received >= 0;
+        if (trade._bitcoinReceived && !trade._txHash) {
+          promises.push(API.getHistory([trade.receiveAddress]).then(function (res) {
+            if (res.txs && res.txs.length > 0) {
+              var tx = new TX(res.txs[0]);
+              trade._txHash = tx.hash;
+              trade._confirmations = tx.confirmations;
+              if (trade.confirmed) {
+                trade._confirmed = true;
+                return coinify.save();
+              }
+            }
+          }));
+        }
       }
     }
-    return Promise.resolve(coinify._trades);
+    return Promise.all(promises).then(coinify._trades);
   });
 };
 
@@ -341,7 +373,7 @@ CoinifyTrade.prototype.toJSON = function () {
     tx_hash: this._txHash,
     account_index: this._account_index,
     receive_index: this._receive_index,
-    confirmed: this._confirmations >= 3
+    confirmed: this.confirmed
   };
 };
 
