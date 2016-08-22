@@ -323,6 +323,18 @@ HDAccount.prototype.receiveAddressAtIndex = function (index) {
   return this._keyRing.receive.getAddress(index);
 };
 
+// This function is optimized for finding recent addresses.
+HDAccount.prototype.indexOfreceiveAddress = function (address) {
+  assert(Helpers.isBitcoinAddress(address), 'Error: not a bitcoin address');
+  var labels = this.receivingAddressesLabels.reverse();
+  for (var i = 0; i < labels.length; i++) {
+    if (this.receiveAddressAtIndex(labels[i].index) === address) {
+      return labels[i].index;
+    }
+  }
+  return null;
+};
+
 HDAccount.prototype.encrypt = function (cipher) {
   if (!this._xpriv) return this;
   var xpriv = cipher ? cipher(this._xpriv) : this._xpriv;
