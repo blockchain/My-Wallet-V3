@@ -12,7 +12,6 @@ var BankAccount = require('./bank-account');
 module.exports = CoinifyTrade;
 
 function CoinifyTrade (obj, coinify) {
-  console.log(obj);
   this._coinify = coinify;
   this._id = obj.id;
   this.set(obj);
@@ -160,10 +159,9 @@ CoinifyTrade.prototype.cancel = function () {
   var processCancel = function (trade) {
     self._state = trade.state;
 
-    // self.removeLabeledAddress.bind(self)();
+    self.removeLabeledAddress.bind(self)();
 
-    // return self._coinify.save();
-    return;
+    return self._coinify.save();
   };
 
   var cancelOrder = function () {
