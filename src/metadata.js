@@ -93,6 +93,7 @@ Metadata.prototype.fetch = function () {
     );
 
     if (verified) {
+      self._previousPayload = decryptedPayload;
       self._value = JSON.parse(decryptedPayload);
       self.setMagicHash(serverPayload.payload);
       return self._value;
@@ -110,6 +111,10 @@ metadata.update({
 Metadata.prototype.update = function (data) {
   var self = this;
   var payload = JSON.stringify(data);
+  if (payload === this._previousPayload) {
+    return Promise.resolve();
+  }
+  this._previousPayload = payload;
   var encryptedPayload = WalletCrypto.encryptDataWithKey(payload, this._encryptionKey);
   var encryptedPayloadSignature = Bitcoin.message.sign(
     this._signatureKeyPair,

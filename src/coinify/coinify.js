@@ -362,6 +362,10 @@ Coinify.prototype.getSellCurrencies = function () {
   return this.getSellMethods().then(getCurrencies);
 };
 
+Coinify.prototype.monitorPayments = function () {
+  CoinifyTrade.monitorPayments(this);
+};
+
 Coinify.prototype.GET = function (endpoint, data) {
   return this.request('GET', endpoint, data);
 };

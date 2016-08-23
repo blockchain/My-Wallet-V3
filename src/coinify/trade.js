@@ -181,6 +181,8 @@ CoinifyTrade.prototype.cancel = function () {
 CoinifyTrade.prototype.watchAddress = function () {
   var self = this;
   var promise = new Promise(function (resolve, reject) {
+    self._watchAddressResolve = resolve;
+
     // Check if we already got it:
     API.getBalances([self.receiveAddress]).then(function (res) {
       var totalReceived = 0;
@@ -191,17 +193,7 @@ CoinifyTrade.prototype.watchAddress = function () {
         resolve(totalReceived);
       } else {
         // Monitor websocket for receive notification:
-        WalletStore.addEventListener(function (event, data) {
-          if (event === 'on_tx_received') {
-            if (data['out']) {
-              for (var i = 0; i < data['out'].length; i++) {
-                if (data['out'][i].addr === self.receiveAddress) {
-                  resolve(data['out'][i].value);
-                }
-              }
-            }
-          }
-        });
+
       }
     });
   });
@@ -324,44 +316,92 @@ CoinifyTrade.prototype.refresh = function () {
   }
 };
 
-CoinifyTrade.checkCompletedTrades = function (coinify) {
-  var isCompleted = function (trade) {
-    return trade.state === 'completed' || trade.state === 'completed_test';
-  };
-  var isUnconfirmed = function (trade) {
-    return !trade.confirmed;
-  };
+CoinifyTrade._checkOnce = function (coinify, tradeFilter) {
   var getReceiveAddress = function (obj) { return obj.receiveAddress; };
-  var unconfirmedCompletedTrades = coinify._trades
-                                    .filter(isCompleted)
-                                    .filter(isUnconfirmed);
-  var receiveAddresses = unconfirmedCompletedTrades.map(getReceiveAddress);
+
+  var trades = coinify._trades.filter(tradeFilter);
+
+  var receiveAddresses = trades.map(getReceiveAddress);
+
   if (receiveAddresses.length === 0) {
-    return Promise.resolve(coinify._trades);
+    return Promise.resolve();
   }
 
-  return API.getBalances(receiveAddresses).then(function (res) {
-    var promises = [];
-    for (var i = 0; i < unconfirmedCompletedTrades.length; i++) {
-      var trade = unconfirmedCompletedTrades[i];
-      if (res[trade.receiveAddress]) {
-        trade._bitcoinReceived = res[trade.receiveAddress].total_received >= 0;
-        if (trade._bitcoinReceived && !trade._txHash) {
-          promises.push(API.getHistory([trade.receiveAddress]).then(function (res) {
-            if (res.txs && res.txs.length > 0) {
-              var tx = new TX(res.txs[0]);
-              trade._txHash = tx.hash;
-              trade._confirmations = tx.confirmations;
-              if (trade.confirmed) {
-                trade._confirmed = true;
-                return coinify.save();
-              }
-            }
-          }));
+  var promises = [];
+
+  for (var i = 0; i < trades.length; i++) {
+    promises.push(CoinifyTrade._getTransactionHash(trades[i]));
+  }
+
+  var save = function () {
+    coinify.save.bind(coinify)();
+  };
+
+  return Promise.all(promises).then(save);
+};
+
+CoinifyTrade._getTransactionHash = function (trade) {
+  return API.getHistory([trade.receiveAddress]).then(function (res) {
+    if (res.txs && res.txs.length > 0) {
+      var tx = new TX(res.txs[0]);
+      trade._txHash = tx.hash;
+      trade._confirmations = tx.confirmations;
+      if (trade.confirmed) {
+        trade._confirmed = true;
+      }
+    }
+  });
+};
+
+CoinifyTrade._monitorWebSockets = function (coinify, tradeFilter) {
+  var getReceiveAddress = function (obj) { return obj.receiveAddress; };
+
+  var saveTrade = function () {
+    coinify.save.bind(coinify)();
+  };
+
+  var tradeWasPaid = function (trade, amount) {
+    trade._watchAddressResolve && trade._watchAddressResolve(amount);
+
+    trade.refresh()
+      .then(saveTrade)
+      .then(CoinifyTrade._getTransactionHash);
+  };
+
+  WalletStore.addEventListener(function (event, data) {
+    if (event === 'on_tx_received') {
+      var trades = coinify._trades
+                    .filter(tradeFilter);
+      var receiveAddresses = trades.map(getReceiveAddress);
+
+      if (data['out']) {
+        for (var i = 0; i < data['out'].length; i++) {
+          var index = receiveAddresses.indexOf(data['out'][i].addr);
+          if (index > -1) {
+            var trade = trades[index];
+            var amount = data['out'][i].value;
+            tradeWasPaid(trade, amount);
+          }
         }
       }
     }
-    return Promise.all(promises).then(coinify._trades);
+  });
+};
+
+// Monitor the receive addresses for pending and completed trades.
+CoinifyTrade.monitorPayments = function (coinify) {
+  var tradeFilter = function (trade) {
+    return [
+      'awaiting_transfer_in',
+      'reviewing',
+      'processing',
+      'completed',
+      'completed_test'
+    ].indexOf(trade.state) > -1 && !trade.confirmed;
+  };
+
+  CoinifyTrade._checkOnce(coinify, tradeFilter).then(function () {
+    CoinifyTrade._monitorWebSockets(coinify, tradeFilter);
   });
 };
 
