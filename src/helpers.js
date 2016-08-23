@@ -135,6 +135,20 @@ Helpers.asyncOnce = function (f, milliseconds, before) {
   };
 };
 
+Helpers.exponentialBackoff = function (f) {
+  var timer;
+  var run = function (e) {
+    timer = setTimeout(function () {
+      f.call(f);
+      run(e + 1);
+    }, Math.pow(2, e) * 1000);
+  };
+  run(0);
+  return function () {
+    clearTimeout(timer);
+  };
+};
+
 // merges the properties of two objects
 Helpers.merge = function (o, p) {
   for (var prop in p) {
