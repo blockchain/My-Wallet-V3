@@ -12,9 +12,9 @@ var BankAccount = require('./bank-account');
 module.exports = CoinifyTrade;
 
 function CoinifyTrade (obj, coinify) {
+  console.log(obj);
   this._coinify = coinify;
   this._id = obj.id;
-  this._createdAt = new Date(obj.createTime);
   this.set(obj);
 }
 
@@ -107,6 +107,7 @@ Object.defineProperties(CoinifyTrade.prototype, {
 
 CoinifyTrade.prototype.set = function (obj) {
   var account;
+  this._createdAt = new Date(obj.createTime);
   this._state = obj.state;
   if (obj.confirmed === Boolean(obj.confirmed)) { // Constructed from metadata JSON
     if (Helpers.isPositiveInteger(obj.account_index)) {
