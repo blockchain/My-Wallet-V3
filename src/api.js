@@ -283,5 +283,5 @@ API.prototype.exportHistory = function (active, currency, options) {
   };
   if (options.start) data.start = options.start;
   if (options.end) data.end = options.end;
-  return this.request('GET', 'v2/export-history', data);
+  return this.request('POST', 'v2/export-history', data);
 };
