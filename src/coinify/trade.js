@@ -259,22 +259,17 @@ CoinifyTrade.buy = function (quote, medium, coinify) {
 CoinifyTrade.fetchAll = function (coinify) {
   var getTrades = function () {
     return coinify.GET('trades').then(function (res) {
-      var didChange = false;
       for (var i = 0; i < res.length; i++) {
         var trade;
         for (var k = 0; k < coinify._trades.length; k++) {
           if (coinify._trades[k]._id === res[i].id) {
             trade = coinify._trades[k];
-            if (trade.state !== res[i].state) {
-              didChange = true;
-            }
             trade.set(res[i]);
           }
         }
         if (trade === undefined) {
           trade = new CoinifyTrade(res[i], coinify);
           coinify._trades.push(trade);
-          didChange = true;
         }
 
         // Remove labeled address if trade is cancelled, rejected or expired
@@ -282,19 +277,12 @@ CoinifyTrade.fetchAll = function (coinify) {
           var account = MyWallet.wallet.hdwallet.accounts[trade._account_index];
           if (['rejected', 'cancelled', 'expired'].indexOf(trade.state) > -1) {
             account.removeLabelForReceivingAddress(trade._receive_index);
-            didChange = true;
           }
         }
         trade = undefined;
       }
 
-      if (didChange) {
-        return coinify.save().then(function () {
-          return CoinifyTrade.checkCompletedTrades(coinify);
-        });
-      } else {
-        return CoinifyTrade.checkCompletedTrades(coinify);
-      }
+      return coinify.save();
     });
   };
 
