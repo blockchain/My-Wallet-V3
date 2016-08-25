@@ -282,7 +282,7 @@ CoinifyTrade.fetchAll = function (coinify) {
         trade = undefined;
       }
 
-      return coinify.save();
+      return coinify.save().then(function () { return coinify._trades; });
     });
   };
 
