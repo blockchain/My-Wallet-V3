@@ -28,8 +28,7 @@ function handleResponse (obj) {
 function generateUUIDs (count) {
   var data = {
     format: 'json',
-    n: count,
-    api_code: API.API_CODE
+    n: count
   };
 
   var extractUUIDs = function (data) {
@@ -56,8 +55,7 @@ function resendTwoFactorSms (userGuid, sessionToken) {
   var data = {
     format: 'json',
     resend_code: true,
-    ct: Date.now(),
-    api_code: API.API_CODE
+    ct: Date.now()
   };
 
   var headers = {sessionToken: sessionToken};
@@ -77,8 +75,7 @@ function recoverGuid (sessionToken, userEmail, captcha) {
     method: 'recover-wallet',
     email: userEmail,
     captcha: captcha,
-    ct: Date.now(),
-    api_code: API.API_CODE
+    ct: Date.now()
   };
 
   var headers = {
@@ -128,8 +125,7 @@ function requestTwoFactorReset (
     secret_phrase: secret,
     message: message,
     kaptcha: captcha,
-    ct: Date.now(),
-    api_code: API.API_CODE
+    ct: Date.now()
   };
 
   var headers = {
@@ -217,7 +213,7 @@ function establishSession (token) {
 // token must be present if sharedKey isn't
 function callGetWalletEndpoint (guid, sharedKey, sessionToken) {
   var clientTime = (new Date()).getTime();
-  var data = { format: 'json', resend_code: null, ct: clientTime, api_code: API.API_CODE };
+  var data = { format: 'json', resend_code: null, ct: clientTime };
   var headers = {};
 
   if (sharedKey) {
@@ -304,8 +300,7 @@ function fetchWalletWithTwoFactor (guid, sessionToken, twoFactor) {
       payload: twoFactorAuthKey,
       length: twoFactorAuthKey.length,
       method: 'get-wallet',
-      format: 'plain',
-      api_code: API.API_CODE
+      format: 'plain'
     };
 
     var headers = {sessionToken: sessionToken};
