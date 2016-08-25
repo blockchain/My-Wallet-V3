@@ -224,10 +224,7 @@ CoinifyTrade.prototype.fakeBankTransfer = function () {
 CoinifyTrade.buy = function (quote, medium, coinify) {
   assert(quote, 'Quote required');
 
-  /* If we want to support buying to another account, we need to store
-     the account index and receive address index for each trade in the
-     metadata service. */
-  var account = MyWallet.wallet.hdwallet.accounts[0];
+  var account = MyWallet.wallet.hdwallet.defaultAccount;
 
   var receiveAddressIndex = account.receiveIndex;
 
@@ -239,7 +236,7 @@ CoinifyTrade.buy = function (quote, medium, coinify) {
   var processTrade = function (res) {
     var trade = new CoinifyTrade(res, coinify);
     account.setLabelForReceivingAddress(receiveAddressIndex, 'Coinify order #' + trade.id);
-    trade._account_index = 0; // TODO: use default account
+    trade._account_index = account.index;
     trade._receive_index = receiveAddressIndex;
     coinify._trades.push(trade);
     return coinify.save();
