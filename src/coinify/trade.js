@@ -128,6 +128,9 @@ CoinifyTrade.prototype.set = function (obj) {
     }
 
     this._confirmed = obj.confirmed;
+    if (obj.confirmed) {
+      this._bitcoinReceived = true;
+    }
     this._txHash = obj.tx_hash;
     this._account_index = obj.account_index;
     this._receive_index = obj.receive_index;
@@ -153,7 +156,9 @@ CoinifyTrade.prototype.set = function (obj) {
     this._receiveAddress = obj.transferOut.details.account;
     this._iSignThisID = obj.transferIn.details.paymentId;
     this._receiptUrl = obj.receiptUrl;
-    this._bitcoinReceived = null;
+    if (!this.bitcoinReceived) {
+      this._bitcoinReceived = null;
+    }
     return this;
   }
 };
@@ -195,20 +200,6 @@ CoinifyTrade.prototype.watchAddress = function () {
   var self = this;
   var promise = new Promise(function (resolve, reject) {
     self._watchAddressResolve = resolve;
-
-    // Check if we already got it:
-    API.getBalances([self.receiveAddress]).then(function (res) {
-      var totalReceived = 0;
-      if (res[self.receiveAddress]) {
-        totalReceived = res[self.receiveAddress].total_received;
-      }
-      if (totalReceived > 0) {
-        resolve(totalReceived);
-      } else {
-        // Monitor websocket for receive notification:
-
-      }
-    });
   });
   return promise;
 };
@@ -347,6 +338,7 @@ CoinifyTrade._getTransactionHash = function (trade) {
       var tx = new TX(res.txs[0]);
       trade._txHash = tx.hash;
       trade._confirmations = tx.confirmations;
+      trade._bitcoinReceived = true;
       if (trade.confirmed) {
         trade._confirmed = true;
       }
@@ -365,8 +357,8 @@ CoinifyTrade._monitorWebSockets = function (coinify, tradeFilter) {
     trade._watchAddressResolve && trade._watchAddressResolve(amount);
 
     trade.refresh()
-      .then(saveTrade)
-      .then(CoinifyTrade._getTransactionHash);
+      .then(CoinifyTrade._getTransactionHash)
+      .then(saveTrade);
   };
 
   WalletStore.addEventListener(function (event, data) {
@@ -374,12 +366,12 @@ CoinifyTrade._monitorWebSockets = function (coinify, tradeFilter) {
       var trades = coinify._trades
                     .filter(tradeFilter);
       var receiveAddresses = trades.map(getReceiveAddress);
-
       if (data['out']) {
         for (var i = 0; i < data['out'].length; i++) {
           var index = receiveAddresses.indexOf(data['out'][i].addr);
           if (index > -1) {
             var trade = trades[index];
+            trade._bitcoinReceived = true;
             var amount = data['out'][i].value;
             tradeWasPaid(trade, amount);
           }
