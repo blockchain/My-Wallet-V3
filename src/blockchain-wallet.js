@@ -683,6 +683,7 @@ Wallet.prototype.upgradeToV3 = function (firstAccountLabel, pw, success, error) 
   this._hd_wallets.push(hd);
   var label = firstAccountLabel || 'My Bitcoin Wallet';
   this.newAccount(label, pw, this._hd_wallets.length - 1, true);
+  this.loadExternal();
   MyWallet.syncWallet(function (res) {
     success();
   }, error);
@@ -804,9 +805,10 @@ Wallet.prototype.fetchAccountInfo = function () {
 
 Wallet.prototype.loadExternal = function () {
   // patch (buy-sell does not work with double encryption for now)
-  if (this.isDoubleEncrypted === true) {
+  if (this.isDoubleEncrypted === true || !this.isUpgradedToHD) {
     return Promise.resolve();
   } else {
+    console.log('hola ara');
     this._external = new External();
     return this._external.fetchOrCreate();
   }
