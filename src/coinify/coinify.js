@@ -17,6 +17,7 @@ module.exports = Coinify;
 function Coinify (object, parent) {
   var obj = object || {};
   this._parent = parent; // parent this of external (for save)
+  this._partner_id = null;
   this._user = obj.user;
   this._offline_token = obj.offline_token;
   this._auto_login = obj.auto_login;
@@ -91,6 +92,15 @@ Object.defineProperties(Coinify.prototype, {
       var tenSecondsAgo = new Date(new Date().getTime() + 10000);
       return Boolean(this._access_token) && this._loginExpiresAt > tenSecondsAgo;
     }
+  },
+  'partnerId': {
+    configurable: false,
+    get: function () {
+      return this._partner_id;
+    },
+    set: function (value) {
+      this._partner_id = value;
+    }
   }
 });
 
@@ -130,7 +140,7 @@ Coinify.prototype.signup = function (countryCode) {
     assert(emailToken, 'email token missing');
     return this.POST('signup/trader', {
       email: MyWallet.wallet.accountInfo.email,
-      partnerId: 18,
+      partnerId: this.partnerId,
       defaultCurrency: MyWallet.wallet.accountInfo.currency, // ISO 4217
       profile: {
         address: {
