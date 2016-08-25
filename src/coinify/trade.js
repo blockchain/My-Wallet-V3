@@ -204,6 +204,34 @@ CoinifyTrade.prototype.watchAddress = function () {
   return promise;
 };
 
+CoinifyTrade.prototype.btcExpected = function () {
+  var self = this;
+  if (this.isBuy) {
+    var fifteenMinutesAgo = new Date(new Date().getTime() - 15 * 60 * 1000);
+    var oneMinuteAgo = new Date(new Date().getTime() - 15 * 60 * 1000);
+    if (this.createdAt > fifteenMinutesAgo) {
+      // Quoted price still valid
+      // Note: trade creation date + 15 mins != quote expiration date
+      // TODO: Coinify adds quote expiration to trade object
+      return Promise.resolve(this.outAmountExpected);
+    } else {
+      // Estimate BTC expected based on current exchange rate:
+      if (this._lastBtcExpectedGuessAt > oneMinuteAgo) {
+        return Promise.resolve(this._lastBtcExpectedGuess);
+      } else {
+        var processQuote = function (quote) {
+          self._lastBtcExpectedGuess = quote.quoteAmount;
+          self._lastBtcExpectedGuessAt = new Date();
+          return self._lastBtcExpectedGuess;
+        };
+        return this._coinify.getBuyQuote(this.inAmount, this.inCurrency).then(processQuote);
+      }
+    }
+  } else {
+    return Promise.reject();
+  }
+};
+
 CoinifyTrade.prototype.fakeBankTransfer = function () {
   var self = this;
 
