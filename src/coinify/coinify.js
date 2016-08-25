@@ -28,6 +28,12 @@ function Coinify (object, parent) {
   this._loginExpiresAt = null;
 
   this._trades = [];
+  if (obj.trades) {
+    for (var i = 0; i < obj.trades.length; i++) {
+      this._trades.push(new CoinifyTrade(obj.trades[i], this));
+    }
+  }
+
   this._kycs = [];
 
   this.exchangeRate = new ExchangeRate(this);
@@ -92,7 +98,8 @@ Coinify.prototype.toJSON = function () {
   var coinify = {
     user: this._user,
     offline_token: this._offline_token,
-    auto_login: this._auto_login
+    auto_login: this._auto_login,
+    trades: CoinifyTrade.filteredTrades(this._trades)
   };
 
   return coinify;
@@ -353,6 +360,10 @@ Coinify.prototype.getSellCurrencies = function () {
     return currencies;
   };
   return this.getSellMethods().then(getCurrencies);
+};
+
+Coinify.prototype.monitorPayments = function () {
+  CoinifyTrade.monitorPayments(this);
 };
 
 Coinify.prototype.GET = function (endpoint, data) {

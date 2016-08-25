@@ -563,7 +563,7 @@ MyWallet.logout = function (sessionToken, force) {
       console.log(e);
     }
   };
-  var data = {format: 'plain', api_code: API.API_CODE};
+  var data = { format: 'plain' };
   WalletStore.sendEvent('logging_out');
 
   var headers = {sessionToken: sessionToken};
