@@ -239,7 +239,7 @@ CoinifyTrade.buy = function (quote, medium, coinify) {
     trade._account_index = account.index;
     trade._receive_index = receiveAddressIndex;
     coinify._trades.push(trade);
-    return coinify.save();
+    return coinify.save().then(function () { return trade; });
   };
 
   return coinify.POST('trades', {
