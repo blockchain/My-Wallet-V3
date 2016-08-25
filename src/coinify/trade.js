@@ -101,6 +101,18 @@ Object.defineProperties(CoinifyTrade.prototype, {
     get: function () {
       return this._confirmed || this._confirmations >= 3;
     }
+  },
+  'isBuy': {
+    configurable: false,
+    get: function () {
+      if (Boolean(this._is_buy) === this._is_buy) {
+        return this._is_buy;
+      } else if (this._is_buy === undefined && this.outCurrency === undefined) {
+        return true; // For older test wallets, can be safely removed later.
+      } else {
+        return this.outCurrency === 'BTC';
+      }
+    }
   }
 });
 
@@ -108,6 +120,7 @@ CoinifyTrade.prototype.set = function (obj) {
   var account;
   this._createdAt = new Date(obj.createTime);
   this._state = obj.state;
+  this._is_buy = obj.is_buy;
   if (obj.confirmed === Boolean(obj.confirmed)) { // Constructed from metadata JSON
     if (Helpers.isPositiveInteger(obj.account_index)) {
       account = MyWallet.wallet.hdwallet.accounts[obj.account_index];
@@ -400,7 +413,8 @@ CoinifyTrade.prototype.toJSON = function () {
     tx_hash: this._txHash,
     account_index: this._account_index,
     receive_index: this._receive_index,
-    confirmed: this.confirmed
+    confirmed: this.confirmed,
+    is_buy: this.isBuy
   };
 };
 
