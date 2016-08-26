@@ -552,6 +552,7 @@ describe "Blockchain-Wallet", ->
           spyOn(wallet, "newAccount").and.callFake(()->)
           spyOn(BIP39, "generateMnemonic").and.callThrough()
           spyOn(RNG, "run").and.callThrough()
+          spyOn(wallet, "loadExternal").and.callFake(()->)
 
         it "should successCallback", ->
           wallet.upgradeToV3("ACC-LABEL", null, cb.success, cb.error)
@@ -561,6 +562,10 @@ describe "Blockchain-Wallet", ->
           wallet.upgradeToV3("ACC-LABEL", null, cb.success, cb.error)
           expect(BIP39.generateMnemonic).toHaveBeenCalled()
           expect(RNG.run).toHaveBeenCalled()
+
+        it "should call loadExternal", ->
+          wallet.upgradeToV3("ACC-LABEL", null, cb.success, cb.error)
+          expect(wallet.loadExternal).toHaveBeenCalled()
 
         it "should throw if RNG throws", ->
           # E.g. because there was a network failure.
