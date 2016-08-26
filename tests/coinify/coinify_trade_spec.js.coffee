@@ -1,19 +1,23 @@
 proxyquire = require('proxyquireify')(require)
 
+acc0 = {
+  receivingAddressesLabels: []
+}
+
 MyWallet = {
   wallet: {
     hdwallet: {
       accounts: [
-        {
-          receivingAddressesLabels: []
-        }
+        acc0
       ]
+      defaultAccount: acc0
     }
   }
 }
 
 API =
   getBalances: () ->
+  getHistory: () ->
 
 WalletStore = {}
 
@@ -28,6 +32,8 @@ CoinifyTrade    = proxyquire('../../src/coinify/trade', stubs)
 describe "CoinifyTrade", ->
 
   tradeJSON = undefined
+  tradeJSON2 = undefined
+
 
   beforeEach ->
 
@@ -48,9 +54,13 @@ describe "CoinifyTrade", ->
           }
       }
       outAmountExpected: 0.06454481
-      state: "completed_test"
+      state: "awaiting_transfer_in"
       receiptUrl: "my url"
+      createTime: "2016-08-26T14:53:26.650Z"
     }
+
+    tradeJSON2 = JSON.parse(JSON.stringify(tradeJSON))
+    tradeJSON2.id = 1143
 
     JasminePromiseMatchers.install()
 
@@ -98,6 +108,8 @@ describe "CoinifyTrade", ->
       }
 
       coinify = {
+        _save: () -> Promise.resolve()
+        save: () -> Promise.resolve()
         _trades: []
         GET: (method) -> {
           then: (cb) ->
@@ -150,7 +162,7 @@ describe "CoinifyTrade", ->
         tradeJSON.inCurrency = "monopoly"
         trade.set(tradeJSON)
         expect(trade._id).toBe(oldId)
-        expect(trade._createdAt).toBe(oldTimeStamp)
+        expect(trade._createdAt).toEqual(oldTimeStamp)
         expect(trade._inCurrency).toBe(tradeJSON.inCurrency)
 
     describe "removeLabeledAddress()", ->
@@ -172,13 +184,6 @@ describe "CoinifyTrade", ->
 
     describe "watchAddress()", ->
       it "should return a promise with the total received", (done) ->
-        getBalanceAnswer = {
-          '19g1YFsoR5duHgTFcs4HKnjKHH7PgNqBJM': {
-            total_received: 1714
-          }
-        }
-        spyOn(API, "getBalances").and.returnValue(Promise.resolve(getBalanceAnswer))
-
         testBitcoinReceived = (bit_rec) ->
           expect(bit_rec).toBe(1714)
 
@@ -187,7 +192,7 @@ describe "CoinifyTrade", ->
           .catch(console.log)
           .then(done)
 
-        expect(API.getBalances).toHaveBeenCalledWith([trade.receiveAddress])
+        trade._watchAddressResolve(1714)
 
     describe "watchAddress()", ->
       it "should listen the websocket", (done) ->
@@ -225,7 +230,7 @@ describe "CoinifyTrade", ->
     describe "buy()", ->
       it "should POST the quote and add the received trade to the list", (done) ->
         quote = { id: 101 }
-        acc = MyWallet.wallet.hdwallet.accounts[0]
+        acc = MyWallet.wallet.hdwallet.defaultAccount
         acc.receiveIndex = 20
         acc.lastUsedReceiveIndex = 19
         acc.receiveAddressAtIndex = () -> '19g1YFsoR5duHgTFcs4HKnjKHH7PgNqBJM'
@@ -243,18 +248,39 @@ describe "CoinifyTrade", ->
           .then(done)
 
     describe "fetchAll()", ->
-      it "should fetch all the trades", ->
+      it "should fetch all the trades", (done) ->
         myCoinify = {
           GET: () ->
             then: (cb) ->
-              cb([tradeJSON,tradeJSON])
+              cb([tradeJSON,tradeJSON2])
           _trades: []
           isLoggedIn: true
+          save: () -> Promise.resolve()
         }
-        spyOn(CoinifyTrade, "checkCompletedTrades").and.returnValue(Promise.resolve({}))
+        check = () ->
+          expect(myCoinify._trades.length).toBe(2)
+
         spyOn(myCoinify, "GET").and.callThrough()
-        CoinifyTrade.fetchAll(myCoinify)
-        expect(myCoinify._trades.length).toBe(2)
+        promise = CoinifyTrade.fetchAll(myCoinify).then(check)
+        expect(promise).toBeResolved(done)
+
+      it "should update existing trades", (done) ->
+        tradeJSON.state = "completed_test"
+        myCoinify = {
+          GET: () ->
+            then: (cb) ->
+              cb([tradeJSON,tradeJSON2])
+          _trades: []
+          isLoggedIn: true
+          save: () -> Promise.resolve()
+        }
+        check = () ->
+          expect(myCoinify._trades.length).toBe(2)
+          expect(myCoinify._trades[0].state).toEqual('completed_test')
+
+        spyOn(myCoinify, "GET").and.callThrough()
+        promise = CoinifyTrade.fetchAll(myCoinify).then(check)
+        expect(promise).toBeResolved(done)
 
     describe "refresh()", ->
       it "should GET the trade and update the trade object", ->
@@ -264,26 +290,32 @@ describe "CoinifyTrade", ->
         expect(coinify.GET).toHaveBeenCalledWith('trades/' + trade._id)
         expect(trade.set).toHaveBeenCalled()
 
-    describe "checkCompletedTrades()", ->
+    describe "_checkOnce()", ->
       it "should mark bitcoin received as true", (done) ->
 
         myCoinify = {
           _trades: [trade]
           isLoggedIn: true
         }
-        getBalanceAnswer = {
-          '19g1YFsoR5duHgTFcs4HKnjKHH7PgNqBJM': {
-            total_received: 10
-          }
+        getHistoryAnswer = {
+          txs: [
+            {
+              hash: "1234",
+              confirmations: 0
+            }
+          ]
+
         }
         myCoinify._trades[0].status = 'completed'
 
         testBitcoinReceived = () ->
           expect(myCoinify._trades[0]._bitcoinReceived).toBe(true)
 
-        spyOn(API, "getBalances").and.returnValue(Promise.resolve(getBalanceAnswer))
+        spyOn(API, "getHistory").and.returnValue(Promise.resolve(getHistoryAnswer))
 
-        CoinifyTrade.checkCompletedTrades(myCoinify)
+        filter = () -> true
+
+        CoinifyTrade._checkOnce(myCoinify, filter)
           .then(testBitcoinReceived)
           .catch(console.log)
           .then(done)

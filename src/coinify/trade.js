@@ -252,7 +252,6 @@ CoinifyTrade.prototype.fakeBankTransfer = function () {
 
 // QA tool:
 CoinifyTrade.prototype.expireQuote = function () {
-  console.log(this, this._coinify._lastQuote);
   if (this.inAmount !== -this._coinify._lastQuote.baseAmount) {
     console.log("Can't find corresponding quote.");
   } else {
