@@ -6,15 +6,25 @@ MyWallet = {
   }
 }
 
+mockPayload = {coinify: {}}
+
+Metadata = (n) ->
+  {
+    create: () ->
+    fetch: () ->
+      Promise.resolve(mockPayload)
+  }
+
 Coinify = (obj) ->
-  return
+  return obj
 
 Coinify.new = () ->
   {}
 
 stubs = {
   './wallet': MyWallet,
-  './coinify' : Coinify
+  './coinify/coinify' : Coinify,
+  './metadata' : Metadata
 }
 
 External    = proxyquire('../src/external', stubs)
@@ -25,6 +35,10 @@ describe "External", ->
 
   beforeEach ->
     spyOn(MyWallet, "syncWallet")
+    JasminePromiseMatchers.install()
+
+  afterEach ->
+    JasminePromiseMatchers.uninstall()
 
   describe "class", ->
     describe "new External()", ->
@@ -32,13 +46,29 @@ describe "External", ->
         e = new External({coinify: {}})
         expect(e.constructor.name).toEqual("External")
 
-      it "should include partners if present", ->
-        e = new External({coinify: {}})
-        expect(e.coinify).toBeDefined()
+      it "should include partners if present", (done) ->
+        e = new External()
+        promise = e.fetchOrCreate().then((res) ->
+          expect(e._coinify).toBeDefined()
+        )
+        expect(promise).toBeResolved(done)
 
-      it "should not cointain any partner by default", ->
-        e = new External({})
-        expect(e.coinify).not.toBeDefined()
+      it "should not cointain any partner by default", (done) ->
+        mockPayload = {}
+        e = new External()
+        promise = e.fetchOrCreate().then((res) ->
+          expect(e._coinify).toBeUndefined()
+        )
+        expect(promise).toBeResolved(done)
+
+      it 'should not deserialize non-expected fields', (done) ->
+        mockPayload = {coinify: {}, rarefield: "I am an intruder"}
+        e = new External()
+        promise = e.fetchOrCreate().then((res) ->
+          expect(e._coinify).toBeDefined()
+          expect(e._rarefield).toBeUndefined()
+        )
+        expect(promise).toBeResolved(done)
 
   describe "instance", ->
     beforeEach ->
@@ -50,22 +80,18 @@ describe "External", ->
           e.addCoinify()
           expect(e.coinify).toBeDefined();
 
-        it "should sync wallet", ->
-          e.addCoinify()
-          expect(MyWallet.syncWallet).toHaveBeenCalled()
-
         it "should check if already present", ->
           e.addCoinify()
           expect(() -> e.addCoinify()).toThrow()
 
     describe "JSON serializer", ->
       beforeEach ->
-        e  = new External({coinify: {}})
+        e  = new External()
+        e._coinify = {}
 
-      it 'should hold: fromJSON . toJSON = id', ->
+      it 'should store partners', ->
         json = JSON.stringify(e, null, 2)
-        b = JSON.parse(json, External.reviver)
-        expect(e).toEqual(b)
+        expect(json).toEqual(JSON.stringify({coinify: {}}, null, 2))
 
       it 'should not serialize non-expected fields', ->
         e.rarefield = "I am an intruder"
@@ -74,7 +100,3 @@ describe "External", ->
 
         expect(b.coinify).toBeDefined()
         expect(b.rarefield).not.toBeDefined()
-
-      it 'should not deserialize non-expected fields', ->
-        b = new External({coinify: {}, rarefield: "I am an intruder"})
-        expect(b).toEqual(e)
