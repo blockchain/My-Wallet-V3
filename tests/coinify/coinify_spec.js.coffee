@@ -57,17 +57,23 @@ describe "Coinify", ->
   describe "instance", ->
     beforeEach ->
       c = Coinify.new()
+      c.partnerId = 18
+      c.save = () ->
+        Promise.resolve()
+      spyOn(c, "save").and.callThrough()
 
     describe "Setter", ->
 
       describe "autoLogin", ->
+        beforeEach ->
+
         it "should update", ->
           c.autoLogin = false
           expect(c.autoLogin).toEqual(false)
 
-        it "should sync wallet", ->
+        it "should save", ->
           c.autoLogin = false
-          expect(MyWallet.syncWallet).toHaveBeenCalled()
+          expect(c.save).toHaveBeenCalled()
 
         it "should check the input", ->
           expect(() -> c.autoLogin = "1").toThrow()
@@ -77,20 +83,14 @@ describe "Coinify", ->
 
       it 'should hold: fromJSON . toJSON = id', ->
         json = JSON.stringify(c, null, 2)
-        b = JSON.parse(json, Coinify.reviver)
-        expect(c).toEqual(b)
+        b = new Coinify(JSON.parse(json))
+        expect(json).toEqual(JSON.stringify(b, null, 2))
 
       it 'should not serialize non-expected fields', ->
+        expectedJSON = JSON.stringify(c, null, 2)
         c.rarefield = "I am an intruder"
-        json = JSON.stringify(c, null, 2)
-        b = JSON.parse(json)
-
-        expect(b.auto_login).toBeDefined()
-        expect(b.rarefield).not.toBeDefined()
-
-      it 'should not deserialize non-expected fields', ->
-        b = new Coinify({auto_login: true, rarefield: "I am an intruder"})
-        expect(b).toEqual(c)
+        json  = JSON.stringify(c, null, 2)
+        expect(json).toEqual(expectedJSON)
 
     describe "API", ->
       beforeEach ->
@@ -99,42 +99,35 @@ describe "Coinify", ->
         spyOn(c, "getEmailToken").and.callFake(() ->
           {
             then: (cb) ->
-              cb('')
+              cb('json-web-token')
           }
         )
 
         # Mock POST requests.
         # TODO: simulate API errors, e.g. if email already registered
         spyOn(c, "POST").and.callFake((endpoint, data) ->
-          handle = (resolve, reject) ->
-            if endpoint == "signup/trader"
-              if data.email == "duplicate@blockchain.com"
-                reject("DUPLICATE_EMAIL")
-              else if data.email == "fail@blockchain.com"
-                reject("ERROR_MESSAGE")
-              else
-                resolve({
-                  trader: {id: "1"}
-                  offlineToken: "offline-token"
-                })
-
-            else if endpoint == "auth"
-              if data.offline_token == 'invalid-offline-token'
-                reject({"error":"offline_token_not_found"})
-              else if data.offline_token == 'random-fail-offline-token'
-                reject()
-              else
-                resolve({access_token: "access-token", token_type: "bearer"})
+          if endpoint == "signup/trader"
+            console.log("singup/trader")
+            if data.email == "duplicate@blockchain.com"
+              console.log("Duplicate, reject!")
+              Promise.reject("DUPLICATE_EMAIL")
+            else if data.email == "fail@blockchain.com"
+              Promise.reject("ERROR_MESSAGE")
             else
-              reject("Unknown endpoint")
-          {
-            then: (resolve) ->
-              handle(resolve, (() ->))
-              {
-                catch: (reject) ->
-                  handle((() ->), reject)
-              }
-          }
+              Promise.resolve({
+                trader: {id: "1"}
+                offlineToken: "offline-token"
+              })
+
+          else if endpoint == "auth"
+            if data.offline_token == 'invalid-offline-token'
+              Promise.reject({"error":"offline_token_not_found"})
+            else if data.offline_token == 'random-fail-offline-token'
+              Promise.reject()
+            else
+              Promise.resolve({access_token: "access-token", token_type: "bearer"})
+          else
+            Promise.reject("Unknown endpoint")
         )
 
         spyOn(c, "PATCH").and.callFake((endpoint, data) ->
@@ -166,39 +159,41 @@ describe "Coinify", ->
             currency: "EUR"
           }
 
-        it 'requires the country to be set', ->
-          MyWallet.wallet.profile.countryCode = null
+        it 'requires the country', ->
+          expect(c.signup('NL')).toBeResolved()
           expect(c.signup()).toBeRejected()
 
 
         it 'requires email', ->
           MyWallet.wallet.accountInfo.email = null
-          expect(c.signup()).toBeRejected()
+          expect(c.signup('NL')).toBeRejected()
 
         it 'requires verified email', ->
           MyWallet.wallet.accountInfo.isEmailVerified = false
-          expect(c.signup()).toBeRejected()
+          expect(c.signup('NL')).toBeRejected()
 
         it 'requires default currency', ->
           MyWallet.wallet.accountInfo.currency = null
-          expect(c.signup()).toBeRejected()
+          expect(c.signup('NL')).toBeRejected()
 
         it 'sets a user and offline token', (done) ->
-          promise = c.signup()
+          checks  = () ->
+            expect(c.user).toEqual("1")
+            expect(c._offline_token).toEqual("offline-token")
+
+          promise = c.signup('NL').then(checks)
 
           expect(promise).toBeResolved(done)
-          expect(c.user).toEqual("1")
-          expect(c._offline_token).toEqual("offline-token")
 
         it 'lets the user know if email is already registered', ((done) ->
           MyWallet.wallet.accountInfo.email = "duplicate@blockchain.com"
-          promise = c.signup()
+          promise = c.signup('NL')
           expect(promise).toBeRejectedWith("DUPLICATE_EMAIL", done)
         )
 
         it 'might fail for an unexpected reason', ((done) ->
           MyWallet.wallet.accountInfo.email = "fail@blockchain.com"
-          promise = c.signup()
+          promise = c.signup('NL')
           expect(promise).toBeRejectedWith("ERROR_MESSAGE", done)
         )
 
@@ -219,9 +214,11 @@ describe "Coinify", ->
 
         it 'should store the access token', (done) ->
           # This is ephemeral, not saved to the wallet.
-          promise = c.login()
+          checks = () ->
+            expect(c._access_token).toEqual("access-token")
+
+          promise = c.login().then(checks)
           expect(promise).toBeResolved(done)
-          expect(c._access_token).toEqual("access-token")
 
         it 'should store the expiration time', () ->
           # Pending API change

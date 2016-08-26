@@ -155,7 +155,7 @@ Coinify.prototype.signup = function (countryCode) {
   var saveMetadata = function (res) {
     this._user = res.trader.id;
     this._offline_token = res.offlineToken;
-    return this.save();
+    return this.save().then(function () { return res; });
   };
 
   return Promise.resolve().then(runChecks.bind(this))
