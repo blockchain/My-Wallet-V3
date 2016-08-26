@@ -10,7 +10,7 @@ module.exports = External;
 
 function External () {
   this._metadata = new Metadata(METADATA_TYPE_EXTERNAL);
-  this._coinify = null;
+  this._coinify = undefined;
 }
 
 Object.defineProperties(External.prototype, {
