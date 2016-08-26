@@ -232,6 +232,7 @@ CoinifyTrade.prototype.btcExpected = function () {
   }
 };
 
+// QA tool:
 CoinifyTrade.prototype.fakeBankTransfer = function () {
   var self = this;
 
@@ -246,6 +247,16 @@ CoinifyTrade.prototype.fakeBankTransfer = function () {
     return fakeBankTransfer();
   } else {
     return this._coinify.login().then(fakeBankTransfer);
+  }
+};
+
+// QA tool:
+CoinifyTrade.prototype.expireQuote = function () {
+  console.log(this, this._coinify._lastQuote);
+  if (this.inAmount !== -this._coinify._lastQuote.baseAmount) {
+    console.log("Can't find corresponding quote.");
+  } else {
+    this._coinify._lastQuote.expiresAt = new Date();
   }
 };
 
