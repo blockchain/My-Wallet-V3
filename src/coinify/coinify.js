@@ -119,7 +119,8 @@ Coinify.prototype.save = function () {
 };
 // Country and default currency must be set
 // Email must be set and verified
-Coinify.prototype.signup = function (countryCode) {
+Coinify.prototype.signup = function (countryCode, currencyCode) {
+  var defaultCurrencyCode = currencyCode || MyWallet.wallet.accountInfo.currency;
   var runChecks = function () {
     assert(!this.user, 'Already signed up');
 
@@ -133,7 +134,7 @@ Coinify.prototype.signup = function (countryCode) {
 
     assert(MyWallet.wallet.accountInfo.email, 'email required');
     assert(MyWallet.wallet.accountInfo.isEmailVerified, 'email must be verified');
-    assert(MyWallet.wallet.accountInfo.currency, 'default currency required');
+    assert(defaultCurrencyCode, 'default currency required');
   };
 
   var doSignup = function (emailToken) {
@@ -141,7 +142,7 @@ Coinify.prototype.signup = function (countryCode) {
     return this.POST('signup/trader', {
       email: MyWallet.wallet.accountInfo.email,
       partnerId: this.partnerId,
-      defaultCurrency: MyWallet.wallet.accountInfo.currency, // ISO 4217
+      defaultCurrency: defaultCurrencyCode, // ISO 4217
       profile: {
         address: {
           country: countryCode.toUpperCase()
