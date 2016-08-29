@@ -39,5 +39,6 @@ module.exports = {
   Address: require('./src/address'),
   Metadata: require('./src/metadata'),
   Bitcoin: require('bitcoinjs-lib'),
-  External: require('./src/external')
+  External: require('./src/external'),
+  BuySell: require('./src/buy-sell')
 };

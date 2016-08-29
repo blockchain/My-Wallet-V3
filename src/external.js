@@ -3,14 +3,16 @@
 var Coinify = require('./coinify/coinify');
 var Metadata = require('./metadata');
 var assert = require('assert');
+var ExchangeDelegate = require('./exchange-delegate');
 
 var METADATA_TYPE_EXTERNAL = 3;
 
 module.exports = External;
 
-function External () {
+function External (wallet) {
   this._metadata = new Metadata(METADATA_TYPE_EXTERNAL);
   this._coinify = undefined;
+  this._delegate = new ExchangeDelegate(wallet);
 }
 
 Object.defineProperties(External.prototype, {
@@ -32,7 +34,7 @@ External.prototype.fetchOrCreate = function () {
     if (object === null) { // entry non exitent
       return this._metadata.create(this);
     } else {
-      this._coinify = object.coinify ? new Coinify(object.coinify, this) : undefined;
+      this._coinify = object.coinify ? new Coinify(object.coinify, this, this._delegate) : undefined;
       return this;
     }
   };
@@ -50,5 +52,5 @@ External.prototype.wipe = function () {
 
 External.prototype.addCoinify = function () {
   assert(!this._coinify, 'Already added');
-  this._coinify = Coinify.new(this);
+  this._coinify = Coinify.new(this, this._delegate);
 };

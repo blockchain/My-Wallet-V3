@@ -1,11 +1,6 @@
 'use strict';
 
-var WalletStore = require('../wallet-store');
-var API = require('../api');
 var assert = require('assert');
-var Helpers = require('../helpers');
-var MyWallet = require('../wallet');
-var TX = require('../wallet-transaction');
 
 var BankAccount = require('./bank-account');
 
@@ -117,34 +112,19 @@ Object.defineProperties(CoinifyTrade.prototype, {
 });
 
 CoinifyTrade.prototype.set = function (obj) {
-  var account;
   this._createdAt = new Date(obj.createTime);
   this._state = obj.state;
   this._is_buy = obj.is_buy;
-  if (obj.confirmed === Boolean(obj.confirmed)) { // Constructed from metadata JSON
-    if (Helpers.isPositiveInteger(obj.account_index)) {
-      account = MyWallet.wallet.hdwallet.accounts[obj.account_index];
-      this._receiveAddress = account.receiveAddressAtIndex(obj.receive_index);
-    }
+  if (obj.confirmed === Boolean(obj.confirmed)) {
+    this._coinify.delegate.deserializeExtraFields(obj, this);
+    this._receiveAddress = this._coinify.delegate.getReceiveAddress(this);
 
     this._confirmed = obj.confirmed;
     if (obj.confirmed) {
       this._bitcoinReceived = true;
     }
     this._txHash = obj.tx_hash;
-    this._account_index = obj.account_index;
-    this._receive_index = obj.receive_index;
   } else { // Contructed from Coinify API
-    if (
-      Helpers.isPositiveInteger(this._account_index) &&
-      Helpers.isPositiveInteger(this._receive_index)
-    ) {
-      account = MyWallet.wallet.hdwallet.accounts[this._account_index];
-      var receiveAddress = account.receiveAddressAtIndex(this._receive_index);
-      assert(obj.transferOut.details.account === receiveAddress, 'Unexpected receive address');
-    } else {
-      this._receiveAddress = obj.transferOut.details.account;
-    }
     this._inCurrency = obj.inCurrency;
     this._outCurrency = obj.outCurrency;
     this._inAmount = obj.inAmount;
@@ -163,21 +143,13 @@ CoinifyTrade.prototype.set = function (obj) {
   }
 };
 
-CoinifyTrade.prototype.removeLabeledAddress = function () {
-  var account;
-  if (this._account_index && Helpers.isPositiveInteger(this._receive_index)) {
-    account = MyWallet.wallet.hdwallet.accounts[this._account_index];
-    account.removeLabelForReceivingAddress(this._receive_index);
-  }
-};
-
 CoinifyTrade.prototype.cancel = function () {
   var self = this;
 
   var processCancel = function (trade) {
     self._state = trade.state;
 
-    self.removeLabeledAddress.bind(self)();
+    self._coinify.delegate.releaseReceiveAddress(self);
 
     return self._coinify.save();
   };
@@ -271,21 +243,13 @@ CoinifyTrade.prototype.expireQuote = function () {
 CoinifyTrade.buy = function (quote, medium, coinify) {
   assert(quote, 'Quote required');
 
-  var account = MyWallet.wallet.hdwallet.defaultAccount;
-
-  var receiveAddressIndex = account.receiveIndex;
-
-  // Respect the GAP limit:
-  if (receiveAddressIndex - account.lastUsedReceiveIndex >= 19) {
-    return Promise.reject('gap_limit');
-  }
+  var receiveAddress = coinify.delegate.reserveReceiveAddress();
 
   var processTrade = function (res) {
     var trade = new CoinifyTrade(res, coinify);
-    account.setLabelForReceivingAddress(receiveAddressIndex, 'Coinify order #' + trade.id);
-    trade._account_index = account.index;
-    trade._receive_index = receiveAddressIndex;
+    coinify.delegate.commitReceiveAddress(trade);
     coinify._trades.push(trade);
+    trade._monitorAddress.bind(trade)();
     return coinify.save().then(function () { return trade; });
   };
 
@@ -297,7 +261,7 @@ CoinifyTrade.buy = function (quote, medium, coinify) {
     transferOut: {
       medium: 'blockchain',
       details: {
-        account: account.receiveAddressAtIndex(receiveAddressIndex)
+        account: receiveAddress
       }
     }
   }).then(processTrade);
@@ -312,7 +276,7 @@ CoinifyTrade.fetchAll = function (coinify) {
         for (var k = 0; k < coinify._trades.length; k++) {
           if (coinify._trades[k]._id === res[i].id) {
             trade = coinify._trades[k];
-            trade.set(res[i]);
+            trade.set.bind(trade)(res[i]);
           }
         }
         if (trade === undefined) {
@@ -320,14 +284,9 @@ CoinifyTrade.fetchAll = function (coinify) {
           coinify._trades.push(trade);
         }
 
-        // Remove labeled address if trade is cancelled, rejected or expired
-        if (Helpers.isPositiveInteger(trade._account_index)) {
-          var account = MyWallet.wallet.hdwallet.accounts[trade._account_index];
-          if (['rejected', 'cancelled', 'expired'].indexOf(trade.state) > -1) {
-            account.removeLabelForReceivingAddress(trade._receive_index);
-          }
+        if (['rejected', 'cancelled', 'expired'].indexOf(trade.state) > -1) {
+          coinify.delegate.releaseReceiveAddress(trade);
         }
-        trade = undefined;
       }
 
       return coinify.save().then(function () { return coinify._trades; });
@@ -350,6 +309,27 @@ CoinifyTrade.prototype.refresh = function () {
   } else {
     return this._coinify.login().then(updateTrade.bind(this));
   }
+};
+
+CoinifyTrade.prototype._monitorAddress = function () {
+  var self = this;
+
+  var saveTrade = function () {
+    self._coinify.save.bind(self._coinify)();
+  };
+
+  var tradeWasPaid = function (amount) {
+    self._watchAddressResolve && self._watchAddressResolve(amount);
+
+    self.refresh()
+      .then(CoinifyTrade._getTransactionHash)
+      .then(saveTrade);
+  };
+
+  self._coinify.delegate.monitorAddress(self.receiveAddress, function (amount) {
+    self._bitcoinReceived = true;
+    tradeWasPaid(amount);
+  });
 };
 
 CoinifyTrade._checkOnce = function (coinify, tradeFilter) {
@@ -377,52 +357,27 @@ CoinifyTrade._checkOnce = function (coinify, tradeFilter) {
 };
 
 CoinifyTrade._getTransactionHash = function (trade) {
-  return API.getHistory([trade.receiveAddress]).then(function (res) {
-    if (res.txs && res.txs.length > 0) {
-      var tx = new TX(res.txs[0]);
-      trade._txHash = tx.hash;
-      trade._confirmations = tx.confirmations;
-      trade._bitcoinReceived = true;
-      if (trade.confirmed) {
-        trade._confirmed = true;
-      }
-    }
-  });
+  return trade._coinify.delegate.checkAddress(trade.receiveAddress)
+         .then(function (tx) {
+           if (tx) {
+             trade._txHash = tx.hash;
+             trade._confirmations = tx.confirmations;
+             trade._bitcoinReceived = true;
+             if (trade.confirmed) {
+               trade._confirmed = true;
+             }
+           }
+         });
 };
 
 CoinifyTrade._monitorWebSockets = function (coinify, tradeFilter) {
-  var getReceiveAddress = function (obj) { return obj.receiveAddress; };
+  var trades = coinify._trades
+                .filter(tradeFilter);
 
-  var saveTrade = function () {
-    coinify.save.bind(coinify)();
-  };
-
-  var tradeWasPaid = function (trade, amount) {
-    trade._watchAddressResolve && trade._watchAddressResolve(amount);
-
-    trade.refresh()
-      .then(CoinifyTrade._getTransactionHash)
-      .then(saveTrade);
-  };
-
-  WalletStore.addEventListener(function (event, data) {
-    if (event === 'on_tx_received') {
-      var trades = coinify._trades
-                    .filter(tradeFilter);
-      var receiveAddresses = trades.map(getReceiveAddress);
-      if (data['out']) {
-        for (var i = 0; i < data['out'].length; i++) {
-          var index = receiveAddresses.indexOf(data['out'][i].addr);
-          if (index > -1) {
-            var trade = trades[index];
-            trade._bitcoinReceived = true;
-            var amount = data['out'][i].value;
-            tradeWasPaid(trade, amount);
-          }
-        }
-      }
-    }
-  });
+  for (var i = 0; i < trades.length; i++) {
+    var trade = trades[i];
+    trade._monitorAddress.bind(trade)();
+  }
 };
 
 // Monitor the receive addresses for pending and completed trades.
@@ -443,15 +398,17 @@ CoinifyTrade.monitorPayments = function (coinify) {
 };
 
 CoinifyTrade.prototype.toJSON = function () {
-  return {
+  var serialized = {
     id: this._id,
     state: this._state,
     tx_hash: this._txHash,
-    account_index: this._account_index,
-    receive_index: this._receive_index,
     confirmed: this.confirmed,
     is_buy: this.isBuy
   };
+
+  this._coinify.delegate.serializeExtraFields(serialized, this);
+
+  return serialized;
 };
 
 CoinifyTrade.filteredTrades = function (trades) {

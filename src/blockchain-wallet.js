@@ -808,7 +808,7 @@ Wallet.prototype.loadExternal = function () {
   if (this.isDoubleEncrypted === true || !this.isUpgradedToHD) {
     return Promise.resolve();
   } else {
-    this._external = new External();
+    this._external = new External(this);
     return this._external.fetchOrCreate();
   }
 };
