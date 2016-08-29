@@ -207,6 +207,15 @@ CoinifyTrade.prototype.watchAddress = function () {
 CoinifyTrade.prototype.btcExpected = function () {
   var self = this;
   if (this.isBuy) {
+    if ([
+      'completed',
+      'completed_test',
+      'cancelled',
+      'rejected'
+    ].indexOf(this.state) > -1) {
+      return Promise.resolve(this.outAmountExpected);
+    }
+
     var fifteenMinutesAgo = new Date(new Date().getTime() - 15 * 60 * 1000);
     var oneMinuteAgo = new Date(new Date().getTime() - 15 * 60 * 1000);
     if (this.createdAt > fifteenMinutesAgo) {
