@@ -17,12 +17,15 @@ function AccountInfo (object) {
     this._mobile = null;
   }
 
-  this._dialCode = object.dial_code;
+  this._countryCodeGuess = object.country_code; // Country guess by the backend
+  this._dialCode = object.dial_code; // Dialcode guess by the backend
 
   this._isEmailVerified = Boolean(object.email_verified);
   this._isMobileVerified = Boolean(object.sms_verified);
 
   this._currency = object.currency;
+
+  this._invited = object.invited || false;
 
   var notifications = {};
   if (object.notifications_type) {
@@ -57,6 +60,10 @@ Object.defineProperties(AccountInfo.prototype, {
         : '+' + this._mobile.countryCode + this._mobile.number.replace(/^0*/, '');
     }
   },
+  'countryCodeGuess': {
+    configurable: false,
+    get: function () { return this._countryCodeGuess; }
+  },
   'dialCode': {
     configurable: false,
     get: function () { return this._dialCode; }
@@ -76,6 +83,10 @@ Object.defineProperties(AccountInfo.prototype, {
   'currency': {
     configurable: false,
     get: function () { return this._currency; }
+  },
+  'invited': {
+    configurable: false,
+    get: function () { return this._invited; }
   },
   'notifications': {
     configurable: false,

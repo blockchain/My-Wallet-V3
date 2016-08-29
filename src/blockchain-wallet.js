@@ -19,6 +19,7 @@ var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var KeyRing = require('./keyring');
 var TxList = require('./transaction-list');
 var Block = require('./bitcoin-block');
+var External = require('./external');
 var AccountInfo = require('./account-info');
 
 // Wallet
@@ -72,6 +73,7 @@ function Wallet (object) {
   this._txList = new TxList();
   this._latestBlock = null;
   this._accountInfo = null;
+  this._external = null;
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -213,6 +215,10 @@ Object.defineProperties(Wallet.prototype, {
     get: function () {
       return !(this._hd_wallets == null || this._hd_wallets.length === 0);
     }
+  },
+  'external': {
+    configurable: false,
+    get: function () { return this._external; }
   },
   'isEncryptionConsistent': {
     configurable: false,
@@ -677,6 +683,7 @@ Wallet.prototype.upgradeToV3 = function (firstAccountLabel, pw, success, error) 
   this._hd_wallets.push(hd);
   var label = firstAccountLabel || 'My Bitcoin Wallet';
   this.newAccount(label, pw, this._hd_wallets.length - 1, true);
+  this.loadExternal();
   MyWallet.syncWallet(function (res) {
     success();
   }, error);
@@ -794,4 +801,14 @@ Wallet.prototype.fetchAccountInfo = function () {
     parentThis._accountInfo = new AccountInfo(info);
     return info; // TODO: handle more here instead of in the frontend / iOs
   });
+};
+
+Wallet.prototype.loadExternal = function () {
+  // patch (buy-sell does not work with double encryption for now)
+  if (this.isDoubleEncrypted === true || !this.isUpgradedToHD) {
+    return Promise.resolve();
+  } else {
+    this._external = new External();
+    return this._external.fetchOrCreate();
+  }
 };

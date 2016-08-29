@@ -371,6 +371,7 @@ describe "Metadata", ->
       beforeEach ->
         c._magicHash = "random|{\"hello\":\"world\"}|encrypted-with-random+m/510742'/2'/1'-private-key-buffer|sha256|base64|magicHash"
         c._value = helloWorld
+        c._previousPayload = '{"hello":"world"}'
         spyOn(WalletCrypto, "encryptDataWithKey").and.callThrough()
 
       it "should immedidately resolve for identical object", (done) ->

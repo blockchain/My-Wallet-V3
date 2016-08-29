@@ -36,15 +36,8 @@ module.exports = {
   WalletNetwork: require('./src/wallet-network'),
   RNG: require('./src/rng'),
   Transaction: require('./src/transaction'),
-  // Wallet: require('./blockchain-wallet'),
   Address: require('./src/address'),
   Metadata: require('./src/metadata'),
-  // HDAccount: require('./hd-account'),
-  // HDWallet: require('./hd-wallet'),
-  // KeyChain: require('./keychain'),
-  // KeyRing: require('./keyring'),
-  Bitcoin: require('bitcoinjs-lib')
-  // Base58: require('bs58'),
-  // BigInteger: require('bigi'),
-  // BIP39: require('bip39')
+  Bitcoin: require('bitcoinjs-lib'),
+  External: require('./src/external')
 };

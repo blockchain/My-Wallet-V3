@@ -491,11 +491,20 @@ describe "Wallet", ->
 
   describe "initializeWallet", ->
     beforeEach ->
-      spyOn(MyWallet, "decryptAndInitializeWallet")
+      spyOn(MyWallet, "decryptAndInitializeWallet").and.callFake(() ->
+        MyWallet.wallet = {
+          loadExternal: () ->
+            Promise.resolve()
+        }
+        Promise.resolve()
+      )
 
-    it "should call decryptAndInitializeWallet()", () ->
-      MyWallet.initializeWallet()
-      expect(MyWallet.decryptAndInitializeWallet).toHaveBeenCalled()
+    it "should call decryptAndInitializeWallet()", (done) ->
+      check = () ->
+        expect(MyWallet.decryptAndInitializeWallet).toHaveBeenCalled()
+
+      promise = MyWallet.initializeWallet().then(check)
+      expect(promise).toBeResolved(done)
 
   describe "decryptAndInitializeWallet", ->
     beforeEach ->

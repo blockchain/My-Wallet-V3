@@ -4,7 +4,6 @@ var MyWallet = module.exports = {};
 
 var assert = require('assert');
 var Buffer = require('buffer').Buffer;
-
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var WalletSignup = require('./wallet-signup');
@@ -75,7 +74,7 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
       MyWallet.getWallet();
     }
   } else if (obj.op === 'utx') {
-    WalletStore.sendEvent('on_tx_received');
+    WalletStore.sendEvent('on_tx_received', obj.x);
     var sendOnTx = WalletStore.sendEvent.bind(null, 'on_tx');
     MyWallet.wallet.getHistory().then(sendOnTx);
   } else if (obj.op === 'block') {
@@ -317,13 +316,13 @@ MyWallet.didFetchWallet = function (obj) {
 };
 
 MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
-  var promise = new Promise(function (resolve, reject) {
+  var doInitialize = function () {
     if (isInitialized || WalletStore.isRestoringWallet()) {
       return;
     }
 
     function _success () {
-      resolve();
+      return;
     }
 
     function _error (e) {
@@ -331,7 +330,7 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
       WalletStore.sendEvent('msg', {type: 'error', message: e});
 
       WalletStore.sendEvent('error_restoring_wallet');
-      reject(e);
+      throw e;
     }
 
     WalletStore.setRestoringWallet(true);
@@ -346,8 +345,14 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
       , decryptSuccess
       , buildHdSuccess
     );
-  });
-  return promise;
+  };
+  // load metadata buy-sell
+
+  var loadExternal = function () {
+    MyWallet.wallet.loadExternal.bind(MyWallet.wallet)();
+  };
+
+  return Promise.resolve().then(doInitialize).then(loadExternal);
 };
 
 // used on iOS

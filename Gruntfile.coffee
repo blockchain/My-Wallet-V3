@@ -63,25 +63,6 @@ module.exports = (grunt) ->
         src: '<%= browserify.build.src %>'
         dest: 'build/blockchain.js'
 
-    # TODO should auto-run and work on all files
-    jshint:
-      files: [
-        #'src/blockchain-api.js'
-        'src/blockchain-settings-api.js'
-        'src/hd-account.js'
-        'src/hd-wallet.js'
-        'src/import-export.js'
-        #'src/shared.js'
-        #'src/sharedcoin.js'
-        'src/transaction.js'
-        'src/wallet-signup.js'
-        'src/payment.js'
-        #'src/wallet.js'
-      ]
-      options:
-        globals:
-          jQuery: true
-
     watch:
       scripts:
         files: [
@@ -111,7 +92,6 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks 'grunt-contrib-uglify'
   grunt.loadNpmTasks 'grunt-contrib-watch'
   grunt.loadNpmTasks 'grunt-env'
-  grunt.loadNpmTasks 'grunt-contrib-jshint'
   grunt.loadNpmTasks 'grunt-preprocess'
   grunt.loadNpmTasks 'grunt-text-replace'
   grunt.loadNpmTasks 'grunt-karma-coveralls'

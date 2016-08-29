@@ -274,15 +274,27 @@ HDAccount.prototype.incrementReceiveIndexIfLast = function (index) {
   }
   return this;
 };
+HDAccount.prototype.decrementReceiveIndex = function () {
+  this._receiveIndex--;
+  return this;
+};
+HDAccount.prototype.decrementReceiveIndexIfLast = function (index) {
+  if (this._receiveIndex === index + 1) {
+    this.decrementReceiveIndex();
+  }
+  return this;
+};
 
 // address labels
-HDAccount.prototype.setLabelForReceivingAddress = function (index, label) {
+HDAccount.prototype.setLabelForReceivingAddress = function (index, label, maxGap) {
+  maxGap = maxGap || 19;
+  assert(maxGap <= 19, 'Max gap must be less than 20');
   assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
 
   if (!Helpers.isValidLabel(label)) {
     return Promise.reject('NOT_ALPHANUMERIC');
     // Error: address label must be alphanumeric
-  } else if (index - this.lastUsedReceiveIndex >= 19) {
+  } else if (index - this.lastUsedReceiveIndex >= maxGap) {
     // Exceeds BIP 44 unused address gap limit
     return Promise.reject('GAP');
   } else {
@@ -296,6 +308,7 @@ HDAccount.prototype.setLabelForReceivingAddress = function (index, label) {
 HDAccount.prototype.removeLabelForReceivingAddress = function (index) {
   assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
   delete this._address_labels[index];
+  this.decrementReceiveIndexIfLast(index);
   MyWallet.syncWallet();
   return this;
 };
