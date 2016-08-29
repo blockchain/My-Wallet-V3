@@ -291,31 +291,30 @@ describe "CoinifyTrade", ->
         expect(trade.set).toHaveBeenCalled()
 
     describe "_checkOnce()", ->
-      it "should mark bitcoin received as true", (done) ->
+      myCoinify = undefined
+      _getTransactionHashCalled = undefined
+
+      beforeEach ->
+        spyOn(CoinifyTrade, '_getTransactionHash').and.callFake(() ->
+          _getTransactionHashCalled = true
+        )
 
         myCoinify = {
           _trades: [trade]
           isLoggedIn: true
+          save: () ->
+            Promise.resolve()
         }
-        getHistoryAnswer = {
-          txs: [
-            {
-              hash: "1234",
-              confirmations: 0
-            }
-          ]
 
-        }
         myCoinify._trades[0].status = 'completed'
 
-        testBitcoinReceived = () ->
-          expect(myCoinify._trades[0]._bitcoinReceived).toBe(true)
 
-        spyOn(API, "getHistory").and.returnValue(Promise.resolve(getHistoryAnswer))
+      it "should call _getTransactionHash", (done) ->
 
         filter = () -> true
 
-        CoinifyTrade._checkOnce(myCoinify, filter)
-          .then(testBitcoinReceived)
-          .catch(console.log)
-          .then(done)
+        promise = CoinifyTrade._checkOnce(myCoinify, filter)
+
+        expect(promise).toBeResolved(done)
+
+        expect(_getTransactionHashCalled).toEqual(true)
