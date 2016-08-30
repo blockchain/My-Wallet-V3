@@ -12,7 +12,7 @@ function BankAccount (obj) {
   this._number = obj.account.number;
   this._bank_name = obj.bank.name;
   this._bank_address = new Address(obj.bank.address);
-  this._holder_name = obj.bank.name;
+  this._holder_name = obj.holder.name;
   this._holder_address = new Address(obj.holder.address);
   this._referenceText = obj.referenceText;
   this._updated_at = obj.updateTime; // Not used in buy
