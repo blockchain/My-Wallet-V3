@@ -271,8 +271,9 @@ CoinifyTrade.buy = function (quote, medium, coinify) {
 CoinifyTrade.fetchAll = function (coinify) {
   var getTrades = function () {
     return coinify.GET('trades').then(function (res) {
+      var trade;
       for (var i = 0; i < res.length; i++) {
-        var trade;
+        trade = undefined;
         for (var k = 0; k < coinify._trades.length; k++) {
           if (coinify._trades[k]._id === res[i].id) {
             trade = coinify._trades[k];

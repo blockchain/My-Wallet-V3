@@ -1,30 +1,6 @@
 proxyquire = require('proxyquireify')(require)
 
-acc0 = {
-  receivingAddressesLabels: []
-}
-
-MyWallet = {
-  wallet: {
-    hdwallet: {
-      accounts: [
-        acc0
-      ]
-      defaultAccount: acc0
-    }
-  }
-}
-
-API =
-  getBalances: () ->
-  getHistory: () ->
-
-WalletStore = {}
-
 stubs = {
-  '../wallet': MyWallet,
-  '../api': API,
-  '../wallet-store': WalletStore
 }
 
 CoinifyTrade    = proxyquire('../../src/coinify/trade', stubs)
@@ -107,6 +83,13 @@ describe "CoinifyTrade", ->
           country: "NL"
       }
 
+      exchangeDelegate = {
+        reserveReceiveAddress: () -> "1abcd"
+        removeLabeledAddress: () ->
+        releaseReceiveAddress: () ->
+        commitReceiveAddress: () ->
+      }
+
       coinify = {
         _save: () -> Promise.resolve()
         save: () -> Promise.resolve()
@@ -148,6 +131,8 @@ describe "CoinifyTrade", ->
               catch: () ->
             }
         }
+        _delegate: exchangeDelegate
+        delegate: exchangeDelegate
       }
       spyOn(coinify, "GET").and.callThrough()
       spyOn(coinify, "POST").and.callThrough()
@@ -165,22 +150,22 @@ describe "CoinifyTrade", ->
         expect(trade._createdAt).toEqual(oldTimeStamp)
         expect(trade._inCurrency).toBe(tradeJSON.inCurrency)
 
-    describe "removeLabeledAddress()", ->
-       it "set new object and does not change id or date", ->
-         pending()
-
     describe "cancel()", ->
       beforeEach ->
-        spyOn(trade, "removeLabeledAddress").and.callFake(() ->)
-
-      it "should cancel a trade and update its state", ->
         coinify.PATCH = () ->
                   then: (cb) ->
                     cb({state: "cancelled"})
         spyOn(coinify, "PATCH").and.callThrough()
+
+      it "should cancel a trade and update its state", ->
         trade.cancel()
         expect(coinify.PATCH).toHaveBeenCalledWith('trades/' + trade._id + '/cancel')
         expect(trade._state).toBe('cancelled')
+
+      it "should notifiy the delegate the receive address is no longer needed", ->
+        spyOn(coinify.delegate, "releaseReceiveAddress")
+        trade.cancel()
+        expect(coinify.delegate.releaseReceiveAddress).toHaveBeenCalled()
 
     describe "watchAddress()", ->
       it "should return a promise with the total received", (done) ->
@@ -222,32 +207,38 @@ describe "CoinifyTrade", ->
         pending()
 
     describe "buy()", ->
-      it "should fail if gap limit", (done) ->
-        MyWallet.wallet.hdwallet.accounts[0].receiveIndex = 20
-        MyWallet.wallet.hdwallet.accounts[0].lastUsedReceiveIndex = 0
-        expect(CoinifyTrade.buy({})).toBeRejectedWith('gap_limit', done)
+      quote = undefined
 
-    describe "buy()", ->
-      it "should POST the quote and add the received trade to the list", (done) ->
+      beforeEach ->
+        spyOn(CoinifyTrade.prototype, "_monitorAddress").and.callFake(() ->)
         quote = { id: 101 }
-        acc = MyWallet.wallet.hdwallet.defaultAccount
-        acc.receiveIndex = 20
-        acc.lastUsedReceiveIndex = 19
-        acc.receiveAddressAtIndex = () -> '19g1YFsoR5duHgTFcs4HKnjKHH7PgNqBJM'
-        acc.setLabelForReceivingAddress = () -> 'do stuff'
         coinify.POST = () -> Promise.resolve(tradeJSON)
         spyOn(coinify, "POST").and.callThrough()
 
+      it "should POST the quote and add the received trade to the list", (done) ->
         testTrade = (t) ->
           expect(coinify.POST).toHaveBeenCalled()
           expect(coinify._trades.length).toBe(1)
 
-        CoinifyTrade.buy(quote, undefined, coinify)
+        promise = CoinifyTrade.buy(quote, undefined, coinify)
           .then(testTrade)
-          .catch(console.log)
-          .then(done)
+
+        expect(promise).toBeResolved(done)
+
+      it "should watch the address", (done) ->
+        checks = (trade) ->
+          expect(trade._monitorAddress).toHaveBeenCalled()
+
+        promise = CoinifyTrade.buy(quote, undefined, coinify)
+          .then(checks)
+
+        expect(promise).toBeResolved(done)
+
 
     describe "fetchAll()", ->
+      beforeEach ->
+        spyOn(coinify.delegate, "releaseReceiveAddress").and.callThrough()
+
       it "should fetch all the trades", (done) ->
         myCoinify = {
           GET: () ->
@@ -281,6 +272,9 @@ describe "CoinifyTrade", ->
         spyOn(myCoinify, "GET").and.callThrough()
         promise = CoinifyTrade.fetchAll(myCoinify).then(check)
         expect(promise).toBeResolved(done)
+
+      it "should release addresses for cancelled trades", ->
+        pending()
 
     describe "refresh()", ->
       it "should GET the trade and update the trade object", ->
