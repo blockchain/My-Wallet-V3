@@ -53,7 +53,7 @@ describe "Coinify: Bank account", ->
       expect(b._number).toBe(o.account.number)
 
       expect(b._bank_name).toBe(o.bank.name)
-      expect(b._holder_name).toBe(o.bank.name)
+      expect(b._holder_name).toBe(o.holder.name)
       expect(b._referenceText).toBe(o.referenceText)
 
       expect(b._updated_at).toBe(o.updateTime)
