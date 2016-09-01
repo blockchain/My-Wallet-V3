@@ -1,28 +1,6 @@
 proxyquire = require('proxyquireify')(require)
 
-MyWallet = {
-  wallet: {
-    syncWallet: () ->
-  }
-}
-
-emailVerified = true
-
-API = {
-  request: (action, method, data, headers) ->
-    return new Promise (resolve, reject) ->
-      if action == 'GET' && method == "wallet/signed-email-token"
-        if emailVerified
-          resolve({success: true, token: 'json-web-token'})
-        else
-          resolve({success: false})
-      else
-        reject('bad call')
-}
-
 stubs = {
-  '../wallet': MyWallet,
-  '../api' : API
 }
 
 Coinify    = proxyquire('../../src/coinify/coinify', stubs)
@@ -32,7 +10,6 @@ describe "Coinify", ->
   c = undefined
 
   beforeEach ->
-    spyOn(MyWallet, "syncWallet")
     JasminePromiseMatchers.install()
 
   afterEach ->
@@ -61,6 +38,13 @@ describe "Coinify", ->
       c.save = () ->
         Promise.resolve()
       spyOn(c, "save").and.callThrough()
+
+      c.delegate = {
+        email: () -> "info@blockchain.com"
+        isEmailVerified: () -> true
+        getEmailToken: () -> "json-web-token"
+      }
+
 
     describe "Setter", ->
 
@@ -94,15 +78,6 @@ describe "Coinify", ->
 
     describe "API", ->
       beforeEach ->
-        MyWallet.wallet.profile = {countryCode: "GB"}
-
-        spyOn(c, "getEmailToken").and.callFake(() ->
-          {
-            then: (cb) ->
-              cb('json-web-token')
-          }
-        )
-
         # Mock POST requests.
         # TODO: simulate API errors, e.g. if email already registered
         spyOn(c, "POST").and.callFake((endpoint, data) ->
@@ -152,48 +127,40 @@ describe "Coinify", ->
         )
 
       describe "signup", ->
-        beforeEach ->
-          MyWallet.wallet.accountInfo = {
-            email: "info@blockchain.com"
-            isEmailVerified: true
-            currency: "EUR"
-          }
-
-        it 'requires the country', ->
-          expect(c.signup('NL')).toBeResolved()
-          expect(c.signup()).toBeRejected()
-
-
-        it 'requires email', ->
-          MyWallet.wallet.accountInfo.email = null
-          expect(c.signup('NL')).toBeRejected()
-
-        it 'requires verified email', ->
-          MyWallet.wallet.accountInfo.isEmailVerified = false
-          expect(c.signup('NL')).toBeRejected()
-
-        it 'requires default currency', ->
-          MyWallet.wallet.accountInfo.currency = null
-          expect(c.signup('NL')).toBeRejected()
-
         it 'sets a user and offline token', (done) ->
           checks  = () ->
             expect(c.user).toEqual("1")
             expect(c._offline_token).toEqual("offline-token")
 
-          promise = c.signup('NL').then(checks)
+          promise = c.signup('NL', 'EUR').then(checks)
 
           expect(promise).toBeResolved(done)
 
+        it 'requires the country', ->
+          expect(c.signup('NL', 'EUR')).toBeResolved()
+          expect(c.signup(undefined, 'EUR')).toBeRejected()
+
+        it 'requires the currency', ->
+          expect(c.signup('NL', 'EUR')).toBeResolved()
+          expect(c.signup('NL')).toBeRejected()
+
+        it 'requires email', ->
+          c.delegate.email = () -> null
+          expect(c.signup('NL', 'EUR')).toBeRejected()
+
+        it 'requires verified email', ->
+          c.delegate.isEmailVerified = () -> false
+          expect(c.signup('NL', 'EUR')).toBeRejected()
+
         it 'lets the user know if email is already registered', ((done) ->
-          MyWallet.wallet.accountInfo.email = "duplicate@blockchain.com"
-          promise = c.signup('NL')
+          c.delegate.email = () -> "duplicate@blockchain.com"
+          promise = c.signup('NL', 'EUR')
           expect(promise).toBeRejectedWith("DUPLICATE_EMAIL", done)
         )
 
         it 'might fail for an unexpected reason', ((done) ->
-          MyWallet.wallet.accountInfo.email = "fail@blockchain.com"
-          promise = c.signup('NL')
+          c.delegate.email = () -> "fail@blockchain.com"
+          promise = c.signup('NL', 'EUR')
           expect(promise).toBeRejectedWith("ERROR_MESSAGE", done)
         )
 
@@ -252,16 +219,3 @@ describe "Coinify", ->
 
         describe 'default currency', ->
           pending()
-
-    describe 'getEmailToken', ->
-      afterEach ->
-        emailVerified = true
-
-      it 'should get the token', (done) ->
-        promise = c.getEmailToken()
-        expect(promise).toBeResolvedWith('json-web-token', done);
-
-      it 'should reject if email is not verified', (done) ->
-        emailVerified = false
-        promise = c.getEmailToken()
-        expect(promise).toBeRejected(done);

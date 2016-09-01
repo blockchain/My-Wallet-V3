@@ -1,22 +1,55 @@
 'use strict';
 
+/* To use this class, three things are needed:
+1 - a delegate object with functions that provide the following:
+      email() -> String            : the users email address
+      isEmailVerified() -> Boolean : whether the users email is verified
+      getEmailToken() -> stringify : JSON web token {email: 'me@example.com'}
+      monitorAddress(address, callback) : callback(amount) if btc received
+      checkAddress(address) : look for existing transaction at address
+      getReceiveAddress(trade) : return the trades receive address
+      reserveReceiveAddress()
+      commitReceiveAddress()
+      releaseReceiveAddress()
+      serializeExtraFields(obj, trade) : e.g. obj.account_index = ...
+      deserializeExtraFields(obj, trade)
+
+2 - a Coinify parner identifier
+
+3 - a parent object with a save() method, e.g.:
+    var parent = {
+      save: function () { return JSON.stringify(this._coinify); }
+    }
+    var object = {user: 1, offline_token: 'token'};
+    var coinify = new Coinify(object, parent, delegate);
+    coinify.partnerId = ...;
+    parent._coinify = coinify;
+    coinify.save()
+    // "{"user":1,"offline_token":"token"}"
+*/
+
 var CoinifyProfile = require('./profile');
 var CoinifyTrade = require('./trade');
 var CoinifyKYC = require('./kyc');
 var PaymentMethod = require('./payment-method');
 var ExchangeRate = require('./exchange-rate');
 
-var MyWallet = require('../wallet');
-var Helpers = require('../helpers');
-var API = require('../api');
-
 var assert = require('assert');
+
+var isBoolean = function (value) {
+  return typeof (value) === 'boolean';
+};
+
+var isString = function (str) {
+  return typeof str === 'string' || str instanceof String;
+};
 
 module.exports = Coinify;
 
-function Coinify (object, parent) {
+function Coinify (object, parent, delegate) {
   var obj = object || {};
   this._parent = parent; // parent this of external (for save)
+  this._delegate = delegate; // ExchangeDelegate
   this._partner_id = null;
   this._user = obj.user;
   this._offline_token = obj.offline_token;
@@ -41,6 +74,13 @@ function Coinify (object, parent) {
 }
 
 Object.defineProperties(Coinify.prototype, {
+  'delegate': {
+    configurable: false,
+    get: function () { return this._delegate; },
+    set: function (value) {
+      this._delegate = value;
+    }
+  },
   'user': {
     configurable: false,
     get: function () { return this._user; }
@@ -50,7 +90,7 @@ Object.defineProperties(Coinify.prototype, {
     get: function () { return this._auto_login; },
     set: function (value) {
       assert(
-        Helpers.isBoolean(value),
+        isBoolean(value),
         'Boolean'
       );
       this._auto_login = value;
@@ -119,29 +159,33 @@ Coinify.prototype.save = function () {
 };
 // Country and default currency must be set
 // Email must be set and verified
-Coinify.prototype.signup = function (countryCode) {
+Coinify.prototype.signup = function (countryCode, currencyCode) {
+  var self = this;
   var runChecks = function () {
-    assert(!this.user, 'Already signed up');
+    assert(!self.user, 'Already signed up');
+
+    assert(self.delegate, 'ExchangeDelegate required');
 
     assert(
       countryCode &&
-      Helpers.isString(countryCode) &&
+      isString(countryCode) &&
       countryCode.length === 2 &&
       countryCode.match(/[a-zA-Z]{2}/),
       'ISO 3166-1 alpha-2'
     );
 
-    assert(MyWallet.wallet.accountInfo.email, 'email required');
-    assert(MyWallet.wallet.accountInfo.isEmailVerified, 'email must be verified');
-    assert(MyWallet.wallet.accountInfo.currency, 'default currency required');
+    assert(currencyCode, 'currency required');
+
+    assert(self.delegate.email(), 'email required');
+    assert(self.delegate.isEmailVerified(), 'email must be verified');
   };
 
   var doSignup = function (emailToken) {
     assert(emailToken, 'email token missing');
     return this.POST('signup/trader', {
-      email: MyWallet.wallet.accountInfo.email,
-      partnerId: this.partnerId,
-      defaultCurrency: MyWallet.wallet.accountInfo.currency, // ISO 4217
+      email: self.delegate.email(),
+      partnerId: self.partnerId,
+      defaultCurrency: currencyCode, // ISO 4217
       profile: {
         address: {
           country: countryCode.toUpperCase()
@@ -159,26 +203,9 @@ Coinify.prototype.signup = function (countryCode) {
   };
 
   return Promise.resolve().then(runChecks.bind(this))
-                          .then(this.getEmailToken.bind(this))
+                          .then(this.delegate.getEmailToken.bind(this.delegate))
                           .then(doSignup.bind(this))
                           .then(saveMetadata.bind(this));
-};
-
-Coinify.prototype.getEmailToken = function () {
-  return API.request(
-    'GET',
-    'wallet/signed-email-token',
-    {
-      guid: MyWallet.wallet.guid,
-      sharedKey: MyWallet.wallet.sharedKey
-    }
-  ).then(function (res) {
-    if (res.success) {
-      return res.token;
-    } else {
-      throw new Error('Unable to obtain email verification proof');
-    }
-  });
 };
 
 Coinify.prototype.login = function () {
@@ -400,8 +427,17 @@ Coinify.prototype.request = function (method, endpoint, data) {
     options.headers['Authorization'] = 'Bearer ' + this._access_token;
   }
 
+  // encodeFormData :: Object -> url encoded params
+  var encodeFormData = function (data) {
+    if (!data) return '';
+    var encoded = Object.keys(data).map(function (k) {
+      return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]);
+    }).join('&');
+    return encoded;
+  };
+
   if (method === 'GET') {
-    url += '?' + API.encodeFormData(data);
+    url += '?' + encodeFormData(data);
   } else {
     options.body = JSON.stringify(data);
   }
@@ -427,10 +463,10 @@ Coinify.prototype.request = function (method, endpoint, data) {
     .then(checkStatus);
 };
 
-Coinify.new = function (parent) {
+Coinify.new = function (parent, delegate) {
   var object = {
     auto_login: true
   };
-  var coinify = new Coinify(object, parent);
+  var coinify = new Coinify(object, parent, delegate);
   return coinify;
 };

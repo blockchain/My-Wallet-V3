@@ -88,7 +88,8 @@ module.exports = function (config) {
       'tests/wallet_signup_spec.js.coffee',
       'tests/blockchain_settings_api_spec.js.coffee',
       'tests/account_info_spec.js.coffee',
-      'tests/metadata_spec.js.coffee'
+      'tests/metadata_spec.js.coffee',
+      'tests/exchange_delegate_spec.js.coffee'
     ]
   };
 
