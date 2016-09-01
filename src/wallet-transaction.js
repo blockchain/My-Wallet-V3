@@ -59,6 +59,9 @@ function Tx (object) {
   this.result = this._result ? this._result : this.internalReceive - this.internalSpend;
   this.txType = computeTxType(this);
   this.amount = computeAmount(this);
+
+  this.from = computeFrom(this);
+  this.to = computeTo(this);
 }
 
 Tx.prototype.toString = function () {
@@ -229,6 +232,44 @@ function computeTxType (Tx) {
   return v;
 }
 
+function computeFrom (Tx) {
+  var formatted = formatTransactionCoins(Tx);
+  return formatted.input;
+}
+
+function computeTo (Tx) {
+  var formatted = formatTransactionCoins(Tx);
+  var recipients = [];
+
+  if (formatted.outputs && formatted.outputs.length > 0) {
+    recipients = formatted.outputs.filter(function (output) {
+      return Tx.txType === 'sent'
+          ? output.coinType === 'external' || output.coinType === 'legacy'
+          : output.coinType !== 'external';
+    });
+  }
+
+  return recipients;
+}
+
+function formatTransactionCoins (tx) {
+  var input = tx.processedInputs
+  .filter(function (input) { return !input.change; })[0] || tx.processedInputs[0];
+  var outputs = tx.processedOutputs
+  .filter(function (output) { return !output.change && output.address !== input.address; });
+
+  var setLabel = function (inputOrOutput) {
+    if (inputOrOutput) {
+      inputOrOutput.label = inputOrOutput.label || MyWallet.wallet.getAddressBookLabel(inputOrOutput.address) || inputOrOutput.address;
+    }
+  };
+
+  setLabel(input);
+  outputs.forEach(setLabel);
+
+  return { input: input, outputs: outputs };
+}
+
 function isCoinBase (input) {
   return (input == null || input.prev_out == null || input.prev_out.addr == null);
 }
@@ -249,7 +290,9 @@ Tx.IOSfactory = function (tx) {
     txType: tx.txType,
     block_height: tx.block_height,
     fromWatchOnly: tx.fromWatchOnly,
-    toWatchOnly: tx.toWatchOnly
+    toWatchOnly: tx.toWatchOnly,
+    to: tx.to,
+    from: tx.from
   };
 };
 

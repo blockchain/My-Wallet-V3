@@ -10,6 +10,7 @@ MyWallet =
 
     key: () -> { label: "Genesis", isWatchOnly: true }
     latestBlock: { height: 399680 }
+    getAddressBookLabel: (address) -> "addressBookLabel"
 
 transactions = require('./data/transactions')
 
@@ -36,7 +37,8 @@ describe 'Transaction', ->
       expect(tx.toWatchOnly).toBeFalsy()
       expect(tx.txType).toEqual("sent")
       expect(tx.amount).toEqual(-30000)
-
+      expect(tx.from.address).toEqual("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa")
+      expect(tx.to[0].address).toEqual("1M5hoG1pCTDsPqZwG6WH25ziwYYaXNMLrU")
 
     it "should have a fee equal to the difference between inputs and outputs value", ->
       tx = Tx.factory(transactions["default"])
@@ -105,7 +107,12 @@ describe 'Transaction', ->
       ios = Tx.IOSfactory(tx)
       expect(ios.time).toEqual(tx.time)
       expect(ios.result).toEqual(tx.result)
+      expect(ios.amount).toEqual(tx.amount)
       expect(ios.confirmations).toEqual(tx.confirmations)
+      expect(ios.myHash).toEqual(tx.hash)
       expect(ios.txType).toEqual(tx.txType)
       expect(ios.block_height).toEqual(tx.block_height)
-      expect(ios.myHash).toEqual(tx.hash)
+      expect(ios.fromWatchOnly).toEqual(tx.fromWatchOnly)
+      expect(ios.toWatchOnly).toEqual(tx.toWatchOnly)
+      expect(ios.to).toEqual(tx.to)
+      expect(ios.from).toEqual(tx.from)
