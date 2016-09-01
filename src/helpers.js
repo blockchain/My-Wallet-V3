@@ -81,6 +81,18 @@ Helpers.add = function (x, y) {
 Helpers.and = function (x, y) {
   return x && y;
 };
+Helpers.pluck = function (prop) {
+  return function (o) { return o[prop]; };
+};
+Helpers.eq = function (value1) {
+  return function (value0) { return value0 === value1; };
+};
+Helpers.notEq = function (value1) {
+  return function (value0) { return value0 !== value1; };
+};
+Helpers.propEq = function (prop, value) {
+  return function (o) { return o[prop] === value; };
+};
 Helpers.o = function (pred1, pred2) {
   return function (element) {
     return pred1(element) || pred2(element);

@@ -84,7 +84,7 @@ describe "CoinifyTrade", ->
       }
 
       exchangeDelegate = {
-        reserveReceiveAddress: () -> "1abcd"
+        reserveReceiveAddress: () -> { receiveAddress: "1abcd", commit: -> }
         removeLabeledAddress: () ->
         releaseReceiveAddress: () ->
         commitReceiveAddress: () ->
@@ -94,6 +94,7 @@ describe "CoinifyTrade", ->
         _save: () -> Promise.resolve()
         save: () -> Promise.resolve()
         _trades: []
+        trades: []
         GET: (method) -> {
           then: (cb) ->
             cb({

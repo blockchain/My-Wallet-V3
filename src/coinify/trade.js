@@ -149,7 +149,7 @@ CoinifyTrade.prototype.cancel = function () {
   var processCancel = function (trade) {
     self._state = trade.state;
 
-    self._coinify.delegate.releaseReceiveAddress(self);
+    self._coinify.delegate.releaseReceiveAddress(self, CoinifyTrade.filteredTrades(self._coinify.trades));
 
     return self._coinify.save();
   };
@@ -243,11 +243,11 @@ CoinifyTrade.prototype.expireQuote = function () {
 CoinifyTrade.buy = function (quote, medium, coinify) {
   assert(quote, 'Quote required');
 
-  var receiveAddress = coinify.delegate.reserveReceiveAddress();
+  var reservation = coinify.delegate.reserveReceiveAddress(CoinifyTrade.filteredTrades(coinify.trades));
 
   var processTrade = function (res) {
     var trade = new CoinifyTrade(res, coinify);
-    coinify.delegate.commitReceiveAddress(trade);
+    reservation.commit(trade);
     coinify._trades.push(trade);
     trade._monitorAddress.bind(trade)();
     return coinify.save().then(function () { return trade; });
@@ -261,7 +261,7 @@ CoinifyTrade.buy = function (quote, medium, coinify) {
     transferOut: {
       medium: 'blockchain',
       details: {
-        account: receiveAddress
+        account: reservation.receiveAddress
       }
     }
   }).then(processTrade);
@@ -286,7 +286,7 @@ CoinifyTrade.fetchAll = function (coinify) {
         }
 
         if (['rejected', 'cancelled', 'expired'].indexOf(trade.state) > -1) {
-          coinify.delegate.releaseReceiveAddress(trade);
+          coinify.delegate.releaseReceiveAddress(trade, CoinifyTrade.filteredTrades(coinify.trades));
         }
       }
 
