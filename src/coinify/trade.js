@@ -67,6 +67,12 @@ Object.defineProperties(CoinifyTrade.prototype, {
       return this._state;
     }
   },
+  'sendAmount': {
+    configurable: false,
+    get: function () {
+      return this._sendAmount;
+    }
+  },
   'outAmountExpected': {
     configurable: false,
     get: function () {
@@ -129,6 +135,7 @@ CoinifyTrade.prototype.set = function (obj) {
     this._outCurrency = obj.outCurrency;
     this._inAmount = obj.inAmount;
     this._medium = obj.transferIn.medium;
+    this._sendAmount = obj.transferIn.sendAmount;
     if (this._medium === 'bank') {
       this._bankAccount = new BankAccount(obj.transferIn.details);
     }
