@@ -292,7 +292,9 @@ Tx.IOSfactory = function (tx) {
     fromWatchOnly: tx.fromWatchOnly,
     toWatchOnly: tx.toWatchOnly,
     to: tx.to,
-    from: tx.from
+    from: tx.from,
+    fee: tx.fee,
+    note: tx.note
   };
 };
 
