@@ -103,7 +103,7 @@ Metadata.prototype.fetch = function () {
     }
   }).catch(function (e) {
     console.log(e);
-    throw new Error('METADATA_FETCH_FAILED');
+    return Promise.reject('METADATA_FETCH_FAILED');
   });
 };
 
