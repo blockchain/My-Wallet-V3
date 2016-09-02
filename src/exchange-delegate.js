@@ -59,38 +59,63 @@ ExchangeDelegate.prototype.checkAddress = function (address) {
 };
 
 ExchangeDelegate.prototype.getReceiveAddress = function (trade) {
-  var account = this._wallet.hdwallet.accounts[trade._account_index];
-  return account.receiveAddressAtIndex(trade._receive_index);
+  if (Helpers.isPositiveInteger(trade._account_index)) {
+    var account = this._wallet.hdwallet.accounts[trade._account_index];
+    return account.receiveAddressAtIndex(trade._receive_index);
+  }
 };
 
-ExchangeDelegate.prototype.reserveReceiveAddress = function (trade) {
-  // TODO: make sure the wallet doesn't use it unless trade creation fails
+ExchangeDelegate.prototype.reserveReceiveAddress = function (trades) {
   var account = this._wallet.hdwallet.defaultAccount;
-
   var receiveAddressIndex = account.receiveIndex;
 
   // Respect the GAP limit:
   if (receiveAddressIndex - account.lastUsedReceiveIndex >= 19) {
-    throw new Error('gap_limit');
+    receiveAddressIndex = findLastExchangeIndex(account.receiveIndex);
+    if (receiveAddressIndex == null) throw new Error('gap_limit');
   }
 
-  return account.receiveAddressAtIndex(receiveAddressIndex);
+  var receiveAddress = account.receiveAddressAtIndex(receiveAddressIndex);
+
+  function findLastExchangeIndex (currentReceiveIndex) {
+    var receiveIndexes = trades.map(Helpers.pluck('_receive_index'));
+    var index = currentReceiveIndex;
+    for (var i = index - 1; i > index - 20; i--) {
+      if (receiveIndexes.filter(Helpers.eq(i)).length > 0) return i;
+    }
+    return null;
+  }
+
+  function commitAddressLabel (trade) {
+    var labelBase = 'Coinify order';
+    var ids = trades
+      .filter(Helpers.propEq('receiveAddress', receiveAddress))
+      .map(Helpers.pluck('id')).concat(trade.id);
+
+    account.setLabelForReceivingAddress(receiveAddressIndex, labelBase + ' #' + ids.join(', #'));
+    trade._account_index = account.index;
+    trade._receive_index = receiveAddressIndex;
+  }
+
+  return {
+    receiveAddress: receiveAddress,
+    commit: commitAddressLabel
+  };
 };
 
-ExchangeDelegate.prototype.commitReceiveAddress = function (trade) {
-  var account = this._wallet.hdwallet.defaultAccount;
-  var receiveAddressIndex = account.receiveIndex;
-
-  account.setLabelForReceivingAddress(receiveAddressIndex, 'Coinify order #' + trade.id);
-
-  trade._account_index = account.index;
-  trade._receive_index = receiveAddressIndex;
-};
-
-ExchangeDelegate.prototype.releaseReceiveAddress = function (trade) {
+ExchangeDelegate.prototype.releaseReceiveAddress = function (trade, trades) {
+  var labelBase = 'Coinify order';
   if (Helpers.isPositiveInteger(trade._account_index) && Helpers.isPositiveInteger(trade._receive_index)) {
     var account = this._wallet.hdwallet.accounts[trade._account_index];
-    account.removeLabelForReceivingAddress(trade._receive_index);
+
+    var ids = trades
+      .filter(Helpers.propEq('receiveAddress', trade.receiveAddress))
+      .map(Helpers.pluck('id'))
+      .filter(Helpers.notEq(trade.id));
+
+    Helpers.isEmptyArray(ids)
+      ? account.removeLabelForReceivingAddress(trade._receive_index)
+      : account.setLabelForReceivingAddress(trade._receive_index, labelBase + ' #' + ids.join(', #'));
   }
 };
 
