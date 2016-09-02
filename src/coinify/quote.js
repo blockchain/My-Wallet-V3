@@ -1,5 +1,8 @@
 'use strict';
 
+var Helpers = require('./helpers');
+var assert = require('assert');
+
 module.exports = Quote;
 
 function Quote (obj) {
@@ -55,20 +58,40 @@ Object.defineProperties(Quote.prototype, {
   }
 });
 
-Quote.getQuote = function (coinify, amount, baseCurrency) {
+Quote.getQuote = function (coinify, amount, baseCurrency, quoteCurrency) {
+  assert(Helpers.isInteger(amount), 'amount must be in cents or satoshi');
+
+  var supportedCurrencies = ['BTC', 'EUR', 'GBP', 'USD', 'DKK'];
+
+  if (supportedCurrencies.indexOf(baseCurrency) === -1) {
+    return Promise.reject('base_currency_not_supported');
+  }
+
+  if (supportedCurrencies.indexOf(quoteCurrency) === -1) {
+    return Promise.reject('quote_currency_not_supported');
+  }
+
+  if (baseCurrency === 'CNY' || quoteCurrency === 'CNY') {
+    console.warn('CNY has only 1 decimal place');
+  }
+
+  var baseAmount;
+  if (baseCurrency === 'BTC') {
+    baseAmount = (amount / 100000000).toFixed(8);
+  } else {
+    baseAmount = (amount / 100).toFixed(2);
+  }
+
   var processQuote = function (quote) {
     quote = new Quote(quote);
     return quote;
   };
 
   var getQuote = function (profile) {
-    baseCurrency = baseCurrency || profile.defaultCurrency;
-    var quoteCurrency = baseCurrency === 'BTC' ? profile.defaultCurrency : 'BTC';
-
     return coinify.POST('trades/quote', {
       baseCurrency: baseCurrency,
       quoteCurrency: quoteCurrency,
-      baseAmount: amount
+      baseAmount: parseFloat(baseAmount)
     });
   };
 
