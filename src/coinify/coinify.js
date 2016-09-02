@@ -33,6 +33,7 @@ var CoinifyTrade = require('./trade');
 var CoinifyKYC = require('./kyc');
 var PaymentMethod = require('./payment-method');
 var ExchangeRate = require('./exchange-rate');
+var Quote = require('./quote');
 
 var assert = require('assert');
 
@@ -251,7 +252,12 @@ Coinify.prototype.getBuyQuote = function (amount, baseCurrency) {
     return Promise.reject('base_currency_not_supported');
   }
 
-  return this.getQuote(-amount, baseCurrency);
+  return Quote.getQuote(this, -amount, baseCurrency).then(this.setLastQuote.bind(this));
+};
+
+Coinify.prototype.setLastQuote = function (quote) {
+  this._lastQuote = quote;
+  return quote;
 };
 
 Coinify.prototype.getSellQuote = function (amount, baseCurrency) {
@@ -261,52 +267,7 @@ Coinify.prototype.getSellQuote = function (amount, baseCurrency) {
     return Promise.reject('base_currency_not_supported');
   }
 
-  return this.getQuote(amount, baseCurrency);
-};
-
-Coinify.prototype.getQuote = function (amount, baseCurrency) {
-  var self = this;
-
-  var processQuote = function (quote) {
-    var expiresAt = new Date(quote.expiryTime);
-
-    // Debug, make quote expire in 15 seconds:
-    // expiresAt = new Date(new Date().getTime() + 15 * 1000);
-
-    self._lastQuote = {
-      id: quote.id,
-      baseCurrency: quote.baseCurrency,
-      quoteCurrency: quote.quoteCurrency,
-      baseAmount: quote.baseAmount,
-      quoteAmount: quote.quoteAmount,
-      expiresAt: expiresAt
-    };
-    return Promise.resolve(self._lastQuote);
-  };
-
-  var getQuote = function (profile) {
-    baseCurrency = baseCurrency || profile.defaultCurrency;
-    var quoteCurrency = baseCurrency === 'BTC' ? profile.defaultCurrency : 'BTC';
-
-    return self.POST('trades/quote', {
-      baseCurrency: baseCurrency,
-      quoteCurrency: quoteCurrency,
-      baseAmount: amount
-    });
-  };
-
-  if (this._offline_token == null) {
-    return getQuote();
-  }
-  if (this.profile === null) {
-    return this.fetchProfile().then(getQuote).then(processQuote);
-  } else {
-    if (!this.isLoggedIn) {
-      return this.login().then(function () { getQuote(self.profile); }).then(processQuote);
-    } else {
-      return getQuote(this.profile).then(processQuote);
-    }
-  }
+  return Quote.getQuote(this, amount, baseCurrency).then(this.setLastQuote.bind(this));
 };
 
 Coinify.prototype.buy = function (amount, baseCurrency, medium) {
