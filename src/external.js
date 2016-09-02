@@ -31,6 +31,7 @@ External.prototype.toJSON = function () {
 
 External.prototype.fetchOrCreate = function () {
   var createOrPopulate = function (object) {
+    this.success = true;
     if (object === null) { // entry non exitent
       return this._metadata.create(this);
     } else {
@@ -38,7 +39,12 @@ External.prototype.fetchOrCreate = function () {
       return this;
     }
   };
-  return this._metadata.fetch().then(createOrPopulate.bind(this));
+  var fetchFailed = function (e) {
+    // Metadata service is down or unreachable.
+    this.success = false;
+    return Promise.reject(e);
+  };
+  return this._metadata.fetch().then(createOrPopulate.bind(this)).catch(fetchFailed.bind(this));
 };
 
 External.prototype.save = function () {
