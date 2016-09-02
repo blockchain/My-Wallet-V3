@@ -120,6 +120,10 @@ Object.defineProperties(CoinifyTrade.prototype, {
         return this.outCurrency === 'BTC';
       }
     }
+  },
+  'txHash': {
+    configurable: false,
+    get: function () { return this._txHash || null; }
   }
 });
 
@@ -333,11 +337,13 @@ CoinifyTrade.prototype._monitorAddress = function () {
   };
 
   var tradeWasPaid = function (amount) {
-    self._watchAddressResolve && self._watchAddressResolve(amount);
-
+    var resolve = function () {
+      self._watchAddressResolve && self._watchAddressResolve(amount);
+    };
     self.refresh()
       .then(CoinifyTrade._getTransactionHash)
-      .then(saveTrade);
+      .then(saveTrade)
+      .then(resolve);
   };
 
   self._coinify.delegate.monitorAddress(self.receiveAddress, function (amount) {
