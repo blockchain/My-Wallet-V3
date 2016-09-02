@@ -85,6 +85,12 @@ Object.defineProperties(CoinifyTrade.prototype, {
       return this._receiveAddress;
     }
   },
+  'accountIndex': {
+    configurable: false,
+    get: function () {
+      return this._account_index;
+    }
+  },
   'bitcoinReceived': {
     configurable: false,
     get: function () {
