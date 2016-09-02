@@ -79,6 +79,7 @@ Metadata.prototype.create = function (data) {
 
 Metadata.prototype.fetch = function () {
   var self = this;
+
   return this.GET(this._address).then(function (serverPayload) {
     if (serverPayload === null) {
       return null;
@@ -100,6 +101,9 @@ Metadata.prototype.fetch = function () {
     } else {
       throw new Error('METADATA_SIGNATURE_VERIFICATION_ERROR');
     }
+  }).catch(function (e) {
+    console.log(e);
+    throw new Error('METADATA_FETCH_FAILED');
   });
 };
 
@@ -136,6 +140,9 @@ Metadata.prototype.update = function (data) {
 };
 
 Metadata.prototype.GET = function (endpoint, data) {
+  // if (this._payloadTypeId === 3) {
+  //   return Promise.reject('DEBUG: simulate meta data service failure');
+  // }
   return this.request('GET', endpoint, data);
 };
 
