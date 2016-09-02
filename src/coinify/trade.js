@@ -249,7 +249,7 @@ CoinifyTrade.prototype.expireQuote = function () {
   if (this.inAmount !== -this._coinify._lastQuote.baseAmount) {
     console.log("Can't find corresponding quote.");
   } else {
-    this._coinify._lastQuote.expiresAt = new Date();
+    this._coinify._lastQuote.expire();
   }
 };
 
