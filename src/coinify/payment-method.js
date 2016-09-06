@@ -91,6 +91,18 @@ Object.defineProperties(PaymentMethod.prototype, {
     get: function () {
       return this._outPercentageFee;
     }
+  },
+  'fee': {
+    configurable: false,
+    get: function () {
+      return this._fee;
+    }
+  },
+  'total': {
+    configurable: false,
+    get: function () {
+      return this._total;
+    }
   }
 });
 
@@ -115,4 +127,9 @@ PaymentMethod.fetchAll = function (inCurrency, outCurrency, coinify) {
   } else {
     return coinify.login().then(getPaymentMethods);
   }
+};
+
+PaymentMethod.prototype.calculateFee = function (quote) {
+  this._fee = Math.round(this.inFixedFee + -quote.baseAmount * (this.inPercentageFee / 100));
+  this._total = -quote.baseAmount + this._fee;
 };

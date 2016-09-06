@@ -5,7 +5,9 @@ var assert = require('assert');
 
 module.exports = Quote;
 
-function Quote (obj) {
+function Quote (obj, coinify) {
+  this._coinify = coinify;
+
   var expiresAt = new Date(obj.expiryTime);
 
   // Debug, make quote expire in 15 seconds:
@@ -91,7 +93,7 @@ Quote.getQuote = function (coinify, amount, baseCurrency, quoteCurrency) {
   }
 
   var processQuote = function (quote) {
-    quote = new Quote(quote);
+    quote = new Quote(quote, coinify);
     return quote;
   };
 
@@ -115,6 +117,44 @@ Quote.getQuote = function (coinify, amount, baseCurrency, quoteCurrency) {
       return getQuote(coinify.profile).then(processQuote);
     }
   }
+};
+
+Quote.prototype.getPaymentMethods = function () {
+  var self = this;
+
+  var setPaymentMethods = function (paymentMethods) {
+    self.paymentMethods = {};
+    for (var i = 0; i < paymentMethods.length; i++) {
+      var paymentMethod = paymentMethods[i];
+      self.paymentMethods[paymentMethod.inMedium] = paymentMethod;
+      paymentMethod.calculateFee.bind(paymentMethod)(self);
+    }
+    return paymentMethods;
+  };
+
+  if (this.paymentMethods) {
+    return Promise.resolve(this.paymentMethods);
+  } else {
+    return self._coinify.getPaymentMethods(this.baseCurrency, this.quoteCurrency)
+                        .then(setPaymentMethods);
+  }
+};
+
+Quote.prototype.feeForMedium = function (medium) {
+  var calculateFee = function () {
+    console.log(medium, this.paymentMethods);
+    return 10000;
+  };
+
+  return this.getPaymentMethods().then(calculateFee.bind(this));
+};
+
+Quote.prototype.totalForMedium = function (medium) {
+  var self = this;
+  var addFee = function (fee) {
+    return self.quoteAmount + fee;
+  };
+  return this.feeForMedium(medium).then(addFee);
 };
 
 // QA tool
