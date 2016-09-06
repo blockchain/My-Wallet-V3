@@ -207,6 +207,7 @@ Function.prototype.compose = function (g) { // eslint-disable-line no-extend-nat
 };
 
 Helpers.guessSize = function (nInputs, nOutputs) {
+  if (nInputs < 1 || nOutputs < 1) { return 0; }
   return (nInputs * 148 + nOutputs * 34 + 10);
 };
 
