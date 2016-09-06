@@ -14,8 +14,13 @@ function PaymentMethod (obj, coinify) {
   this._inCurrency = obj.inCurrency;
   this._outCurrency = obj.outCurrency;
 
-  this._inFixedFee = obj.inFixedFee;
-  this._outFixedFee = obj.outFixedFee;
+  if (this._inCurrency === 'BTC') {
+    this._inFixedFee = Math.trunc(obj.inFixedFee * 100000000);
+    this._outFixedFee = Math.trunc(obj.outFixedFee * 100);
+  } else {
+    this._inFixedFee = Math.trunc(obj.inFixedFee * 100);
+    this._outFixedFee = Math.trunc(obj.outFixedFee * 100000000);
+  }
   this._inPercentageFee = obj.inPercentageFee;
   this._outPercentageFee = obj.outPercentageFee;
 }
