@@ -73,6 +73,12 @@ Object.defineProperties(CoinifyTrade.prototype, {
       return this._sendAmount;
     }
   },
+  'outAmount': {
+    configurable: false,
+    get: function () {
+      return this._outAmount;
+    }
+  },
   'outAmountExpected': {
     configurable: false,
     get: function () {
@@ -166,6 +172,10 @@ CoinifyTrade.prototype.set = function (obj) {
       }
     }
 
+    this._outAmount = obj.outAmount;
+    this._outAmountExpected = obj.outAmountExpected;
+    this._receiveAddress = obj.transferOut.details.account;
+    this._iSignThisID = obj.transferIn.details.paymentId;
     this._receiptUrl = obj.receiptUrl;
 
     return this;
