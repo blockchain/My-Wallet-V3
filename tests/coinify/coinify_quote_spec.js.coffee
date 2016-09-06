@@ -30,8 +30,8 @@ describe "CoinifyQuote", ->
         expect(q._expiresAt).toEqual(new Date(obj.expiryTime))
         expect(q._baseCurrency).toBe(obj.baseCurrency)
         expect(q._quoteCurrency).toBe(obj.quoteCurrency)
-        expect(q._baseAmount).toBe(obj.baseAmount)
-        expect(q._quoteAmount).toBe(obj.quoteAmount)
+        expect(q._baseAmount).toBe(obj.baseAmount * 100)
+        expect(q._quoteAmount).toBe(obj.quoteAmount * 100000000)
         expect(q._id).toBe(obj.id)
 
     describe "getQuote()", ->

@@ -16,8 +16,8 @@ beforeEach ->
     outCurrencies: "outCurrencies"
     inCurrency: "inCurrency"
     outCurrency: "outCurrency"
-    inFixedFee: "inFixedFee"
-    outFixedFee: "outFixedFee"
+    inFixedFee: 0.01
+    outFixedFee: 0
     inPercentageFee: "inPercentageFee"
     outPercentageFee: "outPercentageFee"
   }
@@ -38,8 +38,8 @@ describe "Payment method", ->
       expect(b._outCurrencies).toBe(o.outCurrencies)
       expect(b._inCurrency).toBe(o.inCurrency)
       expect(b._outCurrency).toBe(o.outCurrency)
-      expect(b._inFixedFee).toBe(o.inFixedFee)
-      expect(b._outFixedFee).toBe(o.outFixedFee)
+      expect(b._inFixedFee).toBe(o.inFixedFee * 100)
+      expect(b._outFixedFee).toBe(o.outFixedFee * 100)
       expect(b._inPercentageFee).toBe(o.inPercentageFee)
       expect(b._outPercentageFee).toBe(o.outPercentageFee)
 

@@ -1,6 +1,20 @@
 proxyquire = require('proxyquireify')(require)
 
+Level = (obj) ->
+  {
+    name: obj.name
+  }
+
+
+Limits = (obj) ->
+  {
+    card:
+      in: obj.card.in
+  }
+
 stubs = {
+  './level'  : Level,
+  './limits'  : Limits
 }
 
 CoinifyProfile    = proxyquire('../../src/coinify/profile', stubs)
@@ -51,15 +65,9 @@ describe "CoinifyProfile", ->
               feePercentage: 3
               currentLimits:
                 card:
-                  in:
-                    daily:100
+                  in: 100
                 bank:
-                  in:
-                    daily:0
-                    yearly:0
-                  out:
-                    daily: 100
-                    yearly:1000
+                  in: 0
 
               requirements: []
               level: {name: '1'}
@@ -92,22 +100,9 @@ describe "CoinifyProfile", ->
         expect(p.state).toEqual('NH')
         expect(p.street).toEqual('Hoofdstraat 1')
         expect(p.zipcode).toEqual('1111 AA')
-        expect(p.level).toEqual({name: '1'})
-        expect(p.nextLevel).toEqual({name: '2'})
-        expect(p.currentLimits).toEqual({
-          card: {
-            in:
-              daily: 100
-          },
-          bank: {
-            in:
-              daily: 0
-              yearly: 0
-            out:
-              daily: 100
-              yearly: 1000
-          }
-        })
+        expect(p.level.name).toEqual('1')
+        expect(p.nextLevel.name).toEqual('2')
+        expect(p.currentLimits.card.in).toEqual(100)
 
     describe "update()", ->
       it "should update", ->
