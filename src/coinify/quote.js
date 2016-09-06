@@ -14,9 +14,17 @@ function Quote (obj) {
   this._id = obj.id;
   this._baseCurrency = obj.baseCurrency;
   this._quoteCurrency = obj.quoteCurrency;
-  this._baseAmount = obj.baseAmount;
-  this._quoteAmount = obj.quoteAmount;
   this._expiresAt = expiresAt;
+
+  if (this._baseCurrency === 'BTC') {
+    this._baseAmount = Math.trunc(obj.baseAmount * 100000000);
+    this._quoteAmount = Math.trunc(obj.quoteAmount * 100);
+  } else {
+    this._baseAmount = Math.trunc(obj.baseAmount * 100);
+    this._quoteAmount = Math.trunc(obj.quoteAmount * 100000000);
+  }
+
+  obj.baseAmount;
 }
 
 Object.defineProperties(Quote.prototype, {
