@@ -19,11 +19,11 @@ function Quote (obj, coinify) {
   this._expiresAt = expiresAt;
 
   if (this._baseCurrency === 'BTC') {
-    this._baseAmount = Math.trunc(obj.baseAmount * 100000000);
-    this._quoteAmount = Math.trunc(obj.quoteAmount * 100);
+    this._baseAmount = Math.round(obj.baseAmount * 100000000);
+    this._quoteAmount = Math.round(obj.quoteAmount * 100);
   } else {
-    this._baseAmount = Math.trunc(obj.baseAmount * 100);
-    this._quoteAmount = Math.trunc(obj.quoteAmount * 100000000);
+    this._baseAmount = Math.round(obj.baseAmount * 100);
+    this._quoteAmount = Math.round(obj.quoteAmount * 100000000);
   }
 
   obj.baseAmount;

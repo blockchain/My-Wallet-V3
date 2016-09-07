@@ -43,6 +43,13 @@ describe "Payment method", ->
       expect(b._inPercentageFee).toBe(o.inPercentageFee)
       expect(b._outPercentageFee).toBe(o.outPercentageFee)
 
+    it "must correctly round the fixed fee", ->
+      o.inFixedFee = 35.05 # 35.05 * 100 = 3504.9999999999995 in javascript
+      o.outFixedFee = 35.05 # 35.05 * 100 = 3504.9999999999995 in javascript
+      b = new PaymentMethod(o)
+      expect(b.inFixedFee).toEqual(3505)
+      expect(b.outFixedFee).toEqual(3505000000)
+
   describe "fetch all", ->
     it "should call get with the correct arguments ", (done) ->
       coinify = {

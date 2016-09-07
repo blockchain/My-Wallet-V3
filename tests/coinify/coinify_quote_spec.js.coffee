@@ -34,6 +34,13 @@ describe "CoinifyQuote", ->
         expect(q._quoteAmount).toBe(obj.quoteAmount * 100000000)
         expect(q._id).toBe(obj.id)
 
+      it "must correctly round the fixed fee", ->
+        obj.baseAmount = 35.05 # 35.05 * 100 = 3504.9999999999995 in javascript
+        obj.quoteAmount = 0.00003505
+        q = new Quote(obj)
+        expect(q.baseAmount).toEqual(3505)
+        expect(q.quoteAmount).toEqual(3505)
+
     describe "getQuote()", ->
       coinify = {
         POST: () -> Promise.resolve()
