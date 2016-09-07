@@ -140,23 +140,6 @@ Quote.prototype.getPaymentMethods = function () {
   }
 };
 
-Quote.prototype.feeForMedium = function (medium) {
-  var calculateFee = function () {
-    console.log(medium, this.paymentMethods);
-    return 10000;
-  };
-
-  return this.getPaymentMethods().then(calculateFee.bind(this));
-};
-
-Quote.prototype.totalForMedium = function (medium) {
-  var self = this;
-  var addFee = function (fee) {
-    return self.quoteAmount + fee;
-  };
-  return this.feeForMedium(medium).then(addFee);
-};
-
 // QA tool
 Quote.prototype.expire = function () {
   this._expiresAt = new Date(new Date().getTime() + 3 * 1000);
