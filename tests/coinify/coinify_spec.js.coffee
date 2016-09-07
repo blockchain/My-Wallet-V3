@@ -252,5 +252,10 @@ describe "Coinify", ->
         expect(promise).toBeResolved(done)
 
 
-      it 'should set _lastQuote', ->
-        pending()
+      it 'should set _lastQuote', (done) ->
+        checks = (quote) ->
+          expect(c._lastQuote.baseAmount).toEqual(-1000)
+
+        promise = c.getBuyQuote(1000, 'EUR').then(checks)
+
+        expect(promise).toBeResolved(done)
