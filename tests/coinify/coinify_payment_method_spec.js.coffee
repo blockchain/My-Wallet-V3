@@ -44,13 +44,11 @@ describe "Payment method", ->
       expect(b._outPercentageFee).toBe(o.outPercentageFee)
 
   describe "fetch all", ->
-    it "should call get with the correct arguments ", (done) ->
+    it "should authGET trades/payment-methods with the correct arguments", (done) ->
       coinify = {
-        GET: (method, params) -> Promise.resolve([o,o,o,o]),
-        login: () -> Promise.resolve({access_token: 'my-token', expires_in: 1000})
+        authGET: (method, params) -> Promise.resolve([o,o,o,o]),
       }
-      spyOn(coinify, "GET").and.callThrough()
-      spyOn(coinify, "login").and.callThrough()
+      spyOn(coinify, "authGET").and.callThrough()
 
       promise = PaymentMethod.fetchAll('EUR', 'BTC', coinify)
       argument = {
@@ -58,7 +56,7 @@ describe "Payment method", ->
         outCurrency: 'BTC'
       }
       testCalls = () ->
-        expect(coinify.GET).toHaveBeenCalledWith('trades/payment-methods', argument)
+        expect(coinify.authGET).toHaveBeenCalledWith('trades/payment-methods', argument)
       promise
         .then(testCalls)
         .then(done)

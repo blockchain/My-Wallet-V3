@@ -49,14 +49,7 @@ Object.defineProperties(CoinifyKYC.prototype, {
 });
 
 CoinifyKYC.prototype.refresh = function () {
-  var updateTrade = function () {
-    return this._coinify.GET('kyc/' + this._id).then(this.set.bind(this));
-  };
-  if (this._coinify.isLoggedIn) {
-    return updateTrade.bind(this)();
-  } else {
-    return this._coinify.login().then(updateTrade.bind(this));
-  }
+  return this._coinify.authGET('kyc/' + this._id).then(this.set.bind(this));
 };
 
 CoinifyKYC.trigger = function (coinify) {
@@ -66,26 +59,18 @@ CoinifyKYC.trigger = function (coinify) {
     return kyc;
   };
 
-  return coinify.POST('traders/me/kyc').then(processKYC);
+  return coinify.authPOST('traders/me/kyc').then(processKYC);
 };
 
 // Fetches the latest trades and updates coinify._trades
 CoinifyKYC.fetchAll = function (coinify) {
-  var getKycs = function () {
-    return coinify.GET('kyc').then(function (res) {
-      coinify._kycs.length = 0; // empty array without losing reference
-      for (var i = 0; i < res.length; i++) {
-        var kyc = new CoinifyKYC(res[i], coinify);
-        coinify._kycs.push(kyc);
-      }
+  return coinify.authGET('kyc').then(function (res) {
+    coinify._kycs.length = 0; // empty array without losing reference
+    for (var i = 0; i < res.length; i++) {
+      var kyc = new CoinifyKYC(res[i], coinify);
+      coinify._kycs.push(kyc);
+    }
 
-      return coinify._kycs;
-    });
-  };
-
-  if (coinify.isLoggedIn) {
-    return getKycs();
-  } else {
-    return coinify.login().then(getKycs);
-  }
+    return coinify._kycs;
+  });
 };

@@ -29,58 +29,52 @@ describe "KYC", ->
       expect(k._iSignThisID).toBe(o.externalId)
 
   describe "fetch all", ->
-    it "should call GET with the correct arguments ", (done) ->
+    it "should call authGET with the correct arguments ", (done) ->
 
       coinify = {
         _kycs: []
-        GET: (method, params) -> Promise.resolve([o,o,o,o]),
-        login: () -> Promise.resolve({access_token: 'my-token', expires_in: 1000})
+        authGET: (method, params) -> Promise.resolve([o,o,o,o]),
       }
-      spyOn(coinify, "GET").and.callThrough()
-      spyOn(coinify, "login").and.callThrough()
+      spyOn(coinify, "authGET").and.callThrough()
 
       promise = CoinifyKYC.fetchAll(coinify)
       testCalls = () ->
-        expect(coinify.GET).toHaveBeenCalledWith('kyc')
+        expect(coinify.authGET).toHaveBeenCalledWith('kyc')
       promise
         .then(testCalls)
         .then(done)
         .catch(console.log)
 
   describe "refresh", ->
-    it "should call GET with the correct arguments ", (done) ->
+    it "should call authGET with the correct arguments ", (done) ->
 
       coinify = {
         _kycs: []
-        GET: (method) -> Promise.resolve([o,o,o,o]),
-        login: () -> Promise.resolve({access_token: 'my-token', expires_in: 1000})
+        authGET: (method) -> Promise.resolve([o,o,o,o]),
       }
-      spyOn(coinify, "GET").and.callThrough()
-      spyOn(coinify, "login").and.callThrough()
+      spyOn(coinify, "authGET").and.callThrough()
       k = new CoinifyKYC(o, coinify)
 
       promise = k.refresh()
       testCalls = () ->
-        expect(coinify.GET).toHaveBeenCalledWith('kyc/' + k._id)
+        expect(coinify.authGET).toHaveBeenCalledWith('kyc/' + k._id)
       promise
         .then(testCalls)
         .then(done)
         .catch(console.log)
 
   describe "trigger", ->
-    it "should call GET with the correct arguments ", (done) ->
+    it "should authPOST traders/me/kyc with the correct arguments ", (done) ->
 
       coinify = {
         _kycs: []
-        POST: (method) -> Promise.resolve(o),
-        login: () -> Promise.resolve({access_token: 'my-token', expires_in: 1000})
+        authPOST: (method) -> Promise.resolve(o),
       }
-      spyOn(coinify, "POST").and.callThrough()
-      spyOn(coinify, "login").and.callThrough()
+      spyOn(coinify, "authPOST").and.callThrough()
 
       promise = CoinifyKYC.trigger(coinify)
       testCalls = () ->
-        expect(coinify.POST).toHaveBeenCalledWith('traders/me/kyc')
+        expect(coinify.authPOST).toHaveBeenCalledWith('traders/me/kyc')
       promise
         .then(testCalls)
         .then(done)

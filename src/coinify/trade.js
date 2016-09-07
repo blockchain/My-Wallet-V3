@@ -191,15 +191,7 @@ CoinifyTrade.prototype.cancel = function () {
     return self._coinify.save();
   };
 
-  var cancelOrder = function () {
-    return self._coinify.PATCH('trades/' + self._id + '/cancel').then(processCancel);
-  };
-
-  if (this._coinify.isLoggedIn) {
-    return cancelOrder();
-  } else {
-    return this._coinify.login().then(cancelOrder);
-  }
+  return self._coinify.authPATCH('trades/' + self._id + '/cancel').then(processCancel);
 };
 
 // Checks the balance for the receive address and monitors the websocket if needed:
@@ -254,18 +246,10 @@ CoinifyTrade.prototype.btcExpected = function () {
 CoinifyTrade.prototype.fakeBankTransfer = function () {
   var self = this;
 
-  var fakeBankTransfer = function () {
-    return self._coinify.POST('trades/' + self._id + '/test/bank-transfer', {
-      sendAmount: parseFloat((self.inAmount / 100).toFixed(2)),
-      currency: self.inCurrency
-    });
-  };
-
-  if (this._coinify.isLoggedIn) {
-    return fakeBankTransfer();
-  } else {
-    return this._coinify.login().then(fakeBankTransfer);
-  }
+  return self._coinify.authPOST('trades/' + self._id + '/test/bank-transfer', {
+    sendAmount: parseFloat((self.inAmount / 100).toFixed(2)),
+    currency: self.inCurrency
+  });
 };
 
 // QA tool:
@@ -290,7 +274,7 @@ CoinifyTrade.buy = function (quote, medium, coinify) {
     return coinify.save().then(function () { return trade; });
   };
 
-  return coinify.POST('trades', {
+  return coinify.authPOST('trades', {
     priceQuoteId: quote.id,
     transferIn: {
       medium: medium
@@ -306,47 +290,32 @@ CoinifyTrade.buy = function (quote, medium, coinify) {
 
 // Fetches the latest trades and updates coinify._trades
 CoinifyTrade.fetchAll = function (coinify) {
-  var getTrades = function () {
-    return coinify.GET('trades').then(function (res) {
-      var trade;
-      for (var i = 0; i < res.length; i++) {
-        trade = undefined;
-        for (var k = 0; k < coinify._trades.length; k++) {
-          if (coinify._trades[k]._id === res[i].id) {
-            trade = coinify._trades[k];
-            trade.set.bind(trade)(res[i]);
-          }
-        }
-        if (trade === undefined) {
-          trade = new CoinifyTrade(res[i], coinify);
-          coinify._trades.push(trade);
-        }
-
-        if (['rejected', 'cancelled', 'expired'].indexOf(trade.state) > -1) {
-          coinify.delegate.releaseReceiveAddress(trade, CoinifyTrade.filteredTrades(coinify.trades));
+  return coinify.authGET('trades').then(function (res) {
+    var trade;
+    for (var i = 0; i < res.length; i++) {
+      trade = undefined;
+      for (var k = 0; k < coinify._trades.length; k++) {
+        if (coinify._trades[k]._id === res[i].id) {
+          trade = coinify._trades[k];
+          trade.set.bind(trade)(res[i]);
         }
       }
+      if (trade === undefined) {
+        trade = new CoinifyTrade(res[i], coinify);
+        coinify._trades.push(trade);
+      }
 
-      return coinify.save().then(function () { return coinify._trades; });
-    });
-  };
+      if (['rejected', 'cancelled', 'expired'].indexOf(trade.state) > -1) {
+        coinify.delegate.releaseReceiveAddress(trade, CoinifyTrade.filteredTrades(coinify.trades));
+      }
+    }
 
-  if (coinify.isLoggedIn) {
-    return getTrades();
-  } else {
-    return coinify.login().then(getTrades);
-  }
+    return coinify.save().then(function () { return coinify._trades; });
+  });
 };
 
 CoinifyTrade.prototype.refresh = function () {
-  var updateTrade = function () {
-    return this._coinify.GET('trades/' + this._id).then(this.set.bind(this));
-  };
-  if (this._coinify.isLoggedIn) {
-    return updateTrade.bind(this)();
-  } else {
-    return this._coinify.login().then(updateTrade.bind(this));
-  }
+  return this._coinify.authGET('trades/' + this._id).then(this.set.bind(this));
 };
 
 CoinifyTrade.prototype._monitorAddress = function () {

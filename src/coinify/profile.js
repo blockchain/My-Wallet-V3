@@ -94,7 +94,7 @@ Object.defineProperties(CoinifyProfile.prototype, {
 
 CoinifyProfile.prototype.fetch = function () {
   var parentThis = this;
-  return this._coinify.GET('traders/me').then(function (res) {
+  return this._coinify.authGET('traders/me').then(function (res) {
     parentThis._full_name = res.profile.name;
     parentThis._gender = res.profile.gender;
 
@@ -180,5 +180,5 @@ CoinifyProfile.prototype.setZipcode = function (value) {
 };
 
 CoinifyProfile.prototype.update = function (values) {
-  return this._coinify.PATCH('traders/me', values);
+  return this._coinify.authPATCH('traders/me', values);
 };

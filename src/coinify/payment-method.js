@@ -107,26 +107,18 @@ Object.defineProperties(PaymentMethod.prototype, {
 });
 
 PaymentMethod.fetchAll = function (inCurrency, outCurrency, coinify) {
-  var getPaymentMethods = function () {
-    var params = {};
-    if (inCurrency) { params.inCurrency = inCurrency; }
-    if (outCurrency) { params.outCurrency = outCurrency; }
+  var params = {};
+  if (inCurrency) { params.inCurrency = inCurrency; }
+  if (outCurrency) { params.outCurrency = outCurrency; }
 
-    var output = [];
-    return coinify.GET('trades/payment-methods', params).then(function (res) {
-      output.length = 0;
-      for (var i = 0; i < res.length; i++) {
-        output.push(new PaymentMethod(res[i], coinify));
-      }
-      return Promise.resolve(output);
-    });
-  };
-
-  if (coinify.isLoggedIn) {
-    return getPaymentMethods();
-  } else {
-    return coinify.login().then(getPaymentMethods);
-  }
+  var output = [];
+  return coinify.authGET('trades/payment-methods', params).then(function (res) {
+    output.length = 0;
+    for (var i = 0; i < res.length; i++) {
+      output.push(new PaymentMethod(res[i], coinify));
+    }
+    return Promise.resolve(output);
+  });
 };
 
 PaymentMethod.prototype.calculateFee = function (quote) {

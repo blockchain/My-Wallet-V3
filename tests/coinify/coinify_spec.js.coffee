@@ -208,25 +208,6 @@ describe "Coinify", ->
         promise = c.login()
         expect(promise).toBeRejected(done)
 
-    describe 'profile', ->
-      beforeEach ->
-        c._user = "user-1"
-        c._offline_token = "offline-token"
-        c._access_token = "access-token"
-        c._profile._did_fetch = true;
-        c._profile._full_name = "John Doe"
-        c._profile._default_currency = "EUR"
-
-      describe 'fullName', ->
-        it 'can be updated', () ->
-          c.profile.setFullName("Jane Doe")
-          expect(c.PATCH).toHaveBeenCalled()
-          expect(c.PATCH.calls.argsFor(0)[1].profile).toEqual({name: 'Jane Doe'})
-          expect(c.profile.fullName).toEqual('Jane Doe')
-
-      describe 'default currency', ->
-        pending()
-
     describe 'getBuyQuote', ->
       it 'should use Quote.getQuote', ->
         spyOn(Quote, "getQuote").and.callThrough()

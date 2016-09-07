@@ -55,7 +55,7 @@ describe "CoinifyProfile", ->
           country: "NL"
       }
       coinify = {
-        GET: (method) -> {
+        authGET: (method) -> {
           then: (cb) ->
             cb({
               id: 1
@@ -77,16 +77,16 @@ describe "CoinifyProfile", ->
               catch: () ->
             }
         }
-        PATCH: () ->
+        authPATCH: () ->
       }
-      spyOn(coinify, "GET").and.callThrough()
-      spyOn(coinify, "PATCH").and.callThrough()
+      spyOn(coinify, "authGET").and.callThrough()
+      spyOn(coinify, "authPATCH").and.callThrough()
       p = new CoinifyProfile(coinify)
 
     describe "fetch()", ->
       it "calls /traders/me", ->
         p.fetch()
-        expect(coinify.GET).toHaveBeenCalledWith('traders/me')
+        expect(coinify.authGET).toHaveBeenCalledWith('traders/me')
 
       it "populates the profile", ->
         p.fetch()
@@ -107,7 +107,7 @@ describe "CoinifyProfile", ->
     describe "update()", ->
       it "should update", ->
         p.update({profile: {name: 'Jane Do'}})
-        expect(coinify.PATCH).toHaveBeenCalledWith('traders/me', {profile: { name: 'Jane Do' }})
+        expect(coinify.authPATCH).toHaveBeenCalledWith('traders/me', {profile: { name: 'Jane Do' }})
 
     describe "Setter", ->
       beforeEach ->

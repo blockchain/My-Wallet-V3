@@ -95,7 +95,7 @@ describe "CoinifyTrade", ->
         save: () -> Promise.resolve()
         _trades: []
         trades: []
-        GET: (method) -> {
+        authGET: (method) -> {
           then: (cb) ->
             cb({
               id: 1
@@ -124,20 +124,12 @@ describe "CoinifyTrade", ->
               catch: () ->
             }
         }
-        POST: () -> Promise.resolve('something')
-        login: () -> {
-          then: (cb) ->
-            cb({access_token: 'my-token', expires_in: 1000})
-            {
-              catch: () ->
-            }
-        }
+        authPOST: () -> Promise.resolve('something')
         _delegate: exchangeDelegate
         delegate: exchangeDelegate
       }
-      spyOn(coinify, "GET").and.callThrough()
-      spyOn(coinify, "POST").and.callThrough()
-      spyOn(coinify, "login").and.callThrough()
+      spyOn(coinify, "authGET").and.callThrough()
+      spyOn(coinify, "authPOST").and.callThrough()
       trade = new CoinifyTrade(tradeJSON, coinify)
 
     describe "set(obj)", ->
@@ -153,14 +145,14 @@ describe "CoinifyTrade", ->
 
     describe "cancel()", ->
       beforeEach ->
-        coinify.PATCH = () ->
+        coinify.authPATCH = () ->
                   then: (cb) ->
                     cb({state: "cancelled"})
-        spyOn(coinify, "PATCH").and.callThrough()
+        spyOn(coinify, "authPATCH").and.callThrough()
 
       it "should cancel a trade and update its state", ->
         trade.cancel()
-        expect(coinify.PATCH).toHaveBeenCalledWith('trades/' + trade._id + '/cancel')
+        expect(coinify.authPATCH).toHaveBeenCalledWith('trades/' + trade._id + '/cancel')
         expect(trade._state).toBe('cancelled')
 
       it "should notifiy the delegate the receive address is no longer needed", ->
@@ -213,12 +205,12 @@ describe "CoinifyTrade", ->
       beforeEach ->
         spyOn(CoinifyTrade.prototype, "_monitorAddress").and.callFake(() ->)
         quote = { id: 101 }
-        coinify.POST = () -> Promise.resolve(tradeJSON)
-        spyOn(coinify, "POST").and.callThrough()
+        coinify.authPOST = () -> Promise.resolve(tradeJSON)
+        spyOn(coinify, "authPOST").and.callThrough()
 
       it "should POST the quote and add the received trade to the list", (done) ->
         testTrade = (t) ->
-          expect(coinify.POST).toHaveBeenCalled()
+          expect(coinify.authPOST).toHaveBeenCalled()
           expect(coinify._trades.length).toBe(1)
 
         promise = CoinifyTrade.buy(quote, undefined, coinify)
@@ -242,7 +234,7 @@ describe "CoinifyTrade", ->
 
       it "should fetch all the trades", (done) ->
         myCoinify = {
-          GET: () ->
+          authGET: () ->
             then: (cb) ->
               cb([tradeJSON,tradeJSON2])
           _trades: []
@@ -252,14 +244,14 @@ describe "CoinifyTrade", ->
         check = () ->
           expect(myCoinify._trades.length).toBe(2)
 
-        spyOn(myCoinify, "GET").and.callThrough()
+        spyOn(myCoinify, "authGET").and.callThrough()
         promise = CoinifyTrade.fetchAll(myCoinify).then(check)
         expect(promise).toBeResolved(done)
 
       it "should update existing trades", (done) ->
         tradeJSON.state = "completed_test"
         myCoinify = {
-          GET: () ->
+          authGET: () ->
             then: (cb) ->
               cb([tradeJSON,tradeJSON2])
           _trades: []
@@ -270,7 +262,7 @@ describe "CoinifyTrade", ->
           expect(myCoinify._trades.length).toBe(2)
           expect(myCoinify._trades[0].state).toEqual('completed_test')
 
-        spyOn(myCoinify, "GET").and.callThrough()
+        spyOn(myCoinify, "authGET").and.callThrough()
         promise = CoinifyTrade.fetchAll(myCoinify).then(check)
         expect(promise).toBeResolved(done)
 
@@ -278,11 +270,11 @@ describe "CoinifyTrade", ->
         pending()
 
     describe "refresh()", ->
-      it "should GET the trade and update the trade object", ->
+      it "should authGET /trades/:id and update the trade object", ->
         trade.set = () -> trade
         spyOn(trade, "set").and.callThrough()
         trade.refresh()
-        expect(coinify.GET).toHaveBeenCalledWith('trades/' + trade._id)
+        expect(coinify.authGET).toHaveBeenCalledWith('trades/' + trade._id)
         expect(trade.set).toHaveBeenCalled()
 
     describe "_checkOnce()", ->
