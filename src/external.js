@@ -42,7 +42,8 @@ External.prototype.fetchOrCreate = function () {
   var fetchFailed = function (e) {
     // Metadata service is down or unreachable.
     this.success = false;
-    return Promise.reject(e);
+    // Login should still resolve
+    return Promise.resolve();
   };
   return this._metadata.fetch().then(createOrPopulate.bind(this)).catch(fetchFailed.bind(this));
 };
