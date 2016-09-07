@@ -1,6 +1,16 @@
 proxyquire = require('proxyquireify')(require)
 
+Quote = {
+  getQuote: (coinify, amount, baseCurrency, quoteCurrency) ->
+    Promise.resolve({
+      baseAmount: amount,
+      baseCurrency: baseCurrency,
+      quoteCurrency: quoteCurrency
+    })
+}
+
 stubs = {
+  './quote'  : Quote
 }
 
 Coinify    = proxyquire('../../src/coinify/coinify', stubs)
@@ -45,6 +55,53 @@ describe "Coinify", ->
         getEmailToken: () -> "json-web-token"
       }
 
+      # Mock POST requests.
+      # TODO: simulate API errors, e.g. if email already registered
+      spyOn(c, "POST").and.callFake((endpoint, data) ->
+        if endpoint == "signup/trader"
+          console.log("singup/trader")
+          if data.email == "duplicate@blockchain.com"
+            console.log("Duplicate, reject!")
+            Promise.reject("DUPLICATE_EMAIL")
+          else if data.email == "fail@blockchain.com"
+            Promise.reject("ERROR_MESSAGE")
+          else
+            Promise.resolve({
+              trader: {id: "1"}
+              offlineToken: "offline-token"
+            })
+
+        else if endpoint == "auth"
+          if data.offline_token == 'invalid-offline-token'
+            Promise.reject({"error":"offline_token_not_found"})
+          else if data.offline_token == 'random-fail-offline-token'
+            Promise.reject()
+          else
+            Promise.resolve({access_token: "access-token", token_type: "bearer"})
+        else
+          Promise.reject("Unknown endpoint")
+      )
+
+      spyOn(c, "PATCH").and.callFake((endpoint, data) ->
+        handle = (resolve, reject) ->
+          if endpoint == "traders/me"
+            console.log(data)
+            resolve({
+              profile:
+                name: (data.profile && data.profile.name) || c._profile._full_name
+              defaultCurrency: data.defaultCurrency || c._profile._default_currency
+            })
+          else
+            reject("Unknown endpoint")
+        {
+          then: (resolve) ->
+            handle(resolve, (() ->))
+            {
+              catch: (reject) ->
+                handle((() ->), reject)
+            }
+        }
+      )
 
     describe "Setter", ->
 
@@ -76,146 +133,124 @@ describe "Coinify", ->
         json  = JSON.stringify(c, null, 2)
         expect(json).toEqual(expectedJSON)
 
-    describe "API", ->
+    describe "signup", ->
+      it 'sets a user and offline token', (done) ->
+        checks  = () ->
+          expect(c.user).toEqual("1")
+          expect(c._offline_token).toEqual("offline-token")
+
+        promise = c.signup('NL', 'EUR').then(checks)
+
+        expect(promise).toBeResolved(done)
+
+      it 'requires the country', ->
+        expect(c.signup('NL', 'EUR')).toBeResolved()
+        expect(c.signup(undefined, 'EUR')).toBeRejected()
+
+      it 'requires the currency', ->
+        expect(c.signup('NL', 'EUR')).toBeResolved()
+        expect(c.signup('NL')).toBeRejected()
+
+      it 'requires email', ->
+        c.delegate.email = () -> null
+        expect(c.signup('NL', 'EUR')).toBeRejected()
+
+      it 'requires verified email', ->
+        c.delegate.isEmailVerified = () -> false
+        expect(c.signup('NL', 'EUR')).toBeRejected()
+
+      it 'lets the user know if email is already registered', ((done) ->
+        c.delegate.email = () -> "duplicate@blockchain.com"
+        promise = c.signup('NL', 'EUR')
+        expect(promise).toBeRejectedWith("DUPLICATE_EMAIL", done)
+      )
+
+      it 'might fail for an unexpected reason', ((done) ->
+        c.delegate.email = () -> "fail@blockchain.com"
+        promise = c.signup('NL', 'EUR')
+        expect(promise).toBeRejectedWith("ERROR_MESSAGE", done)
+      )
+
+    describe 'login', ->
       beforeEach ->
-        # Mock POST requests.
-        # TODO: simulate API errors, e.g. if email already registered
-        spyOn(c, "POST").and.callFake((endpoint, data) ->
-          if endpoint == "signup/trader"
-            console.log("singup/trader")
-            if data.email == "duplicate@blockchain.com"
-              console.log("Duplicate, reject!")
-              Promise.reject("DUPLICATE_EMAIL")
-            else if data.email == "fail@blockchain.com"
-              Promise.reject("ERROR_MESSAGE")
-            else
-              Promise.resolve({
-                trader: {id: "1"}
-                offlineToken: "offline-token"
-              })
+        c._user = "user-1"
+        c._offline_token = "offline-token"
 
-          else if endpoint == "auth"
-            if data.offline_token == 'invalid-offline-token'
-              Promise.reject({"error":"offline_token_not_found"})
-            else if data.offline_token == 'random-fail-offline-token'
-              Promise.reject()
-            else
-              Promise.resolve({access_token: "access-token", token_type: "bearer"})
-          else
-            Promise.reject("Unknown endpoint")
-        )
+      it 'requires an offline token', ->
+        c._offline_token = undefined
+        promise = c.login()
+        expect(promise).toBeRejectedWith("NO_OFFLINE_TOKEN")
 
-        spyOn(c, "PATCH").and.callFake((endpoint, data) ->
-          handle = (resolve, reject) ->
-            if endpoint == "traders/me"
-              console.log(data)
-              resolve({
-                profile:
-                  name: (data.profile && data.profile.name) || c._profile._full_name
-                defaultCurrency: data.defaultCurrency || c._profile._default_currency
-              })
-            else
-              reject("Unknown endpoint")
-          {
-            then: (resolve) ->
-              handle(resolve, (() ->))
-              {
-                catch: (reject) ->
-                  handle((() ->), reject)
-              }
-          }
-        )
+      it 'should POST the offline token to /auth', ->
+        promise = c.login()
+        expect(c.POST).toHaveBeenCalled()
+        expect(c.POST.calls.argsFor(0)[1].offline_token).toEqual('offline-token')
 
-      describe "signup", ->
-        it 'sets a user and offline token', (done) ->
-          checks  = () ->
-            expect(c.user).toEqual("1")
-            expect(c._offline_token).toEqual("offline-token")
+      it 'should store the access token', (done) ->
+        # This is ephemeral, not saved to the wallet.
+        checks = () ->
+          expect(c._access_token).toEqual("access-token")
 
-          promise = c.signup('NL', 'EUR').then(checks)
+        promise = c.login().then(checks)
+        expect(promise).toBeResolved(done)
 
-          expect(promise).toBeResolved(done)
+      it 'should store the expiration time', () ->
+        # Pending API change
+        pending()
 
-        it 'requires the country', ->
-          expect(c.signup('NL', 'EUR')).toBeResolved()
-          expect(c.signup(undefined, 'EUR')).toBeRejected()
+      it 'should handle token not found error', (done) ->
+        c._offline_token = 'invalid-offline-token'
+        promise = c.login()
+        expect(promise).toBeRejectedWith(jasmine.objectContaining({error: 'offline_token_not_found'}), done)
 
-        it 'requires the currency', ->
-          expect(c.signup('NL', 'EUR')).toBeResolved()
-          expect(c.signup('NL')).toBeRejected()
+      it 'should handle generic failure', (done) ->
+        c._offline_token = 'random-fail-offline-token'
+        promise = c.login()
+        expect(promise).toBeRejected(done)
 
-        it 'requires email', ->
-          c.delegate.email = () -> null
-          expect(c.signup('NL', 'EUR')).toBeRejected()
+    describe 'profile', ->
+      beforeEach ->
+        c._user = "user-1"
+        c._offline_token = "offline-token"
+        c._access_token = "access-token"
+        c._profile._did_fetch = true;
+        c._profile._full_name = "John Doe"
+        c._profile._default_currency = "EUR"
 
-        it 'requires verified email', ->
-          c.delegate.isEmailVerified = () -> false
-          expect(c.signup('NL', 'EUR')).toBeRejected()
+      describe 'fullName', ->
+        it 'can be updated', () ->
+          c.profile.setFullName("Jane Doe")
+          expect(c.PATCH).toHaveBeenCalled()
+          expect(c.PATCH.calls.argsFor(0)[1].profile).toEqual({name: 'Jane Doe'})
+          expect(c.profile.fullName).toEqual('Jane Doe')
 
-        it 'lets the user know if email is already registered', ((done) ->
-          c.delegate.email = () -> "duplicate@blockchain.com"
-          promise = c.signup('NL', 'EUR')
-          expect(promise).toBeRejectedWith("DUPLICATE_EMAIL", done)
-        )
+      describe 'default currency', ->
+        pending()
 
-        it 'might fail for an unexpected reason', ((done) ->
-          c.delegate.email = () -> "fail@blockchain.com"
-          promise = c.signup('NL', 'EUR')
-          expect(promise).toBeRejectedWith("ERROR_MESSAGE", done)
-        )
+    describe 'getBuyQuote', ->
+      it 'should use Quote.getQuote', ->
+        spyOn(Quote, "getQuote").and.callThrough()
 
-      describe 'login', ->
-        beforeEach ->
-          c._user = "user-1"
-          c._offline_token = "offline-token"
+        c.getBuyQuote(1000, 'EUR', 'BTC')
 
-        it 'requires an offline token', ->
-          c._offline_token = undefined
-          promise = c.login()
-          expect(promise).toBeRejectedWith("NO_OFFLINE_TOKEN")
+        expect(Quote.getQuote).toHaveBeenCalled()
 
-        it 'should POST the offline token to /auth', ->
-          promise = c.login()
-          expect(c.POST).toHaveBeenCalled()
-          expect(c.POST.calls.argsFor(0)[1].offline_token).toEqual('offline-token')
+      it 'should use a negative amount', (done) ->
+        checks = (quote) ->
+          expect(quote.baseAmount).toEqual(-1000)
 
-        it 'should store the access token', (done) ->
-          # This is ephemeral, not saved to the wallet.
-          checks = () ->
-            expect(c._access_token).toEqual("access-token")
+        promise = c.getBuyQuote(1000, 'EUR', 'BTC').then(checks)
 
-          promise = c.login().then(checks)
-          expect(promise).toBeResolved(done)
+        expect(promise).toBeResolved(done)
 
-        it 'should store the expiration time', () ->
-          # Pending API change
-          pending()
+      it 'should set the quote currency to BTC for fiat base currency', (done) ->
+        checks = (quote) ->
+          expect(quote.quoteCurrency).toEqual('BTC')
 
-        it 'should handle token not found error', (done) ->
-          c._offline_token = 'invalid-offline-token'
-          promise = c.login()
-          expect(promise).toBeRejectedWith(jasmine.objectContaining({error: 'offline_token_not_found'}), done)
+        promise = c.getBuyQuote(1000, 'EUR').then(checks)
 
-        it 'should handle generic failure', (done) ->
-          c._offline_token = 'random-fail-offline-token'
-          promise = c.login()
-          expect(promise).toBeRejected(done)
+        expect(promise).toBeResolved(done)
 
-      describe 'profile', ->
-        beforeEach ->
-          c._user = "user-1"
-          c._offline_token = "offline-token"
-          c._access_token = "access-token"
-          c._profile._did_fetch = true;
-          c._profile._full_name = "John Doe"
-          c._profile._default_currency = "EUR"
 
-        describe 'fullName', ->
-          it 'can be updated', () ->
-            c.profile.setFullName("Jane Doe")
-            expect(c.PATCH).toHaveBeenCalled()
-            expect(c.PATCH.calls.argsFor(0)[1].profile).toEqual({name: 'Jane Doe'})
-            expect(c.profile.fullName).toEqual('Jane Doe')
-
-        describe 'default currency', ->
-          pending()
+      it 'should set _lastQuote', ->
+        pending()
