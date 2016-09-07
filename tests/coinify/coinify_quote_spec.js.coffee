@@ -35,8 +35,39 @@ describe "CoinifyQuote", ->
         expect(q._id).toBe(obj.id)
 
     describe "getQuote()", ->
-      it "...", ->
-        pending()
+      coinify = {
+        POST: () -> Promise.resolve()
+      }
+
+      beforeEach ->
+        spyOn(coinify, "POST").and.callThrough()
+
+      describe "when not logged in", ->
+        it "should POST /trades/quote", ->
+          Quote.getQuote(coinify, 1000, 'EUR', 'BTC')
+          expect(coinify.POST).toHaveBeenCalled()
+          expect(coinify.POST.calls.argsFor(0)[0]).toEqual('trades/quote')
+
+      describe "when logged in", ->
+        beforeEach ->
+          coinify._offline_token = "token"
+          coinify.profile = {}
+          coinify.isLoggedIn = true
+
+        it "should POST /trades/quote", ->
+          Quote.getQuote(coinify, 1000, 'EUR', 'BTC')
+          expect(coinify.POST).toHaveBeenCalled()
+          expect(coinify.POST.calls.argsFor(0)[0]).toEqual('trades/quote')
+
+        it "should convert cents", ->
+          Quote.getQuote(coinify, 1000, 'EUR', 'BTC')
+          expect(coinify.POST).toHaveBeenCalled()
+          expect(coinify.POST.calls.argsFor(0)[1].baseAmount).toEqual(10)
+
+        it "should convert satoshis", ->
+          Quote.getQuote(coinify, 100000000, 'BTC', 'EUR')
+          expect(coinify.POST).toHaveBeenCalled()
+          expect(coinify.POST.calls.argsFor(0)[1].baseAmount).toEqual(1)
 
   describe "instance", ->
     describe "getters", ->
@@ -47,3 +78,7 @@ describe "CoinifyQuote", ->
         expect(q.baseAmount).toBe(q._baseAmount)
         expect(q.quoteAmount).toBe(q._quoteAmount)
         expect(q.id).toBe(q._id)
+
+    describe "getPaymentMethods", ->
+      it "...", ->
+        pending()
