@@ -267,15 +267,7 @@ Coinify.prototype.buy = function (amount, baseCurrency, medium) {
 
   var self = this;
 
-  var doBuy = function () {
-    return CoinifyTrade.buy(self._lastQuote, medium, self);
-  };
-
-  if (!this.isLoggedIn) {
-    return this.login().then(doBuy);
-  } else {
-    return doBuy();
-  }
+  return CoinifyTrade.buy(self._lastQuote, medium, self);
 };
 
 Coinify.prototype.getTrades = function () {
@@ -285,15 +277,7 @@ Coinify.prototype.getTrades = function () {
 Coinify.prototype.triggerKYC = function () {
   var self = this;
 
-  var doKYC = function () {
-    return CoinifyKYC.trigger(self);
-  };
-
-  if (!this.isLoggedIn) {
-    return this.login().then(doKYC);
-  } else {
-    return doKYC();
-  }
+  return CoinifyKYC.trigger(self);
 };
 
 Coinify.prototype.getKYCs = function () {
