@@ -73,6 +73,12 @@ Object.defineProperties(CoinifyTrade.prototype, {
       return this._sendAmount;
     }
   },
+  'outAmount': {
+    configurable: false,
+    get: function () {
+      return this._outAmount;
+    }
+  },
   'outAmountExpected': {
     configurable: false,
     get: function () {
@@ -148,10 +154,12 @@ CoinifyTrade.prototype.set = function (obj) {
     if (this._inCurrency === 'BTC') {
       this._inAmount = Math.trunc(obj.inAmount * 100000000);
       this._sendAmount = Math.trunc(obj.transferIn.sendAmount * 100000000);
+      this._outAmount = Math.trunc(obj.outAmount * 100);
       this._outAmountExpected = Math.trunc(obj.outAmountExpected * 100);
     } else {
       this._inAmount = Math.trunc(obj.inAmount * 100);
       this._sendAmount = Math.trunc(obj.transferIn.sendAmount * 100);
+      this._outAmount = Math.trunc(obj.outAmount * 100000000);
       this._outAmountExpected = Math.trunc(obj.outAmountExpected * 100000000);
 
       if (this._medium === 'bank') {
