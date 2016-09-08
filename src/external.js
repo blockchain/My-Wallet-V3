@@ -65,7 +65,7 @@ External.prototype.fetch = function () {
 };
 
 External.prototype.save = function () {
-  if (!this._coinify) {
+  if (!this._metadata.existsOnServer) {
     return this._metadata.create(this);
   } else {
     return this._metadata.update(this);

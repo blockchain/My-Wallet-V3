@@ -46,6 +46,13 @@ Metadata.prototype.setMagicHash = function (encryptedPayload) {
   this._magicHash = Bitcoin.message.magicHash(encryptedPayload, Bitcoin.networks.bitcoin);
 };
 
+Object.defineProperties(Metadata.prototype, {
+  'existsOnServer': {
+    configurable: false,
+    get: function () { return Boolean(this._magicHash); }
+  }
+});
+
 /*
 metadata = new Blockchain.Metadata(2);
 metadata.create({
