@@ -98,6 +98,7 @@ Helpers.o = function (pred1, pred2) {
     return pred1(element) || pred2(element);
   };
 };
+Helpers.noop = function () {};
 Helpers.isValidSharedKey = function (sharedKey) {
   return Helpers.isString(sharedKey) && sharedKey.length === 36;
 };
