@@ -809,6 +809,6 @@ Wallet.prototype.loadExternal = function () {
     return Promise.resolve();
   } else {
     this._external = new External(this);
-    return this._external.fetchOrCreate();
+    return this._external.fetch();
   }
 };

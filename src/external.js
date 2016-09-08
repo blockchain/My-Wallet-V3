@@ -48,8 +48,28 @@ External.prototype.fetchOrCreate = function () {
   return this._metadata.fetch().then(createOrPopulate.bind(this)).catch(fetchFailed.bind(this));
 };
 
+External.prototype.fetch = function () {
+  var Populate = function (object) {
+    this.success = true;
+    if (object !== null) {
+      this._coinify = object.coinify ? new Coinify(object.coinify, this, this._delegate) : undefined;
+    }
+    return this;
+  };
+  var fetchFailed = function (e) {
+    // Metadata service is down or unreachable.
+    this.success = false;
+    return Promise.reject(e);
+  };
+  return this._metadata.fetch().then(Populate.bind(this)).catch(fetchFailed.bind(this));
+};
+
 External.prototype.save = function () {
-  return this._metadata.update(this);
+  if (!this._coinify) {
+    return this._metadata.create(this);
+  } else {
+    return this._metadata.update(this);
+  }
 };
 
 External.prototype.wipe = function () {
