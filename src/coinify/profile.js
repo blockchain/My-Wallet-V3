@@ -1,6 +1,8 @@
 'use strict';
 
 var assert = require('assert');
+var Limits = require('./limits');
+var Level = require('./level');
 
 module.exports = CoinifyProfile;
 
@@ -111,9 +113,9 @@ CoinifyProfile.prototype.fetch = function () {
     parentThis._zipcode = res.profile.address.zipcode;
     parentThis._country = res.profile.address.country;
 
-    parentThis._level = res.level;
-    parentThis._nextLevel = res.nextLevel;
-    parentThis._currentLimits = res.currentLimits;
+    parentThis._level = new Level(res.level);
+    parentThis._nextLevel = new Level(res.nextLevel);
+    parentThis._currentLimits = new Limits(res.currentLimits);
 
     parentThis._did_fetch = true;
 

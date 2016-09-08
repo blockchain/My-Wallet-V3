@@ -73,6 +73,12 @@ Object.defineProperties(CoinifyTrade.prototype, {
       return this._sendAmount;
     }
   },
+  'outAmount': {
+    configurable: false,
+    get: function () {
+      return this._outAmount;
+    }
+  },
   'outAmountExpected': {
     configurable: false,
     get: function () {
@@ -143,19 +149,33 @@ CoinifyTrade.prototype.set = function (obj) {
   } else { // Contructed from Coinify API
     this._inCurrency = obj.inCurrency;
     this._outCurrency = obj.outCurrency;
-    this._inAmount = obj.inAmount;
     this._medium = obj.transferIn.medium;
-    this._sendAmount = obj.transferIn.sendAmount;
-    if (this._medium === 'bank') {
-      this._bankAccount = new BankAccount(obj.transferIn.details);
+
+    if (this._inCurrency === 'BTC') {
+      this._inAmount = Math.round(obj.inAmount * 100000000);
+      this._sendAmount = Math.round(obj.transferIn.sendAmount * 100000000);
+      this._outAmount = Math.round(obj.outAmount * 100);
+      this._outAmountExpected = Math.round(obj.outAmountExpected * 100);
+    } else {
+      this._inAmount = Math.round(obj.inAmount * 100);
+      this._sendAmount = Math.round(obj.transferIn.sendAmount * 100);
+      this._outAmount = Math.round(obj.outAmount * 100000000);
+      this._outAmountExpected = Math.round(obj.outAmountExpected * 100000000);
+
+      if (this._medium === 'bank') {
+        this._bankAccount = new BankAccount(obj.transferIn.details);
+      }
+
+      this._receiveAddress = obj.transferOut.details.account;
+      this._iSignThisID = obj.transferIn.details.paymentId;
+
+      if (!this.bitcoinReceived) {
+        this._bitcoinReceived = null;
+      }
     }
-    this._outAmountExpected = obj.outAmountExpected;
-    this._receiveAddress = obj.transferOut.details.account;
-    this._iSignThisID = obj.transferIn.details.paymentId;
+
     this._receiptUrl = obj.receiptUrl;
-    if (!this.bitcoinReceived) {
-      this._bitcoinReceived = null;
-    }
+
     return this;
   }
 };
@@ -236,7 +256,7 @@ CoinifyTrade.prototype.fakeBankTransfer = function () {
 
   var fakeBankTransfer = function () {
     return self._coinify.POST('trades/' + self._id + '/test/bank-transfer', {
-      sendAmount: self.inAmount,
+      sendAmount: parseFloat((self.inAmount / 100).toFixed(2)),
       currency: self.inCurrency
     });
   };

@@ -14,8 +14,13 @@ function PaymentMethod (obj, coinify) {
   this._inCurrency = obj.inCurrency;
   this._outCurrency = obj.outCurrency;
 
-  this._inFixedFee = obj.inFixedFee;
-  this._outFixedFee = obj.outFixedFee;
+  if (this._inCurrency === 'BTC') {
+    this._inFixedFee = Math.round(obj.inFixedFee * 100000000);
+    this._outFixedFee = Math.round(obj.outFixedFee * 100);
+  } else {
+    this._inFixedFee = Math.round(obj.inFixedFee * 100);
+    this._outFixedFee = Math.round(obj.outFixedFee * 100000000);
+  }
   this._inPercentageFee = obj.inPercentageFee;
   this._outPercentageFee = obj.outPercentageFee;
 }
@@ -86,6 +91,18 @@ Object.defineProperties(PaymentMethod.prototype, {
     get: function () {
       return this._outPercentageFee;
     }
+  },
+  'fee': {
+    configurable: false,
+    get: function () {
+      return this._fee;
+    }
+  },
+  'total': {
+    configurable: false,
+    get: function () {
+      return this._total;
+    }
   }
 });
 
@@ -110,4 +127,9 @@ PaymentMethod.fetchAll = function (inCurrency, outCurrency, coinify) {
   } else {
     return coinify.login().then(getPaymentMethods);
   }
+};
+
+PaymentMethod.prototype.calculateFee = function (quote) {
+  this._fee = Math.round(this.inFixedFee + -quote.baseAmount * (this.inPercentageFee / 100));
+  this._total = -quote.baseAmount + this._fee;
 };

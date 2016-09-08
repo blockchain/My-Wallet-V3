@@ -1,8 +1,13 @@
 'use strict';
 
+var Helpers = require('./helpers');
+var assert = require('assert');
+
 module.exports = Quote;
 
-function Quote (obj) {
+function Quote (obj, coinify) {
+  this._coinify = coinify;
+
   var expiresAt = new Date(obj.expiryTime);
 
   // Debug, make quote expire in 15 seconds:
@@ -11,9 +16,17 @@ function Quote (obj) {
   this._id = obj.id;
   this._baseCurrency = obj.baseCurrency;
   this._quoteCurrency = obj.quoteCurrency;
-  this._baseAmount = obj.baseAmount;
-  this._quoteAmount = obj.quoteAmount;
   this._expiresAt = expiresAt;
+
+  if (this._baseCurrency === 'BTC') {
+    this._baseAmount = Math.round(obj.baseAmount * 100000000);
+    this._quoteAmount = Math.round(obj.quoteAmount * 100);
+  } else {
+    this._baseAmount = Math.round(obj.baseAmount * 100);
+    this._quoteAmount = Math.round(obj.quoteAmount * 100000000);
+  }
+
+  obj.baseAmount;
 }
 
 Object.defineProperties(Quote.prototype, {
@@ -55,34 +68,71 @@ Object.defineProperties(Quote.prototype, {
   }
 });
 
-Quote.getQuote = function (coinify, amount, baseCurrency) {
+Quote.getQuote = function (coinify, amount, baseCurrency, quoteCurrency) {
+  assert(Helpers.isInteger(amount), 'amount must be in cents or satoshi');
+
+  var supportedCurrencies = ['BTC', 'EUR', 'GBP', 'USD', 'DKK'];
+
+  if (supportedCurrencies.indexOf(baseCurrency) === -1) {
+    return Promise.reject('base_currency_not_supported');
+  }
+
+  if (supportedCurrencies.indexOf(quoteCurrency) === -1) {
+    return Promise.reject('quote_currency_not_supported');
+  }
+
+  if (baseCurrency === 'CNY' || quoteCurrency === 'CNY') {
+    console.warn('CNY has only 1 decimal place');
+  }
+
+  var baseAmount;
+  if (baseCurrency === 'BTC') {
+    baseAmount = (amount / 100000000).toFixed(8);
+  } else {
+    baseAmount = (amount / 100).toFixed(2);
+  }
+
   var processQuote = function (quote) {
-    quote = new Quote(quote);
+    quote = new Quote(quote, coinify);
     return quote;
   };
 
-  var getQuote = function (profile) {
-    baseCurrency = baseCurrency || profile.defaultCurrency;
-    var quoteCurrency = baseCurrency === 'BTC' ? profile.defaultCurrency : 'BTC';
-
+  var getQuote = function () {
     return coinify.POST('trades/quote', {
       baseCurrency: baseCurrency,
       quoteCurrency: quoteCurrency,
-      baseAmount: amount
+      baseAmount: parseFloat(baseAmount)
     });
   };
 
   if (coinify._offline_token == null) {
-    return getQuote();
+    return getQuote().then(processQuote);
   }
-  if (coinify.profile === null) {
-    return coinify.fetchProfile().then(getQuote).then(processQuote);
+  if (!coinify.isLoggedIn) {
+    return coinify.login().then(getQuote).then(processQuote);
   } else {
-    if (!coinify.isLoggedIn) {
-      return coinify.login().then(function () { return getQuote(coinify.profile); }).then(processQuote);
-    } else {
-      return getQuote(coinify.profile).then(processQuote);
+    return getQuote().then(processQuote);
+  }
+};
+
+Quote.prototype.getPaymentMethods = function () {
+  var self = this;
+
+  var setPaymentMethods = function (paymentMethods) {
+    self.paymentMethods = {};
+    for (var i = 0; i < paymentMethods.length; i++) {
+      var paymentMethod = paymentMethods[i];
+      self.paymentMethods[paymentMethod.inMedium] = paymentMethod;
+      paymentMethod.calculateFee.bind(paymentMethod)(self);
     }
+    return paymentMethods;
+  };
+
+  if (this.paymentMethods) {
+    return Promise.resolve(this.paymentMethods);
+  } else {
+    return self._coinify.getPaymentMethods(this.baseCurrency, this.quoteCurrency)
+                        .then(setPaymentMethods);
   }
 };
 

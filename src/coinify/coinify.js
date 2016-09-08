@@ -245,29 +245,19 @@ Coinify.prototype.fetchProfile = function () {
   }
 };
 
-Coinify.prototype.getBuyQuote = function (amount, baseCurrency) {
-  assert(baseCurrency, 'Specify currency');
-  // Use (and cache) getBuyCurrencies()
-  if (['BTC', 'EUR', 'GBP', 'USD', 'DKK'].indexOf(baseCurrency) === -1) {
-    return Promise.reject('base_currency_not_supported');
+Coinify.prototype.getBuyQuote = function (amount, baseCurrency, quoteCurrency) {
+  assert(baseCurrency, 'Specify base currency');
+  assert(baseCurrency !== 'BTC' || quoteCurrency, 'Specify quote currency');
+  if (baseCurrency !== 'BTC') {
+    quoteCurrency = 'BTC';
   }
-
-  return Quote.getQuote(this, -amount, baseCurrency).then(this.setLastQuote.bind(this));
+  return Quote.getQuote(this, -amount, baseCurrency, quoteCurrency)
+              .then(this.setLastQuote.bind(this));
 };
 
 Coinify.prototype.setLastQuote = function (quote) {
   this._lastQuote = quote;
   return quote;
-};
-
-Coinify.prototype.getSellQuote = function (amount, baseCurrency) {
-  assert(baseCurrency, 'Specify currency');
-  // Use (and cache) getBuyCurrencies()
-  if (['BTC', 'EUR', 'GBP', 'USD', 'DKK'].indexOf(baseCurrency) === -1) {
-    return Promise.reject('base_currency_not_supported');
-  }
-
-  return Quote.getQuote(this, amount, baseCurrency).then(this.setLastQuote.bind(this));
 };
 
 Coinify.prototype.buy = function (amount, baseCurrency, medium) {
