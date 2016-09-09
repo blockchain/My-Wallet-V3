@@ -152,14 +152,14 @@ CoinifyTrade.prototype.set = function (obj) {
     this._medium = obj.transferIn.medium;
 
     if (this._inCurrency === 'BTC') {
-      this._inAmount = Math.round(obj.inAmount * 100000000);
-      this._sendAmount = Math.round(obj.transferIn.sendAmount * 100000000);
-      this._outAmount = Math.round(obj.outAmount * 100);
+      this._inAmount = Math.round((obj.inAmount || 0) * 100000000);
+      this._sendAmount = Math.round((obj.transferIn.sendAmount || 0) * 100000000);
+      this._outAmount = Math.round((obj.outAmount || 0) * 100);
       this._outAmountExpected = Math.round((obj.outAmountExpected || 0) * 100);
     } else {
-      this._inAmount = Math.round(obj.inAmount * 100);
-      this._sendAmount = Math.round(obj.transferIn.sendAmount * 100);
-      this._outAmount = Math.round(obj.outAmount * 100000000);
+      this._inAmount = Math.round((obj.inAmount || 0) * 100);
+      this._sendAmount = Math.round((obj.transferIn.sendAmount || 0) * 100);
+      this._outAmount = Math.round((obj.outAmount || 0) * 100000000);
       this._outAmountExpected = Math.round((obj.outAmountExpected || 0) * 100000000);
 
       if (this._medium === 'bank') {
