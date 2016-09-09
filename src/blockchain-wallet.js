@@ -538,7 +538,8 @@ Wallet.prototype.validateSecondPassword = function (inputString) {
         this._pbkdf2_iterations = 10;
         break;
       default:
-        throw 'UNKNOWN_SEC_PASS_PBKDF_ITERATIONS'
+        var err = 'UNKNOWN_SEC_PASS_PBKDF_ITERATIONS';
+        throw err;
     }
   }
   var it = this._pbkdf2_iterations;
