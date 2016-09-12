@@ -106,7 +106,7 @@ Object.defineProperties(CoinifyTrade.prototype, {
   'bitcoinReceived': {
     configurable: false,
     get: function () {
-      return this._bitcoinReceived;
+      return Boolean(this._txHash);
     }
   },
   'confirmed': {
@@ -152,11 +152,7 @@ CoinifyTrade.prototype.set = function (obj) {
   if (obj.confirmed === Boolean(obj.confirmed)) {
     this._coinify.delegate.deserializeExtraFields(obj, this);
     this._receiveAddress = this._coinify.delegate.getReceiveAddress(this);
-
     this._confirmed = obj.confirmed;
-    if (obj.confirmed) {
-      this._bitcoinReceived = true;
-    }
     this._txHash = obj.tx_hash;
   } else { // Contructed from Coinify API
     this._inCurrency = obj.inCurrency;
@@ -185,10 +181,6 @@ CoinifyTrade.prototype.set = function (obj) {
 
       this._receiveAddress = obj.transferOut.details.account;
       this._iSignThisID = obj.transferIn.details.paymentId;
-
-      if (!this.bitcoinReceived) {
-        this._bitcoinReceived = null;
-      }
     }
 
     this._receiptUrl = obj.receiptUrl;
@@ -383,7 +375,6 @@ CoinifyTrade.prototype._monitorAddress = function () {
         // set. Instead use the hash for the incoming transaction. This will not
         // work correctly with address reuse.
         self._txHash = hash;
-        self._bitcoinReceived = true;
         tradeWasPaid(amount);
       } else if (self.state === 'completed' || self.state === 'processing') {
         if (self._txHash) {
@@ -395,7 +386,6 @@ CoinifyTrade.prototype._monitorAddress = function () {
           // missing if in the processing state.
           self._txHash = hash;
         }
-        self._bitcoinReceived = true;
         tradeWasPaid(amount);
       }
     };
@@ -449,7 +439,6 @@ CoinifyTrade._getTransactionHash = function (trade) {
           return;
         }
         trade._confirmations = tx.confirmations;
-        trade._bitcoinReceived = true;
         if (trade.confirmed) {
           trade._confirmed = true;
         }
