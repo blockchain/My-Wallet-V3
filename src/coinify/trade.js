@@ -135,6 +135,18 @@ Object.defineProperties(CoinifyTrade.prototype, {
 
 CoinifyTrade.prototype.set = function (obj) {
   this._createdAt = new Date(obj.createTime);
+  if ([
+    'awaiting_transfer_in',
+    'processing',
+    'reviewing',
+    'completed',
+    'completed_test',
+    'cancelled',
+    'rejected',
+    'expired'
+  ].indexOf(obj.state) === -1) {
+    console.warn('Unknown state:', obj.state);
+  }
   this._state = obj.state;
   this._is_buy = obj.is_buy;
   if (obj.confirmed === Boolean(obj.confirmed)) {
