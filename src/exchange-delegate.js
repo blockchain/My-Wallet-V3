@@ -41,7 +41,7 @@ ExchangeDelegate.prototype.monitorAddress = function (address, callback) {
       if (data['out']) {
         for (var i = 0; i < data['out'].length; i++) {
           if (data['out'][i].addr === address) {
-            callback(data['out'][i].value);
+            callback(data['hash'], data['out'][i].value);
           }
         }
       }

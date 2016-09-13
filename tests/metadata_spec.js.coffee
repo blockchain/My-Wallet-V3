@@ -204,13 +204,14 @@ describe "Metadata", ->
         expect(c._magicHash).toEqual("#{ encryptedData }|magicHash")
 
     describe "create", ->
-      it "should encrypt data", ->
+      it "should encrypt data", (done) ->
         spyOn(WalletCrypto, "encryptDataWithKey")
-        c.create({hello: 'world'})
-        expect(WalletCrypto.encryptDataWithKey).toHaveBeenCalledWith(
-          JSON.stringify({hello: 'world'}),
-          c._encryptionKey
-        )
+        c.create({hello: 'world'}).then ->
+          expect(WalletCrypto.encryptDataWithKey).toHaveBeenCalledWith(
+            JSON.stringify({hello: 'world'}),
+            c._encryptionKey
+          )
+        done()
 
       it "magicHash should be null initially", ->
         expect(c._magicHash).toEqual(null)
@@ -221,9 +222,10 @@ describe "Metadata", ->
       describe "POST", ->
         postData = undefined
 
-        beforeEach ->
-          c.create({hello: 'world'})
-          postData = c.POST.calls.argsFor(0)[1]
+        beforeEach (done) ->
+          c.create({hello: 'world'}).then ->
+            postData = c.POST.calls.argsFor(0)[1]
+            done()
 
         it "should be called", ->
           expect(c.POST).toHaveBeenCalled()
@@ -285,13 +287,15 @@ describe "Metadata", ->
       it "value should be null initially", ->
         expect(c._value).toEqual(null)
 
-      it "should GET", ->
-        c.fetch()
-        expect(c.GET).toHaveBeenCalled()
+      it "should GET", (done) ->
+        c.fetch().then ->
+          expect(c.GET).toHaveBeenCalled()
+          done()
 
-      it "should use the right address", ->
-        c.fetch()
-        expect(c.GET.calls.argsFor(0)[0]).toEqual("m/510742'/2'/0'-address")
+      it "should use the right address", (done) ->
+        c.fetch().then ->
+          expect(c.GET.calls.argsFor(0)[0]).toEqual("m/510742'/2'/0'-address")
+          done()
 
       it "should decrypt data and verify signature", (done) ->
         spyOn(WalletCrypto, "decryptDataWithKey").and.callThrough()
@@ -404,11 +408,14 @@ describe "Metadata", ->
         )
 
       describe "PUT", ->
+        prevHash = undefined
         putData = undefined
 
-        beforeEach ->
-          c.update({hello: 'world again'})
-          putData = c.PUT.calls.argsFor(0)[1]
+        beforeEach (done) ->
+          prevHash = c._magicHash
+          c.update({hello: 'world again'}).then ->
+            putData = c.PUT.calls.argsFor(0)[1]
+            done()
 
         it "should be called", ->
           expect(c.PUT).toHaveBeenCalled()
@@ -423,7 +430,7 @@ describe "Metadata", ->
           expect(putData.payload_type_id).toEqual(c._payloadTypeId)
 
         it "should send the previous magic hash", ->
-          expect(putData.prev_magic_hash).toEqual(c._magicHash)
+          expect(putData.prev_magic_hash).toEqual(prevHash)
 
         it "should send encrypted payload", ->
           expect(putData.payload).toEqual(expectedPayloadPUT.payload)

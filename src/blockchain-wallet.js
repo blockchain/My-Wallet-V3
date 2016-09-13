@@ -527,8 +527,22 @@ Wallet.prototype.deleteLegacyAddress = function (a) {
 // };
 
 Wallet.prototype.validateSecondPassword = function (inputString) {
-  // old wallets default_iterations is 10
-  var it = !this._pbkdf2_iterations ? 10 : this._pbkdf2_iterations;
+  if (!this._pbkdf2_iterations) {
+    var passHash1 = WalletCrypto.hashNTimes(this._sharedKey + inputString, 1);
+    var passHash10 = WalletCrypto.hashNTimes(this._sharedKey + inputString, 10);
+    switch (this._dpasswordhash) {
+      case passHash1:
+        this._pbkdf2_iterations = 1;
+        break;
+      case passHash10:
+        this._pbkdf2_iterations = 10;
+        break;
+      default:
+        var err = 'UNKNOWN_SEC_PASS_PBKDF_ITERATIONS';
+        throw err;
+    }
+  }
+  var it = this._pbkdf2_iterations;
   var passwordHash = WalletCrypto.hashNTimes(this._sharedKey + inputString, it);
   return passwordHash === this._dpasswordhash;
 };
@@ -809,6 +823,6 @@ Wallet.prototype.loadExternal = function () {
     return Promise.resolve();
   } else {
     this._external = new External(this);
-    return this._external.fetchOrCreate();
+    return this._external.fetch();
   }
 };

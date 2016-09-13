@@ -10,6 +10,20 @@ function CoinifyKYC (obj, coinify) {
 }
 
 CoinifyKYC.prototype.set = function (obj) {
+  if ([
+    'pending',
+    'rejected',
+    'declined',
+    'failed',
+    'expired',
+    'completed',
+    'completed_test',
+    'manualReviewing',
+    'manualHold',
+    'manualRejected'
+  ].indexOf(obj.state) === -1) {
+    console.warn('Unknown state:', obj.state);
+  }
   this._state = obj.state;
   this._iSignThisID = obj.externalId;
   this._updatedAt = new Date(obj.updateTime);

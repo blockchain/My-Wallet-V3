@@ -53,14 +53,11 @@ describe "CoinifyTrade", ->
         expect(t._id).toBe(tradeJSON.id)
         expect(t._inCurrency).toBe(tradeJSON.inCurrency)
         expect(t._outCurrency).toBe(tradeJSON.outCurrency)
-        expect(t._inAmount).toBe(tradeJSON.inAmount * 100)
         expect(t._medium).toBe(tradeJSON.transferIn.medium)
-        expect(t._outAmountExpected).toBe(Math.trunc(tradeJSON.outAmountExpected * 100000000))
         expect(t._receiveAddress).toBe(tradeJSON.transferOut.details.account)
         expect(t._state).toBe(tradeJSON.state)
         expect(t._iSignThisID).toBe(tradeJSON.transferIn.details.paymentId)
         expect(t._receiptUrl).toBe(tradeJSON.receiptUrl)
-        expect(t._bitcoinReceived).toBe(null)
 
   describe "instance", ->
 
@@ -142,6 +139,18 @@ describe "CoinifyTrade", ->
         expect(trade._id).toBe(oldId)
         expect(trade._createdAt).toEqual(oldTimeStamp)
         expect(trade._inCurrency).toBe(tradeJSON.inCurrency)
+
+      it "should round correctly", ->
+        tradeJSON.inAmount = 35.05
+        tradeJSON.transferIn.sendAmount  = 35.05
+        tradeJSON.outAmount = 0.00003505
+        tradeJSON.outAmountExpected = 0.00003505
+
+        trade.set(tradeJSON)
+        expect(trade.inAmount).toEqual(3505)
+        expect(trade.sendAmount).toEqual(3505)
+        expect(trade.outAmount).toEqual(3505)
+        expect(trade.outAmountExpected).toEqual(3505)
 
     describe "cancel()", ->
       beforeEach ->

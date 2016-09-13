@@ -9,8 +9,24 @@ Quote = {
     })
 }
 
+PaymentMethod = {
+  fetchAll: () ->
+}
+
+CoinifyTrade = {
+  fetchAll: () ->
+  monitorPayments: () ->
+}
+
+CoinifyKYC = {
+  fetchAll: () ->
+}
+
 stubs = {
-  './quote'  : Quote
+  './quote'  : Quote,
+  './payment-method' : PaymentMethod,
+  './trade' : CoinifyTrade,
+  './kyc' : CoinifyKYC
 }
 
 Coinify    = proxyquire('../../src/coinify/coinify', stubs)
@@ -240,3 +256,103 @@ describe "Coinify", ->
         promise = c.getBuyQuote(1000, 'EUR').then(checks)
 
         expect(promise).toBeResolved(done)
+
+    describe 'getPaymentMethods()', ->
+      it 'should use PaymentMethod.fetchAll', ->
+        spyOn(PaymentMethod, "fetchAll").and.callThrough()
+
+        c.getPaymentMethods('EUR', 'BTC')
+
+        expect(PaymentMethod.fetchAll).toHaveBeenCalled()
+
+      it 'should require an in- and out currency', ->
+        spyOn(PaymentMethod, "fetchAll").and.callThrough()
+
+        expect(() -> c.getPaymentMethods()).toThrow()
+        expect(() -> c.getPaymentMethods('EUR')).toThrow()
+
+    describe 'getBuyMethods()', ->
+      beforeEach ->
+        spyOn(c, 'getPaymentMethods')
+
+      it 'should get payment methods with BTC as out currency', ->
+        c.getBuyMethods()
+        expect(c.getPaymentMethods).toHaveBeenCalled()
+        expect(c.getPaymentMethods.calls.argsFor(0)[0]).not.toBeDefined()
+        expect(c.getPaymentMethods.calls.argsFor(0)[1]).toEqual('BTC')
+
+    describe 'getSellMethods()', ->
+      beforeEach ->
+        spyOn(c, 'getPaymentMethods')
+
+      it 'should get payment methods with BTC as in currency', ->
+        c.getSellMethods()
+        expect(c.getPaymentMethods).toHaveBeenCalled()
+        expect(c.getPaymentMethods.calls.argsFor(0)[0]).toEqual('BTC')
+        expect(c.getPaymentMethods.calls.argsFor(0)[1]).not.toBeDefined()
+
+    describe 'getBuyCurrencies()', ->
+      beforeEach ->
+        spyOn(c, 'getBuyMethods').and.callFake(() ->
+          Promise.resolve([
+            {
+              inCurrencies: ["EUR","USD"],
+            },
+            {
+              inCurrencies: ["EUR"],
+            }
+          ])
+        )
+
+      it 'should return a list of currencies', (done) ->
+        checks = (res) ->
+          expect(res).toEqual(['EUR', 'USD'])
+
+        promise = c.getBuyCurrencies().then(checks)
+
+        expect(promise).toBeResolved(done)
+
+    describe 'getSellCurrencies()', ->
+      beforeEach ->
+        spyOn(c, 'getSellMethods').and.callFake(() ->
+          Promise.resolve([
+            {
+              outCurrencies: ["EUR","USD"],
+            },
+            {
+              outCurrencies: ["EUR"],
+            }
+          ])
+        )
+
+      it 'should return a list of currencies', (done) ->
+        checks = (res) ->
+          expect(res).toEqual(['EUR', 'USD'])
+
+        promise = c.getSellCurrencies().then(checks)
+
+        expect(promise).toBeResolved(done)
+
+    describe 'monitorPayments()', ->
+      it 'should call CoinifyTrade.monitorPayments', ->
+        spyOn(CoinifyTrade, 'monitorPayments')
+        c.monitorPayments()
+        expect(CoinifyTrade.monitorPayments).toHaveBeenCalledWith(c)
+
+    describe 'getTrades()', ->
+      it 'should call CoinifyTrade.fetchAll', ->
+        spyOn(CoinifyTrade, 'fetchAll')
+        c.getTrades()
+        expect(CoinifyTrade.fetchAll).toHaveBeenCalledWith(c)
+
+    describe 'getKYCs()', ->
+      it 'should call CoinifyKYC.fetchAll', ->
+        spyOn(CoinifyKYC, 'fetchAll')
+        c.getKYCs()
+        expect(CoinifyKYC.fetchAll).toHaveBeenCalledWith(c)
+
+    describe 'triggerKYC()', ->
+      it 'should call CoinifyKYC.trigger', ->
+        spyOn(CoinifyKYC, 'fetchAll')
+        c.getKYCs()
+        expect(CoinifyKYC.fetchAll).toHaveBeenCalledWith(c)

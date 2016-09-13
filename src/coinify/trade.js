@@ -106,7 +106,7 @@ Object.defineProperties(CoinifyTrade.prototype, {
   'bitcoinReceived': {
     configurable: false,
     get: function () {
-      return this._bitcoinReceived;
+      return Boolean(this._txHash);
     }
   },
   'confirmed': {
@@ -135,16 +135,24 @@ Object.defineProperties(CoinifyTrade.prototype, {
 
 CoinifyTrade.prototype.set = function (obj) {
   this._createdAt = new Date(obj.createTime);
+  if ([
+    'awaiting_transfer_in',
+    'processing',
+    'reviewing',
+    'completed',
+    'completed_test',
+    'cancelled',
+    'rejected',
+    'expired'
+  ].indexOf(obj.state) === -1) {
+    console.warn('Unknown state:', obj.state);
+  }
   this._state = obj.state;
   this._is_buy = obj.is_buy;
   if (obj.confirmed === Boolean(obj.confirmed)) {
     this._coinify.delegate.deserializeExtraFields(obj, this);
     this._receiveAddress = this._coinify.delegate.getReceiveAddress(this);
-
     this._confirmed = obj.confirmed;
-    if (obj.confirmed) {
-      this._bitcoinReceived = true;
-    }
     this._txHash = obj.tx_hash;
   } else { // Contructed from Coinify API
     this._inCurrency = obj.inCurrency;
@@ -152,15 +160,20 @@ CoinifyTrade.prototype.set = function (obj) {
     this._medium = obj.transferIn.medium;
 
     if (this._inCurrency === 'BTC') {
-      this._inAmount = Math.trunc(obj.inAmount * 100000000);
-      this._sendAmount = Math.trunc(obj.transferIn.sendAmount * 100000000);
-      this._outAmount = Math.trunc(obj.outAmount * 100);
-      this._outAmountExpected = Math.trunc(obj.outAmountExpected * 100);
+      this._inAmount = Math.round((obj.inAmount || 0) * 100000000);
+      this._sendAmount = Math.round((obj.transferIn.sendAmount || 0) * 100000000);
+      this._outAmount = Math.round((obj.outAmount || 0) * 100);
+      this._outAmountExpected = Math.round((obj.outAmountExpected || 0) * 100);
     } else {
-      this._inAmount = Math.trunc(obj.inAmount * 100);
-      this._sendAmount = Math.trunc(obj.transferIn.sendAmount * 100);
-      this._outAmount = Math.trunc(obj.outAmount * 100000000);
-      this._outAmountExpected = Math.trunc(obj.outAmountExpected * 100000000);
+      this._inAmount = Math.round((obj.inAmount || 0) * 100);
+      this._sendAmount = Math.round((obj.transferIn.sendAmount || 0) * 100);
+      this._outAmount = Math.round((obj.outAmount || 0) * 100000000);
+      this._outAmountExpected = Math.round((obj.outAmountExpected || 0) * 100000000);
+
+      // NOTE: this field is currently missing in the Coinify API:
+      if (obj.transferOut && obj.transferOutdetails && obj.transferOutdetails.transaction) {
+        this._txHash = obj.transferOutdetails.transaction;
+      }
 
       if (this._medium === 'bank') {
         this._bankAccount = new BankAccount(obj.transferIn.details);
@@ -168,10 +181,6 @@ CoinifyTrade.prototype.set = function (obj) {
 
       this._receiveAddress = obj.transferOut.details.account;
       this._iSignThisID = obj.transferIn.details.paymentId;
-
-      if (!this.bitcoinReceived) {
-        this._bitcoinReceived = null;
-      }
     }
 
     this._receiptUrl = obj.receiptUrl;
@@ -234,7 +243,7 @@ CoinifyTrade.prototype.btcExpected = function () {
           self._lastBtcExpectedGuessAt = new Date();
           return self._lastBtcExpectedGuess;
         };
-        return this._coinify.getBuyQuote(Math.trunc(this.inAmount), this.inCurrency).then(processQuote);
+        return this._coinify.getBuyQuote(this.inAmount, this.inCurrency).then(processQuote);
       }
     }
   } else {
@@ -321,23 +330,40 @@ CoinifyTrade.prototype.refresh = function () {
 CoinifyTrade.prototype._monitorAddress = function () {
   var self = this;
 
-  var saveTrade = function () {
-    self._coinify.save.bind(self._coinify)();
-  };
-
   var tradeWasPaid = function (amount) {
     var resolve = function () {
       self._watchAddressResolve && self._watchAddressResolve(amount);
     };
-    self.refresh()
-      .then(CoinifyTrade._getTransactionHash)
-      .then(saveTrade)
-      .then(resolve);
+    self._coinify.save.bind(self._coinify)().then(resolve);
   };
 
-  self._coinify.delegate.monitorAddress(self.receiveAddress, function (amount) {
-    self._bitcoinReceived = true;
-    tradeWasPaid(amount);
+  self._coinify.delegate.monitorAddress(self.receiveAddress, function (hash, amount) {
+    var updateTrade = function () {
+      if (self.state === 'completed_test' && !self.confirmations) {
+        // For test trades, there is no real transaction, so trade._txHash is not
+        // set. Instead use the hash for the incoming transaction. This will not
+        // work correctly with address reuse.
+        self._txHash = hash;
+        tradeWasPaid(amount);
+      } else if (self.state === 'completed' || self.state === 'processing') {
+        if (self._txHash) {
+          // Multiple trades may reuse the same address if e.g. one is
+          // cancelled of if we reach the gap limit.
+          if (self._txHash !== hash) return;
+        } else {
+          // transferOut.details.transaction is not implemented and might be
+          // missing if in the processing state.
+          self._txHash = hash;
+        }
+        tradeWasPaid(amount);
+      }
+    };
+
+    if (self.state === 'completed' || self.state === 'processing' || self.state === 'completed_test') {
+      updateTrade();
+    } else {
+      self.refresh().then(updateTrade);
+    }
   });
 };
 
@@ -367,16 +393,26 @@ CoinifyTrade._checkOnce = function (coinify, tradeFilter) {
 
 CoinifyTrade._getTransactionHash = function (trade) {
   return trade._coinify.delegate.checkAddress(trade.receiveAddress)
-         .then(function (tx) {
-           if (tx) {
-             trade._txHash = tx.hash;
-             trade._confirmations = tx.confirmations;
-             trade._bitcoinReceived = true;
-             if (trade.confirmed) {
-               trade._confirmed = true;
-             }
-           }
-         });
+    .then(function (tx) {
+      if (tx) {
+        if (trade.state === 'completed_test' && !trade._txHash) {
+          // See remarks below
+          trade._txHash = tx.hash;
+        } else if (trade.state === 'processing' || trade.state === 'completed') {
+          if (trade._txHash) {
+            if (trade._txHash !== tx.hash) return;
+          } else {
+            trade._txHash = tx.hash;
+          }
+        } else {
+          return;
+        }
+        trade._confirmations = tx.confirmations;
+        if (trade.confirmed) {
+          trade._confirmed = true;
+        }
+      }
+    });
 };
 
 CoinifyTrade._monitorWebSockets = function (coinify, tradeFilter) {

@@ -349,7 +349,7 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
   // load metadata buy-sell
 
   var loadExternal = function () {
-    MyWallet.wallet.loadExternal.bind(MyWallet.wallet)();
+    return MyWallet.wallet.loadExternal.bind(MyWallet.wallet)();
   };
 
   return Promise.resolve().then(doInitialize).then(loadExternal);
