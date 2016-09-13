@@ -120,12 +120,6 @@ Object.defineProperties(Coinify.prototype, {
       return this._kycs;
     }
   },
-  'paymentMethods': {
-    configurable: false,
-    get: function () {
-      return this._payment_methods;
-    }
-  },
   'isLoggedIn': {
     configurable: false,
     get: function () {

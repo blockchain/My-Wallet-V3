@@ -1,5 +1,6 @@
 'use strict';
 
+var PaymentMethod = require('./payment-method');
 var Helpers = require('./helpers');
 var assert = require('assert');
 
@@ -131,7 +132,7 @@ Quote.prototype.getPaymentMethods = function () {
   if (this.paymentMethods) {
     return Promise.resolve(this.paymentMethods);
   } else {
-    return self._coinify.getPaymentMethods(this.baseCurrency, this.quoteCurrency)
+    return PaymentMethod.fetchAll(this.baseCurrency, this.quoteCurrency, this._coinify)
                         .then(setPaymentMethods);
   }
 };
