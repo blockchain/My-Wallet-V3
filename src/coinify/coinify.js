@@ -120,6 +120,12 @@ Object.defineProperties(Coinify.prototype, {
       return this._kycs;
     }
   },
+  'hasAccount': {
+    configurable: false,
+    get: function () {
+      return Boolean(this._offline_token);
+    }
+  },
   'isLoggedIn': {
     configurable: false,
     get: function () {
@@ -228,15 +234,7 @@ Coinify.prototype.login = function () {
 };
 
 Coinify.prototype.fetchProfile = function () {
-  var parentThis = this;
-
-  if (this.isLoggedIn) {
-    return this._profile.fetch();
-  } else {
-    return this.login().then(function () {
-      return parentThis._profile.fetch();
-    });
-  }
+  return this._profile.fetch();
 };
 
 Coinify.prototype.getBuyQuote = function (amount, baseCurrency, quoteCurrency) {
@@ -263,15 +261,7 @@ Coinify.prototype.buy = function (amount, baseCurrency, medium) {
 
   var self = this;
 
-  var doBuy = function () {
-    return CoinifyTrade.buy(self._lastQuote, medium, self);
-  };
-
-  if (!this.isLoggedIn) {
-    return this.login().then(doBuy);
-  } else {
-    return doBuy();
-  }
+  return CoinifyTrade.buy(self._lastQuote, medium, self);
 };
 
 Coinify.prototype.getTrades = function () {
@@ -281,15 +271,7 @@ Coinify.prototype.getTrades = function () {
 Coinify.prototype.triggerKYC = function () {
   var self = this;
 
-  var doKYC = function () {
-    return CoinifyKYC.trigger(self);
-  };
-
-  if (!this.isLoggedIn) {
-    return this.login().then(doKYC);
-  } else {
-    return doKYC();
-  }
+  return CoinifyKYC.trigger(self);
 };
 
 Coinify.prototype.getKYCs = function () {
@@ -352,12 +334,48 @@ Coinify.prototype.GET = function (endpoint, data) {
   return this.request('GET', endpoint, data);
 };
 
+Coinify.prototype.authGET = function (endpoint, data) {
+  var doGET = function () {
+    return this.GET(endpoint, data);
+  };
+
+  if (this.isLoggedIn) {
+    return doGET.bind(this)();
+  } else {
+    return this.login().then(doGET.bind(this));
+  }
+};
+
 Coinify.prototype.POST = function (endpoint, data) {
   return this.request('POST', endpoint, data);
 };
 
+Coinify.prototype.authPOST = function (endpoint, data) {
+  var doPOST = function () {
+    return this.POST(endpoint, data);
+  };
+
+  if (this.isLoggedIn) {
+    return doPOST.bind(this)();
+  } else {
+    return this.login().then(doPOST.bind(this));
+  }
+};
+
 Coinify.prototype.PATCH = function (endpoint, data) {
   return this.request('PATCH', endpoint, data);
+};
+
+Coinify.prototype.authPATCH = function (endpoint, data) {
+  var doPATCH = function () {
+    return this.PATCH(endpoint, data);
+  };
+
+  if (this.isLoggedIn) {
+    return doPATCH.bind(this)();
+  } else {
+    return this.login().then(doPATCH.bind(this));
+  }
 };
 
 Coinify.prototype.request = function (method, endpoint, data) {

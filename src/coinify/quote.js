@@ -98,7 +98,7 @@ Quote.getQuote = function (coinify, amount, baseCurrency, quoteCurrency) {
     return quote;
   };
 
-  var getQuote = function () {
+  var getAnonymousQuote = function () {
     return coinify.POST('trades/quote', {
       baseCurrency: baseCurrency,
       quoteCurrency: quoteCurrency,
@@ -106,11 +106,16 @@ Quote.getQuote = function (coinify, amount, baseCurrency, quoteCurrency) {
     });
   };
 
-  if (coinify._offline_token == null) {
-    return getQuote().then(processQuote);
-  }
-  if (!coinify.isLoggedIn) {
-    return coinify.login().then(getQuote).then(processQuote);
+  var getQuote = function () {
+    return coinify.authPOST('trades/quote', {
+      baseCurrency: baseCurrency,
+      quoteCurrency: quoteCurrency,
+      baseAmount: parseFloat(baseAmount)
+    });
+  };
+
+  if (!coinify.hasAccount) {
+    return getAnonymousQuote().then(processQuote);
   } else {
     return getQuote().then(processQuote);
   }

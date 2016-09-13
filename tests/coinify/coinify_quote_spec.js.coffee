@@ -44,37 +44,35 @@ describe "CoinifyQuote", ->
     describe "getQuote()", ->
       coinify = {
         POST: () -> Promise.resolve()
+        authPOST: () -> Promise.resolve()
       }
 
       beforeEach ->
         spyOn(coinify, "POST").and.callThrough()
+        spyOn(coinify, "authPOST").and.callThrough()
 
-      describe "when not logged in", ->
+      describe "without an account", ->
         it "should POST /trades/quote", ->
           Quote.getQuote(coinify, 1000, 'EUR', 'BTC')
           expect(coinify.POST).toHaveBeenCalled()
           expect(coinify.POST.calls.argsFor(0)[0]).toEqual('trades/quote')
 
-      describe "when logged in", ->
+      describe "with an account", ->
         beforeEach ->
-          coinify._offline_token = "token"
-          coinify.profile = {}
-          coinify.isLoggedIn = true
+          coinify.hasAccount = true
 
-        it "should POST /trades/quote", ->
+        it "should POST /trades/quote with credentials", ->
           Quote.getQuote(coinify, 1000, 'EUR', 'BTC')
-          expect(coinify.POST).toHaveBeenCalled()
-          expect(coinify.POST.calls.argsFor(0)[0]).toEqual('trades/quote')
+          expect(coinify.authPOST).toHaveBeenCalled()
+          expect(coinify.authPOST.calls.argsFor(0)[0]).toEqual('trades/quote')
 
         it "should convert cents", ->
           Quote.getQuote(coinify, 1000, 'EUR', 'BTC')
-          expect(coinify.POST).toHaveBeenCalled()
-          expect(coinify.POST.calls.argsFor(0)[1].baseAmount).toEqual(10)
+          expect(coinify.authPOST.calls.argsFor(0)[1].baseAmount).toEqual(10)
 
         it "should convert satoshis", ->
           Quote.getQuote(coinify, 100000000, 'BTC', 'EUR')
-          expect(coinify.POST).toHaveBeenCalled()
-          expect(coinify.POST.calls.argsFor(0)[1].baseAmount).toEqual(1)
+          expect(coinify.authPOST.calls.argsFor(0)[1].baseAmount).toEqual(1)
 
   describe "instance", ->
     describe "getters", ->
