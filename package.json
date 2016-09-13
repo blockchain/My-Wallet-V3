@@ -45,7 +45,8 @@
     "randombytes": "^2.0.1",
     "sjcl": "1.0.3",
     "unorm": "^1.4.1",
-    "ws": "1.1.*"
+    "ws": "1.1.*",
+    "pbkdf2": "3.0.4"
   },
   "devDependencies": {
     "babel-polyfill": "^6.7.2",
