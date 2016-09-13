@@ -58,7 +58,6 @@ describe "CoinifyTrade", ->
         expect(t._state).toBe(tradeJSON.state)
         expect(t._iSignThisID).toBe(tradeJSON.transferIn.details.paymentId)
         expect(t._receiptUrl).toBe(tradeJSON.receiptUrl)
-        expect(t._bitcoinReceived).toBe(null)
 
   describe "instance", ->
 
