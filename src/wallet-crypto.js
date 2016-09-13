@@ -1,8 +1,8 @@
 'use strict';
 
+var pbkdf2 = require('pbkdf2');
 var crypto = require('crypto');
 var assert = require('assert');
-var sjcl = require('sjcl');
 
 var SUPPORTED_ENCRYPTION_VERSION = 3;
 var SALT_BYTES = 16;
@@ -295,10 +295,12 @@ function decryptDataWithKey (data, key) {
 // options: (optional)
 // returns: decrypted payload (e.g. a JSON string)
 function decryptBufferWithKey (payload, iv, key, options) {
+  console.log(payload, iv, key, options);
   options = options || {};
   options.padding = options.padding || Iso10126;
 
   var decryptedBytes = AES.decrypt(payload, key, iv, options);
+  console.log('decryptedBytes', decryptedBytes);
   return decryptedBytes.toString('utf8');
 }
 
@@ -325,23 +327,9 @@ function stretchPassword (password, salt, iterations, keylen) {
   assert(salt, 'salt missing');
   assert(password, 'password missing');
   assert(iterations, 'iterations missing');
-  assert(typeof (sjcl.hash.sha1) === 'function', 'missing sha1, make sure sjcl is configured correctly');
 
-  var hmacSHA1 = function (key) {
-    var hasher = new sjcl.misc.hmac(key, sjcl.hash.sha1); // eslint-disable-line new-cap
-    this.encrypt = hasher.encrypt.bind(hasher);
-  };
-
-  salt = sjcl.codec.hex.toBits(salt.toString('hex'));
-  var stretched = sjcl.misc.pbkdf2(password, salt, iterations, keylen || 256, hmacSHA1);
-
-  return new Buffer(sjcl.codec.hex.fromBits(stretched), 'hex');
-}
-
-function pbkdf2 (password, salt, iterations, keylen, algorithm) {
-  algorithm = algorithm || ALGO.SHA1;
-  var iv = salt.toString('binary');
-  return crypto.pbkdf2Sync(password, iv, iterations, keylen, algorithm);
+  console.log(password, salt, iterations, keylen);
+  return pbkdf2.pbkdf2Sync(password, salt, iterations, keylen || 256, 'sha1');
 }
 
 function hashNTimes (data, iterations) {

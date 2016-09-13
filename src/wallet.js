@@ -3,6 +3,7 @@
 var MyWallet = module.exports = {};
 
 var assert = require('assert');
+var pbkdf2 = require('pbkdf2');
 var Buffer = require('buffer').Buffer;
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
@@ -16,8 +17,6 @@ var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var RNG = require('./rng');
 var BIP39 = require('bip39');
 var Bitcoin = require('bitcoinjs-lib');
-// Intentionally not directly included in package.json:
-var pbkdf2 = require('pbkdf2').pbkdf2Sync;
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -590,7 +589,7 @@ MyWallet.browserCheck = function () {
 MyWallet.browserCheckFast = function () {
   var mnemonic = 'daughter size twenty place alter glass small bid purse october faint beyond';
 
-  var seed = pbkdf2(mnemonic, 'mnemonic', 100, 64, 'sha512');
+  var seed = pbkdf2.pbkdf2Sync(mnemonic, 'mnemonic', 100, 64, 'sha512');
   var seedString = seed.toString('hex');
 
   if (seedString !== '25357208f6fcbde803b4f333e59ce7a0ebe8b77b0390fa8b72899496f50fcc3707c65debf6102b19912cd0ccb36a2332cfebecb53e61b5fa79f11592c825bdda') {
