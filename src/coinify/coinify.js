@@ -278,18 +278,20 @@ Coinify.prototype.getKYCs = function () {
   return CoinifyKYC.fetchAll(this);
 };
 
+// DEPRECATED, used get[Buy/Sell]Methods() or quote.getPaymentMethods()
 Coinify.prototype.getPaymentMethods = function (inCurrency, outCurrency) {
-  assert(inCurrency, 'In currency required');
+  console.warn('coinify.getPaymentMethods() is deprecated');
+  assert(inCurrency || outCurrency, 'In or out currency required');
   assert(outCurrency, 'Out currency required');
   return PaymentMethod.fetchAll(inCurrency, outCurrency, this);
 };
 
 Coinify.prototype.getBuyMethods = function () {
-  return this.getPaymentMethods(undefined, 'BTC', this);
+  return PaymentMethod.fetchAll(undefined, 'BTC', this);
 };
 
 Coinify.prototype.getSellMethods = function () {
-  return this.getPaymentMethods('BTC', undefined, this);
+  return PaymentMethod.fetchAll('BTC', undefined, this);
 };
 
 Coinify.prototype.getBuyCurrencies = function () {

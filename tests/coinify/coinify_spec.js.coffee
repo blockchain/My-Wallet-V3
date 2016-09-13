@@ -273,23 +273,23 @@ describe "Coinify", ->
 
     describe 'getBuyMethods()', ->
       beforeEach ->
-        spyOn(c, 'getPaymentMethods')
+        spyOn(PaymentMethod, 'fetchAll')
 
       it 'should get payment methods with BTC as out currency', ->
         c.getBuyMethods()
-        expect(c.getPaymentMethods).toHaveBeenCalled()
-        expect(c.getPaymentMethods.calls.argsFor(0)[0]).not.toBeDefined()
-        expect(c.getPaymentMethods.calls.argsFor(0)[1]).toEqual('BTC')
+        expect(PaymentMethod.fetchAll).toHaveBeenCalled()
+        expect(PaymentMethod.fetchAll.calls.argsFor(0)[0]).not.toBeDefined()
+        expect(PaymentMethod.fetchAll.calls.argsFor(0)[1]).toEqual('BTC')
 
     describe 'getSellMethods()', ->
       beforeEach ->
-        spyOn(c, 'getPaymentMethods')
+        spyOn(PaymentMethod, 'fetchAll')
 
       it 'should get payment methods with BTC as in currency', ->
         c.getSellMethods()
-        expect(c.getPaymentMethods).toHaveBeenCalled()
-        expect(c.getPaymentMethods.calls.argsFor(0)[0]).toEqual('BTC')
-        expect(c.getPaymentMethods.calls.argsFor(0)[1]).not.toBeDefined()
+        expect(PaymentMethod.fetchAll).toHaveBeenCalled()
+        expect(PaymentMethod.fetchAll.calls.argsFor(0)[0]).toEqual('BTC')
+        expect(PaymentMethod.fetchAll.calls.argsFor(0)[1]).not.toBeDefined()
 
     describe 'getBuyCurrencies()', ->
       beforeEach ->
