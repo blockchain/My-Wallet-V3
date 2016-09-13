@@ -112,7 +112,7 @@ Metadata.prototype.fetch = function () {
         throw new Error('METADATA_SIGNATURE_VERIFICATION_ERROR');
       }
     }).catch(function (e) {
-      console.log(e);
+      console.error(e);
       return Promise.reject('METADATA_FETCH_FAILED');
     });
   });

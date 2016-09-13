@@ -29,28 +29,9 @@ External.prototype.toJSON = function () {
   return external;
 };
 
-External.prototype.fetchOrCreate = function () {
-  var createOrPopulate = function (object) {
-    this.success = true;
-    if (object === null) { // entry non exitent
-      return this._metadata.create(this);
-    } else {
-      this._coinify = object.coinify ? new Coinify(object.coinify, this, this._delegate) : undefined;
-      return this;
-    }
-  };
-  var fetchFailed = function (e) {
-    // Metadata service is down or unreachable.
-    this.success = false;
-    // Login should still resolve
-    return Promise.resolve();
-  };
-  return this._metadata.fetch().then(createOrPopulate.bind(this)).catch(fetchFailed.bind(this));
-};
-
 External.prototype.fetch = function () {
   var Populate = function (object) {
-    this.success = true;
+    this.loaded = true;
     if (object !== null) {
       this._coinify = object.coinify ? new Coinify(object.coinify, this, this._delegate) : undefined;
     }
@@ -58,7 +39,7 @@ External.prototype.fetch = function () {
   };
   var fetchFailed = function (e) {
     // Metadata service is down or unreachable.
-    this.success = false;
+    this.loaded = false;
     return Promise.reject(e);
   };
   return this._metadata.fetch().then(Populate.bind(this)).catch(fetchFailed.bind(this));
@@ -73,7 +54,7 @@ External.prototype.save = function () {
 };
 
 External.prototype.wipe = function () {
-  this._metadata.update({}).then(this.fetchOrCreate.bind(this));
+  this._metadata.update({}).then(this.fetch.bind(this));
   this._coinify = undefined;
 };
 

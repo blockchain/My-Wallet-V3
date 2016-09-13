@@ -9,7 +9,7 @@ function BuySell (wallet) {
   if (wallet.external === null) return;
 
   // Stop if meta data failed to load;
-  if (!wallet.external.success) {
+  if (!wallet.external.loaded) {
     return;
   }
 
@@ -22,7 +22,7 @@ Object.defineProperties(BuySell.prototype, {
     configurable: false,
     get: function () {
       return {
-        metaDataService: this._wallet.external && this._wallet.external.success
+        metaDataService: this._wallet.external && this._wallet.external.loaded
       };
     }
   },
@@ -31,7 +31,7 @@ Object.defineProperties(BuySell.prototype, {
     get: function () {
       if (
         this._wallet.external === null ||
-        !this._wallet.external.success
+        !this._wallet.external.loaded
       ) return;
       return {
         coinify: this._wallet.external.coinify

@@ -48,7 +48,7 @@ describe "External", ->
 
       it "should include partners if present", (done) ->
         e = new External()
-        promise = e.fetchOrCreate().then((res) ->
+        promise = e.fetch().then((res) ->
           expect(e._coinify).toBeDefined()
         )
         expect(promise).toBeResolved(done)
@@ -56,7 +56,7 @@ describe "External", ->
       it "should not cointain any partner by default", (done) ->
         mockPayload = {}
         e = new External()
-        promise = e.fetchOrCreate().then((res) ->
+        promise = e.fetch().then((res) ->
           expect(e._coinify).toBeUndefined()
         )
         expect(promise).toBeResolved(done)
@@ -64,7 +64,7 @@ describe "External", ->
       it 'should not deserialize non-expected fields', (done) ->
         mockPayload = {coinify: {}, rarefield: "I am an intruder"}
         e = new External()
-        promise = e.fetchOrCreate().then((res) ->
+        promise = e.fetch().then((res) ->
           expect(e._coinify).toBeDefined()
           expect(e._rarefield).toBeUndefined()
         )
