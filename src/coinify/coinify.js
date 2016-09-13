@@ -303,7 +303,11 @@ Coinify.prototype.getPaymentMethods = function (inCurrency, outCurrency) {
 };
 
 Coinify.prototype.getBuyMethods = function () {
-  return PaymentMethod.fetchAll(undefined, 'BTC', this);
+  return this.getPaymentMethods(undefined, 'BTC', this);
+};
+
+Coinify.prototype.getSellMethods = function () {
+  return this.getPaymentMethods('BTC', undefined, this);
 };
 
 Coinify.prototype.getBuyCurrencies = function () {
@@ -321,10 +325,6 @@ Coinify.prototype.getBuyCurrencies = function () {
     return currencies;
   };
   return this.getBuyMethods().then(getCurrencies);
-};
-
-Coinify.prototype.getSellMethods = function () {
-  return PaymentMethod.fetchAll('BTC', undefined, this);
 };
 
 Coinify.prototype.getSellCurrencies = function () {
