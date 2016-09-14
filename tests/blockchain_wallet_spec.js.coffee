@@ -53,7 +53,7 @@ describe "Blockchain-Wallet", ->
         'archived': false
         'xpriv': 'xprv9yko4kDvhYSdUcqK5e8naLwtGE1Ca57mwJ6JMB8WxeYq8t1w3PpiZfGGvLN6N6GEwLF8XuHnp8HeNLrWWviAjXxb2BFEiLaW2UgukMZ3Zva'
         'xpub': 'xpub6Ck9UFkpXuzvh6unBffnwUtcpFqgyXqdJX1u9ZY8Wz5p1gM5aw8y7TakmcEWLA9rJkc59BJzn61p3qqKSaqFkSPMbbhGA9YDNmphj9SKBVJ'
-        'address_labels': []
+        'address_labels': [{'index': 170, 'label': 'Utilities'}]
         'cache':
           'receiveAccount': 'xpub6FD59hfbH1UWQA9B8NP1C8bh3jc6i2tpM6b8f4Wi9gHWQttZbBBtEsDDZAiPsw7e3427SzvQsFu2sdubjbZHDQdqYXN6x3hTDCrG5bZFEhB'
           'changeAccount': 'xpub6FD59hfbH1UWRrY38bVLPPLPLxcA1XBqsQgB95AgsSWngxbwqPBMd5Z3of8PNicLwE9peQ9g4SeWWtBTzUKLwfjSioAg73RRh7dJ5rWYxM7'
@@ -629,6 +629,18 @@ describe "Blockchain-Wallet", ->
           expect(MyWallet.syncWallet).toHaveBeenCalled()
 
           expect(wallet.getNote("hash")).toEqual(undefined)
+
+        it "should have a placeholder given a received transaction and account filter", ->
+          outputs = [
+            {'identity':0, 'label':'Car', 'coinType':'0/0/171'},
+            {'identity':0, 'label':'Utilities', 'coinType':'0/0/170'}
+          ]
+
+          expect(wallet.getNotePlaceholder(0, {'txType':'received', 'processedOutputs':outputs})).toEqual('Utilities')
+
+          expect(wallet.getNotePlaceholder(0, {'txType':'sent', 'processedOutputs':outputs})).toEqual('')
+          
+          expect(wallet.getNotePlaceholder(0, {'txType':'transferred', 'processedOutputs':outputs})).toEqual('')
 
       describe ".getMnemonic", ->
         it "should return the mnemonic if the wallet is not encrypted", ->
