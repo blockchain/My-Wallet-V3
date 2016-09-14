@@ -133,6 +133,22 @@ Object.defineProperties(CoinifyTrade.prototype, {
   }
 });
 
+function toCents (fiat) {
+  return Math.round((parseFloat(fiat) || 0) * 100);
+}
+
+function toSatoshi (fiat) {
+  return Math.round((parseFloat(fiat) || 0) * 100000000);
+}
+
+function fromCents (cents) {
+  return parseFloat((cents / 100).toFixed(2));
+}
+
+function fromSatoshi (cents) {
+  return parseFloat((cents / 100000000).toFixed(2));
+}
+
 CoinifyTrade.prototype.set = function (obj) {
   this._createdAt = new Date(obj.createTime);
   if ([
@@ -149,27 +165,32 @@ CoinifyTrade.prototype.set = function (obj) {
   }
   this._state = obj.state;
   this._is_buy = obj.is_buy;
+
+  this._inCurrency = obj.inCurrency;
+  this._outCurrency = obj.outCurrency;
+  this._medium = obj.transferIn.medium;
+
+  if (this._inCurrency === 'BTC') {
+    this._inAmount = toSatoshi(obj.inAmount);
+    this._sendAmount = toSatoshi(obj.transferIn.sendAmount);
+    this._outAmount = toCents(obj.outAmount);
+    this._outAmountExpected = toCents(obj.outAmountExpected);
+  } else {
+    this._inAmount = toCents(obj.inAmount);
+    this._sendAmount = toCents(obj.transferIn.sendAmount);
+    this._outAmount = toSatoshi(obj.outAmount);
+    this._outAmountExpected = toSatoshi(obj.outAmountExpected);
+  }
+
   if (obj.confirmed === Boolean(obj.confirmed)) {
     this._coinify.delegate.deserializeExtraFields(obj, this);
     this._receiveAddress = this._coinify.delegate.getReceiveAddress(this);
     this._confirmed = obj.confirmed;
     this._txHash = obj.tx_hash;
   } else { // Contructed from Coinify API
-    this._inCurrency = obj.inCurrency;
-    this._outCurrency = obj.outCurrency;
-    this._medium = obj.transferIn.medium;
+    this._receiptUrl = obj.receiptUrl;
 
-    if (this._inCurrency === 'BTC') {
-      this._inAmount = Math.round((obj.inAmount || 0) * 100000000);
-      this._sendAmount = Math.round((obj.transferIn.sendAmount || 0) * 100000000);
-      this._outAmount = Math.round((obj.outAmount || 0) * 100);
-      this._outAmountExpected = Math.round((obj.outAmountExpected || 0) * 100);
-    } else {
-      this._inAmount = Math.round((obj.inAmount || 0) * 100);
-      this._sendAmount = Math.round((obj.transferIn.sendAmount || 0) * 100);
-      this._outAmount = Math.round((obj.outAmount || 0) * 100000000);
-      this._outAmountExpected = Math.round((obj.outAmountExpected || 0) * 100000000);
-
+    if (this._inCurrency !== 'BTC') {
       // NOTE: this field is currently missing in the Coinify API:
       if (obj.transferOut && obj.transferOutdetails && obj.transferOutdetails.transaction) {
         this._txHash = obj.transferOutdetails.transaction;
@@ -182,11 +203,9 @@ CoinifyTrade.prototype.set = function (obj) {
       this._receiveAddress = obj.transferOut.details.account;
       this._iSignThisID = obj.transferIn.details.paymentId;
     }
-
-    this._receiptUrl = obj.receiptUrl;
-
-    return this;
   }
+
+  return this;
 };
 
 CoinifyTrade.prototype.cancel = function () {
@@ -448,8 +467,24 @@ CoinifyTrade.prototype.toJSON = function () {
     state: this._state,
     tx_hash: this._txHash,
     confirmed: this.confirmed,
-    is_buy: this.isBuy
+    is_buy: this.isBuy,
+    createTime: this._createdAt,
+    inCurrency: this._inCurrency,
+    outCurrency: this._outCurrency,
+    transferIn: {}
   };
+
+  if (this._inCurrency === 'BTC') {
+    serialized.inAmount = fromSatoshi(this._inAmount);
+    serialized.transferIn.sendAmount = fromSatoshi(this._sendAmount);
+    serialized.outAmount = fromCents(this._outAmount);
+    serialized.outAmountExpected = fromCents(this._outAmountExpected);
+  } else {
+    serialized.inAmount = fromCents(this._inAmount);
+    serialized.transferIn.sendAmount = fromCents(this._sendAmount);
+    serialized.outAmount = fromSatoshi(this._outAmount);
+    serialized.outAmountExpected = fromSatoshi(this._outAmountExpected);
+  }
 
   this._coinify.delegate.serializeExtraFields(serialized, this);
 
