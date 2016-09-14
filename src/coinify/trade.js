@@ -168,16 +168,20 @@ CoinifyTrade.prototype.set = function (obj) {
 
   this._inCurrency = obj.inCurrency;
   this._outCurrency = obj.outCurrency;
-  this._medium = obj.transferIn.medium;
+
+  if (obj.transferIn) {
+    this._medium = obj.transferIn.medium;
+    this._sendAmount = this._inCurrency === 'BTC'
+      ? toSatoshi(obj.transferIn.sendAmount)
+      : toCents(obj.transferIn.sendAmount);
+  }
 
   if (this._inCurrency === 'BTC') {
     this._inAmount = toSatoshi(obj.inAmount);
-    this._sendAmount = toSatoshi(obj.transferIn.sendAmount);
     this._outAmount = toCents(obj.outAmount);
     this._outAmountExpected = toCents(obj.outAmountExpected);
   } else {
     this._inAmount = toCents(obj.inAmount);
-    this._sendAmount = toCents(obj.transferIn.sendAmount);
     this._outAmount = toSatoshi(obj.outAmount);
     this._outAmountExpected = toSatoshi(obj.outAmountExpected);
   }
