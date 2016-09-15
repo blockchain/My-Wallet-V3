@@ -132,6 +132,39 @@ describe "Coinify", ->
         }
       )
 
+    describe "Getter", ->
+      describe "hasAccount", ->
+        it "should use offline_token to see if user has account", ->
+          c._offline_token = undefined
+          expect(c.hasAccount).toEqual(false)
+
+          c._offline_token = "token"
+          expect(c.hasAccount).toEqual(true)
+
+      describe "isLoggedIn", ->
+        beforeEach ->
+          c._access_token = "access_token"
+          c._loginExpiresAt = new Date(new Date().getTime() + 100000)
+
+        it "checks if there is an access token", ->
+          expect(c.isLoggedIn).toEqual(true)
+
+          c._access_token = undefined
+          expect(c.isLoggedIn).toEqual(false)
+
+        it "checks if the token hasn't expired", ->
+          expect(c.isLoggedIn).toEqual(true)
+
+          c._loginExpiresAt = new Date(new Date().getTime() - 100000)
+          expect(c.isLoggedIn).toEqual(false)
+
+
+        it "should be a few seconds on the safe side", ->
+          expect(c.isLoggedIn).toEqual(true)
+
+          c._loginExpiresAt = new Date(new Date().getTime())
+          expect(c.isLoggedIn).toEqual(false)
+
     describe "Setter", ->
 
       describe "autoLogin", ->
