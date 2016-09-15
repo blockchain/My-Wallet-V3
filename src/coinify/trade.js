@@ -147,7 +147,12 @@ CoinifyTrade.prototype.set = function (obj) {
   ].indexOf(obj.state) === -1) {
     console.warn('Unknown state:', obj.state);
   }
-  this._state = obj.state;
+  if (this._isDeclined && obj.state === 'awaiting_transfer_in') {
+    // Coinify API may lag a bit behind the iSignThis iframe.
+    this._state = 'rejected';
+  } else {
+    this._state = obj.state;
+  }
   this._is_buy = obj.is_buy;
   if (obj.confirmed === Boolean(obj.confirmed)) {
     this._coinify.delegate.deserializeExtraFields(obj, this);
@@ -325,6 +330,13 @@ CoinifyTrade.fetchAll = function (coinify) {
 
 CoinifyTrade.prototype.refresh = function () {
   return this._coinify.authGET('trades/' + this._id).then(this.set.bind(this));
+};
+
+// Call this if the iSignThis iframe says the card is declined. It may take a
+// while before Coinify API reflects this change
+CoinifyTrade.prototype.declined = function () {
+  this._state = 'rejected';
+  this._isDeclined = true;
 };
 
 CoinifyTrade.prototype._monitorAddress = function () {
