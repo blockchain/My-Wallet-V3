@@ -27,6 +27,7 @@ CoinifyKYC.prototype.set = function (obj) {
   this._state = obj.state;
   this._iSignThisID = obj.externalId;
   this._updatedAt = new Date(obj.updateTime);
+  return this;
 };
 
 Object.defineProperties(CoinifyKYC.prototype, {
