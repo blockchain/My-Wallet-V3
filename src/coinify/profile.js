@@ -6,8 +6,8 @@ var Level = require('./level');
 
 module.exports = CoinifyProfile;
 
-function CoinifyProfile (coinify) {
-  this._coinify = coinify;
+function CoinifyProfile (api) {
+  this._api = api;
   this._did_fetch;
 }
 
@@ -94,7 +94,7 @@ Object.defineProperties(CoinifyProfile.prototype, {
 
 CoinifyProfile.prototype.fetch = function () {
   var parentThis = this;
-  return this._coinify.authGET('traders/me').then(function (res) {
+  return this._api.authGET('traders/me').then(function (res) {
     parentThis._full_name = res.profile.name;
     parentThis._gender = res.profile.gender;
 
@@ -180,5 +180,5 @@ CoinifyProfile.prototype.setZipcode = function (value) {
 };
 
 CoinifyProfile.prototype.update = function (values) {
-  return this._coinify.authPATCH('traders/me', values);
+  return this._api.authPATCH('traders/me', values);
 };

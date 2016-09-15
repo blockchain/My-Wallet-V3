@@ -30,10 +30,10 @@ describe "CoinifyProfile", ->
   describe "class", ->
     describe "new CoinifyProfile()", ->
 
-      it "should keep a reference to Coinify parent object", ->
-        coinify = {}
-        p = new CoinifyProfile(coinify)
-        expect(p._coinify).toBe(coinify)
+      it "should keep a reference to API object", ->
+        api = {}
+        p = new CoinifyProfile(api)
+        expect(p._api).toBe(api)
 
   describe "instance", ->
     p = undefined
