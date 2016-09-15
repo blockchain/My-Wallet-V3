@@ -3,6 +3,7 @@
 var assert = require('assert');
 
 var BankAccount = require('./bank-account');
+var Helpers = require('./helpers');
 
 module.exports = CoinifyTrade;
 
@@ -133,22 +134,6 @@ Object.defineProperties(CoinifyTrade.prototype, {
   }
 });
 
-function toCents (fiat) {
-  return Math.round((parseFloat(fiat) || 0) * 100);
-}
-
-function toSatoshi (fiat) {
-  return Math.round((parseFloat(fiat) || 0) * 100000000);
-}
-
-function fromCents (cents) {
-  return parseFloat((cents / 100).toFixed(2));
-}
-
-function fromSatoshi (cents) {
-  return parseFloat((cents / 100000000).toFixed(2));
-}
-
 CoinifyTrade.prototype.set = function (obj) {
   this._createdAt = new Date(obj.createTime);
   if ([
@@ -172,18 +157,18 @@ CoinifyTrade.prototype.set = function (obj) {
   if (obj.transferIn) {
     this._medium = obj.transferIn.medium;
     this._sendAmount = this._inCurrency === 'BTC'
-      ? toSatoshi(obj.transferIn.sendAmount)
-      : toCents(obj.transferIn.sendAmount);
+      ? Helpers.toSatoshi(obj.transferIn.sendAmount)
+      : Helpers.toCents(obj.transferIn.sendAmount);
   }
 
   if (this._inCurrency === 'BTC') {
-    this._inAmount = toSatoshi(obj.inAmount);
-    this._outAmount = toCents(obj.outAmount);
-    this._outAmountExpected = toCents(obj.outAmountExpected);
+    this._inAmount = Helpers.toSatoshi(obj.inAmount);
+    this._outAmount = Helpers.toCents(obj.outAmount);
+    this._outAmountExpected = Helpers.toCents(obj.outAmountExpected);
   } else {
-    this._inAmount = toCents(obj.inAmount);
-    this._outAmount = toSatoshi(obj.outAmount);
-    this._outAmountExpected = toSatoshi(obj.outAmountExpected);
+    this._inAmount = Helpers.toCents(obj.inAmount);
+    this._outAmount = Helpers.toSatoshi(obj.outAmount);
+    this._outAmountExpected = Helpers.toSatoshi(obj.outAmountExpected);
   }
 
   if (obj.confirmed === Boolean(obj.confirmed)) {
@@ -479,15 +464,15 @@ CoinifyTrade.prototype.toJSON = function () {
   };
 
   if (this._inCurrency === 'BTC') {
-    serialized.inAmount = fromSatoshi(this._inAmount);
-    serialized.transferIn.sendAmount = fromSatoshi(this._sendAmount);
-    serialized.outAmount = fromCents(this._outAmount);
-    serialized.outAmountExpected = fromCents(this._outAmountExpected);
+    serialized.inAmount = Helpers.fromSatoshi(this._inAmount);
+    serialized.transferIn.sendAmount = Helpers.fromSatoshi(this._sendAmount);
+    serialized.outAmount = Helpers.fromCents(this._outAmount);
+    serialized.outAmountExpected = Helpers.fromCents(this._outAmountExpected);
   } else {
-    serialized.inAmount = fromCents(this._inAmount);
-    serialized.transferIn.sendAmount = fromCents(this._sendAmount);
-    serialized.outAmount = fromSatoshi(this._outAmount);
-    serialized.outAmountExpected = fromSatoshi(this._outAmountExpected);
+    serialized.inAmount = Helpers.fromCents(this._inAmount);
+    serialized.transferIn.sendAmount = Helpers.fromCents(this._sendAmount);
+    serialized.outAmount = Helpers.fromSatoshi(this._outAmount);
+    serialized.outAmountExpected = Helpers.fromSatoshi(this._outAmountExpected);
   }
 
   this._coinify.delegate.serializeExtraFields(serialized, this);
