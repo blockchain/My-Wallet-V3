@@ -76,15 +76,6 @@ CoinifyKYC.trigger = function (coinify) {
   return coinify.authPOST('traders/me/kyc').then(processKYC);
 };
 
-// Fetches the latest trades and updates coinify._trades
 CoinifyKYC.fetchAll = function (coinify) {
-  return coinify.authGET('kyc').then(function (res) {
-    coinify._kycs.length = 0; // empty array without losing reference
-    for (var i = 0; i < res.length; i++) {
-      var kyc = new CoinifyKYC(res[i], coinify);
-      coinify._kycs.push(kyc);
-    }
-
-    return coinify._kycs;
-  });
+  return coinify.authGET('kyc');
 };

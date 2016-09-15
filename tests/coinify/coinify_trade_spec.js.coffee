@@ -250,31 +250,15 @@ describe "CoinifyTrade", ->
           isLoggedIn: true
           save: () -> Promise.resolve()
         }
-        check = () ->
-          expect(myCoinify._trades.length).toBe(2)
+        check = (res) ->
+          expect(res.length).toBe(2)
+          done()
 
-        spyOn(myCoinify, "authGET").and.callThrough()
         promise = CoinifyTrade.fetchAll(myCoinify).then(check)
-        expect(promise).toBeResolved(done)
+        expect(promise).toBeResolved()
 
-      it "should update existing trades", (done) ->
-        tradeJSON.state = "completed_test"
-        myCoinify = {
-          authGET: () ->
-            then: (cb) ->
-              cb([tradeJSON,tradeJSON2])
-          _trades: []
-          isLoggedIn: true
-          save: () -> Promise.resolve()
-        }
-        check = () ->
-          expect(myCoinify._trades.length).toBe(2)
-          expect(myCoinify._trades[0].state).toEqual('completed_test')
 
-        spyOn(myCoinify, "authGET").and.callThrough()
-        promise = CoinifyTrade.fetchAll(myCoinify).then(check)
-        expect(promise).toBeResolved(done)
-
+    describe "process", ->
       it "should release addresses for cancelled trades", ->
         pending()
 

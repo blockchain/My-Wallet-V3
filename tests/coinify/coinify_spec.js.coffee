@@ -15,16 +15,43 @@ PaymentMethod = {
 
 CoinifyTrade = (obj) ->
   obj
+CoinifyTrade.spyableProcessTrade = () ->
+tradesJSON = [
+  {
+    id: 1
+    state: "awaiting_transfer_in"
+  }
+]
 CoinifyTrade.fetchAll = () ->
+  Promise.resolve([
+    {
+      id: tradesJSON[0].id
+      state: tradesJSON[0].state
+      process: CoinifyTrade.spyableProcessTrade
+    }
+  ])
 CoinifyTrade.monitorPayments = () ->
 
 CoinifyProfile = () ->
   fetch: () ->
     this._did_fetch = true
 
-CoinifyKYC = {
-  fetchAll: () ->
-}
+kycsJSON = [
+  {
+    id: 1
+    state: "pending"
+  }
+]
+CoinifyKYC = (obj) ->
+  obj
+CoinifyKYC.fetchAll = () ->
+  Promise.resolve([
+    {
+      id: kycsJSON[0].id
+      state: kycsJSON[0].state
+    }
+  ])
+
 
 stubs = {
   './quote'  : Quote,
@@ -400,15 +427,107 @@ describe "Coinify", ->
 
     describe 'getTrades()', ->
       it 'should call CoinifyTrade.fetchAll', ->
-        spyOn(CoinifyTrade, 'fetchAll')
+        spyOn(CoinifyTrade, 'fetchAll').and.callThrough()
         c.getTrades()
         expect(CoinifyTrade.fetchAll).toHaveBeenCalledWith(c)
 
+      it 'should store the trades', (done) ->
+        checks = (res) ->
+          expect(c._trades.length).toEqual(1)
+
+        promise = c.getTrades().then(checks)
+        expect(promise).toBeResolved(done)
+
+      it 'should resolve the trades', (done) ->
+        checks = (res) ->
+          expect(res.length).toEqual(1)
+          done()
+
+        promise = c.getTrades().then(checks)
+
+      it 'should call process on each trade', (done) ->
+        spyOn(CoinifyTrade, 'spyableProcessTrade')
+
+        checks = (res) ->
+          expect(CoinifyTrade.spyableProcessTrade).toHaveBeenCalled()
+          done()
+
+        c.getTrades().then(checks)
+
+      it "should update existing trades", (done) ->
+        c._trades = [
+          {
+            _id: 1
+            process: () ->
+            state: 'awaiting_transfer_in'
+            set: (obj) ->
+              this.state = obj.state
+          },
+          {
+            _id: 2
+            process: () ->
+            state: 'awaiting_transfer_in'
+            set: () ->
+              this.state = obj.state
+          }
+        ]
+
+        tradesJSON[0].state = "completed_test"
+
+        checks = () ->
+          expect(c._trades.length).toBe(2)
+          expect(c._trades[0].state).toEqual('completed_test')
+          done()
+
+        c.getTrades().then(checks)
+
     describe 'getKYCs()', ->
       it 'should call CoinifyKYC.fetchAll', ->
-        spyOn(CoinifyKYC, 'fetchAll')
+        spyOn(CoinifyKYC, 'fetchAll').and.callThrough()
         c.getKYCs()
         expect(CoinifyKYC.fetchAll).toHaveBeenCalledWith(c)
+
+      it 'should store the kycs', (done) ->
+        checks = (res) ->
+          expect(c._kycs.length).toEqual(1)
+
+        promise = c.getKYCs().then(checks)
+        expect(promise).toBeResolved(done)
+
+      it 'should resolve the kycs', (done) ->
+        checks = (res) ->
+          expect(res.length).toEqual(1)
+          done()
+
+        promise = c.getKYCs().then(checks)
+
+      it "should update existing kycs", (done) ->
+        c._kycs = [
+          {
+            _id: 1
+            process: () ->
+            state: 'pending'
+            set: (obj) ->
+              this.state = obj.state
+          },
+          {
+            _id: 2
+            process: () ->
+            state: 'pending'
+            set: () ->
+              this.state = obj.state
+          }
+        ]
+
+        kycsJSON[0].state = "completed_test"
+
+        checks = () ->
+          expect(c._kycs.length).toBe(2)
+          expect(c._kycs[0].state).toEqual('completed_test')
+          done()
+
+        c.getKYCs().then(checks)
+
 
     describe 'triggerKYC()', ->
       it 'should call CoinifyKYC.trigger', ->

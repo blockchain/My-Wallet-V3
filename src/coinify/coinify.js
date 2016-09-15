@@ -264,8 +264,41 @@ Coinify.prototype.buy = function (amount, baseCurrency, medium) {
   return CoinifyTrade.buy(self._lastQuote, medium, self);
 };
 
+Coinify.prototype.updateList = function (list, items, ListClass) {
+  var item;
+  for (var i = 0; i < items.length; i++) {
+    item = undefined;
+    for (var k = 0; k < list.length; k++) {
+      if (list[k]._id === items[i].id) {
+        item = list[k];
+        item.set.bind(item)(items[i]);
+      }
+    }
+    if (item === undefined) {
+      item = new ListClass(items[i], this);
+      list.push(item);
+    }
+  }
+};
+
 Coinify.prototype.getTrades = function () {
-  return CoinifyTrade.fetchAll(this);
+  var self = this;
+  var save = function () {
+    return this.save().then(function () { return self._trades; });
+  };
+  var update = function (trades) {
+    this.updateList(this._trades, trades, CoinifyTrade);
+  };
+  var process = function () {
+    for (var i = 0; i < this._trades.length; i++) {
+      var trade = this._trades[i];
+      trade.process();
+    }
+  };
+  return CoinifyTrade.fetchAll(this)
+                     .then(update.bind(this))
+                     .then(process.bind(this))
+                     .then(save.bind(this));
 };
 
 Coinify.prototype.triggerKYC = function () {
@@ -275,7 +308,16 @@ Coinify.prototype.triggerKYC = function () {
 };
 
 Coinify.prototype.getKYCs = function () {
-  return CoinifyKYC.fetchAll(this);
+  var self = this;
+  var save = function () {
+    return this.save().then(function () { return self._kycs; });
+  };
+  var update = function (kycs) {
+    this.updateList(this._kycs, kycs, CoinifyKYC);
+  };
+  return CoinifyKYC.fetchAll(this)
+                     .then(update.bind(this))
+                     .then(save.bind(this));
 };
 
 // DEPRECATED, used get[Buy/Sell]Methods() or quote.getPaymentMethods()

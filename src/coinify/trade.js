@@ -189,13 +189,13 @@ CoinifyTrade.prototype.set = function (obj) {
   }
 };
 
-CoinifyTrade.prototype.cancel = function () {
+CoinifyTrade.prototype.cancel = function (trades) {
   var self = this;
 
   var processCancel = function (trade) {
     self._state = trade.state;
 
-    self._coinify.delegate.releaseReceiveAddress(self, CoinifyTrade.filteredTrades(self._coinify.trades));
+    self._coinify.delegate.releaseReceiveAddress(self, self._coinify.trades);
 
     return self._coinify.save();
   };
@@ -297,30 +297,14 @@ CoinifyTrade.buy = function (quote, medium, coinify) {
   }).then(processTrade);
 };
 
-// Fetches the latest trades and updates coinify._trades
 CoinifyTrade.fetchAll = function (coinify) {
-  return coinify.authGET('trades').then(function (res) {
-    var trade;
-    for (var i = 0; i < res.length; i++) {
-      trade = undefined;
-      for (var k = 0; k < coinify._trades.length; k++) {
-        if (coinify._trades[k]._id === res[i].id) {
-          trade = coinify._trades[k];
-          trade.set.bind(trade)(res[i]);
-        }
-      }
-      if (trade === undefined) {
-        trade = new CoinifyTrade(res[i], coinify);
-        coinify._trades.push(trade);
-      }
+  return coinify.authGET('trades');
+};
 
-      if (['rejected', 'cancelled', 'expired'].indexOf(trade.state) > -1) {
-        coinify.delegate.releaseReceiveAddress(trade, CoinifyTrade.filteredTrades(coinify.trades));
-      }
-    }
-
-    return coinify.save().then(function () { return coinify._trades; });
-  });
+CoinifyTrade.prototype.process = function () {
+  if (['rejected', 'cancelled', 'expired'].indexOf(this.state) > -1) {
+    this._coinify.delegate.releaseReceiveAddress(this, this._coinify.trades);
+  }
 };
 
 CoinifyTrade.prototype.refresh = function () {
