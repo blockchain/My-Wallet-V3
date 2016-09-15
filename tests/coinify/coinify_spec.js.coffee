@@ -18,6 +18,10 @@ CoinifyTrade = (obj) ->
 CoinifyTrade.fetchAll = () ->
 CoinifyTrade.monitorPayments = () ->
 
+CoinifyProfile = () ->
+  fetch: () ->
+    this._did_fetch = true
+
 CoinifyKYC = {
   fetchAll: () ->
 }
@@ -26,7 +30,8 @@ stubs = {
   './quote'  : Quote,
   './payment-method' : PaymentMethod,
   './trade' : CoinifyTrade,
-  './kyc' : CoinifyKYC
+  './kyc' : CoinifyKYC,
+  './profile' : CoinifyProfile
 }
 
 Coinify    = proxyquire('../../src/coinify/coinify', stubs)
@@ -340,6 +345,19 @@ describe "Coinify", ->
         promise = c.getSellCurrencies().then(checks)
 
         expect(promise).toBeResolved(done)
+
+    describe 'fetchProfile()', ->
+      it 'should call fetch() on profile', ->
+        spyOn(c._profile, "fetch")
+        c.fetchProfile()
+        expect(c._profile.fetch).toHaveBeenCalled()
+
+      it 'profile should be null before', ->
+        expect(c.profile).toBeNull()
+
+      it 'should set .profile', ->
+        c.fetchProfile()
+        expect(c.profile).not.toBeNull()
 
     describe 'monitorPayments()', ->
       it 'should call CoinifyTrade.monitorPayments', ->
