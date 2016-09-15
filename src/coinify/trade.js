@@ -456,24 +456,8 @@ CoinifyTrade.prototype.toJSON = function () {
     state: this._state,
     tx_hash: this._txHash,
     confirmed: this.confirmed,
-    is_buy: this.isBuy,
-    createTime: this._createdAt,
-    inCurrency: this._inCurrency,
-    outCurrency: this._outCurrency,
-    transferIn: {}
+    is_buy: this.isBuy
   };
-
-  if (this._inCurrency === 'BTC') {
-    serialized.inAmount = Helpers.fromSatoshi(this._inAmount);
-    serialized.transferIn.sendAmount = Helpers.fromSatoshi(this._sendAmount);
-    serialized.outAmount = Helpers.fromCents(this._outAmount);
-    serialized.outAmountExpected = Helpers.fromCents(this._outAmountExpected);
-  } else {
-    serialized.inAmount = Helpers.fromCents(this._inAmount);
-    serialized.transferIn.sendAmount = Helpers.fromCents(this._sendAmount);
-    serialized.outAmount = Helpers.fromSatoshi(this._outAmount);
-    serialized.outAmountExpected = Helpers.fromSatoshi(this._outAmountExpected);
-  }
 
   this._coinify.delegate.serializeExtraFields(serialized, this);
 
