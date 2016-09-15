@@ -2,8 +2,8 @@
 
 module.exports = CoinifyKYC;
 
-function CoinifyKYC (obj, coinify) {
-  this._coinify = coinify;
+function CoinifyKYC (obj, api) {
+  this._api = api;
   this._id = obj.id;
   this._createdAt = new Date(obj.createTime);
   this.set(obj);
@@ -64,19 +64,18 @@ Object.defineProperties(CoinifyKYC.prototype, {
 });
 
 CoinifyKYC.prototype.refresh = function () {
-  return this._coinify.authGET('kyc/' + this._id).then(this.set.bind(this));
+  return this._api.authGET('kyc/' + this._id).then(this.set.bind(this));
 };
 
-CoinifyKYC.trigger = function (coinify) {
+CoinifyKYC.trigger = function (api) {
   var processKYC = function (res) {
-    var kyc = new CoinifyKYC(res, coinify);
-    coinify._kycs.push(kyc);
+    var kyc = new CoinifyKYC(res, api);
     return kyc;
   };
 
-  return coinify.authPOST('traders/me/kyc').then(processKYC);
+  return api.authPOST('traders/me/kyc').then(processKYC);
 };
 
-CoinifyKYC.fetchAll = function (coinify) {
-  return coinify.authGET('kyc');
+CoinifyKYC.fetchAll = function (api) {
+  return api.authGET('kyc');
 };

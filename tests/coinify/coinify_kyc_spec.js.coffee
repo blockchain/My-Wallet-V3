@@ -21,10 +21,10 @@ afterEach ->
 describe "KYC", ->
 
   describe "constructor", ->
-    it "must put everything on place", ->
-      coinify = {}
-      k = new CoinifyKYC(o, coinify)
-      expect(k._coinify).toBe(coinify)
+    it "must put everything in place", ->
+      api = {}
+      k = new CoinifyKYC(o, api)
+      expect(k._api).toBe(api)
       expect(k._id).toBe(o.id)
       expect(k._iSignThisID).toBe(o.externalId)
 

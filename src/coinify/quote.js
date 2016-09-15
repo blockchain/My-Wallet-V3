@@ -6,8 +6,8 @@ var assert = require('assert');
 
 module.exports = Quote;
 
-function Quote (obj, coinify) {
-  this._coinify = coinify;
+function Quote (obj, api) {
+  this._api = api;
 
   var expiresAt = new Date(obj.expiryTime);
 
@@ -69,7 +69,7 @@ Object.defineProperties(Quote.prototype, {
   }
 });
 
-Quote.getQuote = function (coinify, amount, baseCurrency, quoteCurrency) {
+Quote.getQuote = function (api, amount, baseCurrency, quoteCurrency) {
   assert(Helpers.isInteger(amount), 'amount must be in cents or satoshi');
 
   var supportedCurrencies = ['BTC', 'EUR', 'GBP', 'USD', 'DKK'];
@@ -94,12 +94,12 @@ Quote.getQuote = function (coinify, amount, baseCurrency, quoteCurrency) {
   }
 
   var processQuote = function (quote) {
-    quote = new Quote(quote, coinify);
+    quote = new Quote(quote, api);
     return quote;
   };
 
   var getAnonymousQuote = function () {
-    return coinify.POST('trades/quote', {
+    return api.POST('trades/quote', {
       baseCurrency: baseCurrency,
       quoteCurrency: quoteCurrency,
       baseAmount: parseFloat(baseAmount)
@@ -107,14 +107,14 @@ Quote.getQuote = function (coinify, amount, baseCurrency, quoteCurrency) {
   };
 
   var getQuote = function () {
-    return coinify.authPOST('trades/quote', {
+    return api.authPOST('trades/quote', {
       baseCurrency: baseCurrency,
       quoteCurrency: quoteCurrency,
       baseAmount: parseFloat(baseAmount)
     });
   };
 
-  if (!coinify.hasAccount) {
+  if (!api.hasAccount) {
     return getAnonymousQuote().then(processQuote);
   } else {
     return getQuote().then(processQuote);
@@ -137,7 +137,7 @@ Quote.prototype.getPaymentMethods = function () {
   if (this.paymentMethods) {
     return Promise.resolve(this.paymentMethods);
   } else {
-    return PaymentMethod.fetchAll(this.baseCurrency, this.quoteCurrency, this._coinify)
+    return PaymentMethod.fetchAll(this.baseCurrency, this.quoteCurrency, this._api)
                         .then(setPaymentMethods);
   }
 };

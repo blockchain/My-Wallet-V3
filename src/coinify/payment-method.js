@@ -2,8 +2,8 @@
 
 module.exports = PaymentMethod;
 
-function PaymentMethod (obj, coinify) {
-  this._coinify = coinify;
+function PaymentMethod (obj, api) {
+  this._api = api;
   this._inMedium = obj.inMedium;
   this._outMedium = obj.outMedium;
   this._name = obj.name;
@@ -106,16 +106,16 @@ Object.defineProperties(PaymentMethod.prototype, {
   }
 });
 
-PaymentMethod.fetchAll = function (inCurrency, outCurrency, coinify) {
+PaymentMethod.fetchAll = function (inCurrency, outCurrency, api) {
   var params = {};
   if (inCurrency) { params.inCurrency = inCurrency; }
   if (outCurrency) { params.outCurrency = outCurrency; }
 
   var output = [];
-  return coinify.authGET('trades/payment-methods', params).then(function (res) {
+  return api.authGET('trades/payment-methods', params).then(function (res) {
     output.length = 0;
     for (var i = 0; i < res.length; i++) {
-      output.push(new PaymentMethod(res[i], coinify));
+      output.push(new PaymentMethod(res[i], api));
     }
     return Promise.resolve(output);
   });

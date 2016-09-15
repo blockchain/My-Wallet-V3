@@ -9,6 +9,13 @@ Quote = {
     })
 }
 
+API = () ->
+  {
+    GET: () ->
+    POST: () ->
+    PATCH: () ->
+  }
+
 PaymentMethod = {
   fetchAll: () ->
 }
@@ -32,6 +39,7 @@ CoinifyTrade.fetchAll = () ->
   ])
 CoinifyTrade.monitorPayments = () ->
 CoinifyTrade.buy = () ->
+  Promise.resolve()
 
 CoinifyProfile = () ->
   fetch: () ->
@@ -52,9 +60,11 @@ CoinifyKYC.fetchAll = () ->
       state: kycsJSON[0].state
     }
   ])
-
+CoinifyKYC.trigger = () ->
+  Promise.resolve()
 
 stubs = {
+  './api' : API,
   './quote'  : Quote,
   './payment-method' : PaymentMethod,
   './trade' : CoinifyTrade,
@@ -114,7 +124,7 @@ describe "Coinify", ->
 
       # Mock POST requests.
       # TODO: simulate API errors, e.g. if email already registered
-      spyOn(c, "POST").and.callFake((endpoint, data) ->
+      spyOn(c._api, "POST").and.callFake((endpoint, data) ->
         if endpoint == "signup/trader"
           console.log("singup/trader")
           if data.email == "duplicate@blockchain.com"
@@ -127,71 +137,39 @@ describe "Coinify", ->
               trader: {id: "1"}
               offlineToken: "offline-token"
             })
-
-        else if endpoint == "auth"
-          if data.offline_token == 'invalid-offline-token'
-            Promise.reject({"error":"offline_token_not_found"})
-          else if data.offline_token == 'random-fail-offline-token'
-            Promise.reject()
-          else
-            Promise.resolve({access_token: "access-token", token_type: "bearer"})
         else
           Promise.reject("Unknown endpoint")
       )
 
-      spyOn(c, "PATCH").and.callFake((endpoint, data) ->
-        handle = (resolve, reject) ->
-          if endpoint == "traders/me"
-            console.log(data)
-            resolve({
-              profile:
-                name: (data.profile && data.profile.name) || c._profile._full_name
-              defaultCurrency: data.defaultCurrency || c._profile._default_currency
-            })
-          else
-            reject("Unknown endpoint")
-        {
-          then: (resolve) ->
-            handle(resolve, (() ->))
-            {
-              catch: (reject) ->
-                handle((() ->), reject)
-            }
-        }
-      )
+      # spyOn(c, "PATCH").and.callFake((endpoint, data) ->
+      #   handle = (resolve, reject) ->
+      #     if endpoint == "traders/me"
+      #       console.log(data)
+      #       resolve({
+      #         profile:
+      #           name: (data.profile && data.profile.name) || c._profile._full_name
+      #         defaultCurrency: data.defaultCurrency || c._profile._default_currency
+      #       })
+      #     else
+      #       reject("Unknown endpoint")
+      #   {
+      #     then: (resolve) ->
+      #       handle(resolve, (() ->))
+      #       {
+      #         catch: (reject) ->
+      #           handle((() ->), reject)
+      #       }
+      #   }
+      # )
 
     describe "Getter", ->
       describe "hasAccount", ->
         it "should use offline_token to see if user has account", ->
-          c._offline_token = undefined
+          c._offlineToken = undefined
           expect(c.hasAccount).toEqual(false)
 
-          c._offline_token = "token"
+          c._offlineToken = "token"
           expect(c.hasAccount).toEqual(true)
-
-      describe "isLoggedIn", ->
-        beforeEach ->
-          c._access_token = "access_token"
-          c._loginExpiresAt = new Date(new Date().getTime() + 100000)
-
-        it "checks if there is an access token", ->
-          expect(c.isLoggedIn).toEqual(true)
-
-          c._access_token = undefined
-          expect(c.isLoggedIn).toEqual(false)
-
-        it "checks if the token hasn't expired", ->
-          expect(c.isLoggedIn).toEqual(true)
-
-          c._loginExpiresAt = new Date(new Date().getTime() - 100000)
-          expect(c.isLoggedIn).toEqual(false)
-
-
-        it "should be a few seconds on the safe side", ->
-          expect(c.isLoggedIn).toEqual(true)
-
-          c._loginExpiresAt = new Date(new Date().getTime())
-          expect(c.isLoggedIn).toEqual(false)
 
     describe "Setter", ->
 
@@ -245,7 +223,7 @@ describe "Coinify", ->
       it 'sets a user and offline token', (done) ->
         checks  = () ->
           expect(c.user).toEqual("1")
-          expect(c._offline_token).toEqual("offline-token")
+          expect(c._offlineToken).toEqual("offline-token")
 
         promise = c.signup('NL', 'EUR').then(checks)
 
@@ -278,43 +256,6 @@ describe "Coinify", ->
         promise = c.signup('NL', 'EUR')
         expect(promise).toBeRejectedWith("ERROR_MESSAGE", done)
       )
-
-    describe 'login', ->
-      beforeEach ->
-        c._user = "user-1"
-        c._offline_token = "offline-token"
-
-      it 'requires an offline token', ->
-        c._offline_token = undefined
-        promise = c.login()
-        expect(promise).toBeRejectedWith("NO_OFFLINE_TOKEN")
-
-      it 'should POST the offline token to /auth', ->
-        promise = c.login()
-        expect(c.POST).toHaveBeenCalled()
-        expect(c.POST.calls.argsFor(0)[1].offline_token).toEqual('offline-token')
-
-      it 'should store the access token', (done) ->
-        # This is ephemeral, not saved to the wallet.
-        checks = () ->
-          expect(c._access_token).toEqual("access-token")
-
-        promise = c.login().then(checks)
-        expect(promise).toBeResolved(done)
-
-      it 'should store the expiration time', () ->
-        # Pending API change
-        pending()
-
-      it 'should handle token not found error', (done) ->
-        c._offline_token = 'invalid-offline-token'
-        promise = c.login()
-        expect(promise).toBeRejectedWith(jasmine.objectContaining({error: 'offline_token_not_found'}), done)
-
-      it 'should handle generic failure', (done) ->
-        c._offline_token = 'random-fail-offline-token'
-        promise = c.login()
-        expect(promise).toBeRejected(done)
 
     describe 'getBuyQuote', ->
       it 'should use Quote.getQuote', ->
@@ -467,13 +408,13 @@ describe "Coinify", ->
       it 'should call CoinifyTrade.monitorPayments', ->
         spyOn(CoinifyTrade, 'monitorPayments')
         c.monitorPayments()
-        expect(CoinifyTrade.monitorPayments).toHaveBeenCalledWith(c)
+        expect(CoinifyTrade.monitorPayments).toHaveBeenCalled()
 
     describe 'getTrades()', ->
       it 'should call CoinifyTrade.fetchAll', ->
         spyOn(CoinifyTrade, 'fetchAll').and.callThrough()
         c.getTrades()
-        expect(CoinifyTrade.fetchAll).toHaveBeenCalledWith(c)
+        expect(CoinifyTrade.fetchAll).toHaveBeenCalled()
 
       it 'should store the trades', (done) ->
         checks = (res) ->
@@ -529,7 +470,7 @@ describe "Coinify", ->
       it 'should call CoinifyKYC.fetchAll', ->
         spyOn(CoinifyKYC, 'fetchAll').and.callThrough()
         c.getKYCs()
-        expect(CoinifyKYC.fetchAll).toHaveBeenCalledWith(c)
+        expect(CoinifyKYC.fetchAll).toHaveBeenCalled()
 
       it 'should store the kycs', (done) ->
         checks = (res) ->
@@ -575,6 +516,6 @@ describe "Coinify", ->
 
     describe 'triggerKYC()', ->
       it 'should call CoinifyKYC.trigger', ->
-        spyOn(CoinifyKYC, 'trigger')
+        spyOn(CoinifyKYC, 'trigger').and.callThrough()
         c.triggerKYC()
-        expect(CoinifyKYC.trigger).toHaveBeenCalledWith(c)
+        expect(CoinifyKYC.trigger).toHaveBeenCalled()
