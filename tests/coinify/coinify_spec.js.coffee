@@ -13,10 +13,10 @@ PaymentMethod = {
   fetchAll: () ->
 }
 
-CoinifyTrade = {
-  fetchAll: () ->
-  monitorPayments: () ->
-}
+CoinifyTrade = (obj) ->
+  obj
+CoinifyTrade.fetchAll = () ->
+CoinifyTrade.monitorPayments = () ->
 
 CoinifyKYC = {
   fetchAll: () ->
@@ -51,6 +51,14 @@ describe "Coinify", ->
       it "should use fields", ->
         c = new Coinify({auto_login: true})
         expect(c._auto_login).toEqual(true)
+
+      it "should deserialize trades", ->
+        c = new Coinify({
+          auto_login: true,
+          trades: [{}]
+        })
+        expect(c.trades.length).toEqual(1)
+
 
     describe "Coinify.new()", ->
       it "sets autoLogin to true", ->
