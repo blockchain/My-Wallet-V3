@@ -412,6 +412,6 @@ describe "Coinify", ->
 
     describe 'triggerKYC()', ->
       it 'should call CoinifyKYC.trigger', ->
-        spyOn(CoinifyKYC, 'fetchAll')
-        c.getKYCs()
-        expect(CoinifyKYC.fetchAll).toHaveBeenCalledWith(c)
+        spyOn(CoinifyKYC, 'trigger')
+        c.triggerKYC()
+        expect(CoinifyKYC.trigger).toHaveBeenCalledWith(c)
