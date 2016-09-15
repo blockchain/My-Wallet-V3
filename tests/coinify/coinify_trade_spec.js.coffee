@@ -115,7 +115,7 @@ describe "CoinifyTrade", ->
               requirements: []
               level: {name: '1'}
               nextLevel: {name: '2'}
-              state: 'undefined'
+              state: 'awaiting_transfer_in'
             })
             {
               catch: () ->
@@ -151,6 +151,21 @@ describe "CoinifyTrade", ->
         expect(trade.sendAmount).toEqual(3505)
         expect(trade.outAmount).toEqual(3505)
         expect(trade.outAmountExpected).toEqual(3505)
+
+      it "state should stay 'rejected' after card decline", ->
+        trade._isDeclined = true
+        trade.set(tradeJSON) # {state: 'awaiting_transfer_in'}
+        expect(trade.state).toEqual('rejected')
+
+    describe "declined()", ->
+      beforeEach ->
+        trade.set(tradeJSON)
+
+      it "should change state to rejected and set _isDeclined", ->
+        trade.declined()
+        expect(trade.state).toEqual('rejected')
+        expect(trade._isDeclined).toEqual(true)
+
 
     describe "cancel()", ->
       beforeEach ->
