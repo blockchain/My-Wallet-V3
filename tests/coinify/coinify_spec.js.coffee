@@ -31,6 +31,7 @@ CoinifyTrade.fetchAll = () ->
     }
   ])
 CoinifyTrade.monitorPayments = () ->
+CoinifyTrade.buy = () ->
 
 CoinifyProfile = () ->
   fetch: () ->
@@ -209,7 +210,25 @@ describe "Coinify", ->
           expect(() -> c.autoLogin = "1").toThrow()
 
     describe "JSON serializer", ->
-      p  = new Coinify({auto_login: true})
+      obj =
+        user: 1
+        offline_token: "token"
+        auto_login: true
+
+      p  = new Coinify(obj)
+
+      it 'should serialize the right fields', ->
+        json = JSON.stringify(p, null, 2)
+        d = JSON.parse(json)
+        expect(d.user).toEqual(1)
+        expect(d.offline_token).toEqual("token")
+        expect(d.auto_login).toEqual(true)
+
+      it 'should serialize trades', ->
+        p.trades = []
+        json = JSON.stringify(p, null, 2)
+        d = JSON.parse(json)
+        expect(d.trades).toEqual([])
 
       it 'should hold: fromJSON . toJSON = id', ->
         json = JSON.stringify(c, null, 2)
@@ -329,6 +348,31 @@ describe "Coinify", ->
         promise = c.getBuyQuote(1000, 'EUR').then(checks)
 
         expect(promise).toBeResolved(done)
+
+    describe 'buy()', ->
+      beforeEach ->
+        c._lastQuote = {
+          baseCurrency: 'EUR'
+          baseAmount: -1000
+          expiresAt: new Date(new Date().getTime() + 100000)
+        }
+
+      it 'should use CoinifyTrade.buy', ->
+        spyOn(CoinifyTrade, "buy").and.callThrough()
+
+        c.buy(1000, 'EUR', 'card')
+
+        expect(CoinifyTrade.buy).toHaveBeenCalled()
+
+      it 'should check for a matching quote', ->
+        expect(() -> c.buy(1001, 'EUR', 'card')).toThrow()
+        expect(() -> c.buy(1000, 'USD', 'card')).toThrow()
+
+      it 'should check for a quote that is still valid', ->
+        c._lastQuote.expiresAt = new Date(new Date().getTime() - 100000)
+        expect(() -> c.buy(1000, 'EUR', 'card')).toThrow()
+
+
 
     describe 'getPaymentMethods()', ->
       it 'should use PaymentMethod.fetchAll', ->
