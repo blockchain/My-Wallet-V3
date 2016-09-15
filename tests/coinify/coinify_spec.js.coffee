@@ -489,7 +489,7 @@ describe "Coinify", ->
 
       it 'should store the kycs', (done) ->
         checks = (res) ->
-          expect(c._kycs.length).toEqual(1)
+          expect(c.kycs.length).toEqual(1)
 
         promise = c.getKYCs().then(checks)
         expect(promise).toBeResolved(done)
@@ -522,8 +522,8 @@ describe "Coinify", ->
         kycsJSON[0].state = "completed_test"
 
         checks = () ->
-          expect(c._kycs.length).toBe(2)
-          expect(c._kycs[0].state).toEqual('completed_test')
+          expect(c.kycs.length).toBe(2)
+          expect(c.kycs[0].state).toEqual('completed_test')
           done()
 
         c.getKYCs().then(checks)
