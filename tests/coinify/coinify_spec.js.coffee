@@ -370,6 +370,13 @@ describe "Coinify", ->
 
         expect(promise).toBeResolved(done)
 
+      it 'should store the list', (done) ->
+        checks = (res) ->
+          expect(c.buyCurrencies).toEqual(['EUR', 'USD'])
+          done()
+
+        promise = c.getBuyCurrencies().then(checks)
+
     describe 'getSellCurrencies()', ->
       beforeEach ->
         spyOn(c, 'getSellMethods').and.callFake(() ->
@@ -390,6 +397,13 @@ describe "Coinify", ->
         promise = c.getSellCurrencies().then(checks)
 
         expect(promise).toBeResolved(done)
+
+      it 'should store the list', (done) ->
+        checks = (res) ->
+          expect(c.sellCurrencies).toEqual(['EUR', 'USD'])
+          done()
+
+        promise = c.getSellCurrencies().then(checks)
 
     describe 'fetchProfile()', ->
       it 'should call fetch() on profile', ->

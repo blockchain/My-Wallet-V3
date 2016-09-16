@@ -63,6 +63,9 @@ function Coinify (object, parent, delegate) {
   this._profile = new CoinifyProfile(this._api);
   this._lastQuote = null;
 
+  this._buyCurrencies = null;
+  this._sellCurrencies = null;
+
   this._trades = [];
   if (obj.trades) {
     for (var i = 0; i < obj.trades.length; i++) {
@@ -134,6 +137,18 @@ Object.defineProperties(Coinify.prototype, {
     },
     set: function (value) {
       this._partner_id = value;
+    }
+  },
+  'buyCurrencies': {
+    configurable: false,
+    get: function () {
+      return this._buyCurrencies;
+    }
+  },
+  'sellCurrencies': {
+    configurable: false,
+    get: function () {
+      return this._sellCurrencies;
     }
   }
 });
@@ -331,9 +346,10 @@ Coinify.prototype.getBuyCurrencies = function () {
         }
       }
     }
+    this._buyCurrencies = JSON.parse(JSON.stringify(currencies));
     return currencies;
   };
-  return this.getBuyMethods().then(getCurrencies);
+  return this.getBuyMethods().then(getCurrencies.bind(this));
 };
 
 Coinify.prototype.getSellCurrencies = function () {
@@ -348,9 +364,10 @@ Coinify.prototype.getSellCurrencies = function () {
         }
       }
     }
+    this._sellCurrencies = JSON.parse(JSON.stringify(currencies));
     return currencies;
   };
-  return this.getSellMethods().then(getCurrencies);
+  return this.getSellMethods().then(getCurrencies.bind(this));
 };
 
 Coinify.prototype.monitorPayments = function () {
