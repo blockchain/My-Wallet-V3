@@ -270,7 +270,7 @@ Coinify.prototype.updateList = function (list, items, ListClass) {
       }
     }
     if (item === undefined) {
-      item = new ListClass(items[i], this._api);
+      item = new ListClass(items[i], this._api, this.delegate, this);
       list.push(item);
     }
   }
@@ -313,7 +313,7 @@ Coinify.prototype.getKYCs = function () {
   var update = function (kycs) {
     this.updateList(this._kycs, kycs, CoinifyKYC);
   };
-  return CoinifyKYC.fetchAll(this._api)
+  return CoinifyKYC.fetchAll(this._api, this)
                      .then(update.bind(this))
                      .then(save.bind(this));
 };

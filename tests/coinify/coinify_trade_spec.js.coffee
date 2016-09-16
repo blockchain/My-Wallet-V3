@@ -100,35 +100,30 @@ describe "CoinifyTrade", ->
       }
 
       api = {
-        authGET: (method) -> {
-          then: (cb) ->
-            cb({
-              id: 1
-              defaultCurrency: 'EUR'
-              email: "john@do.com"
-              profile: profile
-              feePercentage: 3
-              currentLimits:
-                card:
-                  in:
-                    daily:100
-                bank:
-                  in:
-                    daily:0
-                    yearly:0
-                  out:
-                    daily: 100
-                    yearly:1000
+        authGET: (method) ->
+          Promise.resolve({
+            id: 1
+            defaultCurrency: 'EUR'
+            email: "john@do.com"
+            profile: profile
+            feePercentage: 3
+            currentLimits:
+              card:
+                in:
+                  daily:100
+              bank:
+                in:
+                  daily:0
+                  yearly:0
+                out:
+                  daily: 100
+                  yearly:1000
 
-              requirements: []
-              level: {name: '1'}
-              nextLevel: {name: '2'}
-              state: 'awaiting_transfer_in'
-            })
-            {
-              catch: () ->
-            }
-        }
+            requirements: []
+            level: {name: '1'}
+            nextLevel: {name: '2'}
+            state: 'awaiting_transfer_in'
+          })
         authPOST: () -> Promise.resolve('something')
       }
       spyOn(api, "authGET").and.callThrough()
@@ -284,12 +279,37 @@ describe "CoinifyTrade", ->
         pending()
 
     describe "refresh()", ->
-      it "should authGET /trades/:id and update the trade object", ->
-        trade.set = () -> trade
+      beforeEach ->
+        trade._coinify = {
+          save: () -> Promise.resolve()
+        }
+        api.authGET = () ->
+          Promise.resolve({})
+
+        spyOn(api , "authGET").and.callThrough()
+
+      it "should authGET /trades/:id and update the trade object", (done) ->
+        checks  = () ->
+          expect(api.authGET).toHaveBeenCalledWith('trades/' + trade._id)
+          expect(trade.set).toHaveBeenCalled()
+
+        trade.set = () -> Promise.resolve(trade)
         spyOn(trade, "set").and.callThrough()
-        trade.refresh()
-        expect(api.authGET).toHaveBeenCalledWith('trades/' + trade._id)
-        expect(trade.set).toHaveBeenCalled()
+
+        promise = trade.refresh().then(checks)
+
+        expect(promise).toBeResolved(done)
+
+
+      it "should save metadata", (done) ->
+        checks = (done) ->
+          expect(trade._coinify.save).toHaveBeenCalled()
+
+        trade.set = () -> Promise.resolve(trade)
+        spyOn(trade._coinify, "save").and.callThrough()
+        promise = trade.refresh().then(checks)
+
+        expect(promise).toBeResolved(done)
 
     describe "_checkOnce()", ->
       myCoinify = undefined

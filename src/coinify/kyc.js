@@ -2,7 +2,8 @@
 
 module.exports = CoinifyKYC;
 
-function CoinifyKYC (obj, api) {
+function CoinifyKYC (obj, api, delegate, coinify) {
+  // delegate and coinify are not used
   this._api = api;
   this._id = obj.id;
   this._createdAt = new Date(obj.createTime);
@@ -64,12 +65,13 @@ Object.defineProperties(CoinifyKYC.prototype, {
 });
 
 CoinifyKYC.prototype.refresh = function () {
-  return this._api.authGET('kyc/' + this._id).then(this.set.bind(this));
+  return this._api.authGET('kyc/' + this._id)
+                  .then(this.set.bind(this));
 };
 
 CoinifyKYC.trigger = function (api) {
   var processKYC = function (res) {
-    var kyc = new CoinifyKYC(res, api);
+    var kyc = new CoinifyKYC(res, api, null, null);
     return kyc;
   };
 

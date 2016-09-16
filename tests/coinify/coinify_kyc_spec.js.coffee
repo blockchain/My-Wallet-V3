@@ -23,7 +23,7 @@ describe "KYC", ->
   describe "constructor", ->
     it "must put everything in place", ->
       api = {}
-      k = new CoinifyKYC(o, api)
+      k = new CoinifyKYC(o, api, null, coinify)
       expect(k._api).toBe(api)
       expect(k._id).toBe(o.id)
       expect(k._iSignThisID).toBe(o.externalId)
@@ -50,14 +50,16 @@ describe "KYC", ->
 
       coinify = {
         _kycs: []
+      }
+      api = {
         authGET: (method) -> Promise.resolve([o,o,o,o]),
       }
-      spyOn(coinify, "authGET").and.callThrough()
-      k = new CoinifyKYC(o, coinify)
+      spyOn(api, "authGET").and.callThrough()
+      k = new CoinifyKYC(o, api, null, coinify)
 
       promise = k.refresh()
       testCalls = () ->
-        expect(coinify.authGET).toHaveBeenCalledWith('kyc/' + k._id)
+        expect(api.authGET).toHaveBeenCalledWith('kyc/' + k._id)
       promise
         .then(testCalls)
         .then(done)

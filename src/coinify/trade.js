@@ -327,7 +327,9 @@ CoinifyTrade.prototype.process = function (trades) {
 };
 
 CoinifyTrade.prototype.refresh = function () {
-  return this._api.authGET('trades/' + this._id).then(this.set.bind(this));
+  return this._api.authGET('trades/' + this._id)
+          .then(this.set.bind(this))
+          .then(this._coinify.save.bind(this._coinify));
 };
 
 // Call this if the iSignThis iframe says the card is declined. It may take a
