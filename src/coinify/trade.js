@@ -3,6 +3,7 @@
 var assert = require('assert');
 
 var BankAccount = require('./bank-account');
+var Helpers = require('./helpers');
 
 module.exports = CoinifyTrade;
 
@@ -161,27 +162,36 @@ CoinifyTrade.prototype.set = function (obj) {
     this._state = obj.state;
   }
   this._is_buy = obj.is_buy;
+
+  this._inCurrency = obj.inCurrency;
+  this._outCurrency = obj.outCurrency;
+
+  if (obj.transferIn) {
+    this._medium = obj.transferIn.medium;
+    this._sendAmount = this._inCurrency === 'BTC'
+      ? Helpers.toSatoshi(obj.transferIn.sendAmount)
+      : Helpers.toCents(obj.transferIn.sendAmount);
+  }
+
+  if (this._inCurrency === 'BTC') {
+    this._inAmount = Helpers.toSatoshi(obj.inAmount);
+    this._outAmount = Helpers.toCents(obj.outAmount);
+    this._outAmountExpected = Helpers.toCents(obj.outAmountExpected);
+  } else {
+    this._inAmount = Helpers.toCents(obj.inAmount);
+    this._outAmount = Helpers.toSatoshi(obj.outAmount);
+    this._outAmountExpected = Helpers.toSatoshi(obj.outAmountExpected);
+  }
+
   if (obj.confirmed === Boolean(obj.confirmed)) {
     this._coinifyDelegate.deserializeExtraFields(obj, this);
     this._receiveAddress = this._coinifyDelegate.getReceiveAddress(this);
     this._confirmed = obj.confirmed;
     this._txHash = obj.tx_hash;
   } else { // Contructed from Coinify API
-    this._inCurrency = obj.inCurrency;
-    this._outCurrency = obj.outCurrency;
-    this._medium = obj.transferIn.medium;
+    this._receiptUrl = obj.receiptUrl;
 
-    if (this._inCurrency === 'BTC') {
-      this._inAmount = Math.round((obj.inAmount || 0) * 100000000);
-      this._sendAmount = Math.round((obj.transferIn.sendAmount || 0) * 100000000);
-      this._outAmount = Math.round((obj.outAmount || 0) * 100);
-      this._outAmountExpected = Math.round((obj.outAmountExpected || 0) * 100);
-    } else {
-      this._inAmount = Math.round((obj.inAmount || 0) * 100);
-      this._sendAmount = Math.round((obj.transferIn.sendAmount || 0) * 100);
-      this._outAmount = Math.round((obj.outAmount || 0) * 100000000);
-      this._outAmountExpected = Math.round((obj.outAmountExpected || 0) * 100000000);
-
+    if (this._inCurrency !== 'BTC') {
       // NOTE: this field is currently missing in the Coinify API:
       if (obj.transferOut && obj.transferOutdetails && obj.transferOutdetails.transaction) {
         this._txHash = obj.transferOutdetails.transaction;
@@ -194,11 +204,9 @@ CoinifyTrade.prototype.set = function (obj) {
       this._receiveAddress = obj.transferOut.details.account;
       this._iSignThisID = obj.transferIn.details.paymentId;
     }
-
-    this._receiptUrl = obj.receiptUrl;
-
-    return this;
   }
+
+  return this;
 };
 
 CoinifyTrade.prototype.cancel = function (trades) {
