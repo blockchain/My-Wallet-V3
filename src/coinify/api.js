@@ -13,8 +13,8 @@ Object.defineProperties(API.prototype, {
     configurable: false,
     get: function () {
       // Debug: + 60 * 19 * 1000 expires the login after 1 minute
-      var tenSecondsAgo = new Date(new Date().getTime() + 10000);
-      return Boolean(this._access_token) && this._loginExpiresAt > tenSecondsAgo;
+      var tenSecondsFromNow = new Date(new Date().getTime() + 10000);
+      return Boolean(this._access_token) && this._loginExpiresAt > tenSecondsFromNow;
     }
   },
   'offlineToken': {
@@ -56,12 +56,12 @@ API.prototype.login = function () {
 };
 
 API.prototype.GET = function (endpoint, data) {
-  return this.request('GET', endpoint, data);
+  return this._request('GET', endpoint, data);
 };
 
 API.prototype.authGET = function (endpoint, data) {
   var doGET = function () {
-    return this.GET(endpoint, data);
+    return this._request('GET', endpoint, data, true);
   };
 
   if (this.isLoggedIn) {
@@ -72,12 +72,12 @@ API.prototype.authGET = function (endpoint, data) {
 };
 
 API.prototype.POST = function (endpoint, data) {
-  return this.request('POST', endpoint, data);
+  return this._request('POST', endpoint, data);
 };
 
 API.prototype.authPOST = function (endpoint, data) {
   var doPOST = function () {
-    return this.POST(endpoint, data);
+    return this._request('POST', endpoint, data, true);
   };
 
   if (this.isLoggedIn) {
@@ -88,12 +88,12 @@ API.prototype.authPOST = function (endpoint, data) {
 };
 
 API.prototype.PATCH = function (endpoint, data) {
-  return this.request('PATCH', endpoint, data);
+  return this._request('PATCH', endpoint, data);
 };
 
 API.prototype.authPATCH = function (endpoint, data) {
   var doPATCH = function () {
-    return this.PATCH(endpoint, data);
+    return this._request('PATCH', endpoint, data, true);
   };
 
   if (this.isLoggedIn) {
@@ -103,7 +103,9 @@ API.prototype.authPATCH = function (endpoint, data) {
   }
 };
 
-API.prototype.request = function (method, endpoint, data) {
+API.prototype._request = function (method, endpoint, data, authorized) {
+  assert(!authorized || this.isLoggedIn, "Can't make authorized request if not logged in");
+
   var url = this._rootURL + endpoint;
 
   var options = {
@@ -111,7 +113,7 @@ API.prototype.request = function (method, endpoint, data) {
     credentials: 'omit'
   };
 
-  if (this.isLoggedIn) {
+  if (authorized) {
     options.headers['Authorization'] = 'Bearer ' + this._access_token;
   }
 
@@ -124,10 +126,12 @@ API.prototype.request = function (method, endpoint, data) {
     return encoded;
   };
 
-  if (method === 'GET') {
-    url += '?' + encodeFormData(data);
-  } else {
-    options.body = JSON.stringify(data);
+  if (data) {
+    if (method === 'GET') {
+      url += '?' + encodeFormData(data);
+    } else {
+      options.body = JSON.stringify(data);
+    }
   }
 
   options.method = method;

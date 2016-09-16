@@ -56,6 +56,7 @@
     "coffee-script": "~1.8.0",
     "coffeeify": "^1.0.0",
     "eslint": "2.*",
+    "fetch-mock": "^5.1.2",
     "git-changelog": "1.0.*",
     "grunt": "^0.4.5",
     "grunt-browserify": "5.0.*",
@@ -91,7 +92,7 @@
       "Audio"
     ]
   },
-  "engines" : {
-    "node" : "5.8"
+  "engines": {
+    "node": "5.8"
   }
 }
