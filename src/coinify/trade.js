@@ -209,13 +209,13 @@ CoinifyTrade.prototype.set = function (obj) {
   return this;
 };
 
-CoinifyTrade.prototype.cancel = function (trades) {
+CoinifyTrade.prototype.cancel = function () {
   var self = this;
 
   var processCancel = function (trade) {
     self._state = trade.state;
 
-    self._coinifyDelegate.releaseReceiveAddress(self, trades);
+    self._coinifyDelegate.releaseReceiveAddress(self, self._coinify.trades);
 
     return self._coinify.save();
   };
