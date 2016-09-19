@@ -131,7 +131,7 @@ Quote.prototype.getPaymentMethods = function () {
       self.paymentMethods[paymentMethod.inMedium] = paymentMethod;
       paymentMethod.calculateFee.bind(paymentMethod)(self);
     }
-    return paymentMethods;
+    return self.paymentMethods;
   };
 
   if (this.paymentMethods) {
