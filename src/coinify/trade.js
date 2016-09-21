@@ -253,7 +253,7 @@ CoinifyTrade.prototype.btcExpected = function () {
       return Promise.resolve(this.outAmountExpected);
     }
 
-    var oneMinuteAgo = new Date(new Date().getTime() - 15 * 60 * 1000);
+    var oneMinuteAgo = new Date(new Date().getTime() - 60 * 1000);
     if (this.quoteExpireTime > new Date()) {
       // Quoted price still valid
       return Promise.resolve(this.outAmountExpected);
