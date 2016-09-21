@@ -148,13 +148,15 @@ Helpers.asyncOnce = function (f, milliseconds, before) {
   };
 };
 
-Helpers.exponentialBackoff = function (f) {
+Helpers.exponentialBackoff = function (f, maxTime) {
+  maxTime = maxTime || Infinity;
   var timer;
   var run = function (e) {
+    var nextTime = Math.pow(2, e) * 1000;
     timer = setTimeout(function () {
       f.call(f);
       run(e + 1);
-    }, Math.pow(2, e) * 1000);
+    }, nextTime > maxTime ? maxTime : nextTime);
   };
   run(0);
   return function () {
