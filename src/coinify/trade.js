@@ -40,6 +40,12 @@ Object.defineProperties(CoinifyTrade.prototype, {
       return this._iSignThisID;
     }
   },
+  'quoteExpireTime': {
+    configurable: false,
+    get: function () {
+      return this._quoteExpireTime;
+    }
+  },
   'bankAccount': {
     configurable: false,
     get: function () {
@@ -150,6 +156,7 @@ Object.defineProperties(CoinifyTrade.prototype, {
 
 CoinifyTrade.prototype.set = function (obj) {
   this._createdAt = new Date(obj.createTime);
+  this._quoteExpireTime = new Date(obj.quoteExpireTime);
   if ([
     'awaiting_transfer_in',
     'processing',
@@ -260,12 +267,9 @@ CoinifyTrade.prototype.btcExpected = function () {
       return Promise.resolve(this.outAmountExpected);
     }
 
-    var fifteenMinutesAgo = new Date(new Date().getTime() - 15 * 60 * 1000);
-    var oneMinuteAgo = new Date(new Date().getTime() - 15 * 60 * 1000);
-    if (this.createdAt > fifteenMinutesAgo) {
+    var oneMinuteAgo = new Date(new Date().getTime() - 60 * 1000);
+    if (this.quoteExpireTime > new Date()) {
       // Quoted price still valid
-      // Note: trade creation date + 15 mins != quote expiration date
-      // TODO: Coinify adds quote expiration to trade object
       return Promise.resolve(this.outAmountExpected);
     } else {
       // Estimate BTC expected based on current exchange rate:
@@ -297,11 +301,7 @@ CoinifyTrade.prototype.fakeBankTransfer = function () {
 
 // QA tool:
 CoinifyTrade.prototype.expireQuote = function () {
-  if (this.inAmount !== -this._coinify._lastQuote.baseAmount) {
-    console.log("Can't find corresponding quote.");
-  } else {
-    this._coinify._lastQuote.expire();
-  }
+  this._quoteExpireTime = new Date(new Date().getTime() + 3000);
 };
 
 CoinifyTrade.buy = function (quote, medium, api, coinifyDelegate, trades, coinify) {
