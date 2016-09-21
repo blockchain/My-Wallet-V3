@@ -9,6 +9,16 @@ function ExchangeDelegate (wallet) {
   this._wallet = wallet;
 }
 
+Object.defineProperties(ExchangeDelegate.prototype, {
+  'debug': {
+    configurable: false,
+    get: function () { return this._debug; },
+    set: function (value) {
+      this._debug = Boolean(value);
+    }
+  }
+});
+
 ExchangeDelegate.prototype.email = function () {
   return this._wallet.accountInfo.email;
 };
@@ -41,6 +51,9 @@ ExchangeDelegate.prototype.monitorAddress = function (address, callback) {
       if (data['out']) {
         for (var i = 0; i < data['out'].length; i++) {
           if (data['out'][i].addr === address) {
+            if (this.debug) {
+              console.info('Transaction ' + data['hash'] + ' detected on address ' + address);
+            }
             callback(data['hash'], data['out'][i].value);
           }
         }

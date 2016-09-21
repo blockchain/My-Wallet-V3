@@ -69,7 +69,9 @@ function Coinify (object, parent, delegate) {
   this._trades = [];
   if (obj.trades) {
     for (var i = 0; i < obj.trades.length; i++) {
-      this._trades.push(new CoinifyTrade(obj.trades[i], this._api, this.delegate, this));
+      var trade = new CoinifyTrade(obj.trades[i], this._api, this.delegate, this);
+      trade.debug = this._debug;
+      this._trades.push(trade);
     }
   }
 
@@ -79,11 +81,21 @@ function Coinify (object, parent, delegate) {
 }
 
 Object.defineProperties(Coinify.prototype, {
+  'debug': {
+    configurable: false,
+    get: function () { return this._debug; },
+    set: function (value) {
+      this._debug = Boolean(value);
+    }
+  },
   'delegate': {
     configurable: false,
     get: function () { return this._delegate; },
     set: function (value) {
       this._delegate = value;
+      if (this._delegate) {
+        this._delegate.debug = this._debug;
+      }
     }
   },
   'user': {
@@ -245,6 +257,7 @@ Coinify.prototype.buy = function (amount, baseCurrency, medium) {
   assert(medium === 'bank' || medium === 'card', 'Specify bank or card');
 
   var addTrade = function (trade) {
+    trade.debug = this._debug;
     this._trades.push(trade);
     return this.save().then(function () { return trade; });
   };
@@ -266,11 +279,13 @@ Coinify.prototype.updateList = function (list, items, ListClass) {
     for (var k = 0; k < list.length; k++) {
       if (list[k]._id === items[i].id) {
         item = list[k];
+        item.debug = this.debug;
         item.set.bind(item)(items[i]);
       }
     }
     if (item === undefined) {
       item = new ListClass(items[i], this._api, this.delegate, this);
+      item.debug = this.debug;
       list.push(item);
     }
   }
