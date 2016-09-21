@@ -320,6 +320,10 @@ CoinifyTrade.fetchAll = function (api) {
   return api.authGET('trades');
 };
 
+CoinifyTrade.prototype.self = function () {
+  return this;
+};
+
 CoinifyTrade.prototype.process = function (trades) {
   if (['rejected', 'cancelled', 'expired'].indexOf(this.state) > -1) {
     this._coinifyDelegate.releaseReceiveAddress(this, trades);
@@ -329,7 +333,8 @@ CoinifyTrade.prototype.process = function (trades) {
 CoinifyTrade.prototype.refresh = function () {
   return this._api.authGET('trades/' + this._id)
           .then(this.set.bind(this))
-          .then(this._coinify.save.bind(this._coinify));
+          .then(this._coinify.save.bind(this._coinify))
+          .then(this.self.bind(this));
 };
 
 // Call this if the iSignThis iframe says the card is declined. It may take a

@@ -302,11 +302,20 @@ describe "CoinifyTrade", ->
 
 
       it "should save metadata", (done) ->
-        checks = (done) ->
+        checks = () ->
           expect(trade._coinify.save).toHaveBeenCalled()
 
         trade.set = () -> Promise.resolve(trade)
         spyOn(trade._coinify, "save").and.callThrough()
+        promise = trade.refresh().then(checks)
+
+        expect(promise).toBeResolved(done)
+
+      it "should resolve with trade object", (done) ->
+        checks = (res) ->
+          expect(res).toEqual(trade)
+
+        trade.set = () -> Promise.resolve(trade)
         promise = trade.refresh().then(checks)
 
         expect(promise).toBeResolved(done)
