@@ -313,22 +313,6 @@ describe "Coinify", ->
         c._lastQuote.expiresAt = new Date(new Date().getTime() - 100000)
         expect(() -> c.buy(1000, 'EUR', 'card')).toThrow()
 
-
-
-    describe 'getPaymentMethods()', ->
-      it 'should use PaymentMethod.fetchAll', ->
-        spyOn(PaymentMethod, "fetchAll").and.callThrough()
-
-        c.getPaymentMethods('EUR', 'BTC')
-
-        expect(PaymentMethod.fetchAll).toHaveBeenCalled()
-
-      it 'should require an in- and out currency', ->
-        spyOn(PaymentMethod, "fetchAll").and.callThrough()
-
-        expect(() -> c.getPaymentMethods()).toThrow()
-        expect(() -> c.getPaymentMethods('EUR')).toThrow()
-
     describe 'getBuyMethods()', ->
       beforeEach ->
         spyOn(PaymentMethod, 'fetchAll')

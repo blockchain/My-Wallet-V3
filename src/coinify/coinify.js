@@ -318,14 +318,6 @@ Coinify.prototype.getKYCs = function () {
                      .then(save.bind(this));
 };
 
-// DEPRECATED, used get[Buy/Sell]Methods() or quote.getPaymentMethods()
-Coinify.prototype.getPaymentMethods = function (inCurrency, outCurrency) {
-  console.warn('coinify.getPaymentMethods() is deprecated');
-  assert(inCurrency || outCurrency, 'In or out currency required');
-  assert(outCurrency, 'Out currency required');
-  return PaymentMethod.fetchAll(inCurrency, outCurrency, this._api);
-};
-
 Coinify.prototype.getBuyMethods = function () {
   return PaymentMethod.fetchAll(undefined, 'BTC', this._api);
 };
