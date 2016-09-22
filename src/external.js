@@ -35,7 +35,7 @@ External.prototype.fetch = function () {
     if (object !== null) {
       if (object.coinify) {
         var delegate = new ExchangeDelegate(this._wallet);
-        this._coinify = new Coinify(object.coinify, this, delegate);
+        this._coinify = new Coinify(object.coinify, delegate);
         delegate.trades = this._coinify.trades;
       }
     }
@@ -66,6 +66,6 @@ External.prototype.addCoinify = function () {
   assert(!this._coinify, 'Already added');
 
   var delegate = new ExchangeDelegate(this._wallet);
-  this._coinify = Coinify.new(this, delegate);
+  this._coinify = Coinify.new(delegate);
   delegate.trades = this._coinify.trades;
 };

@@ -64,7 +64,9 @@ CoinifyKYC.trigger = () ->
   Promise.resolve()
 
 ExchangeDelegate = () ->
-  {}
+  {
+    save: () -> Promise.resolve()
+  }
 
 stubs = {
   './api' : API,
@@ -92,46 +94,42 @@ describe "Coinify", ->
     describe "new Coinify()", ->
 
       it "should transform an Object to a Coinify", ->
-        c = new Coinify({auto_login: true}, {} ,{})
+        c = new Coinify({auto_login: true}, {})
         expect(c.constructor.name).toEqual("Coinify")
 
       it "should use fields", ->
-        c = new Coinify({auto_login: true}, {}, {})
+        c = new Coinify({auto_login: true}, {})
         expect(c._auto_login).toEqual(true)
 
       it "should require a delegate", ->
-        expect(() -> new Coinify({auto_login: true}, {})).toThrow()
+        expect(() -> new Coinify({auto_login: true})).toThrow()
 
       it "should deserialize trades", ->
         c = new Coinify({
           auto_login: true,
           trades: [{}]
-        }, {}, {})
+        }, {})
         expect(c.trades.length).toEqual(1)
 
 
     describe "Coinify.new()", ->
       it "sets autoLogin to true", ->
-        c = Coinify.new({},{})
+        c = Coinify.new({})
         expect(c._auto_login).toEqual(true)
 
       it "should require a delegate", ->
-        expect(() -> Coinify.new({})).toThrow()
+        expect(() -> Coinify.new()).toThrow()
 
   describe "instance", ->
     beforeEach ->
-      c = Coinify.new({}, {
+      c = Coinify.new({
         email: () -> "info@blockchain.com"
         isEmailVerified: () -> true
         getEmailToken: () -> "json-web-token"
+        save: () -> Promise.resolve()
       })
       c.partnerId = 18
-      c.save = () ->
-        Promise.resolve()
-      spyOn(c, "save").and.callThrough()
 
-      # Mock POST requests.
-      # TODO: simulate API errors, e.g. if email already registered
       spyOn(c._api, "POST").and.callFake((endpoint, data) ->
         if endpoint == "signup/trader"
           console.log("singup/trader")
@@ -149,27 +147,6 @@ describe "Coinify", ->
           Promise.reject("Unknown endpoint")
       )
 
-      # spyOn(c, "PATCH").and.callFake((endpoint, data) ->
-      #   handle = (resolve, reject) ->
-      #     if endpoint == "traders/me"
-      #       console.log(data)
-      #       resolve({
-      #         profile:
-      #           name: (data.profile && data.profile.name) || c._profile._full_name
-      #         defaultCurrency: data.defaultCurrency || c._profile._default_currency
-      #       })
-      #     else
-      #       reject("Unknown endpoint")
-      #   {
-      #     then: (resolve) ->
-      #       handle(resolve, (() ->))
-      #       {
-      #         catch: (reject) ->
-      #           handle((() ->), reject)
-      #       }
-      #   }
-      # )
-
     describe "Getter", ->
       describe "hasAccount", ->
         it "should use offline_token to see if user has account", ->
@@ -183,6 +160,7 @@ describe "Coinify", ->
 
       describe "autoLogin", ->
         beforeEach ->
+          spyOn(c.delegate, "save").and.callThrough()
 
         it "should update", ->
           c.autoLogin = false
@@ -190,7 +168,7 @@ describe "Coinify", ->
 
         it "should save", ->
           c.autoLogin = false
-          expect(c.save).toHaveBeenCalled()
+          expect(c.delegate.save).toHaveBeenCalled()
 
         it "should check the input", ->
           expect(() -> c.autoLogin = "1").toThrow()
@@ -201,7 +179,7 @@ describe "Coinify", ->
         offline_token: "token"
         auto_login: true
 
-      p  = new Coinify(obj, {}, {})
+      p  = new Coinify(obj, {})
 
       it 'should serialize the right fields', ->
         json = JSON.stringify(p, null, 2)
@@ -218,7 +196,7 @@ describe "Coinify", ->
 
       it 'should hold: fromJSON . toJSON = id', ->
         json = JSON.stringify(c, null, 2)
-        b = new Coinify(JSON.parse(json), {}, {})
+        b = new Coinify(JSON.parse(json), {})
         expect(json).toEqual(JSON.stringify(b, null, 2))
 
       it 'should not serialize non-expected fields', ->

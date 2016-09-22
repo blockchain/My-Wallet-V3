@@ -2,6 +2,7 @@
 
 /* To use this class, three things are needed:
 1 - a delegate object with functions that provide the following:
+      save() -> e.g. function () { return JSON.stringify(this._coinify); }
       email() -> String            : the users email address
       isEmailVerified() -> Boolean : whether the users email is verified
       getEmailToken() -> stringify : JSON web token {email: 'me@example.com'}
@@ -16,17 +17,11 @@
 
 2 - a Coinify parner identifier
 
-3 - a parent object with a save() method, e.g.:
-    var parent = {
-      save: function () { return JSON.stringify(this._coinify); }
-    }
-    var object = {user: 1, offline_token: 'token'};
-    var coinify = new Coinify(object, parent);
-    coinify.delegate = delegate;
-    coinify.partnerId = ...;
-    parent._coinify = coinify;
-    coinify.save()
-    // "{"user":1,"offline_token":"token"}"
+var object = {user: 1, offline_token: 'token'};
+var coinify = new Coinify(object, delegate);
+coinify.partnerId = ...;
+coinify.delegate.save.bind(coinify.delegate)()
+// "{"user":1,"offline_token":"token"}"
 */
 
 var CoinifyProfile = require('./profile');
@@ -49,11 +44,10 @@ var isString = function (str) {
 
 module.exports = Coinify;
 
-function Coinify (object, parent, delegate) {
+function Coinify (object, delegate) {
   assert(delegate, 'ExchangeDelegate required');
   this._delegate = delegate;
   var obj = object || {};
-  this._parent = parent; // parent this of external (for save)
   this._partner_id = null;
   this._user = obj.user;
   this._auto_login = obj.auto_login;
@@ -111,7 +105,7 @@ Object.defineProperties(Coinify.prototype, {
         'Boolean'
       );
       this._auto_login = value;
-      this.save();
+      this.delegate.save.bind(this.delegate)();
     }
   },
   'profile': {
@@ -175,9 +169,6 @@ Coinify.prototype.toJSON = function () {
 
   return coinify;
 };
-Coinify.prototype.save = function () {
-  return this._parent.save();
-};
 // Country and default currency must be set
 // Email must be set and verified
 Coinify.prototype.signup = function (countryCode, currencyCode) {
@@ -221,7 +212,7 @@ Coinify.prototype.signup = function (countryCode, currencyCode) {
     this._user = res.trader.id;
     this._offlineToken = res.offlineToken;
     this._api._offlineToken = this._offlineToken;
-    return this.save().then(function () { return res; });
+    return this._delegate.save.bind(this._delegate)().then(function () { return res; });
   };
 
   return Promise.resolve().then(runChecks.bind(this))
@@ -260,7 +251,7 @@ Coinify.prototype.buy = function (amount, baseCurrency, medium) {
   var addTrade = function (trade) {
     trade.debug = this._debug;
     this._trades.push(trade);
-    return this.save().then(function () { return trade; });
+    return this.delegate.save.bind(this.delegate)().then(function () { return trade; });
   };
 
   return CoinifyTrade.buy(
@@ -294,7 +285,7 @@ Coinify.prototype.updateList = function (list, items, ListClass) {
 Coinify.prototype.getTrades = function () {
   var self = this;
   var save = function () {
-    return this.save().then(function () { return self._trades; });
+    return this.delegate.save.bind(this.delegate)().then(function () { return self._trades; });
   };
   var update = function (trades) {
     this.updateList(this._trades, trades, CoinifyTrade);
@@ -323,7 +314,7 @@ Coinify.prototype.triggerKYC = function () {
 Coinify.prototype.getKYCs = function () {
   var self = this;
   var save = function () {
-    return this.save().then(function () { return self._kycs; });
+    return this.delegate.save.bind(this.delegate)().then(function () { return self._kycs; });
   };
   var update = function (kycs) {
     this.updateList(this._kycs, kycs, CoinifyKYC);
@@ -378,14 +369,14 @@ Coinify.prototype.getSellCurrencies = function () {
 };
 
 Coinify.prototype.monitorPayments = function () {
-  CoinifyTrade.monitorPayments(this._trades, this);
+  CoinifyTrade.monitorPayments(this._trades, this.delegate);
 };
 
-Coinify.new = function (parent, delegate) {
+Coinify.new = function (delegate) {
   assert(delegate, 'Coinify.new requires delegate');
   var object = {
     auto_login: true
   };
-  var coinify = new Coinify(object, parent, delegate);
+  var coinify = new Coinify(object, delegate);
   return coinify;
 };

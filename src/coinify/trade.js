@@ -4,18 +4,16 @@ var assert = require('assert');
 
 var BankAccount = require('./bank-account');
 var Helpers = require('./helpers');
+var Quote = require('./quote');
 
 module.exports = CoinifyTrade;
 
-function CoinifyTrade (obj, api, coinifyDelegate, coinify) {
-  // TODO: remove dependency on 'coinify'
+function CoinifyTrade (obj, api, coinifyDelegate) {
   assert(obj, 'JSON missing');
   assert(api, 'Coinify API missing');
   assert(coinifyDelegate, 'coinifyDelegate missing');
-  assert(coinify, 'Reference to Coinify missing');
   this._coinifyDelegate = coinifyDelegate;
   this._api = api;
-  this._coinify = coinify; // TODO: avoid this reference
   this._id = obj.id;
   this.set(obj);
 }
@@ -235,7 +233,7 @@ CoinifyTrade.prototype.cancel = function () {
 
     self._coinifyDelegate.releaseReceiveAddress(self);
 
-    return self._coinify.save();
+    return self._coinifyDelegate.save.bind(self._coinifyDelegate)();
   };
 
   return self._api.authPATCH('trades/' + self._id + '/cancel').then(processCancel);
@@ -281,7 +279,7 @@ CoinifyTrade.prototype.btcExpected = function () {
           self._lastBtcExpectedGuessAt = new Date();
           return self._lastBtcExpectedGuess;
         };
-        return this._coinify.getBuyQuote(this.inAmount, this.inCurrency).then(processQuote);
+        return Quote.getQuote(this._api, -this.inAmount, this.inCurrency).then(processQuote);
       }
     }
   } else {
@@ -304,7 +302,7 @@ CoinifyTrade.prototype.expireQuote = function () {
   this._quoteExpireTime = new Date(new Date().getTime() + 3000);
 };
 
-CoinifyTrade.buy = function (quote, medium, api, coinifyDelegate, coinify, debug) {
+CoinifyTrade.buy = function (quote, medium, api, coinifyDelegate, debug) {
   assert(quote, 'Quote required');
 
   if (debug) {
@@ -313,7 +311,7 @@ CoinifyTrade.buy = function (quote, medium, api, coinifyDelegate, coinify, debug
   var reservation = coinifyDelegate.reserveReceiveAddress();
 
   var processTrade = function (res) {
-    var trade = new CoinifyTrade(res, api, coinifyDelegate, coinify);
+    var trade = new CoinifyTrade(res, api, coinifyDelegate);
     trade.debug = debug;
     if (debug) {
       console.info('Commit receive address for new trade');
@@ -368,7 +366,7 @@ CoinifyTrade.prototype.refresh = function () {
   }
   return this._api.authGET('trades/' + this._id)
           .then(this.set.bind(this))
-          .then(this._coinify.save.bind(this._coinify))
+          .then(this._coinifyDelegate.save.bind(this._coinifyDelegate))
           .then(this.self.bind(this));
 };
 
@@ -389,7 +387,7 @@ CoinifyTrade.prototype._monitorAddress = function () {
     var resolve = function () {
       self._watchAddressResolve && self._watchAddressResolve(amount);
     };
-    self._coinify.save.bind(self._coinify)().then(resolve);
+    self._coinifyDelegate.save.bind(self._coinifyDelegate)().then(resolve);
   };
 
   self._coinifyDelegate.monitorAddress(self.receiveAddress, function (hash, amount) {
@@ -438,7 +436,9 @@ CoinifyTrade.prototype._monitorAddress = function () {
   });
 };
 
-CoinifyTrade._checkOnce = function (unfilteredTrades, tradeFilter, coinify) {
+CoinifyTrade._checkOnce = function (unfilteredTrades, tradeFilter, coinifyDelegate) {
+  assert(coinifyDelegate, '_checkOnce needs delegate');
+
   var getReceiveAddress = function (obj) { return obj.receiveAddress; };
 
   var trades = unfilteredTrades.filter(tradeFilter);
@@ -452,18 +452,15 @@ CoinifyTrade._checkOnce = function (unfilteredTrades, tradeFilter, coinify) {
   var promises = [];
 
   for (var i = 0; i < trades.length; i++) {
-    promises.push(CoinifyTrade._getTransactionHash(trades[i]));
+    promises.push(CoinifyTrade._getTransactionHash(trades[i], coinifyDelegate));
   }
 
-  var save = function () {
-    coinify.save.bind(coinify)();
-  };
-
-  return Promise.all(promises).then(save);
+  return Promise.all(promises).then(coinifyDelegate.save.bind(coinifyDelegate));
 };
 
-CoinifyTrade._getTransactionHash = function (trade) {
-  return trade._coinify.delegate.checkAddress(trade.receiveAddress)
+CoinifyTrade._getTransactionHash = function (trade, coinifyDelegate) {
+  assert(coinifyDelegate, '_getTransactionHash needs delegate');
+  return coinifyDelegate.checkAddress(trade.receiveAddress)
     .then(function (tx) {
       if (tx) {
         if (trade.state === 'completed_test' && !trade._txHash) {
@@ -497,8 +494,9 @@ CoinifyTrade._monitorWebSockets = function (unfilteredTrades, tradeFilter) {
 };
 
 // Monitor the receive addresses for pending and completed trades.
-// TODO: avoid using coinify reference
-CoinifyTrade.monitorPayments = function (trades, coinify) {
+CoinifyTrade.monitorPayments = function (trades, coinifyDelegate) {
+  assert(coinifyDelegate, '_monitorPayments needs delegate');
+
   var tradeFilter = function (trade) {
     return [
       'awaiting_transfer_in',
@@ -509,7 +507,7 @@ CoinifyTrade.monitorPayments = function (trades, coinify) {
     ].indexOf(trade.state) > -1 && !trade.confirmed;
   };
 
-  CoinifyTrade._checkOnce(trades, tradeFilter, coinify).then(function () {
+  CoinifyTrade._checkOnce(trades, tradeFilter, coinifyDelegate).then(function () {
     CoinifyTrade._monitorWebSockets(trades, tradeFilter);
   });
 };
@@ -523,7 +521,7 @@ CoinifyTrade.prototype.toJSON = function () {
     is_buy: this.isBuy
   };
 
-  this._coinify.delegate.serializeExtraFields(serialized, this);
+  this._coinifyDelegate.serializeExtraFields(serialized, this);
 
   return serialized;
 };

@@ -28,6 +28,10 @@ Object.defineProperties(ExchangeDelegate.prototype, {
   }
 });
 
+ExchangeDelegate.prototype.save = function () {
+  return this._wallet.external.save();
+};
+
 ExchangeDelegate.prototype.email = function () {
   return this._wallet.accountInfo.email;
 };
