@@ -16,15 +16,23 @@ Metadata = (n) ->
   }
 
 Coinify = (obj) ->
+  if !obj.trades
+    obj.trades = []
   return obj
 
-Coinify.new = () ->
+ExchangeDelegate = () ->
   {}
+
+Coinify.new = () ->
+  {
+    trades: []
+  }
 
 stubs = {
   './wallet': MyWallet,
   './coinify/coinify' : Coinify,
-  './metadata' : Metadata
+  './metadata' : Metadata,
+  './exchange-delegate' : ExchangeDelegate
 }
 
 External    = proxyquire('../src/external', stubs)

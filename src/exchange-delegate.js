@@ -2,10 +2,12 @@ var API = require('./api');
 var WalletStore = require('./wallet-store');
 var TX = require('./wallet-transaction');
 var Helpers = require('./helpers');
+var assert = require('assert');
 
 module.exports = ExchangeDelegate;
 
 function ExchangeDelegate (wallet) {
+  assert(wallet, 'BlockchainWallet expected');
   this._wallet = wallet;
 }
 
@@ -16,8 +18,19 @@ Object.defineProperties(ExchangeDelegate.prototype, {
     set: function (value) {
       this._debug = Boolean(value);
     }
+  },
+  'trades': {
+    configurable: false,
+    get: function () { return this._trades; },
+    set: function (value) {
+      this._trades = value;
+    }
   }
 });
+
+ExchangeDelegate.prototype.save = function () {
+  return this._wallet.external.save();
+};
 
 ExchangeDelegate.prototype.email = function () {
   return this._wallet.accountInfo.email;
@@ -46,12 +59,13 @@ ExchangeDelegate.prototype.getEmailToken = function () {
 };
 
 ExchangeDelegate.prototype.monitorAddress = function (address, callback) {
+  var self = this;
   WalletStore.addEventListener(function (event, data) {
     if (event === 'on_tx_received') {
       if (data['out']) {
         for (var i = 0; i < data['out'].length; i++) {
           if (data['out'][i].addr === address) {
-            if (this.debug) {
+            if (self.debug) {
               console.info('Transaction ' + data['hash'] + ' detected on address ' + address);
             }
             callback(data['hash'], data['out'][i].value);
@@ -78,9 +92,12 @@ ExchangeDelegate.prototype.getReceiveAddress = function (trade) {
   }
 };
 
-ExchangeDelegate.prototype.reserveReceiveAddress = function (trades) {
+ExchangeDelegate.prototype.reserveReceiveAddress = function () {
+  assert(this._trades, 'delegate.trades array should be set for reserveReceiveAddress');
   var account = this._wallet.hdwallet.defaultAccount;
   var receiveAddressIndex = account.receiveIndex;
+
+  var self = this;
 
   // Respect the GAP limit:
   if (receiveAddressIndex - account.lastUsedReceiveIndex >= 19) {
@@ -91,7 +108,7 @@ ExchangeDelegate.prototype.reserveReceiveAddress = function (trades) {
   var receiveAddress = account.receiveAddressAtIndex(receiveAddressIndex);
 
   function findLastExchangeIndex (currentReceiveIndex) {
-    var receiveIndexes = trades.map(Helpers.pluck('_receive_index'));
+    var receiveIndexes = self._trades.map(Helpers.pluck('_receive_index'));
     var index = currentReceiveIndex;
     for (var i = index - 1; i > index - 20; i--) {
       if (receiveIndexes.filter(Helpers.eq(i)).length > 0) return i;
@@ -101,11 +118,16 @@ ExchangeDelegate.prototype.reserveReceiveAddress = function (trades) {
 
   function commitAddressLabel (trade) {
     var labelBase = 'Coinify order';
-    var ids = trades
+    var ids = self._trades
       .filter(Helpers.propEq('receiveAddress', receiveAddress))
       .map(Helpers.pluck('id')).concat(trade.id);
 
-    account.setLabelForReceivingAddress(receiveAddressIndex, labelBase + ' #' + ids.join(', #'));
+    var label = labelBase + ' #' + ids.join(', #');
+    if (self.debug) {
+      console.info('Set label for receive index', receiveAddressIndex, label);
+    }
+
+    account.setLabelForReceivingAddress(receiveAddressIndex, label);
     trade._account_index = account.index;
     trade._receive_index = receiveAddressIndex;
   }
@@ -116,19 +138,31 @@ ExchangeDelegate.prototype.reserveReceiveAddress = function (trades) {
   };
 };
 
-ExchangeDelegate.prototype.releaseReceiveAddress = function (trade, trades) {
+ExchangeDelegate.prototype.releaseReceiveAddress = function (trade) {
+  assert(this._trades, 'delegate.trades array should be set for releaseReceiveAddress');
   var labelBase = 'Coinify order';
   if (Helpers.isPositiveInteger(trade._account_index) && Helpers.isPositiveInteger(trade._receive_index)) {
     var account = this._wallet.hdwallet.accounts[trade._account_index];
 
-    var ids = trades
+    var ids = this._trades
       .filter(Helpers.propEq('receiveAddress', trade.receiveAddress))
       .map(Helpers.pluck('id'))
       .filter(Helpers.notEq(trade.id));
 
-    Helpers.isEmptyArray(ids)
-      ? account.removeLabelForReceivingAddress(trade._receive_index)
-      : account.setLabelForReceivingAddress(trade._receive_index, labelBase + ' #' + ids.join(', #'));
+    var self = this;
+
+    if (Helpers.isEmptyArray(ids)) {
+      if (self.debug) {
+        console.info('Remove label for receive index', trade._receive_index);
+      }
+      account.removeLabelForReceivingAddress(trade._receive_index);
+    } else {
+      var label = labelBase + ' #' + ids.join(', #');
+      if (self.debug) {
+        console.info('Rename label for receive index', trade._receive_index, label);
+      }
+      account.setLabelForReceivingAddress(trade._receive_index, label);
+    }
   }
 };
 

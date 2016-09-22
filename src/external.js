@@ -12,7 +12,7 @@ module.exports = External;
 function External (wallet) {
   this._metadata = new Metadata(METADATA_TYPE_EXTERNAL);
   this._coinify = undefined;
-  this._delegate = new ExchangeDelegate(wallet);
+  this._wallet = wallet;
 }
 
 Object.defineProperties(External.prototype, {
@@ -33,7 +33,11 @@ External.prototype.fetch = function () {
   var Populate = function (object) {
     this.loaded = true;
     if (object !== null) {
-      this._coinify = object.coinify ? new Coinify(object.coinify, this, this._delegate) : undefined;
+      if (object.coinify) {
+        var delegate = new ExchangeDelegate(this._wallet);
+        this._coinify = new Coinify(object.coinify, delegate);
+        delegate.trades = this._coinify.trades;
+      }
     }
     return this;
   };
@@ -60,5 +64,8 @@ External.prototype.wipe = function () {
 
 External.prototype.addCoinify = function () {
   assert(!this._coinify, 'Already added');
-  this._coinify = Coinify.new(this, this._delegate);
+
+  var delegate = new ExchangeDelegate(this._wallet);
+  this._coinify = Coinify.new(delegate);
+  delegate.trades = this._coinify.trades;
 };
