@@ -21,7 +21,8 @@
       save: function () { return JSON.stringify(this._coinify); }
     }
     var object = {user: 1, offline_token: 'token'};
-    var coinify = new Coinify(object, parent, delegate);
+    var coinify = new Coinify(object, parent);
+    coinify.delegate = delegate;
     coinify.partnerId = ...;
     parent._coinify = coinify;
     coinify.save()
@@ -49,9 +50,10 @@ var isString = function (str) {
 module.exports = Coinify;
 
 function Coinify (object, parent, delegate) {
+  assert(delegate, 'ExchangeDelegate required');
+  this._delegate = delegate;
   var obj = object || {};
   this._parent = parent; // parent this of external (for save)
-  this._delegate = delegate; // ExchangeDelegate
   this._partner_id = null;
   this._user = obj.user;
   this._auto_login = obj.auto_login;
@@ -69,7 +71,7 @@ function Coinify (object, parent, delegate) {
   this._trades = [];
   if (obj.trades) {
     for (var i = 0; i < obj.trades.length; i++) {
-      var trade = new CoinifyTrade(obj.trades[i], this._api, this.delegate, this);
+      var trade = new CoinifyTrade(obj.trades[i], this._api, delegate, this);
       trade.debug = this._debug;
       this._trades.push(trade);
     }
@@ -86,17 +88,15 @@ Object.defineProperties(Coinify.prototype, {
     get: function () { return this._debug; },
     set: function (value) {
       this._debug = Boolean(value);
+      this._delegate.debug = Boolean(value);
+      for (var i = 0; i < this.trades.length; i++) {
+        this.trades[i].debug = Boolean(value);
+      }
     }
   },
   'delegate': {
     configurable: false,
-    get: function () { return this._delegate; },
-    set: function (value) {
-      this._delegate = value;
-      if (this._delegate) {
-        this._delegate.debug = this._debug;
-      }
-    }
+    get: function () { return this._delegate; }
   },
   'user': {
     configurable: false,
@@ -250,6 +250,7 @@ Coinify.prototype.setLastQuote = function (quote) {
 };
 
 Coinify.prototype.buy = function (amount, baseCurrency, medium) {
+  assert(this.delegate, 'ExchangeDelegate required');
   assert(this._lastQuote !== null, 'You must first obtain a quote');
   assert(this._lastQuote.baseAmount === -amount, 'LAST_QUOTE_AMOUNT_DOES_NOT_MATCH');
   assert(this._lastQuote.baseCurrency === baseCurrency, 'Currency must match last quote');
@@ -267,7 +268,6 @@ Coinify.prototype.buy = function (amount, baseCurrency, medium) {
     medium,
     this._api,
     this.delegate,
-    this._trades,
     this
   ).then(addTrade.bind(this));
 };
@@ -382,6 +382,7 @@ Coinify.prototype.monitorPayments = function () {
 };
 
 Coinify.new = function (parent, delegate) {
+  assert(delegate, 'Coinify.new requires delegate');
   var object = {
     auto_login: true
   };

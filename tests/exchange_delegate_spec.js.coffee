@@ -83,10 +83,12 @@ describe "ExchangeDelegate", ->
 
   describe "instance", ->
     beforeEach ->
-      delegate = new ExchangeDelegate(MyWallet.wallet)
       trade = {
         _account_index: 0
       }
+      delegate = new ExchangeDelegate(MyWallet.wallet)
+      delegate.trades = [trade]
+
 
     describe "email()", ->
       it "should get the users email", ->
@@ -126,7 +128,8 @@ describe "ExchangeDelegate", ->
       it "should fail if gap limit", () ->
         MyWallet.wallet.hdwallet.accounts[0].receiveIndex = 19
         MyWallet.wallet.hdwallet.accounts[0].lastUsedReceiveIndex = 0
-        expect(() -> delegate.reserveReceiveAddress([])).toThrow(new Error('gap_limit'))
+        delegate.trades = []
+        expect(() -> delegate.reserveReceiveAddress()).toThrow(new Error('gap_limit'))
 
       describe ".commit()", ->
         account = undefined
@@ -138,13 +141,15 @@ describe "ExchangeDelegate", ->
           trade = { id: 1, _account_index: 0, _receive_index: 0 }
 
         it "should label the address", ->
-          reservation = delegate.reserveReceiveAddress([])
+          delegate.trades = []
+          reservation = delegate.reserveReceiveAddress()
           reservation.commit(trade)
           expect(account.getLabelForReceivingAddress(0)).toEqual("Coinify order #1")
 
         it "should append to existing label if at gap limit", ->
+          delegate.trades = [{ id: 0, _receive_index: 16, receiveAddress: '0-16', state: 'completed' }]
           account.receiveIndex = 19
-          reservation = delegate.reserveReceiveAddress([{ id: 0, _receive_index: 16, receiveAddress: '0-16', state: 'completed' }])
+          reservation = delegate.reserveReceiveAddress()
           reservation.commit(trade)
           expect(account.getLabelForReceivingAddress(16)).toEqual("Coinify order #0, #1")
 
@@ -154,16 +159,17 @@ describe "ExchangeDelegate", ->
       beforeEach ->
         account = MyWallet.wallet.hdwallet.accounts[0]
         account.receiveIndex = 1
-        trade = { id: 1, receiveAddress: '0-16', _account_index: 0, _receive_index: 0, }
+        trade = { id: 1, receiveAddress: '0-16', _account_index: 0, _receive_index: 0}
 
       it "should remove the label", ->
         account.labels[0] = "Coinify order #1"
-        delegate.releaseReceiveAddress(trade, [])
+        delegate.releaseReceiveAddress(trade)
         expect(account.labels[0]).not.toBeDefined()
 
       it "should remove one of multible ids in a label", ->
         account.labels[0] = "Coinify order #0, 1"
-        delegate.releaseReceiveAddress(trade, [{ id: 0, _receive_index: 16, receiveAddress: '0-16', state: 'completed' }])
+        delegate.trades =  [{ id: 0, _receive_index: 16, receiveAddress: '0-16', state: 'completed' }]
+        delegate.releaseReceiveAddress(trade)
         expect(account.labels[0]).toEqual("Coinify order #0")
 
     describe "checkAddress()", ->

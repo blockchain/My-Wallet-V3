@@ -63,13 +63,17 @@ CoinifyKYC.fetchAll = () ->
 CoinifyKYC.trigger = () ->
   Promise.resolve()
 
+ExchangeDelegate = () ->
+  {}
+
 stubs = {
   './api' : API,
   './quote'  : Quote,
   './payment-method' : PaymentMethod,
   './trade' : CoinifyTrade,
   './kyc' : CoinifyKYC,
-  './profile' : CoinifyProfile
+  './profile' : CoinifyProfile,
+  './exchange-delegate' : ExchangeDelegate
 }
 
 Coinify    = proxyquire('../../src/coinify/coinify', stubs)
@@ -88,39 +92,43 @@ describe "Coinify", ->
     describe "new Coinify()", ->
 
       it "should transform an Object to a Coinify", ->
-        c = new Coinify({auto_login: true})
+        c = new Coinify({auto_login: true}, {} ,{})
         expect(c.constructor.name).toEqual("Coinify")
 
       it "should use fields", ->
-        c = new Coinify({auto_login: true})
+        c = new Coinify({auto_login: true}, {}, {})
         expect(c._auto_login).toEqual(true)
+
+      it "should require a delegate", ->
+        expect(() -> new Coinify({auto_login: true}, {})).toThrow()
 
       it "should deserialize trades", ->
         c = new Coinify({
           auto_login: true,
           trades: [{}]
-        })
+        }, {}, {})
         expect(c.trades.length).toEqual(1)
 
 
     describe "Coinify.new()", ->
       it "sets autoLogin to true", ->
-        c = Coinify.new()
+        c = Coinify.new({},{})
         expect(c._auto_login).toEqual(true)
+
+      it "should require a delegate", ->
+        expect(() -> Coinify.new({})).toThrow()
 
   describe "instance", ->
     beforeEach ->
-      c = Coinify.new()
+      c = Coinify.new({}, {
+        email: () -> "info@blockchain.com"
+        isEmailVerified: () -> true
+        getEmailToken: () -> "json-web-token"
+      })
       c.partnerId = 18
       c.save = () ->
         Promise.resolve()
       spyOn(c, "save").and.callThrough()
-
-      c.delegate = {
-        email: () -> "info@blockchain.com"
-        isEmailVerified: () -> true
-        getEmailToken: () -> "json-web-token"
-      }
 
       # Mock POST requests.
       # TODO: simulate API errors, e.g. if email already registered
@@ -193,7 +201,7 @@ describe "Coinify", ->
         offline_token: "token"
         auto_login: true
 
-      p  = new Coinify(obj)
+      p  = new Coinify(obj, {}, {})
 
       it 'should serialize the right fields', ->
         json = JSON.stringify(p, null, 2)
@@ -210,7 +218,7 @@ describe "Coinify", ->
 
       it 'should hold: fromJSON . toJSON = id', ->
         json = JSON.stringify(c, null, 2)
-        b = new Coinify(JSON.parse(json))
+        b = new Coinify(JSON.parse(json), {}, {})
         expect(json).toEqual(JSON.stringify(b, null, 2))
 
       it 'should not serialize non-expected fields', ->

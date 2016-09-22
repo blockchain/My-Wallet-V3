@@ -233,7 +233,7 @@ CoinifyTrade.prototype.cancel = function () {
   var processCancel = function (trade) {
     self._state = trade.state;
 
-    self._coinifyDelegate.releaseReceiveAddress(self, self._coinify.trades);
+    self._coinifyDelegate.releaseReceiveAddress(self);
 
     return self._coinify.save();
   };
@@ -304,16 +304,31 @@ CoinifyTrade.prototype.expireQuote = function () {
   this._quoteExpireTime = new Date(new Date().getTime() + 3000);
 };
 
-CoinifyTrade.buy = function (quote, medium, api, coinifyDelegate, trades, coinify) {
+CoinifyTrade.buy = function (quote, medium, api, coinifyDelegate, coinify, debug) {
   assert(quote, 'Quote required');
 
-  var reservation = coinifyDelegate.reserveReceiveAddress(trades);
+  if (debug) {
+    console.info('Reserve receive address for new trade');
+  }
+  var reservation = coinifyDelegate.reserveReceiveAddress();
 
   var processTrade = function (res) {
     var trade = new CoinifyTrade(res, api, coinifyDelegate, coinify);
+    trade.debug = debug;
+    if (debug) {
+      console.info('Commit receive address for new trade');
+    }
     reservation.commit(trade);
+    if (debug) {
+      console.info('Monitor trade', trade.receiveAddress);
+    }
     trade._monitorAddress.bind(trade)();
     return trade;
+  };
+
+  var error = function (e) {
+    console.error(e);
+    return Promise.reject(e);
   };
 
   return api.authPOST('trades', {
@@ -327,7 +342,7 @@ CoinifyTrade.buy = function (quote, medium, api, coinifyDelegate, trades, coinif
         account: reservation.receiveAddress
       }
     }
-  }).then(processTrade);
+  }).then(processTrade).catch(error);
 };
 
 CoinifyTrade.fetchAll = function (api) {
@@ -338,12 +353,12 @@ CoinifyTrade.prototype.self = function () {
   return this;
 };
 
-CoinifyTrade.prototype.process = function (trades) {
+CoinifyTrade.prototype.process = function () {
   if (['rejected', 'cancelled', 'expired'].indexOf(this.state) > -1) {
     if (this.debug) {
       console.info('Check if address for ' + this.state + ' trade ' + this.id + ' can be released');
     }
-    this._coinifyDelegate.releaseReceiveAddress(this, trades);
+    this._coinifyDelegate.releaseReceiveAddress(this);
   }
 };
 
