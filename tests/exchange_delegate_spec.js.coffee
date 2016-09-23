@@ -53,7 +53,15 @@ API =
       else
         reject('bad call')
 
-WalletStore = {}
+eventListener = {
+  callback: null
+}
+
+WalletStore = {
+  addEventListener: (callback) ->
+    eventListener.callback = callback
+
+}
 
 TX = (tx) ->
   {
@@ -198,8 +206,44 @@ describe "ExchangeDelegate", ->
         expect(promise).toBeResolvedWith(jasmine.objectContaining({hash: 'hash', confirmations: 1}), done)
 
     describe "monitorAddress()", ->
-      it "...", ->
-        pending()
+      e =
+        callback: () ->
+
+      beforeEach ->
+        spyOn(e, 'callback')
+
+      it "should add an eventListener", ->
+        spyOn(WalletStore, "addEventListener")
+        delegate.monitorAddress()
+        expect(WalletStore.addEventListener).toHaveBeenCalled()
+
+      it "should callback if transaction happens on address", ->
+        delegate.monitorAddress("1abc", e.callback)
+
+        eventListener.callback('on_tx_received', {
+          out: [{
+            addr: "1abc"
+          }]
+        })
+
+        expect(e.callback).toHaveBeenCalled()
+
+      it "should callback if transaction happens on a different address", ->
+        e =
+          callback: () ->
+
+        spyOn(e, 'callback')
+
+        delegate.monitorAddress("1abc", e.callback)
+
+        eventListener.callback('on_tx_received', {
+          out: [{
+            addr: "1abcdef"
+          }]
+        })
+
+        expect(e.callback).not.toHaveBeenCalled()
+
 
     describe "serializeExtraFields()", ->
       it "should add receive account and index", ->
