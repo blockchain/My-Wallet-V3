@@ -10,7 +10,7 @@ coinify = undefined
 beforeEach ->
   o = {
     id: "id"
-    state: "state"
+    state: "pending"
     externalId: "externalId"
     createTime: "2016-07-07T12:10:19Z"
     updateTime: "2016-07-07T12:11:36Z"
@@ -99,10 +99,8 @@ describe "KYC", ->
       k = new CoinifyKYC(o, api, null, coinify)
 
     it "should have getters", ->
-
-      it "must put everything in place", ->
-        expect(k.id).toBe(o.id)
-        expect(k.state).toBe(o.state)
-        expect(k.iSignThisID).toBe(o.externalId)
-        expect(k.createTime).toBe(new Date(o.createTime))
-        expect(k.updateTime).toBe(new Date(o.updateTime))
+      expect(k.id).toBe(o.id)
+      expect(k.state).toBe(o.state)
+      expect(k.iSignThisID).toBe(o.externalId)
+      expect(k.createdAt).toEqual(new Date(o.createTime))
+      expect(k.updatedAt).toEqual(new Date(o.updateTime))

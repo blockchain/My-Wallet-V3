@@ -62,6 +62,13 @@ describe "CoinifyTrade", ->
         expect(t._iSignThisID).toBe(tradeJSON.transferIn.details.paymentId)
         expect(t._receiptUrl).toBe(tradeJSON.receiptUrl)
 
+      it "should warn if there is an unknown state type", ->
+        tradeJSON.state = "unknown"
+        spyOn(window.console, 'warn')
+        new CoinifyTrade(tradeJSON, api, {})
+        expect(window.console.warn).toHaveBeenCalled()
+        expect(window.console.warn.calls.argsFor(0)[1]).toEqual('unknown')
+
   describe "instance", ->
     profile = undefined
     trade   = undefined
