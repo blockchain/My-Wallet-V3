@@ -171,17 +171,44 @@ describe "API", ->
 
         it "should not login again if access token is valid", ->
           api.authGET('/trades')
+          api.authPOST('/trades')
+          api.authPATCH('/trades')
           expect(api.login).not.toHaveBeenCalled()
 
-        it "should refuse if no offline token is present", ->
+        it "should refuse if no offline token is present for GET", ->
           api._access_token = null
           api._offlineToken = null
           api.authGET('/trades')
+
           expect(api._request).not.toHaveBeenCalled()
 
-        it "should login first if access token is absent", ->
+        it "should refuse if no offline token is present for POST", ->
+          api._access_token = null
+          api._offlineToken = null
+          api.authPOST('/trades')
+
+          expect(api._request).not.toHaveBeenCalled()
+
+        it "should refuse if no offline token is present for PATCH", ->
+          api._access_token = null
+          api._offlineToken = null
+          api.authPATCH('/trades')
+
+          expect(api._request).not.toHaveBeenCalled()
+
+        it "should login first before GET if access token is absent", ->
           api._access_token = null
           api.authGET('/trades')
+          expect(api.login).toHaveBeenCalled()
+
+        it "should login first before POST if access token is absent", ->
+          api._access_token = null
+          api.authPOST('/trades')
+          expect(api.login).toHaveBeenCalled()
+
+        it "should login first before PATCH if access token is absent", ->
+          api._access_token = null
+          api.authPATCH('/trades')
           expect(api.login).toHaveBeenCalled()
 
         it "should login first if access token is expired", ->
