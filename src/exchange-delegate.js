@@ -65,6 +65,7 @@ ExchangeDelegate.prototype.monitorAddress = function (address, callback) {
       if (data['out']) {
         for (var i = 0; i < data['out'].length; i++) {
           if (data['out'][i].addr === address) {
+            /* istanbul ignore if */
             if (self.debug) {
               console.info('Transaction ' + data['hash'] + ' detected on address ' + address);
             }
@@ -123,6 +124,7 @@ ExchangeDelegate.prototype.reserveReceiveAddress = function () {
       .map(Helpers.pluck('id')).concat(trade.id);
 
     var label = labelBase + ' #' + ids.join(', #');
+    /* istanbul ignore if */
     if (self.debug) {
       console.info('Set label for receive index', receiveAddressIndex, label);
     }
@@ -152,12 +154,14 @@ ExchangeDelegate.prototype.releaseReceiveAddress = function (trade) {
     var self = this;
 
     if (Helpers.isEmptyArray(ids)) {
+      /* istanbul ignore if */
       if (self.debug) {
         console.info('Remove label for receive index', trade._receive_index);
       }
       account.removeLabelForReceivingAddress(trade._receive_index);
     } else {
       var label = labelBase + ' #' + ids.join(', #');
+      /* istanbul ignore if */
       if (self.debug) {
         console.info('Rename label for receive index', trade._receive_index, label);
       }

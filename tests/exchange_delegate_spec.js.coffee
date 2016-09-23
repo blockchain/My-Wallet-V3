@@ -28,6 +28,8 @@ MyWallet = {
     accountInfo:
       email: 'info@blockchain.com'
       isEmailVerified: true
+    external:
+      save: () ->
   }
 }
 
@@ -89,6 +91,20 @@ describe "ExchangeDelegate", ->
       delegate = new ExchangeDelegate(MyWallet.wallet)
       delegate.trades = [trade]
 
+    describe "debug", ->
+      it "should set debug", ->
+        delegate.debug = true
+        expect(delegate.debug).toEqual(true)
+
+    describe "getters", ->
+      it "trades should be an array", ->
+        expect(delegate.trades.length).toBeDefined()
+
+    describe "save()", ->
+      it "should call save on external", ->
+        spyOn(MyWallet.wallet.external, "save")
+        delegate.save()
+        expect(MyWallet.wallet.external.save).toHaveBeenCalled()
 
     describe "email()", ->
       it "should get the users email", ->
