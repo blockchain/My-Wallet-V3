@@ -1,6 +1,10 @@
 proxyquire = require('proxyquireify')(require)
 
+Address = (obj) ->
+  {street: obj.street}
+
 stubs = {
+  './address' : Address
 }
 
 BankAccount    = proxyquire('../../src/coinify/bank-account', stubs)
@@ -12,10 +16,6 @@ beforeEach ->
 
   address = {
     street: "221B Baker Street"
-    city: "London"
-    state: "England"
-    zipcode: "NW1 6XE"
-    country: "United Kingdom"
   }
 
   o = {
@@ -54,6 +54,9 @@ describe "Coinify: Bank account", ->
 
       expect(b._bank_name).toBe(o.bank.name)
       expect(b._holder_name).toBe(o.holder.name)
+      expect(b._bank_address.street).toEqual(o.bank.address.street)
+      expect(b._holder_name).toBe(o.holder.name)
+      expect(b._holder_address.street).toEqual(o.holder.address.street)
       expect(b._referenceText).toBe(o.referenceText)
 
       expect(b._updated_at).toBe(o.updateTime)
@@ -71,5 +74,7 @@ describe "Coinify: Bank account", ->
       expect(b.number).toBe(o.account.number)
 
       expect(b.bankName).toBe(o.bank.name)
+      expect(b.bankAddress.street).toEqual(o.bank.address.street)
       expect(b.holderName).toBe(o.holder.name)
+      expect(b.holderAddress.street).toEqual(o.holder.address.street)
       expect(b.referenceText).toBe(o.referenceText)
