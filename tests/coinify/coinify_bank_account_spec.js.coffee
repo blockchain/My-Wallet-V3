@@ -27,7 +27,7 @@ beforeEach ->
       number: "number"
     }
     bank: {
-      name: "name"
+      name: "Banky McBankface"
       address: address
     }
     holder: {
@@ -58,3 +58,18 @@ describe "Coinify: Bank account", ->
 
       expect(b._updated_at).toBe(o.updateTime)
       expect(b._created_at).toBe(o.createTime)
+
+  describe "instance", ->
+    b = undefined
+    beforeEach ->
+      b = new BankAccount(o)
+
+    it "has getters", ->
+      expect(b.type).toBe(o.account.type)
+      expect(b.currency).toBe(o.account.currency)
+      expect(b.bic).toBe(o.account.bic)
+      expect(b.number).toBe(o.account.number)
+
+      expect(b.bankName).toBe(o.bank.name)
+      expect(b.holderName).toBe(o.holder.name)
+      expect(b.referenceText).toBe(o.referenceText)

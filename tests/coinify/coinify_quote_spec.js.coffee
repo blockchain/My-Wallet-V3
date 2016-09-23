@@ -1,7 +1,17 @@
 
 proxyquire = require('proxyquireify')(require)
 
+PaymentMethod = {
+  fetchAll: () -> Promise.resolve([
+    {
+      inMedium: 'bank'
+      calculateFee: this.prototype.calculateFee
+    }
+  ])
+}
+
 stubs = {
+  './payment-method' : PaymentMethod
 }
 
 Quote = proxyquire('../../src/coinify/quote', stubs)
@@ -34,17 +44,48 @@ describe "CoinifyQuote", ->
         expect(q._quoteAmount).toBe(obj.quoteAmount * 100000000)
         expect(q._id).toBe(obj.id)
 
-      it "must correctly round the fixed fee", ->
+      it "must correctly round the fixed fee, fiat to BTC", ->
         obj.baseAmount = 35.05 # 35.05 * 100 = 3504.9999999999995 in javascript
         obj.quoteAmount = 0.00003505
         q = new Quote(obj)
         expect(q.baseAmount).toEqual(3505)
         expect(q.quoteAmount).toEqual(3505)
 
+      it "must correctly round the fixed fee, BTC to fait", ->
+        obj.baseCurrency = "BTC"
+        obj.quoteCurrency = "EUR"
+        obj.baseAmount = 0.00003505
+        obj.quoteAmount = 35.05
+        q = new Quote(obj)
+        expect(q.baseAmount).toEqual(3505)
+        expect(q.quoteAmount).toEqual(3505)
+
     describe "getQuote()", ->
       coinify = {
-        POST: () -> Promise.resolve()
-        authPOST: () -> Promise.resolve()
+        POST: (endpoint, data) ->
+          console.log(endpoint, data)
+          if endpoint == 'trades/quote'
+            Promise.resolve(data)
+          else
+            Promise.reject()
+
+        authPOST: (endpoint, data) ->
+          console.log(endpoint, data)
+          if endpoint == 'trades/quote'
+            rate = undefined
+            if data.baseCurrency == 'BTC'
+              rate = 500
+            else
+              rate = 0.002
+
+            Promise.resolve({
+              baseCurrency: data.baseCurrency
+              quoteCurrency: data.quoteCurrency
+              baseAmount: data.baseAmount
+              quoteAmount: data.baseAmount * rate
+            })
+          else
+            Promise.reject()
       }
 
       beforeEach ->
@@ -74,6 +115,24 @@ describe "CoinifyQuote", ->
           Quote.getQuote(coinify, 100000000, 'BTC', 'EUR')
           expect(coinify.authPOST.calls.argsFor(0)[1].baseAmount).toEqual(1)
 
+        it "should check if the base currency is supported", ->
+          promise = Quote.getQuote(coinify, 100000000, 'XXX', 'BTC')
+          expect(promise).toBeRejected()
+
+        it "should check if the quote currency is supported", ->
+          promise = Quote.getQuote(coinify, 100000000, 'EUR', 'DOGE')
+          expect(promise).toBeRejected()
+
+        it "should resolve with the quote", (done) ->
+          checks = (res) ->
+            expect(res.quoteAmount).toEqual(50000)
+            done()
+
+          promise = Quote.getQuote(coinify, 100000000, 'BTC', 'EUR')
+                    .then(checks)
+
+          expect(promise).toBeResolved()
+
   describe "instance", ->
     describe "getters", ->
       it "should work", ->
@@ -85,5 +144,32 @@ describe "CoinifyQuote", ->
         expect(q.id).toBe(q._id)
 
     describe "getPaymentMethods", ->
-      it "...", ->
-        pending()
+      it "should cache the result", ->
+        q.paymentMethods = {}
+        spyOn(PaymentMethod, "fetchAll")
+        q.getPaymentMethods()
+        expect(PaymentMethod.fetchAll).not.toHaveBeenCalled()
+
+      it "should set .bank for the bank method", (done) ->
+        checks = (res) ->
+          expect(res.bank).toBeDefined()
+          done()
+
+        q.getPaymentMethods().then(checks)
+
+      it "should calculate fees", (done) ->
+        spyOn(PaymentMethod.prototype, "calculateFee").and.callFake(
+          () ->
+        )
+
+        checks = (res) ->
+          expect(PaymentMethod.prototype.calculateFee).toHaveBeenCalled()
+          done()
+
+        q.getPaymentMethods().then(checks)
+
+    describe "QA expire()", ->
+      it "should set expiration time to 3 seconds in the future", ->
+        originalExpiration = q.expiresAt
+        q.expire()
+        expect(q.expiresAt).not.toEqual(originalExpiration)

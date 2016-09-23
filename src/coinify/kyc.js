@@ -7,6 +7,7 @@ function CoinifyKYC (obj, api, delegate, coinify) {
   this._api = api;
   this._id = obj.id;
   this._createdAt = new Date(obj.createTime);
+  this._updatedAt = new Date(obj.updateTime);
   this.set(obj);
 }
 
@@ -14,14 +15,11 @@ CoinifyKYC.prototype.set = function (obj) {
   if ([
     'pending',
     'rejected',
-    'declined',
     'failed',
     'expired',
     'completed',
-    'completed_test',
-    'manualReviewing',
-    'manualHold',
-    'manualRejected'
+    'reviewing',
+    'documentsRequested'
   ].indexOf(obj.state) === -1) {
     console.warn('Unknown state:', obj.state);
   }

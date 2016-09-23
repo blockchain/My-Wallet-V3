@@ -12,6 +12,8 @@ beforeEach ->
     id: "id"
     state: "state"
     externalId: "externalId"
+    createTime: "2016-07-07T12:10:19Z"
+    updateTime: "2016-07-07T12:11:36Z"
   }
   JasminePromiseMatchers.install()
 
@@ -21,12 +23,20 @@ afterEach ->
 describe "KYC", ->
 
   describe "constructor", ->
+    api = {}
+
     it "must put everything in place", ->
-      api = {}
       k = new CoinifyKYC(o, api, null, coinify)
       expect(k._api).toBe(api)
       expect(k._id).toBe(o.id)
       expect(k._iSignThisID).toBe(o.externalId)
+
+    it "should warn if there is an unknown state type", ->
+      o.state = "unknown"
+      spyOn(window.console, 'warn')
+      new CoinifyKYC(o, api, null, coinify)
+      expect(window.console.warn).toHaveBeenCalled()
+      expect(window.console.warn.calls.argsFor(0)[1]).toEqual('unknown')
 
   describe "fetch all", ->
     it "should call authGET with the correct arguments ", (done) ->
@@ -81,3 +91,18 @@ describe "KYC", ->
         .then(testCalls)
         .then(done)
         .catch(console.log)
+
+  describe "instance", ->
+    k = undefined
+    beforeEach ->
+      api = {}
+      k = new CoinifyKYC(o, api, null, coinify)
+
+    it "should have getters", ->
+
+      it "must put everything in place", ->
+        expect(k.id).toBe(o.id)
+        expect(k.state).toBe(o.state)
+        expect(k.iSignThisID).toBe(o.externalId)
+        expect(k.createTime).toBe(new Date(o.createTime))
+        expect(k.updateTime).toBe(new Date(o.updateTime))

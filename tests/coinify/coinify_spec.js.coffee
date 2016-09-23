@@ -38,8 +38,8 @@ CoinifyTrade.fetchAll = () ->
     }
   ])
 CoinifyTrade.monitorPayments = () ->
-CoinifyTrade.buy = () ->
-  Promise.resolve()
+CoinifyTrade.buy = (quote) ->
+  Promise.resolve({amount: quote.baseAmount})
 
 CoinifyProfile = () ->
   fetch: () ->
@@ -129,6 +129,7 @@ describe "Coinify", ->
         save: () -> Promise.resolve()
       })
       c.partnerId = 18
+      c._debug = false
 
       spyOn(c._api, "POST").and.callFake((endpoint, data) ->
         if endpoint == "signup/trader"
@@ -172,6 +173,21 @@ describe "Coinify", ->
 
         it "should check the input", ->
           expect(() -> c.autoLogin = "1").toThrow()
+
+      describe "debug", ->
+        it "should set debug", ->
+          c.debug = true
+          expect(c.debug).toEqual(true)
+
+        it "should set debug flag on the delegate", ->
+          c._delegate = {debug: false}
+          c.debug = true
+          expect(c.delegate.debug).toEqual(true)
+
+        it "should set debug flag on trades", ->
+          c._trades = [{debug: false}]
+          c.debug = true
+          expect(c.trades[0].debug).toEqual(true)
 
     describe "JSON serializer", ->
       obj =
@@ -298,6 +314,24 @@ describe "Coinify", ->
       it 'should check for a quote that is still valid', ->
         c._lastQuote.expiresAt = new Date(new Date().getTime() - 100000)
         expect(() -> c.buy(1000, 'EUR', 'card')).toThrow()
+
+      it 'should return the trade', (done) ->
+        checks = (res) ->
+          expect(res).toEqual({amount: -1000, debug: false})
+          done()
+
+        promise = c.buy(1000, 'EUR', 'card').then(checks)
+        expect(promise).toBeResolved()
+
+      it "should save", (done) ->
+        spyOn(c.delegate, "save").and.callThrough()
+
+        checks = () ->
+          expect(c.delegate.save).toHaveBeenCalled()
+          done()
+
+        promise = c.buy(1000, 'EUR', 'card').then(checks)
+        expect(promise).toBeResolved()
 
     describe 'getBuyMethods()', ->
       beforeEach ->
