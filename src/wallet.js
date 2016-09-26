@@ -555,29 +555,22 @@ MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic
 };
 
 // used frontend and mywallet
-MyWallet.logout = function (force, beforeLogout) {
-  beforeLogout = beforeLogout || function () {};
-
+MyWallet.logout = function (sessionToken, force) {
   if (!force && WalletStore.isLogoutDisabled()) {
-    return Promise.reject('LOGOUT_PREVENTED');
+    return;
   }
 
   var reload = function () {
-    try {
-      window.location.reload();
-    } catch (e) {
+    try { window.location.reload(); } catch (e) {
       console.log(e);
     }
   };
-
-  WalletStore.sendEvent('logging_out');
-  return Promise.resolve(beforeLogout()).then(reload);
-};
-
-MyWallet.endSession = function (sessionToken) {
   var data = { format: 'plain' };
-  var headers = { sessionToken: sessionToken };
-  return API.request('GET', 'wallet/logout', data, headers);
+  WalletStore.sendEvent('logging_out');
+
+  var headers = {sessionToken: sessionToken};
+
+  API.request('GET', 'wallet/logout', data, headers).then(reload).catch(reload);
 };
 
 // In case of a non-mainstream browser, ensure it correctly implements the
