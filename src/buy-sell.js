@@ -5,6 +5,7 @@ module.exports = BuySell;
 function BuySell (wallet, debug) {
   this.debug = Boolean(debug);
 
+  /* istanbul ignore if */
   if (this.debug) {
     console.info('BuySell debug enabled');
   }
@@ -13,6 +14,7 @@ function BuySell (wallet, debug) {
 
   // Stop if 2nd password is enabled
   if (wallet.external === null) {
+    /* istanbul ignore if */
     if (this.debug) {
       console.info("2nd password enabled, don't initialize BuySell");
     }

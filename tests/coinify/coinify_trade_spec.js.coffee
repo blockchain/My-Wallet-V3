@@ -1,6 +1,16 @@
 proxyquire = require('proxyquireify')(require)
 
+BankAccount = () ->
+  {mock: "bank-account"}
+
+Quote = {
+  getQuote: (api, amount, currency) ->
+    Promise.resolve({quoteAmount: 0.071})
+}
+
 stubs = {
+  './bank-account' : BankAccount
+  './quote' : Quote
 }
 
 CoinifyTrade    = proxyquire('../../src/coinify/trade', stubs)
@@ -14,6 +24,8 @@ describe "CoinifyTrade", ->
 
 
   beforeEach ->
+    jasmine.clock().uninstall();
+    jasmine.clock().install()
 
     tradeJSON = {
       id: 1142
@@ -35,6 +47,8 @@ describe "CoinifyTrade", ->
       state: "awaiting_transfer_in"
       receiptUrl: "my url"
       createTime: "2016-08-26T14:53:26.650Z"
+      updateTime: "2016-08-26T14:54:00.000Z"
+      quoteExpireTime: "2016-08-26T15:10:00.000Z"
     }
 
     tradeJSON2 = JSON.parse(JSON.stringify(tradeJSON))
@@ -44,13 +58,17 @@ describe "CoinifyTrade", ->
 
   afterEach ->
     JasminePromiseMatchers.uninstall()
+    jasmine.clock().uninstall()
 
   describe "class", ->
     describe "new CoinifyTrade()", ->
+      delegate = {
+        getReceiveAddress: () ->
+      }
 
       it "should keep a reference to the API", ->
         api = {}
-        delegate = {}
+
         t = new CoinifyTrade(tradeJSON, api, delegate)
         expect(t._api).toBe(api)
         expect(t._id).toBe(tradeJSON.id)
@@ -65,9 +83,190 @@ describe "CoinifyTrade", ->
       it "should warn if there is an unknown state type", ->
         tradeJSON.state = "unknown"
         spyOn(window.console, 'warn')
-        new CoinifyTrade(tradeJSON, api, {})
+        new CoinifyTrade(tradeJSON, api, delegate)
         expect(window.console.warn).toHaveBeenCalled()
         expect(window.console.warn.calls.argsFor(0)[1]).toEqual('unknown')
+
+    describe "_checkOnce()", ->
+      _setTransactionHashCalled = undefined
+      trade = {}
+
+      beforeEach ->
+        spyOn(CoinifyTrade, '_setTransactionHash').and.callFake(() ->
+          _setTransactionHashCalled = true
+        )
+
+      it "should resolve immedidatley if there are no transactions", (done) ->
+        coinifyDelegate = {
+          save: () -> Promise.resolve()
+          getReceiveAddress: () ->
+        }
+
+        filter = () -> true
+
+        promise = CoinifyTrade._checkOnce([], filter, coinifyDelegate).catch(console.log)
+
+        expect(promise).toBeResolved(done)
+
+
+      it "should call _setTransactionHash", (done) ->
+        coinifyDelegate = {
+          save: () -> Promise.resolve()
+          getReceiveAddress: () ->
+        }
+
+        filter = () -> true
+
+        promise = CoinifyTrade._checkOnce([trade], filter, coinifyDelegate).catch(console.log)
+
+        expect(promise).toBeResolved(done)
+
+        expect(_setTransactionHashCalled).toEqual(true)
+
+    describe "filteredTrades", ->
+      it "should return transactions that might still receive payment", ->
+        trades  = [
+          {state: "awaiting_transfer_in"} # might receive payment
+          {state: "cancelled"} # will never receive payment
+        ]
+        expected = [
+          {state: "awaiting_transfer_in"},
+        ]
+        expect(CoinifyTrade.filteredTrades(trades)).toEqual(expected)
+
+    describe "_setTransactionHash", ->
+      trade = undefined
+      delegate = undefined
+      tx = {hash: 'tx-hash', confirmations: 0}
+
+      beforeEach ->
+        delegate =
+          checkAddress: (address) ->
+            Promise.resolve(tx)
+
+        trade = {
+          receiveAddress: "trade-address"
+          _coinifyDelegate: delegate
+          state: 'completed'
+          debug: true
+          _txHash: null
+        }
+
+      it "should ask the delegate if a transaction exists for the trade address", ->
+        spyOn(delegate, "checkAddress").and.callThrough()
+        CoinifyTrade._setTransactionHash(trade, delegate)
+        expect(delegate.checkAddress).toHaveBeenCalledWith('trade-address')
+
+      describe "for a test trade", ->
+        it "should set the hash if trade is completed", (done) ->
+          trade.state = 'completed_test'
+
+          checks = () ->
+            expect(trade._txHash).toEqual('tx-hash')
+            done()
+
+          CoinifyTrade._setTransactionHash(trade, delegate).then(checks)
+
+        it "should not override the hash if set earlier", (done) ->
+          trade.state = 'completed_test'
+          trade._txHash = 'tx-hash-before'
+
+          checks = () ->
+            expect(trade._txHash).toEqual('tx-hash-before')
+            done()
+
+          CoinifyTrade._setTransactionHash(trade, delegate).then(checks)
+
+      describe "for a real trade", ->
+        it "should set the hash if trade is completed", (done) ->
+          trade.state = 'completed'
+
+          checks = () ->
+            expect(trade._txHash).toEqual('tx-hash')
+            done()
+
+          CoinifyTrade._setTransactionHash(trade, delegate).then(checks)
+
+        it "should set the hash if trade is processing", (done) ->
+          trade.state = 'processing'
+
+          checks = () ->
+            expect(trade._txHash).toEqual('tx-hash')
+            done()
+
+          CoinifyTrade._setTransactionHash(trade, delegate).then(checks)
+
+        it "should not override the hash if set earlier", (done) ->
+          trade.state = 'completed'
+          trade._txHash = 'tx-hash-before'
+
+          checks = () ->
+            expect(trade._txHash).toEqual('tx-hash-before')
+            done()
+
+          CoinifyTrade._setTransactionHash(trade, delegate).then(checks)
+
+        it "should set the number of confirmations", (done) ->
+          trade.state = 'completed'
+
+          checks = () ->
+            expect(trade._confirmations).toEqual(0)
+            done()
+
+          CoinifyTrade._setTransactionHash(trade, delegate).then(checks)
+
+        it "should set _confirmed to true so it gets serialized", ->
+          trade.state = 'completed'
+          tx.confirmations = 6
+          trade.confirmed = true # mock getter, the real one checks trade._confirmations
+
+          checks = () ->
+            expect(trade._confirmed).toEqual(true)
+            done()
+
+          CoinifyTrade._setTransactionHash(trade, delegate).then(checks)
+
+    describe "_monitorWebSockets", ->
+      it "should call _monitorAddress() on each trade", ->
+        trades = [{
+          _monitorAddress: () ->
+        }]
+        spyOn(trades[0], "_monitorAddress")
+        filter = () -> true
+        CoinifyTrade._monitorWebSockets(trades, filter)
+        expect(trades[0]._monitorAddress).toHaveBeenCalled()
+
+    describe "monitorPayments", ->
+      delegate = {
+      }
+
+      trade1 = {
+        state: "cancelled"
+        delegate: delegate
+      }
+      trade2 = {
+        state: "awaiting_transfer_in"
+        delegate: delegate
+      }
+      trades = [trade1, trade2]
+
+
+      beforeEach ->
+        spyOn(CoinifyTrade, "_checkOnce").and.callFake(() ->
+          Promise.resolve()
+        )
+
+      it "should call _checkOnce with  trades", ->
+        CoinifyTrade.monitorPayments(trades, delegate)
+        expect(CoinifyTrade._checkOnce).toHaveBeenCalled()
+        expect(CoinifyTrade._checkOnce.calls.argsFor(0)[0]).toEqual(trades)
+
+      it "should call _monitorWebSockets with relevant trades", (done) ->
+        spyOn(CoinifyTrade , '_monitorWebSockets').and.callFake(() -> done())
+        CoinifyTrade.monitorPayments(trades, delegate)
+
+    describe "_monitorAddress", ->
+      it "pending", ->
 
   describe "instance", ->
     profile = undefined
@@ -95,6 +294,9 @@ describe "CoinifyTrade", ->
         releaseReceiveAddress: () ->
         commitReceiveAddress: () ->
         save: () -> Promise.resolve()
+        deserializeExtraFields: () ->
+        getReceiveAddress: () ->
+        serializeExtraFields: () ->
       }
 
       api = {
@@ -128,6 +330,125 @@ describe "CoinifyTrade", ->
       spyOn(api, "authPOST").and.callThrough()
       trade = new CoinifyTrade(tradeJSON, api, exchangeDelegate)
 
+    describe "getters", ->
+      it "should have some simple ones restored from trades JSON", ->
+        trade = new CoinifyTrade({
+          id: 1142
+          state: 'awaiting_transfer_in'
+          tx_hash: null
+          confirmed: false
+          is_buy: true
+        }, api, exchangeDelegate)
+
+        expect(trade.id).toEqual(1142)
+        expect(trade.state).toEqual('awaiting_transfer_in')
+        expect(trade.confirmed).toEqual(false)
+        expect(trade.isBuy).toEqual(true)
+        expect(trade.txHash).toEqual(null)
+
+      it "should have more simple ones loaded from API", ->
+        trade = new CoinifyTrade(tradeJSON, api, exchangeDelegate)
+        expect(trade.id).toEqual(1142)
+        expect(trade.iSignThisID).toEqual('05e18928-7b29-4b70-b29e-84cfe9fbc5ac')
+        expect(trade.quoteExpireTime).toEqual(new Date('2016-08-26T15:10:00.000Z'))
+        expect(trade.createdAt).toEqual(new Date('2016-08-26T14:53:26.650Z'))
+        expect(trade.updatedAt).toEqual(new Date('2016-08-26T14:54:00.000Z'))
+        expect(trade.inCurrency).toEqual('USD')
+        expect(trade.outCurrency).toEqual('BTC')
+        expect(trade.inAmount).toEqual(4000)
+        expect(trade.medium).toEqual('card')
+        expect(trade.state).toEqual('awaiting_transfer_in')
+        expect(trade.sendAmount).toEqual(0)
+        expect(trade.outAmount).toEqual(0)
+        expect(trade.outAmountExpected).toEqual(6454481)
+        expect(trade.receiptUrl).toEqual('my url')
+        expect(trade.receiveAddress).toEqual('19g1YFsoR5duHgTFcs4HKnjKHH7PgNqBJM')
+        expect(trade.bitcoinReceived).toEqual(false)
+        expect(trade.confirmed).toEqual(false)
+        expect(trade.isBuy).toEqual(true)
+        expect(trade.txHash).toEqual(null)
+
+      it "should have a bank account for a bank trade", ->
+        tradeJSON.transferIn = {
+          medium: "bank"
+          details: {} # Bank account details are mocked
+        }
+        trade = new CoinifyTrade(tradeJSON, api, exchangeDelegate)
+        expect(trade.bankAccount).toEqual({mock: "bank-account"})
+
+    describe "deserialize from trades JSON", ->
+      beforeEach ->
+        tradeJSON = {
+          id: 1142
+          state: 'awaiting_transfer_in'
+          tx_hash: 'hash'
+          confirmed: false
+          is_buy: true
+        }
+
+      it "should ask the delegate to deserialize extra fields", ->
+
+        spyOn(exchangeDelegate, "deserializeExtraFields")
+        new CoinifyTrade(tradeJSON, api, exchangeDelegate)
+        expect(exchangeDelegate.deserializeExtraFields).toHaveBeenCalled()
+
+      it "should pass in self, so delegate can set extra fields", ->
+        tradeJSON.extra = "test"
+        exchangeDelegate.deserializeExtraFields = (deserialized, t) ->
+          t.extra = deserialized.extra
+
+        trade = new CoinifyTrade(tradeJSON, api, exchangeDelegate)
+        expect(trade.extra).toEqual('test')
+
+    describe "serialize", ->
+      it "should store several fields", ->
+        trade._txHash = "hash"
+        expect(JSON.stringify(trade)).toEqual(JSON.stringify({
+          id: 1142
+          state: 'awaiting_transfer_in'
+          tx_hash: 'hash'
+          confirmed: false
+          is_buy: true
+        }))
+
+      it "should ask the delegate to store more fields", ->
+        spyOn(trade._coinifyDelegate, "serializeExtraFields")
+        JSON.stringify(trade)
+        expect(trade._coinifyDelegate.serializeExtraFields).toHaveBeenCalled()
+
+      it "should serialize any fields added by the delegate", ->
+        trade._coinifyDelegate.serializeExtraFields = (t) ->
+          t.extra_field = 'test'
+
+        s = JSON.stringify(trade)
+        expect(JSON.parse(s).extra_field).toEqual('test')
+
+    describe "debug", ->
+      it "can be set", ->
+        trade.debug = true
+        expect(trade.debug).toEqual(true)
+
+    describe "isBuy", ->
+      it "should equal _is_buy if set", ->
+        trade._is_buy = false
+        expect(trade.isBuy).toEqual(false)
+
+        trade._is_buy = true
+        expect(trade.isBuy).toEqual(true)
+
+      it "should default to true for older test wallets", ->
+        trade._is_buy = undefined
+        trade._outCurrency = undefined
+        expect(trade.isBuy).toEqual(true)
+
+      it "should be true if out currency is BTC", ->
+        trade._is_buy = undefined
+        trade._outCurrency = 'BTC'
+        expect(trade.isBuy).toEqual(true)
+
+        trade._outCurrency = 'EUR'
+        expect(trade.isBuy).toEqual(false)
+
     describe "set(obj)", ->
       it "set new object and does not change id or date", ->
         oldId = tradeJSON.id
@@ -139,11 +460,25 @@ describe "CoinifyTrade", ->
         expect(trade._createdAt).toEqual(oldTimeStamp)
         expect(trade._inCurrency).toBe(tradeJSON.inCurrency)
 
-      it "should round correctly", ->
+      it "should round correctly for buy", ->
         tradeJSON.inAmount = 35.05
         tradeJSON.transferIn.sendAmount  = 35.05
         tradeJSON.outAmount = 0.00003505
         tradeJSON.outAmountExpected = 0.00003505
+
+        trade.set(tradeJSON)
+        expect(trade.inAmount).toEqual(3505)
+        expect(trade.sendAmount).toEqual(3505)
+        expect(trade.outAmount).toEqual(3505)
+        expect(trade.outAmountExpected).toEqual(3505)
+
+      it "should round correctly for sell", ->
+        tradeJSON.inCurrency = 'BTC'
+        tradeJSON.outCurrency = 'EUR'
+        tradeJSON.inAmount = 0.00003505
+        tradeJSON.transferIn.sendAmount  = 0.00003505
+        tradeJSON.outAmount = 35.05
+        tradeJSON.outAmountExpected = 35.05
 
         trade.set(tradeJSON)
         expect(trade.inAmount).toEqual(3505)
@@ -184,7 +519,7 @@ describe "CoinifyTrade", ->
         expect(exchangeDelegate.releaseReceiveAddress).toHaveBeenCalled()
 
     describe "watchAddress()", ->
-      it "should return a promise with the total received", (done) ->
+      it "should set this._watchAddressResolve() and return promise with the total received", (done) ->
         testBitcoinReceived = (bit_rec) ->
           expect(bit_rec).toBe(1714)
 
@@ -195,32 +530,13 @@ describe "CoinifyTrade", ->
 
         trade._watchAddressResolve(1714)
 
-    describe "watchAddress()", ->
-      it "should listen the websocket", (done) ->
-        # not sure how to test this esoteric case full of sideeffects with the eventListener
-        pending()
-
-        # getBalanceAnswer = {
-        #   '19g1YFsoR5duHgTFcs4HKnjKHH7PgNqBJM': {
-        #     total_received: 0
-        #   }
-        # }
-        # spyOn(API, "getBalances").and.returnValue(Promise.resolve(getBalanceAnswer))
-        #
-        # testBitcoinReceived = (bit_rec) -> expect(bit_rec).toBe(1715)
-        #
-        # trade.watchAddress()
-        #   .then(testBitcoinReceived)
-        #   .catch(console.log)
-        #   .then(done)
-        #
-        # WalletStore.sendEvent('on_tx_received', {out: [{addr: '19g1YFsoR5duHgTFcs4HKnjKHH7PgNqBJM', value: 1715}]});
-
-
     describe "fakeBankTransfer()", ->
-      it "should POST a fake bank-transfer", (done) ->
-        # probably no test needed
-        pending()
+      it "should POST a fake bank-transfer", () ->
+        trade.fakeBankTransfer()
+        expect(api.authPOST).toHaveBeenCalledWith('trades/1142/test/bank-transfer', {
+          sendAmount: 40
+          currency: 'USD'
+        })
 
     describe "buy()", ->
       quote = undefined
@@ -269,8 +585,61 @@ describe "CoinifyTrade", ->
         expect(promise).toBeResolved()
 
     describe "process", ->
-      it "should release addresses for cancelled trades", ->
-        pending()
+      beforeEach ->
+        spyOn(trade._coinifyDelegate, "releaseReceiveAddress")
+
+      it "should ask delegate to release addresses for cancelled trades", ->
+        trade._state = 'cancelled'
+        trade.process()
+        expect(trade._coinifyDelegate.releaseReceiveAddress).toHaveBeenCalled()
+
+      it "should not ask to release addresses for awaiting_transfer_in trades", ->
+        trade._state = 'awaiting_transfer_in'
+        trade.process()
+        expect(trade._coinifyDelegate.releaseReceiveAddress).not.toHaveBeenCalled()
+
+    describe "btcExpected", ->
+      beforeEach ->
+        now = new Date(2016, 9, 25, 12, 10, 0) # 12:10:00
+        jasmine.clock().mockDate(now);
+        trade.quoteExpireTime = new Date(2016, 9, 25, 12, 15, 0) # 12:15:00
+
+      it "should use the quote if that's still valid", ->
+        promise = trade.btcExpected()
+        expect(promise).toBeResolvedWith(0.06454481)
+
+      describe "when quote expired", ->
+        beforeEach ->
+          trade._lastBtcExpectedGuessAt = new Date(2016, 9, 25, 12, 15, 15) # 12:15:15
+          trade._lastBtcExpectedGuess = 0.07
+
+        it "should use the last value if quote expired less than a minute ago", ->
+          jasmine.clock().mockDate(new Date(2016, 9, 25, 12, 15, 45)) # 12:15:45
+
+          promise = trade.btcExpected()
+          expect(promise).toBeResolvedWith(0.07)
+
+        it "should get and store quote", (done) ->
+          now = new Date(2016, 9, 25, 12, 16, 15)
+          jasmine.clock().mockDate(now) # 12:16:15
+          spyOn(Quote, "getQuote").and.callThrough()
+
+          checks = () ->
+            expect(trade._lastBtcExpectedGuessAt).toEqual(now)
+            expect(trade._lastBtcExpectedGuess).toEqual(0.071)
+            done()
+
+          promise = trade.btcExpected().then(checks)
+          expect(promise).toBeResolvedWith(0.071)
+
+    describe "expireQuote", ->
+      it "should expire the quote sooner", ->
+        now = new Date(2016, 9, 25, 11, 50, 0)
+        threeSeconds = new Date(2016, 9, 25, 11, 50, 3)
+        trade._quoteExpireTime = new Date(2016, 9, 25, 12, 0)
+        jasmine.clock().mockDate(now);
+        trade.expireQuote()
+        expect(trade.quoteExpireTime).toEqual(threeSeconds)
 
     describe "refresh()", ->
       beforeEach ->
@@ -310,25 +679,3 @@ describe "CoinifyTrade", ->
         promise = trade.refresh().then(checks)
 
         expect(promise).toBeResolved(done)
-
-    describe "_checkOnce()", ->
-      _getTransactionHashCalled = undefined
-
-      beforeEach ->
-        spyOn(CoinifyTrade, '_getTransactionHash').and.callFake(() ->
-          _getTransactionHashCalled = true
-        )
-
-
-      it "should call _getTransactionHash", (done) ->
-        coinifyDelegate = {
-          save: () -> Promise.resolve()
-        }
-
-        filter = () -> true
-
-        promise = CoinifyTrade._checkOnce([trade], filter, coinifyDelegate).catch(console.log)
-
-        expect(promise).toBeResolved(done)
-
-        expect(_getTransactionHashCalled).toEqual(true)
