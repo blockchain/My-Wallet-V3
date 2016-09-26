@@ -94,6 +94,8 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
   } else if (obj.op === 'email_verified') {
     MyWallet.wallet.accountInfo.isEmailVerified = Boolean(obj.x);
     WalletStore.sendEvent('on_email_verified', obj.x);
+  } else if (obj.op === 'wallet_logout') {
+    WalletStore.sendEvent('wallet_logout', obj.x);
   }
 };
 
