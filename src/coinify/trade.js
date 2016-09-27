@@ -459,12 +459,10 @@ CoinifyTrade.prototype._monitorAddress = function () {
   });
 };
 
-CoinifyTrade._checkOnce = function (unfilteredTrades, tradeFilter, coinifyDelegate) {
+CoinifyTrade._checkOnce = function (trades, coinifyDelegate) {
   assert(coinifyDelegate, '_checkOnce needs delegate');
 
   var getReceiveAddress = function (obj) { return obj.receiveAddress; };
-
-  var trades = unfilteredTrades.filter(tradeFilter);
 
   var receiveAddresses = trades.map(getReceiveAddress);
 
@@ -508,10 +506,7 @@ CoinifyTrade._setTransactionHash = function (trade, coinifyDelegate) {
     });
 };
 
-CoinifyTrade._monitorWebSockets = function (unfilteredTrades, tradeFilter) {
-  var trades = unfilteredTrades
-                .filter(tradeFilter);
-
+CoinifyTrade._monitorWebSockets = function (trades) {
   for (var i = 0; i < trades.length; i++) {
     var trade = trades[i];
     trade._monitorAddress.bind(trade)();
@@ -520,7 +515,6 @@ CoinifyTrade._monitorWebSockets = function (unfilteredTrades, tradeFilter) {
 
 // Monitor the receive addresses for pending and completed trades.
 CoinifyTrade.monitorPayments = function (trades, coinifyDelegate) {
-  // TODO: refactor, apply filter here instead of passing it on
   assert(coinifyDelegate, '_monitorPayments needs delegate');
 
   var tradeFilter = function (trade) {
@@ -533,8 +527,10 @@ CoinifyTrade.monitorPayments = function (trades, coinifyDelegate) {
     ].indexOf(trade.state) > -1 && !trade.confirmed;
   };
 
-  CoinifyTrade._checkOnce(trades, tradeFilter, coinifyDelegate).then(function () {
-    CoinifyTrade._monitorWebSockets(trades, tradeFilter);
+  var filteredTrades = trades.filter(tradeFilter);
+
+  CoinifyTrade._checkOnce(filteredTrades, coinifyDelegate).then(function () {
+    CoinifyTrade._monitorWebSockets(filteredTrades);
   });
 };
 

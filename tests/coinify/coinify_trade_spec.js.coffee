@@ -104,7 +104,7 @@ describe "CoinifyTrade", ->
 
         filter = () -> true
 
-        promise = CoinifyTrade._checkOnce([], filter, coinifyDelegate).catch(console.log)
+        promise = CoinifyTrade._checkOnce([], coinifyDelegate)
 
         expect(promise).toBeResolved(done)
 
@@ -115,9 +115,7 @@ describe "CoinifyTrade", ->
           getReceiveAddress: () ->
         }
 
-        filter = () -> true
-
-        promise = CoinifyTrade._checkOnce([trade], filter, coinifyDelegate).catch(console.log)
+        promise = CoinifyTrade._checkOnce([trade], coinifyDelegate).catch(console.log)
 
         expect(promise).toBeResolved(done)
 
@@ -256,17 +254,25 @@ describe "CoinifyTrade", ->
           Promise.resolve()
         )
 
-      it "should call _checkOnce with  trades", ->
+      it "should call _checkOnce with relevant trades", ->
         CoinifyTrade.monitorPayments(trades, delegate)
         expect(CoinifyTrade._checkOnce).toHaveBeenCalled()
-        expect(CoinifyTrade._checkOnce.calls.argsFor(0)[0]).toEqual(trades)
+        expect(CoinifyTrade._checkOnce.calls.argsFor(0)[0]).toEqual([trade2])
 
       it "should call _monitorWebSockets with relevant trades", (done) ->
-        spyOn(CoinifyTrade , '_monitorWebSockets').and.callFake(() -> done())
-        CoinifyTrade.monitorPayments(trades, delegate)
+        spyOn(CoinifyTrade , '_monitorWebSockets').and.callFake(() ->
+          # monitorPayments() is not a promise, so this test relies on the fact
+          # that Jasmine throws a timeout if this code is never run.
+          expect(CoinifyTrade._monitorWebSockets).toHaveBeenCalled()
+          expect(CoinifyTrade._monitorWebSockets.calls.argsFor(0)[0]).toEqual([trade2])
+          done()
+        )
+
+        promise = CoinifyTrade.monitorPayments(trades, delegate)
 
     describe "_monitorAddress", ->
-      it "pending", ->
+      it "...", ->
+        pending()
 
   describe "instance", ->
     profile = undefined
