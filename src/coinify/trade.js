@@ -405,7 +405,7 @@ CoinifyTrade.prototype._monitorAddress = function () {
     var resolve = function () {
       self._watchAddressResolve && self._watchAddressResolve(amount);
     };
-    self._coinifyDelegate.save.bind(self._coinifyDelegate)().then(resolve);
+    self._coinifyDelegate.save().then(resolve);
   };
 
   self._coinifyDelegate.monitorAddress(self.receiveAddress, function (hash, amount) {

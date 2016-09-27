@@ -303,6 +303,7 @@ describe "CoinifyTrade", ->
         deserializeExtraFields: () ->
         getReceiveAddress: () ->
         serializeExtraFields: () ->
+        monitorAddress: () ->
       }
 
       api = {
@@ -685,3 +686,85 @@ describe "CoinifyTrade", ->
         promise = trade.refresh().then(checks)
 
         expect(promise).toBeResolved(done)
+
+    describe "_monitorAddress()", ->
+      refreshedState = "completed"
+
+      beforeEach ->
+        trade._state = "completed"
+        trade._txHash = null
+
+        # tradeWasPaid() calls _watchAddressResolve
+        trade._watchAddressResolve = () ->
+
+        spyOn(trade, "_watchAddressResolve")
+
+        spyOn(trade, "refresh").and.callFake(() ->
+          trade._state = refreshedState
+          {
+            then: (cb) ->
+              cb()
+          }
+        )
+
+        spyOn(trade._coinifyDelegate, "save").and.callFake(() ->
+          {
+            then: (cb) ->
+              cb()
+          }
+        )
+
+      it "should call monitorAddress() on the delegate", ->
+        spyOn(trade._coinifyDelegate, "monitorAddress")
+        trade._monitorAddress()
+        expect(trade._coinifyDelegate.monitorAddress).toHaveBeenCalled()
+
+      it "should call tradeWasPaid() for completed_(test) and processing", () ->
+        trade._coinifyDelegate.monitorAddress = (address, callback) ->
+          callback("transaction-hash", 1000)
+
+        trade._monitorAddress()
+
+        expect(trade._watchAddressResolve).toHaveBeenCalled()
+
+      it "should store hash if tradeWasPaid() is called", () ->
+        trade._coinifyDelegate.monitorAddress = (address, callback) ->
+          callback("transaction-hash", 1000)
+
+        trade._monitorAddress()
+
+        expect(trade.txHash).toEqual("transaction-hash")
+
+      it "should first refresh if trade is still awaiting_transfer_in", () ->
+        trade._state = "awaiting_transfer_in"
+
+        trade._coinifyDelegate.monitorAddress = (address, callback) ->
+          callback("transaction-hash", 1000)
+
+        trade._monitorAddress()
+
+        expect(trade.refresh).toHaveBeenCalled()
+
+
+      it "should not call tradeWasPaid if state is awaiting_transfer_in after refresh", () ->
+        trade._state = "awaiting_transfer_in"
+        refreshedState = "awaiting_transfer_in"
+
+        trade._coinifyDelegate.monitorAddress = (address, callback) ->
+          callback("transaction-hash", 1000)
+
+        trade._monitorAddress()
+
+        expect(trade._watchAddressResolve).not.toHaveBeenCalled()
+
+      it "should not call tradeWasPaid if trade already has a hash", () ->
+        trade._txHash = "other-transaction-hash"
+
+        trade._coinifyDelegate.monitorAddress = (address, callback) ->
+          callback("transaction-hash", 1000)
+
+        trade._monitorAddress()
+
+        expect(trade._watchAddressResolve).not.toHaveBeenCalled()
+
+        expect(trade.txHash).toEqual("other-transaction-hash")
