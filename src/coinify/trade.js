@@ -289,7 +289,7 @@ CoinifyTrade.prototype.btcExpected = function () {
           self._lastBtcExpectedGuessAt = new Date();
           return self._lastBtcExpectedGuess;
         };
-        return Quote.getQuote(this._api, -this.inAmount, this.inCurrency).then(processQuote);
+        return Quote.getQuote(this._api, -this.inAmount, this.inCurrency, this.outCurrency).then(processQuote);
       }
     }
   } else {
