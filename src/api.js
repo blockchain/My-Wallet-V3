@@ -156,7 +156,7 @@ API.prototype.getBalanceForRedeemCode = function (privatekey) {
 API.prototype.getFiatAtTime = function (time, value, currencyCode) {
   var data = {
     value: value,
-    currency: currencyCode,
+    currency: currencyCode.toUpperCase(),
     time: time,
     textual: false,
     nosavecurrency: true
