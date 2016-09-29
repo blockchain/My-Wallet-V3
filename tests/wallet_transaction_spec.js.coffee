@@ -4,11 +4,18 @@ proxyquire = require('proxyquireify')(require)
 MyWallet =
   wallet:
     getNote: (hash) -> null
-    containsLegacyAddress: (addr) -> addr == "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+    containsLegacyAddress: (addr) -> addr == "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa" || addr == "1GpQRQAAMGuQ3AMcivFHDCPnV69qtQ65RZ" || addr == "16GJsXtwq5JsYDAFaTXGMgj4W178nT3Pqj"
     hdwallet:
       account: () -> { index: 0, label: "Savings" }
 
-    key: () -> { label: "Genesis", isWatchOnly: true }
+    key: (addr) ->
+      if addr == "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+        { label: "Genesis", isWatchOnly: true, archived: false }
+      else if addr == "1GpQRQAAMGuQ3AMcivFHDCPnV69qtQ65RZ"
+        { label: "Legacy Addr 1", isWatchOnly: false, archived: false }
+      else if addr == "16GJsXtwq5JsYDAFaTXGMgj4W178nT3Pqj"
+        { label: "Legacy Addr 2", isWatchOnly: false, archived: false }
+
     latestBlock: { height: 399680 }
     getAddressBookLabel: (address) -> "addressBookLabel"
 
@@ -94,6 +101,16 @@ describe 'Transaction', ->
       expect(tx.changeAmount).toEqual(10000)
       expect(tx.amount).toEqual(80000)
 
+  describe "from imported address to imported address", ->
+    it "should have the right amount", ->
+      tx = Tx.factory(transactions["from_imported"])
+      expect(tx.processedInputs.length).toBe(1)
+      expect(tx.processedOutputs.length).toBe(2)
+      expect(tx.fromWatchOnly).toBeFalsy()
+      expect(tx.toWatchOnly).toBeFalsy()
+      expect(tx.txType).toEqual("transfer")
+      expect(tx.fee).toEqual(10000)
+      expect(tx.amount).toEqual(4968)
 
   describe "factory", ->
     it "should not touch already existing objects", ->

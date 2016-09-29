@@ -29,20 +29,6 @@ function Tx (object) {
   this.confirmations = Tx.setConfirmations(this.block_height);
 
   // computed properties
-  var initialOut = {
-    taggedOuts: [],
-    toWatchOnly: false,
-    totalOut: 0,
-    internalReceive: 0,
-    changeAmount: 0
-  };
-  var pouts = this.out.reduce(procOuts, initialOut);
-  this.processedOutputs = pouts.taggedOuts;
-  this.toWatchOnly = pouts.toWatchOnly;
-  this.totalOut = pouts.totalOut;
-  this.internalReceive = pouts.internalReceive;
-  this.changeAmount = pouts.changeAmount;
-
   var initialIn = {
     taggedIns: [],
     fromWatchOnly: false,
@@ -54,6 +40,20 @@ function Tx (object) {
   this.totalIn = pins.totalIn;
   this.internalSpend = pins.internalSpend;
   this.fromWatchOnly = pins.fromWatchOnly;
+
+  var initialOut = {
+    taggedOuts: [],
+    toWatchOnly: false,
+    totalOut: 0,
+    internalReceive: 0,
+    changeAmount: 0
+  };
+  var pouts = this.out.reduce(procOuts.bind(this), initialOut);
+  this.processedOutputs = pouts.taggedOuts;
+  this.toWatchOnly = pouts.toWatchOnly;
+  this.totalOut = pouts.totalOut;
+  this.internalReceive = pouts.internalReceive;
+  this.changeAmount = pouts.changeAmount;
 
   this.fee = isCoinBase(this.inputs[0]) ? 0 : this.totalIn - this.totalOut;
   this.result = this._result ? this._result : this.internalReceive - this.internalSpend;
@@ -96,6 +96,11 @@ function procOuts (acc, output) {
   acc.toWatchOnly = acc.toWatchOnly || tagOut.isWatchOnly || false;
   if (tagOut.coinType !== 'external') {
     acc.internalReceive = acc.internalReceive + tagOut.amount;
+    if (tagOut.coinType === 'legacy' && !tagOut.change) {
+      tagOut.change = this.processedInputs.some(function (input) {
+        return input.address === tagOut.address;
+      });
+    }
     if (tagOut.change === true) {
       acc.changeAmount = acc.changeAmount + tagOut.amount;
     }
@@ -189,7 +194,8 @@ function tagCoin (x) {
 
 function unpackInput (input) {
   if (isCoinBase(input)) {
-    return {addr: 'Coinbase', value: this.totalOut};
+    var totalOut = this.out.reduce(function (sum, out) { return sum + out.value; }, 0);
+    return {addr: 'Coinbase', value: totalOut};
   } else {
     return input.prev_out;
   }
