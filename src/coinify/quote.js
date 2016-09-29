@@ -7,6 +7,7 @@ var assert = require('assert');
 module.exports = Quote;
 
 function Quote (obj, api) {
+  assert(obj, 'Missing quote object');
   this._api = api;
 
   var expiresAt = new Date(obj.expiryTime);
