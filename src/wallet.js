@@ -351,6 +351,8 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
     var loadExternalFailed = function (message) {
       console.warn('wallet.external not set:', message);
     };
+    // try save guid.
+    MyWallet.wallet.saveGUIDtoMetadata();
     return MyWallet.wallet.loadExternal.bind(MyWallet.wallet)().catch(loadExternalFailed);
   };
 

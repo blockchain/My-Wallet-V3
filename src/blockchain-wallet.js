@@ -20,6 +20,7 @@ var KeyRing = require('./keyring');
 var TxList = require('./transaction-list');
 var Block = require('./bitcoin-block');
 var External = require('./external');
+var Metadata = require('./metadata');
 var AccountInfo = require('./account-info');
 
 // Wallet
@@ -852,5 +853,14 @@ Wallet.prototype.loadExternal = function () {
   } else {
     this._external = new External(this);
     return this._external.fetch();
+  }
+};
+
+Wallet.prototype.saveGUIDtoMetadata = function () {
+  // backupGUID not enabled if secondPassword active
+  if (!this.isDoubleEncrypted && this.isUpgradedToHD) {
+    var GUID_METADATA_TYPE = 0;
+    var m = new Metadata(GUID_METADATA_TYPE);
+    m.create(MyWallet.wallet.guid);
   }
 };
