@@ -256,6 +256,14 @@ CoinifyTrade.prototype.watchAddress = function () {
   if (this.debug) {
     console.info('Watch ' + this.receiveAddress + ' for ' + this.state + ' trade ' + this.id);
   }
+  // Check if this transaction is already marked as paid:
+  if (this._txHash) {
+    /* istanbul ignore if */
+    if (this.debug) {
+      console.info("Already paid, resolve immedidately and don't watch.");
+    }
+    return Promise.resolve();
+  }
   var self = this;
   var promise = new Promise(function (resolve, reject) {
     self._watchAddressResolve = resolve;
@@ -304,7 +312,7 @@ CoinifyTrade.prototype.fakeBankTransfer = function () {
   return self._api.authPOST('trades/' + self._id + '/test/bank-transfer', {
     sendAmount: parseFloat((self.inAmount / 100).toFixed(2)),
     currency: self.inCurrency
-  });
+  }).then(this._coinifyDelegate.save.bind(this._coinifyDelegate));
 };
 
 // QA tool:
@@ -397,64 +405,18 @@ CoinifyTrade.prototype.declined = function () {
 CoinifyTrade.prototype._monitorAddress = function () {
   var self = this;
 
-  var tradeWasPaid = function (amount) {
-    /* istanbul ignore if */
-    if (self.debug) {
-      console.info(amount + ' paid for trade ' + self.id);
-    }
-    var resolve = function () {
-      self._watchAddressResolve && self._watchAddressResolve(amount);
-    };
-    self._coinifyDelegate.save().then(resolve);
+  var save = function () {
+    return self._coinifyDelegate.save.bind(self._coinifyDelegate)();
   };
 
   self._coinifyDelegate.monitorAddress(self.receiveAddress, function (hash, amount) {
-    var updateTrade = function () {
-      /* istanbul ignore if */
-      if (self.debug) {
-        console.info('Transaction ' + hash + ' detected, considering ' + self.state + ' trade ' + self.id);
-      }
-      if (self.state === 'completed_test' && !self.confirmations && !self._txHash) {
-        // For test trades, there is no real transaction, so trade._txHash is not
-        // set. Instead use the hash for the incoming transaction. This will not
-        // work correctly with address reuse.
-        /* istanbul ignore if */
-        if (self.debug) {
-          console.info('Test trade, not matched before, unconfirmed transaction, assuming match');
-        }
-        self._txHash = hash;
-        tradeWasPaid(amount);
-      } else if (self.state === 'completed' || self.state === 'processing') {
-        if (self._txHash) {
-          // Multiple trades may reuse the same address if e.g. one is
-          // cancelled of if we reach the gap limit.
-          /* istanbul ignore if */
-          if (self.debug) {
-            console.info('Trade already matched, ignoring transaction');
-          }
-          if (self._txHash !== hash) return;
-        } else {
-          // transferOut.details.transaction is not implemented and might be
-          // missing if in the processing state.
-          /* istanbul ignore if */
-          if (self.debug) {
-            console.info('Trade not matched yet, assuming match');
-          }
-          self._txHash = hash;
-        }
-        tradeWasPaid(amount);
-      } else {
-        /* istanbul ignore if */
-        if (self.debug) {
-          console.info('Not calling tradeWasPaid()');
-        }
-      }
+    var checkAddress = function () {
+      return self._setTransactionHash({hash: hash}, amount, self._coinifyDelegate);
     };
-
     if (self.state === 'completed' || self.state === 'processing' || self.state === 'completed_test') {
-      updateTrade();
+      return checkAddress().then(save);
     } else {
-      self.refresh().then(updateTrade);
+      return self.refresh().then(checkAddress).then(save);
     }
   });
 };
@@ -462,48 +424,106 @@ CoinifyTrade.prototype._monitorAddress = function () {
 CoinifyTrade._checkOnce = function (trades, coinifyDelegate) {
   assert(coinifyDelegate, '_checkOnce needs delegate');
 
-  var getReceiveAddress = function (obj) { return obj.receiveAddress; };
-
-  var receiveAddresses = trades.map(getReceiveAddress);
-
-  if (receiveAddresses.length === 0) {
+  if (trades.length === 0) {
     return Promise.resolve();
   }
 
-  var promises = [];
-
-  for (var i = 0; i < trades.length; i++) {
-    promises.push(CoinifyTrade._setTransactionHash(trades[i], coinifyDelegate));
+  /* istanbul ignore if */
+  if (coinifyDelegate.debug) {
+    console.info('_checkOnce', trades.map(function (trade) { return trade.id; }).join(', '));
   }
+
+  // DO NOT DO THIS: // for (var i = 0; i < trades.length; i++) {
+  var promises = trades.map(function (trade) {
+    return coinifyDelegate.checkAddress(trade.receiveAddress).then(function (tx, amount) {
+      if (!tx) return;
+
+      /* istanbul ignore if */
+      if (coinifyDelegate.debug) {
+        console.info('checkAddress', trade.receiveAddress, 'found transaction');
+      }
+
+      var setTransactionHash = function () {
+        return trade._setTransactionHash(tx, amount, coinifyDelegate);
+      };
+
+      if (trade.state === 'completed' || trade.state === 'processing' || trade.state === 'completed_test') {
+        return setTransactionHash();
+      } else {
+        return trade.refresh().then(setTransactionHash);
+      }
+    });
+  });
 
   return Promise.all(promises).then(coinifyDelegate.save.bind(coinifyDelegate));
 };
 
 //
-CoinifyTrade._setTransactionHash = function (trade, coinifyDelegate) {
-  assert(coinifyDelegate, '_setTransactionHash needs delegate');
-  return coinifyDelegate.checkAddress(trade.receiveAddress)
-    .then(function (tx) {
-      if (tx) {
-        if (trade.state === 'completed_test' && !trade._txHash) {
-          // See remarks below
-          trade._txHash = tx.hash;
-        } else if (trade.state === 'processing' || trade.state === 'completed') {
-          if (trade._txHash) {
-            if (trade._txHash !== tx.hash) return;
-          } else {
-            trade._txHash = tx.hash;
-          }
-        } else {
-          return;
-        }
-        trade._confirmations = tx.confirmations;
-        // TODO: refactor
-        if (trade.confirmed) {
-          trade._confirmed = true;
-        }
+CoinifyTrade.prototype._setTransactionHash = function (tx, amount, coinifyDelegate) {
+  var self = this;
+  var setConfirmations = function (tx) {
+    self._confirmations = tx.confirmations;
+    // TODO: refactor
+    if (self.confirmed) {
+      self._confirmed = true;
+    }
+  };
+
+  /* istanbul ignore if */
+  if (self.debug) {
+    console.info('Transaction ' + tx.hash + ' detected, considering ' + self.state + ' trade ' + self.id);
+  }
+  if (self.state === 'completed_test') {
+    if (!self.confirmations && !self._txHash) {
+      // For test trades, there is no real transaction, so trade._txHash is not
+      // set. Instead use the hash for the incoming transaction. This will not
+      // work correctly with address reuse.
+      /* istanbul ignore if */
+      if (self.debug) {
+        console.info('Test trade, not matched before, unconfirmed transaction, assuming match');
       }
-    });
+      self._txHash = tx.hash;
+      setConfirmations(tx);
+      self._watchAddressResolve && self._watchAddressResolve();
+    } else {
+      if (self.debug) {
+        console.info('Trade already matched, not calling _watchAddressResolve()');
+      }
+      if (self._txHash === tx.hash) {
+        /* istanbul ignore if */
+        setConfirmations(tx);
+      }
+    }
+  } else if (self.state === 'completed' || self.state === 'processing') {
+    if (self._txHash) {
+      // Multiple trades may reuse the same address if e.g. one is
+      // cancelled of if we reach the gap limit.
+      /* istanbul ignore if */
+      if (self.debug) {
+        console.info('Trade already matched, not calling _watchAddressResolve()');
+      }
+      if (self._txHash === tx.hash) {
+        setConfirmations(tx);
+      } else {
+        // Different trade, ignore
+      }
+    } else {
+      // transferOut.details.transaction is not implemented and might be
+      // missing if in the processing state.
+      /* istanbul ignore if */
+      if (self.debug) {
+        console.info('Trade not matched yet, assuming match');
+      }
+      self._txHash = tx.hash;
+      setConfirmations(tx);
+    }
+    self._watchAddressResolve && self._watchAddressResolve();
+  } else {
+    /* istanbul ignore if */
+    if (self.debug) {
+      console.info('Not calling _watchAddressResolve()');
+    }
+  }
 };
 
 CoinifyTrade._monitorWebSockets = function (trades) {
@@ -515,6 +535,11 @@ CoinifyTrade._monitorWebSockets = function (trades) {
 
 // Monitor the receive addresses for pending and completed trades.
 CoinifyTrade.monitorPayments = function (trades, coinifyDelegate) {
+  /* istanbul ignore if */
+  if (coinifyDelegate.debug) {
+    console.info('monitorPayments');
+  }
+
   assert(coinifyDelegate, '_monitorPayments needs delegate');
 
   var tradeFilter = function (trade) {

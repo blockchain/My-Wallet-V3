@@ -88,20 +88,24 @@ describe "CoinifyTrade", ->
         expect(window.console.warn.calls.argsFor(0)[1]).toEqual('unknown')
 
     describe "_checkOnce()", ->
-      _setTransactionHashCalled = undefined
-      trade = {}
+      trade = {
+        id: 1
+        receiveAddress: "trade-address"
+        _setTransactionHash: () ->
+        refresh: () -> Promise.resolve()
+      }
+      coinifyDelegate = {
+        debug: true
+        save: () -> Promise.resolve()
+        getReceiveAddress: () ->
+        checkAddress: (address) ->
+          Promise.resolve({hash: "tx-hash", confirmations: 0}, 1)
+      }
 
       beforeEach ->
-        spyOn(CoinifyTrade, '_setTransactionHash').and.callFake(() ->
-          _setTransactionHashCalled = true
-        )
+        spyOn(trade, "_setTransactionHash").and.callThrough()
 
       it "should resolve immedidatley if there are no transactions", (done) ->
-        coinifyDelegate = {
-          save: () -> Promise.resolve()
-          getReceiveAddress: () ->
-        }
-
         filter = () -> true
 
         promise = CoinifyTrade._checkOnce([], coinifyDelegate)
@@ -110,16 +114,14 @@ describe "CoinifyTrade", ->
 
 
       it "should call _setTransactionHash", (done) ->
-        coinifyDelegate = {
-          save: () -> Promise.resolve()
-          getReceiveAddress: () ->
-        }
+        checks = () ->
+          expect(trade._setTransactionHash).toHaveBeenCalled()
+          done()
 
-        promise = CoinifyTrade._checkOnce([trade], coinifyDelegate).catch(console.log)
+        promise = CoinifyTrade._checkOnce([trade], coinifyDelegate).then(checks)
 
         expect(promise).toBeResolved(done)
 
-        expect(_setTransactionHashCalled).toEqual(true)
 
     describe "filteredTrades", ->
       it "should return transactions that might still receive payment", ->
@@ -131,98 +133,6 @@ describe "CoinifyTrade", ->
           {state: "awaiting_transfer_in"},
         ]
         expect(CoinifyTrade.filteredTrades(trades)).toEqual(expected)
-
-    describe "_setTransactionHash", ->
-      trade = undefined
-      delegate = undefined
-      tx = {hash: 'tx-hash', confirmations: 0}
-
-      beforeEach ->
-        delegate =
-          checkAddress: (address) ->
-            Promise.resolve(tx)
-
-        trade = {
-          receiveAddress: "trade-address"
-          _coinifyDelegate: delegate
-          state: 'completed'
-          debug: true
-          _txHash: null
-        }
-
-      it "should ask the delegate if a transaction exists for the trade address", ->
-        spyOn(delegate, "checkAddress").and.callThrough()
-        CoinifyTrade._setTransactionHash(trade, delegate)
-        expect(delegate.checkAddress).toHaveBeenCalledWith('trade-address')
-
-      describe "for a test trade", ->
-        it "should set the hash if trade is completed", (done) ->
-          trade.state = 'completed_test'
-
-          checks = () ->
-            expect(trade._txHash).toEqual('tx-hash')
-            done()
-
-          CoinifyTrade._setTransactionHash(trade, delegate).then(checks)
-
-        it "should not override the hash if set earlier", (done) ->
-          trade.state = 'completed_test'
-          trade._txHash = 'tx-hash-before'
-
-          checks = () ->
-            expect(trade._txHash).toEqual('tx-hash-before')
-            done()
-
-          CoinifyTrade._setTransactionHash(trade, delegate).then(checks)
-
-      describe "for a real trade", ->
-        it "should set the hash if trade is completed", (done) ->
-          trade.state = 'completed'
-
-          checks = () ->
-            expect(trade._txHash).toEqual('tx-hash')
-            done()
-
-          CoinifyTrade._setTransactionHash(trade, delegate).then(checks)
-
-        it "should set the hash if trade is processing", (done) ->
-          trade.state = 'processing'
-
-          checks = () ->
-            expect(trade._txHash).toEqual('tx-hash')
-            done()
-
-          CoinifyTrade._setTransactionHash(trade, delegate).then(checks)
-
-        it "should not override the hash if set earlier", (done) ->
-          trade.state = 'completed'
-          trade._txHash = 'tx-hash-before'
-
-          checks = () ->
-            expect(trade._txHash).toEqual('tx-hash-before')
-            done()
-
-          CoinifyTrade._setTransactionHash(trade, delegate).then(checks)
-
-        it "should set the number of confirmations", (done) ->
-          trade.state = 'completed'
-
-          checks = () ->
-            expect(trade._confirmations).toEqual(0)
-            done()
-
-          CoinifyTrade._setTransactionHash(trade, delegate).then(checks)
-
-        it "should set _confirmed to true so it gets serialized", ->
-          trade.state = 'completed'
-          tx.confirmations = 6
-          trade.confirmed = true # mock getter, the real one checks trade._confirmations
-
-          checks = () ->
-            expect(trade._confirmed).toEqual(true)
-            done()
-
-          CoinifyTrade._setTransactionHash(trade, delegate).then(checks)
 
     describe "_monitorWebSockets", ->
       it "should call _monitorAddress() on each trade", ->
@@ -693,6 +603,7 @@ describe "CoinifyTrade", ->
       beforeEach ->
         trade._state = "completed"
         trade._txHash = null
+        trade._setTransactionHash = () -> Promise.resolve()
 
         # tradeWasPaid() calls _watchAddressResolve
         trade._watchAddressResolve = () ->
@@ -718,22 +629,6 @@ describe "CoinifyTrade", ->
         spyOn(trade._coinifyDelegate, "monitorAddress")
         trade._monitorAddress()
         expect(trade._coinifyDelegate.monitorAddress).toHaveBeenCalled()
-
-      it "should call tradeWasPaid() for completed_(test) and processing", () ->
-        trade._coinifyDelegate.monitorAddress = (address, callback) ->
-          callback("transaction-hash", 1000)
-
-        trade._monitorAddress()
-
-        expect(trade._watchAddressResolve).toHaveBeenCalled()
-
-      it "should store hash if tradeWasPaid() is called", () ->
-        trade._coinifyDelegate.monitorAddress = (address, callback) ->
-          callback("transaction-hash", 1000)
-
-        trade._monitorAddress()
-
-        expect(trade.txHash).toEqual("transaction-hash")
 
       it "should first refresh if trade is still awaiting_transfer_in", () ->
         trade._state = "awaiting_transfer_in"
@@ -768,3 +663,78 @@ describe "CoinifyTrade", ->
         expect(trade._watchAddressResolve).not.toHaveBeenCalled()
 
         expect(trade.txHash).toEqual("other-transaction-hash")
+
+    describe "_setTransactionHash", ->
+      trade = undefined
+      delegate = undefined
+      tx = {hash: 'tx-hash', confirmations: 0}
+
+      beforeEach ->
+        delegate =
+          checkAddress: (address) ->
+            Promise.resolve(tx)
+
+        trade = {
+          receiveAddress: "trade-address"
+          _coinifyDelegate: delegate
+          state: 'completed'
+          debug: true
+          _txHash: null
+          _setTransactionHash: CoinifyTrade.prototype._setTransactionHash
+        }
+
+      describe "for a test trade", ->
+        it "should set the hash if trade is completed", ->
+          trade.state = 'completed_test'
+
+          trade._setTransactionHash(tx, 1, delegate)
+          expect(trade._txHash).toEqual('tx-hash')
+
+
+        it "should not override the hash if set earlier", ->
+          trade.state = 'completed_test'
+          trade._txHash = 'tx-hash-before'
+
+          trade._setTransactionHash(tx, 1, delegate)
+
+          expect(trade._txHash).toEqual('tx-hash-before')
+
+      describe "for a real trade", ->
+        it "should set the hash if trade is completed", ->
+          trade.state = 'completed'
+
+          trade._setTransactionHash(tx, 1, delegate)
+
+          expect(trade._txHash).toEqual('tx-hash')
+
+
+        it "should set the hash if trade is processing", ->
+          trade.state = 'processing'
+
+          trade._setTransactionHash(tx, 1, delegate)
+
+          expect(trade._txHash).toEqual('tx-hash')
+
+        it "should not override the hash if set earlier", ->
+          trade.state = 'completed'
+          trade._txHash = 'tx-hash-before'
+
+          trade._setTransactionHash(tx, 1, delegate)
+
+          expect(trade._txHash).toEqual('tx-hash-before')
+
+        it "should set the number of confirmations", ->
+          trade.state = 'completed'
+
+          trade._setTransactionHash(tx, 1, delegate)
+
+          expect(trade._confirmations).toEqual(0)
+
+        it "should set _confirmed to true so it gets serialized", ->
+          trade.state = 'completed'
+          tx.confirmations = 6
+          trade.confirmed = true # mock getter, the real one checks trade._confirmations
+
+          trade._setTransactionHash(tx, 1, delegate)
+
+          expect(trade._confirmed).toEqual(true)
