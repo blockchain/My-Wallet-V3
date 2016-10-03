@@ -1,6 +1,6 @@
 'use strict';
 
-var Helpers = require('./helpers');
+var Helpers = require('../exchange/helpers');
 
 module.exports = Limit;
 

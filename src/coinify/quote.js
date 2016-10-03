@@ -1,7 +1,7 @@
 'use strict';
 
 var PaymentMethod = require('./payment-method');
-var Helpers = require('./helpers');
+var Helpers = require('../exchange/helpers');
 var assert = require('assert');
 
 module.exports = Quote;

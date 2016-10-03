@@ -1,5 +1,7 @@
 var Helpers = {};
 
+Helpers.isBoolean = (value) => typeof (value) === 'boolean';
+Helpers.isString = (str) => typeof str === 'string' || str instanceof String;
 Helpers.isNumber = (num) => typeof num === 'number' && !isNaN(num);
 Helpers.isInteger = (num) => Helpers.isNumber(num) && num % 1 === 0;
 Helpers.isPositiveNumber = (num) => Helpers.isNumber(num) && num >= 0;

@@ -4,7 +4,7 @@ proxyquire = require('proxyquireify')(require)
 stubs = {
 }
 
-Helpers = proxyquire('../../src/coinify/helpers', stubs)
+Helpers = proxyquire('../../src/exchange/helpers', stubs)
 
 describe "CoinifyHelpers", ->
   describe "isNumber", ->

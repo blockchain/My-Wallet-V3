@@ -3,7 +3,7 @@
 var assert = require('assert');
 
 var BankAccount = require('./bank-account');
-var Helpers = require('./helpers');
+var Helpers = require('../exchange/helpers');
 var Quote = require('./quote');
 
 module.exports = CoinifyTrade;

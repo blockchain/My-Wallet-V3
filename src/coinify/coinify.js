@@ -33,14 +33,7 @@ var Quote = require('./quote');
 var API = require('./api');
 
 var assert = require('assert');
-
-var isBoolean = function (value) {
-  return typeof (value) === 'boolean';
-};
-
-var isString = function (str) {
-  return typeof str === 'string' || str instanceof String;
-};
+var Helpers = require('../exchange/helpers');
 
 module.exports = Coinify;
 
@@ -53,7 +46,7 @@ function Coinify (object, delegate) {
   this._auto_login = obj.auto_login;
   this._offlineToken = obj.offline_token;
 
-  this._api = new API();
+  this._api = new API('https://app-api.coinify.com/');
   this._api._offlineToken = this._offlineToken;
 
   this._profile = new CoinifyProfile(this._api);
@@ -101,7 +94,7 @@ Object.defineProperties(Coinify.prototype, {
     get: function () { return this._auto_login; },
     set: function (value) {
       assert(
-        isBoolean(value),
+        Helpers.isBoolean(value),
         'Boolean'
       );
       this._auto_login = value;
@@ -180,7 +173,7 @@ Coinify.prototype.signup = function (countryCode, currencyCode) {
 
     assert(
       countryCode &&
-      isString(countryCode) &&
+      Helpers.isString(countryCode) &&
       countryCode.length === 2 &&
       countryCode.match(/[a-zA-Z]{2}/),
       'ISO 3166-1 alpha-2'
