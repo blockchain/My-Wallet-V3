@@ -108,8 +108,13 @@ function changeEmail (email, successCallback, error) {
   updateKV('update-email', email, success, error);
 }
 
-function changeMobileNumber (val, success, error) {
-  updateKV('update-sms', val, success, error);
+function changeMobileNumber (mobile, successCallback, error) {
+  var success = function (res) {
+    MyWallet.wallet.accountInfo.mobile = mobile;
+    MyWallet.wallet.accountInfo.isMobileVerified = false;
+    if (typeof successCallback === 'function') successCallback(res);
+  };
+  updateKV('update-sms', mobile, success, error);
 }
 
 // Logging levels:
@@ -213,6 +218,7 @@ function verifyEmail (code, success, error) {
 function verifyMobile (code, success, error) {
   API.securePostCallbacks('wallet', { payload: code, length: code.length, method: 'verify-sms' }, function (data) {
     WalletStore.sendEvent('msg', {type: 'success', message: data});
+    MyWallet.wallet.accountInfo.isMobileVerified = true;
     typeof (success) === 'function' && success(data);
   }, function (data) {
     WalletStore.sendEvent('msg', {type: 'error', message: data});

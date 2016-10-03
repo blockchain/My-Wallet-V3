@@ -27,6 +27,7 @@ MyWallet = {
     }
     accountInfo:
       email: 'info@blockchain.com'
+      mobile: '+1 55512341234'
       isEmailVerified: true
       isMobileVerified: true
     external:
@@ -126,6 +127,14 @@ describe "ExchangeDelegate", ->
       it "should return null if the user doesn't have an email", ->
         MyWallet.wallet.accountInfo.email = null
         expect(delegate.email()).toEqual(null)
+
+    describe "mobile()", ->
+      it "should get the users mobile number", ->
+        expect(delegate.mobile()).toEqual('+1 55512341234')
+
+      it "should return null if the user doesn't have a mobile number", ->
+        MyWallet.wallet.accountInfo.mobile = null
+        expect(delegate.mobile()).toEqual(null)
 
     describe "isEmailVerified()", ->
       it "should be true is users email is verified", ->

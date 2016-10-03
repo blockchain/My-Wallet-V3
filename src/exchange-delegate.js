@@ -36,6 +36,10 @@ ExchangeDelegate.prototype.email = function () {
   return this._wallet.accountInfo.email;
 };
 
+ExchangeDelegate.prototype.mobile = function () {
+  return this._wallet.accountInfo.mobile;
+};
+
 ExchangeDelegate.prototype.isEmailVerified = function () {
   return this._wallet.accountInfo.isEmailVerified;
 };
@@ -67,7 +71,7 @@ ExchangeDelegate.prototype.getToken = function () {
   var self = this;
   return API.request(
     'GET',
-    'wallet/signed-token',
+    'wallet/signed-email-token',
     {
       guid: self._wallet.guid,
       sharedKey: self._wallet.sharedKey
