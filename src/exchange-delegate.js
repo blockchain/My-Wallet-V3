@@ -40,6 +40,10 @@ ExchangeDelegate.prototype.isEmailVerified = function () {
   return this._wallet.accountInfo.isEmailVerified;
 };
 
+ExchangeDelegate.prototype.isMobileVerified = function () {
+  return this._wallet.accountInfo.isMobileVerified;
+};
+
 ExchangeDelegate.prototype.getEmailToken = function () {
   var self = this;
   return API.request(
@@ -55,6 +59,24 @@ ExchangeDelegate.prototype.getEmailToken = function () {
       return res.token;
     } else {
       throw new Error('Unable to obtain email verification proof');
+    }
+  });
+};
+
+ExchangeDelegate.prototype.getToken = function () {
+  var self = this;
+  return API.request(
+    'GET',
+    'wallet/signed-token',
+    {
+      guid: self._wallet.guid,
+      sharedKey: self._wallet.sharedKey
+    }
+  ).then(function (res) {
+    if (res.success) {
+      return res.token;
+    } else {
+      throw new Error('Unable to obtain email & mobile verification proof');
     }
   });
 };

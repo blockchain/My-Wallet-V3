@@ -28,12 +28,14 @@ MyWallet = {
     accountInfo:
       email: 'info@blockchain.com'
       isEmailVerified: true
+      isMobileVerified: true
     external:
       save: () ->
   }
 }
 
 emailVerified = true
+mobileVerified = true
 
 API =
   getBalances: () ->
@@ -52,6 +54,11 @@ API =
           resolve({success: true, token: 'json-web-token-mobile'})
         if emailVerified && data.fields == 'email|mobile'
           resolve({success: true, token: 'json-web-token-email-mobile'})
+        else
+          resolve({success: false})
+      if action == 'GET' && method == "wallet/signed-token"
+        if emailVerified && mobileVerified
+          resolve({success: true, token: 'json-web-token'})
         else
           resolve({success: false})
       else
@@ -124,6 +131,10 @@ describe "ExchangeDelegate", ->
       it "should be true is users email is verified", ->
         expect(delegate.isEmailVerified()).toEqual(true)
 
+    describe "isMobileVerified()", ->
+      it "should be true is users mobile is verified", ->
+        expect(delegate.isMobileVerified()).toEqual(true)
+
     describe "getEmailToken()", ->
       afterEach ->
         emailVerified = true
@@ -135,6 +146,25 @@ describe "ExchangeDelegate", ->
       it 'should reject if email is not verified', (done) ->
         emailVerified = false
         promise = delegate.getEmailToken()
+        expect(promise).toBeRejected(done);
+
+    describe "getToken()", ->
+      afterEach ->
+        emailVerified = true
+        mobileVerified = true
+
+      it 'should get the token', (done) ->
+        promise = delegate.getToken()
+        expect(promise).toBeResolvedWith('json-web-token', done);
+
+      it 'should reject if email is not verified', (done) ->
+        emailVerified = false
+        promise = delegate.getToken()
+        expect(promise).toBeRejected(done);
+
+      it 'should reject if mobile is not verified', (done) ->
+        emailVerified = false
+        promise = delegate.getToken()
         expect(promise).toBeRejected(done);
 
     describe "getReceiveAddress()", ->
