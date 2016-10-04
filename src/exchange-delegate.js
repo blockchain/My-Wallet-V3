@@ -71,7 +71,7 @@ ExchangeDelegate.prototype.getToken = function () {
   var self = this;
   return API.request(
     'GET',
-    'wallet/signed-email-token',
+    'wallet/signed-token',
     {
       guid: self._wallet.guid,
       sharedKey: self._wallet.sharedKey
