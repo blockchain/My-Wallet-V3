@@ -20,25 +20,16 @@ PaymentMethod = {
   fetchAll: () ->
 }
 
-CoinifyTrade = (obj) ->
+Trade = (obj) ->
   obj
-CoinifyTrade.spyableProcessTrade = () ->
 tradesJSON = [
   {
     id: 1
     state: "awaiting_transfer_in"
   }
 ]
-CoinifyTrade.fetchAll = () ->
-  Promise.resolve([
-    {
-      id: tradesJSON[0].id
-      state: tradesJSON[0].state
-      process: CoinifyTrade.spyableProcessTrade
-    }
-  ])
-CoinifyTrade.monitorPayments = () ->
-CoinifyTrade.buy = (quote) ->
+Trade.monitorPayments = () ->
+Trade.buy = (quote) ->
   Promise.resolve({amount: quote.baseAmount})
 
 CoinifyProfile = () ->
@@ -72,7 +63,7 @@ stubs = {
   './api' : API,
   './quote'  : Quote,
   './payment-method' : PaymentMethod,
-  './trade' : CoinifyTrade,
+  './trade' : Trade,
   './kyc' : CoinifyKYC,
   './profile' : CoinifyProfile,
   './exchange-delegate' : ExchangeDelegate
@@ -173,21 +164,6 @@ describe "Coinify", ->
 
         it "should check the input", ->
           expect(() -> c.autoLogin = "1").toThrow()
-
-      describe "debug", ->
-        it "should set debug", ->
-          c.debug = true
-          expect(c.debug).toEqual(true)
-
-        it "should set debug flag on the delegate", ->
-          c._delegate = {debug: false}
-          c.debug = true
-          expect(c.delegate.debug).toEqual(true)
-
-        it "should set debug flag on trades", ->
-          c._trades = [{debug: false}]
-          c.debug = true
-          expect(c.trades[0].debug).toEqual(true)
 
     describe "JSON serializer", ->
       obj =
@@ -300,12 +276,12 @@ describe "Coinify", ->
           expiresAt: new Date(new Date().getTime() + 100000)
         }
 
-      it 'should use CoinifyTrade.buy', ->
-        spyOn(CoinifyTrade, "buy").and.callThrough()
+      it 'should use Trade.buy', ->
+        spyOn(Trade, "buy").and.callThrough()
 
         c.buy(1000, 'EUR', 'card')
 
-        expect(CoinifyTrade.buy).toHaveBeenCalled()
+        expect(Trade.buy).toHaveBeenCalled()
 
       it 'should check for a matching quote', ->
         expect(() -> c.buy(1001, 'EUR', 'card')).toThrow()
@@ -423,66 +399,10 @@ describe "Coinify", ->
         expect(c.profile).not.toBeNull()
 
     describe 'monitorPayments()', ->
-      it 'should call CoinifyTrade.monitorPayments', ->
-        spyOn(CoinifyTrade, 'monitorPayments')
+      it 'should call Trade.monitorPayments', ->
+        spyOn(Trade, 'monitorPayments')
         c.monitorPayments()
-        expect(CoinifyTrade.monitorPayments).toHaveBeenCalled()
-
-    describe 'getTrades()', ->
-      it 'should call CoinifyTrade.fetchAll', ->
-        spyOn(CoinifyTrade, 'fetchAll').and.callThrough()
-        c.getTrades()
-        expect(CoinifyTrade.fetchAll).toHaveBeenCalled()
-
-      it 'should store the trades', (done) ->
-        checks = (res) ->
-          expect(c._trades.length).toEqual(1)
-
-        promise = c.getTrades().then(checks)
-        expect(promise).toBeResolved(done)
-
-      it 'should resolve the trades', (done) ->
-        checks = (res) ->
-          expect(res.length).toEqual(1)
-          done()
-
-        promise = c.getTrades().then(checks)
-
-      it 'should call process on each trade', (done) ->
-        spyOn(CoinifyTrade, 'spyableProcessTrade')
-
-        checks = (res) ->
-          expect(CoinifyTrade.spyableProcessTrade).toHaveBeenCalled()
-          done()
-
-        c.getTrades().then(checks)
-
-      it "should update existing trades", (done) ->
-        c._trades = [
-          {
-            _id: 1
-            process: () ->
-            state: 'awaiting_transfer_in'
-            set: (obj) ->
-              this.state = obj.state
-          },
-          {
-            _id: 2
-            process: () ->
-            state: 'awaiting_transfer_in'
-            set: () ->
-              this.state = obj.state
-          }
-        ]
-
-        tradesJSON[0].state = "completed_test"
-
-        checks = () ->
-          expect(c._trades.length).toBe(2)
-          expect(c._trades[0].state).toEqual('completed_test')
-          done()
-
-        c.getTrades().then(checks)
+        expect(Trade.monitorPayments).toHaveBeenCalled()
 
     describe 'getKYCs()', ->
       it 'should call CoinifyKYC.fetchAll', ->

@@ -24,8 +24,9 @@ coinify.delegate.save.bind(coinify.delegate)()
 // "{"user":1,"offline_token":"token"}"
 */
 
+var Exchange = require('../exchange/exchange');
 var CoinifyProfile = require('./profile');
-var CoinifyTrade = require('./trade');
+var Trade = require('./trade');
 var CoinifyKYC = require('./kyc');
 var PaymentMethod = require('./payment-method');
 var ExchangeRate = require('./exchange-rate');
@@ -35,39 +36,42 @@ var API = require('./api');
 var assert = require('assert');
 var Helpers = require('../exchange/helpers');
 
-module.exports = Coinify;
+var Coinify = (function () {
+  var $this = function Coinify (object, delegate) {
+    $this.base.constructor.call(this, delegate, Trade);
 
-function Coinify (object, delegate) {
-  assert(delegate, 'ExchangeDelegate required');
-  this._delegate = delegate;
-  var obj = object || {};
-  this._partner_id = null;
-  this._user = obj.user;
-  this._auto_login = obj.auto_login;
-  this._offlineToken = obj.offline_token;
+    var obj = object || {};
+    this._partner_id = null;
+    this._user = obj.user;
+    this._auto_login = obj.auto_login;
+    this._offlineToken = obj.offline_token;
 
-  this._api = new API('https://app-api.coinify.com/');
-  this._api._offlineToken = this._offlineToken;
+    this._api = new API('https://app-api.coinify.com/');
+    this._api._offlineToken = this._offlineToken;
 
-  this._profile = new CoinifyProfile(this._api);
-  this._lastQuote = null;
+    this._profile = new CoinifyProfile(this._api);
+    this._lastQuote = null;
 
-  this._buyCurrencies = null;
-  this._sellCurrencies = null;
+    this._buyCurrencies = null;
+    this._sellCurrencies = null;
 
-  this._trades = [];
-  if (obj.trades) {
-    for (let tradeObj of obj.trades) {
-      var trade = new CoinifyTrade(tradeObj, this._api, delegate, this);
-      trade.debug = this._debug;
-      this._trades.push(trade);
+    this._trades = [];
+    if (obj.trades) {
+      for (let tradeObj of obj.trades) {
+        var trade = new Trade(tradeObj, this._api, delegate, this);
+        trade.debug = this._debug;
+        this._trades.push(trade);
+      }
     }
-  }
 
-  this._kycs = [];
+    this._kycs = [];
 
-  this.exchangeRate = new ExchangeRate(this._api);
-}
+    this.exchangeRate = new ExchangeRate(this._api);
+  };
+  Helpers.extend(Exchange, $this, {});
+
+  return $this;
+})();
 
 Object.defineProperties(Coinify.prototype, {
   'debug': {
@@ -157,7 +161,7 @@ Coinify.prototype.toJSON = function () {
     user: this._user,
     offline_token: this._offlineToken,
     auto_login: this._auto_login,
-    trades: CoinifyTrade.filteredTrades(this._trades)
+    trades: this._TradeClass.filteredTrades(this._trades)
   };
 
   return coinify;
@@ -247,48 +251,13 @@ Coinify.prototype.buy = function (amount, baseCurrency, medium) {
     return this.delegate.save.bind(this.delegate)().then(function () { return trade; });
   };
 
-  return CoinifyTrade.buy(
+  return Trade.buy(
     this._lastQuote,
     medium,
     this._api,
     this.delegate,
     this
   ).then(addTrade.bind(this));
-};
-
-Coinify.prototype.updateList = function (list, items, ListClass) {
-  var item;
-  for (var i = 0; i < items.length; i++) {
-    item = undefined;
-    for (var k = 0; k < list.length; k++) {
-      if (list[k]._id === items[i].id) {
-        item = list[k];
-        item.debug = this.debug;
-        item.set.bind(item)(items[i]);
-      }
-    }
-    if (item === undefined) {
-      item = new ListClass(items[i], this._api, this.delegate, this);
-      item.debug = this.debug;
-      list.push(item);
-    }
-  }
-};
-
-Coinify.prototype.getTrades = function () {
-  var save = () => this.delegate.save.bind(this.delegate)().then(() => this._trades);
-  var update = (trades) => {
-    this.updateList(this._trades, trades, CoinifyTrade);
-  };
-  var process = () => {
-    for (let trade of this._trades) {
-      trade.process(this._trades);
-    }
-  };
-  return CoinifyTrade.fetchAll(this._api)
-                     .then(update)
-                     .then(process)
-                     .then(save);
 };
 
 Coinify.prototype.triggerKYC = function () {
@@ -351,7 +320,7 @@ Coinify.prototype.getSellCurrencies = function () {
 };
 
 Coinify.prototype.monitorPayments = function () {
-  CoinifyTrade.monitorPayments(this._trades, this.delegate);
+  Trade.monitorPayments(this._trades, this.delegate);
 };
 
 Coinify.new = function (delegate) {
@@ -362,3 +331,5 @@ Coinify.new = function (delegate) {
   var coinify = new Coinify(object, delegate);
   return coinify;
 };
+
+module.exports = Coinify;

@@ -17,11 +17,32 @@ Profile = () ->
 Profile.fetch = () ->
   Promise.resolve({mock: "profile"})
 
+Trade = (obj) ->
+  obj
+Trade.spyableProcessTrade = () ->
+tradesJSON = [
+  {
+    id: 1
+    state: "completed"
+  }
+]
+Trade.fetchAll = () ->
+  Promise.resolve([
+    {
+      id: tradesJSON[0].id
+      state: tradesJSON[0].state
+      process: Trade.spyableProcessTrade
+    }
+  ])
+Trade.monitorPayments = () ->
+Trade.buy = (quote) ->
+  Promise.resolve({amount: quote.baseAmount})
 
 stubs = {
   '../exchange/api' : API,
   '../exchange-delegate' : ExchangeDelegate,
-  './profile' : Profile
+  './profile' : Profile,
+  './trade' : Trade
 }
 
 SFOX    = proxyquire('../../src/sfox/sfox', stubs)
@@ -51,12 +72,11 @@ describe "SFOX", ->
         expect(() -> new SFOX({auto_login: true})).toThrow()
 
       it "should deserialize trades", ->
-        pending()
-        # s = new SFOX({
-        #   auto_login: true,
-        #   trades: [{}]
-        # }, {})
-        # expect(s.trades.length).toEqual(1)
+        s = new SFOX({
+          auto_login: true,
+          trades: [{}]
+        }, {})
+        expect(s.trades.length).toEqual(1)
 
 
     describe "SFOX.new()", ->

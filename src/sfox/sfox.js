@@ -28,45 +28,44 @@ sfox.delegate.save.bind(sfox.delegate)()
 // "{"user":1,"account_token":"token"}"
 */
 
+var Exchange = require('../exchange/exchange');
+
 var API = require('./api');
 var Profile = require('./profile');
+var Trade = require('./trade');
 
 var Helpers = require('../exchange/helpers');
 
 var assert = require('assert');
 
-module.exports = SFOX;
+var SFOX = (function () {
+  var $this = function SFOX (object, delegate) {
+    $this.base.constructor.call(this, delegate, Trade);
 
-function SFOX (object, delegate) {
-  assert(delegate, 'ExchangeDelegate required');
-  this._delegate = delegate;
-  var obj = object || {};
-  this._partner_id = null;
-  this._user = obj.user;
-  this._auto_login = obj.auto_login;
-  this._accountToken = obj.account_token;
-  this._api = new API();
-  this._api._accountToken = this._accountToken;
+    var obj = object || {};
+    this._partner_id = null;
+    this._user = obj.user;
+    this._auto_login = obj.auto_login;
+    this._accountToken = obj.account_token;
+    this._api = new API();
+    this._api._accountToken = this._accountToken;
 
-  this._trades = [];
-}
-
-Object.defineProperties(SFOX.prototype, {
-  'debug': {
-    configurable: false,
-    get: function () { return this._debug; },
-    set: function (value) {
-      this._debug = Boolean(value);
-      this._delegate.debug = Boolean(value);
-      for (var i = 0; i < this.trades.length; i++) {
-        this.trades[i].debug = Boolean(value);
+    this._trades = [];
+    if (obj.trades) {
+      for (var i = 0; i < obj.trades.length; i++) {
+        var trade = new Trade(obj.trades[i], this._api, delegate, this);
+        trade.debug = this._debug;
+        this._trades.push(trade);
       }
     }
-  },
-  'delegate': {
-    configurable: false,
-    get: function () { return this._delegate; }
-  },
+  };
+
+  Helpers.extend(Exchange, $this, {});
+
+  return $this;
+})();
+
+Object.defineProperties(SFOX.prototype, {
   'user': {
     configurable: false,
     get: function () { return this._user; }
@@ -89,12 +88,6 @@ Object.defineProperties(SFOX.prototype, {
       this.delegate.save.bind(this.delegate)();
     }
   },
-  'trades': {
-    configurable: false,
-    get: function () {
-      return this._trades;
-    }
-  },
   'hasAccount': {
     configurable: false,
     get: function () {
@@ -115,16 +108,6 @@ Object.defineProperties(SFOX.prototype, {
   }
 });
 
-SFOX.prototype.toJSON = function () {
-  var sfox = {
-    user: this._user,
-    account_token: this._accountToken,
-    auto_login: this._auto_login,
-    trades: []
-  };
-
-  return sfox;
-};
 // Email must be set and verified
 // Mobile must be set and verified
 SFOX.prototype.signup = function () {
@@ -177,3 +160,16 @@ SFOX.prototype.fetchProfile = function () {
   };
   return Profile.fetch(this._api).then(setProfile.bind(this));
 };
+
+SFOX.prototype.toJSON = function () {
+  var sfox = {
+    user: this._user,
+    account_token: this._accountToken,
+    auto_login: this._auto_login,
+    trades: this._TradeClass.filteredTrades(this._trades)
+  };
+
+  return sfox;
+};
+
+module.exports = SFOX;
