@@ -12,9 +12,16 @@ ExchangeDelegate = () ->
     save: () -> Promise.resolve()
   }
 
+Profile = () ->
+
+Profile.fetch = () ->
+  Promise.resolve({mock: "profile"})
+
+
 stubs = {
   '../exchange/api' : API,
-  '../exchange-delegate' : ExchangeDelegate
+  '../exchange-delegate' : ExchangeDelegate,
+  './profile' : Profile
 }
 
 SFOX    = proxyquire('../../src/sfox/sfox', stubs)
@@ -70,11 +77,9 @@ describe "SFOX", ->
         getToken: () -> "json-web-token"
         save: () -> Promise.resolve()
       })
-      s.partnerId = 'blockchain'
       s._debug = false
 
       spyOn(s._api, "POST").and.callFake((endpoint, data) ->
-        console.log(data)
         if endpoint == "account"
           if data.user_data == "fail-token"
             Promise.reject("ERROR_MESSAGE")
@@ -197,3 +202,10 @@ describe "SFOX", ->
         promise = s.signup()
         expect(promise).toBeRejectedWith("ERROR_MESSAGE", done)
       )
+
+    describe "fetchProfile", ->
+      it "should set profile", (done) ->
+        promise = s.fetchProfile().then(()->
+          expect(s.profile).toEqual({mock: "profile"})
+        )
+        expect(promise).toBeResolved(done)

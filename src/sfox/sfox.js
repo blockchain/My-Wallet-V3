@@ -29,6 +29,8 @@ sfox.delegate.save.bind(sfox.delegate)()
 */
 
 var API = require('./api');
+var Profile = require('./profile');
+
 var Helpers = require('../exchange/helpers');
 
 var assert = require('assert');
@@ -68,6 +70,12 @@ Object.defineProperties(SFOX.prototype, {
   'user': {
     configurable: false,
     get: function () { return this._user; }
+  },
+  'profile': {
+    configurable: false,
+    get: function () {
+      return this._profile || null;
+    }
   },
   'autoLogin': {
     configurable: false,
@@ -160,4 +168,12 @@ SFOX.new = function (delegate) {
   };
   var sfox = new SFOX(object, delegate);
   return sfox;
+};
+
+SFOX.prototype.fetchProfile = function () {
+  var setProfile = function (profile) {
+    this._profile = profile;
+    return profile;
+  };
+  return Profile.fetch(this._api).then(setProfile.bind(this));
 };
