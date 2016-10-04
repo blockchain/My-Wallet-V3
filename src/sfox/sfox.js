@@ -23,7 +23,7 @@
 
 var object = {user: 1, account_token: 'token'};
 var sfox = new SFOX(object, delegate);
-sfox.partnerId = ...;
+sfox.api.apiKey = ...;
 sfox.delegate.save.bind(sfox.delegate)()
 // "{"user":1,"account_token":"token"}"
 */
@@ -91,15 +91,6 @@ Object.defineProperties(SFOX.prototype, {
     configurable: false,
     get: function () {
       return Boolean(this._accountToken);
-    }
-  },
-  'partnerId': {
-    configurable: false,
-    get: function () {
-      return this._partner_id;
-    },
-    set: function (value) {
-      this._partner_id = value;
     }
   },
   'buyCurrencies': {

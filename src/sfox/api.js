@@ -16,6 +16,9 @@ Object.defineProperties(API.prototype, {
     configurable: false,
     get: function () {
       return this._apiKey;
+    },
+    set: function (value) {
+      this._apiKey = value;
     }
   },
   'accountToken': {
