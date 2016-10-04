@@ -86,23 +86,6 @@ describe "External", ->
         )
         expect(promise).toBeResolved(done)
 
-    describe "addCoinify", ->
-      it "should initialize a Coinify object", ->
-        e.addCoinify()
-        expect(e.coinify).toBeDefined();
-      it "should check if already present", ->
-        e.addCoinify()
-        expect(() -> e.addCoinify()).toThrow()
-
-    describe "addSFOX", ->
-      it "should initialize a SFOX object", ->
-        e.addSFOX()
-        expect(e.sfox).toBeDefined();
-
-      it "should check if already present", ->
-        e.addSFOX()
-        expect(() -> e.addSFOX()).toThrow()
-
     describe "JSON serializer", ->
       beforeEach ->
         e._coinify = {}
