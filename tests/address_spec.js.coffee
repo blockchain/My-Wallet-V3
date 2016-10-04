@@ -43,6 +43,16 @@ Base58 = {
     v
 }
 
+API = {
+  getBalances: (l) ->
+    ad1 = l[0];
+    ad2 = l[1];
+    o = {}
+    o.ad1 = { final_balance: 0 }
+    o.ad2 = { final_balance: 0 }
+    return o
+}
+
 Helpers = {
   isBitcoinAddress: () -> false
   isKey: () -> true
@@ -78,7 +88,8 @@ stubs = {
   './wallet-crypto': WalletCrypto,
   './helpers' : Helpers,
   'bitcoinjs-lib': Bitcoin,
-  'bs58' : Base58
+  'bs58' : Base58,
+  './API' : API
 }
 
 Address    = proxyquire('../src/address', stubs)
@@ -389,17 +400,29 @@ describe "Address", ->
           return "mini" if candidate.indexOf("mini_") == 0
           "sipa"
 
-        Helpers.privateKeyStringToKey = (address, format) ->
-          return "mini_address" if address == "mini_address"
-          throw "invalid mini" if address == "mini_invalid"
+        miniAddress = {
+          getAddress: () -> "mini_address"
+          compressed: true
+        }
+        miniInvalid = {
+          getAddress: () -> "mini_address"
+          compressed: true
+        }
+        validAddress = {
+          getAddress: () -> "address"
+          compressed: true
+        }
 
+        Helpers.privateKeyStringToKey = (address, format) ->
+          return miniAddress if address == "mini_address"
+          return validAddress if address == "address"
+          throw miniInvalid if address == "mini_invalid"
 
         spyOn(Address, "import").and.callFake((address) ->
-          {
-            _addr: address
-          }
+          return { _addr: address } if Helpers.isString(address)
+          return { _addr: address.getAddress() } if address
+          return { _addr: address } if !address
         )
-
 
       it "should not import unknown formats", (done) ->
         promise = Address.fromString("unknown_format", null, null)
