@@ -43,6 +43,19 @@ Base58 = {
     v
 }
 
+API =
+  getBalances: (l) ->
+    ad1 = l[0];
+    ad2 = l[1];
+    o = {}
+    if ad1 == 'mini_2'
+      o[ad1] = { final_balance: 0 };
+      o[ad2] = { final_balance: 10 };
+    else
+      o[ad1] = { final_balance: 10 };
+      o[ad2] = { final_balance: 0 };
+    return Promise.resolve(o)
+
 Helpers = {
   isBitcoinAddress: () -> false
   isKey: () -> true
@@ -74,6 +87,7 @@ WalletCrypto =
 stubs = {
   './wallet': MyWallet,
   './rng' : RNG,
+  './api' : API,
   './import-export': ImportExport,
   './wallet-crypto': WalletCrypto,
   './helpers' : Helpers,
@@ -98,6 +112,10 @@ describe "Address", ->
   beforeEach ->
     spyOn(MyWallet, "syncWallet")
     spyOn(MyWallet.wallet, "getHistory")
+    # JasminePromiseMatchers.install()
+
+  afterEach ->
+    # JasminePromiseMatchers.uninstall()
 
   describe "class", ->
     describe "new Address()", ->
@@ -389,17 +407,35 @@ describe "Address", ->
           return "mini" if candidate.indexOf("mini_") == 0
           "sipa"
 
-        Helpers.privateKeyStringToKey = (address, format) ->
-          return "mini_address" if address == "mini_address"
-          throw "invalid mini" if address == "mini_invalid"
+        miniAddress = {
+          getAddress: () ->
+            if this.compressed then "mini_address" else "mini_address_uncompressed"
+          compressed: true
+        }
+        miniInvalid = {
+          getAddress: () -> "mini_address"
+          compressed: true
+        }
+        mini2 = {
+          getAddress: () -> if this.compressed then "mini_2" else "mini_2_uncompressed"
+          compressed: true
+        }
+        validAddress = {
+          getAddress: () -> "address"
+          compressed: true
+        }
 
+        Helpers.privateKeyStringToKey = (address, format) ->
+          return miniAddress if address == "mini_address"
+          return mini2 if address == "mini_2"
+          return validAddress if address == "address"
+          throw miniInvalid if address == "mini_invalid"
 
         spyOn(Address, "import").and.callFake((address) ->
-          {
-            _addr: address
-          }
+          return { _addr: address } if Helpers.isString(address)
+          return { _addr: address.getAddress() } if address
+          return { _addr: address } if !address
         )
-
 
       it "should not import unknown formats", (done) ->
         promise = Address.fromString("unknown_format", null, null)
@@ -433,6 +469,11 @@ describe "Address", ->
       it "should import private keys using mini format string", (done) ->
         promise = Address.fromString("mini_address", null, null)
         match = jasmine.objectContaining({_addr: "mini_address"})
+        expect(promise).toBeResolvedWith(match, done)
+
+      it "should import uncompressed private keys using mini format string", (done) ->
+        promise = Address.fromString("mini_2", null, null)
+        match = jasmine.objectContaining({_addr: "mini_2_uncompressed"})
         expect(promise).toBeResolvedWith(match, done)
 
       it "should not import private keys using an invalid mini format string", (done) ->
