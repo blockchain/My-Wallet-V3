@@ -854,3 +854,10 @@ Wallet.prototype.loadExternal = function () {
     return this._external.fetch();
   }
 };
+
+Wallet.prototype.incStats = function () {
+  var mvBool = this.hdwallet ? this.hdwallet.isMnemonicVerified : false;
+  API.incrementSecPassStats(this.isDoubleEncrypted);
+  API.incrementRecoveryStats(mvBool);
+  return true;
+}
