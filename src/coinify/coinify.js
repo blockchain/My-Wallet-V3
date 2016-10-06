@@ -64,8 +64,8 @@ function Coinify (object, delegate) {
 
   this._trades = [];
   if (obj.trades) {
-    for (var i = 0; i < obj.trades.length; i++) {
-      var trade = new CoinifyTrade(obj.trades[i], this._api, delegate, this);
+    for (let tradeObj of obj.trades) {
+      var trade = new CoinifyTrade(tradeObj, this._api, delegate, this);
       trade.debug = this._debug;
       this._trades.push(trade);
     }
@@ -283,45 +283,38 @@ Coinify.prototype.updateList = function (list, items, ListClass) {
 };
 
 Coinify.prototype.getTrades = function () {
-  var self = this;
-  var save = function () {
-    return this.delegate.save.bind(this.delegate)().then(function () { return self._trades; });
-  };
-  var update = function (trades) {
+  var save = () => this.delegate.save.bind(this.delegate)().then(() => this._trades);
+  var update = (trades) => {
     this.updateList(this._trades, trades, CoinifyTrade);
   };
-  var process = function () {
-    for (var i = 0; i < this._trades.length; i++) {
-      var trade = this._trades[i];
+  var process = () => {
+    for (let trade of this._trades) {
       trade.process(this._trades);
     }
   };
   return CoinifyTrade.fetchAll(this._api)
-                     .then(update.bind(this))
-                     .then(process.bind(this))
-                     .then(save.bind(this));
+                     .then(update)
+                     .then(process)
+                     .then(save);
 };
 
 Coinify.prototype.triggerKYC = function () {
-  var addKYC = function (kyc) {
+  var addKYC = (kyc) => {
     this._kycs.push(kyc);
     return kyc;
   };
 
-  return CoinifyKYC.trigger(this._api).then(addKYC.bind(this));
+  return CoinifyKYC.trigger(this._api).then(addKYC);
 };
 
 Coinify.prototype.getKYCs = function () {
-  var self = this;
-  var save = function () {
-    return this.delegate.save.bind(this.delegate)().then(function () { return self._kycs; });
-  };
-  var update = function (kycs) {
+  var save = () => this.delegate.save.bind(this.delegate)().then(() => this._kycs);
+  var update = (kycs) => {
     this.updateList(this._kycs, kycs, CoinifyKYC);
   };
   return CoinifyKYC.fetchAll(this._api, this)
-                     .then(update.bind(this))
-                     .then(save.bind(this));
+                     .then(update)
+                     .then(save);
 };
 
 Coinify.prototype.getBuyMethods = function () {
@@ -335,12 +328,10 @@ Coinify.prototype.getSellMethods = function () {
 Coinify.prototype.getBuyCurrencies = function () {
   var getCurrencies = function (paymentMethods) {
     var currencies = [];
-    for (var i = 0; i < paymentMethods.length; i++) {
-      var paymentMethod = paymentMethods[i];
-      for (var j = 0; j < paymentMethod.inCurrencies.length; j++) {
-        var inCurrency = paymentMethod.inCurrencies[j];
+    for (let paymentMethod of paymentMethods) {
+      for (let inCurrency of paymentMethod.inCurrencies) {
         if (currencies.indexOf(inCurrency) === -1) {
-          currencies.push(paymentMethod.inCurrencies[j]);
+          currencies.push(inCurrency);
         }
       }
     }
@@ -353,12 +344,10 @@ Coinify.prototype.getBuyCurrencies = function () {
 Coinify.prototype.getSellCurrencies = function () {
   var getCurrencies = function (paymentMethods) {
     var currencies = [];
-    for (var i = 0; i < paymentMethods.length; i++) {
-      var paymentMethod = paymentMethods[i];
-      for (var j = 0; j < paymentMethod.outCurrencies.length; j++) {
-        var outCurrency = paymentMethod.outCurrencies[j];
+    for (let paymentMethod of paymentMethods) {
+      for (let outCurrency of paymentMethod.outCurrencies) {
         if (currencies.indexOf(outCurrency) === -1) {
-          currencies.push(paymentMethod.outCurrencies[j]);
+          currencies.push(outCurrency);
         }
       }
     }
