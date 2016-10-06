@@ -45,7 +45,8 @@ module.exports = function (config) {
             presets: ['es2015'],
             ignore: [
               'src/ws-browser.js' // undefined is not an object (evaluating 'global.WebSocket')
-            ]
+            ],
+            sourceMap: 'inline'
           });
 
           bundle.plugin('proxyquireify/plugin');
