@@ -58,21 +58,19 @@ Exchange.prototype.updateList = function (list, items, ListClass) {
 };
 
 Exchange.prototype.getTrades = function () {
-  var self = this;
-  var save = function () {
-    return this.delegate.save.bind(this.delegate)().then(function () { return self._trades; });
+  var save = () => {
+    return this.delegate.save.bind(this.delegate)().then(() => this._trades);
   };
-  var update = function (trades) {
+  var update = (trades) => {
     this.updateList(this._trades, trades, this._TradeClass);
   };
-  var process = function () {
-    for (var i = 0; i < this._trades.length; i++) {
-      var trade = this._trades[i];
+  var process = () => {
+    for (let trade of this._trades) {
       trade.process(this._trades);
     }
   };
   return this._TradeClass.fetchAll(this._api)
-                     .then(update.bind(this))
-                     .then(process.bind(this))
-                     .then(save.bind(this));
+                     .then(update)
+                     .then(process)
+                     .then(save);
 };
