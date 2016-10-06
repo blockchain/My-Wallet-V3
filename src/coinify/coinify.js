@@ -1,5 +1,3 @@
-'use strict';
-
 /* To use this class, three things are needed:
 1 - a delegate object with functions that provide the following:
       save() -> e.g. function () { return JSON.stringify(this._coinify); }
@@ -36,9 +34,9 @@ var API = require('./api');
 var assert = require('assert');
 var Helpers = require('../exchange/helpers');
 
-var Coinify = (function () {
-  var $this = function Coinify (object, delegate) {
-    $this.base.constructor.call(this, delegate, Trade);
+class Coinify extends Exchange {
+  constructor (object, delegate) {
+    super(delegate, Trade);
 
     var obj = object || {};
     this._partner_id = null;
@@ -67,269 +65,205 @@ var Coinify = (function () {
     this._kycs = [];
 
     this.exchangeRate = new ExchangeRate(this._api);
-  };
-  Helpers.extend(Exchange, $this, {});
+  }
 
-  return $this;
-})();
-
-Object.defineProperties(Coinify.prototype, {
-  'debug': {
-    configurable: false,
-    get: function () { return this._debug; },
-    set: function (value) {
-      this._debug = Boolean(value);
-      this._delegate.debug = Boolean(value);
-      for (var i = 0; i < this.trades.length; i++) {
-        this.trades[i].debug = Boolean(value);
-      }
+  get profile () {
+    if (!this._profile._did_fetch) {
+      return null;
+    } else {
+      return this._profile;
     }
-  },
-  'delegate': {
-    configurable: false,
-    get: function () { return this._delegate; }
-  },
-  'user': {
-    configurable: false,
-    get: function () { return this._user; }
-  },
-  'autoLogin': {
-    configurable: false,
-    get: function () { return this._auto_login; },
-    set: function (value) {
+  }
+
+  get kycs () { return this._kycs; }
+
+  get hasAccount () { return Boolean(this._offlineToken); }
+
+  get partnerId () { return this._partner_id; }
+  set partnerId (value) {
+    this._partner_id = value;
+  }
+
+  get buyCurrencies () { return this._buyCurrencies; }
+
+  get sellCurrencies () { return this._sellCurrencies; }
+
+  toJSON () {
+    var coinify = {
+      user: this._user,
+      offline_token: this._offlineToken,
+      auto_login: this._auto_login,
+      trades: this._TradeClass.filteredTrades(this._trades)
+    };
+
+    return coinify;
+  }
+
+  // Country and default currency must be set
+  // Email must be set and verified
+  signup (countryCode, currencyCode) {
+    var self = this;
+    var runChecks = function () {
+      assert(!self.user, 'Already signed up');
+
+      assert(self.delegate, 'ExchangeDelegate required');
+
       assert(
-        Helpers.isBoolean(value),
-        'Boolean'
+        countryCode &&
+        Helpers.isString(countryCode) &&
+        countryCode.length === 2 &&
+        countryCode.match(/[a-zA-Z]{2}/),
+        'ISO 3166-1 alpha-2'
       );
-      this._auto_login = value;
-      this.delegate.save.bind(this.delegate)();
-    }
-  },
-  'profile': {
-    configurable: false,
-    get: function () {
-      if (!this._profile._did_fetch) {
-        return null;
-      } else {
-        return this._profile;
-      }
-    }
-  },
-  'trades': {
-    configurable: false,
-    get: function () {
-      return this._trades;
-    }
-  },
-  'kycs': {
-    configurable: false,
-    get: function () {
-      return this._kycs;
-    }
-  },
-  'hasAccount': {
-    configurable: false,
-    get: function () {
-      return Boolean(this._offlineToken);
-    }
-  },
-  'partnerId': {
-    configurable: false,
-    get: function () {
-      return this._partner_id;
-    },
-    set: function (value) {
-      this._partner_id = value;
-    }
-  },
-  'buyCurrencies': {
-    configurable: false,
-    get: function () {
-      return this._buyCurrencies;
-    }
-  },
-  'sellCurrencies': {
-    configurable: false,
-    get: function () {
-      return this._sellCurrencies;
-    }
+
+      assert(currencyCode, 'currency required');
+
+      assert(self.delegate.email(), 'email required');
+      assert(self.delegate.isEmailVerified(), 'email must be verified');
+    };
+
+    var doSignup = function (emailToken) {
+      assert(emailToken, 'email token missing');
+      return this._api.POST('signup/trader', {
+        email: self.delegate.email(),
+        partnerId: self.partnerId,
+        defaultCurrency: currencyCode, // ISO 4217
+        profile: {
+          address: {
+            country: countryCode.toUpperCase()
+          }
+        },
+        trustedEmailValidationToken: emailToken,
+        generateOfflineToken: true
+      });
+    };
+
+    var saveMetadata = function (res) {
+      this._user = res.trader.id;
+      this._offlineToken = res.offlineToken;
+      this._api._offlineToken = this._offlineToken;
+      return this._delegate.save.bind(this._delegate)().then(function () { return res; });
+    };
+
+    return Promise.resolve().then(runChecks.bind(this))
+                            .then(this.delegate.getEmailToken.bind(this.delegate))
+                            .then(doSignup.bind(this))
+                            .then(saveMetadata.bind(this));
   }
-});
 
-Coinify.prototype.toJSON = function () {
-  var coinify = {
-    user: this._user,
-    offline_token: this._offlineToken,
-    auto_login: this._auto_login,
-    trades: this._TradeClass.filteredTrades(this._trades)
-  };
-
-  return coinify;
-};
-// Country and default currency must be set
-// Email must be set and verified
-Coinify.prototype.signup = function (countryCode, currencyCode) {
-  var self = this;
-  var runChecks = function () {
-    assert(!self.user, 'Already signed up');
-
-    assert(self.delegate, 'ExchangeDelegate required');
-
-    assert(
-      countryCode &&
-      Helpers.isString(countryCode) &&
-      countryCode.length === 2 &&
-      countryCode.match(/[a-zA-Z]{2}/),
-      'ISO 3166-1 alpha-2'
-    );
-
-    assert(currencyCode, 'currency required');
-
-    assert(self.delegate.email(), 'email required');
-    assert(self.delegate.isEmailVerified(), 'email must be verified');
-  };
-
-  var doSignup = function (emailToken) {
-    assert(emailToken, 'email token missing');
-    return this._api.POST('signup/trader', {
-      email: self.delegate.email(),
-      partnerId: self.partnerId,
-      defaultCurrency: currencyCode, // ISO 4217
-      profile: {
-        address: {
-          country: countryCode.toUpperCase()
-        }
-      },
-      trustedEmailValidationToken: emailToken,
-      generateOfflineToken: true
-    });
-  };
-
-  var saveMetadata = function (res) {
-    this._user = res.trader.id;
-    this._offlineToken = res.offlineToken;
-    this._api._offlineToken = this._offlineToken;
-    return this._delegate.save.bind(this._delegate)().then(function () { return res; });
-  };
-
-  return Promise.resolve().then(runChecks.bind(this))
-                          .then(this.delegate.getEmailToken.bind(this.delegate))
-                          .then(doSignup.bind(this))
-                          .then(saveMetadata.bind(this));
-};
-
-Coinify.prototype.fetchProfile = function () {
-  return this._profile.fetch();
-};
-
-Coinify.prototype.getBuyQuote = function (amount, baseCurrency, quoteCurrency) {
-  assert(baseCurrency, 'Specify base currency');
-  assert(baseCurrency !== 'BTC' || quoteCurrency, 'Specify quote currency');
-  if (baseCurrency !== 'BTC') {
-    quoteCurrency = 'BTC';
+  fetchProfile () {
+    return this._profile.fetch();
   }
-  return Quote.getQuote(this._api, -amount, baseCurrency, quoteCurrency)
-              .then(this.setLastQuote.bind(this));
-};
 
-Coinify.prototype.setLastQuote = function (quote) {
-  this._lastQuote = quote;
-  return quote;
-};
+  getBuyQuote (amount, baseCurrency, quoteCurrency) {
+    assert(baseCurrency, 'Specify base currency');
+    assert(baseCurrency !== 'BTC' || quoteCurrency, 'Specify quote currency');
+    if (baseCurrency !== 'BTC') {
+      quoteCurrency = 'BTC';
+    }
+    return Quote.getQuote(this._api, -amount, baseCurrency, quoteCurrency)
+                .then(this.setLastQuote.bind(this));
+  }
 
-Coinify.prototype.buy = function (amount, baseCurrency, medium) {
-  assert(this.delegate, 'ExchangeDelegate required');
-  assert(this._lastQuote !== null, 'You must first obtain a quote');
-  assert(this._lastQuote.baseAmount === -amount, 'LAST_QUOTE_AMOUNT_DOES_NOT_MATCH');
-  assert(this._lastQuote.baseCurrency === baseCurrency, 'Currency must match last quote');
-  assert(this._lastQuote.expiresAt > new Date(), 'LAST_QUOTE_EXPIRED');
-  assert(medium === 'bank' || medium === 'card', 'Specify bank or card');
+  setLastQuote (quote) {
+    this._lastQuote = quote;
+    return quote;
+  }
 
-  var addTrade = function (trade) {
-    trade.debug = this._debug;
-    this._trades.push(trade);
-    return this.delegate.save.bind(this.delegate)().then(function () { return trade; });
-  };
+  buy (amount, baseCurrency, medium) {
+    assert(this.delegate, 'ExchangeDelegate required');
+    assert(this._lastQuote !== null, 'You must first obtain a quote');
+    assert(this._lastQuote.baseAmount === -amount, 'LAST_QUOTE_AMOUNT_DOES_NOT_MATCH');
+    assert(this._lastQuote.baseCurrency === baseCurrency, 'Currency must match last quote');
+    assert(this._lastQuote.expiresAt > new Date(), 'LAST_QUOTE_EXPIRED');
+    assert(medium === 'bank' || medium === 'card', 'Specify bank or card');
 
-  return Trade.buy(
-    this._lastQuote,
-    medium,
-    this._api,
-    this.delegate,
-    this
-  ).then(addTrade.bind(this));
-};
+    var addTrade = function (trade) {
+      trade.debug = this._debug;
+      this._trades.push(trade);
+      return this.delegate.save.bind(this.delegate)().then(function () { return trade; });
+    };
 
-Coinify.prototype.triggerKYC = function () {
-  var addKYC = (kyc) => {
-    this._kycs.push(kyc);
-    return kyc;
-  };
+    return Trade.buy(
+      this._lastQuote,
+      medium,
+      this._api,
+      this.delegate,
+      this
+    ).then(addTrade.bind(this));
+  }
 
-  return CoinifyKYC.trigger(this._api).then(addKYC);
-};
+  triggerKYC () {
+    var addKYC = (kyc) => {
+      this._kycs.push(kyc);
+      return kyc;
+    };
 
-Coinify.prototype.getKYCs = function () {
-  var save = () => this.delegate.save.bind(this.delegate)().then(() => this._kycs);
-  var update = (kycs) => {
-    this.updateList(this._kycs, kycs, CoinifyKYC);
-  };
-  return CoinifyKYC.fetchAll(this._api, this)
-                     .then(update)
-                     .then(save);
-};
+    return CoinifyKYC.trigger(this._api).then(addKYC);
+  }
 
-Coinify.prototype.getBuyMethods = function () {
-  return PaymentMethod.fetchAll(undefined, 'BTC', this._api);
-};
+  getKYCs () {
+    var save = () => this.delegate.save.bind(this.delegate)().then(() => this._kycs);
+    var update = (kycs) => {
+      this.updateList(this._kycs, kycs, CoinifyKYC);
+    };
+    return CoinifyKYC.fetchAll(this._api, this)
+                       .then(update)
+                       .then(save);
+  }
 
-Coinify.prototype.getSellMethods = function () {
-  return PaymentMethod.fetchAll('BTC', undefined, this._api);
-};
+  getBuyMethods () {
+    return PaymentMethod.fetchAll(undefined, 'BTC', this._api);
+  }
 
-Coinify.prototype.getBuyCurrencies = function () {
-  var getCurrencies = function (paymentMethods) {
-    var currencies = [];
-    for (let paymentMethod of paymentMethods) {
-      for (let inCurrency of paymentMethod.inCurrencies) {
-        if (currencies.indexOf(inCurrency) === -1) {
-          currencies.push(inCurrency);
+  getSellMethods () {
+    return PaymentMethod.fetchAll('BTC', undefined, this._api);
+  }
+
+  getBuyCurrencies () {
+    var getCurrencies = function (paymentMethods) {
+      var currencies = [];
+      for (let paymentMethod of paymentMethods) {
+        for (let inCurrency of paymentMethod.inCurrencies) {
+          if (currencies.indexOf(inCurrency) === -1) {
+            currencies.push(inCurrency);
+          }
         }
       }
-    }
-    this._buyCurrencies = JSON.parse(JSON.stringify(currencies));
-    return currencies;
-  };
-  return this.getBuyMethods().then(getCurrencies.bind(this));
-};
+      this._buyCurrencies = JSON.parse(JSON.stringify(currencies));
+      return currencies;
+    };
+    return this.getBuyMethods().then(getCurrencies.bind(this));
+  }
 
-Coinify.prototype.getSellCurrencies = function () {
-  var getCurrencies = function (paymentMethods) {
-    var currencies = [];
-    for (let paymentMethod of paymentMethods) {
-      for (let outCurrency of paymentMethod.outCurrencies) {
-        if (currencies.indexOf(outCurrency) === -1) {
-          currencies.push(outCurrency);
+  getSellCurrencies () {
+    var getCurrencies = function (paymentMethods) {
+      var currencies = [];
+      for (let paymentMethod of paymentMethods) {
+        for (let outCurrency of paymentMethod.outCurrencies) {
+          if (currencies.indexOf(outCurrency) === -1) {
+            currencies.push(outCurrency);
+          }
         }
       }
-    }
-    this._sellCurrencies = JSON.parse(JSON.stringify(currencies));
-    return currencies;
-  };
-  return this.getSellMethods().then(getCurrencies.bind(this));
-};
+      this._sellCurrencies = JSON.parse(JSON.stringify(currencies));
+      return currencies;
+    };
+    return this.getSellMethods().then(getCurrencies.bind(this));
+  }
 
-Coinify.prototype.monitorPayments = function () {
-  Trade.monitorPayments(this._trades, this.delegate);
-};
+  monitorPayments () {
+    Trade.monitorPayments(this._trades, this.delegate);
+  }
 
-Coinify.new = function (delegate) {
-  assert(delegate, 'Coinify.new requires delegate');
-  var object = {
-    auto_login: true
-  };
-  var coinify = new Coinify(object, delegate);
-  return coinify;
-};
+  static new (delegate) {
+    assert(delegate, 'Coinify.new requires delegate');
+    var object = {
+      auto_login: true
+    };
+    var coinify = new Coinify(object, delegate);
+    return coinify;
+  }
+}
 
 module.exports = Coinify;

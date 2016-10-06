@@ -1,5 +1,3 @@
-'use strict';
-
 /* To use this class, two things are needed:
 1 - a delegate object with functions that provide the following:
       save() -> e.g. function () { return JSON.stringify(this._sfox); }
@@ -34,13 +32,11 @@ var API = require('./api');
 var Profile = require('./profile');
 var Trade = require('./trade');
 
-var Helpers = require('../exchange/helpers');
-
 var assert = require('assert');
 
-var SFOX = (function () {
-  var $this = function SFOX (object, delegate) {
-    $this.base.constructor.call(this, delegate, Trade);
+class SFOX extends Exchange {
+  constructor (object, delegate) {
+    super(delegate, Trade);
 
     var obj = object || {};
     this._partner_id = null;
@@ -58,118 +54,79 @@ var SFOX = (function () {
         this._trades.push(trade);
       }
     }
-  };
-
-  Helpers.extend(Exchange, $this, {});
-
-  return $this;
-})();
-
-Object.defineProperties(SFOX.prototype, {
-  'user': {
-    configurable: false,
-    get: function () { return this._user; }
-  },
-  'profile': {
-    configurable: false,
-    get: function () {
-      return this._profile || null;
-    }
-  },
-  'autoLogin': {
-    configurable: false,
-    get: function () { return this._auto_login; },
-    set: function (value) {
-      assert(
-        Helpers.isBoolean(value),
-        'Boolean'
-      );
-      this._auto_login = value;
-      this.delegate.save.bind(this.delegate)();
-    }
-  },
-  'hasAccount': {
-    configurable: false,
-    get: function () {
-      return Boolean(this._accountToken);
-    }
-  },
-  'buyCurrencies': {
-    configurable: false,
-    get: function () {
-      return ['USD'];
-    }
-  },
-  'sellCurrencies': {
-    configurable: false,
-    get: function () {
-      return ['USD'];
-    }
   }
-});
 
-// Email must be set and verified
-// Mobile must be set and verified
-SFOX.prototype.signup = function () {
-  var self = this;
-  var runChecks = function () {
-    assert(!self.user, 'Already signed up');
+  get profile () { return this._profile || null; }
 
-    assert(self.delegate, 'ExchangeDelegate required');
+  get hasAccount () { return Boolean(this._accountToken); }
 
-    assert(self.delegate.email(), 'email required');
-    assert(self.delegate.mobile(), 'mobile required');
-    assert(self.delegate.isEmailVerified(), 'email must be verified');
-    assert(self.delegate.isMobileVerified(), 'mobile must be verified');
-  };
+  get buyCurrencies () { return ['USD']; }
 
-  var doSignup = function (token) {
-    assert(token, 'email + mobile token missing');
-    return this._api.POST('account', {
-      username: self.delegate.email(),
-      user_data: token
-    });
-  };
+  get sellCurrencies () { return ['USD']; }
 
-  var saveMetadata = function (res) {
-    this._user = res.account.id;
-    this._accountToken = res.token;
-    this._api._accountToken = this._accountToken;
-    return this._delegate.save.bind(this._delegate)().then(function () { return res; });
-  };
+  // Email must be set and verified
+  // Mobile must be set and verified
+  signup () {
+    var self = this;
+    var runChecks = function () {
+      assert(!self.user, 'Already signed up');
 
-  return Promise.resolve().then(runChecks.bind(this))
-                          .then(this.delegate.getToken.bind(this.delegate))
-                          .then(doSignup.bind(this))
-                          .then(saveMetadata.bind(this));
-};
+      assert(self.delegate, 'ExchangeDelegate required');
 
-SFOX.new = function (delegate) {
-  assert(delegate, 'SFOX.new requires delegate');
-  var object = {
-    auto_login: true
-  };
-  var sfox = new SFOX(object, delegate);
-  return sfox;
-};
+      assert(self.delegate.email(), 'email required');
+      assert(self.delegate.mobile(), 'mobile required');
+      assert(self.delegate.isEmailVerified(), 'email must be verified');
+      assert(self.delegate.isMobileVerified(), 'mobile must be verified');
+    };
 
-SFOX.prototype.fetchProfile = function () {
-  var setProfile = function (profile) {
-    this._profile = profile;
-    return profile;
-  };
-  return Profile.fetch(this._api).then(setProfile.bind(this));
-};
+    var doSignup = function (token) {
+      assert(token, 'email + mobile token missing');
+      return this._api.POST('account', {
+        username: self.delegate.email(),
+        user_data: token
+      });
+    };
 
-SFOX.prototype.toJSON = function () {
-  var sfox = {
-    user: this._user,
-    account_token: this._accountToken,
-    auto_login: this._auto_login,
-    trades: this._TradeClass.filteredTrades(this._trades)
-  };
+    var saveMetadata = function (res) {
+      this._user = res.account.id;
+      this._accountToken = res.token;
+      this._api._accountToken = this._accountToken;
+      return this._delegate.save.bind(this._delegate)().then(function () { return res; });
+    };
 
-  return sfox;
-};
+    return Promise.resolve().then(runChecks.bind(this))
+                            .then(this.delegate.getToken.bind(this.delegate))
+                            .then(doSignup.bind(this))
+                            .then(saveMetadata.bind(this));
+  }
+
+  fetchProfile () {
+    var setProfile = function (profile) {
+      this._profile = profile;
+      return profile;
+    };
+    return Profile.fetch(this._api).then(setProfile.bind(this));
+  }
+
+  toJSON () {
+    var sfox = {
+      user: this._user,
+      account_token: this._accountToken,
+      auto_login: this._auto_login,
+      trades: this._TradeClass.filteredTrades(this._trades)
+    };
+
+    return sfox;
+  }
+
+  static new (delegate) {
+    assert(delegate, 'SFOX.new requires delegate');
+    var object = {
+      auto_login: true
+    };
+    var sfox = new SFOX(object, delegate);
+    return sfox;
+  }
+}
 
 module.exports = SFOX;
