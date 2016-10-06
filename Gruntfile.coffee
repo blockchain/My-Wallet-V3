@@ -73,10 +73,7 @@ module.exports = (grunt) ->
 
     watch:
       scripts:
-        files: [
-          'src/**/*.js'
-          'src/**/*.es6'
-        ]
+        files: 'src/**/*.js'
         tasks: ['build']
 
     env:
@@ -94,13 +91,6 @@ module.exports = (grunt) ->
         src: '**/*.js'
         dest: 'build'
         ext: '.processed.js'
-
-      es6:
-        expand: true
-        cwd: 'src/'
-        src: '**/*.es6'
-        dest: 'build'
-        ext: '.processed.es6'
 
   grunt.loadNpmTasks 'grunt-browserify'
   grunt.loadNpmTasks 'grunt-contrib-clean'
