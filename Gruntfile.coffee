@@ -51,7 +51,15 @@ module.exports = (grunt) ->
     browserify:
       options:
         debug: true
-        browserifyOptions: { standalone: "Blockchain" }
+        browserifyOptions: {
+          standalone: "Blockchain"
+          transform: [
+            ["babelify", {
+              presets: ["es2015"],
+              only: ["coinify/*.js"]
+            }]
+          ]
+        }
 
       build:
         src: ['index.js']
@@ -67,6 +75,7 @@ module.exports = (grunt) ->
       scripts:
         files: [
           'src/**/*.js'
+          'src/**/*.es6'
         ]
         tasks: ['build']
 
@@ -85,6 +94,13 @@ module.exports = (grunt) ->
         src: '**/*.js'
         dest: 'build'
         ext: '.processed.js'
+
+      es6:
+        expand: true
+        cwd: 'src/'
+        src: '**/*.es6'
+        dest: 'build'
+        ext: '.processed.es6'
 
   grunt.loadNpmTasks 'grunt-browserify'
   grunt.loadNpmTasks 'grunt-contrib-clean'

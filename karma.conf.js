@@ -24,14 +24,14 @@ module.exports = function (config) {
 
     coverageReporter: {
       reporters: [
-        { type: 'html', dir: 'coverage/' },
-        { type: 'lcov', dir: 'coverage-lcov/' }
+        { type: 'lcovonly', dir: 'coverage-lcov/' }
       ],
 
       subdir: '.'
     },
 
     preprocessors: {
+      'src/**/*.js': ['browserify'],
       'tests/**/*.coffee': ['browserify']
     },
 
@@ -39,6 +39,12 @@ module.exports = function (config) {
       configure: function (bundle) {
         bundle.once('prebundle', function () {
           bundle.transform('coffeeify');
+          bundle.transform('babelify', {
+            presets: ['es2015'],
+            ignore: [
+              'src/ws-browser.js' // undefined is not an object (evaluating 'global.WebSocket')
+            ]
+          });
           bundle.transform('browserify-istanbul');
           bundle.plugin('proxyquireify/plugin');
         });
