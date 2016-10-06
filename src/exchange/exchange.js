@@ -71,6 +71,10 @@ class Exchange {
                        .then(process)
                        .then(save);
   }
+
+  monitorPayments () {
+    this._TradeClass.monitorPayments(this._trades, this.delegate);
+  }
 }
 
 module.exports = Exchange;

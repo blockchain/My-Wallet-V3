@@ -252,16 +252,12 @@ class Coinify extends Exchange {
     return this.getSellMethods().then(getCurrencies.bind(this));
   }
 
-  monitorPayments () {
-    Trade.monitorPayments(this._trades, this.delegate);
-  }
-
-  static new (delegate) {
+  static new (delegate, TradeClass) {
     assert(delegate, 'Coinify.new requires delegate');
     var object = {
       auto_login: true
     };
-    var coinify = new Coinify(object, delegate);
+    var coinify = new Coinify(object, delegate, TradeClass);
     return coinify;
   }
 }
