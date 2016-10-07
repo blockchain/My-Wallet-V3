@@ -4,7 +4,6 @@ var assert = require('assert');
 
 var BankAccount = require('./bank-account');
 var Helpers = require('../exchange/helpers');
-var Quote = require('./quote');
 
 var ExchangeTrade = require('../exchange/trade');
 
@@ -127,7 +126,6 @@ class Trade extends ExchangeTrade {
   }
 
   btcExpected () {
-    var self = this;
     if (this.isBuy) {
       if ([
         'completed',
@@ -148,12 +146,12 @@ class Trade extends ExchangeTrade {
         if (this._lastBtcExpectedGuessAt > oneMinuteAgo) {
           return Promise.resolve(this._lastBtcExpectedGuess);
         } else {
-          var processQuote = function (quote) {
-            self._lastBtcExpectedGuess = quote.quoteAmount;
-            self._lastBtcExpectedGuessAt = new Date();
-            return self._lastBtcExpectedGuess;
+          var processQuote = (quote) => {
+            this._lastBtcExpectedGuess = quote.quoteAmount;
+            this._lastBtcExpectedGuessAt = new Date();
+            return this._lastBtcExpectedGuess;
           };
-          return Quote.getQuote(this._api, -this.inAmount, this.inCurrency, this.outCurrency).then(processQuote);
+          return this._getQuote(this._api, this._delegate, -this.inAmount, this.inCurrency, this.outCurrency, this._debug).then(processQuote);
         }
       }
     } else {

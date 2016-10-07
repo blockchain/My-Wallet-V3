@@ -31,12 +31,13 @@ var Exchange = require('../exchange/exchange');
 var API = require('./api');
 var Profile = require('./profile');
 var Trade = require('./trade');
+var Quote = {}; // = require('./quote');
 
 var assert = require('assert');
 
 class SFOX extends Exchange {
   constructor (object, delegate) {
-    super(delegate, Trade);
+    super(delegate, Trade, Quote);
 
     var obj = object || {};
     this._partner_id = null;

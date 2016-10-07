@@ -25,8 +25,12 @@ Trade.fetchAll = () ->
     }
   ])
 
+Quote = (obj) ->
+  obj
+
 stubs = {
   './trade' : Trade
+  './quote' : Quote
   './api' : API
 }
 
@@ -46,7 +50,7 @@ describe "Exchange", ->
     describe "new Exchange()", ->
 
       it "should work", ->
-        e = new Exchange({}, Trade)
+        e = new Exchange({}, Trade, Quote)
         expect(e.constructor.name).toEqual("Exchange")
 
   describe "instance", ->
@@ -56,7 +60,7 @@ describe "Exchange", ->
         isEmailVerified: () -> true
         getEmailToken: () -> "json-web-token"
         save: () -> Promise.resolve()
-      }, Trade)
+      }, Trade, Quote)
       e.api = new API()
 
     describe "debug", ->

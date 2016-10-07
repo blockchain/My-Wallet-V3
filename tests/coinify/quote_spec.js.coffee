@@ -10,13 +10,19 @@ PaymentMethod = {
   ])
 }
 
+Trade = () ->
+Trade.buy = (quote) ->
+  Promise.resolve({amount: quote.baseAmount})
+
+
 stubs = {
-  './payment-method' : PaymentMethod
+  './payment-method' : PaymentMethod,
+  './trade' : Trade
 }
 
 Quote = proxyquire('../../src/coinify/quote', stubs)
 
-describe "CoinifyQuote", ->
+describe "Coinify Quote", ->
 
   obj = undefined
   q = undefined
@@ -32,7 +38,10 @@ describe "CoinifyQuote", ->
       issueTime:"2016-09-02T13:50:55.648Z",
       expiryTime:"2016-09-02T14:05:55.000Z"
     }
-    q = new Quote(obj)
+    q = new Quote(obj, {}, {
+      save: () -> Promise.resolve()
+      trades: []
+    }, false)
 
   describe "class", ->
     describe "new Quote()", ->
@@ -47,7 +56,7 @@ describe "CoinifyQuote", ->
       it "must correctly round the fixed fee, fiat to BTC", ->
         obj.baseAmount = 35.05 # 35.05 * 100 = 3504.9999999999995 in javascript
         obj.quoteAmount = 0.00003505
-        q = new Quote(obj)
+        q = new Quote(obj, {}, {})
         expect(q.baseAmount).toEqual(3505)
         expect(q.quoteAmount).toEqual(3505)
 
@@ -56,12 +65,12 @@ describe "CoinifyQuote", ->
         obj.quoteCurrency = "EUR"
         obj.baseAmount = 0.00003505
         obj.quoteAmount = 35.05
-        q = new Quote(obj)
+        q = new Quote(obj, {}, {})
         expect(q.baseAmount).toEqual(3505)
         expect(q.quoteAmount).toEqual(3505)
 
     describe "getQuote()", ->
-      coinify = {
+      api = {
         POST: (endpoint, data) ->
           console.log(endpoint, data)
           if endpoint == 'trades/quote'
@@ -70,7 +79,6 @@ describe "CoinifyQuote", ->
             Promise.reject()
 
         authPOST: (endpoint, data) ->
-          console.log(endpoint, data)
           if endpoint == 'trades/quote'
             rate = undefined
             if data.baseCurrency == 'BTC'
@@ -89,46 +97,34 @@ describe "CoinifyQuote", ->
       }
 
       beforeEach ->
-        spyOn(coinify, "POST").and.callThrough()
-        spyOn(coinify, "authPOST").and.callThrough()
+        spyOn(api, "POST").and.callThrough()
+        spyOn(api, "authPOST").and.callThrough()
 
       describe "without an account", ->
-        it "should POST /trades/quote", ->
-          Quote.getQuote(coinify, 1000, 'EUR', 'BTC')
-          expect(coinify.POST).toHaveBeenCalled()
-          expect(coinify.POST.calls.argsFor(0)[0]).toEqual('trades/quote')
+        it "should POST /trades/quote", (done) ->
+          checks = () ->
+            expect(api.POST).toHaveBeenCalled()
+            expect(api.POST.calls.argsFor(0)[0]).toEqual('trades/quote')
+            done()
+
+          Quote.getQuote(api, {}, 1000, 'EUR', 'BTC').then(checks)
 
       describe "with an account", ->
         beforeEach ->
-          coinify.hasAccount = true
+          api.hasAccount = true
 
-        it "should POST /trades/quote with credentials", ->
-          Quote.getQuote(coinify, 1000, 'EUR', 'BTC')
-          expect(coinify.authPOST).toHaveBeenCalled()
-          expect(coinify.authPOST.calls.argsFor(0)[0]).toEqual('trades/quote')
-
-        it "should convert cents", ->
-          Quote.getQuote(coinify, 1000, 'EUR', 'BTC')
-          expect(coinify.authPOST.calls.argsFor(0)[1].baseAmount).toEqual(10)
-
-        it "should convert satoshis", ->
-          Quote.getQuote(coinify, 100000000, 'BTC', 'EUR')
-          expect(coinify.authPOST.calls.argsFor(0)[1].baseAmount).toEqual(1)
-
-        it "should check if the base currency is supported", ->
-          promise = Quote.getQuote(coinify, 100000000, 'XXX', 'BTC')
-          expect(promise).toBeRejected()
-
-        it "should check if the quote currency is supported", ->
-          promise = Quote.getQuote(coinify, 100000000, 'EUR', 'DOGE')
-          expect(promise).toBeRejected()
+        it "should POST /trades/quote with credentials", (done) ->
+          Quote.getQuote(api, {}, 1000, 'EUR', 'BTC').then(() ->
+            expect(api.authPOST).toHaveBeenCalled()
+            expect(api.authPOST.calls.argsFor(0)[0]).toEqual('trades/quote')
+          ).then(done)
 
         it "should resolve with the quote", (done) ->
           checks = (res) ->
             expect(res.quoteAmount).toEqual(50000)
             done()
 
-          promise = Quote.getQuote(coinify, 100000000, 'BTC', 'EUR')
+          promise = Quote.getQuote(api, {}, 100000000, 'BTC', 'EUR')
                     .then(checks)
 
           expect(promise).toBeResolved()

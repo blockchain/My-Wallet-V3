@@ -2,12 +2,14 @@ var assert = require('assert');
 var Helpers = require('./helpers');
 
 class Exchange {
-  constructor (delegate, TradeClass) {
+  constructor (delegate, TradeClass, QuoteClass) {
     assert(delegate, 'ExchangeDelegate required');
     assert(TradeClass, 'Trade class required');
+    assert(QuoteClass, 'Quote class required');
     this._delegate = delegate;
     this._trades = [];
     this._TradeClass = TradeClass;
+    this._QuoteClass = QuoteClass;
   }
 
   get debug () { return this._debug; }
@@ -34,6 +36,15 @@ class Exchange {
   get trades () { return this._trades; }
 
   get delegate () { return this._delegate; }
+
+  getBuyQuote (amount, baseCurrency, quoteCurrency) {
+    assert(baseCurrency, 'Specify base currency');
+    assert(baseCurrency !== 'BTC' || quoteCurrency, 'Specify quote currency');
+    if (baseCurrency !== 'BTC') {
+      quoteCurrency = 'BTC';
+    }
+    return this._QuoteClass.getQuote(this._api, this._delegate, -amount, baseCurrency, quoteCurrency, this._debug);
+  }
 
   updateList (list, items, ListClass) {
     var item;

@@ -36,7 +36,7 @@ var Helpers = require('../exchange/helpers');
 
 class Coinify extends Exchange {
   constructor (object, delegate) {
-    super(delegate, Trade);
+    super(delegate, Trade, Quote);
 
     var obj = object || {};
     this._partner_id = null;
@@ -48,7 +48,6 @@ class Coinify extends Exchange {
     this._api._offlineToken = this._offlineToken;
 
     this._profile = new CoinifyProfile(this._api);
-    this._lastQuote = null;
 
     this._buyCurrencies = null;
     this._sellCurrencies = null;
@@ -57,6 +56,7 @@ class Coinify extends Exchange {
     if (obj.trades) {
       for (let tradeObj of obj.trades) {
         var trade = new Trade(tradeObj, this._api, delegate, this);
+        trade._getQuote = Quote.getQuote; // Prevents circular dependency
         trade.debug = this._debug;
         this._trades.push(trade);
       }
@@ -155,44 +155,6 @@ class Coinify extends Exchange {
     return this._profile.fetch();
   }
 
-  getBuyQuote (amount, baseCurrency, quoteCurrency) {
-    assert(baseCurrency, 'Specify base currency');
-    assert(baseCurrency !== 'BTC' || quoteCurrency, 'Specify quote currency');
-    if (baseCurrency !== 'BTC') {
-      quoteCurrency = 'BTC';
-    }
-    return Quote.getQuote(this._api, -amount, baseCurrency, quoteCurrency)
-                .then(this.setLastQuote.bind(this));
-  }
-
-  setLastQuote (quote) {
-    this._lastQuote = quote;
-    return quote;
-  }
-
-  buy (amount, baseCurrency, medium) {
-    assert(this.delegate, 'ExchangeDelegate required');
-    assert(this._lastQuote !== null, 'You must first obtain a quote');
-    assert(this._lastQuote.baseAmount === -amount, 'LAST_QUOTE_AMOUNT_DOES_NOT_MATCH');
-    assert(this._lastQuote.baseCurrency === baseCurrency, 'Currency must match last quote');
-    assert(this._lastQuote.expiresAt > new Date(), 'LAST_QUOTE_EXPIRED');
-    assert(medium === 'bank' || medium === 'card', 'Specify bank or card');
-
-    var addTrade = function (trade) {
-      trade.debug = this._debug;
-      this._trades.push(trade);
-      return this.delegate.save.bind(this.delegate)().then(function () { return trade; });
-    };
-
-    return Trade.buy(
-      this._lastQuote,
-      medium,
-      this._api,
-      this.delegate,
-      this
-    ).then(addTrade.bind(this));
-  }
-
   triggerKYC () {
     var addKYC = (kyc) => {
       this._kycs.push(kyc);
@@ -252,12 +214,12 @@ class Coinify extends Exchange {
     return this.getSellMethods().then(getCurrencies.bind(this));
   }
 
-  static new (delegate, TradeClass) {
+  static new (delegate) {
     assert(delegate, 'Coinify.new requires delegate');
     var object = {
       auto_login: true
     };
-    var coinify = new Coinify(object, delegate, TradeClass);
+    var coinify = new Coinify(object, delegate);
     return coinify;
   }
 }

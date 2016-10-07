@@ -3,14 +3,8 @@ proxyquire = require('proxyquireify')(require)
 BankAccount = () ->
   {mock: "bank-account"}
 
-Quote = {
-  getQuote: (api, amount, currency) ->
-    Promise.resolve({quoteAmount: 0.071})
-}
-
 stubs = {
   './bank-account' : BankAccount
-  './quote' : Quote
 }
 
 Trade = proxyquire('../../src/coinify/trade', stubs)
@@ -147,6 +141,8 @@ describe "Coinify Trade", ->
       spyOn(api, "authGET").and.callThrough()
       spyOn(api, "authPOST").and.callThrough()
       trade = new Trade(tradeJSON, api, exchangeDelegate)
+      trade._getQuote = (api, amount, currency) ->
+        Promise.resolve({quoteAmount: 0.071})
 
     describe "getters", ->
       it "should have some simple ones restored from trades JSON", ->
@@ -408,7 +404,7 @@ describe "Coinify Trade", ->
         it "should get and store quote", (done) ->
           now = new Date(2016, 9, 25, 12, 16, 15)
           jasmine.clock().mockDate(now) # 12:16:15
-          spyOn(Quote, "getQuote").and.callThrough()
+          spyOn(trade, "_getQuote").and.callThrough()
 
           checks = () ->
             expect(trade._lastBtcExpectedGuessAt).toEqual(now)

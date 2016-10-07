@@ -1,7 +1,7 @@
 proxyquire = require('proxyquireify')(require)
 
 Quote = {
-  getQuote: (coinify, amount, baseCurrency, quoteCurrency) ->
+  getQuote: (api, delegate, amount, baseCurrency, quoteCurrency) ->
     Promise.resolve({
       baseAmount: amount,
       baseCurrency: baseCurrency,
@@ -29,8 +29,6 @@ tradesJSON = [
   }
 ]
 Trade.monitorPayments = () ->
-Trade.buy = (quote) ->
-  Promise.resolve({amount: quote.baseAmount})
 Trade.filteredTrades = (trades) ->
   []
 
@@ -87,11 +85,11 @@ describe "Coinify", ->
     describe "new Coinify()", ->
 
       it "should transform an Object to a Coinify", ->
-        c = new Coinify({auto_login: true}, {}, Trade)
+        c = new Coinify({auto_login: true}, {})
         expect(c.constructor.name).toEqual("Coinify")
 
       it "should use fields", ->
-        c = new Coinify({auto_login: true}, {}, Trade)
+        c = new Coinify({auto_login: true}, {})
         expect(c._auto_login).toEqual(true)
 
       it "should require a delegate", ->
@@ -120,7 +118,7 @@ describe "Coinify", ->
         isEmailVerified: () -> true
         getEmailToken: () -> "json-web-token"
         save: () -> Promise.resolve()
-      }, Trade)
+      })
       c.partnerId = 18
       c._debug = false
 
@@ -173,7 +171,7 @@ describe "Coinify", ->
         offline_token: "token"
         auto_login: true
 
-      p  = new Coinify(obj, {}, Trade)
+      p  = new Coinify(obj, {})
 
       it 'should serialize the right fields', ->
         json = JSON.stringify(p, null, 2)
@@ -190,7 +188,7 @@ describe "Coinify", ->
 
       it 'should hold: fromJSON . toJSON = id', ->
         json = JSON.stringify(c, null, 2)
-        b = new Coinify(JSON.parse(json), {}, Trade)
+        b = new Coinify(JSON.parse(json), {})
         expect(json).toEqual(JSON.stringify(b, null, 2))
 
       it 'should not serialize non-expected fields', ->
@@ -260,56 +258,6 @@ describe "Coinify", ->
         promise = c.getBuyQuote(1000, 'EUR').then(checks)
 
         expect(promise).toBeResolved(done)
-
-
-      it 'should set _lastQuote', (done) ->
-        checks = (quote) ->
-          expect(c._lastQuote.baseAmount).toEqual(-1000)
-
-        promise = c.getBuyQuote(1000, 'EUR').then(checks)
-
-        expect(promise).toBeResolved(done)
-
-    describe 'buy()', ->
-      beforeEach ->
-        c._lastQuote = {
-          baseCurrency: 'EUR'
-          baseAmount: -1000
-          expiresAt: new Date(new Date().getTime() + 100000)
-        }
-
-      it 'should use Trade.buy', ->
-        spyOn(Trade, "buy").and.callThrough()
-
-        c.buy(1000, 'EUR', 'card')
-
-        expect(Trade.buy).toHaveBeenCalled()
-
-      it 'should check for a matching quote', ->
-        expect(() -> c.buy(1001, 'EUR', 'card')).toThrow()
-        expect(() -> c.buy(1000, 'USD', 'card')).toThrow()
-
-      it 'should check for a quote that is still valid', ->
-        c._lastQuote.expiresAt = new Date(new Date().getTime() - 100000)
-        expect(() -> c.buy(1000, 'EUR', 'card')).toThrow()
-
-      it 'should return the trade', (done) ->
-        checks = (res) ->
-          expect(res).toEqual({amount: -1000, debug: false})
-          done()
-
-        promise = c.buy(1000, 'EUR', 'card').then(checks)
-        expect(promise).toBeResolved()
-
-      it "should save", (done) ->
-        spyOn(c.delegate, "save").and.callThrough()
-
-        checks = () ->
-          expect(c.delegate.save).toHaveBeenCalled()
-          done()
-
-        promise = c.buy(1000, 'EUR', 'card').then(checks)
-        expect(promise).toBeResolved()
 
     describe 'getBuyMethods()', ->
       beforeEach ->
