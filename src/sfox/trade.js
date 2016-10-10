@@ -132,6 +132,10 @@ class Trade extends ExchangeTrade {
       ].indexOf(trade.state) > -1;
     });
   }
+
+  // Placeholder, TODO: make CoinifyTrade.buy reusable
+  static buy () {
+  }
 }
 
 module.exports = Trade;
