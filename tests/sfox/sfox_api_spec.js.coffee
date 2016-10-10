@@ -1,15 +1,15 @@
 proxyquire = require('proxyquireify')(require)
 
-require('isomorphic-fetch')
-
-fetchMock = require('fetch-mock')
+class ExchangeAPI
+  _request: () ->
 
 stubs = {
+  '../exchange/api': ExchangeAPI
 }
 
 API = proxyquire('../../src/sfox/api', stubs)
 
-describe "API", ->
+describe "SFOX API", ->
 
   api = undefined
 
@@ -19,16 +19,12 @@ describe "API", ->
   afterEach ->
     JasminePromiseMatchers.uninstall()
 
-  describe "class", ->
-    describe "new API()", ->
-      it "should have a root URL", ->
-        api = new API()
-        expect(api._rootURL).toBeDefined()
-
   describe "instance", ->
     beforeEach ->
       api = new API()
       api._accountToken = "account-token"
+      api._apiKey = 'api-key'
+
 
     describe "Getter", ->
       describe "hasAccount", ->
@@ -39,40 +35,35 @@ describe "API", ->
           api._accountToken = "token"
           expect(api.hasAccount).toEqual(true)
 
-    describe '_request', ->
+    describe '_url()', ->
+      it "...", ->
+        pending()
+
+    describe '_request()', ->
       beforeEach ->
-        api._rootURL = '/'
-        api._apiKey = 'api-key'
-        fetchMock.get('*', {})
-        fetchMock.post('*', {})
+        spyOn(ExchangeAPI.prototype, '_request')
+        spyOn(api, "_url").and.callFake((subdomain, version, endpoint) ->
+          return "/" + endpoint
+        )
 
-      afterEach ->
-        fetchMock.restore()
+      it "should set the API key header for all requests", ->
+        api._request('GET', 'trades', 'v1', 'api', {}, false)
+        expect(ExchangeAPI.prototype._request).toHaveBeenCalled()
+        expect(ExchangeAPI.prototype._request.calls.argsFor(0)[3]['X-SFOX-PARTNER-ID']).toEqual('api-key')
 
-      it "should use fetch()", ->
-        api._request('GET', 'trades')
-        expect(fetchMock.lastUrl()).toEqual('/trades')
+      it "should not set the API key header for quotes", ->
+        api._request('GET', 'trades', 'v1', 'quotes', {}, false)
+        expect(ExchangeAPI.prototype._request.calls.argsFor(0)[3]['X-SFOX-PARTNER-ID']).not.toBeDefined()
 
-      it "should URL encode parameters for GET requests", ->
-        api._request('GET', 'trades', {param: 1})
-        expect(fetchMock.lastUrl()).toEqual('/trades?param=1')
-        expect(fetchMock.lastOptions().method).toEqual('GET')
+      it "should set the account token for authenticated requests", ->
+        api._request('GET', 'trades', 'v1', 'api', {}, true)
+        expect(ExchangeAPI.prototype._request).toHaveBeenCalled()
+        expect(ExchangeAPI.prototype._request.calls.argsFor(0)[3]['Authorization']).toEqual('Bearer account-token')
 
-      it "should JSON encode POST data", ->
-        api._request('POST', 'trades', {param: 1})
-        expect(fetchMock.lastUrl()).toEqual('/trades')
-        expect(fetchMock.lastOptions().method).toEqual('POST')
-        expect(JSON.parse(fetchMock.lastOptions().body)).toEqual({param: 1})
-
-      it "should add API key header", ->
-        api._apiKey = 'api-key'
-        api._request('GET', 'trades', undefined)
-        expect(fetchMock.lastOptions().headers["X-SFOX-PARTNER-ID"]).toEqual('api-key')
-
-      it "should add Authorization header if asked", ->
-        api._accountToken = 'account-token'
-        api._request('GET', 'trades', undefined, true)
-        expect(fetchMock.lastOptions().headers.Authorization).toEqual('Bearer account-token')
+      it "should not set the account token for unauthenticated requests", ->
+        api._request('GET', 'trades', 'v1', 'api', {}, false)
+        expect(ExchangeAPI.prototype._request).toHaveBeenCalled()
+        expect(ExchangeAPI.prototype._request.calls.argsFor(0)[3]['Authorization']).not.toBeDefined()
 
     describe 'REST', ->
       beforeEach ->
@@ -95,43 +86,3 @@ describe "API", ->
           api.PATCH('/trades')
           expect(api._request).toHaveBeenCalled()
           expect(api._request.calls.argsFor(0)[0]).toEqual('PATCH')
-
-      describe "authenticated", ->
-        beforeEach ->
-          api._accountToken = undefined
-
-        it "should refuse if no account token is present for GET", ->
-          api.authGET('/trades')
-
-          expect(fetchMock.lastUrl()).not.toBeDefined()
-
-        it "should refuse if no account token is present for POST", ->
-          api.authPOST('/trades')
-
-          expect(fetchMock.lastUrl()).not.toBeDefined()
-
-        it "should refuse if no account token is present for PATCH", ->
-          api.authPATCH('/trades')
-
-          expect(fetchMock.lastUrl()).not.toBeDefined()
-
-        describe 'GET', ->
-          it "should make a GET request", ->
-            api.authGET('/trades')
-            expect(api._request).toHaveBeenCalled()
-            expect(api._request.calls.argsFor(0)[0]).toEqual('GET')
-            expect(api._request.calls.argsFor(0)[3]).toEqual(true)
-
-        describe 'POST', ->
-          it "should make a POST request", ->
-            api.authPOST('/trades')
-            expect(api._request).toHaveBeenCalled()
-            expect(api._request.calls.argsFor(0)[0]).toEqual('POST')
-            expect(api._request.calls.argsFor(0)[3]).toEqual(true)
-
-        describe 'PATCH', ->
-          it "should make a PATCH request", ->
-            api.authPATCH('/trades')
-            expect(api._request).toHaveBeenCalled()
-            expect(api._request.calls.argsFor(0)[0]).toEqual('PATCH')
-            expect(api._request.calls.argsFor(0)[3]).toEqual(true)
