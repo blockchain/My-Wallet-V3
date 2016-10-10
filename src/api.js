@@ -295,3 +295,8 @@ API.prototype.incrementRecoveryStats = function (activeBool) {
   var active = activeBool ? 1 : 0;
   return fetch(this.ROOT_URL + '/event?name=wallet_login_recovery_phrase_' + active);
 };
+
+API.prototype.incrementLegacyUseStats = function (activeBool) {
+  var active = activeBool ? 1 : 0;
+  return fetch(this.ROOT_URL + '/event?name=wallet_login_legacy_use_' + active);
+};
