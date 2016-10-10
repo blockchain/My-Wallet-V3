@@ -51,7 +51,15 @@ module.exports = (grunt) ->
     browserify:
       options:
         debug: true
-        browserifyOptions: { standalone: "Blockchain" }
+        browserifyOptions: {
+          standalone: "Blockchain"
+          transform: [
+            ["babelify", {
+              presets: ["es2015"],
+              only: ["coinify/*.js"]
+            }]
+          ]
+        }
 
       build:
         src: ['index.js']
@@ -65,9 +73,7 @@ module.exports = (grunt) ->
 
     watch:
       scripts:
-        files: [
-          'src/**/*.js'
-        ]
+        files: 'src/**/*.js'
         tasks: ['build']
 
     env:

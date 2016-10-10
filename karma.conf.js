@@ -32,6 +32,7 @@ module.exports = function (config) {
     },
 
     preprocessors: {
+      'src/**/*.js': ['browserify'],
       'tests/**/*.coffee': ['browserify']
     },
 
@@ -39,7 +40,15 @@ module.exports = function (config) {
       configure: function (bundle) {
         bundle.once('prebundle', function () {
           bundle.transform('coffeeify');
-          bundle.transform('browserify-istanbul');
+          bundle.transform('browserify-istanbul'); // Must go first
+          bundle.transform('babelify', {
+            presets: ['es2015'],
+            ignore: [
+              'src/ws-browser.js' // undefined is not an object (evaluating 'global.WebSocket')
+            ],
+            sourceMap: 'inline'
+          });
+
           bundle.plugin('proxyquireify/plugin');
         });
       },
