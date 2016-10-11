@@ -288,15 +288,15 @@ API.prototype.exportHistory = function (active, currency, options) {
 
 API.prototype.incrementSecPassStats = function (activeBool) {
   var active = activeBool ? 1 : 0;
-  return fetch(this.ROOT_URL + '/event?name=wallet_login_second_password_' + active);
+  return fetch(this.ROOT_URL + 'event?name=wallet_login_second_password_' + active);
 };
 
 API.prototype.incrementRecoveryStats = function (activeBool) {
   var active = activeBool ? 1 : 0;
-  return fetch(this.ROOT_URL + '/event?name=wallet_login_recovery_phrase_' + active);
+  return fetch(this.ROOT_URL + 'event?name=wallet_login_recovery_phrase_' + active);
 };
 
 API.prototype.incrementLegacyUseStats = function (activeBool) {
   var active = activeBool ? 1 : 0;
-  return fetch(this.ROOT_URL + '/event?name=wallet_login_legacy_use_' + active);
+  return fetch(this.ROOT_URL + 'event?name=wallet_login_legacy_use_' + active);
 };

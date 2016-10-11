@@ -21,6 +21,7 @@ var TxList = require('./transaction-list');
 var Block = require('./bitcoin-block');
 var External = require('./external');
 var AccountInfo = require('./account-info');
+var Metadata = require('./metadata');
 
 // Wallet
 
@@ -858,11 +859,21 @@ Wallet.prototype.loadExternal = function () {
 Wallet.prototype.incStats = function () {
   var balanceNoWO = function (a) {
     return a.isWatchOnly ? 0 : a.balance;
-  }
+  };
   var legacyBalance = this.keys.map(balanceNoWO).reduce(Helpers.add, 0);
   var mvBool = this.hdwallet ? this.hdwallet.isMnemonicVerified : false;
   API.incrementSecPassStats(this.isDoubleEncrypted);
   API.incrementRecoveryStats(mvBool);
   API.incrementLegacyUseStats(legacyBalance > 0);
   return true;
-}
+};
+
+Wallet.prototype.saveGUIDtoMetadata = function () {
+   // backupGUID not enabled if secondPassword active
+   if (!this.isDoubleEncrypted && this.isUpgradedToHD) {
+     var GUID_METADATA_TYPE = 0;
+     var m = new Metadata(GUID_METADATA_TYPE);
+     return m.create(MyWallet.wallet.guid);
+   }
+   return Promise.resolve();
+ };

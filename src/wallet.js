@@ -358,8 +358,11 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
     var is = MyWallet.wallet.incStats.bind(MyWallet.wallet);
     return gh().then(is);
   };
+  var saveGUID = function () {
+    return MyWallet.wallet.saveGUIDtoMetadata();
+  };
   var p = Promise.resolve().then(doInitialize);
-  p.then(incStats);
+  p.then(incStats).then(saveGUID);
   return p.then(tryLoadExternal);
 };
 
