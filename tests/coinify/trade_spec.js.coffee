@@ -54,13 +54,13 @@ describe "Coinify Trade", ->
 
   describe "class", ->
     describe "new Trade()", ->
-      delegate = {
-        getReceiveAddress: () ->
-      }
-
-      it "should keep a reference to the API", ->
+      beforeEach ->
+        delegate = {
+          getReceiveAddress: () ->
+        }
         api = {}
 
+      it "should keep a reference to the API", ->
         t = new Trade(tradeJSON, api, delegate)
         expect(t._api).toBe(api)
         expect(t._id).toBe(tradeJSON.id)
@@ -82,7 +82,7 @@ describe "Coinify Trade", ->
   describe "instance", ->
     profile = undefined
     trade   = undefined
-    exchangeDelegate = undefined
+    delegate = undefined
 
     beforeEach ->
       profile = {
@@ -99,7 +99,7 @@ describe "Coinify Trade", ->
           country: "NL"
       }
 
-      exchangeDelegate = {
+      delegate = {
         reserveReceiveAddress: () -> { receiveAddress: "1abcd", commit: -> }
         removeLabeledAddress: () ->
         releaseReceiveAddress: () ->
@@ -140,7 +140,7 @@ describe "Coinify Trade", ->
       }
       spyOn(api, "authGET").and.callThrough()
       spyOn(api, "authPOST").and.callThrough()
-      trade = new Trade(tradeJSON, api, exchangeDelegate)
+      trade = new Trade(tradeJSON, api, delegate)
       trade._getQuote = (api, amount, currency) ->
         Promise.resolve({quoteAmount: 0.071})
 
@@ -152,7 +152,7 @@ describe "Coinify Trade", ->
           tx_hash: null
           confirmed: false
           is_buy: true
-        }, api, exchangeDelegate)
+        }, api, delegate)
 
         expect(trade.id).toEqual(1142)
         expect(trade.state).toEqual('awaiting_transfer_in')
@@ -161,7 +161,7 @@ describe "Coinify Trade", ->
         expect(trade.txHash).toEqual(null)
 
       it "should have more simple ones loaded from API", ->
-        trade = new Trade(tradeJSON, api, exchangeDelegate)
+        trade = new Trade(tradeJSON, api, delegate)
         expect(trade.id).toEqual(1142)
         expect(trade.iSignThisID).toEqual('05e18928-7b29-4b70-b29e-84cfe9fbc5ac')
         expect(trade.quoteExpireTime).toEqual(new Date('2016-08-26T15:10:00.000Z'))
@@ -187,7 +187,7 @@ describe "Coinify Trade", ->
           medium: "bank"
           details: {} # Bank account details are mocked
         }
-        trade = new Trade(tradeJSON, api, exchangeDelegate)
+        trade = new Trade(tradeJSON, api, delegate)
         expect(trade.bankAccount).toEqual({mock: "bank-account"})
 
     describe "deserialize from trades JSON", ->
@@ -202,16 +202,16 @@ describe "Coinify Trade", ->
 
       it "should ask the delegate to deserialize extra fields", ->
 
-        spyOn(exchangeDelegate, "deserializeExtraFields")
-        new Trade(tradeJSON, api, exchangeDelegate)
-        expect(exchangeDelegate.deserializeExtraFields).toHaveBeenCalled()
+        spyOn(delegate, "deserializeExtraFields")
+        new Trade(tradeJSON, api, delegate)
+        expect(delegate.deserializeExtraFields).toHaveBeenCalled()
 
       it "should pass in self, so delegate can set extra fields", ->
         tradeJSON.extra = "test"
-        exchangeDelegate.deserializeExtraFields = (deserialized, t) ->
+        delegate.deserializeExtraFields = (deserialized, t) ->
           t.extra = deserialized.extra
 
-        trade = new Trade(tradeJSON, api, exchangeDelegate)
+        trade = new Trade(tradeJSON, api, delegate)
         expect(trade.extra).toEqual('test')
 
     describe "serialize", ->
@@ -323,9 +323,9 @@ describe "Coinify Trade", ->
         expect(trade._state).toBe('cancelled')
 
       it "should notifiy the delegate the receive address is no longer needed", ->
-        spyOn(exchangeDelegate, "releaseReceiveAddress")
+        spyOn(delegate, "releaseReceiveAddress")
         trade.cancel()
-        expect(exchangeDelegate.releaseReceiveAddress).toHaveBeenCalled()
+        expect(delegate.releaseReceiveAddress).toHaveBeenCalled()
 
     describe "fakeBankTransfer()", ->
       it "should POST a fake bank-transfer", () ->
@@ -340,9 +340,21 @@ describe "Coinify Trade", ->
 
       beforeEach ->
         spyOn(Trade.prototype, "_monitorAddress").and.callFake(() ->)
-        quote = { id: 101 }
         api.authPOST = () ->
           Promise.resolve(tradeJSON)
+
+        quote = {
+          id: 101
+          expiresAt: new Date(new Date().getTime() + 100000)
+          api: api
+          delegate: delegate
+          debug: true
+          _TradeClass: Trade
+        }
+
+      it 'should check that quote  is still valid', ->
+        quote._expiresAt = new Date(new Date().getTime() - 100000)
+        expect(() -> t.buy(quote, 'card')).toThrow()
 
       it "should POST the quote and resolve the trade", (done) ->
         spyOn(api, "authPOST").and.callThrough()
@@ -350,7 +362,7 @@ describe "Coinify Trade", ->
           expect(api.authPOST).toHaveBeenCalled()
           expect(t.id).toEqual(1142)
 
-        promise = Trade.buy(quote, 'bank', api, exchangeDelegate)
+        promise = Trade.buy(quote, 'bank')
           .then(testTrade)
 
         expect(promise).toBeResolved(done)
@@ -359,7 +371,7 @@ describe "Coinify Trade", ->
         checks = (trade) ->
           expect(trade._monitorAddress).toHaveBeenCalled()
 
-        promise = Trade.buy(quote, 'bank', api, exchangeDelegate)
+        promise = Trade.buy(quote, 'bank')
           .then(checks)
 
         expect(promise).toBeResolved(done)
@@ -367,7 +379,7 @@ describe "Coinify Trade", ->
 
     describe "fetchAll()", ->
       beforeEach ->
-        spyOn(exchangeDelegate, "releaseReceiveAddress").and.callThrough()
+        spyOn(delegate, "releaseReceiveAddress").and.callThrough()
 
       it "should fetch all the trades", (done) ->
         api.authGET = () ->

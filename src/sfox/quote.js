@@ -1,10 +1,11 @@
 var ExchangeQuote = require('../exchange/quote');
+var PaymentMethod = require('./payment-method');
 var Trade = require('./trade');
 
 // I use Coinify's convention for the meaning of base & quote currency.
 class Quote extends ExchangeQuote {
   constructor (obj, amountCurrency, api, delegate, debug) {
-    super(api, delegate, Trade, debug);
+    super(api, delegate, Trade, PaymentMethod, debug);
 
     var expiresAt = new Date(obj.expires_on);
 

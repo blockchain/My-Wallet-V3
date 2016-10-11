@@ -27,6 +27,7 @@ Trade.fetchAll = () ->
 
 Quote = (obj) ->
   obj
+Quote.getQuote = () ->
 
 stubs = {
   './trade' : Trade

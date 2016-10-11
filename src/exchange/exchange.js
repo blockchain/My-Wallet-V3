@@ -6,6 +6,7 @@ class Exchange {
     assert(delegate, 'ExchangeDelegate required');
     assert(TradeClass, 'Trade class required');
     assert(QuoteClass, 'Quote class required');
+    assert(QuoteClass.getQuote, 'Quote.getQuote missing');
     this._delegate = delegate;
     this._trades = [];
     this._TradeClass = TradeClass;

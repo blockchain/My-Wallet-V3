@@ -133,8 +133,8 @@ class Trade extends ExchangeTrade {
     });
   }
 
-  // Placeholder, TODO: make CoinifyTrade.buy reusable
   static buy () {
+    console.log('Buy me!')
   }
 }
 

@@ -1,8 +1,11 @@
 var ExchangePaymentMethod = require('../exchange/payment-method');
+var Trade = require('./trade');
 
 class PaymentMethod extends ExchangePaymentMethod {
   constructor (obj, api, quote) {
-    super(api);
+    super(api, quote);
+
+    this._TradeClass = Trade;
 
     this._inMedium = obj.inMedium;
     this._outMedium = obj.outMedium;
@@ -29,6 +32,13 @@ class PaymentMethod extends ExchangePaymentMethod {
       this._fee = Math.round(this.inFixedFee + -amt * (this.inPercentageFee / 100));
       this._total = -amt + this._fee;
     }
+  }
+
+  buy () {
+    return super.buy().then((trade) => {
+      trade._getQuote = this._quote.constructor.getQuote; // Prevents circular dependency
+      return trade;
+    });
   }
 
   static fetchAll (inCurrency, outCurrency, api, quote) {

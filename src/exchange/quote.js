@@ -2,21 +2,28 @@ var Helpers = require('../exchange/helpers');
 var assert = require('assert');
 
 class Quote {
-  constructor (api, delegate, TradeClass, debug) {
+  constructor (api, delegate, TradeClass, PaymentMethodClass, debug) {
     assert(api, 'API required');
     assert(delegate, 'ExchangeDelegate required');
     assert(TradeClass, 'Trade class required');
+    assert(PaymentMethodClass, 'PaymentMethod class required');
+    assert(PaymentMethodClass.fetchAll, 'PaymentMethod.fetchAll missing');
     assert(TradeClass.buy, 'Trade.buy() missing');
 
     this._api = api;
     this._delegate = delegate;
     this._TradeClass = TradeClass;
+    this._PaymentMethodClass = PaymentMethodClass;
     this._debug = debug;
   }
 
   get id () { return this._id; }
 
   get debug () { return this._debug; }
+
+  get api () { return this._api; }
+
+  get delegate () { return this._delegate; }
 
   get baseCurrency () { return this._baseCurrency; }
 
@@ -53,23 +60,24 @@ class Quote {
     return Promise.resolve(baseAmount);
   }
 
-  // TODO: move to payment method
-  buy (medium) {
-    assert(this._expiresAt > new Date(), 'QUOTE_EXPIRED');
+  getPaymentMethods () {
+    var self = this;
 
-    var addTrade = (trade) => {
-      trade.debug = this._debug;
-      this._delegate.trades.push(trade);
-      return this._delegate.save.bind(this._delegate)().then(() => trade);
+    var setPaymentMethods = function (paymentMethods) {
+      self.paymentMethods = {};
+      for (var i = 0; i < paymentMethods.length; i++) {
+        var paymentMethod = paymentMethods[i];
+        self.paymentMethods[paymentMethod.inMedium] = paymentMethod;
+      }
+      return self.paymentMethods;
     };
 
-    return this._TradeClass.buy(
-      this,
-      medium,
-      this._api,
-      this._delegate,
-      this._debug
-    ).then(addTrade);
+    if (this.paymentMethods) {
+      return Promise.resolve(this.paymentMethods);
+    } else {
+      return this._PaymentMethodClass.fetchAll(this.baseCurrency, this.quoteCurrency, this._api, this)
+                          .then(setPaymentMethods);
+    }
   }
 }
 

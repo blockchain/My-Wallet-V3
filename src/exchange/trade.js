@@ -140,6 +140,42 @@ class Trade {
     // Subclass needs to implement this
   }
 
+  static buy (quote, medium, request) {
+    assert(quote, 'Quote required');
+    assert(quote.expiresAt > new Date(), 'QUOTE_EXPIRED');
+
+    /* istanbul ignore if */
+    if (quote.debug) {
+      console.info('Reserve receive address for new trade');
+    }
+    var reservation = quote.delegate.reserveReceiveAddress();
+
+    var processTrade = function (res) {
+      var trade = new quote._TradeClass(res, quote.api, quote.delegate);
+      trade.debug = quote.debug;
+
+      /* istanbul ignore if */
+      if (quote.debug) {
+        console.info('Commit receive address for new trade');
+      }
+      reservation.commit(trade);
+
+      /* istanbul ignore if */
+      if (quote.debug) {
+        console.info('Monitor trade', trade.receiveAddress);
+      }
+      trade._monitorAddress.bind(trade)();
+      return trade;
+    };
+
+    var error = function (e) {
+      console.error(e);
+      return Promise.reject(e);
+    };
+
+    return request(reservation.receiveAddress).then(processTrade).catch(error);
+  }
+
   //
   _setTransactionHash (tx, amount, delegate) {
     var self = this;

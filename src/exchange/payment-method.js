@@ -1,8 +1,10 @@
 var assert = require('assert');
 
 class PaymentMethod {
-  constructor (api) {
+  constructor (api, quote, TradeClass) {
     this._api = api;
+    this._quote = quote;
+    this._TradeClass = TradeClass;
   }
 
   get inMedium () { return this._inMedium; }
@@ -30,6 +32,20 @@ class PaymentMethod {
   get fee () { return this._fee; }
 
   get total () { return this._total; }
+
+  buy () {
+    var delegate = this._quote.delegate;
+    var addTrade = (trade) => {
+      trade.debug = this._quote.debug;
+      delegate.trades.push(trade);
+      return delegate.save.bind(delegate)().then(() => trade);
+    };
+
+    return this._TradeClass.buy(
+      this._quote,
+      this._inMedium
+    ).then(addTrade);
+  }
 
   static fetchAll () {
     assert(false, 'Subclass must implement this. Do not call super');

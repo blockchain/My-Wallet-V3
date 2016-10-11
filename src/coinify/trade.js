@@ -174,50 +174,22 @@ class Trade extends ExchangeTrade {
     this._quoteExpireTime = new Date(new Date().getTime() + 3000);
   }
 
-  static buy (quote, medium, api, delegate, debug) {
-    assert(quote, 'Quote required');
-
-    /* istanbul ignore if */
-    if (debug) {
-      console.info('Reserve receive address for new trade');
-    }
-    var reservation = delegate.reserveReceiveAddress();
-
-    var processTrade = function (res) {
-      var trade = new Trade(res, api, delegate);
-      trade.debug = debug;
-
-      /* istanbul ignore if */
-      if (debug) {
-        console.info('Commit receive address for new trade');
-      }
-      reservation.commit(trade);
-
-      /* istanbul ignore if */
-      if (debug) {
-        console.info('Monitor trade', trade.receiveAddress);
-      }
-      trade._monitorAddress.bind(trade)();
-      return trade;
-    };
-
-    var error = function (e) {
-      console.error(e);
-      return Promise.reject(e);
-    };
-
-    return api.authPOST('trades', {
-      priceQuoteId: quote.id,
-      transferIn: {
-        medium: medium
-      },
-      transferOut: {
-        medium: 'blockchain',
-        details: {
-          account: reservation.receiveAddress
+  static buy (quote, medium) {
+    const request = (receiveAddress) => {
+      return quote.api.authPOST('trades', {
+        priceQuoteId: quote.id,
+        transferIn: {
+          medium: medium
+        },
+        transferOut: {
+          medium: 'blockchain',
+          details: {
+            account: receiveAddress
+          }
         }
-      }
-    }).then(processTrade).catch(error);
+      });
+    };
+    return super.buy(quote, medium, request);
   }
 
   static fetchAll (api) {

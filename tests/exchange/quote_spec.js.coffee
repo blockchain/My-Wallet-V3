@@ -2,8 +2,10 @@
 proxyquire = require('proxyquireify')(require)
 
 Trade = () ->
-Trade.buy = (quote) ->
-  Promise.resolve({amount: quote.baseAmount})
+Trade.buy = () ->
+
+PaymentMethod = () ->
+PaymentMethod.fetchAll = () ->
 
 stubs = {
   './trade' : Trade
@@ -22,7 +24,7 @@ describe "Quote", ->
     q = new Quote(api, {
       save: () -> Promise.resolve()
       trades: []
-    }, Trade, false)
+    }, Trade, PaymentMethod, false)
 
     q._id = '1'
     q._baseAmount = 1
@@ -64,34 +66,3 @@ describe "Quote", ->
         expect(q.baseAmount).toBe(1)
         expect(q.quoteAmount).toBe(1)
         expect(q.id).toBe('1')
-
-    describe 'buy()', ->
-      beforeEach ->
-        q._expiresAt = new Date(new Date().getTime() + 100000)
-        q._baseAmount = -1000
-        q._baseCurrency = 'EUR'
-
-      it 'should use Trade.buy', ->
-        spyOn(Trade, "buy").and.callThrough()
-
-        q.buy('card')
-
-        expect(Trade.buy).toHaveBeenCalled()
-
-      it 'should check that quote  is still valid', ->
-        q._expiresAt = new Date(new Date().getTime() - 100000)
-        expect(() -> q.buy('card')).toThrow()
-
-      it 'should return the trade', (done) ->
-        checks = (res) ->
-          expect(res).toEqual({amount: -1000, debug: false})
-
-        promise = q.buy('card').then(checks).then(done)
-
-      it "should save", (done) ->
-        spyOn(q._delegate, "save").and.callThrough()
-
-        checks = () ->
-          expect(q._delegate.save).toHaveBeenCalled()
-
-        promise = q.buy('card').then(checks).then(done)
