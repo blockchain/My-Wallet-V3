@@ -869,11 +869,11 @@ Wallet.prototype.incStats = function () {
 };
 
 Wallet.prototype.saveGUIDtoMetadata = function () {
-   // backupGUID not enabled if secondPassword active
-   if (!this.isDoubleEncrypted && this.isUpgradedToHD) {
-     var GUID_METADATA_TYPE = 0;
-     var m = new Metadata(GUID_METADATA_TYPE);
-     return m.create(MyWallet.wallet.guid);
-   }
-   return Promise.resolve();
- };
+  // backupGUID not enabled if secondPassword active
+  if (!this.isDoubleEncrypted && this.isUpgradedToHD) {
+    var GUID_METADATA_TYPE = 0;
+    var m = new Metadata(GUID_METADATA_TYPE);
+    return m.create(MyWallet.wallet.guid);
+  }
+  return Promise.resolve();
+};
