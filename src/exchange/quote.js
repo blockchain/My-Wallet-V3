@@ -53,6 +53,7 @@ class Quote {
     return Promise.resolve(baseAmount);
   }
 
+  // TODO: move to payment method
   buy (medium) {
     assert(this._expiresAt > new Date(), 'QUOTE_EXPIRED');
 

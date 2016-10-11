@@ -5,7 +5,6 @@ PaymentMethod = {
   fetchAll: () -> Promise.resolve([
     {
       inMedium: 'bank'
-      calculateFee: this.prototype.calculateFee
     }
   ])
 }
@@ -149,17 +148,6 @@ describe "Coinify Quote", ->
       it "should set .bank for the bank method", (done) ->
         checks = (res) ->
           expect(res.bank).toBeDefined()
-          done()
-
-        q.getPaymentMethods().then(checks)
-
-      it "should calculate fees", (done) ->
-        spyOn(PaymentMethod.prototype, "calculateFee").and.callFake(
-          () ->
-        )
-
-        checks = (res) ->
-          expect(PaymentMethod.prototype.calculateFee).toHaveBeenCalled()
           done()
 
         q.getPaymentMethods().then(checks)

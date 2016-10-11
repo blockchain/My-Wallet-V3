@@ -67,7 +67,6 @@ class Quote extends ExchangeQuote {
       for (var i = 0; i < paymentMethods.length; i++) {
         var paymentMethod = paymentMethods[i];
         self.paymentMethods[paymentMethod.inMedium] = paymentMethod;
-        paymentMethod.calculateFee.bind(paymentMethod)(self);
       }
       return self.paymentMethods;
     };
@@ -75,7 +74,7 @@ class Quote extends ExchangeQuote {
     if (this.paymentMethods) {
       return Promise.resolve(this.paymentMethods);
     } else {
-      return PaymentMethod.fetchAll(this.baseCurrency, this.quoteCurrency, this._api)
+      return PaymentMethod.fetchAll(this.baseCurrency, this.quoteCurrency, this._api, this)
                           .then(setPaymentMethods);
     }
   }
