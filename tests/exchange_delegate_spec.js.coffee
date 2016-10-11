@@ -205,6 +205,13 @@ describe "ExchangeDelegate", ->
           delegate.trades = []
           reservation = delegate.reserveReceiveAddress()
           reservation.commit(trade)
+          expect(account.getLabelForReceivingAddress(0)).toEqual("Exchange order #1")
+
+        it "should allow custom label prefix for each exchange", ->
+          delegate.trades = []
+          delegate.labelBase = 'Coinify order'
+          reservation = delegate.reserveReceiveAddress()
+          reservation.commit(trade)
           expect(account.getLabelForReceivingAddress(0)).toEqual("Coinify order #1")
 
         it "should append to existing label if at gap limit", ->
@@ -212,7 +219,7 @@ describe "ExchangeDelegate", ->
           account.receiveIndex = 19
           reservation = delegate.reserveReceiveAddress()
           reservation.commit(trade)
-          expect(account.getLabelForReceivingAddress(16)).toEqual("Coinify order #0, #1")
+          expect(account.getLabelForReceivingAddress(16)).toEqual("Exchange order #0, #1")
 
     describe "releaseReceiveAddress()", ->
       account = undefined
