@@ -17,7 +17,7 @@ var WalletStore = (function () {
   var counter = 0;
   var syncPubkeys = false;
   var isSynchronizedWithServer = true;
-  var eventListeners = []; // Emits Did decrypt wallet event (used on claim page)
+  var eventListeners = [];
 
   return {
     setPbkdf2Iterations: function (iterations) {
