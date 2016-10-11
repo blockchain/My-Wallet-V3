@@ -23,23 +23,23 @@ class Quote extends ExchangeQuote {
   }
 
   static getQuote (api, delegate, amount, baseCurrency, quoteCurrency, debug) {
-    const processQuote = (quote) => new Quote(quote, baseCurrency, api, delegate);
+    const processQuote = (quote) => new Quote(quote, baseCurrency, api, delegate, debug);
 
     const getQuote = (_baseAmount) => {
       var getQuote = function () {
-        return api.POST('quote', {
+        return api.POST('quote/', {
           action: 'buy',
           base_currency: 'btc',
           quote_currency: 'usd',
-          amount: parseFloat(_baseAmount),
-          amount_currency: baseCurrency
+          amount: _baseAmount,
+          amount_currency: baseCurrency.toLowerCase()
         }, 'v1', 'quotes');
       };
 
       return getQuote().then(processQuote);
     };
 
-    return super.getQuote(amount, baseCurrency, quoteCurrency, ['BTC', 'EUR', 'GBP', 'USD', 'DKK'], debug)
+    return super.getQuote(-amount, baseCurrency, quoteCurrency, ['BTC', 'EUR', 'GBP', 'USD', 'DKK'], debug)
              .then(getQuote);
   }
 
