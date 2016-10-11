@@ -133,8 +133,23 @@ class Trade extends ExchangeTrade {
     });
   }
 
-  static buy () {
-    console.log('Buy me!')
+  static buy (quote, medium, paymentMethodId) {
+    // const request = (receiveAddress) => {
+    //   return quote.api.authPOST('trades', {
+    //     priceQuoteId: quote.id,
+    //     transferIn: {
+    //       medium: medium
+    //     },
+    //     transferOut: {
+    //       medium: 'blockchain',
+    //       details: {
+    //         account: receiveAddress
+    //       }
+    //     }
+    //   });
+    console.log('Go buy', quote.id, paymentMethodId);
+    return Promise.resolve({});
+    // return super.buy(quote, medium, request);
   }
 }
 

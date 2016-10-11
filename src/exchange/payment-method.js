@@ -11,6 +11,8 @@ class PaymentMethod {
 
   get outMedium () { return this._outMedium; }
 
+  get id () { return this._id; }
+
   get name () { return this._name; }
 
   get inCurrencies () { return this._inCurrencies; }
@@ -34,6 +36,9 @@ class PaymentMethod {
   get total () { return this._total; }
 
   buy () {
+    if (!this._quote) {
+      return Promise.reject('QUOTE_MISSING');
+    }
     var delegate = this._quote.delegate;
     var addTrade = (trade) => {
       trade.debug = this._quote.debug;
@@ -43,7 +48,8 @@ class PaymentMethod {
 
     return this._TradeClass.buy(
       this._quote,
-      this._inMedium
+      this._inMedium,
+      this._id
     ).then(addTrade);
   }
 

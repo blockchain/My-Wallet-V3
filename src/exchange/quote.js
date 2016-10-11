@@ -65,9 +65,11 @@ class Quote {
 
     var setPaymentMethods = function (paymentMethods) {
       self.paymentMethods = {};
-      for (var i = 0; i < paymentMethods.length; i++) {
-        var paymentMethod = paymentMethods[i];
-        self.paymentMethods[paymentMethod.inMedium] = paymentMethod;
+      for (let paymentMethod of paymentMethods) {
+        if (!self.paymentMethods[paymentMethod.inMedium]) {
+          self.paymentMethods[paymentMethod.inMedium] = [];
+        }
+        self.paymentMethods[paymentMethod.inMedium].push(paymentMethod);
       }
       return self.paymentMethods;
     };
