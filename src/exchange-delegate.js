@@ -44,10 +44,11 @@ ExchangeDelegate.prototype.getEmailToken = function () {
   var self = this;
   return API.request(
     'GET',
-    'wallet/signed-email-token',
+    'wallet/signed-token',
     {
       guid: self._wallet.guid,
-      sharedKey: self._wallet.sharedKey
+      sharedKey: self._wallet.sharedKey,
+      fields: 'email'
     }
   ).then(function (res) {
     if (res.success) {
