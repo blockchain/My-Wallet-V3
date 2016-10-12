@@ -164,7 +164,7 @@ describe "ExchangeDelegate", ->
 
       it 'should get the token', (done) ->
         promise = delegate.getToken()
-        expect(promise).toBeResolvedWith('json-web-token', done);
+        expect(promise).toBeResolvedWith('json-web-token-email-mobile', done);
 
       it 'should reject if email is not verified', (done) ->
         emailVerified = false

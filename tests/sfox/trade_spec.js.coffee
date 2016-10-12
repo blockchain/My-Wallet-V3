@@ -19,7 +19,7 @@ describe "SFOX Trade", ->
     jasmine.clock().install()
 
     tradeJSON = {
-      id: 1142
+      id: "1abcdef"
       status: "pending"
       quote_currency: "usd"
       base_currency: "btc"
@@ -120,7 +120,7 @@ describe "SFOX Trade", ->
     describe "deserialize from trades JSON", ->
       beforeEach ->
         tradeJSON = {
-          id: 1142
+          id: "1abcd"
           state: 'awaiting_transfer_in'
           tx_hash: 'hash'
           confirmed: false

@@ -52,7 +52,8 @@ class Exchange {
     for (var i = 0; i < items.length; i++) {
       item = undefined;
       for (var k = 0; k < list.length; k++) {
-        if (list[k]._id === items[i].id.toLowerCase()) {
+        var itemId = Helpers.isNumber(items[i].id) ? items[i].id : items[i].id.toLowerCase();
+        if (list[k]._id === itemId) {
           item = list[k];
           item.debug = this.debug;
           item.set.bind(item)(items[i]);

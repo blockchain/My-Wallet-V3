@@ -84,7 +84,7 @@ ExchangeDelegate.prototype.getToken = function () {
     {
       guid: self._wallet.guid,
       sharedKey: self._wallet.sharedKey,
-      fields: 'mail|mobile'
+      fields: 'email|mobile'
     }
   ).then(function (res) {
     if (res.success) {
