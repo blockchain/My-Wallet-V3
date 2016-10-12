@@ -52,7 +52,7 @@ class Exchange {
     for (var i = 0; i < items.length; i++) {
       item = undefined;
       for (var k = 0; k < list.length; k++) {
-        if (list[k]._id === items[i].id) {
+        if (list[k]._id === items[i].id.toLowerCase()) {
           item = list[k];
           item.debug = this.debug;
           item.set.bind(item)(items[i]);

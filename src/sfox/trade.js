@@ -10,7 +10,7 @@ class Trade extends ExchangeTrade {
     super(api, delegate);
 
     assert(obj, 'JSON missing');
-    this._id = obj.id;
+    this._id = obj.id.toLowerCase();
     this.set(obj);
   }
 
