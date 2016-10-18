@@ -359,7 +359,9 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
     return gh().then(is);
   };
   var saveGUID = function () {
-    return MyWallet.wallet.saveGUIDtoMetadata();
+    // Don't wait for this, and ignore the result:
+    MyWallet.wallet.saveGUIDtoMetadata();
+    return Promise.resolve();
   };
   var p = Promise.resolve().then(doInitialize);
   p.then(incStats).then(saveGUID);

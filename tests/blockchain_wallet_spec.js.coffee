@@ -7,6 +7,8 @@ WalletStore = undefined
 BlockchainSettingsAPI = undefined
 BIP39 = undefined
 RNG = undefined
+Metadata = undefined
+mockPayload = undefined
 
 describe "Blockchain-Wallet", ->
   wallet = undefined
@@ -66,6 +68,8 @@ describe "Blockchain-Wallet", ->
         if success
           success()
       get_history: () ->
+      wallet:
+        guid: "1234"
 
     Address =
       new: (label) ->
@@ -132,6 +136,16 @@ describe "Blockchain-Wallet", ->
         "random"
     }
 
+    mockPayload = {guid: "1234"}
+
+    Metadata = (n) ->
+
+    Metadata.prototype =
+      create: () ->
+        Promise.resolve()
+      fetch: () ->
+        Promise.resolve(mockPayload)
+
     stubs = {
       './wallet'  : MyWallet,
       './address' : Address,
@@ -140,7 +154,8 @@ describe "Blockchain-Wallet", ->
       './wallet-store' : WalletStore,
       './blockchain-settings-api': BlockchainSettingsAPI,
       'bip39': BIP39,
-      './rng' : RNG
+      './rng' : RNG,
+      './metadata' : Metadata
     }
 
     Wallet = proxyquire('../src/blockchain-wallet', stubs)
@@ -644,7 +659,7 @@ describe "Blockchain-Wallet", ->
           expect(wallet.getNotePlaceholder(0, {'txType':'received', 'processedOutputs':outputs})).toEqual('Utilities')
 
           expect(wallet.getNotePlaceholder(0, {'txType':'sent', 'processedOutputs':outputs})).toEqual('')
-          
+
           expect(wallet.getNotePlaceholder(0, {'txType':'transferred', 'processedOutputs':outputs})).toEqual('')
 
       describe ".getMnemonic", ->
@@ -791,3 +806,52 @@ describe "Blockchain-Wallet", ->
           expect(() -> wallet.disableNotifications()).toThrow()
           expect(() -> wallet.disableNotifications(cb.success)).toThrow()
           expect(() -> wallet.disableNotifications(cb.success, cb.error)).not.toThrow()
+
+    describe "saveGUIDtoMetadata", ->
+      beforeEach ->
+        JasminePromiseMatchers.install()
+        spyOn(Metadata.prototype, "create").and.callThrough()
+        spyOn(Metadata.prototype, "fetch").and.callThrough()
+
+      afterEach ->
+        JasminePromiseMatchers.uninstall()
+
+      it "should check if guid was already saved", (done) ->
+        checks = (res) ->
+          expect(res).toEqual("1234")
+          expect(Metadata.prototype.fetch).toHaveBeenCalled()
+
+        promise = wallet.saveGUIDtoMetadata().then(checks)
+        expect(promise).toBeResolved(done)
+
+      it "should save guid if not already saved", (done) ->
+        mockPayload = null
+
+        checks = () ->
+          expect(Metadata.prototype.create).toHaveBeenCalled()
+
+        promise = wallet.saveGUIDtoMetadata().then(checks)
+        expect(promise).toBeResolved(done)
+
+      it "should not re-save guid", (done) ->
+        checks = () ->
+          expect(Metadata.prototype.create).not.toHaveBeenCalled()
+
+        promise = wallet.saveGUIDtoMetadata().then(checks)
+        expect(promise).toBeResolved(done)
+
+      it "should should check that the guid was correctly saved previously", (done) ->
+        mockPayload = {guid: "wrong"}
+
+        promise = wallet.saveGUIDtoMetadata()
+        expect(promise).toBeRejected(done)
+
+      it "should not work for legacy wallets", (done) ->
+        wallet._hd_wallets = []
+        promise = wallet.saveGUIDtoMetadata()
+        expect(promise).toBeRejected(done)
+
+      it "should not work with 2nd password enabled", (done) ->
+        wallet._double_encryption = true
+        promise = wallet.saveGUIDtoMetadata()
+        expect(promise).toBeRejected(done)
