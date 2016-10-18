@@ -135,10 +135,17 @@ Quote.prototype.getPaymentMethods = function () {
     return self.paymentMethods;
   };
 
+  let inCurrency = this.baseCurrency;
+  let outCurrency = this.quoteCurrency;
+  if (this.baseCurrency === 'BTC' && this.baseAmount > 0) {
+    inCurrency = this.quoteCurrency;
+    outCurrency = this.baseCurrency;
+  }
+
   if (this.paymentMethods) {
     return Promise.resolve(this.paymentMethods);
   } else {
-    return PaymentMethod.fetchAll(this.baseCurrency, this.quoteCurrency, this._api)
+    return PaymentMethod.fetchAll(inCurrency, outCurrency, this._api)
                         .then(setPaymentMethods);
   }
 };
