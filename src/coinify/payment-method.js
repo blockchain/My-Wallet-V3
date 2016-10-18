@@ -106,10 +106,10 @@ Object.defineProperties(PaymentMethod.prototype, {
   }
 });
 
-PaymentMethod.fetchAll = function (baseCurrency, quoteCurrency, api) {
+PaymentMethod.fetchAll = function (inCurrency, outCurrency, api) {
   var params = {};
-  if (baseCurrency) { params.baseCurrency = baseCurrency; }
-  if (quoteCurrency) { params.quoteCurrency = quoteCurrency; }
+  if (inCurrency) { params.inCurrency = inCurrency; }
+  if (outCurrency) { params.outCurrency = outCurrency; }
 
   var output = [];
   return api.authGET('trades/payment-methods', params).then(function (res) {
