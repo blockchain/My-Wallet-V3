@@ -354,7 +354,7 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
     return MyWallet.wallet.loadExternal.bind(MyWallet.wallet)().catch(loadExternalFailed);
   };
   var incStats = function () {
-    var gh = MyWallet.wallet.getHistory.bind(MyWallet.wallet);
+    var gh = MyWallet.wallet.getLegacyBalance.bind(MyWallet.wallet);
     var is = MyWallet.wallet.incStats.bind(MyWallet.wallet);
     return gh().then(is);
   };

@@ -385,6 +385,32 @@ Wallet.prototype.fetchTransactions = function () {
     .then(this._updateWalletInfo.bind(this));
 };
 
+Wallet.prototype.getLegacyBalance = function () {
+  var self = this;
+
+  var process = function (obj) {
+    var res = Object.keys(obj).map(function (key) {
+      if (self.containsLegacyAddress(key)) {
+        return obj[key].final_balance;
+      } else {
+        return 0;
+      }
+    }).reduce(Helpers.add, 0);
+    return res;
+  };
+
+  var addrs = this.addresses.filter(function (addr) {
+    return self.key(addr).archived === false &&
+      self.key(addr).isWatchOnly === false;
+  });
+
+  if (addrs.length === 0) {
+    return Promise.resolve(0);
+  } else {
+    return API.getBalances(addrs).then(process.bind(this));
+  }
+};
+
 Wallet.prototype.getBalancesForArchived = function () {
   var updateBalance = function (key) {
     if (this.containsLegacyAddress(key.address)) {
@@ -856,11 +882,7 @@ Wallet.prototype.loadExternal = function () {
   }
 };
 
-Wallet.prototype.incStats = function () {
-  var balanceNoWO = function (a) {
-    return a.isWatchOnly ? 0 : a.balance;
-  };
-  var legacyBalance = this.keys.map(balanceNoWO).reduce(Helpers.add, 0);
+Wallet.prototype.incStats = function (legacyBalance) {
   var mvBool = this.hdwallet ? this.hdwallet.isMnemonicVerified : false;
   API.incrementSecPassStats(this.isDoubleEncrypted);
   API.incrementRecoveryStats(mvBool);
