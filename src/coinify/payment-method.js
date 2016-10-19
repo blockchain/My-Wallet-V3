@@ -122,6 +122,7 @@ PaymentMethod.fetchAll = function (inCurrency, outCurrency, api) {
 };
 
 PaymentMethod.prototype.calculateFee = function (quote) {
-  this._fee = Math.round(this.inFixedFee + -quote.baseAmount * (this.inPercentageFee / 100));
-  this._total = -quote.baseAmount + this._fee;
+  let amt = quote.baseCurrency === 'BTC' ? quote.quoteAmount : quote.baseAmount;
+  this._fee = Math.round(this.inFixedFee + -amt * (this.inPercentageFee / 100));
+  this._total = -amt + this._fee;
 };
