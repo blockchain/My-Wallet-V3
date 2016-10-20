@@ -3,7 +3,7 @@ var Trade = require('./trade');
 
 class PaymentMethod extends ExchangePaymentMethod {
   constructor (obj, api, quote) {
-    super(api, quote);
+    super(api, quote, Trade);
 
     this._TradeClass = Trade;
 

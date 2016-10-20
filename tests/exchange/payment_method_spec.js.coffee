@@ -23,7 +23,7 @@ describe "Payment method", ->
   describe "class", ->
     describe "constructor", ->
       it "should keep a reference to the api", ->
-        b = new PaymentMethod(api)
+        b = new PaymentMethod(api, undefined, {})
         expect(b._api).toEqual(api)
 
   describe "instance", ->

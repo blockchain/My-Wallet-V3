@@ -36,7 +36,7 @@ var Helpers = require('../exchange/helpers');
 
 class Coinify extends Exchange {
   constructor (object, delegate) {
-    super(delegate, Trade, Quote);
+    super(delegate, Trade, Quote, PaymentMethod);
 
     var obj = object || {};
     this._partner_id = null;
@@ -172,14 +172,6 @@ class Coinify extends Exchange {
     return CoinifyKYC.fetchAll(this._api, this)
                        .then(update)
                        .then(save);
-  }
-
-  getBuyMethods () {
-    return PaymentMethod.fetchAll(undefined, 'BTC', this._api);
-  }
-
-  getSellMethods () {
-    return PaymentMethod.fetchAll('BTC', undefined, this._api);
   }
 
   getBuyCurrencies () {

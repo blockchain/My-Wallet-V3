@@ -2,6 +2,8 @@ var assert = require('assert');
 
 class PaymentMethod {
   constructor (api, quote, TradeClass) {
+    assert(api, 'API required');
+    assert(TradeClass, 'Trade class required');
     this._api = api;
     this._quote = quote;
     this._TradeClass = TradeClass;

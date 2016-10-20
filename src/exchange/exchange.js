@@ -2,15 +2,17 @@ var assert = require('assert');
 var Helpers = require('./helpers');
 
 class Exchange {
-  constructor (delegate, TradeClass, QuoteClass) {
+  constructor (delegate, TradeClass, QuoteClass, PaymentMethodClass) {
     assert(delegate, 'ExchangeDelegate required');
     assert(TradeClass, 'Trade class required');
     assert(QuoteClass, 'Quote class required');
+    assert(QuoteClass, 'PaymentMethod class required');
     assert(QuoteClass.getQuote, 'Quote.getQuote missing');
     this._delegate = delegate;
     this._trades = [];
     this._TradeClass = TradeClass;
     this._QuoteClass = QuoteClass;
+    this._PaymentMethodClass = PaymentMethodClass;
   }
 
   get debug () { return this._debug; }
@@ -37,6 +39,14 @@ class Exchange {
   get trades () { return this._trades; }
 
   get delegate () { return this._delegate; }
+
+  getBuyMethods () {
+    return this._PaymentMethodClass.fetchAll(undefined, 'BTC', this._api);
+  }
+
+  getSellMethods () {
+    return this._PaymentMethodClass.fetchAll('BTC', undefined, this._api);
+  }
 
   getBuyQuote (amount, baseCurrency, quoteCurrency) {
     assert(baseCurrency, 'Specify base currency');

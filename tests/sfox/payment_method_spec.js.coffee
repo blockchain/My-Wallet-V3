@@ -38,7 +38,7 @@ describe "SFOX Payment method", ->
       quote = {baseAmount: -1000}
 
     it "must put everything on place", ->
-      b = new PaymentMethod(o)
+      b = new PaymentMethod(o, api)
       expect(b._inMedium).toBe(o.inMedium)
       expect(b._outMedium).toBe(o.outMedium)
       expect(b._name).toBe(o.name)
@@ -62,7 +62,7 @@ describe "SFOX Payment method", ->
     it "must correctly round the fixed fee for fiat to BTC", ->
       o.inFixedFee = 35.05 # 35.05 * 100 = 3504.9999999999995 in javascript
       o.outFixedFee = 35.05 # 35.05 * 100 = 3504.9999999999995 in javascript
-      b = new PaymentMethod(o)
+      b = new PaymentMethod(o, api)
       expect(b.inFixedFee).toEqual(3505)
       expect(b.outFixedFee).toEqual(3505000000)
 
@@ -71,7 +71,7 @@ describe "SFOX Payment method", ->
       o.outCurrency = "EUR"
       o.inFixedFee = 35.05
       o.outFixedFee = 35.05
-      b = new PaymentMethod(o)
+      b = new PaymentMethod(o, api)
       expect(b.inFixedFee).toEqual(3505000000)
       expect(b.outFixedFee).toEqual(3505)
 

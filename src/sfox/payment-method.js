@@ -1,18 +1,21 @@
 var ExchangePaymentMethod = require('../exchange/payment-method');
 var Trade = require('./trade');
+var assert = require('assert');
 
 class PaymentMethod extends ExchangePaymentMethod {
   constructor (obj, api, quote) {
-    super(api, quote);
+    super(api, quote, Trade);
 
     this._TradeClass = Trade;
 
-    this._id = obj.payment_method_id;
-    this._status = obj.status;
-    this._routingNumber = obj.routing_number;
-    this._accountNumber = obj.account_number;
-    this._name = obj.name;
-    this._accountType = obj.account_type;
+    if (obj) {
+      this._id = obj.payment_method_id;
+      this._status = obj.status;
+      this._routingNumber = obj.routing_number;
+      this._accountNumber = obj.account_number;
+      this._name = obj.name;
+      this._accountType = obj.account_type;
+    }
 
     this._inMedium = 'ach';
     this._outMedium = 'blockchain';
@@ -28,9 +31,13 @@ class PaymentMethod extends ExchangePaymentMethod {
     this._inPercentageFee = 0;
     this._outPercentageFee = 0;
 
-    this._fee = 0;
-    this._total = -quote.baseAmount;
+    if (quote) {
+      this._fee = 0;
+      this._total = -quote.baseAmount;
+    }
   }
+
+  get accounts () { return this._accounts; }
 
   get status () { return this._status; }
 
@@ -60,8 +67,52 @@ class PaymentMethod extends ExchangePaymentMethod {
       });
     } else {
       // Return ACH account as a type
-      return Promise.resolve([new PaymentMethod(api, quote)]);
+      return Promise.resolve([new PaymentMethod(undefined, api)]);
     }
+  }
+
+  addAccount (routingNumber, accountNumber, name, nickname, type) {
+    assert(this._inMedium === 'ach', 'Not ACH');
+
+    assert(routingNumber && accountNumber, 'Routing and account number required');
+    assert(name, 'Account holder name required');
+    assert(nickname, 'Nickname required');
+
+    return this._api.authPOST('payment-methods', {
+      type: 'ach',
+      ach: {
+        currency: 'usd',
+        routing_number: routingNumber,
+        account_number: accountNumber,
+        name1: name,
+        nickname: nickname,
+        type: type || 'checking'
+      }
+    }).then((res) => {
+      this._accounts.push(new PaymentMethod(res, this._api));
+    });
+  }
+
+  fetchAccounts () {
+    return this._api.authGET('payment-methods').then((accounts) => {
+      this._accounts = [];
+      for (let account of accounts) {
+        this._accounts.push(new PaymentMethod(account, this._api));
+      }
+      return this._accounts;
+    });
+  }
+
+  verify (amount1, amount2) {
+    assert(amount1 && amount2, 'Split amounts required');
+    return this._api.authPOST('payment-methods/verify', {
+      payment_method_id: this._id,
+      amount1: amount1,
+      amount2: amount2
+    }).then((res) => {
+      this.status = res.status;
+      return this;
+    });
   }
 }
 
