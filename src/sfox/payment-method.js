@@ -15,6 +15,8 @@ class PaymentMethod extends ExchangePaymentMethod {
       this._accountNumber = obj.account_number;
       this._name = obj.name;
       this._accountType = obj.account_type;
+    } else {
+      this._accounts = [];
     }
 
     this._inMedium = 'ach';
@@ -59,7 +61,6 @@ class PaymentMethod extends ExchangePaymentMethod {
       // Return list user's ACH accounts
       var output = [];
       return api.authGET('payment-methods').then(function (res) {
-        output.length = 0;
         for (let method of res) {
           output.push(new PaymentMethod(method, api, quote));
         }
@@ -95,7 +96,6 @@ class PaymentMethod extends ExchangePaymentMethod {
 
   fetchAccounts () {
     return this._api.authGET('payment-methods').then((accounts) => {
-      this._accounts = [];
       for (let account of accounts) {
         this._accounts.push(new PaymentMethod(account, this._api));
       }
@@ -110,7 +110,7 @@ class PaymentMethod extends ExchangePaymentMethod {
       amount1: amount1,
       amount2: amount2
     }).then((res) => {
-      this.status = res.status;
+      this._status = res.status;
       return this;
     });
   }
