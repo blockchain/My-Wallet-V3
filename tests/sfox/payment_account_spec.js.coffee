@@ -3,7 +3,7 @@ proxyquire = require('proxyquireify')(require)
 stubs = {
 }
 
-PaymentMethod    = proxyquire('../../src/coinify/payment-method', stubs)
+PaymentAccount    = proxyquire('../../src/coinify/payment-account', stubs)
 o = undefined
 coinify = undefined
 b = undefined
@@ -29,7 +29,7 @@ beforeEach ->
 afterEach ->
   JasminePromiseMatchers.uninstall()
 
-describe "Coinify Payment method", ->
+fdescribe "SFOX Payment method", ->
 
   describe "constructor", ->
     quote = undefined
@@ -38,7 +38,7 @@ describe "Coinify Payment method", ->
       quote = {baseAmount: -1000}
 
     it "must put everything on place", ->
-      b = new PaymentMethod(o, api)
+      b = new PaymentAccount(o, api)
       expect(b._inMedium).toBe(o.inMedium)
       expect(b._outMedium).toBe(o.outMedium)
       expect(b._name).toBe(o.name)
@@ -52,17 +52,17 @@ describe "Coinify Payment method", ->
       expect(b._outPercentageFee).toBe(o.outPercentageFee)
 
     it "should set fee, given a quote", ->
-      b = new PaymentMethod(o, api, quote)
+      b = new PaymentAccount(o, api, quote)
       expect(b.fee).toEqual(30 + 1)
 
     it "should set total, given a quote", ->
-      b = new PaymentMethod(o, api, quote)
+      b = new PaymentAccount(o, api, quote)
       expect(b.total).toEqual(1000 + 30 + 1)
 
     it "must correctly round the fixed fee for fiat to BTC", ->
       o.inFixedFee = 35.05 # 35.05 * 100 = 3504.9999999999995 in javascript
       o.outFixedFee = 35.05 # 35.05 * 100 = 3504.9999999999995 in javascript
-      b = new PaymentMethod(o, api)
+      b = new PaymentAccount(o, api)
       expect(b.inFixedFee).toEqual(3505)
       expect(b.outFixedFee).toEqual(3505000000)
 
@@ -71,7 +71,7 @@ describe "Coinify Payment method", ->
       o.outCurrency = "EUR"
       o.inFixedFee = 35.05
       o.outFixedFee = 35.05
-      b = new PaymentMethod(o, api)
+      b = new PaymentAccount(o, api)
       expect(b.inFixedFee).toEqual(3505000000)
       expect(b.outFixedFee).toEqual(3505)
 
@@ -82,7 +82,7 @@ describe "Coinify Payment method", ->
       }
       spyOn(coinify, "authGET").and.callThrough()
 
-      promise = PaymentMethod.fetchAll('EUR', 'BTC', coinify)
+      promise = PaymentAccount.getAll('EUR', 'BTC', coinify)
       argument = {
         inCurrency: 'EUR',
         outCurrency: 'BTC'

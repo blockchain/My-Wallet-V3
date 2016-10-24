@@ -2,18 +2,18 @@ var Helpers = require('../exchange/helpers');
 var assert = require('assert');
 
 class Quote {
-  constructor (api, delegate, TradeClass, PaymentMethodClass, debug) {
+  constructor (api, delegate, TradeClass, PaymentMediumClass, debug) {
     assert(api, 'API required');
     assert(delegate, 'ExchangeDelegate required');
     assert(TradeClass, 'Trade class required');
-    assert(PaymentMethodClass, 'PaymentMethod class required');
-    assert(PaymentMethodClass.fetchAll, 'PaymentMethod.fetchAll missing');
+    assert(PaymentMediumClass, 'PaymentMedium class required');
+    assert(PaymentMediumClass.getAll, 'PaymentMedium.getAll missing');
     assert(TradeClass.buy, 'Trade.buy() missing');
 
     this._api = api;
     this._delegate = delegate;
     this._TradeClass = TradeClass;
-    this._PaymentMethodClass = PaymentMethodClass;
+    this._PaymentMediumClass = PaymentMediumClass;
     this._debug = debug;
   }
 
@@ -60,25 +60,26 @@ class Quote {
     return Promise.resolve(baseAmount);
   }
 
-  getPaymentMethods () {
+  getPaymentMediums () {
     var self = this;
 
-    var setPaymentMethods = function (paymentMethods) {
-      self.paymentMethods = {};
-      for (let paymentMethod of paymentMethods) {
-        if (!self.paymentMethods[paymentMethod.inMedium]) {
-          self.paymentMethods[paymentMethod.inMedium] = [];
-        }
-        self.paymentMethods[paymentMethod.inMedium].push(paymentMethod);
-      }
-      return self.paymentMethods;
+    var setPaymentMediums = function (paymentMediums) {
+      self.paymentMediums = paymentMediums;
+      return self.paymentMediums;
     };
 
-    if (this.paymentMethods) {
-      return Promise.resolve(this.paymentMethods);
+    let inCurrency = this.baseCurrency;
+    let outCurrency = this.quoteCurrency;
+    if (this.baseCurrency === 'BTC' && this.baseAmount > 0) {
+      inCurrency = this.quoteCurrency;
+      outCurrency = this.baseCurrency;
+    }
+
+    if (this.paymentMediums) {
+      return Promise.resolve(this.paymentMediums);
     } else {
-      return this._PaymentMethodClass.fetchAll(this.baseCurrency, this.quoteCurrency, this._api, this)
-                          .then(setPaymentMethods);
+      return this._PaymentMediumClass.getAll(inCurrency, outCurrency, this._api, this)
+                          .then(setPaymentMediums);
     }
   }
 }

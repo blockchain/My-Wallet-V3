@@ -3,7 +3,7 @@ proxyquire = require('proxyquireify')(require)
 stubs = {
 }
 
-PaymentMethod    = proxyquire('../../src/coinify/payment-method', stubs)
+PaymentMethod    = proxyquire('../../src/coinify/payment-medium', stubs)
 o = undefined
 coinify = undefined
 b = undefined
@@ -29,7 +29,7 @@ beforeEach ->
 afterEach ->
   JasminePromiseMatchers.uninstall()
 
-describe "SFOX Payment method", ->
+fdescribe "Coinify Payment medium", ->
 
   describe "constructor", ->
     quote = undefined
@@ -82,7 +82,7 @@ describe "SFOX Payment method", ->
       }
       spyOn(coinify, "authGET").and.callThrough()
 
-      promise = PaymentMethod.fetchAll('EUR', 'BTC', coinify)
+      promise = PaymentMethod.getAll('EUR', 'BTC', coinify)
       argument = {
         inCurrency: 'EUR',
         outCurrency: 'BTC'

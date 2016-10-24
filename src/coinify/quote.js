@@ -1,4 +1,4 @@
-var PaymentMethod = require('./payment-method');
+var PaymentMethod = require('./payment-medium');
 var ExchangeQuote = require('../exchange/quote');
 var Trade = require('./trade');
 

@@ -1,5 +1,5 @@
 var ExchangeQuote = require('../exchange/quote');
-var PaymentMethod = require('./payment-method');
+var PaymentMethod = require('./payment-medium');
 var Trade = require('./trade');
 
 // I use Coinify's convention for the meaning of base & quote currency.

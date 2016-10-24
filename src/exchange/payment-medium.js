@@ -1,17 +1,20 @@
 var assert = require('assert');
 
-class PaymentMethod {
-  constructor (api, quote, TradeClass) {
+class PaymentMedium {
+  constructor (api, quote) {
     assert(api, 'API required');
-    assert(TradeClass, 'Trade class required');
     this._api = api;
     this._quote = quote;
-    this._TradeClass = TradeClass;
+    this._accounts = [];
   }
+
+  get accounts () { return this._accounts; }
 
   get inMedium () { return this._inMedium; }
 
   get outMedium () { return this._outMedium; }
+
+  get fiatMedium () { return this._fiatMedium; }
 
   get id () { return this._id; }
 
@@ -36,28 +39,6 @@ class PaymentMethod {
   get fee () { return this._fee; }
 
   get total () { return this._total; }
-
-  buy () {
-    if (!this._quote) {
-      return Promise.reject('QUOTE_MISSING');
-    }
-    var delegate = this._quote.delegate;
-    var addTrade = (trade) => {
-      trade.debug = this._quote.debug;
-      delegate.trades.push(trade);
-      return delegate.save.bind(delegate)().then(() => trade);
-    };
-
-    return this._TradeClass.buy(
-      this._quote,
-      this._inMedium,
-      this._id
-    ).then(addTrade);
-  }
-
-  static fetchAll () {
-    assert(false, 'Subclass must implement this. Do not call super');
-  }
 }
 
-module.exports = PaymentMethod;
+module.exports = PaymentMedium;

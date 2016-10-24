@@ -8,7 +8,7 @@ stubs = {
   './trade' : Trade
 }
 
-PaymentMethod    = proxyquire('../../src/exchange/payment-method', stubs)
+PaymentAccount    = proxyquire('../../src/exchange/payment-account', stubs)
 api = undefined
 
 beforeEach ->
@@ -19,11 +19,11 @@ beforeEach ->
 afterEach ->
   JasminePromiseMatchers.uninstall()
 
-describe "Payment method", ->
+fdescribe "Payment method", ->
   describe "class", ->
     describe "constructor", ->
       it "should keep a reference to the api", ->
-        b = new PaymentMethod(api, undefined, {})
+        b = new PaymentAccount(api, undefined, {})
         expect(b._api).toEqual(api)
 
   describe "instance", ->
@@ -43,7 +43,7 @@ describe "Payment method", ->
         api: {}
         debug: false
 
-      p = new PaymentMethod(api, quote, Trade)
+      p = new PaymentAccount(api, quote, Trade)
 
     it "should have getters", ->
       p._inMedium = 'card'

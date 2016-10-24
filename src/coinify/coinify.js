@@ -26,7 +26,7 @@ var Exchange = require('../exchange/exchange');
 var CoinifyProfile = require('./profile');
 var Trade = require('./trade');
 var CoinifyKYC = require('./kyc');
-var PaymentMethod = require('./payment-method');
+var PaymentMedium = require('./payment-medium');
 var ExchangeRate = require('./exchange-rate');
 var Quote = require('./quote');
 var API = require('./api');
@@ -36,7 +36,7 @@ var Helpers = require('../exchange/helpers');
 
 class Coinify extends Exchange {
   constructor (object, delegate) {
-    super(delegate, Trade, Quote, PaymentMethod);
+    super(delegate, Trade, Quote, PaymentMedium);
 
     var obj = object || {};
     this._partner_id = null;

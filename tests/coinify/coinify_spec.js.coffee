@@ -16,7 +16,7 @@ API = () ->
     PATCH: () ->
   }
 
-PaymentMethod = {
+PaymentMedium = {
   fetchAll: () ->
 }
 
@@ -62,7 +62,7 @@ ExchangeDelegate = () ->
 stubs = {
   './api' : API,
   './quote'  : Quote,
-  './payment-method' : PaymentMethod,
+  './payment-medium' : PaymentMedium,
   './trade' : Trade,
   './kyc' : CoinifyKYC,
   './profile' : CoinifyProfile,
@@ -261,23 +261,23 @@ describe "Coinify", ->
 
     describe 'getBuyMethods()', ->
       beforeEach ->
-        spyOn(PaymentMethod, 'fetchAll')
+        spyOn(PaymentMedium, 'fetchAll')
 
       it 'should get payment methods with BTC as out currency', ->
         c.getBuyMethods()
-        expect(PaymentMethod.fetchAll).toHaveBeenCalled()
-        expect(PaymentMethod.fetchAll.calls.argsFor(0)[0]).not.toBeDefined()
-        expect(PaymentMethod.fetchAll.calls.argsFor(0)[1]).toEqual('BTC')
+        expect(PaymentMedium.fetchAll).toHaveBeenCalled()
+        expect(PaymentMedium.fetchAll.calls.argsFor(0)[0]).not.toBeDefined()
+        expect(PaymentMedium.fetchAll.calls.argsFor(0)[1]).toEqual('BTC')
 
     describe 'getSellMethods()', ->
       beforeEach ->
-        spyOn(PaymentMethod, 'fetchAll')
+        spyOn(PaymentMedium, 'fetchAll')
 
       it 'should get payment methods with BTC as in currency', ->
         c.getSellMethods()
-        expect(PaymentMethod.fetchAll).toHaveBeenCalled()
-        expect(PaymentMethod.fetchAll.calls.argsFor(0)[0]).toEqual('BTC')
-        expect(PaymentMethod.fetchAll.calls.argsFor(0)[1]).not.toBeDefined()
+        expect(PaymentMedium.fetchAll).toHaveBeenCalled()
+        expect(PaymentMedium.fetchAll.calls.argsFor(0)[0]).toEqual('BTC')
+        expect(PaymentMedium.fetchAll.calls.argsFor(0)[1]).not.toBeDefined()
 
     describe 'getBuyCurrencies()', ->
       beforeEach ->

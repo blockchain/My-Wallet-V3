@@ -1,7 +1,7 @@
 
 proxyquire = require('proxyquireify')(require)
 
-PaymentMethod = {
+PaymentMedium = {
   fetchAll: () -> Promise.resolve([
     {
       inMedium: 'bank'
@@ -15,7 +15,7 @@ Trade.buy = (quote) ->
 
 
 stubs = {
-  './payment-method' : PaymentMethod,
+  './payment-medium' : PaymentMedium,
   './trade' : Trade
 }
 
@@ -138,19 +138,19 @@ describe "Coinify Quote", ->
         expect(q.quoteAmount).toBe(q._quoteAmount)
         expect(q.id).toBe(q._id)
 
-    describe "getPaymentMethods", ->
+    describe "getPaymentMediums", ->
       it "should cache the result", ->
         q.paymentMethods = {}
-        spyOn(PaymentMethod, "fetchAll")
-        q.getPaymentMethods()
-        expect(PaymentMethod.fetchAll).not.toHaveBeenCalled()
+        spyOn(PaymentMedium, "fetchAll")
+        q.getPaymentMediums()
+        expect(PaymentMedium.fetchAll).not.toHaveBeenCalled()
 
       it "should set .bank for the bank method", (done) ->
         checks = (res) ->
           expect(res.bank).toBeDefined()
           done()
 
-        q.getPaymentMethods().then(checks)
+        q.getPaymentMediums().then(checks)
 
     describe "QA expire()", ->
       it "should set expiration time to 3 seconds in the future", ->

@@ -1,7 +1,8 @@
-var ExchangePaymentMethod = require('../exchange/payment-method');
+var ExchangePaymentMedium = require('../exchange/payment-medium');
+var PaymentAccount = require('./payment-account');
 var Trade = require('./trade');
 
-class PaymentMethod extends ExchangePaymentMethod {
+class PaymentMedium extends ExchangePaymentMedium {
   constructor (obj, api, quote) {
     super(api, quote, Trade);
 
@@ -9,6 +10,15 @@ class PaymentMethod extends ExchangePaymentMethod {
 
     this._inMedium = obj.inMedium;
     this._outMedium = obj.outMedium;
+
+    if (this._inMedium === 'card' || this._outMedium === 'card') {
+      this._fiatMedium = 'card';
+    } else if (this._inMedium === 'bank' || this._outMedium === 'bank') {
+      this._fiatMedium = 'bank';
+    } else {
+      console.warn('Unknown fiat medium', this._inMedium, this._outMedium);
+    }
+
     this._name = obj.name;
 
     this._inCurrencies = obj.inCurrencies;
@@ -34,27 +44,29 @@ class PaymentMethod extends ExchangePaymentMethod {
     }
   }
 
-  buy () {
-    return super.buy().then((trade) => {
-      trade._getQuote = this._quote.constructor.getQuote; // Prevents circular dependency
-      return trade;
-    });
+  getAccounts () {
+    return Promise.resolve([new PaymentAccount(this._api, this.fiatMedium, this._quote)]);
   }
 
-  static fetchAll (inCurrency, outCurrency, api, quote) {
+  static getAll (inCurrency, outCurrency, api, quote) {
     var params = {};
     if (inCurrency) { params.inCurrency = inCurrency; }
     if (outCurrency) { params.outCurrency = outCurrency; }
 
     var output = [];
     return api.authGET('trades/payment-methods', params).then(function (res) {
-      output.length = 0;
+      output = {};
       for (var i = 0; i < res.length; i++) {
-        output.push(new PaymentMethod(res[i], api, quote));
+        let medium = new PaymentMedium(res[i], api, quote);
+        if (inCurrency !== 'BTC') { // Buy
+          output[medium.inMedium] = medium;
+        } else { // Sell
+          output[medium.outMedium] = medium;
+        }
       }
       return Promise.resolve(output);
     });
   }
 }
 
-module.exports = PaymentMethod;
+module.exports = PaymentMedium;
