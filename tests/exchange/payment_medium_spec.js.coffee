@@ -14,7 +14,7 @@ beforeEach ->
 afterEach ->
   JasminePromiseMatchers.uninstall()
 
-fdescribe "Payment method", ->
+describe "Payment Medium", ->
   describe "class", ->
     describe "constructor", ->
       it "should keep a reference to the api", ->
@@ -26,11 +26,13 @@ fdescribe "Payment method", ->
     delegate = undefined
 
     beforeEach ->
+      quote = {}
+
       delegate =
         save: () -> Promise.resolve()
 
-      p = new PaymentMedium(api, quote, Trade)
+      p = new PaymentMedium(api, quote)
 
     it "should have getters", ->
-      p._inMedium = 'card'
-      expect(p.inMedium).toBe('card')
+      p._id = '1234'
+      expect(p.id).toBe('1234')

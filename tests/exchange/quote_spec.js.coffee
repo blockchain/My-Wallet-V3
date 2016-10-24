@@ -5,7 +5,7 @@ Trade = () ->
 Trade.buy = () ->
 
 PaymentMethod = () ->
-PaymentMethod.fetchAll = () ->
+PaymentMethod.getAll = () ->
 
 stubs = {
   './trade' : Trade

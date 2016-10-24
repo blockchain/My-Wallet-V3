@@ -3,33 +3,21 @@ proxyquire = require('proxyquireify')(require)
 stubs = {
 }
 
-PaymentMedium    = proxyquire('../../src/coinify/payment-medium', stubs)
-o = undefined
-coinify = undefined
+PaymentMedium    = proxyquire('../../src/sfox/payment-medium', stubs)
+
+sfox = undefined
 b = undefined
-api = undefined
+quote = undefined
+api = {}
+
 
 beforeEach ->
-  api = {}
-  o = {
-    inMedium: "inMedium"
-    outMedium: "outMedium"
-    name: "name"
-    inCurrencies: "inCurrencies"
-    outCurrencies: "outCurrencies"
-    inCurrency: "inCurrency"
-    outCurrency: "outCurrency"
-    inFixedFee: 0.01
-    outFixedFee: 0
-    inPercentageFee: 3
-    outPercentageFee: 0
-  }
   JasminePromiseMatchers.install()
 
 afterEach ->
   JasminePromiseMatchers.uninstall()
 
-fdescribe "SFOX Payment method", ->
+describe "SFOX Payment Medium", ->
 
   describe "constructor", ->
     quote = undefined
@@ -37,58 +25,20 @@ fdescribe "SFOX Payment method", ->
     beforeEach ->
       quote = {baseAmount: -1000}
 
-    it "must put everything on place", ->
-      b = new PaymentMedium(o, api)
-      expect(b._inMedium).toBe(o.inMedium)
-      expect(b._outMedium).toBe(o.outMedium)
-      expect(b._name).toBe(o.name)
-      expect(b._inCurrencies).toBe(o.inCurrencies)
-      expect(b._outCurrencies).toBe(o.outCurrencies)
-      expect(b._inCurrency).toBe(o.inCurrency)
-      expect(b._outCurrency).toBe(o.outCurrency)
-      expect(b._inFixedFee).toBe(o.inFixedFee * 100)
-      expect(b._outFixedFee).toBe(o.outFixedFee * 100)
-      expect(b._inPercentageFee).toBe(o.inPercentageFee)
-      expect(b._outPercentageFee).toBe(o.outPercentageFee)
+    it "should store the medium", ->
+      b = new PaymentMedium(undefined, api, quote)
+      expect(b.inMedium).toBe('ach')
+      expect(b.outMedium).toBe('blockchain')
 
     it "should set fee, given a quote", ->
-      b = new PaymentMedium(o, api, quote)
-      expect(b.fee).toEqual(30 + 1)
+      b = new PaymentMedium(undefined, api, quote)
+      expect(b.fee).toEqual(0)
 
     it "should set total, given a quote", ->
-      b = new PaymentMedium(o, api, quote)
-      expect(b.total).toEqual(1000 + 30 + 1)
-
-    it "must correctly round the fixed fee for fiat to BTC", ->
-      o.inFixedFee = 35.05 # 35.05 * 100 = 3504.9999999999995 in javascript
-      o.outFixedFee = 35.05 # 35.05 * 100 = 3504.9999999999995 in javascript
-      b = new PaymentMedium(o, api)
-      expect(b.inFixedFee).toEqual(3505)
-      expect(b.outFixedFee).toEqual(3505000000)
-
-    it "must correctly round the fixed fee for BTC to fiat", ->
-      o.inCurrency = "BTC"
-      o.outCurrency = "EUR"
-      o.inFixedFee = 35.05
-      o.outFixedFee = 35.05
-      b = new PaymentMedium(o, api)
-      expect(b.inFixedFee).toEqual(3505000000)
-      expect(b.outFixedFee).toEqual(3505)
+      b = new PaymentMedium(undefined, api, quote)
+      expect(b.total).toEqual(1000)
 
   describe "fetch all", ->
-    it "should authGET trades/payment-methods with the correct arguments", (done) ->
-      coinify = {
-        authGET: (method, params) -> Promise.resolve([o,o,o,o]),
-      }
-      spyOn(coinify, "authGET").and.callThrough()
-
-      promise = PaymentMedium.getAll('EUR', 'BTC', coinify)
-      argument = {
-        inCurrency: 'EUR',
-        outCurrency: 'BTC'
-      }
-      testCalls = () ->
-        expect(coinify.authGET).toHaveBeenCalledWith('trades/payment-methods', argument)
-      promise
-        .then(testCalls)
-        .then(done)
+    it "should return an array of one", () ->
+      promise = PaymentMedium.getAll('USD', 'BTC', api, quote)
+      expect(promise).toBeResolvedWith([{}])

@@ -29,7 +29,7 @@ beforeEach ->
 afterEach ->
   JasminePromiseMatchers.uninstall()
 
-fdescribe "Coinify Payment medium", ->
+describe "Coinify Payment medium", ->
 
   describe "constructor", ->
     quote = undefined

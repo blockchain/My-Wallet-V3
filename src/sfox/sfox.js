@@ -33,7 +33,6 @@ var Profile = require('./profile');
 var Trade = require('./trade');
 var Quote = require('./quote');
 var PaymentMedium = require('./payment-medium');
-var PaymentAccount = require('./payment-account');
 
 var assert = require('assert');
 

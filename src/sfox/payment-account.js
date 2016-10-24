@@ -12,7 +12,7 @@ class PaymentAccount extends ExchangePaymentAccount {
     this._status = obj.status;
     this._routingNumber = obj.routing_number;
     this._accountNumber = obj.account_number;
-    this._name = obj.name;
+    this._name = obj.nickname;
     this._accountType = obj.account_type;
   }
 
@@ -43,11 +43,11 @@ class PaymentAccount extends ExchangePaymentAccount {
     });
   }
 
-  static getAll () {
-    return this._api.authGET('payment-methods').then((accounts) => {
+  static getAll (inMedium, outMedium, api, quote) {
+    return api.authGET('payment-methods').then((accounts) => {
       let accountsObj = [];
       for (let account of accounts) {
-        accountsObj.push(new PaymentAccount(account, this._api));
+        accountsObj.push(new PaymentAccount(account, api, quote));
       }
       return accountsObj;
     });

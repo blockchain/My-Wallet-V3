@@ -19,11 +19,11 @@ beforeEach ->
 afterEach ->
   JasminePromiseMatchers.uninstall()
 
-fdescribe "Payment method", ->
+describe "Payment Account", ->
   describe "class", ->
     describe "constructor", ->
       it "should keep a reference to the api", ->
-        b = new PaymentAccount(api, undefined, {})
+        b = new PaymentAccount(api, 'bank', undefined, {})
         expect(b._api).toEqual(api)
 
   describe "instance", ->
@@ -43,11 +43,11 @@ fdescribe "Payment method", ->
         api: {}
         debug: false
 
-      p = new PaymentAccount(api, quote, Trade)
+      p = new PaymentAccount(api, 'bank', quote, Trade)
 
     it "should have getters", ->
-      p._inMedium = 'card'
-      expect(p.inMedium).toBe('card')
+      p._id = '1234'
+      expect(p.id).toBe('1234')
 
     describe 'buy()', ->
       it 'should use Trade.buy', ->

@@ -17,7 +17,7 @@ API = () ->
   }
 
 PaymentMedium = {
-  fetchAll: () ->
+  getAll: () ->
 }
 
 Trade = (obj) ->
@@ -261,23 +261,23 @@ describe "Coinify", ->
 
     describe 'getBuyMethods()', ->
       beforeEach ->
-        spyOn(PaymentMedium, 'fetchAll')
+        spyOn(PaymentMedium, 'getAll')
 
       it 'should get payment methods with BTC as out currency', ->
         c.getBuyMethods()
-        expect(PaymentMedium.fetchAll).toHaveBeenCalled()
-        expect(PaymentMedium.fetchAll.calls.argsFor(0)[0]).not.toBeDefined()
-        expect(PaymentMedium.fetchAll.calls.argsFor(0)[1]).toEqual('BTC')
+        expect(PaymentMedium.getAll).toHaveBeenCalled()
+        expect(PaymentMedium.getAll.calls.argsFor(0)[0]).not.toBeDefined()
+        expect(PaymentMedium.getAll.calls.argsFor(0)[1]).toEqual('BTC')
 
     describe 'getSellMethods()', ->
       beforeEach ->
-        spyOn(PaymentMedium, 'fetchAll')
+        spyOn(PaymentMedium, 'getAll')
 
       it 'should get payment methods with BTC as in currency', ->
         c.getSellMethods()
-        expect(PaymentMedium.fetchAll).toHaveBeenCalled()
-        expect(PaymentMedium.fetchAll.calls.argsFor(0)[0]).toEqual('BTC')
-        expect(PaymentMedium.fetchAll.calls.argsFor(0)[1]).not.toBeDefined()
+        expect(PaymentMedium.getAll).toHaveBeenCalled()
+        expect(PaymentMedium.getAll.calls.argsFor(0)[0]).toEqual('BTC')
+        expect(PaymentMedium.getAll.calls.argsFor(0)[1]).not.toBeDefined()
 
     describe 'getBuyCurrencies()', ->
       beforeEach ->
