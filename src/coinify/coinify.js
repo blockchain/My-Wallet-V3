@@ -177,7 +177,7 @@ class Coinify extends Exchange {
   getBuyCurrencies () {
     var getCurrencies = function (paymentMethods) {
       var currencies = [];
-      for (let paymentMethod of paymentMethods) {
+      for (let [key, paymentMethod] of Object.entries(paymentMethods)) {
         for (let inCurrency of paymentMethod.inCurrencies) {
           if (currencies.indexOf(inCurrency) === -1) {
             currencies.push(inCurrency);
@@ -193,7 +193,7 @@ class Coinify extends Exchange {
   getSellCurrencies () {
     var getCurrencies = function (paymentMethods) {
       var currencies = [];
-      for (let paymentMethod of paymentMethods) {
+      for (let [key, paymentMethod] of Object.entries(paymentMethods)) {
         for (let outCurrency of paymentMethod.outCurrencies) {
           if (currencies.indexOf(outCurrency) === -1) {
             currencies.push(outCurrency);
