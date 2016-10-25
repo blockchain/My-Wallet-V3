@@ -34,15 +34,16 @@ class PaymentMedium extends ExchangePaymentMedium {
   addAccount (routingNumber, accountNumber, name, nickname, type) {
     assert(this._inMedium === 'ach', 'Not ACH');
 
-    PaymentAccount.add(this._api, routingNumber, accountNumber, name, nickname, type).then((account) => {
+    return PaymentAccount.add(this._api, routingNumber, accountNumber, name, nickname, type).then((account) => {
       this._accounts.push(account);
+      return account;
     });
   }
 
   getAccounts () {
     return this._api.authGET('payment-methods').then((accounts) => {
       for (let account of accounts) {
-        this._accounts.push(new PaymentAccount(account, 'ach', this._api));
+        this._accounts.push(new PaymentAccount(account, this._api, this._quote));
       }
       return this._accounts;
     });

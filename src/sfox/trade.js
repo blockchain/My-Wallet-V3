@@ -21,10 +21,13 @@ class Trade extends ExchangeTrade {
       'pending',
       'failed',
       'rejected',
-      'completed'
+      'completed',
+      'ready'
     ].indexOf(obj.status) === -1) {
       console.warn('Unknown status:', obj.status);
     }
+
+    this._sfox_status = obj.status;
 
     switch (obj.status) {
       case 'pending':
@@ -32,6 +35,9 @@ class Trade extends ExchangeTrade {
         break;
       case 'failed':
         this._state = 'failed';
+        break;
+      case 'ready':
+        this._state = 'processing';
         break;
       default:
         this._state = obj.status;
@@ -60,7 +66,7 @@ class Trade extends ExchangeTrade {
     if (this.debug) {
       console.info('Trade ' + this.id + ' from API');
     }
-    // this._createdAt = new Date(obj.createTime); // Pending API change
+    this._createdAt = new Date(obj.created_at);
 
     if (this._outCurrency === 'BTC') {
       this._txHash = obj.blockchain_tx_hash;
@@ -105,6 +111,21 @@ class Trade extends ExchangeTrade {
             .then(this.set.bind(this))
             .then(this._delegate.save.bind(this._delegate))
             .then(this.self.bind(this));
+  }
+
+  // QA tool:
+  fakeAchSuccess () {
+    return this._api.authPOST('testing/approvedeposit', {
+      id: this.id
+    }).then(this._delegate.save.bind(this._delegate));
+  }
+
+  // QA tool:
+  fakeAchFail () {
+    return this._api.authPOST('testing/changestatus', {
+      id: this.id,
+      status: 'rejected'
+    }).then(this._delegate.save.bind(this._delegate));
   }
 
   toJSON () {
