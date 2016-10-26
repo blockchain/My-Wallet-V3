@@ -11,7 +11,6 @@ class API {
 
     // encodeFormData :: Object -> url encoded params
     var encodeFormData = function (data) {
-      if (!data) return '';
       var encoded = Object.keys(data).map(function (k) {
         return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]);
       }).join('&');
@@ -29,7 +28,7 @@ class API {
     options.method = method;
 
     var handleNetworkError = function (e) {
-      return Promise.reject({ error: 'SFOX_CONNECT_ERROR', message: e });
+      return Promise.reject({ error: 'EXCHANGE_CONNECT_ERROR', message: e });
     };
 
     var checkStatus = function (response) {

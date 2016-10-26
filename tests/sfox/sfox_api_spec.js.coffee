@@ -24,9 +24,10 @@ describe "SFOX API", ->
       api = new API()
       api._accountToken = "account-token"
       api._apiKey = 'api-key'
+      api._partnerId = 'blockchain'
 
 
-    describe "Getter", ->
+    describe "Properties", ->
       describe "hasAccount", ->
         it "should use _accountToken to see if user has account", ->
           api._accountToken = undefined
@@ -35,9 +36,35 @@ describe "SFOX API", ->
           api._accountToken = "token"
           expect(api.hasAccount).toEqual(true)
 
+      describe "apiKey", ->
+        it "should allow read and write", ->
+          api.apiKey = 'a'
+          expect(api.apiKey).toEqual('a')
+
+      describe "partnerId", ->
+        it "should allow read and write", ->
+          api.partnerId = 'blockchain'
+          expect(api.partnerId).toEqual('blockchain')
+
     describe '_url()', ->
-      it "...", ->
-        pending()
+      it "should use the api subdomain by default", ->
+        expect(api._url(undefined, undefined, 'transactions')).toContain('api.staging.sfox.com')
+
+      it "should use a custom subdomain", ->
+        expect(api._url('quote', undefined, 'transactions')).toContain('quote.staging.sfox.com')
+
+      it "should append the endpoint", ->
+        expect(api._url(undefined, undefined, 'transactions')).toMatch(/.*\/transactions$/)
+
+      it "should use v2 by default", ->
+        expect(api._url(undefined, undefined, 'transactions')).toContain('/v2/')
+
+      it "should allow a custom version", ->
+        expect(api._url(undefined, 'v1', 'transactions')).toContain('/v1/')
+
+      it "should include a partner id", ->
+        expect(api._url(undefined, undefined, 'transactions')).toContain('/partner/blockchain')
+
 
     describe '_request()', ->
       beforeEach ->
@@ -86,3 +113,22 @@ describe "SFOX API", ->
           api.PATCH('/trades')
           expect(api._request).toHaveBeenCalled()
           expect(api._request.calls.argsFor(0)[0]).toEqual('PATCH')
+
+      describe "authenticated", ->
+        describe 'GET', ->
+          it "should make a GET request", ->
+            api.authGET('/trades')
+            expect(api._request).toHaveBeenCalled()
+            expect(api._request.calls.argsFor(0)[0]).toEqual('GET')
+
+        describe 'POST', ->
+          it "should make a POST request", ->
+            api.authPOST('/trades')
+            expect(api._request).toHaveBeenCalled()
+            expect(api._request.calls.argsFor(0)[0]).toEqual('POST')
+
+        describe 'PATCH', ->
+          it "should make a PATCH request", ->
+            api.authPATCH('/trades')
+            expect(api._request).toHaveBeenCalled()
+            expect(api._request.calls.argsFor(0)[0]).toEqual('PATCH')
