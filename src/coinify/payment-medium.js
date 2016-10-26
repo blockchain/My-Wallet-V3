@@ -11,6 +11,7 @@ class PaymentMedium extends ExchangePaymentMedium {
     this._inMedium = obj.inMedium;
     this._outMedium = obj.outMedium;
 
+    /* istanbul ignore else */
     if (this._inMedium === 'card' || this._outMedium === 'card') {
       this._fiatMedium = 'card';
     } else if (this._inMedium === 'bank' || this._outMedium === 'bank') {
@@ -44,14 +45,20 @@ class PaymentMedium extends ExchangePaymentMedium {
     }
   }
 
+  get name () { return this._name; }
+
   getAccounts () {
     return Promise.resolve([new PaymentAccount(this._api, this.fiatMedium, this._quote)]);
   }
 
   static getAll (inCurrency, outCurrency, api, quote) {
     var params = {};
-    if (inCurrency) { params.inCurrency = inCurrency; }
-    if (outCurrency) { params.outCurrency = outCurrency; }
+    if (inCurrency) {
+      params.inCurrency = inCurrency;
+    }
+    if (outCurrency) {
+      params.outCurrency = outCurrency;
+    }
 
     var output = [];
     return api.authGET('trades/payment-methods', params).then(function (res) {

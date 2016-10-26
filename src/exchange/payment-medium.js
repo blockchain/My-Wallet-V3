@@ -16,10 +16,6 @@ class PaymentMedium {
 
   get fiatMedium () { return this._fiatMedium; }
 
-  get id () { return this._id; }
-
-  get name () { return this._name; }
-
   get inCurrencies () { return this._inCurrencies; }
 
   get outCurrencies () { return this._outCurrencies; }
