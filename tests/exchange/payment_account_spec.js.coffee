@@ -44,6 +44,10 @@ describe "Payment Account", ->
         debug: false
 
       p = new PaymentAccount(api, 'bank', quote, Trade)
+      p._name = "John Do"
+
+    it "should have a name", ->
+      expect(p.name).toEqual("John Do")
 
     it "should have getters", ->
       p._id = '1234'
@@ -56,6 +60,13 @@ describe "Payment Account", ->
         p.buy('card')
 
         expect(Trade.buy).toHaveBeenCalled()
+
+      it 'should check for a quote', (done) ->
+        p._quote = undefined
+        promise = p.buy('card').catch((e) ->
+          expect(e.toEqual('QUOTE_MISSING'))
+        )
+        expect(promise).toBeRejected(done)
 
       it 'should return the trade', (done) ->
         checks = (res) ->
