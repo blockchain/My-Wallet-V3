@@ -11,6 +11,7 @@ var MyWallet = require('./wallet'); // This cyclic import should be avoided once
 var shared = require('./shared');
 var ImportExport = require('./import-export');
 var WalletCrypto = require('./wallet-crypto');
+var constants = require('./constants');
 
 // Address class
 function Address (object) {
@@ -163,7 +164,7 @@ Address.import = function (key, label) {
       object.priv = Base58.encode(key.d.toBuffer(32));
       break;
     case Helpers.isBitcoinPrivateKey(key):
-      key = Bitcoin.ECPair.fromWIF(key);
+      key = Bitcoin.ECPair.fromWIF(key, constants.getNetwork());
       object.addr = key.getAddress();
       object.priv = Base58.encode(key.d.toBuffer(32));
       break;
@@ -237,7 +238,8 @@ Address.fromString = function (keyOrAddr, label, bipPass) {
 Address.new = function (label) {
   var key = Bitcoin.ECPair.makeRandom({
     rng: RNG.run.bind(RNG),
-    compressed: true
+    compressed: true,
+    network: constants.getNetwork()
   });
   return Address.import(key, label);
 };
@@ -272,7 +274,7 @@ Address.prototype.signMessage = function (message, secondPassword) {
   var keyPair = Helpers.privateKeyStringToKey(priv, 'base58');
 
   if (keyPair.getAddress() !== this.address) keyPair.compressed = false;
-  return Bitcoin.message.sign(keyPair, message).toString('base64');
+  return Bitcoin.message.sign(keyPair, message, constants.getNetwork()).toString('base64');
 };
 
 Address.prototype.encrypt = function (cipher) {

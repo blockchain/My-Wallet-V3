@@ -5,6 +5,7 @@ module.exports = KeyChain;
 var Bitcoin = require('bitcoinjs-lib');
 var assert = require('assert');
 var Helpers = require('./helpers');
+var constants = require('./constants');
 
 // keychain
 function KeyChain (extendedKey, index, cache) {
@@ -40,10 +41,10 @@ KeyChain.prototype.init = function (extendedKey, index, cache) {
   // if cache is defined we use it to recreate the chain
   // otherwise we generate it using extendedKey and index
   if (cache) {
-    this._chainRoot = Bitcoin.HDNode.fromBase58(cache);
+    this._chainRoot = Bitcoin.HDNode.fromBase58(cache, constants.getNetwork());
   } else {
     this._chainRoot = extendedKey && Helpers.isPositiveInteger(index) && index >= 0
-      ? Bitcoin.HDNode.fromBase58(extendedKey).derive(index) : undefined;
+      ? Bitcoin.HDNode.fromBase58(extendedKey, constants.getNetwork()).derive(index) : undefined;
   }
   return this;
 };

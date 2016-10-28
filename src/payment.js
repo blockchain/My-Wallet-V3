@@ -9,6 +9,7 @@ var Helpers = require('./helpers');
 var KeyRing = require('./keyring');
 var EventEmitter = require('events');
 var util = require('util');
+var constants = require('./constants');
 
 // Payment Class
 
@@ -364,7 +365,7 @@ Payment.updateFees = function () {
 
 Payment.prebuild = function (absoluteFee) {
   return function (payment) {
-    var dust = Bitcoin.networks.bitcoin.dustThreshold;
+    var dust = constants.getNetwork().dustThreshold;
 
     var usableCoins = Transaction.filterUsableCoins(payment.coins, payment.feePerKb);
     var max = Transaction.maxAvailableAmount(usableCoins, payment.feePerKb);
@@ -490,8 +491,9 @@ function getUnspentCoins (addressList, notify) {
 function getKey (priv, addr) {
   var format = Helpers.detectPrivateKeyFormat(priv);
   var key = Helpers.privateKeyStringToKey(priv, format);
-  var ckey = new Bitcoin.ECPair(key.d, null, {compressed: true});
-  var ukey = new Bitcoin.ECPair(key.d, null, {compressed: false});
+  var network = constants.getNetwork();
+  var ckey = new Bitcoin.ECPair(key.d, null, {compressed: true, network: network});
+  var ukey = new Bitcoin.ECPair(key.d, null, {compressed: false, network: network});
   if (ckey.getAddress() === addr) {
     return ckey;
   } else if (ukey.getAddress() === addr) {

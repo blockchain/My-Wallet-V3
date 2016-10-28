@@ -4,6 +4,7 @@ var WalletCrypto = require('./wallet-crypto');
 var Bitcoin = require('bitcoinjs-lib');
 var API = require('./api');
 var Helpers = require('./helpers');
+var constants = require('./constants');
 
 var MyWallet = require('./wallet');
 
@@ -45,7 +46,7 @@ function Metadata (payloadType, cipher) {
 }
 
 Metadata.prototype.setMagicHash = function (encryptedPayload) {
-  this._magicHash = Bitcoin.message.magicHash(encryptedPayload, Bitcoin.networks.bitcoin);
+  this._magicHash = Bitcoin.message.magicHash(encryptedPayload, constants.getNetwork());
 };
 
 Object.defineProperties(Metadata.prototype, {
@@ -70,7 +71,8 @@ Metadata.prototype.create = function (data) {
 
     var encryptedPayloadSignature = Bitcoin.message.sign(
       self._signatureKeyPair,
-      encryptedPayload
+      encryptedPayload,
+      constants.getNetwork()
     );
 
     var serverPayload = {
@@ -100,7 +102,8 @@ Metadata.prototype.fetch = function () {
       var verified = Bitcoin.message.verify(
         self._address,
         Buffer(serverPayload.signature, 'base64'),
-        serverPayload.payload
+        serverPayload.payload,
+        constants.getNetwork()
       );
 
       if (verified) {
@@ -134,7 +137,8 @@ Metadata.prototype.update = function (data) {
     var encryptedPayload = WalletCrypto.encryptDataWithKey(payload, self._encryptionKey);
     var encryptedPayloadSignature = Bitcoin.message.sign(
       self._signatureKeyPair,
-      encryptedPayload
+      encryptedPayload,
+      constants.getNetwork()
     );
 
     var serverPayload = {
