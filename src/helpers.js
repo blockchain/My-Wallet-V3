@@ -7,6 +7,7 @@ var Base58 = require('bs58');
 var BIP39 = require('bip39');
 var shared = require('./shared');
 var ImportExport = require('./import-export');
+var constants = require('./constants');
 
 var Helpers = {};
 Math.log2 = function (x) { return Math.log(x) / Math.LN2; };
@@ -23,13 +24,13 @@ Helpers.isInstanceOf = function (object, theClass) {
 Helpers.isBitcoinAddress = function (candidate) {
   try {
     var d = Bitcoin.address.fromBase58Check(candidate);
-    var n = Bitcoin.networks.bitcoin;
+    var n = constants.getNetwork();
     return d.version === n.pubKeyHash || d.version === n.scriptHash;
   } catch (e) { return false; }
 };
 Helpers.isBitcoinPrivateKey = function (candidate) {
   try {
-    Bitcoin.ECPair.fromWIF(candidate);
+    Bitcoin.ECPair.fromWIF(candidate, constants.getNetwork());
     return true;
   } catch (e) { return false; }
 };
@@ -333,7 +334,11 @@ Helpers.privateKeyStringToKey = function (value, format) {
     throw new Error('Unsupported Key Format');
   }
 
-  return new Bitcoin.ECPair(new BigInteger.fromByteArrayUnsigned(keyBytes), null, {compressed: format !== 'sipa'}); // eslint-disable-line new-cap
+  return new Bitcoin.ECPair(
+    new BigInteger.fromByteArrayUnsigned(keyBytes), // eslint-disable-line new-cap
+    null,
+    { compressed: format !== 'sipa', network: constants.getNetwork() }
+  );
 };
 
 Helpers.detectPrivateKeyFormat = function (key) {
@@ -443,7 +448,7 @@ Helpers.precisionToSatoshiBN = function (x) {
 };
 
 Helpers.verifyMessage = function (address, signature, message) {
-  return Bitcoin.message.verify(address, signature, message);
+  return Bitcoin.message.verify(address, signature, message, constants.getNetwork());
 };
 
 Helpers.getMobileOperatingSystem = function () {

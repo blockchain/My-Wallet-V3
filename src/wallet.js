@@ -17,6 +17,7 @@ var RNG = require('./rng');
 var BIP39 = require('bip39');
 var Bitcoin = require('bitcoinjs-lib');
 var pbkdf2 = require('pbkdf2');
+var constants = require('./constants');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -582,16 +583,18 @@ MyWallet.endSession = function (sessionToken) {
 MyWallet.browserCheck = function () {
   var mnemonic = 'daughter size twenty place alter glass small bid purse october faint beyond';
   var seed = BIP39.mnemonicToSeed(mnemonic, '');
-  var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed);
+  var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed, constants.getNetwork());
 
   var account = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(0);
   var address = account.derive(0).derive(0).getAddress();
-  return address === '1QBWUDG4AFL2kFmbqoZ9y4KsSpQoCTZKRw';
+  var answer = constants.NETWORK === 'testnet' ? 'n4hTmGM2yGmHXNFDZNXXnyYCJp1W8qoMw4' : '1QBWUDG4AFL2kFmbqoZ9y4KsSpQoCTZKRw';
+  return address === answer;
 };
 
 // Takes about 100 ms on a Macbook Pro
 MyWallet.browserCheckFast = function () {
   var mnemonic = 'daughter size twenty place alter glass small bid purse october faint beyond';
+  var network = constants.getNetwork();
 
   var seed = pbkdf2.pbkdf2Sync(mnemonic, 'mnemonic', 100, 64, 'sha512');
   var seedString = seed.toString('hex');
@@ -602,11 +605,26 @@ MyWallet.browserCheckFast = function () {
 
   seed = Buffer('9f3ad67c5f1eebbffcc8314cb8a3aacbfa28046fd4b3d0af6965a8c804a603e57f5b551320eca4017267550e5b01e622978c133f2085c5999f7ef57a340d0ae2', 'hex');
 
-  // master node -> xpriv (1 ms)
-  var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed);
-  var xpriv = masterkey.toString();
+  var vectors = {
+    'bitcoin': {
+      priv: 'xprv9s21ZrQH143K44XyzPUorz65tsvifDFiWZRoqeM69iTeYXd5KbSrz4WEAbWwB2CY6jCGJ2pKdXgw66oQPePPifrpxhWuGoDkumMGCZQwduP',
+      pub: 'xpub682P4gW4PvBwugpzCZoKp3QMZRcj6KTakpZ5jwZXZuv1nvYkPbcT84PNVk1vSKnf1XtLRfTzuwqRH6y7T2HYKRWohWHLDpEv2sfeqPCAFkH',
+      address: '1MGULYKjmADKfZG6BpWwQQ3qVw622HqhCR',
+      pubChild: 'xpub6BQQYoWs7yyp2oNXYABTjjfmcJNJN1vHogwZ9qFdRPAfYhh5EDrBH63MHdjv5uvaawU3E3HTDGZ4SWDhwDjtnmP2S7A3EyYoQiZdFaFju5e'
+    },
+    'testnet': {
+      priv: 'tprv8ZgxMBicQKsPesmWexLK2di5D1LvtjHir7Lvi4mYdgx8L8NAJxncVosg5mgbBParUAj3J8S5ntGjYxM9WrjLXj8RVLjCw9wops6geJMEiVB',
+      pub: 'tpubD8Q1avKk7C9QBV1qeknR1xjitYiP5hxeJT9P6VcfupfuYDDTTpTYGW4Cjn6hxpjtoSRF3EysT3fTyHTiqt8nCry6m72duLu9cqG4bRT3wcX',
+      address: 'n1nRdbQiaBeaSfjhuPVKEKGAMvgiuxaDHY',
+      pubChild: 'tpubDBn353LYqFwGJbZNzMAYwf18wRTxMQRMMKXrWPJmmHvZHzMnJShGRXiBXfphcQspNqzwqcoKkNP78giKL5b8gCqKVhuLvWD2zgA31b1vXZE'
+    }
+  }[constants.NETWORK];
 
-  if (xpriv !== 'xprv9s21ZrQH143K44XyzPUorz65tsvifDFiWZRoqeM69iTeYXd5KbSrz4WEAbWwB2CY6jCGJ2pKdXgw66oQPePPifrpxhWuGoDkumMGCZQwduP') {
+  // master node -> xpriv (1 ms)
+  var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed, network);
+  var priv = masterkey.toString();
+
+  if (priv !== vectors.priv) {
     return false;
   }
 
@@ -623,17 +641,17 @@ MyWallet.browserCheckFast = function () {
   //   return false;
   // }
 
-  var xpub = Bitcoin.HDNode.fromBase58('xpub682P4gW4PvBwugpzCZoKp3QMZRcj6KTakpZ5jwZXZuv1nvYkPbcT84PNVk1vSKnf1XtLRfTzuwqRH6y7T2HYKRWohWHLDpEv2sfeqPCAFkH');
+  var pub = Bitcoin.HDNode.fromBase58(vectors.pub, network);
 
   // xpub -> address // 2 ms
-  if (xpub.getAddress() !== '1MGULYKjmADKfZG6BpWwQQ3qVw622HqhCR') {
+  if (pub.getAddress() !== vectors.address) {
     return false;
   }
 
   // xpub -> xpub' // 100 ms
-  var xpubChild = xpub.derive(0);
+  var pubChild = pub.derive(0);
 
-  if (xpubChild.toString() !== 'xpub6BQQYoWs7yyp2oNXYABTjjfmcJNJN1vHogwZ9qFdRPAfYhh5EDrBH63MHdjv5uvaawU3E3HTDGZ4SWDhwDjtnmP2S7A3EyYoQiZdFaFju5e') {
+  if (pubChild.toString() !== vectors.pubChild) {
     return false;
   }
 

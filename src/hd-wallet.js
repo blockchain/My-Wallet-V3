@@ -8,6 +8,7 @@ var Helpers = require('./helpers');
 var HDAccount = require('./hd-account');
 var BIP39 = require('bip39');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
+var constants = require('./constants');
 
 function HDWallet (object) {
   function addAccount (o, index) {
@@ -182,7 +183,7 @@ HDWallet.prototype.getMasterHDNode = function (cipher) {
   }
 
   var masterhex = HDWallet.getMasterHex(this._seedHex, this._bip39Password, dec);
-  var network = Bitcoin.networks.bitcoin;
+  var network = constants.getNetwork();
   return Bitcoin.HDNode.fromSeedBuffer(masterhex, network);
 };
 
