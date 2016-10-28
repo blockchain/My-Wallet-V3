@@ -7,12 +7,13 @@ PaymentAccount = (api, medium, quote) ->
     quote: quote
   }
 PaymentAccount.add = () -> Promise.resolve({mock: "payment-account"})
+PaymentAccount.getAll = () -> Promise.resolve([{mock: "payment-account"}])
 
 stubs = {
   './payment-account': PaymentAccount
 }
 
-PaymentMedium    = proxyquire('../../src/sfox/payment-medium', stubs)
+PaymentMedium = proxyquire('../../src/sfox/payment-medium', stubs)
 
 sfox = undefined
 m = undefined
@@ -20,7 +21,6 @@ quote = undefined
 api = {
   mock: "api"
 }
-
 
 beforeEach ->
   JasminePromiseMatchers.install()
@@ -66,5 +66,13 @@ describe "SFOX Payment Medium", ->
         expect(PaymentAccount.add).toHaveBeenCalledWith({mock: "api"}, '12345', '1234567890', 'John Do', 'Banky McBankface', undefined)
 
     describe "getAccounts", ->
-      it "...", ->
-        pending()
+      it "should call PaymentAccount.getAll", ->
+        spyOn(PaymentAccount, "getAll").and.callThrough()
+        m.getAccounts()
+        expect(PaymentAccount.getAll).toHaveBeenCalled()
+
+      it "should set .accounts", (done) ->
+        promise = m.getAccounts().then(() ->
+          expect(m.accounts).toEqual([{mock: "payment-account"}])
+        )
+        expect(promise).toBeResolved(done)

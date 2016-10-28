@@ -41,11 +41,8 @@ class PaymentMedium extends ExchangePaymentMedium {
   }
 
   getAccounts () {
-    return this._api.authGET('payment-methods').then((accounts) => {
-      for (let account of accounts) {
-        this._accounts.push(new PaymentAccount(account, this._api, this._quote));
-      }
-      return this._accounts;
+    return PaymentAccount.getAll(undefined, undefined, this._api).then((accounts) => {
+      this._accounts = accounts;
     });
   }
 }
