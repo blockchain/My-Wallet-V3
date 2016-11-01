@@ -43,6 +43,7 @@ class PaymentMedium extends ExchangePaymentMedium {
   getAccounts () {
     return PaymentAccount.getAll(undefined, undefined, this._api).then((accounts) => {
       this._accounts = accounts;
+      return accounts;
     });
   }
 }
