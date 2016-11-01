@@ -43,6 +43,20 @@ class PaymentAccount extends ExchangePaymentAccount {
     });
   }
 
+  accountWithQuote (quote) {
+    // Reconstruct the object as the API would
+    let obj = {
+      payment_method_id: this._id,
+      status: this._status,
+      routing_number: this._routingNumber,
+      account_number: this._accountNumber,
+      nickname: this._name,
+      account_type: this._accountType
+    };
+    let account = new PaymentAccount(obj, this._api, quote);
+    return account;
+  }
+
   static getAll (inMedium, outMedium, api, quote) {
     return api.authGET('payment-methods').then((accounts) => {
       let accountsObj = [];

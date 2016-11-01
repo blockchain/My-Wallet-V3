@@ -51,6 +51,12 @@ class PaymentMedium extends ExchangePaymentMedium {
     return Promise.resolve([new PaymentAccount(this._api, this.fiatMedium, this._quote)]);
   }
 
+  // There are no PaymentAccounts when buying, so just call it directly:
+  buy () {
+    let account = new PaymentAccount(this._api, this.fiatMedium, this._quote);
+    account.buy();
+  }
+
   static getAll (inCurrency, outCurrency, api, quote) {
     var params = {};
     if (inCurrency) {

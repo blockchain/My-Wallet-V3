@@ -46,6 +46,13 @@ class PaymentMedium extends ExchangePaymentMedium {
       return accounts;
     });
   }
+
+  // Buy from a specific account, avoids the need for .getAccounts()
+  buy (account) {
+    assert(account, 'Specify account');
+    let acc = account.accountWithQuote(this._quote);
+    return acc.buy();
+  }
 }
 
 module.exports = PaymentMedium;

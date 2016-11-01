@@ -43,10 +43,6 @@ class Quote extends ExchangeQuote {
     return super.getQuote(-amount, baseCurrency, quoteCurrency, ['BTC', 'EUR', 'GBP', 'USD', 'DKK'], debug)
              .then(getQuote);
   }
-
-  buy () {
-    return super.buy('bank');
-  }
 }
 
 module.exports = Quote;
