@@ -342,13 +342,13 @@ Helpers.privateKeyStringToKey = function (value, format) {
 };
 
 Helpers.detectPrivateKeyFormat = function (key) {
-  // 51 characters base58, always starts with a '5'
-  if (/^5[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/.test(key)) {
+  // 51 characters base58, always starts with 5 (or 9, for testnet)
+  if (/^[59][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/.test(key)) {
     return 'sipa';
   }
 
-  // 52 character compressed starts with L or K
-  if (/^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key)) {
+  // 52 character compressed starts with L or K (or c, for testnet)
+  if (/^[LKc][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key)) {
     return 'compsipa';
   }
 
