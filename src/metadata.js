@@ -35,10 +35,10 @@ function Metadata (payloadType, cipher) {
   //                       signature used to authenticate
   // purpose' / type' / 1' : sha256(private key) used as 256 bit AES key
 
-  var node = payloadTypeNode.deriveHardened(0);
+  this._node = payloadTypeNode.deriveHardened(0);
 
-  this._address = node.getAddress();
-  this._signatureKeyPair = node.keyPair;
+  this._address = this._node.getAddress();
+  this._signatureKeyPair = this._node.keyPair;
 
   var privateKeyBuffer = payloadTypeNode.deriveHardened(1).keyPair.d.toBuffer();
   this._encryptionKey = WalletCrypto.sha256(privateKeyBuffer);
@@ -97,8 +97,7 @@ Metadata.prototype.fetch = function () {
 
       var decryptedPayload = WalletCrypto.decryptDataWithKey(serverPayload.payload, self._encryptionKey);
 
-      var verified = Bitcoin.message.verify(
-        self._address,
+      var verified = self._verify(
         Buffer(serverPayload.signature, 'base64'),
         serverPayload.payload
       );
@@ -118,6 +117,10 @@ Metadata.prototype.fetch = function () {
   });
 };
 
+// Overridden in Objective-C
+Metadata.prototype._verify = function (signature, message) {
+  return Bitcoin.message.verify(this._address, signature, message);
+};
 /*
 metadata.update({
   lastViewed: Date.now()
