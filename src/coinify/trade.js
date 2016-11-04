@@ -3,11 +3,11 @@
 var assert = require('assert');
 
 var BankAccount = require('./bank-account');
-var Helpers = require('../exchange/helpers');
+var Helpers = require('bitcoin-exchange-client').Helpers;
 
-var ExchangeTrade = require('../exchange/trade');
+var Exchange = require('bitcoin-exchange-client');
 
-class Trade extends ExchangeTrade {
+class Trade extends Exchange.Trade {
   constructor (obj, api, delegate) {
     super(api, delegate);
 

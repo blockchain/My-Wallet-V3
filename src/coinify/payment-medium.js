@@ -1,4 +1,4 @@
-var ExchangePaymentMedium = require('../exchange/payment-medium');
+var ExchangePaymentMedium = require('bitcoin-exchange-client').PaymentMedium;
 var PaymentAccount = require('./payment-account');
 var Trade = require('./trade');
 

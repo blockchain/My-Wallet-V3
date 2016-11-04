@@ -7,6 +7,10 @@ API = () ->
     PATCH: () ->
   }
 
+Exchange = {
+  API: API
+}
+
 ExchangeDelegate = () ->
   {
     save: () -> Promise.resolve()
@@ -39,7 +43,7 @@ Trade.buy = (quote) ->
   Promise.resolve({amount: quote.baseAmount})
 
 stubs = {
-  '../exchange/api' : API,
+  'bitcoin-exchange-client' : Exchange,
   '../exchange-delegate' : ExchangeDelegate,
   './profile' : Profile,
   './trade' : Trade

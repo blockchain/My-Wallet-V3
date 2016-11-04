@@ -55,12 +55,12 @@ module.exports = (grunt) ->
           standalone: "Blockchain"
           transform: [
             ["babelify", {
-              presets: ["es2015"],
-              only: [
-                "metadata.js"
-                "exchange/*.js"
-                "coinify/*.js"
-                "sfox/*.js"
+              presets: ["es2015"]
+              global: true
+              ignore: [
+                /\/node_modules\/(?!bitcoin-exchange-client\/)/
+                "/src/blockchain-socket.js"
+                "/src/ws-browser.js"
               ]
             }]
           ]

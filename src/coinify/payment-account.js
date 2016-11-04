@@ -1,4 +1,4 @@
-var ExchangePaymentAccount = require('../exchange/payment-account');
+var ExchangePaymentAccount = require('bitcoin-exchange-client').PaymentAccount;
 var Trade = require('./trade');
 
 class PaymentAccount extends ExchangePaymentAccount {

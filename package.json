@@ -47,7 +47,9 @@
     "randombytes": "^2.0.1",
     "sjcl": "1.0.3",
     "unorm": "^1.4.1",
-    "ws": "1.1.*"
+    "ws": "1.1.*",
+    "pbkdf2": "3.0.4",
+    "bitcoin-exchange-client": "blockchain/bitcoin-exchange-client#v0.1.0"
   },
   "devDependencies": {
     "babel-polyfill": "6.16.*",

@@ -1,7 +1,7 @@
 var assert = require('assert');
-var ExchangeAPI = require('../exchange/api');
+var Exchange = require('bitcoin-exchange-client');
 
-class API extends ExchangeAPI {
+class API extends Exchange.API {
   constructor () {
     super();
     this._offlineToken = null;

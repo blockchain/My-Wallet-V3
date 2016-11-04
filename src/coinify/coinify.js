@@ -22,7 +22,7 @@ coinify.delegate.save.bind(coinify.delegate)()
 // "{"user":1,"offline_token":"token"}"
 */
 
-var Exchange = require('../exchange/exchange');
+var Exchange = require('bitcoin-exchange-client');
 var CoinifyProfile = require('./profile');
 var Trade = require('./trade');
 var CoinifyKYC = require('./kyc');
@@ -32,9 +32,8 @@ var Quote = require('./quote');
 var API = require('./api');
 
 var assert = require('assert');
-var Helpers = require('../exchange/helpers');
 
-class Coinify extends Exchange {
+class Coinify extends Exchange.Exchange {
   constructor (object, delegate) {
     super(delegate, Trade, Quote, PaymentMedium);
 
@@ -110,7 +109,7 @@ class Coinify extends Exchange {
 
       assert(
         countryCode &&
-        Helpers.isString(countryCode) &&
+        Exchange.Helpers.isString(countryCode) &&
         countryCode.length === 2 &&
         countryCode.match(/[a-zA-Z]{2}/),
         'ISO 3166-1 alpha-2'

@@ -1,6 +1,6 @@
 'use strict';
 
-var Helpers = require('../exchange/helpers');
+var Helpers = require('bitcoin-exchange-client').Helpers;
 
 module.exports = Limit;
 

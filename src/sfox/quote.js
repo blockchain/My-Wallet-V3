@@ -1,9 +1,9 @@
-var ExchangeQuote = require('../exchange/quote');
+var Exchange = require('bitcoin-exchange-client');
 var PaymentMethod = require('./payment-medium');
 var Trade = require('./trade');
 
 // I use Coinify's convention for the meaning of base & quote currency.
-class Quote extends ExchangeQuote {
+class Quote extends Exchange.Quote {
   constructor (obj, amountCurrency, api, delegate, debug) {
     super(api, delegate, Trade, PaymentMethod, debug);
 
@@ -24,7 +24,11 @@ class Quote extends ExchangeQuote {
   }
 
   static getQuote (api, delegate, amount, baseCurrency, quoteCurrency, debug) {
-    const processQuote = (quote) => new Quote(quote, baseCurrency, api, delegate, debug);
+    const processQuote = (quote) => {
+      let q = new Quote(quote, baseCurrency, api, delegate);
+      q.debug = debug;
+      return q;
+    };
 
     const getQuote = (_baseAmount) => {
       var getQuote = function () {

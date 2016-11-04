@@ -3,8 +3,13 @@ proxyquire = require('proxyquireify')(require)
 class ExchangeAPI
   _request: () ->
 
+Exchange = {
+  API: ExchangeAPI
+}
+
+
 stubs = {
-  '../exchange/api': ExchangeAPI
+  'bitcoin-exchange-client': Exchange
 }
 
 API = proxyquire('../../src/sfox/api', stubs)

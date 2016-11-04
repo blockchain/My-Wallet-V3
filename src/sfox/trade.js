@@ -2,10 +2,9 @@
 
 var assert = require('assert');
 
-var Helpers = require('../exchange/helpers');
-var ExchangeTrade = require('../exchange/trade');
+var Exchange = require('bitcoin-exchange-client');
 
-class Trade extends ExchangeTrade {
+class Trade extends Exchange.Trade {
   constructor (obj, api, delegate) {
     super(api, delegate);
 
@@ -49,17 +48,17 @@ class Trade extends ExchangeTrade {
     this._outCurrency = obj.base_currency.toUpperCase();
 
     this._sendAmount = this._inCurrency === 'BTC'
-      ? Helpers.toSatoshi(obj.quote_amount + obj.fee_amount)
-      : Helpers.toCents(obj.quote_amount + obj.fee_amount);
+      ? Exchange.Helpers.toSatoshi(obj.quote_amount + obj.fee_amount)
+      : Exchange.Helpers.toCents(obj.quote_amount + obj.fee_amount);
 
     if (this._inCurrency === 'BTC') {
-      this._inAmount = Helpers.toSatoshi(obj.quote_amount);
-      this._outAmount = Helpers.toCents(obj.base_amount);
-      this._outAmountExpected = Helpers.toCents(obj.base_amount);
+      this._inAmount = Exchange.Helpers.toSatoshi(obj.quote_amount);
+      this._outAmount = Exchange.Helpers.toCents(obj.base_amount);
+      this._outAmountExpected = Exchange.Helpers.toCents(obj.base_amount);
     } else {
-      this._inAmount = Helpers.toCents(obj.quote_amount);
-      this._outAmount = Helpers.toSatoshi(obj.base_amount);
-      this._outAmountExpected = Helpers.toSatoshi(obj.base_amount);
+      this._inAmount = Exchange.Helpers.toCents(obj.quote_amount);
+      this._outAmount = Exchange.Helpers.toSatoshi(obj.base_amount);
+      this._outAmountExpected = Exchange.Helpers.toSatoshi(obj.base_amount);
     }
 
     /* istanbul ignore if */

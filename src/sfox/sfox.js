@@ -26,7 +26,7 @@ sfox.delegate.save.bind(sfox.delegate)()
 // "{"user":1,"account_token":"token"}"
 */
 
-var Exchange = require('../exchange/exchange');
+var Exchange = require('bitcoin-exchange-client');
 
 var API = require('./api');
 var Profile = require('./profile');
@@ -36,7 +36,7 @@ var PaymentMedium = require('./payment-medium');
 
 var assert = require('assert');
 
-class SFOX extends Exchange {
+class SFOX extends Exchange.Exchange {
   constructor (object, delegate) {
     super(delegate, Trade, Quote, PaymentMedium);
 

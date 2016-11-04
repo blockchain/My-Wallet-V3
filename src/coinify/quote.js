@@ -1,8 +1,8 @@
 var PaymentMethod = require('./payment-medium');
-var ExchangeQuote = require('../exchange/quote');
+var Exchange = require('bitcoin-exchange-client');
 var Trade = require('./trade');
 
-class Quote extends ExchangeQuote {
+class Quote extends Exchange.Quote {
   constructor (obj, api, delegate, debug) {
     super(api, delegate, Trade, PaymentMethod, debug);
 

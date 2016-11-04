@@ -1,24 +1,11 @@
 proxyquire = require('proxyquireify')(require)
 
-Quote = {
-  getQuote: (api, delegate, amount, baseCurrency, quoteCurrency) ->
-    Promise.resolve({
-      baseAmount: amount,
-      baseCurrency: baseCurrency,
-      quoteCurrency: quoteCurrency
-    })
-}
-
 API = () ->
   {
     GET: () ->
     POST: () ->
     PATCH: () ->
   }
-
-PaymentMedium = {
-  getAll: () ->
-}
 
 Trade = (obj) ->
   obj
@@ -61,8 +48,6 @@ ExchangeDelegate = () ->
 
 stubs = {
   './api' : API,
-  './quote'  : Quote,
-  './payment-medium' : PaymentMedium,
   './trade' : Trade,
   './kyc' : CoinifyKYC,
   './profile' : CoinifyProfile,
@@ -148,23 +133,6 @@ describe "Coinify", ->
           c._offlineToken = "token"
           expect(c.hasAccount).toEqual(true)
 
-    describe "Setter", ->
-
-      describe "autoLogin", ->
-        beforeEach ->
-          spyOn(c.delegate, "save").and.callThrough()
-
-        it "should update", ->
-          c.autoLogin = false
-          expect(c.autoLogin).toEqual(false)
-
-        it "should save", ->
-          c.autoLogin = false
-          expect(c.delegate.save).toHaveBeenCalled()
-
-        it "should check the input", ->
-          expect(() -> c.autoLogin = "1").toThrow()
-
     describe "JSON serializer", ->
       obj =
         user: 1
@@ -235,50 +203,6 @@ describe "Coinify", ->
         expect(promise).toBeRejectedWith("ERROR_MESSAGE", done)
       )
 
-    describe 'getBuyQuote', ->
-      it 'should use Quote.getQuote', ->
-        spyOn(Quote, "getQuote").and.callThrough()
-
-        c.getBuyQuote(1000, 'EUR', 'BTC')
-
-        expect(Quote.getQuote).toHaveBeenCalled()
-
-      it 'should use a negative amount', (done) ->
-        checks = (quote) ->
-          expect(quote.baseAmount).toEqual(-1000)
-
-        promise = c.getBuyQuote(1000, 'EUR', 'BTC').then(checks)
-
-        expect(promise).toBeResolved(done)
-
-      it 'should set the quote currency to BTC for fiat base currency', (done) ->
-        checks = (quote) ->
-          expect(quote.quoteCurrency).toEqual('BTC')
-
-        promise = c.getBuyQuote(1000, 'EUR').then(checks)
-
-        expect(promise).toBeResolved(done)
-
-    describe 'getBuyMethods()', ->
-      beforeEach ->
-        spyOn(PaymentMedium, 'getAll')
-
-      it 'should get payment methods with BTC as out currency', ->
-        c.getBuyMethods()
-        expect(PaymentMedium.getAll).toHaveBeenCalled()
-        expect(PaymentMedium.getAll.calls.argsFor(0)[0]).not.toBeDefined()
-        expect(PaymentMedium.getAll.calls.argsFor(0)[1]).toEqual('BTC')
-
-    describe 'getSellMethods()', ->
-      beforeEach ->
-        spyOn(PaymentMedium, 'getAll')
-
-      it 'should get payment methods with BTC as in currency', ->
-        c.getSellMethods()
-        expect(PaymentMedium.getAll).toHaveBeenCalled()
-        expect(PaymentMedium.getAll.calls.argsFor(0)[0]).toEqual('BTC')
-        expect(PaymentMedium.getAll.calls.argsFor(0)[1]).not.toBeDefined()
-
     describe 'getBuyCurrencies()', ->
       beforeEach ->
         spyOn(c, 'getBuyMethods').and.callFake(() ->
@@ -347,12 +271,6 @@ describe "Coinify", ->
       it 'should set .profile', ->
         c.fetchProfile()
         expect(c.profile).not.toBeNull()
-
-    describe 'monitorPayments()', ->
-      it 'should call Trade.monitorPayments', ->
-        spyOn(Trade, 'monitorPayments')
-        c.monitorPayments()
-        expect(Trade.monitorPayments).toHaveBeenCalled()
 
     describe 'getKYCs()', ->
       it 'should call CoinifyKYC.fetchAll', ->

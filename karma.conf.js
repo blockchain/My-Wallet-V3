@@ -44,8 +44,10 @@ module.exports = function (config) {
           bundle.transform('babelify', {
             presets: ['es2015'],
             ignore: [
-              'src/ws-browser.js' // undefined is not an object (evaluating 'global.WebSocket')
+              'src/ws-browser.js', // undefined is not an object (evaluating 'global.WebSocket')
+              /\/node_modules\/(?!bitcoin-exchange-client\/)/
             ],
+            global: true,
             sourceMap: 'inline'
           });
 
@@ -83,7 +85,6 @@ module.exports = function (config) {
       'tests/bip38_spec.js.coffee',
       'tests/address_spec.js.coffee',
       'tests/external_spec.js.coffee',
-      'tests/exchange/*_spec.js.coffee',
       'tests/coinify/*_spec.js.coffee',
       'tests/sfox/*_spec.js.coffee',
       'tests/keychain_spec.js.coffee',
