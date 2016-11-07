@@ -40,5 +40,9 @@ module.exports = {
   Metadata: require('./src/metadata'),
   Bitcoin: require('bitcoinjs-lib'),
   External: require('./src/external'),
-  BuySell: require('./src/buy-sell')
+  BuySell: require('./src/buy-sell'),
+  BigInteger: require('bigi/lib'),
+  BIP39: require('bip39'),
+  Networks: require('bitcoinjs-lib/src/networks'),
+  ECDSA: require('bitcoinjs-lib/src/ecdsa')
 };
