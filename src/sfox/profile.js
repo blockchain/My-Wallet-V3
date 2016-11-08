@@ -114,9 +114,10 @@ class Profile {
     });
   }
 
-  getSignedURL (type) {
+  getSignedURL (type, filename) {
     return this.api.authPOST('account/uploads/sign', {
-      type: type
+      type: type,
+      filename: filename
     });
   }
 }
