@@ -113,6 +113,12 @@ class Profile {
       // TODO: update verification status, limits, can_buy and can_sell, without wiping address info
     });
   }
+
+  getSignedURL (type) {
+    return this.api.authPOST('account/uploads/sign', {
+      type: type
+    });
+  }
 }
 
 module.exports = Profile;
