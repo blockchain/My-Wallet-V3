@@ -20,7 +20,12 @@ class Quote extends Exchange.Quote {
       this._baseAmount = Math.round(obj.quote_amount * 100000000);
       this._quoteAmount = Math.round(obj.base_amount * 100);
     }
+    this._rate = (obj.quote_amount / obj.base_amount).toFixed(2);
     this._expiresAt = expiresAt;
+  }
+
+  get rate () {
+    return this._rate;
   }
 
   static getQuote (api, delegate, amount, baseCurrency, quoteCurrency, debug) {
