@@ -56,8 +56,8 @@ describe "SFOX Quote", ->
       it "must correctly round the fixed fee, BTC to fiat", ->
         obj.base_currency = "BTC"
         obj.quote_currency = "USD"
-        obj.quote_amount = 0.00003505
-        obj.base_amount = 35.05
+        obj.quote_amount = 35.05
+        obj.base_amount = 0.00003505
         q = new Quote(obj, 'btc', {}, {})
         expect(q.baseAmount).toEqual(3505)
         expect(q.quoteAmount).toEqual(3505)

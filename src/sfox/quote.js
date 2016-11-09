@@ -17,8 +17,8 @@ class Quote extends Exchange.Quote {
       this._quoteAmount = Math.round(obj.base_amount * 100000000);
     } else {
       this._quoteCurrency = 'USD';
-      this._baseAmount = Math.round(obj.quote_amount * 100000000);
-      this._quoteAmount = Math.round(obj.base_amount * 100);
+      this._baseAmount = Math.round(obj.base_amount * 100000000);
+      this._quoteAmount = Math.round(obj.quote_amount * 100);
     }
     this._rate = (obj.quote_amount / obj.base_amount).toFixed(2);
     this._expiresAt = expiresAt;
