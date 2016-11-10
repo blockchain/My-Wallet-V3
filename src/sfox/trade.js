@@ -107,9 +107,9 @@ class Trade extends Exchange.Trade {
       console.info('Refresh ' + this.state + ' trade ' + this.id);
     }
     return this._api.authGET('transaction/' + this._id)
+            .then(txs => txs[0])
             .then(this.set.bind(this))
-            .then(this._delegate.save.bind(this._delegate))
-            .then(this.self.bind(this));
+            .then(this._delegate.save.bind(this._delegate));
   }
 
   // QA tool:
