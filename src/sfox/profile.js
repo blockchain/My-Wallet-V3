@@ -48,6 +48,9 @@ class Profile {
 
   get verificationStatus () { return this._verification_status; }
 
+  get canBuy () { return this._can_buy; }
+  get canSell () { return this._can_sell; }
+
   get limits () { return this._limits; }
 
   static fetch (api) {
@@ -108,9 +111,11 @@ class Profile {
       birth_month: this.dateOfBirth.getMonth(),
       birth_year: this.dateOfBirth.getFullYear(),
       identity: this.identity
-    }).then(function (res) {
-      console.log(res);
-      // TODO: update verification status, limits, can_buy and can_sell, without wiping address info
+    }).then((res) => {
+      this._can_buy = res.account.can_buy;
+      this._can_sell = res.account.can_sell;
+      this._limits = res.account.limits.available;
+      this._verification_status = res.account.verification_status;
     });
   }
 
