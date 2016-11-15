@@ -3,7 +3,7 @@ var assert = require('assert');
 class Profile {
   constructor (obj, api) {
     this._api = api;
-    this._verification_status = obj.account.verification_status.level;
+    this._verification_status = obj.account.verification_status;
     this._limits = obj.account.limits.available;
   }
 
