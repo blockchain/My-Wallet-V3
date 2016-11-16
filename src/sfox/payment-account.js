@@ -67,10 +67,9 @@ class PaymentAccount extends ExchangePaymentAccount {
     });
   }
 
-  static add (api, routingNumber, accountNumber, name, nickname, type) {
+  static add (api, routingNumber, accountNumber, name, type) {
     assert(routingNumber && accountNumber, 'Routing and account number required');
     assert(name, 'Account holder name required');
-    assert(nickname, 'Nickname required');
 
     return api.authPOST('payment-methods', {
       type: 'ach',
@@ -79,7 +78,6 @@ class PaymentAccount extends ExchangePaymentAccount {
         routing_number: routingNumber,
         account_number: accountNumber,
         name1: name,
-        nickname: nickname,
         type: type || 'checking'
       }
     }).then((res) => {
