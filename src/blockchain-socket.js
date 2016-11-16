@@ -3,7 +3,7 @@ var WebSocket = require('ws');
 var Helpers = require('./helpers');
 
 function BlockchainSocket () {
-  this.wsUrl = 'wss://blockchain.info/inv';
+  this.wsUrl = 'wss://ws.blockchain.info/inv';
   this.headers = { 'Origin': 'https://blockchain.info' };
   this.socket;
   this.reconnect = null;
