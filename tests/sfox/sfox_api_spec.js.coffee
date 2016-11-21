@@ -51,9 +51,18 @@ describe "SFOX API", ->
           api.partnerId = 'blockchain'
           expect(api.partnerId).toEqual('blockchain')
 
+      describe "production", ->
+        it "should set _production", ->
+          api.production = true
+          expect(api._production).toEqual(true)
+
     describe '_url()', ->
       it "should use the api subdomain by default", ->
         expect(api._url(undefined, undefined, 'transactions')).toContain('api.staging.sfox.com')
+
+      it "should use the production subdomain if specified", ->
+        api._production = true
+        expect(api._url(undefined, undefined, 'transactions')).toContain('api.sfox.com')
 
       it "should use a custom subdomain", ->
         expect(api._url('quote', undefined, 'transactions')).toContain('quote.staging.sfox.com')

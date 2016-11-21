@@ -12,6 +12,11 @@ class API extends Exchange.API {
   get apiKey () { return this._apiKey; }
   set apiKey (value) { this._apiKey = value; }
 
+  set production (value) {
+    assert(Exchange.Helpers.isBoolean(value), 'Boolean expected');
+    this._production = value;
+  }
+
   get partnerId () { return this._partnerId; }
   set partnerId (value) { this._partnerId = value; }
 
@@ -23,7 +28,7 @@ class API extends Exchange.API {
     assert(endpoint, 'endpoint required');
     version = version || 'v2';
     subdomain = subdomain || 'api';
-    return `https://${subdomain}.staging.sfox.com/${version}/partner/${this._partnerId}/${endpoint}`;
+    return `https://${subdomain}${this._production ? '' : '.staging'}.sfox.com/${version}/partner/${this._partnerId}/${endpoint}`;
   }
 
   GET (endpoint, data, version, subdomain) {
