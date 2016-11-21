@@ -49,7 +49,7 @@
     "unorm": "^1.4.1",
     "ws": "1.1.*",
     "pbkdf2": "3.0.4",
-    "bitcoin-exchange-client": "blockchain/bitcoin-exchange-client#v0.1.1"
+    "bitcoin-exchange-client": "blockchain/bitcoin-exchange-client#master"
   },
   "devDependencies": {
     "babel-polyfill": "6.16.*",

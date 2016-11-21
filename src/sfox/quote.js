@@ -23,6 +23,9 @@ class Quote extends Exchange.Quote {
 
     this._quoteCurrency = flipCurrency(this._baseCurrency);
     this._quoteAmount = isBTC(this._quoteCurrency) ? btcAmount : usdAmount;
+
+    this._feeAmount = toCents(obj.fee_amount);
+    this._feeCurrency = obj.fee_currency.toUpperCase();
   }
 
   get rate () {
