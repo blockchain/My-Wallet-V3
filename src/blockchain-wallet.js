@@ -14,7 +14,6 @@ var Address = require('./address');
 var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 var API = require('./api');
-var shared = require('./shared');
 var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var KeyRing = require('./keyring');
 var TxList = require('./transaction-list');
@@ -321,12 +320,6 @@ Object.defineProperties(Wallet.prototype, {
 // update-wallet-balances after multiaddr call
 Wallet.prototype._updateWalletInfo = function (obj) {
   if (obj.info) {
-    if (obj.info.symbol_local) {
-      shared.setLocalSymbol(obj.info.symbol_local);
-    }
-    if (obj.info.symbol_btc) {
-      shared.setBTCSymbol(obj.info.symbol_btc);
-    }
     if (obj.info.notice) {
       WalletStore.sendEvent('msg', {type: 'error', message: obj.info.notice});
     }

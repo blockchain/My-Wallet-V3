@@ -378,12 +378,3 @@ describe "Helpers", ->
 
     it "should not verify invalid messages", ->
       expect(Helpers.verifyMessage("12cbQLTFMXRnSzktFkuoG3eHoMeFtpTu3S", "IH+xpXCKouEcd0E8Hv3NkrYWbhq0P7pAQpI1GcQ2hF2AAsqL2o4agDE8V81i071/bTMz00YKw2YRMoyFMzThZwM=", "Wright, it is not the same as if I sign Craig Wright, Satoshi.")).toBeFalsy()
-
-
-  describe "precisionToSatoshiBN", ->
-
-    it "should parse valid strings with fractional values", ->
-      expect(Helpers.precisionToSatoshiBN("21.0349756").intValue()).toEqual(new BigInteger("2103497560").intValue())
-
-    it "should parse valid strings with fractional values", ->
-      expect(Helpers.precisionToSatoshiBN("1").intValue()).toEqual(new BigInteger("100000000").intValue())
