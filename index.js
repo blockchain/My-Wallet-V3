@@ -41,6 +41,7 @@ module.exports = {
   Bitcoin: require('bitcoinjs-lib'),
   External: require('./src/external'),
   BuySell: require('./src/buy-sell'),
+  constants: require('./src/constants'),
   BigInteger: require('bigi/lib'),
   BIP39: require('bip39'),
   Networks: require('bitcoinjs-lib/src/networks'),

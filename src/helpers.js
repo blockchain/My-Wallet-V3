@@ -7,6 +7,7 @@ var Base58 = require('bs58');
 var BIP39 = require('bip39');
 var shared = require('./shared');
 var ImportExport = require('./import-export');
+var constants = require('./constants');
 
 var Helpers = {};
 Math.log2 = function (x) { return Math.log(x) / Math.LN2; };
@@ -23,13 +24,13 @@ Helpers.isInstanceOf = function (object, theClass) {
 Helpers.isBitcoinAddress = function (candidate) {
   try {
     var d = Bitcoin.address.fromBase58Check(candidate);
-    var n = Bitcoin.networks.bitcoin;
+    var n = constants.getNetwork();
     return d.version === n.pubKeyHash || d.version === n.scriptHash;
   } catch (e) { return false; }
 };
 Helpers.isBitcoinPrivateKey = function (candidate) {
   try {
-    Bitcoin.ECPair.fromWIF(candidate);
+    Bitcoin.ECPair.fromWIF(candidate, constants.getNetwork());
     return true;
   } catch (e) { return false; }
 };
@@ -37,10 +38,10 @@ Helpers.isBase58Key = function (str) {
   return Helpers.isString(str) && /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{40,44}$/.test(str);
 };
 Helpers.isXprivKey = function (k) {
-  return Helpers.isString(k) && k.substring(0, 4) === 'xprv';
+  return Helpers.isString(k) && (/^(x|t)prv/).test(k);
 };
 Helpers.isXpubKey = function (k) {
-  return Helpers.isString(k) && k.substring(0, 4) === 'xpub';
+  return Helpers.isString(k) && (/^(x|t)pub/).test(k);
 };
 Helpers.isAlphaNum = function (str) {
   return Helpers.isString(str) && /^[\-+,._\w\d\s]+$/.test(str);
@@ -333,17 +334,31 @@ Helpers.privateKeyStringToKey = function (value, format) {
     throw new Error('Unsupported Key Format');
   }
 
-  return new Bitcoin.ECPair(new BigInteger.fromByteArrayUnsigned(keyBytes), null, {compressed: format !== 'sipa'}); // eslint-disable-line new-cap
+  return new Bitcoin.ECPair(
+    new BigInteger.fromByteArrayUnsigned(keyBytes), // eslint-disable-line new-cap
+    null,
+    { compressed: format !== 'sipa', network: constants.getNetwork() }
+  );
 };
 
 Helpers.detectPrivateKeyFormat = function (key) {
-  // 51 characters base58, always starts with a '5'
-  if (/^5[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/.test(key)) {
+  var isTestnet = constants.NETWORK === 'testnet';
+
+  // 51 characters base58, always starts with 5 (or 9, for testnet)
+  var sipaRegex = isTestnet
+    ? (/^[9][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/)
+    : (/^[5][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/);
+
+  if (sipaRegex.test(key)) {
     return 'sipa';
   }
 
-  // 52 character compressed starts with L or K
-  if (/^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key)) {
+  // 52 character compressed starts with L or K (or c, for testnet)
+  var compsipaRegex = isTestnet
+    ? (/^[c][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/)
+    : (/^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/);
+
+  if (compsipaRegex.test(key)) {
     return 'compsipa';
   }
 
@@ -443,7 +458,7 @@ Helpers.precisionToSatoshiBN = function (x) {
 };
 
 Helpers.verifyMessage = function (address, signature, message) {
-  return Bitcoin.message.verify(address, signature, message);
+  return Bitcoin.message.verify(address, signature, message, constants.getNetwork());
 };
 
 Helpers.getMobileOperatingSystem = function () {

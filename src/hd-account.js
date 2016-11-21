@@ -7,6 +7,7 @@ var assert = require('assert');
 var Helpers = require('./helpers');
 var KeyRing = require('./keyring');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
+var constants = require('./constants');
 
 // HDAccount Class
 
@@ -223,7 +224,7 @@ HDAccount.fromWalletMasterKey = function (masterkey, index, label) {
 HDAccount.fromExtPublicKey = function (extPublicKey, index, label) {
   // this is creating a read-only account
   assert(Helpers.isXpubKey(extPublicKey), 'Extended public key must be given to create an account.');
-  var accountZero = Bitcoin.HDNode.fromBase58(extPublicKey);
+  var accountZero = Bitcoin.HDNode.fromBase58(extPublicKey, constants.getNetwork());
   var a = HDAccount.fromAccountMasterKey(accountZero, index, label);
   a._xpriv = null;
   return a;
@@ -231,7 +232,7 @@ HDAccount.fromExtPublicKey = function (extPublicKey, index, label) {
 
 HDAccount.fromExtPrivateKey = function (extPrivateKey, index, label) {
   assert(Helpers.isXprivKey(extPrivateKey), 'Extended private key must be given to create an account.');
-  var accountZero = Bitcoin.HDNode.fromBase58(extPrivateKey);
+  var accountZero = Bitcoin.HDNode.fromBase58(extPrivateKey, constants.getNetwork());
   return HDAccount.fromAccountMasterKey(accountZero, index, label);
 };
 
