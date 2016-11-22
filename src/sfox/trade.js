@@ -87,6 +87,9 @@ class Trade extends Exchange.Trade {
   }
 
   set (obj) {
+    if (Array.isArray(obj)) {
+      obj = obj[0];
+    }
     if (obj.status) {
       this.setFromAPI(obj);
     } else {
@@ -107,24 +110,24 @@ class Trade extends Exchange.Trade {
       console.info('Refresh ' + this.state + ' trade ' + this.id);
     }
     return this._api.authGET('transaction/' + this._id)
-            .then(txs => txs[0])
             .then(this.set.bind(this))
             .then(this._delegate.save.bind(this._delegate));
   }
 
   // QA tool:
   fakeAchSuccess () {
-    return this._api.authPOST('testing/approvedeposit', {
-      id: this.id
-    }).then(this._delegate.save.bind(this._delegate));
+    let options = { id: this.id };
+    return this._api.authPOST('testing/approvedeposit', options)
+      .then(this.set.bind(this))
+      .then(this._delegate.save.bind(this._delegate));
   }
 
   // QA tool:
   fakeAchFail () {
-    return this._api.authPOST('testing/changestatus', {
-      id: this.id,
-      status: 'rejected'
-    }).then(this._delegate.save.bind(this._delegate));
+    let options = { id: this.id, status: 'rejected' };
+    return this._api.authPOST('testing/changestatus', options)
+      .then(this.set.bind(this))
+      .then(this._delegate.save.bind(this._delegate));
   }
 
   toJSON () {
