@@ -42,11 +42,12 @@
     "bs58": "2.0.*",
     "es6-promise": "^3.0.2",
     "isomorphic-fetch": "^2.2.0",
+    "pbkdf2": "3.0.4",
+    "ramda": "^0.22.1",
     "randombytes": "^2.0.1",
     "sjcl": "1.0.3",
     "unorm": "^1.4.1",
-    "ws": "1.1.*",
-    "pbkdf2": "3.0.4"
+    "ws": "1.1.*"
   },
   "devDependencies": {
     "babel-polyfill": "6.16.*",

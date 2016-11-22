@@ -21,6 +21,7 @@ var TxList = require('./transaction-list');
 var Block = require('./bitcoin-block');
 var External = require('./external');
 var AccountInfo = require('./account-info');
+var Metadata = require('./metadata');
 
 // Wallet
 
@@ -853,4 +854,9 @@ Wallet.prototype.loadExternal = function () {
     this._external = new External(this);
     return this._external.fetch();
   }
+};
+
+Wallet.prototype.metadata = function (typeId) {
+  var masterhdnode = this.hdwallet.getMasterHDNode();
+  return Metadata.fromMasterHDNode(masterhdnode, typeId);
 };

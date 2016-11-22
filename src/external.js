@@ -10,7 +10,8 @@ var METADATA_TYPE_EXTERNAL = 3;
 module.exports = External;
 
 function External (wallet) {
-  this._metadata = new Metadata(METADATA_TYPE_EXTERNAL);
+  var masterhdnode = wallet.hdwallet.getMasterHDNode();
+  this._metadata = Metadata.fromMasterHDNode(masterhdnode, METADATA_TYPE_EXTERNAL);
   this._coinify = undefined;
   this._wallet = wallet;
 }
