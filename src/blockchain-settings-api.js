@@ -99,6 +99,10 @@ function updatePasswordHint2 (value, success, error) {
   isBad ? error(isBad) : updateKV('update-password-hint2', value, success, error);
 }
 
+function sendConfirmationCode (success, error) {
+  updateKV('send-verify-email-mail', success, error);
+}
+
 function changeEmail (email, successCallback, error) {
   var success = function (res) {
     MyWallet.wallet.accountInfo.email = email;
@@ -200,7 +204,7 @@ function verifyEmail (code, success, error) {
     typeof (success) === 'function' && success(data);
   }, function (data) {
     WalletStore.sendEvent('msg', {type: 'error', message: data});
-    typeof (error) === 'function' && error();
+    typeof (error) === 'function' && error(data);
   });
 }
 
@@ -336,6 +340,7 @@ module.exports = {
   setTwoFactorGoogleAuthenticator: setTwoFactorGoogleAuthenticator,
   confirmTwoFactorGoogleAuthenticator: confirmTwoFactorGoogleAuthenticator,
   resendEmailConfirmation: resendEmailConfirmation,
+  sendConfirmationCode: sendConfirmationCode,
   verifyEmail: verifyEmail,
   verifyMobile: verifyMobile,
   getActivityLogs: getActivityLogs,
