@@ -56,7 +56,7 @@ module.exports = (grunt) ->
           transform: [
             ["babelify", {
               presets: ["es2015"],
-              only: ["coinify/*.js", "metadata.js"]
+              only: ["coinify/*.js", "metadata.js", "sharedMetadata.js"]
             }]
           ]
         }
