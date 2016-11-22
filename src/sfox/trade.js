@@ -30,11 +30,6 @@ class Trade extends Exchange.Trade {
 
     switch (obj.status) {
       case 'pending':
-        this._state = 'awaiting_transfer_in';
-        break;
-      case 'failed':
-        this._state = 'failed';
-        break;
       case 'ready':
         this._state = 'processing';
         break;
