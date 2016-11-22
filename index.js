@@ -2,9 +2,7 @@
 
 require('isomorphic-fetch');
 require('es6-promise').polyfill();
-
 global.Symbol = require('core-js/es6/symbol');
-
 var Buffer = require('buffer').Buffer;
 
 // This fixes a bug with Safari < 8 and the Browserify Buffer shim used in Crypto-browserify/randombytes
