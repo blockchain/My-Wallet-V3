@@ -7,6 +7,12 @@ WalletStore = undefined
 BlockchainSettingsAPI = undefined
 BIP39 = undefined
 RNG = undefined
+Metadata = undefined
+mockPayload = undefined
+API = undefined
+
+legacyBalances = require('./data/legacy-balances')
+
 
 describe "Blockchain-Wallet", ->
   wallet = undefined
@@ -30,6 +36,10 @@ describe "Blockchain-Wallet", ->
         'created_time': 1437494028974
         'created_device_name': 'javascript_web'
         'created_device_version': '1.0'
+      }, {
+        'addr': '16qYpqyjD4BWr7xEWpUTRW94JyZvBLtxbP'
+        'priv': 'private-key'
+        'tag': 0
       }, {
         'addr': '12C5rBJ7Ev3YGBCbJPY6C8nkGhkUTNqfW9'
         'priv': null
@@ -66,6 +76,8 @@ describe "Blockchain-Wallet", ->
         if success
           success()
       get_history: () ->
+      wallet:
+        guid: "1234"
 
     Address =
       new: (label) ->
@@ -132,6 +144,21 @@ describe "Blockchain-Wallet", ->
         "random"
     }
 
+    mockPayload = {guid: "1234"}
+
+    Metadata = (n) ->
+
+    Metadata.prototype =
+      create: () ->
+        Promise.resolve()
+      fetch: () ->
+        Promise.resolve(mockPayload)
+
+    API = {
+      getBalances: () ->
+        Promise.resolve(legacyBalances)
+    }
+
     stubs = {
       './wallet'  : MyWallet,
       './address' : Address,
@@ -140,7 +167,9 @@ describe "Blockchain-Wallet", ->
       './wallet-store' : WalletStore,
       './blockchain-settings-api': BlockchainSettingsAPI,
       'bip39': BIP39,
-      './rng' : RNG
+      './rng' : RNG,
+      './metadata' : Metadata,
+      './api' : API
     }
 
     Wallet = proxyquire('../src/blockchain-wallet', stubs)
@@ -325,10 +354,10 @@ describe "Blockchain-Wallet", ->
         expect(wallet.numberTxTotal).toEqual(101)
 
       it "addresses", ->
-        expect(wallet.addresses).toEqual(['1ASqDXsKYqcx7dkKZ74bKBBggpd5HDtjCv', '12C5rBJ7Ev3YGBCbJPY6C8nkGhkUTNqfW9', '1H8Cwvr3Vq9rJBGEoudG1AeyeAezr38j8h'])
+        expect(wallet.addresses).toEqual(['1ASqDXsKYqcx7dkKZ74bKBBggpd5HDtjCv', '16qYpqyjD4BWr7xEWpUTRW94JyZvBLtxbP', '12C5rBJ7Ev3YGBCbJPY6C8nkGhkUTNqfW9', '1H8Cwvr3Vq9rJBGEoudG1AeyeAezr38j8h'])
 
       it "activeAddresses", ->
-        expect(wallet.activeAddresses).toEqual(['1ASqDXsKYqcx7dkKZ74bKBBggpd5HDtjCv', '12C5rBJ7Ev3YGBCbJPY6C8nkGhkUTNqfW9'])
+        expect(wallet.activeAddresses).toEqual(['1ASqDXsKYqcx7dkKZ74bKBBggpd5HDtjCv', '16qYpqyjD4BWr7xEWpUTRW94JyZvBLtxbP', '12C5rBJ7Ev3YGBCbJPY6C8nkGhkUTNqfW9'])
 
       it "keys", ->
         ad = '1ASqDXsKYqcx7dkKZ74bKBBggpd5HDtjCv'
@@ -339,7 +368,7 @@ describe "Blockchain-Wallet", ->
         expect(wallet.key(ad).address).toEqual(ad)
 
       it "activeKeys", ->
-        expect(wallet.activeKeys.length).toEqual(2)
+        expect(wallet.activeKeys.length).toEqual(3)
 
       it "activeKey", ->
         ad = '1ASqDXsKYqcx7dkKZ74bKBBggpd5HDtjCv'
@@ -367,7 +396,7 @@ describe "Blockchain-Wallet", ->
         expect(wallet.defaultPbkdf2Iterations).toEqual(5000)
 
       it "spendableActiveAddresses", ->
-        expect(wallet.spendableActiveAddresses.length).toEqual(1)
+        expect(wallet.spendableActiveAddresses.length).toEqual(2)
 
     describe "Method", ->
       it ".containsLegacyAddress should find address", ->
@@ -455,20 +484,21 @@ describe "Blockchain-Wallet", ->
       describe ".deleteLegacyAddress", ->
 
         it "should delete existing legacy addresses", ->
+          before = wallet.keys.length
           expect(wallet.deleteLegacyAddress(wallet.keys[0])).toBeTruthy()
-          expect(wallet.keys.length).toEqual(2)
+          expect(wallet.keys.length).toEqual(before - 1)
           expect(MyWallet.syncWallet).toHaveBeenCalled()
 
         it "should do nothing when trying to delete non existing legacy addresses", ->
-          expect(wallet.keys.length).toEqual(3)
+          before = wallet.keys.length
           expect(wallet.deleteLegacyAddress(Address.new("testing"))).toBeFalsy()
-          expect(wallet.keys.length).toEqual(3)
+          expect(wallet.keys.length).toEqual(before)
           expect(MyWallet.syncWallet).not.toHaveBeenCalled()
 
         it "should do nothing with bad arguments", ->
-          expect(wallet.keys.length).toEqual(3)
+          before = wallet.keys.length
           expect(wallet.deleteLegacyAddress("1KM7w12SkjzJ1FYV2g1UCMzHjv3pkMgkEb")).toBeFalsy()
-          expect(wallet.keys.length).toEqual(3)
+          expect(wallet.keys.length).toEqual(before)
           expect(MyWallet.syncWallet).not.toHaveBeenCalled()
 
       it ".validateSecondPassword", ->
@@ -644,7 +674,7 @@ describe "Blockchain-Wallet", ->
           expect(wallet.getNotePlaceholder(0, {'txType':'received', 'processedOutputs':outputs})).toEqual('Utilities')
 
           expect(wallet.getNotePlaceholder(0, {'txType':'sent', 'processedOutputs':outputs})).toEqual('')
-          
+
           expect(wallet.getNotePlaceholder(0, {'txType':'transferred', 'processedOutputs':outputs})).toEqual('')
 
       describe ".getMnemonic", ->
@@ -689,14 +719,14 @@ describe "Blockchain-Wallet", ->
 
         it "should return null for watch-only addresses in non double encrypted wallets", ->
           expect(wallet.isDoubleEncrypted).toBeFalsy()
-          expect(wallet.keys[1].isWatchOnly).toBeTruthy()
-          expect(wallet.getPrivateKeyForAddress(wallet.keys[1])).toEqual(null)
+          expect(wallet.keys[2].isWatchOnly).toBeTruthy()
+          expect(wallet.getPrivateKeyForAddress(wallet.keys[2])).toEqual(null)
 
         it "should return null for watch-only addresses in for double encrypted wallets", ->
           wallet.encrypt("batteryhorsestaple")
           expect(wallet.isDoubleEncrypted).toBeTruthy()
-          expect(wallet.keys[1].isWatchOnly).toBeTruthy()
-          expect(wallet.getPrivateKeyForAddress(wallet.keys[1], "batteryhorsestaple")).toEqual(null)
+          expect(wallet.keys[2].isWatchOnly).toBeTruthy()
+          expect(wallet.getPrivateKeyForAddress(wallet.keys[2], "batteryhorsestaple")).toEqual(null)
 
     describe "_updateWalletInfo()", ->
       multiaddr = {
@@ -791,3 +821,78 @@ describe "Blockchain-Wallet", ->
           expect(() -> wallet.disableNotifications()).toThrow()
           expect(() -> wallet.disableNotifications(cb.success)).toThrow()
           expect(() -> wallet.disableNotifications(cb.success, cb.error)).not.toThrow()
+
+    describe "saveGUIDtoMetadata", ->
+      beforeEach ->
+        JasminePromiseMatchers.install()
+        spyOn(Metadata.prototype, "create").and.callThrough()
+        spyOn(Metadata.prototype, "fetch").and.callThrough()
+
+      afterEach ->
+        JasminePromiseMatchers.uninstall()
+
+      it "should check if guid was already saved", (done) ->
+        checks = (res) ->
+          expect(res).toEqual("1234")
+          expect(Metadata.prototype.fetch).toHaveBeenCalled()
+
+        promise = wallet.saveGUIDtoMetadata().then(checks)
+        expect(promise).toBeResolved(done)
+
+      it "should save guid if not already saved", (done) ->
+        mockPayload = null
+
+        checks = () ->
+          expect(Metadata.prototype.create).toHaveBeenCalled()
+
+        promise = wallet.saveGUIDtoMetadata().then(checks)
+        expect(promise).toBeResolved(done)
+
+      it "should not re-save guid", (done) ->
+        checks = () ->
+          expect(Metadata.prototype.create).not.toHaveBeenCalled()
+
+        promise = wallet.saveGUIDtoMetadata().then(checks)
+        expect(promise).toBeResolved(done)
+
+      it "should should check that the guid was correctly saved previously", (done) ->
+        mockPayload = {guid: "wrong"}
+
+        promise = wallet.saveGUIDtoMetadata()
+        expect(promise).toBeRejected(done)
+
+      it "should not work for legacy wallets", (done) ->
+        wallet._hd_wallets = []
+        promise = wallet.saveGUIDtoMetadata()
+        expect(promise).toBeRejected(done)
+
+      it "should not work with 2nd password enabled", (done) ->
+        wallet._double_encryption = true
+        promise = wallet.saveGUIDtoMetadata()
+        expect(promise).toBeRejected(done)
+
+    describe "getLegacyBalance", ->
+      beforeEach ->
+        spyOn(wallet, "containsLegacyAddress").and.returnValue(true)
+
+      it "should use the /balances endpoint and add up", (done) ->
+        promise = wallet.getLegacyBalance()
+        expect(promise).toBeResolvedWith(71415, done)
+
+      it "should skip watch-only addresses", () ->
+        spyOn(API, "getBalances").and.callThrough()
+        promise = wallet.getLegacyBalance()
+        expect(API.getBalances.calls.argsFor(0)[0]).toContain('1ASqDXsKYqcx7dkKZ74bKBBggpd5HDtjCv')
+        expect(API.getBalances.calls.argsFor(0)[0]).not.toContain('12C5rBJ7Ev3YGBCbJPY6C8nkGhkUTNqfW9')
+
+      it "should skip archived addresses", () ->
+        spyOn(API, "getBalances").and.callThrough()
+        promise = wallet.getLegacyBalance()
+        expect(API.getBalances.calls.argsFor(0)[0]).not.toContain('1H8Cwvr3Vq9rJBGEoudG1AeyeAezr38j8h')
+
+      it "should not make a request for 0 addresses", (done) ->
+        spyOn(API, "getBalances").and.callThrough()
+        wallet._addresses = []
+        promise = wallet.getLegacyBalance()
+        expect(API.getBalances).not.toHaveBeenCalled()
+        expect(promise).toBeResolvedWith(0, done)

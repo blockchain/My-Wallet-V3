@@ -20,6 +20,7 @@ var TxList = require('./transaction-list');
 var Block = require('./bitcoin-block');
 var External = require('./external');
 var AccountInfo = require('./account-info');
+var Metadata = require('./metadata');
 
 // Wallet
 
@@ -375,6 +376,32 @@ Wallet.prototype.getHistory = function () {
 Wallet.prototype.fetchTransactions = function () {
   return API.getHistory(this.context, 0, this.txList.fetched, this.txList.loadNumber)
     .then(this._updateWalletInfo.bind(this));
+};
+
+Wallet.prototype.getLegacyBalance = function () {
+  var self = this;
+
+  var process = function (obj) {
+    var res = Object.keys(obj).map(function (key) {
+      if (self.containsLegacyAddress(key)) {
+        return obj[key].final_balance;
+      } else {
+        return 0;
+      }
+    }).reduce(Helpers.add, 0);
+    return res;
+  };
+
+  var addrs = this.addresses.filter(function (addr) {
+    return self.key(addr).archived === false &&
+      self.key(addr).isWatchOnly === false;
+  });
+
+  if (addrs.length === 0) {
+    return Promise.resolve(0);
+  } else {
+    return API.getBalances(addrs).then(process.bind(this));
+  }
 };
 
 Wallet.prototype.getBalancesForArchived = function () {
@@ -845,5 +872,36 @@ Wallet.prototype.loadExternal = function () {
   } else {
     this._external = new External(this);
     return this._external.fetch();
+  }
+};
+
+Wallet.prototype.incStats = function (legacyBalance) {
+  var mvBool = this.hdwallet ? this.hdwallet.isMnemonicVerified : false;
+  API.incrementSecPassStats(this.isDoubleEncrypted);
+  API.incrementRecoveryStats(mvBool);
+  API.incrementLegacyUseStats(legacyBalance > 0);
+  return true;
+};
+
+Wallet.prototype.saveGUIDtoMetadata = function () {
+  var setOrCheckGuid = function (res) {
+    if (res === null) {
+      return m.create({
+        guid: MyWallet.wallet.guid
+      });
+    } else if (!res || !res.guid || res.guid !== MyWallet.wallet.guid) {
+      return Promise.reject();
+    } else {
+      return res.guid;
+    }
+  };
+
+  // backupGUID not enabled if secondPassword active
+  if (!this.isDoubleEncrypted && this.isUpgradedToHD) {
+    var GUID_METADATA_TYPE = 0;
+    var m = new Metadata(GUID_METADATA_TYPE);
+    return m.fetch().then(setOrCheckGuid);
+  } else {
+    return Promise.reject();
   }
 };

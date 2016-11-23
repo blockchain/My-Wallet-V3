@@ -356,8 +356,19 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
     };
     return MyWallet.wallet.loadExternal.bind(MyWallet.wallet)().catch(loadExternalFailed);
   };
-
-  return Promise.resolve().then(doInitialize).then(tryLoadExternal);
+  var incStats = function () {
+    var gh = MyWallet.wallet.getLegacyBalance.bind(MyWallet.wallet);
+    var is = MyWallet.wallet.incStats.bind(MyWallet.wallet);
+    return gh().then(is);
+  };
+  var saveGUID = function () {
+    // Don't wait for this, and ignore the result:
+    MyWallet.wallet.saveGUIDtoMetadata();
+    return Promise.resolve();
+  };
+  var p = Promise.resolve().then(doInitialize);
+  p.then(incStats).then(saveGUID);
+  return p.then(tryLoadExternal);
 };
 
 // used on iOS
