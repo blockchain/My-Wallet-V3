@@ -5,7 +5,6 @@ var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
 var BIP39 = require('bip39');
-var shared = require('./shared');
 var ImportExport = require('./import-export');
 var constants = require('./constants');
 
@@ -432,29 +431,6 @@ Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
     return a === address ? Base58.encode(key.d.toBuffer(32)) : null;
   };
   return new Promise(asyncParse).then(predicate);
-};
-
-function parseValueBitcoin (valueString) {
-  valueString = valueString.toString();
-  // TODO: Detect other number formats (e.g. comma as decimal separator)
-  var valueComp = valueString.split('.');
-  var integralPart = valueComp[0];
-  var fractionalPart = valueComp[1] || '0';
-  while (fractionalPart.length < 8) fractionalPart += '0';
-  fractionalPart = fractionalPart.replace(/^0+/g, '');
-  var value = BigInteger.valueOf(parseInt(integralPart, 10));
-  value = value.multiply(BigInteger.valueOf(100000000));
-  value = value.add(BigInteger.valueOf(parseInt(fractionalPart, 10)));
-  return value;
-}
-
-// The current 'shift' value - BTC = 1, mBTC = 3, uBTC = 6
-function sShift (symbol) {
-  return (shared.satoshi / symbol.conversion).toString().length - 1;
-}
-
-Helpers.precisionToSatoshiBN = function (x) {
-  return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, sShift(shared.getBTCSymbol())).toString()));
 };
 
 Helpers.verifyMessage = function (address, signature, message) {
