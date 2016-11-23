@@ -1,6 +1,7 @@
 'use strict';
 
 require('isomorphic-fetch');
+require('es6-promise').polyfill();
 
 global.Symbol = require('core-js/es6/symbol');
 
