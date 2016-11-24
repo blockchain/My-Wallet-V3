@@ -488,11 +488,9 @@ describe "CoinifyTrade", ->
 
       it "should fetch all the trades", (done) ->
         api.authGET = () ->
-          console.log('authGET')
           Promise.resolve([tradeJSON,tradeJSON2])
 
         check = (res) ->
-          console.log('res:', res)
           expect(res.length).toBe(2)
           done()
 
