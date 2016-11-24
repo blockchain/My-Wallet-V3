@@ -1,3 +1,156 @@
+proxyquire = require('proxyquireify')(require)
+
+OriginalWalletCrypto = require('../src/wallet-crypto');
+OriginalBitcoin = require('bitcoinjs-lib');
+
+# mock derivation to generate hdnode from string deterministically
+MyWallet =
+  wallet:
+    syncWallet: () ->
+    hdwallet:
+      getMasterHDNode: () ->
+        deriveHardened: (purpose) ->
+          deriveHardened: (payloadType) ->
+            deriveHardened: (i) -> BitcoinJS.HDNode.fromSeedBuffer(
+                                     OriginalWalletCrypto.sha256(
+                                      "m/#{ purpose }'/#{ payloadType }'/#{ i }'"))
+
+BitcoinJS = {
+}
+# disable encryption layer
+WalletCrypto = {
+  encryptDataWithKey: (data, key) -> Buffer.from(data).toString('base64'),
+  decryptDataWithKey: (data, key) -> Buffer.from(data, 'base64').toString()
+}
+stubs = {
+  './wallet-crypto': WalletCrypto,
+  'bitcoinjs-lib': BitcoinJS,
+  './wallet': MyWallet
+}
+
+Metadata = proxyquire('../src/metadata', stubs)
+
+
+fdescribe "Metadata", ->
+
+  # c = undefined
+  # helloWorld = {hello: "world"}
+  # unencryptedData = JSON.stringify(helloWorld)
+  # encryptedData = "eyJoZWxsbyI6IndvcmxkIn0="
+  # serverPayload = {
+  #   version:1,
+  #   type_id:2
+  #   payload: encryptedData,
+  #   signature:"HysANE1TFkCEX/5zxj+8BXKtld4FIjVXqOKl3K1XdMj8HT5RsigY3iF4LOvMT5IpstZZYAcchZTB4xZrJZPkdKM=",
+  #   created_at:1468316898000,
+  #   updated_at:1468316941000,
+  # }
+  # expectedPayloadPUT = {
+  #   version:1,
+  #   type_id:2
+  #   payload: encryptedData,
+  #   signature:"HysANE1TFkCEX/5zxj+8BXKtld4FIjVXqOKl3K1XdMj8HT5RsigY3iF4LOvMT5IpstZZYAcchZTB4xZrJZPkdKM="
+  # }
+
+
+  response =
+    payload: "74WvlBJFlzTGMOdtlSxIS7sPInIHbEvluhzgNnRcqpb0D8v8JWlOqNvoIHXm/NGX",
+    version: 1,
+    type_id: 1001,
+    signature: "Hz05FwwqnE1DIg6DJjXM3PJZe9M1t1cocpKN27hndBojGbElkDZgqr8ABmNbNPH8JxYGYx4G405ckL8RkjwTvhM=",
+    prev_magic_hash: "a0d0e52a6f53d9601a416bbc6d067d347348cd2b29658479485fc27558560e00",
+    created_at: 1480008753000,
+    updated_at: 1480008769000,
+    address: "1opMSE5QuPJomcAyMSNeD9iJ2Emz1ifdK"
+
+  # fdescribe "class", ->
+  #   describe "new Metadata()", ->
+  #
+  #     it "should instantiate", ->
+  #       c = new Metadata(2)
+  #       expect(c.constructor.name).toEqual("Metadata")
+
+  describe "Metadata.message", ->
+
+    it "should compute message with prevMagicHash", ->
+      payload = Buffer.from('payload')
+      prevMagic = Buffer.from('prevMagic')
+      message = Metadata.message(payload, prevMagic)
+      expect(message).toBe('cHJldk1hZ2ljI59Z7VXnN8dxR89VrQwbAwttfudIp0JpUvm4UtWpNeU=');
+
+    it "should compute message without prevMagicHash", ->
+      payload = Buffer.from('payload')
+      prevMagic = undefined
+      message = Metadata.message(payload, prevMagic)
+      expect(message).toBe('cGF5bG9hZA==');
+
+  describe "Metadata.magic", ->
+
+    it "should compute magicHash with prevMagicHash", ->
+      payload = Buffer.from('payload')
+      prevMagic = Buffer.from('prevMagic')
+      magic = Metadata.magic(payload, prevMagic)
+      expect(magic.toString('base64')).toBe('CDaNC0fPlsRlIyjKeELKrrttBEP7g27PCv/pIY4cWCQ=');
+
+    it "should compute magicHash without prevMagicHash", ->
+      payload = Buffer.from('payload')
+      prevMagic = undefined
+      magic = Metadata.magic(payload, prevMagic)
+      expect(magic.toString('base64')).toBe('ADDQotVAKs732nTFsqr7RtJsY9n3Ng6OKIcEd/BNjCI=');
+
+  describe "Metadata.computeSignature", ->
+
+    it "should compute signature with prevMagicHash", ->
+      k = OriginalBitcoin.ECPair.fromWIF('L1tXV2tuvFWvLw2JTZ1yYz8gxSXPawvoDemrwruTtwp4hhn5cbD3')
+      payload = Buffer.from('payload')
+      prevMagic = Buffer.from('prevMagic')
+      signature = Metadata.computeSignature(k, payload, prevMagic)
+      expect(signature.toString('base64')).toBe('H0Ggd/NL6cfGVMCUnUEtbHcFmwbt2i3CXP4dzAtMd6lFCKdbPuCezCVnfRoSvAWeajvP0CkgWxNLnWzjqv1gKfw=');
+
+    it "should compute signature without prevMagicHash", ->
+      k = OriginalBitcoin.ECPair.fromWIF('L1tXV2tuvFWvLw2JTZ1yYz8gxSXPawvoDemrwruTtwp4hhn5cbD3')
+      payload = Buffer.from('payload')
+      prevMagic = undefined
+      signature = Metadata.computeSignature(k, payload, prevMagic)
+      expect(signature.toString('base64')).toBe('INBtCI3+o9zQuTwijKDN1L/caBjmXI38hJAJ6sse9+L6O8dwvPptLUl/aP4l9Rz+zfJ9bUJj1UJwp/YeQJBFBBM=');
+
+  describe "Metadata.verifyResponse", ->
+
+    it "should propagate null", ->
+      verified = Metadata.verifyResponse('1F1tAaz5x1HUXrCNLbtMDqcw6o5GNn4xqX', null)
+      expect(verified).toBe(null);
+
+    it "should verify and compute the new magic hash", ->
+      verified = Metadata.verifyResponse(response.address, response)
+      expectedMagicHash = Buffer.from('RFR4rQvl9ynFbI84jfgM3BtWd/Jl2BZr7tguer1TqxM=', 'base64')
+      expect(verified).toEqual(jasmine.objectContaining({compute_new_magic_hash: expectedMagicHash}))
+
+    it "should fail and launch an exception", ->
+      shouldFail = () => Metadata.verifyResponse('1F1tAaz5x1HUXrCNLbtMDqcw6o5GNn4xqX', response)
+      expect(shouldFail).toThrow(new Error('METADATA_SIGNATURE_VERIFICATION_ERROR'));
+
+  fdescribe "Metadata.extractResponse", ->
+
+    it "should propagate null", ->
+      extracted = Metadata.extractResponse('encrypteionKey', null)
+      expect(extracted).toBe(null);
+
+    # it "encrypted data", ->
+    #
+    #
+    # it "decrypted data", ->
+
+
+
+
+
+
+
+
+
+
+
+
 # proxyquire = require('proxyquireify')(require)
 #
 # OriginalWalletCrypto = require('../src/wallet-crypto');
