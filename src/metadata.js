@@ -154,10 +154,12 @@ Metadata.prototype.fetch = function () {
   return this.next(() => {
     const M = Metadata;
     const saveMagicHash = (res) => {
+      if (res === null) return res;
       this._magicHash = R.prop('compute_new_magic_hash', res);
       return res;
     };
     const saveValue = (res) => {
+      if (res === null) return res;
       this._value = res;
       return res;
     };
