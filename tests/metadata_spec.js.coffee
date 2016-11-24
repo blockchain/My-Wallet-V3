@@ -92,11 +92,6 @@
 #     signature:"#{ encryptedDataPUT }|m/510742'/2'/0'-keyPair-signature"
 #   }
 #
-#   beforeEach ->
-#     JasminePromiseMatchers.install()
-#
-#   afterEach ->
-#     JasminePromiseMatchers.uninstall()
 #
 #   describe "class", ->
 #     describe "new Metadata()", ->

@@ -1,49 +1,42 @@
 proxyquire = require('proxyquireify')(require)
 
-wallet =
-  hdwallet:
-    getMasterHDNode: () ->
+describe "External", ->
+  mockPayload = {coinify: {}}
 
-mockPayload = {coinify: {}}
+  Metadata =
+    fromMasterHDNode: (n, masterhdnode) ->
+      {
+        create: () ->
+        fetch: () ->
+          Promise.resolve(mockPayload)
+      }
 
-Metadata =
-  fromMasterHDNode: (n, masterhdnode) ->
+  Coinify = (obj) ->
+    if !obj.trades
+      obj.trades = []
+    return obj
+
+  Coinify.new = () ->
     {
-      create: () ->
-      fetch: () ->
-        Promise.resolve(mockPayload)
+      trades: []
     }
 
-Coinify = (obj) ->
-  if !obj.trades
-    obj.trades = []
-  return obj
+  ExchangeDelegate = () ->
+    {}
 
-ExchangeDelegate = () ->
-  {}
-
-Coinify.new = () ->
-  {
-    trades: []
+  stubs = {
+    './coinify/coinify' : Coinify,
+    './metadata' : Metadata,
+    './exchange-delegate' : ExchangeDelegate
   }
 
-stubs = {
-  './coinify/coinify' : Coinify,
-  './metadata' : Metadata,
-  './exchange-delegate' : ExchangeDelegate
-}
+  External    = proxyquire('../src/external', stubs)
 
-External    = proxyquire('../src/external', stubs)
-
-describe "External", ->
+  wallet =
+    hdwallet:
+      getMasterHDNode: () ->
 
   e = undefined
-
-  beforeEach ->
-    JasminePromiseMatchers.install()
-
-  afterEach ->
-    JasminePromiseMatchers.uninstall()
 
   describe "class", ->
     describe "new External()", ->
@@ -78,18 +71,16 @@ describe "External", ->
         expect(promise).toBeResolved(done)
 
     describe "addCoinify", ->
+      it "should initialize a Coinify object", ->
+        e.addCoinify()
+        expect(e.coinify).toBeDefined();
 
-        it "should initialize a Coinify object", ->
-          e.addCoinify()
-          expect(e.coinify).toBeDefined();
-
-        it "should check if already present", ->
-          e.addCoinify()
-          expect(() -> e.addCoinify()).toThrow()
+      it "should check if already present", ->
+        e.addCoinify()
+        expect(() -> e.addCoinify()).toThrow()
 
     describe "JSON serializer", ->
       beforeEach ->
-        e  = new External(wallet)
         e._coinify = {}
 
       it 'should store partners', ->
@@ -99,7 +90,7 @@ describe "External", ->
       it 'should not serialize non-expected fields', ->
         e.rarefield = "I am an intruder"
         json = JSON.stringify(e, null, 2)
-        b = JSON.parse(json)
+        obj = JSON.parse(json)
 
-        expect(b.coinify).toBeDefined()
-        expect(b.rarefield).not.toBeDefined()
+        expect(obj.coinify).toBeDefined()
+        expect(obj.rarefield).not.toBeDefined()

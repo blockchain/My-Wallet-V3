@@ -141,12 +141,8 @@ describe "Wallet", ->
   callbacks = undefined
 
   beforeEach ->
-    JasminePromiseMatchers.install()
     WalletStore.setGuid(undefined)
     WalletStore.setEncryptedWalletData(undefined)
-
-  afterEach ->
-    JasminePromiseMatchers.uninstall()
 
   describe "makePairingCode()", ->
     success = undefined

@@ -112,10 +112,6 @@ describe "Address", ->
   beforeEach ->
     spyOn(MyWallet, "syncWallet")
     spyOn(MyWallet.wallet, "getHistory")
-    # JasminePromiseMatchers.install()
-
-  afterEach ->
-    # JasminePromiseMatchers.uninstall()
 
   describe "class", ->
     describe "new Address()", ->
