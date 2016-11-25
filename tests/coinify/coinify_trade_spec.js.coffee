@@ -54,10 +54,7 @@ describe "CoinifyTrade", ->
     tradeJSON2 = JSON.parse(JSON.stringify(tradeJSON))
     tradeJSON2.id = 1143
 
-    JasminePromiseMatchers.install()
-
   afterEach ->
-    JasminePromiseMatchers.uninstall()
     jasmine.clock().uninstall()
 
   describe "class", ->
@@ -491,8 +488,7 @@ describe "CoinifyTrade", ->
 
       it "should fetch all the trades", (done) ->
         api.authGET = () ->
-                        then: (cb) ->
-                          cb([tradeJSON,tradeJSON2])
+          Promise.resolve([tradeJSON,tradeJSON2])
 
         check = (res) ->
           expect(res.length).toBe(2)

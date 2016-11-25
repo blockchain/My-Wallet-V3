@@ -84,12 +84,6 @@ ExchangeDelegate    = proxyquire('../src/exchange-delegate', stubs)
 
 describe "ExchangeDelegate", ->
 
-  beforeEach ->
-    JasminePromiseMatchers.install()
-
-  afterEach ->
-    JasminePromiseMatchers.uninstall()
-
   describe "class", ->
     describe "new ExchangeDelegate()", ->
       it "...", ->

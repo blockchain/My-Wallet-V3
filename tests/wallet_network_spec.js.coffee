@@ -87,12 +87,6 @@ describe "WalletNetwork", ->
     './wallet-store' : WalletStore
   })
 
-  beforeEach ->
-    JasminePromiseMatchers.install()
-
-  afterEach ->
-    JasminePromiseMatchers.uninstall()
-
   describe "generateUUIDs", ->
     it "should return two UUIDs", (done) ->
       promise = WalletNetwork.generateUUIDs(2)
