@@ -67,7 +67,7 @@ Metadata.BufferToB64 = (buff) => buff.toString('base64');
 Metadata.StringToBuffer = (base64) => Buffer.from(base64);
 Metadata.BufferToString = (buff) => buff.toString();
 
-// Buffer -> Buffer -> Base64String
+// Metadata.message :: Buffer -> Buffer -> Base64String
 Metadata.message = R.curry(
   function (payload, prevMagic) {
     if (prevMagic) {
@@ -80,7 +80,7 @@ Metadata.message = R.curry(
   }
 );
 
-// Buffer -> Buffer -> Buffer
+// Metadata.magic :: Buffer -> Buffer -> Buffer
 Metadata.magic = R.curry(
   function (payload, prevMagic) {
     const msg = this.message(payload, prevMagic);
@@ -93,6 +93,8 @@ Metadata.verify = (address, signature, hash) =>
 
 // Metadata.sign :: keyPair -> msg -> Buffer
 Metadata.sign = (keyPair, msg) => Bitcoin.message.sign(keyPair, msg, Bitcoin.networks.bitcoin);
+
+// Metadata.computeSignature :: keypair -> buffer -> buffer -> base64
 Metadata.computeSignature = (key, payloadBuff, magicHash) =>
   Metadata.sign(key, Metadata.message(payloadBuff, magicHash));
 
