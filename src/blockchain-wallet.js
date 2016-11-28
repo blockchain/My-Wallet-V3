@@ -23,6 +23,7 @@ var AccountInfo = require('./account-info');
 var Metadata = require('./metadata');
 var constants = require('./constants');
 var Payment = require('./payment');
+var SharedMetadata = require('./sharedMetadata');
 
 // Wallet
 
@@ -77,6 +78,8 @@ function Wallet (object) {
   this._latestBlock = null;
   this._accountInfo = null;
   this._external = null;
+  // handle second password and non-upgraded wallets
+  this._sharedMetadata = SharedMetadata.fromMasterHDNode(this.hdwallet.getMasterHDNode());
 }
 
 Object.defineProperties(Wallet.prototype, {

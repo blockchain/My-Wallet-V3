@@ -1,15 +1,14 @@
-// var master = Blockchain.MyWallet.wallet.hdwallet.getMasterHDNode()
-// var m = Blockchain.SharedMetadata.fromMasterHDNode(master)
 'use strict';
 
 const WalletCrypto = require('./wallet-crypto');
 const Bitcoin = require('bitcoinjs-lib');
 const crypto = require('crypto');
-const API = require('./api');
 const MyWallet = require('./wallet');
 const Contacts = require('./contacts');
 const Helpers = require('./helpers');
 const Metadata = require('./metadata');
+const jwtDecode = require('jwt-decode');
+const API = require('./sharedMetadataAPI');
 import * as R from 'ramda'
 
 class SharedMetadata {
@@ -21,131 +20,45 @@ class SharedMetadata {
     this._keyPair = mdidHDNode.keyPair;
     this._auth_token = null;
     this._sequence = Promise.resolve();
-    this.authorize();
   }
-
-  get mdid() {
-    return this._mdid;
-  }
-  get priv() {
-    return this._priv;
-  }
+  get mdid() { return this._mdid; }
+  get node() { return this._node; }
+  get token() { return this._auth_token; }
 }
 
-SharedMetadata.sign = function (keyPair, message) {
-  return Bitcoin.message.sign(keyPair, message)
-};
+// should be overwritten by iOS
+SharedMetadata.sign = Bitcoin.message.sign;
+SharedMetadata.verify = Bitcoin.message.verify
 
-SharedMetadata.verify = function (mdid, signature, message) {
-  return Bitcoin.message.verify (mdid, signature, message);
-}
-
-SharedMetadata.request = function (method, endpoint, data, authToken) {
-  var url = API.API_ROOT_URL + 'metadata/' + endpoint;
-  var options = {
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'omit'
-  };
-  if (authToken) {
-    options.headers.Authorization = 'Bearer ' + authToken;
+SharedMetadata.signChallenge = R.curry((key, r) => (
+  {
+    nonce: r.nonce,
+    signature: SharedMetadata.sign(key, r.nonce).toString('base64'),
+    mdid: key.getAddress()
   }
+));
 
-  // encodeFormData :: Object -> url encoded params
-  var encodeFormData = function (data) {
-    if (!data) return '';
-    var encoded = Object.keys(data).map(function (k) {
-      return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]);
-    }).join('&');
-    return encoded ? '?' + encoded : encoded;
-  };
+SharedMetadata.getAuthToken = (mdidHDNode) =>
+  API.getAuth().then(SharedMetadata.signChallenge(mdidHDNode.keyPair))
+                 .then(API.postAuth);
 
-  if (data && data !== {}) {
-    if (method === 'GET') {
-      url += encodeFormData(data);
-    } else {
-      options.body = JSON.stringify(data);
-    }
+SharedMetadata.isValidToken = (token) => {
+  try {
+    const decoded = jwtDecode(token);
+    var expDate = new Date(decoded.exp * 1000);
+    var now = new Date();
+    return now < expDate;
+  } catch (e) {
+    return false;
   }
-
-  options.method = method;
-
-  var handleNetworkError = function (e) {
-    return Promise.reject({ error: 'SHARED_METADATA_CONNECT_ERROR', message: e });
-  };
-
-  var checkStatus = function (response) {
-    if (response.ok) {
-      return response.json();
-    } else {
-      return response.text().then(Promise.reject.bind(Promise));
-    }
-  };
-
-  return fetch(url, options)
-    .catch(handleNetworkError)
-    .then(checkStatus);
-};
-
-SharedMetadata.getAuthToken = function (mdidHDNode) {
-  const S = SharedMetadata;
-  const mdid = mdidHDNode.getAddress();
-  const key = mdidHDNode.keyPair;
-  return S.request('GET','auth')
-             .then( (r) => ({ nonce: r.nonce
-                            , signature: S.sign(key, r.nonce).toString('base64')
-                            , mdid: mdid}))
-             .then( (d) => S.request('POST', 'auth' , d))
-             .then( (r) => r.token);
 };
 
 SharedMetadata.prototype.authorize = function () {
-  return this.next(() => {
-    return SharedMetadata.getAuthToken(this._node)
-             .then((token) => {
-                 this._auth_token = token;
-                 return token;
-              })
-  });
-}
-SharedMetadata.prototype.getMessages = function (onlyNew) {
+  const saveToken = (r) => { this._auth_token = r.token; return r.token; };
   return this.next(
-    SharedMetadata.request.bind(this, 'GET', 'messages', onlyNew ? {new: true} : {}, this._auth_token)
-  );
-};
-
-SharedMetadata.prototype.getMessage = function (id) {
-  return this.next(
-    SharedMetadata.request.bind(this, 'GET', 'message/' + id, null, this._auth_token)
-  );
-};
-
-SharedMetadata.prototype.processMessage = function (id) {
-  return this.next(
-    SharedMetadata.request.bind(this, 'PUT', 'message/' + id + '/processed', null, this._auth_token)
-  );
-};
-
-SharedMetadata.prototype.trustContact = function (contactMdid) {
-  return this.next(
-    SharedMetadata.request.bind(this, 'PUT', 'trusted/' + contactMdid, null, this._auth_token)
-  );
-};
-
-SharedMetadata.prototype.getTrustedList = function () {
-  return this.next(
-    SharedMetadata.request.bind(this, 'GET', 'trusted', null, this._auth_token)
-  );
-};
-
-SharedMetadata.prototype.getTrusted = function (contactMdid) {
-  return this.next(
-    SharedMetadata.request.bind(this, 'GET', 'trusted/' + contactMdid, null, this._auth_token)
-  );
-};
-
-SharedMetadata.prototype.removeContact = function (contactMdid) {
-  return this.next(
-    SharedMetadata.request.bind(this, 'DELETE', 'trusted/' + contactMdid, null, this._auth_token)
+    () => SharedMetadata.isValidToken(this.token)
+          ? Promise.resolve(this.token)
+          : SharedMetadata.getAuthToken(this.node).then(saveToken)
   );
 };
 
@@ -155,7 +68,6 @@ SharedMetadata.prototype.removeContact = function (contactMdid) {
 //     type: type,
 //     payload: encrypted,
 //     signature: this.sign(encrypted),
-//     // sender: this.mdid,
 //     recipient: mdidRecipient
 //   };
 //   return this.request('POST', 'messages', body);
@@ -207,32 +119,33 @@ SharedMetadata.prototype.removeContact = function (contactMdid) {
 //   return msgP.then(f.bind(this));
 // };
 //
-SharedMetadata.prototype.publishXPUB = function () {
-  return this.next(() => {
-    var myDirectory = new Metadata(this._keyPair);
-    myDirectory.fetch();
-    return myDirectory.update({xpub: this._xpub});
-  });
-};
+// SharedMetadata.prototype.publishXPUB = function () {
+//   return this.next(() => {
+//     var myDirectory = new Metadata(this._keyPair);
+//     myDirectory.fetch();
+//     return myDirectory.update({xpub: this._xpub});
+//   });
+// };
+//
+// SharedMetadata.prototype.getXPUB = function (contactMDID) {
+//   return this.next(Metadata.read.bind(undefined, contactMDID));
+// };
 
-SharedMetadata.prototype.getXPUB = function (contactMDID) {
-  return this.next(Metadata.read.bind(undefined, contactMDID));
-};
 // createInvitation :: Promise InvitationID
 SharedMetadata.prototype.createInvitation = function () {
-  return this.next(SharedMetadata.request.bind(this, 'POST', 'share', undefined, this._auth_token));
+  return this.authorize().then((t) => this.next(API.createInvitation.bind(null, t)));
 };
 // readInvitation :: String -> Promise RequesterID
-SharedMetadata.prototype.readInvitation = function (id) {
-  return this.next(SharedMetadata.request.bind(this, 'GET', 'share/' + id, undefined, this._auth_token));
+SharedMetadata.prototype.readInvitation = function (uuid) {
+  return this.authorize().then((t) => this.next(API.readInvitation.bind(null, t, uuid)));
 };
 // acceptInvitation :: String -> Promise ()
-SharedMetadata.prototype.acceptInvitation = function (id) {
-  return this.next(SharedMetadata.request.bind(this, 'POST', 'share/' + id, undefined, this._auth_token));
+SharedMetadata.prototype.acceptInvitation = function (uuid) {
+  return this.authorize().then((t) => this.next(API.acceptInvitation.bind(null, t, uuid)));
 };
 // deleteInvitation :: String -> Promise ()
-SharedMetadata.prototype.deleteInvitation = function (id) {
-  return this.next(SharedMetadata.request.bind(this, 'DELETE', 'share/' + id, undefined, this._auth_token));
+SharedMetadata.prototype.deleteInvitation = function (uuid) {
+  return this.authorize().then((t) => this.next(API.deleteInvitation.bind(null, t, uuid)));
 };
 
 SharedMetadata.fromMDIDHDNode = function (mdidHDNode) {
@@ -240,7 +153,6 @@ SharedMetadata.fromMDIDHDNode = function (mdidHDNode) {
 };
 
 SharedMetadata.fromMasterHDNode = function (masterHDNode) {
-  // var masterHDNode = MyWallet.wallet.hdwallet.getMasterHDNode(cipher);
   var hash = WalletCrypto.sha256('info.blockchain.mdid');
   var purpose = hash.slice(0, 4).readUInt32BE(0) & 0x7FFFFFFF;
   var mdidHDNode = masterHDNode.deriveHardened(purpose);
@@ -249,7 +161,7 @@ SharedMetadata.fromMasterHDNode = function (masterHDNode) {
 
 SharedMetadata.prototype.next = function (f) {
   var nextInSeq = this._sequence.then(f);
-  this._sequence = nextInSeq.then(Helpers.noop, Helpers.noop);
+  this._sequence = nextInSeq.then(x => x, x => x);
   return nextInSeq;
 };
 
