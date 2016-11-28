@@ -49,6 +49,7 @@ module.exports = {
   Networks: require('bitcoinjs-lib/src/networks'),
   ECDSA: require('bitcoinjs-lib/src/ecdsa'),
   SharedMetadata: require('./src/sharedMetadata'),
+  SharedMetadataAPI: require('./src/sharedMetadataAPI'),
   Contacts: require('./src/contacts'),
   R: require('ramda')
 };
