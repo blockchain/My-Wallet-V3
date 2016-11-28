@@ -1,12 +1,6 @@
 proxyquire = require('proxyquireify')(require)
 
 describe "token endpoints", ->
-  beforeEach ->
-    JasminePromiseMatchers.install()
-
-  afterEach ->
-    JasminePromiseMatchers.uninstall()
-
   API = {
     request: (action, method, data, withCred) ->
       new Promise (resolve, reject) ->

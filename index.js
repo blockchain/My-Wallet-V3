@@ -47,5 +47,6 @@ module.exports = {
   BigInteger: require('bigi/lib'),
   BIP39: require('bip39'),
   Networks: require('bitcoinjs-lib/src/networks'),
-  ECDSA: require('bitcoinjs-lib/src/ecdsa')
+  ECDSA: require('bitcoinjs-lib/src/ecdsa'),
+  R: require('ramda')
 };
