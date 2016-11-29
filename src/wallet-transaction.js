@@ -300,7 +300,9 @@ Tx.IOSfactory = function (tx) {
     to: tx.to,
     from: tx.from,
     fee: tx.fee,
-    note: tx.note
+    note: tx.note,
+    double_spend: tx.double_spend,
+    rbf: tx.rbf
   };
 };
 
