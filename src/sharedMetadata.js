@@ -28,7 +28,7 @@ class SharedMetadata {
 
 // should be overwritten by iOS
 SharedMetadata.sign = Bitcoin.message.sign;
-SharedMetadata.verify = Bitcoin.message.verify
+SharedMetadata.verify = Bitcoin.message.verify;
 
 SharedMetadata.signChallenge = R.curry((key, r) => (
   {
@@ -62,39 +62,32 @@ SharedMetadata.prototype.authorize = function () {
   );
 };
 
-// SharedMetadata.prototype.sendMessage = function (mdidRecipient, payload, type) {
-//   var encrypted = this.encryptFor(payload, mdidRecipient);
-//   var body = {
-//     type: type,
-//     payload: encrypted,
-//     signature: this.sign(encrypted),
-//     recipient: mdidRecipient
-//   };
-//   return this.request('POST', 'messages', body);
-// };
-//
-// SharedMetadata.prototype.readMessage = function (msg) {
-//   // TODO :: The public key can be extracted from the signature
-//   return this.verify(msg.payload, msg.signature, msg.sender)
-//     ? Promise.resolve(this.decryptFrom(msg.payload, msg.sender))
-//     : Promise.reject('Wrong Signature');
-// };
-//
-// SharedMetadata.prototype.encryptFor = function (message, mdid) {
-//   var contactObject = this.contacts.get(mdid);
-//   var contactPublicKey = Contacts.toPubKey(contactObject);
-//   var sharedSecret = contactPublicKey.Q.multiply(this._keyPair.d).getEncoded(true);
-//   var sharedKey = WalletCrypto.sha256(sharedSecret);
-//   return WalletCrypto.encryptDataWithKey(message, sharedKey);
-// };
-//
-// SharedMetadata.prototype.decryptFrom = function (message, mdid) {
-//   var contactObject = this.contacts.get(mdid);
-//   var contactPublicKey = Contacts.toPubKey(contactObject);
-//   var sharedSecret = contactPublicKey.Q.multiply(this._keyPair.d).getEncoded(true);
-//   var sharedKey = WalletCrypto.sha256(sharedSecret);
-//   return WalletCrypto.decryptDataWithKey(message, sharedKey);
-// };
+SharedMetadata.prototype.sendMessage = function (contact, type, payload) {
+  const encrypted = this.encryptFor(payload, contact);
+  const signature = SharedMetadata.sign(this.node.keyPair, encrypted).toString('base64');
+  console.log(signature);
+  return this.authorize().then((t) =>
+    this.next(API.sendMessage.bind(null, t, contact.mdid, encrypted, signature, type)));
+};
+
+SharedMetadata.prototype.readMessage = function (contacts, msg) {
+  const sender = R.head(R.values(contacts.search(msg.sender)));
+  return SharedMetadata.verify(msg.sender, msg.signature, msg.payload)
+    ? Promise.resolve(this.decryptFrom(msg.payload, sender))
+    : Promise.reject('Wrong Signature');
+};
+
+SharedMetadata.prototype.encryptFor = function (message, contact) {
+  var sharedSecret = contact.pubKey.Q.multiply(this._keyPair.d).getEncoded(true);
+  var sharedKey = WalletCrypto.sha256(sharedSecret);
+  return WalletCrypto.encryptDataWithKey(message, sharedKey);
+};
+
+SharedMetadata.prototype.decryptFrom = function (message, contact) {
+  var sharedSecret = contact.pubKey.Q.multiply(this._keyPair.d).getEncoded(true);
+  var sharedKey = WalletCrypto.sha256(sharedSecret);
+  return WalletCrypto.decryptDataWithKey(message, sharedKey);
+};
 //
 // SharedMetadata.prototype.sendPaymentRequest = function (mdid, amount, note) {
 //   // type 1 :: paymentRequest
@@ -119,18 +112,13 @@ SharedMetadata.prototype.authorize = function () {
 //   return msgP.then(f.bind(this));
 // };
 //
-// SharedMetadata.prototype.publishXPUB = function () {
-//   return this.next(() => {
-//     var myDirectory = new Metadata(this._keyPair);
-//     myDirectory.fetch();
-//     return myDirectory.update({xpub: this._xpub});
-//   });
-// };
-//
-// SharedMetadata.prototype.getXPUB = function (contactMDID) {
-//   return this.next(Metadata.read.bind(undefined, contactMDID));
-// };
-
+SharedMetadata.prototype.publishXPUB = function () {
+  return this.next(() => {
+    var myDirectory = new Metadata(this._keyPair);
+    myDirectory.fetch();
+    return myDirectory.update({xpub: this._xpub});
+  });
+};
 // createInvitation :: Promise InvitationID
 SharedMetadata.prototype.createInvitation = function () {
   return this.authorize().then((t) => this.next(API.createInvitation.bind(null, t)));
@@ -146,6 +134,30 @@ SharedMetadata.prototype.acceptInvitation = function (uuid) {
 // deleteInvitation :: String -> Promise ()
 SharedMetadata.prototype.deleteInvitation = function (uuid) {
   return this.authorize().then((t) => this.next(API.deleteInvitation.bind(null, t, uuid)));
+};
+
+SharedMetadata.prototype.addTrusted = function (mdid) {
+  return this.authorize().then((t) => this.next(API.addTrusted.bind(null, t, mdid)));
+};
+
+SharedMetadata.prototype.deleteTrusted = function (mdid) {
+  return this.authorize().then((t) => this.next(API.deleteTrusted.bind(null, t, mdid)));
+};
+
+SharedMetadata.prototype.getMessages = function (onlyNew) {
+  return this.authorize().then((t) => this.next(API.getMessages.bind(null, t, onlyNew)));
+};
+
+SharedMetadata.prototype.getMessage = function (uuid) {
+  return this.authorize().then((t) => this.next(API.getMessage.bind(null, t, uuid)));
+};
+
+SharedMetadata.prototype.processMessage = function (uuid) {
+  return this.authorize().then((t) => this.next(API.processMessage.bind(null, t, uuid)));
+};
+
+SharedMetadata.prototype.deleteTrusted = function (mdid) {
+  return this.authorize().then((t) => this.next(API.deleteTrusted.bind(null, t, mdid)));
 };
 
 SharedMetadata.fromMDIDHDNode = function (mdidHDNode) {
