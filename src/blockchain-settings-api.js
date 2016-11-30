@@ -198,7 +198,7 @@ function resendEmailConfirmation (email, success, error) {
  * @param {function ()} error Error callback function.
  */
 function verifyEmail (code, success, error) {
-  API.securePostCallbacks('wallet', { payload: code, length: code.length, method: 'verify-email' }, function (data) {
+  API.securePostCallbacks('wallet', { payload: code, length: code.length, method: 'verify-email-token' }, function (data) {
     WalletStore.sendEvent('msg', {type: 'success', message: data});
     MyWallet.wallet.accountInfo.isEmailVerified = true;
     typeof (success) === 'function' && success(data);
