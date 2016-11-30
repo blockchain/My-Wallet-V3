@@ -24,6 +24,7 @@ var Metadata = require('./metadata');
 var constants = require('./constants');
 var Payment = require('./payment');
 var SharedMetadata = require('./sharedMetadata');
+var Contacts = require('./contacts');
 
 // Wallet
 
@@ -78,8 +79,7 @@ function Wallet (object) {
   this._latestBlock = null;
   this._accountInfo = null;
   this._external = null;
-  // handle second password and non-upgraded wallets
-  this._sharedMetadata = SharedMetadata.fromMasterHDNode(this.hdwallet.getMasterHDNode());
+  this._contacts = null;
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -225,6 +225,10 @@ Object.defineProperties(Wallet.prototype, {
   'external': {
     configurable: false,
     get: function () { return this._external; }
+  },
+  'contacts': {
+    configurable: false,
+    get: function () { return this._contacts; }
   },
   'isEncryptionConsistent': {
     configurable: false,
@@ -847,6 +851,16 @@ Wallet.prototype.loadExternal = function () {
   } else {
     this._external = new External(this);
     return this._external.fetch();
+  }
+};
+
+Wallet.prototype.loadContacts = function () {
+  if (this.isDoubleEncrypted === true || !this.isUpgradedToHD) {
+    return Promise.resolve();
+  } else {
+    var masterhdnode = this.hdwallet.getMasterHDNode();
+    this._contacts = new Contacts(masterhdnode);
+    return this._contacts.fetch();
   }
 };
 
