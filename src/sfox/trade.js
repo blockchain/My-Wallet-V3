@@ -43,8 +43,8 @@ class Trade extends Exchange.Trade {
     this._outCurrency = obj.base_currency.toUpperCase();
 
     this._sendAmount = this._inCurrency === 'BTC'
-      ? Exchange.Helpers.toSatoshi(obj.quote_amount + obj.fee_amount)
-      : Exchange.Helpers.toCents(obj.quote_amount + obj.fee_amount);
+      ? Exchange.Helpers.toSatoshi(obj.quote_amount)
+      : Exchange.Helpers.toCents(obj.quote_amount);
 
     if (this._inCurrency === 'BTC') {
       this._inAmount = Exchange.Helpers.toSatoshi(obj.quote_amount);
