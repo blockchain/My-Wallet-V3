@@ -41,7 +41,7 @@ describe "SFOX Profile", ->
 
       it "populates the profile", (done) ->
         promise = Profile.fetch(api).then((p) ->
-          expect(p.verificationStatus).toEqual('pending')
+          expect(p.verificationStatus).toEqual({level: 'pending'})
           expect(p.limits).toEqual({buy: 100, sell: 100})
         )
 
