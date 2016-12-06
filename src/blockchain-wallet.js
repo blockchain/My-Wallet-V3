@@ -861,6 +861,8 @@ Wallet.prototype.loadContacts = function () {
   } else {
     var masterhdnode = this.hdwallet.getMasterHDNode();
     this._contacts = new Contacts(masterhdnode);
+    const signature = this._contacts._sharedMetadata.signWithMDID(this._guid);
+    this.MDIDregistration('register-mdid', signature.toString('base64'));
     return this._contacts.fetch();
   }
 };
@@ -870,5 +872,14 @@ Wallet.prototype.metadata = function (typeId) {
   return Metadata.fromMasterHDNode(masterhdnode, typeId);
 };
 
-
-//
+Wallet.prototype.MDIDregistration = function (method, signedMDID) {
+  // method: register-mdid / unregister-mdid
+  var data = {
+    guid: this._guid,
+    sharedKey: this._sharedKey,
+    method: method,
+    payload: signedMDID,
+    length: signedMDID.length
+  };
+  return API.request('POST', 'wallet', data);
+};
