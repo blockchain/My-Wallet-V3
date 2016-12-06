@@ -78,6 +78,7 @@ Contacts.prototype.wipe = function () {
 Contacts.prototype.new = function (object) {
   const c = Contact.new(object);
   this.list = R.assoc(c.id, c, this.list);
+  return c;
 };
 
 const fromNull = (str) => str || '';
@@ -121,8 +122,8 @@ Contacts.prototype.readInvitation = function (invitation) {
   // {name: "Biel", invitationReceived: "4d7f9088-4a1e-45f0-bd93-1baba7b0ec58"}
   return this._sharedMetadata.readInvitation(invitation.invitationReceived)
     .then((i) => {
-           this.new(R.assoc('mdid', i.mdid, invitation))
-           return true;
+           const c = this.new(R.assoc('mdid', i.mdid, invitation))
+           return c;
          }
     );
 };
