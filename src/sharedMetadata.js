@@ -2,14 +2,9 @@
 
 const WalletCrypto = require('./wallet-crypto');
 const Bitcoin = require('bitcoinjs-lib');
-const crypto = require('crypto');
-const MyWallet = require('./wallet');
-const Contacts = require('./contacts');
-const Helpers = require('./helpers');
-const Metadata = require('./metadata');
 const jwtDecode = require('jwt-decode');
 const API = require('./sharedMetadataAPI');
-import * as R from 'ramda'
+import * as R from 'ramda';
 
 class SharedMetadata {
   constructor (mdidHDNode) {
@@ -21,15 +16,14 @@ class SharedMetadata {
     this._auth_token = null;
     this._sequence = Promise.resolve();
   }
-  get mdid() { return this._mdid; }
-  get node() { return this._node; }
-  get token() { return this._auth_token; }
-}
+  get mdid () { return this._mdid; }
+  get node () { return this._node; }
+  get token () { return this._auth_token; }
+};
 
 // should be overwritten by iOS
 SharedMetadata.sign = Bitcoin.message.sign;
 SharedMetadata.verify = Bitcoin.message.verify;
-
 SharedMetadata.signChallenge = R.curry((key, r) => (
   {
     nonce: r.nonce,
@@ -65,7 +59,6 @@ SharedMetadata.prototype.authorize = function () {
 SharedMetadata.prototype.sendMessage = function (contact, type, payload) {
   const encrypted = this.encryptFor(payload, contact);
   const signature = SharedMetadata.sign(this.node.keyPair, encrypted).toString('base64');
-  console.log(signature);
   return this.authorize().then((t) =>
     this.next(API.sendMessage.bind(null, t, contact.mdid, encrypted, signature, type)));
 };
@@ -158,6 +151,10 @@ SharedMetadata.prototype.processMessage = function (uuid) {
 
 SharedMetadata.prototype.deleteTrusted = function (mdid) {
   return this.authorize().then((t) => this.next(API.deleteTrusted.bind(null, t, mdid)));
+};
+
+SharedMetadata.prototype.signWithMDID = function (message) {
+  return SharedMetadata.sign(this._node.keyPair, message);
 };
 
 SharedMetadata.fromMDIDHDNode = function (mdidHDNode) {
