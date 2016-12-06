@@ -110,6 +110,10 @@ PaymentMethod.fetchAll = function (inCurrency, outCurrency, api) {
   var params = {};
   if (inCurrency) { params.inCurrency = inCurrency; }
   if (outCurrency) { params.outCurrency = outCurrency; }
+  if (inCurrency === 'BTC') {
+    params.inCurrency = outCurrency;
+    params.outCurrency = inCurrency;
+  }
 
   var output = [];
   return api.authGET('trades/payment-methods', params).then(function (res) {
