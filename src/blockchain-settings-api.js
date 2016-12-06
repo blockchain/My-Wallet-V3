@@ -112,6 +112,10 @@ function changeEmail (email, successCallback, error) {
   updateKV('update-email', email, success, error);
 }
 
+function changeTheme (theme, success, error) {
+  updateKV('update-theme', theme, success, error);
+}
+
 function changeMobileNumber (val, success, error) {
   updateKV('update-sms', val, success, error);
 }
@@ -330,6 +334,7 @@ module.exports = {
   updatePasswordHint1: updatePasswordHint1,
   updatePasswordHint2: updatePasswordHint2,
   changeEmail: changeEmail,
+  changeTheme: changeTheme,
   changeMobileNumber: changeMobileNumber,
   updateLoggingLevel: updateLoggingLevel,
   toggleSave2FA: toggleSave2FA,
