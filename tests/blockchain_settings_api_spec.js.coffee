@@ -201,7 +201,7 @@ describe "SettingsAPI", ->
       },
       {
         func: "verifyEmail",
-        endpoint: "verify-email-token"
+        endpoint: "verify-email-code"
       }
     ]
 
