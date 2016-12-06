@@ -100,7 +100,7 @@ function updatePasswordHint2 (value, success, error) {
 }
 
 function sendConfirmationCode (success, error) {
-  updateKV('send-verify-email-mail', success, error);
+  updateKV('send-verify-email-mail', null, success, error);
 }
 
 function changeEmail (email, successCallback, error) {
