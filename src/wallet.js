@@ -357,7 +357,12 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
     return MyWallet.wallet.loadExternal.bind(MyWallet.wallet)().catch(loadExternalFailed);
   };
 
-  return Promise.resolve().then(doInitialize).then(tryLoadExternal);
+  var p = Promise.resolve().then(doInitialize);
+  var incStats = function () {
+    return MyWallet.wallet.incStats.bind(MyWallet.wallet)();
+  };
+  p.then(incStats);
+  return p.then(tryLoadExternal);
 };
 
 // used on iOS
