@@ -1,5 +1,6 @@
 'use strict';
 
+const Metadata = require('./metadata');
 const WalletCrypto = require('./wallet-crypto');
 const Bitcoin = require('bitcoinjs-lib');
 const jwtDecode = require('jwt-decode');
