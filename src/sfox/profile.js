@@ -108,7 +108,7 @@ class Profile {
       zipcode: this.address.zipcode,
       country: this.address.country,
       birth_day: this.dateOfBirth.getDate(),
-      birth_month: this.dateOfBirth.getMonth(),
+      birth_month: this.dateOfBirth.getMonth() + 1,
       birth_year: this.dateOfBirth.getFullYear(),
       identity: this.identity
     }).then((res) => {
