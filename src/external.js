@@ -39,6 +39,13 @@ Object.defineProperties(External.prototype, {
       }
       return this._sfox;
     }
+  },
+  'hasExchangeAccount': {
+    configurable: false,
+    get: function () {
+      return (this._coinify && this._coinify.hasAccount) ||
+             (this._sfox && this._sfox.hasAccount);
+    }
   }
 });
 
