@@ -855,7 +855,28 @@ Wallet.prototype.metadata = function (typeId) {
 };
 
 Wallet.prototype.incStats = function () {
-  console.log('incing stats');
   API.incrementSecPassStats(this.isDoubleEncrypted);
   return true;
+};
+
+Wallet.prototype.saveGUIDtoMetadata = function () {
+  var self = this;
+  var setOrCheckGuid = function (res) {
+    if (res === null) {
+      return m.create({ guid: MyWallet.wallet.guid });
+    } else if (!res || !res.guid || res.guid !== MyWallet.wallet.guid) {
+      return Promise.reject();
+    } else {
+      return res.guid;
+    }
+  };
+
+  // backupGUID not enabled if secondPassword active
+  if (!this.isDoubleEncrypted && this.isUpgradedToHD) {
+    var GUID_METADATA_TYPE = 0;
+    var m = this.metadata(GUID_METADATA_TYPE);
+    return m.fetch().then(setOrCheckGuid);
+  } else {
+    return Promise.reject();
+  }
 };
