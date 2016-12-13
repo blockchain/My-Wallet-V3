@@ -1,7 +1,10 @@
 proxyquire = require('proxyquireify')(require)
 
 describe "External", ->
-  mockPayload = {coinify: {}}
+  mockPayload = {
+    coinify: {}
+    sfox: {}
+  }
 
   Metadata =
     fromMasterHDNode: (n, masterhdnode) ->
@@ -16,16 +19,27 @@ describe "External", ->
       obj.trades = []
     return obj
 
+  SFOX = (obj) ->
+    if !obj.trades
+      obj.trades = []
+    return obj
+
+  ExchangeDelegate = () ->
+    {}
+
   Coinify.new = () ->
     {
       trades: []
     }
 
-  ExchangeDelegate = () ->
-    {}
+  SFOX.new = () ->
+    {
+      trades: []
+    }
 
   stubs = {
     './coinify/coinify' : Coinify,
+    './sfox/sfox' : SFOX,
     './metadata' : Metadata,
     './exchange-delegate' : ExchangeDelegate
   }
@@ -52,6 +66,7 @@ describe "External", ->
       it "should include partners if present", (done) ->
         promise = e.fetch().then((res) ->
           expect(e._coinify).toBeDefined()
+          expect(e._sfox).toBeDefined()
         )
         expect(promise).toBeResolved(done)
 
@@ -59,6 +74,7 @@ describe "External", ->
         mockPayload = {}
         promise = e.fetch().then((res) ->
           expect(e._coinify).toBeUndefined()
+          expect(e._sfox).toBeUndefined()
         )
         expect(promise).toBeResolved(done)
 
@@ -70,22 +86,14 @@ describe "External", ->
         )
         expect(promise).toBeResolved(done)
 
-    describe "addCoinify", ->
-      it "should initialize a Coinify object", ->
-        e.addCoinify()
-        expect(e.coinify).toBeDefined();
-
-      it "should check if already present", ->
-        e.addCoinify()
-        expect(() -> e.addCoinify()).toThrow()
-
     describe "JSON serializer", ->
       beforeEach ->
         e._coinify = {}
+        e._sfox = {}
 
       it 'should store partners', ->
         json = JSON.stringify(e, null, 2)
-        expect(json).toEqual(JSON.stringify({coinify: {}}, null, 2))
+        expect(json).toEqual(JSON.stringify({coinify: {}, sfox: {}}, null, 2))
 
       it 'should not serialize non-expected fields', ->
         e.rarefield = "I am an intruder"

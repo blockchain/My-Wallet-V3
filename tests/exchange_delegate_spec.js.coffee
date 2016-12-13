@@ -27,13 +27,16 @@ MyWallet = {
     }
     accountInfo:
       email: 'info@blockchain.com'
+      mobile: '+1 55512341234'
       isEmailVerified: true
+      isMobileVerified: true
     external:
       save: () ->
   }
 }
 
 emailVerified = true
+mobileVerified = true
 
 API =
   getBalances: () ->
@@ -52,6 +55,11 @@ API =
           resolve({success: true, token: 'json-web-token-mobile'})
         if emailVerified && data.fields == 'email|mobile'
           resolve({success: true, token: 'json-web-token-email-mobile'})
+        else
+          resolve({success: false})
+      if action == 'GET' && method == "wallet/signed-token"
+        if emailVerified && mobileVerified
+          resolve({success: true, token: 'json-web-token'})
         else
           resolve({success: false})
       else
@@ -120,9 +128,21 @@ describe "ExchangeDelegate", ->
         MyWallet.wallet.accountInfo.email = null
         expect(delegate.email()).toEqual(null)
 
+    describe "mobile()", ->
+      it "should get the users mobile number", ->
+        expect(delegate.mobile()).toEqual('+1 55512341234')
+
+      it "should return null if the user doesn't have a mobile number", ->
+        MyWallet.wallet.accountInfo.mobile = null
+        expect(delegate.mobile()).toEqual(null)
+
     describe "isEmailVerified()", ->
       it "should be true is users email is verified", ->
         expect(delegate.isEmailVerified()).toEqual(true)
+
+    describe "isMobileVerified()", ->
+      it "should be true is users mobile is verified", ->
+        expect(delegate.isMobileVerified()).toEqual(true)
 
     describe "getEmailToken()", ->
       afterEach ->
@@ -135,6 +155,25 @@ describe "ExchangeDelegate", ->
       it 'should reject if email is not verified', (done) ->
         emailVerified = false
         promise = delegate.getEmailToken()
+        expect(promise).toBeRejected(done);
+
+    describe "getToken()", ->
+      afterEach ->
+        emailVerified = true
+        mobileVerified = true
+
+      it 'should get the token', (done) ->
+        promise = delegate.getToken()
+        expect(promise).toBeResolvedWith('json-web-token-email-mobile', done);
+
+      it 'should reject if email is not verified', (done) ->
+        emailVerified = false
+        promise = delegate.getToken()
+        expect(promise).toBeRejected(done);
+
+      it 'should reject if mobile is not verified', (done) ->
+        emailVerified = false
+        promise = delegate.getToken()
         expect(promise).toBeRejected(done);
 
     describe "getReceiveAddress()", ->
@@ -166,6 +205,13 @@ describe "ExchangeDelegate", ->
           delegate.trades = []
           reservation = delegate.reserveReceiveAddress()
           reservation.commit(trade)
+          expect(account.getLabelForReceivingAddress(0)).toEqual("Exchange order #1")
+
+        it "should allow custom label prefix for each exchange", ->
+          delegate.trades = []
+          delegate.labelBase = 'Coinify order'
+          reservation = delegate.reserveReceiveAddress()
+          reservation.commit(trade)
           expect(account.getLabelForReceivingAddress(0)).toEqual("Coinify order #1")
 
         it "should append to existing label if at gap limit", ->
@@ -173,7 +219,7 @@ describe "ExchangeDelegate", ->
           account.receiveIndex = 19
           reservation = delegate.reserveReceiveAddress()
           reservation.commit(trade)
-          expect(account.getLabelForReceivingAddress(16)).toEqual("Coinify order #0, #1")
+          expect(account.getLabelForReceivingAddress(16)).toEqual("Exchange order #0, #1")
 
     describe "releaseReceiveAddress()", ->
       account = undefined

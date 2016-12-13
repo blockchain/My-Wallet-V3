@@ -130,12 +130,14 @@ Helpers.isEmptyArray = function (x) {
 Helpers.asyncOnce = function (f, milliseconds, before) {
   var timer = null;
   var oldArguments = [];
-  return function () {
+
+  trigger.cancel = function () {
+    clearTimeout(timer);
+  };
+
+  function trigger () {
+    trigger.cancel();
     before && before();
-    if (timer) {
-      clearTimeout(timer);
-      timer = null;
-    }
     var myArgs = [];
     // this is needed because arguments is not an 'Array' instance
     for (var i = 0; i < arguments.length; i++) { myArgs[i] = arguments[i]; }
@@ -145,7 +147,9 @@ Helpers.asyncOnce = function (f, milliseconds, before) {
       f.apply(this, myArgs);
       oldArguments = [];
     }, milliseconds);
-  };
+  }
+
+  return trigger;
 };
 
 Helpers.exponentialBackoff = function (f, maxTime) {
