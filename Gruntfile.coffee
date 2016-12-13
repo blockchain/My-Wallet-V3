@@ -58,7 +58,6 @@ module.exports = (grunt) ->
               presets: ["es2015"]
               global: true
               ignore: [
-                /\/node_modules\/(?!bitcoin-exchange-client\/)/
                 "/src/blockchain-socket.js"
                 "/src/ws-browser.js"
               ]
