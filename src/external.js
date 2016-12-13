@@ -1,6 +1,6 @@
 'use strict';
 
-var Coinify = require('./coinify/coinify');
+var Coinify = require('bitcoin-coinify-client');
 var SFOX = require('./sfox/sfox');
 var Metadata = require('./metadata');
 var ExchangeDelegate = require('./exchange-delegate');
