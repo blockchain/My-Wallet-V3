@@ -491,6 +491,8 @@ describe "Wallet", ->
         MyWallet.wallet = {
           loadExternal: () ->
             Promise.resolve()
+          incStats: () ->
+            Promise.reject()
         }
         Promise.resolve()
       )
@@ -500,6 +502,10 @@ describe "Wallet", ->
         expect(MyWallet.decryptAndInitializeWallet).toHaveBeenCalled()
 
       promise = MyWallet.initializeWallet().then(check)
+      expect(promise).toBeResolved(done)
+
+    it "should initialize wallet with stats failure", (done) ->
+      promise = MyWallet.initializeWallet()
       expect(promise).toBeResolved(done)
 
   describe "decryptAndInitializeWallet", ->
