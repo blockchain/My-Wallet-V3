@@ -65,7 +65,7 @@ ExchangeDelegate.prototype.getEmailToken = function () {
     {
       guid: self._wallet.guid,
       sharedKey: self._wallet.sharedKey,
-      fields: 'email'
+      fields: 'email|wallet_age'
     }
   ).then(function (res) {
     if (res.success) {
