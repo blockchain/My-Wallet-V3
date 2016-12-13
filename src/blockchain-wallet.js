@@ -853,3 +853,9 @@ Wallet.prototype.metadata = function (typeId) {
   var masterhdnode = this.hdwallet.getMasterHDNode();
   return Metadata.fromMasterHDNode(masterhdnode, typeId);
 };
+
+Wallet.prototype.incStats = function () {
+  console.log('incing stats');
+  API.incrementSecPassStats(this.isDoubleEncrypted);
+  return true;
+};

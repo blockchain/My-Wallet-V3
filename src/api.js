@@ -269,3 +269,8 @@ API.prototype.exportHistory = function (active, currency, options) {
   if (options.end) data.end = options.end;
   return this.request('POST', 'v2/export-history', data);
 };
+
+API.prototype.incrementSecPassStats = function (activeBool) {
+  var active = activeBool ? 1 : 0;
+  return fetch(this.ROOT_URL + 'event?name=wallet_login_second_password_' + active);
+};
