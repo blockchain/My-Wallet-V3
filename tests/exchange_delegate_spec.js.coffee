@@ -51,6 +51,8 @@ API =
       if action == 'GET' && method == "wallet/signed-token"
         if emailVerified && data.fields == 'email'
           resolve({success: true, token: 'json-web-token-email'})
+        if emailVerified && data.fields == 'email|wallet_age'
+          resolve({success: true, token: 'json-web-token-email-wallet-age'})
         if emailVerified && data.fields == 'mobile'
           resolve({success: true, token: 'json-web-token-mobile'})
         if emailVerified && data.fields == 'email|mobile'
@@ -150,7 +152,7 @@ describe "ExchangeDelegate", ->
 
       it 'should get the token', (done) ->
         promise = delegate.getEmailToken()
-        expect(promise).toBeResolvedWith('json-web-token-email', done);
+        expect(promise).toBeResolvedWith('json-web-token-email-wallet-age', done);
 
       it 'should reject if email is not verified', (done) ->
         emailVerified = false
