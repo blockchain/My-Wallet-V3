@@ -860,7 +860,6 @@ Wallet.prototype.incStats = function () {
 };
 
 Wallet.prototype.saveGUIDtoMetadata = function () {
-  var self = this;
   var setOrCheckGuid = function (res) {
     if (res === null) {
       return m.create({ guid: MyWallet.wallet.guid });
