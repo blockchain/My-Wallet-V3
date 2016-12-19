@@ -7,6 +7,7 @@ var Base58 = require('bs58');
 var BIP39 = require('bip39');
 var ImportExport = require('./import-export');
 var constants = require('./constants');
+var WalletCrypo = require('./wallet-crypto');
 
 var Helpers = {};
 Math.log2 = function (x) { return Math.log(x) / Math.LN2; };
@@ -451,6 +452,19 @@ Helpers.getMobileOperatingSystem = function () {
   } else {
     return 'unknown';
   }
+};
+
+Helpers.isEmailInvited = function (email, fraction) {
+  if (!email) {
+    return false;
+  }
+  if (!Helpers.isPositiveNumber(fraction)) {
+    return false;
+  }
+  if (fraction > 1) {
+    return false;
+  }
+  return WalletCrypo.sha256(email)[0] / 256 >= 1 - fraction;
 };
 
 module.exports = Helpers;
