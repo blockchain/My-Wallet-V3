@@ -67,6 +67,7 @@ Contacts.prototype.fetch = function () {
 };
 
 Contacts.prototype.save = function () {
+  console.log('save called');
   return this._metadata.update(this);
 };
 
@@ -167,6 +168,26 @@ Contacts.prototype.readMessage = function (messageId) {
   return this._sharedMetadata.getMessage(messageId)
            .then(this._sharedMetadata.readMessage.bind(this._sharedMetadata, this))
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// simple interface
+Contacts.prototype.acceptRelation = function (invitation) {
+  return this.readInvitation(invitation)
+    .then(c => this.acceptInvitation(c.id)
+               .then(this.addTrusted(c.id))
+               .then(this.fetchXPUB(c.id))
+    )
+    .then(this.save.bind(this))
+}
+
+// used by the sender once websocket notification is received that recipient accepted
+Contacts.prototype.completeRelation = function (uuid) {
+  return this.readInvitationSent(uuid)
+    .then(this.addTrusted.bind(this, uuid))
+    .then(this.fetchXPUB.bind(this, uuid))
+    .then(this.save.bind(this))
+}
+
 
 module.exports = Contacts;
 
