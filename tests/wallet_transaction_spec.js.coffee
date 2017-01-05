@@ -43,7 +43,8 @@ describe 'Transaction', ->
       expect(tx.fromWatchOnly).toBeTruthy()
       expect(tx.toWatchOnly).toBeFalsy()
       expect(tx.txType).toEqual("sent")
-      expect(tx.amount).toEqual(-30000)
+      expect(tx.fee).toEqual(10000)
+      expect(tx.amount).toEqual(-20000)
       expect(tx.from.address).toEqual("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa")
       expect(tx.to[0].address).toEqual("1M5hoG1pCTDsPqZwG6WH25ziwYYaXNMLrU")
 

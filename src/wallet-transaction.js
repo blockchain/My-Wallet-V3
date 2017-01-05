@@ -208,7 +208,7 @@ function computeAmount (Tx) {
       am = Tx.internalReceive - Tx.changeAmount;
       break;
     case 'sent':
-      am = Tx.internalReceive - Tx.internalSpend;
+      am = Tx.internalReceive - Tx.internalSpend + Tx.fee;
       break;
     case 'received':
       am = Tx.internalReceive - Tx.internalSpend;
