@@ -49,8 +49,8 @@
     "unorm": "^1.4.1",
     "ws": "1.1.*",
     "pbkdf2": "3.0.4",
-    "bitcoin-coinify-client": "blockchain/bitcoin-coinify-client#master",
-    "bitcoin-sfox-client": "blockchain/bitcoin-sfox-client#master"
+    "bitcoin-coinify-client": "0.2.*",
+    "bitcoin-sfox-client": "0.1.*"
   },
   "devDependencies": {
     "babel-polyfill": "6.16.*",

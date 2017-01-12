@@ -76,16 +76,23 @@ ExchangeDelegate.prototype.getEmailToken = function () {
   });
 };
 
-ExchangeDelegate.prototype.getToken = function () {
-  var self = this;
+ExchangeDelegate.prototype.getToken = function (partner) {
+  console.log('getToken()', partner);
+  console.log(this);
+  let fields = {
+    guid: this._wallet.guid,
+    sharedKey: this._wallet.sharedKey,
+    fields: 'email|mobile'
+  };
+  console.log('Fields...')
+  if (partner) {
+    fields.partner = partner;
+  }
+  console.log(fields);
   return API.request(
     'GET',
     'wallet/signed-token',
-    {
-      guid: self._wallet.guid,
-      sharedKey: self._wallet.sharedKey,
-      fields: 'email|mobile'
-    }
+    fields
   ).then(function (res) {
     if (res.success) {
       return res.token;
