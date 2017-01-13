@@ -1,46 +1,18 @@
 'use strict';
 
-const Bitcoin = require('bitcoinjs-lib');
+const MyWallet = require('./wallet');
 const Metadata = require('./metadata');
 const R = require('ramda');
 const uuid = require('uuid');
 const SharedMetadata = require('./sharedMetadata');
+const FacilitatedTx = require('./facilitatedTx');
+const Contact = require('./contact');
 const METADATA_TYPE_EXTERNAL = 4;
 
-class Contact {
-  constructor (o) {
-    this.id = o.id;
-    this.mdid = o.mdid;
-    this.name = o.name;
-    this.surname = o.surname;
-    this.company = o.company;
-    this.email = o.email;
-    this.xpub = o.xpub;
-    this.note = o.note;
-    this.trusted = o.trusted;
-    this.invitationSent = o.invitationSent;  // I invited somebody
-    this.invitationReceived = o.invitationReceived; // Somebody invited me
-  }
-  get pubKey () {
-    return this.xpub ? Bitcoin.HDNode.fromBase58(this.xpub).keyPair : null;
-  }
-}
-
-Contact.factory = function (o) {
-  return new Contact(o);
-};
-
-Contact.new = function (o) {
-  const id = uuid();
-  const namedContact = R.assoc('id', id, o);
-  return new Contact(namedContact);
-};
-
-Contact.prototype.fetchXPUB = function () {
-  return this.mdid
-    ? Metadata.read(this.mdid).then((r) => { this.xpub = r.xpub; return r.xpub; })
-    : Promise.reject('UNKNOWN_MDID');
-};
+// messages types
+const REQUEST_PAYMENT_REQUEST_TYPE = 0;
+const PAYMENT_REQUEST_TYPE = 1;
+const PAYMENT_REQUEST_RESPONSE_TYPE = 2;
 
 class Contacts {
   constructor (masterhdnode) {
@@ -67,7 +39,6 @@ Contacts.prototype.fetch = function () {
 };
 
 Contacts.prototype.save = function () {
-  console.log('save called');
   return this._metadata.update(this);
 };
 
@@ -106,91 +77,209 @@ Contacts.prototype.get = function (uuid) {
 };
 
 // returns a promise with the invitation and updates my contact list
-Contacts.prototype.createInvitation = function (myInfoToShare, contactInfo) {
-  // myInfoToShare could be a contact object that will be encoded on the QR
-  // contactInfo comes from a form that is filled before pressing invite (I am inviting James bla bla)
-  return this._sharedMetadata.createInvitation()
-    .then((i) => {
-           this.new(R.assoc('invitationSent', i.id, contactInfo))
-           return R.assoc('invitationReceived', i.id, myInfoToShare)
-         }
-    );
-};
-
-// returns a promise with the invitation and updates my contact list
 Contacts.prototype.readInvitation = function (invitation) {
   // invitation is an object with contact information and mandatory invitationReceived
   // {name: "Biel", invitationReceived: "4d7f9088-4a1e-45f0-bd93-1baba7b0ec58"}
   return this._sharedMetadata.readInvitation(invitation.invitationReceived)
     .then((i) => {
-           const c = this.new(R.assoc('mdid', i.mdid, invitation))
-           return c;
-         }
-    );
+      const c = this.new(R.assoc('mdid', i.mdid, invitation));
+      return c;
+    });
 };
 
 Contacts.prototype.acceptInvitation = function (uuid) {
   const c = this.get(uuid);
-  return this._sharedMetadata.acceptInvitation(c.invitationReceived)
+  return this._sharedMetadata.acceptInvitation(c.invitationReceived);
 };
 
 Contacts.prototype.readInvitationSent = function (uuid) {
   const c = this.get(uuid);
   return this._sharedMetadata.readInvitation(c.invitationSent)
     .then((i) => {
-           c.mdid = i.contact;
-           return c;
-         }
-    );
+      c.mdid = i.contact;
+      return c;
+    });
 };
 
 Contacts.prototype.addTrusted = function (uuid) {
   const c = this.get(uuid);
-  return this._sharedMetadata.addTrusted(c.mdid).then(() => {c.trusted = true; return true;});
+  return this._sharedMetadata.addTrusted(c.mdid)
+    .then(() => { c.trusted = true; return true; });
 };
 
 Contacts.prototype.deleteTrusted = function (uuid) {
   const c = this.get(uuid);
-  return this._sharedMetadata.deleteTrusted(c.mdid).then(() => {c.trusted = false; return true;});
+  return this._sharedMetadata.deleteTrusted(c.mdid)
+    .then(() => { c.trusted = false; return true; });
 };
 
 Contacts.prototype.sendMessage = function (uuid, type, message) {
   const c = this.get(uuid);
   return this._sharedMetadata.sendMessage(c, type, message);
-}
+};
 
 Contacts.prototype.getMessages = function (onlyNew) {
-  const c = this.get(uuid);
   return this._sharedMetadata.getMessages(onlyNew);
-}
+};
 
 Contacts.prototype.readMessage = function (messageId) {
   return this._sharedMetadata.getMessage(messageId)
-           .then(this._sharedMetadata.readMessage.bind(this._sharedMetadata, this))
-}
+    .then(this._sharedMetadata.readMessage.bind(this._sharedMetadata, this));
+};
 
-////////////////////////////////////////////////////////////////////////////////
-// simple interface
+// //////////////////////////////////////////////////////////////////////////////
+// simple interface for making friends
+// //////////////////////////////////////////////////////////////////////////////
+
+// returns a promise with the invitation and updates my contact list
+Contacts.prototype.createInvitation = function (myInfoToShare, contactInfo) {
+  // myInfoToShare could be a contact object that will be encoded on the QR
+  // contactInfo comes from a form that is filled before pressing invite (I am inviting James bla bla)
+  return this._sharedMetadata.createInvitation()
+    .then((i) => {
+      this.new(R.assoc('invitationSent', i.id, contactInfo));
+      return R.assoc('invitationReceived', i.id, myInfoToShare);
+    });
+};
+
 Contacts.prototype.acceptRelation = function (invitation) {
   return this.readInvitation(invitation)
     .then(c => this.acceptInvitation(c.id)
                .then(this.addTrusted(c.id))
                .then(this.fetchXPUB(c.id))
     )
-    .then(this.save.bind(this))
-}
+    .then(this.save.bind(this));
+};
 
 // used by the sender once websocket notification is received that recipient accepted
 Contacts.prototype.completeRelation = function (uuid) {
   return this.readInvitationSent(uuid)
     .then(this.addTrusted.bind(this, uuid))
     .then(this.fetchXPUB.bind(this, uuid))
-    .then(this.save.bind(this))
-}
+    .then(this.save.bind(this));
+};
 
+// /////////////////////////////////////////////////////////////////////////////
+// Messaging facilities
+
+// :: returns a message string of a payment request
+const paymentRequest = function (id, intendedAmount, address) {
+  return JSON.stringify(
+    {
+      id: id,
+      intended_amount: intendedAmount,
+      address: address
+    });
+};
+
+// :: returns a message string of a payment request
+const requestPaymentRequest = function (intendedAmount, id) {
+  return JSON.stringify(
+    {
+      intended_amount: intendedAmount,
+      id: id
+    });
+};
+
+// :: returns a message string of a payment request
+const paymentRequestResponse = function (id, txHash) {
+  return JSON.stringify(
+    {
+      id: id,
+      tx_hash: txHash
+    });
+};
+
+// I want you to pay me
+Contacts.prototype.sendPR = function (userId, intendedAmount, id = uuid()) {
+  // we should reserve the address (check buy-sell) - should probable be an argument
+  const address = MyWallet.wallet.hdwallet.defaultAccount.receiveAddress;
+  const contact = this.get(userId);
+  const message = paymentRequest(id, intendedAmount, address);
+  return this.sendMessage(userId, PAYMENT_REQUEST_TYPE, message)
+    .then(contact.PR.bind(contact, intendedAmount, id, FacilitatedTx.PR_INITIATOR, address))
+    .then(this.save.bind(this));
+};
+
+// request payment request (step-1)
+Contacts.prototype.sendRPR = function (userId, intendedAmount, id = uuid()) {
+  const message = requestPaymentRequest(intendedAmount, id);
+  const contact = this.get(userId);
+  return this.sendMessage(userId, REQUEST_PAYMENT_REQUEST_TYPE, message)
+    .then(contact.RPR.bind(contact, intendedAmount, id, FacilitatedTx.RPR_INITIATOR))
+    .then(this.save.bind(this));
+};
+
+// payment request response
+Contacts.prototype.sendPRR = function (userId, txHash, id = uuid()) {
+  const message = paymentRequestResponse(id, txHash);
+  const contact = this.get(userId);
+  return this.sendMessage(userId, PAYMENT_REQUEST_RESPONSE_TYPE, message)
+    .then(contact.PRR.bind(contact, txHash, id))
+    .then(this.save.bind(this));
+};
+
+// /////////////////////////////////////////////////////////////////////////////
+// digestion logic
+Contacts.prototype.digestRPR = function (message) {
+  console.log('digesting a request payment request');
+  console.log(message);
+  const result = this.search(message.sender);
+  const contact = result[Object.keys(result)[0]];
+  return this._sharedMetadata.processMessage(message.id)
+    .then(contact.RPR.bind(contact,
+            message.payload.intended_amount,
+            message.payload.id,
+            FacilitatedTx.RPR_RECEIVER))
+    .then(this.save.bind(this));
+};
+
+Contacts.prototype.digestPR = function (message) {
+  console.log('digesting a payment request');
+  console.log(message);
+  const result = this.search(message.sender);
+  const contact = result[Object.keys(result)[0]];
+  return this._sharedMetadata.processMessage(message.id)
+    .then(contact.PR.bind(contact,
+            message.payload.intended_amount,
+            message.payload.id,
+            FacilitatedTx.PR_RECEIVER,
+            message.payload.address))
+    .then(this.save.bind(this));
+};
+
+Contacts.prototype.digestPRR = function (message) {
+  console.log('digesting a payment request response');
+  console.log(message);
+  const result = this.search(message.sender);
+  const contact = result[Object.keys(result)[0]];
+  // todo :: validate txhash on network and amount
+  return this._sharedMetadata.processMessage(message.id)
+    .then(contact.PRR.bind(contact, message.payload.tx_hash, message.payload.id))
+    .then(this.save.bind(this));
+};
+
+Contacts.prototype.digestMessage = function (message) {
+  switch (message.type) {
+    case REQUEST_PAYMENT_REQUEST_TYPE:
+      return this.digestRPR(message);
+    case PAYMENT_REQUEST_TYPE:
+      return this.digestPR(message);
+    case PAYMENT_REQUEST_RESPONSE_TYPE:
+      return this.digestPRR(message);
+    default:
+      return message;
+  }
+};
+
+Contacts.prototype.digestNewMessages = function () {
+  const mapPromises = (f, promises) => R.map(p => p.then(f), promises);
+  return this.getMessages(true)
+   .then(msgs =>
+     R.map(this._sharedMetadata.decryptMessage.bind(this._sharedMetadata, this), msgs)
+  ).then(msgsP =>
+    mapPromises(this.digestMessage.bind(this), msgsP)
+  );
+};
 
 module.exports = Contacts;
-
-
-// ffaaaa9d-b54f-40b0-9736-2e39ca9e9ff0
-// 4d2c6ade-8397-4d7b-8c74-03113f40487a

@@ -51,7 +51,7 @@ S.getMessages = (token, onlyNew) => S.request('GET', 'messages', onlyNew ? {new:
 S.getMessage = (token, uuid) => S.request('GET', 'message/' + uuid, null, token);
 S.sendMessage = (token, recipient, payload, signature, type) =>
   S.request('POST', 'messages', {type, payload, signature, recipient}, token);
-S.processMessage = (token, uuid) => S.request('PUT', 'message/' + uuid + '/processed', null, token);
+S.processMessage = (token, uuid) => S.request('PUT', 'message/' + uuid + '/processed', {processed: true}, token);
 
 // trusted contact list
 S.addTrusted = (token, mdid) => S.request('PUT', 'trusted/' + mdid, null, token);

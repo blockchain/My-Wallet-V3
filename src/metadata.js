@@ -120,9 +120,12 @@ Metadata.extractResponse = R.curry((encKey, res) => {
   }
 });
 
+Metadata.toImmutable = R.compose(Object.freeze, JSON.parse, JSON.stringify);
+
 Metadata.prototype.create = function (payload) {
+  const M = Metadata;
+  payload = M.toImmutable(payload);
   return this.next(() => {
-    const M = Metadata;
     const encPayloadBuffer = this._encKeyBuffer
       ? R.compose(M.B64ToBuffer, M.encrypt(this._encKeyBuffer), JSON.stringify)(payload)
       : R.compose(M.StringToBuffer, JSON.stringify)(payload);
@@ -146,8 +149,10 @@ Metadata.prototype.create = function (payload) {
 
 Metadata.prototype.update = function (payload) {
   if (JSON.stringify(payload) === JSON.stringify(this._value)) {
-    return this.next(() => Promise.resolve(payload));
+    console.log('ignore save');
+    return this.next(() => Promise.resolve(Metadata.toImmutable(payload)));
   } else {
+    console.log('real save');
     return this.create(payload);
   }
 };
@@ -162,7 +167,7 @@ Metadata.prototype.fetch = function () {
     };
     const saveValue = (res) => {
       if (res === null) return res;
-      this._value = res;
+      this._value = Metadata.toImmutable(res);
       return res;
     };
     return M.GET(this._address).then(M.verifyResponse(this._address))
