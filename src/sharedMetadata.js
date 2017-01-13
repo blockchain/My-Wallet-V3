@@ -64,6 +64,18 @@ SharedMetadata.prototype.sendMessage = function (contact, type, payload) {
     this.next(API.sendMessage.bind(null, t, contact.mdid, encrypted, signature, type)));
 };
 
+SharedMetadata.prototype.decryptMessage = function (contacts, msg) {
+  const sender = R.head(R.values(contacts.search(msg.sender)));
+  const open = (m) => {
+    var msg = this.decryptFrom(m.payload, sender);
+    try { msg = JSON.parse(msg); } catch (e) { console.log(e); }
+    return R.assoc('payload', msg, m);
+  };
+  return SharedMetadata.verify(msg.sender, msg.signature, msg.payload)
+    ? Promise.resolve(open(msg))
+    : Promise.reject('Wrong Signature');
+};
+
 SharedMetadata.prototype.readMessage = function (contacts, msg) {
   const sender = R.head(R.values(contacts.search(msg.sender)));
   return SharedMetadata.verify(msg.sender, msg.signature, msg.payload)

@@ -155,6 +155,7 @@ Metadata.prototype.update = function (payload) {
   if (JSON.stringify(payload) === JSON.stringify(this._value)) {
     return this.next(() => Promise.resolve(Metadata.toImmutable(payload)));
   } else {
+    console.log('real save');
     return this.create(payload);
   }
 };
