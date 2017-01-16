@@ -191,22 +191,30 @@ const paymentRequestResponse = function (id, txHash) {
 };
 
 // I want you to pay me
-Contacts.prototype.sendPR = function (userId, intendedAmount, id = uuid()) {
+Contacts.prototype.sendPR = function (userId, intendedAmount, id = uuid(), note) {
   // we should reserve the address (check buy-sell) - should probable be an argument
-  const address = MyWallet.wallet.hdwallet.defaultAccount.receiveAddress;
+
   const contact = this.get(userId);
+  const account = MyWallet.wallet.hdwallet.defaultAccount;
+  const address = account.receiveAddress;
+  const reserveAddress = (x) => {
+    const label = 'payment request to ' + contact.name;
+    account.setLabelForReceivingAddress(account.receiveIndex, label);
+    return x;
+  };
   const message = paymentRequest(id, intendedAmount, address);
   return this.sendMessage(userId, PAYMENT_REQUEST_TYPE, message)
-    .then(contact.PR.bind(contact, intendedAmount, id, FacilitatedTx.PR_INITIATOR, address))
+    .then(contact.PR.bind(contact, intendedAmount, id, FacilitatedTx.PR_INITIATOR, address, note))
+    .then(reserveAddress)
     .then(this.save.bind(this));
 };
 
 // request payment request (step-1)
-Contacts.prototype.sendRPR = function (userId, intendedAmount, id = uuid()) {
+Contacts.prototype.sendRPR = function (userId, intendedAmount, id = uuid(), note) {
   const message = requestPaymentRequest(intendedAmount, id);
   const contact = this.get(userId);
   return this.sendMessage(userId, REQUEST_PAYMENT_REQUEST_TYPE, message)
-    .then(contact.RPR.bind(contact, intendedAmount, id, FacilitatedTx.RPR_INITIATOR))
+    .then(contact.RPR.bind(contact, intendedAmount, id, FacilitatedTx.RPR_INITIATOR), note)
     .then(this.save.bind(this));
 };
 
@@ -230,7 +238,8 @@ Contacts.prototype.digestRPR = function (message) {
     .then(contact.RPR.bind(contact,
             message.payload.intended_amount,
             message.payload.id,
-            FacilitatedTx.RPR_RECEIVER))
+            FacilitatedTx.RPR_RECEIVER),
+            message.payload.note)
     .then(this.save.bind(this));
 };
 
@@ -244,7 +253,8 @@ Contacts.prototype.digestPR = function (message) {
             message.payload.intended_amount,
             message.payload.id,
             FacilitatedTx.PR_RECEIVER,
-            message.payload.address))
+            message.payload.address,
+            message.payload.note))
     .then(this.save.bind(this));
 };
 

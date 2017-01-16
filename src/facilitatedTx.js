@@ -8,29 +8,32 @@ class FacilitatedTx {
     this.address = o.address;
     this.tx_hash = o.tx_hash;
     this.role = o.role;
+    this.note = o.note;
   }
 }
 
 // create a Request for a Payment Request
-FacilitatedTx.RPR = function (intendedAmount, id, role) {
+FacilitatedTx.RPR = function (intendedAmount, id, role, note) {
   return new FacilitatedTx(
     {
       state: FacilitatedTx.WAITING_ADDRESS,
       intended_amount: intendedAmount,
       role: role,
-      id: id
+      id: id,
+      note: note
     });
 };
 
 // create a payment request
-FacilitatedTx.PR = function (intendedAmount, id, role, address) {
+FacilitatedTx.PR = function (intendedAmount, id, role, address, note) {
   return new FacilitatedTx(
     {
       state: FacilitatedTx.WAITING_PAYMENT,
       intended_amount: intendedAmount,
       role: role,
       id: id,
-      address: address
+      address: address,
+      note: note
     });
 };
 
