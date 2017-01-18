@@ -38,8 +38,8 @@ describe "External", ->
     }
 
   stubs = {
-    './coinify/coinify' : Coinify,
-    './sfox/sfox' : SFOX,
+    'bitcoin-coinify-client' : Coinify,
+    'bitcoin-sfox-client' : SFOX,
     './metadata' : Metadata,
     './exchange-delegate' : ExchangeDelegate
   }
