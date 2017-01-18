@@ -493,6 +493,8 @@ describe "Wallet", ->
             Promise.resolve()
           incStats: () ->
             Promise.reject()
+          saveGUIDtoMetadata: () ->
+            Promise.reject()
         }
         Promise.resolve()
       )
@@ -505,6 +507,10 @@ describe "Wallet", ->
       expect(promise).toBeResolved(done)
 
     it "should initialize wallet with stats failure", (done) ->
+      promise = MyWallet.initializeWallet()
+      expect(promise).toBeResolved(done)
+
+    it "should initialize wallet with saveGUID failure", (done) ->
       promise = MyWallet.initializeWallet()
       expect(promise).toBeResolved(done)
 
