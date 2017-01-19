@@ -118,13 +118,9 @@ Object.defineProperties(Address.prototype, {
     get: function () { return this._tag === 2; },
     set: function (value) {
       if (Helpers.isBoolean(value)) {
-        if (value) { // Archive:
-          this._tag = 2;
-        } else { // Unarchive:
-          this._tag = 0;
-          MyWallet.wallet.getHistory();
-        }
+        this._tag = value ? 2 : 0;
         MyWallet.syncWallet();
+        MyWallet.wallet.getHistory();
       } else {
         throw new Error('address.archived must be a boolean');
       }
