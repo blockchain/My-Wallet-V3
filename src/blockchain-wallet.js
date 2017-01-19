@@ -21,6 +21,7 @@ var Block = require('./bitcoin-block');
 var External = require('./external');
 var AccountInfo = require('./account-info');
 var Metadata = require('./metadata');
+var constants = require('./constants');
 
 // Wallet
 
@@ -35,10 +36,11 @@ function Wallet (object) {
   this._double_encryption = obj.double_encryption || false;
   this._dpasswordhash = obj.dpasswordhash;
   // options
-  this._pbkdf2_iterations = obj.options.pbkdf2_iterations == null ? 5000 : obj.options.pbkdf2_iterations;
-  this._fee_per_kb = obj.options.fee_per_kb == null ? 10000 : obj.options.fee_per_kb;
-  this._html5_notifications = Boolean(obj.options.html5_notifications);
-  this._logout_time = obj.options.logout_time == null ? 600000 : obj.options.logout_time;
+  let options = Object.assign(constants.getDefaultWalletOptions(), obj.options);
+  this._pbkdf2_iterations = options.pbkdf2_iterations;
+  this._fee_per_kb = options.fee_per_kb;
+  this._html5_notifications = options.html5_notifications;
+  this._logout_time = options.logout_time;
 
   // legacy addresses list
   this._addresses = obj.keys ? obj.keys.reduce(Address.factory, {}) : undefined;
@@ -664,12 +666,7 @@ Wallet.new = function (guid, sharedKey, mnemonic, bip39Password, firstAccountLab
     guid: guid,
     sharedKey: sharedKey,
     double_encryption: false,
-    options: {
-      pbkdf2_iterations: 5000,
-      html5_notifications: false,
-      fee_per_kb: 10000,
-      logout_time: 600000
-    }
+    options: constants.getDefaultWalletOptions()
   };
   MyWallet.wallet = new Wallet(object);
   var label = firstAccountLabel || 'My Bitcoin Wallet';
