@@ -35,10 +35,10 @@ function Wallet (object) {
   this._double_encryption = obj.double_encryption || false;
   this._dpasswordhash = obj.dpasswordhash;
   // options
-  this._pbkdf2_iterations = obj.options.pbkdf2_iterations;
+  this._pbkdf2_iterations = obj.options.pbkdf2_iterations == null ? 5000 : obj.options.pbkdf2_iterations;
   this._fee_per_kb = obj.options.fee_per_kb == null ? 10000 : obj.options.fee_per_kb;
-  this._html5_notifications = obj.options.html5_notifications;
-  this._logout_time = obj.options.logout_time;
+  this._html5_notifications = Boolean(obj.options.html5_notifications);
+  this._logout_time = obj.options.logout_time == null ? 600000 : obj.options.logout_time;
 
   // legacy addresses list
   this._addresses = obj.keys ? obj.keys.reduce(Address.factory, {}) : undefined;
