@@ -33,7 +33,8 @@ module.exports = function (config) {
 
     preprocessors: {
       'src/**/*.js': ['browserify'],
-      'tests/**/*.coffee': ['browserify']
+      'tests/**/*.coffee': ['browserify'],
+      'tests/**/*.js': ['browserify']
     },
 
     browserify: {
@@ -79,7 +80,7 @@ module.exports = function (config) {
       'tests/blockchain_socket.js.coffee',
       // 'tests/**/*.coffee',
       // Or specify individual test files:
-      'tests/mocks/*.coffee',
+      'tests/mocks/*.js',
       'tests/transaction_spend_spec.js.coffee',
       'tests/wallet_spec.js.coffee',
       'tests/bip38_spec.js.coffee',
