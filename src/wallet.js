@@ -71,7 +71,9 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
     if (lastOnChange.checksum !== newChecksum && oldChecksum !== newChecksum) {
       lastOnChange.checksum = newChecksum;
 
-      MyWallet.getWallet();
+      MyWallet.getWallet(function () {
+        WalletStore.sendEvent('on_change');
+      });
     }
   } else if (obj.op === 'utx') {
     WalletStore.sendEvent('on_tx_received', obj.x);
