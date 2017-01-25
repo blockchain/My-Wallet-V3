@@ -76,15 +76,21 @@ ExchangeDelegate.prototype.getEmailToken = function () {
   });
 };
 
-ExchangeDelegate.prototype.getToken = function (partner) {
+ExchangeDelegate.prototype.getToken = function (partner, options) {
+  options = options || {};
+  // assert(partner, 'Specify exchange partner');
+
   let fields = {
+    // partner: partner, // Coinify doesn't support this yet
     guid: this._wallet.guid,
     sharedKey: this._wallet.sharedKey,
-    fields: 'email|mobile'
+    fields: `email${options.mobile ? '|mobile' : ''}|${options.walletAge ? '|wallet_age' : ''}`
   };
+
   if (partner) {
     fields.partner = partner;
   }
+
   return API.request(
     'GET',
     'wallet/signed-token',
