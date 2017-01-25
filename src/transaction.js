@@ -161,21 +161,116 @@ Transaction.sumOfCoins = function (coins) {
   return coins.reduce(function (a, e) { a = a + e.value; return a; }, 0);
 };
 
-Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
+/* Filter the usable coins to use the minimum number of different input addresses */
+Transaction.filterCoinsByAddress = function (usableCoins, amounts, fee, isAbsoluteFee) {
+  // First, group usable coins by address
+  var addressToCoins = {};
+  var nCoins = usableCoins.length;
+
+  for (var i = 0; i < nCoins; i++) {
+    var coin = usableCoins[i];
+    if (!(coin.script in addressToCoins)) {
+      addressToCoins[coin.script] = [];
+    }
+    addressToCoins[coin.script].push(coin);
+  }
+
+  // Then compute maximum spendable balance for each address
+  // array of {address: xxx, spendableBalance: xx, nOutputs: xxx}
+  var balanceForAddresses = [];
+  var nAddresses = 0;
+  for (var address in addressToCoins) {
+    nAddresses++;
+    var addressBalance = addressToCoins[address].reduce(function(a, b) { return a + b.value; }, 0);
+
+    balanceForAddresses.push({
+      'address': address,
+      'spendableBalance': addressBalance,
+      'nOutputs': addressToCoins[address].length
+    });
+  }
+
+  // Finally, find the best subset of addresses to pay for the transactions
+  var amount = amounts.reduce(Helpers.add, 0);
+  var accAm = 0;
+  var accFee = isAbsoluteFee ? fee : 0;
+  balanceForAddresses = balanceForAddresses.sort(function (a, b) { return b.spendableBalance - a.spendableBalance; });
+
+  var coinsToUse = [];
+  var nInputs = 0;
+  for (var j = 0; j < nAddresses; j++) {
+    accAm += balanceForAddresses[j].spendableBalance;
+    nInputs += balanceForAddresses[j].nOutputs;
+    coinsToUse = coinsToUse.concat(addressToCoins[balanceForAddresses[j].address]);
+
+    if (!isAbsoluteFee) {
+      accFee = Transaction.guessFee(nInputs, amounts.length, fee);
+    }
+
+    if (accAm >= accFee + amount) {
+      return coinsToUse;
+    }
+  }
+
+  return [];
+};
+
+Transaction.selectCoinsWithoutChange = function(coins, amount, nouts, fee, isAbsoluteFee) {
+  var minFee = isAbsoluteFee ? fee : Transaction.guessFee(1, nouts, fee);
+  var totalTxValue = minFee + amount;
+  var threshold = isAbsoluteFee ? 0 : Bitcoin.networks.bitcoin.dustThreshold;
+
+  // If an unspent output matches 0 <= value - totalTxValue <= threshold, it is returned
+  var len = coins.length;
+  for (var i = 0; i < len; i++) {
+    var change = coins[i].value - totalTxValue;
+
+    if (change >= 0 && change <= threshold) {
+      return {'coins': [coins[i]], 'fee': minFee};
+    }
+  }
+
+  return {'coins': [], 'fee': 0};
+
+};
+
+Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee, filterAddresses) {
   var amount = amounts.reduce(Helpers.add, 0);
   var nouts = amounts.length;
-  var sorted = usableCoins.sort(function (a, b) { return b.value - a.value; });
-  var len = sorted.length;
   var sel = [];
   var accAm = 0;
   var accFee = 0;
+
+  // Try to find an output that can fulfill the transaction without change
+  var noChange = Transaction.selectCoinsWithoutChange(usableCoins, amount, nouts, fee, isAbsoluteFee);
+  if (noChange.coins.length > 0) {
+    return noChange;
+  }
+
+  if (filterAddresses) {
+    // Minimize merges of inputs from different addresses
+    usableCoins = Transaction.filterCoinsByAddress(usableCoins, amounts, fee, isAbsoluteFee);
+  }
+
+  var sorted = usableCoins.sort(function (a, b) { return b.value - a.value; });
+  var len = sorted.length;
+
+  // If possible, create a change output of at least 0.01 BTC
+  var MIN_CHANGE = 1000000;
+  var sweepFee = isAbsoluteFee ? fee : Transaction.guessFee(len, nouts, fee);
+  var spendableBalance = usableCoins.reduce(function(a, b) { return a + b.value; }, 0) - sweepFee;
+
+  var target = amount;
+  if (spendableBalance > amount + MIN_CHANGE) {
+    target = amount + MIN_CHANGE;
+  }
 
   if (isAbsoluteFee) {
     for (var i = 0; i < len; i++) {
       var coin = sorted[i];
       accAm = accAm + coin.value;
       sel.push(coin);
-      if (accAm >= fee + amount) { return {'coins': sel, 'fee': fee}; }
+      if (accAm >= fee + target) { return {'coins': sel, 'fee': fee}; }
     }
   } else {
     for (var ii = 0; ii < len; ii++) {
@@ -183,7 +278,7 @@ Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
       accAm = accAm + coin2.value;
       accFee = Transaction.guessFee(ii + 1, nouts + 1, fee);
       sel.push(coin2);
-      if (accAm >= accFee + amount) { return {'coins': sel, 'fee': accFee}; }
+      if (accAm >= accFee + target) { return {'coins': sel, 'fee': accFee}; }
     }
   }
   return {'coins': [], 'fee': 0};
