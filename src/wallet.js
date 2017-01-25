@@ -12,7 +12,6 @@ var API = require('./api');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
 var BlockchainSocket = require('./blockchain-socket');
-var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var RNG = require('./rng');
 var BIP39 = require('bip39');
 var Bitcoin = require('bitcoinjs-lib');
@@ -518,11 +517,6 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
   var success = function (createdGuid, createdSharedKey, createdPassword, sessionToken) {
     if (languageCode) {
       WalletStore.setLanguage(languageCode);
-      BlockchainSettingsAPI.changeLanguage(languageCode, function () {});
-    }
-
-    if (currencyCode) {
-      BlockchainSettingsAPI.changeLocalCurrency(currencyCode, function () {});
     }
 
     WalletStore.unsafeSetPassword(createdPassword);
@@ -532,7 +526,17 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
   var saveWallet = function (wallet) {
     // Generate a session token to facilitate future login attempts:
     WalletNetwork.establishSession(null).then(function (sessionToken) {
-      WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, {email: inputedEmail}, undefined, sessionToken).then(function () {
+      var extra = {email: inputedEmail};
+
+      if (languageCode) {
+        extra.language = languageCode;
+      }
+
+      if (currencyCode) {
+        extra.currency = currencyCode;
+      }
+
+      WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, extra, undefined, sessionToken).then(function () {
         success(wallet.guid, wallet.sharedKey, inputedPassword, sessionToken);
       }).catch(function (e) {
         errorCallback(e);
