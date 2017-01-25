@@ -49,19 +49,20 @@ API =
   request: (action, method, data, headers) ->
     return new Promise (resolve, reject) ->
       if action == 'GET' && method == "wallet/signed-token"
-        if emailVerified && data.fields == 'email'
-          resolve({success: true, token: 'json-web-token-email'})
+        if data.fields == 'email'
+          if emailVerified
+            resolve({success: true, token: 'json-web-token-email'})
+          else
+            resolve({success: false})
+        if data.fields == 'email|mobile'
+          if emailVerified && mobileVerified
+            resolve({success: true, token: 'json-web-token-email-mobile'})
+          else
+            resolve({success: false})
         if emailVerified && data.fields == 'email|wallet_age'
           resolve({success: true, token: 'json-web-token-email-wallet-age'})
         if emailVerified && data.fields == 'mobile'
           resolve({success: true, token: 'json-web-token-mobile'})
-        if emailVerified && data.fields == 'email|mobile'
-          resolve({success: true, token: 'json-web-token-email-mobile'})
-        else
-          resolve({success: false})
-      if action == 'GET' && method == "wallet/signed-token"
-        if emailVerified && mobileVerified
-          resolve({success: true, token: 'json-web-token'})
         else
           resolve({success: false})
       else
@@ -146,36 +147,23 @@ describe "ExchangeDelegate", ->
       it "should be true is users mobile is verified", ->
         expect(delegate.isMobileVerified()).toEqual(true)
 
-    describe "getEmailToken()", ->
-      afterEach ->
-        emailVerified = true
-
-      it 'should get the token', (done) ->
-        promise = delegate.getEmailToken()
-        expect(promise).toBeResolvedWith('json-web-token-email-wallet-age', done);
-
-      it 'should reject if email is not verified', (done) ->
-        emailVerified = false
-        promise = delegate.getEmailToken()
-        expect(promise).toBeRejected(done);
-
     describe "getToken()", ->
       afterEach ->
         emailVerified = true
         mobileVerified = true
 
       it 'should get the token', (done) ->
-        promise = delegate.getToken()
+        promise = delegate.getToken('partner', {mobile: true})
         expect(promise).toBeResolvedWith('json-web-token-email-mobile', done);
 
       it 'should reject if email is not verified', (done) ->
         emailVerified = false
-        promise = delegate.getToken()
+        promise = delegate.getToken('partner', {mobile: true})
         expect(promise).toBeRejected(done);
 
       it 'should reject if mobile is not verified', (done) ->
-        emailVerified = false
-        promise = delegate.getToken()
+        mobileVerified = false
+        promise = delegate.getToken('partner', {mobile: true})
         expect(promise).toBeRejected(done);
 
     describe "getReceiveAddress()", ->

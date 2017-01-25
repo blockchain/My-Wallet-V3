@@ -57,25 +57,6 @@ ExchangeDelegate.prototype.isMobileVerified = function () {
   return this._wallet.accountInfo.isMobileVerified;
 };
 
-ExchangeDelegate.prototype.getEmailToken = function () {
-  var self = this;
-  return API.request(
-    'GET',
-    'wallet/signed-token',
-    {
-      guid: self._wallet.guid,
-      sharedKey: self._wallet.sharedKey,
-      fields: 'email|wallet_age'
-    }
-  ).then(function (res) {
-    if (res.success) {
-      return res.token;
-    } else {
-      throw new Error('Unable to obtain email verification proof');
-    }
-  });
-};
-
 ExchangeDelegate.prototype.getToken = function (partner, options) {
   options = options || {};
   // assert(partner, 'Specify exchange partner');
@@ -84,7 +65,7 @@ ExchangeDelegate.prototype.getToken = function (partner, options) {
     // partner: partner, // Coinify doesn't support this yet
     guid: this._wallet.guid,
     sharedKey: this._wallet.sharedKey,
-    fields: `email${options.mobile ? '|mobile' : ''}|${options.walletAge ? '|wallet_age' : ''}`
+    fields: `email${options.mobile ? '|mobile' : ''}${options.walletAge ? '|wallet_age' : ''}`
   };
 
   if (partner) {
