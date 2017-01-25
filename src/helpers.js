@@ -1,16 +1,29 @@
 'use strict';
 
+
 var Bitcoin = require('bitcoinjs-lib');
+var bscript = Bitcoin.script;
+var bcrypto = Bitcoin.crypto;
+var baddress = Bitcoin.address;
+var bitcoinMessage = require('bitcoinjs-message')
 var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
 var BIP39 = require('bip39');
 var ImportExport = require('./import-export');
-var constants = require('./constants');
 var WalletCrypo = require('./wallet-crypto');
+var constants = require('./constants');
+
 
 var Helpers = {};
 Math.log2 = function (x) { return Math.log(x) / Math.LN2; };
+
+Helpers.segwitAddress = function (keyPair) {
+  var pubkeyhash = bcrypto.hash160(keyPair.getPublicKeyBuffer());
+  var toSegwitPubKey = bscript.witnessPubKeyHash.output.encode(pubkeyhash);
+  var address = baddress.toBase58Check(bcrypto.hash160(toSegwitPubKey), constants.getNetwork().scriptHash);
+  return address;
+};
 
 Helpers.isString = function (str) {
   return typeof str === 'string' || str instanceof String;
@@ -439,7 +452,8 @@ Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
 };
 
 Helpers.verifyMessage = function (address, signature, message) {
-  return Bitcoin.message.verify(address, signature, message, constants.getNetwork());
+  var messagePrefix = constants.getNetwork().messagePrefix;
+  return bitcoinMessage.verify(message, messagePrefix, address, signature);
 };
 
 Helpers.getMobileOperatingSystem = function () {

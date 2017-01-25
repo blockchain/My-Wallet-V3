@@ -142,7 +142,9 @@ Address.factory = function (o, a) {
   return o;
 };
 
-Address.import = function (key, label) {
+Address.import = function (key, label, segwitFlag) {
+  console.log('importing address!!!!!')
+  console.log('segwit: ' + segwitFlag);
   var object = {
     addr: null,
     priv: null,
@@ -150,18 +152,24 @@ Address.import = function (key, label) {
     created_device_name: shared.APP_NAME,
     created_device_version: shared.APP_VERSION
   };
+
+  var getAddress = function (key) {
+    console.log('call get address');
+    return segwitFlag ? Helpers.segwitAddress(key) : key.getAddress();
+  };
+
   switch (true) {
     case Helpers.isBitcoinAddress(key):
       object.addr = key;
       object.priv = null;
       break;
     case Helpers.isKey(key):
-      object.addr = key.getAddress();
+      object.addr = getAddress(key);
       object.priv = Base58.encode(key.d.toBuffer(32));
       break;
     case Helpers.isBitcoinPrivateKey(key):
       key = Bitcoin.ECPair.fromWIF(key, constants.getNetwork());
-      object.addr = key.getAddress();
+      object.addr = getAddress(key);
       object.priv = Base58.encode(key.d.toBuffer(32));
       break;
     default:
@@ -175,7 +183,7 @@ Address.import = function (key, label) {
   return address;
 };
 
-Address.fromString = function (keyOrAddr, label, bipPass) {
+Address.fromString = function (keyOrAddr, label, bipPass, segwitFlag) {
   if (Helpers.isBitcoinAddress(keyOrAddr)) {
     return Promise.resolve(Address.import(keyOrAddr, label));
   } else {
@@ -189,7 +197,7 @@ Address.fromString = function (keyOrAddr, label, bipPass) {
 
       var parseBIP38Wrapper = function (resolve, reject) {
         ImportExport.parseBIP38toECPair(keyOrAddr, bipPass,
-          function (key) { resolve(Address.import(key, label)); },
+          function (key) { resolve(Address.import(key, label, segwitFlag)); },
           function () { reject('wrongBipPass'); },
           function () { reject('importError'); }
         );
@@ -214,17 +222,17 @@ Address.fromString = function (keyOrAddr, label, bipPass) {
           } else {
             myk.compressed = true;
           }
-          return Address.import(myk, label);
+          return Address.import(myk, label, segwitFlag);
         }
       ).catch(
         function (e) {
           myk.compressed = true;
-          return Promise.resolve(Address.import(myk, label));
+          return Promise.resolve(Address.import(myk, label, segwitFlag));
         }
       );
     } else if (okFormats.indexOf(format) > -1) {
       var k = Helpers.privateKeyStringToKey(keyOrAddr, format);
-      return Promise.resolve(Address.import(k, label));
+      return Promise.resolve(Address.import(k, label, segwitFlag));
     } else {
       return Promise.reject('unknown key format');
     }

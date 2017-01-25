@@ -1,11 +1,13 @@
 'use strict';
 
-var WalletCrypto = require('./wallet-crypto');
-var Bitcoin = require('bitcoinjs-lib');
-var API = require('./api');
-var Helpers = require('./helpers');
-var constants = require('./constants');
-var R = require('ramda');
+const WalletCrypto = require('./wallet-crypto');
+const Bitcoin = require('bitcoinjs-lib');
+const API = require('./api');
+const Helpers = require('./helpers');
+const constants = require('./constants');
+const R = require('ramda');
+const bitcoinMessage = require('bitcoinjs-message')
+const messagePrefix = constants.getNetwork().messagePrefix;
 
 class Metadata {
   constructor (ecPair, encKeyBuffer, typeId) {
@@ -84,15 +86,17 @@ Metadata.message = R.curry(
 Metadata.magic = R.curry(
   function (payload, prevMagic) {
     const msg = this.message(payload, prevMagic);
-    return Bitcoin.message.magicHash(msg, constants.getNetwork());
+    return bitcoinMessage.magicHash(msg, messagePrefix);
   }
 );
 
-Metadata.verify = (address, signature, hash) =>
-  Bitcoin.message.verify(address, signature, hash);
+Metadata.verify = (address, signature, message) =>
+  bitcoinMessage.verify(message, messagePrefix, address, signature)
 
 // Metadata.sign :: keyPair -> msg -> Buffer
-Metadata.sign = (keyPair, msg) => Bitcoin.message.sign(keyPair, msg, Bitcoin.networks.bitcoin);
+Metadata.sign = (keyPair, msg) =>
+  // Bitcoin.message.sign(keyPair, msg, Bitcoin.networks.bitcoin);
+  bitcoinMessage.sign(msg, messagePrefix, keyPair.d.toBuffer(32), keyPair.compressed)
 
 // Metadata.computeSignature :: keypair -> buffer -> buffer -> base64
 Metadata.computeSignature = (key, payloadBuff, magicHash) =>

@@ -11,12 +11,12 @@ var constants = require('./constants');
 // Error messages that should only appear during development can be any string.
 
 var Transaction = function (payment, emitter) {
-  var unspentOutputs = payment.selectedCoins;
+
   var toAddresses = payment.to;
   var amounts = payment.amounts;
   var fee = payment.finalFee;
   var changeAddress = payment.change;
-  var BITCOIN_DUST = constants.getNetwork().dustThreshold;
+  var BITCOIN_DUST = 546; // satoshi amount
 
   if (!Array.isArray(toAddresses) && toAddresses != null) { toAddresses = [toAddresses]; }
   if (!Array.isArray(amounts) && amounts != null) { amounts = [amounts]; }
@@ -24,6 +24,7 @@ var Transaction = function (payment, emitter) {
   assert(toAddresses && toAddresses.length, 'Missing destination address');
   assert(amounts && amounts.length, 'Missing amount to pay');
 
+  this.unspentOutputs = payment.selectedCoins;
   this.emitter = emitter;
   this.amount = amounts.reduce(Helpers.add, 0);
   this.addressesOfInputs = [];
@@ -33,7 +34,7 @@ var Transaction = function (payment, emitter) {
 
   assert(toAddresses.length === amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
   assert(this.amount >= BITCOIN_DUST, {error: 'BELOW_DUST_THRESHOLD', amount: this.amount, threshold: BITCOIN_DUST});
-  assert(unspentOutputs && unspentOutputs.length > 0, {error: 'NO_UNSPENT_OUTPUTS'});
+  assert(this.unspentOutputs && this.unspentOutputs.length > 0, {error: 'NO_UNSPENT_OUTPUTS'});
   var transaction = new Bitcoin.TransactionBuilder(constants.getNetwork());
   // add all outputs
   function addOutput (e, i) { transaction.addOutput(toAddresses[i], amounts[i]); }
@@ -41,17 +42,20 @@ var Transaction = function (payment, emitter) {
 
   // add all inputs
   var total = 0;
-  for (var i = 0; i < unspentOutputs.length; i++) {
-    var output = unspentOutputs[i];
+  for (var i = 0; i < this.unspentOutputs.length; i++) {
+    var output = this.unspentOutputs[i];
     total = total + output.value;
     var transactionHashBuffer = Buffer(output.hash, 'hex');
-    transaction.addInput(Array.prototype.reverse.call(transactionHashBuffer), output.index);
+
 
     // Generate address from output script and add to private list so we can check if the private keys match the inputs later
     var scriptBuffer = Buffer(output.script, 'hex');
-    assert.notEqual(Bitcoin.script.classifyOutput(scriptBuffer), 'nonstandard', {error: 'STRANGE_SCRIPT'});
+    // transaction.addInput(Array.prototype.reverse.call(transactionHashBuffer), output.index);
+    transaction.addInput(Array.prototype.reverse.call(transactionHashBuffer), output.index, 0xffffffff, scriptBuffer);
+
+    // assert.notEqual(Bitcoin.script.classifyOutput(scriptBuffer), 'nonstandard', {error: 'STRANGE_SCRIPT'});
     var address = Bitcoin.address.fromOutputScript(scriptBuffer, constants.getNetwork()).toString();
-    assert(address, {error: 'CANNOT_DECODE_OUTPUT_ADDRESS', tx_hash: output.tx_hash});
+    // assert(address, {error: 'CANNOT_DECODE_OUTPUT_ADDRESS', tx_hash: output.tx_hash});
     this.addressesOfInputs.push(address);
 
     // Add to list of needed private keys
@@ -72,11 +76,11 @@ var Transaction = function (payment, emitter) {
 };
 
 Transaction.prototype.addPrivateKeys = function (privateKeys) {
-  assert.equal(privateKeys.length, this.addressesOfInputs.length, 'Number of private keys needs to match inputs');
+  // assert.equal(privateKeys.length, this.addressesOfInputs.length, 'Number of private keys needs to match inputs');
 
-  for (var i = 0; i < privateKeys.length; i++) {
-    assert.equal(this.addressesOfInputs[i], privateKeys[i].getAddress(), 'Private key does not match bitcoin address ' + this.addressesOfInputs[i] + '!=' + privateKeys[i].getAddress() + ' while adding private key for input ' + i);
-  }
+  // for (var i = 0; i < privateKeys.length; i++) {
+  //   assert.equal(this.addressesOfInputs[i], privateKeys[i].getAddress(), 'Private key does not match bitcoin address ' + this.addressesOfInputs[i] + '!=' + privateKeys[i].getAddress() + ' while adding private key for input ' + i);
+  // }
 
   this.privateKeys = privateKeys;
 };
@@ -112,20 +116,21 @@ Transaction.prototype.sign = function () {
   assert(this.privateKeys, 'Need private keys to sign transaction');
 
   assert.equal(this.privateKeys.length, this.transaction.inputs.length, 'Number of private keys needs to match inputs');
-
-  for (var i = 0; i < this.privateKeys.length; i++) {
-    assert.equal(this.addressesOfInputs[i], this.privateKeys[i].getAddress(), 'Private key does not match bitcoin address ' + this.addressesOfInputs[i] + '!=' + this.privateKeys[i].getAddress() + ' while signing input ' + i);
-  }
-
+  // for (var i = 0; i < this.privateKeys.length; i++) {
+  //   assert.equal(this.addressesOfInputs[i], this.privateKeys[i].getAddress(), 'Private key does not match bitcoin address ' + this.addressesOfInputs[i] + '!=' + this.privateKeys[i].getAddress() + ' while signing input ' + i);
+  // }
   this.emitter.emit('on_begin_signing');
 
   var transaction = this.transaction;
 
   for (var ii = 0; ii < transaction.inputs.length; ii++) {
+
     this.emitter.emit('on_sign_progress', ii + 1);
     var key = this.privateKeys[ii];
-    transaction.sign(ii, key);
-    assert(transaction.inputs[ii].scriptType === 'pubkeyhash', 'Error creating input script');
+    var redeemScript = Bitcoin.script.witnessPubKeyHash.output.encode(Bitcoin.crypto.hash160(key.getPublicKeyBuffer()))
+    var coin = this.unspentOutputs[ii];
+    transaction.sign(ii, key, redeemScript, Bitcoin.Transaction.SIGHASH_ALL, coin.value);
+    // transaction.sign(ii, key);
   }
 
   this.emitter.emit('on_finish_signing');

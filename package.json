@@ -38,7 +38,10 @@
   "dependencies": {
     "bigi": "1.4.*",
     "bip39": "2.1.*",
-    "bitcoinjs-lib": "2.1.*",
+    "bitcoin-coinify-client": "0.2.*",
+    "bitcoin-sfox-client": "0.1.*",
+    "bitcoinjs-lib": "git://github.com/bitcoinjs/bitcoinjs-lib.git#segwit-p2wsh-2",
+    "bitcoinjs-message": "^1.0.1",
     "bs58": "2.0.*",
     "es6-promise": "^3.0.2",
     "isomorphic-fetch": "^2.2.0",
@@ -47,10 +50,7 @@
     "randombytes": "^2.0.1",
     "sjcl": "1.0.3",
     "unorm": "^1.4.1",
-    "ws": "1.1.*",
-    "pbkdf2": "3.0.4",
-    "bitcoin-coinify-client": "0.2.*",
-    "bitcoin-sfox-client": "0.1.*"
+    "ws": "1.1.*"
   },
   "devDependencies": {
     "babel-polyfill": "6.16.*",

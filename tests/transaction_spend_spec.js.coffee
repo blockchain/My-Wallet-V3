@@ -128,7 +128,6 @@ describe "Transaction", ->
       # Check the network property is set:
       expect(key.network).toEqual(Bitcoin.networks.bitcoin)
       expect(tx.transaction.network).toEqual(Bitcoin.networks.bitcoin)
-
       # Override it so the assert statement passes:
       key.network = Bitcoin.networks.bitcoin
       tx.transaction.network = Bitcoin.networks.bitcoin
@@ -139,9 +138,7 @@ describe "Transaction", ->
       privateKeys = [key]
 
       tx.addPrivateKeys(privateKeys)
-
       tx = tx.sign().build()
-
       expectedHex = '0100000001594c66729d5068b7d816760fc304accd760629ee75a371529049a94cffa50861000000008a4730440220354fd8f420d1f3ffc802af13d451f853d26f343b10225e92a17d3e831edb81960220074d8dac3c497a0481e2041df4f3cd7a82e32415c11b2054b246187f3ff733a8014104a7392f5628776b530aa5fbb41ac10c327ccd2cf64622a81671038ecda25084af786fd54d43689241694d1d65e6bde98756fa01dfd2f5a90d5318ab3fb7bad8c1ffffffff03204e0000000000001976a914078d35591e340799ee96968936e8b2ea8ce504a688ac10270000000000001976a914a0e6ca5444e4d8b7c80f70237f332320387f18c788acf2540000000000001976a9148b71295471e921703a938aa9e01433deb07c1aa588ac00000000'
       expect(tx.toHex()).toEqual(expectedHex)
 

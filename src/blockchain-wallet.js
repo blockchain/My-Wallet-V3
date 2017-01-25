@@ -456,7 +456,7 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
   }
 };
 
-Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) {
+Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass, segwitFlag) {
   var importAddress = function (ad) {
     if (this.containsLegacyAddress(ad)) {
       if (this.key(ad.address).isWatchOnly && !ad.isWatchOnly) {
@@ -478,7 +478,7 @@ Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) 
     return ad;
   }.bind(this);
 
-  return Address.fromString(addr, label, bipPass).then(importAddress);
+  return Address.fromString(addr, label, bipPass, segwitFlag).then(importAddress);
 };
 
 Wallet.prototype.containsLegacyAddress = function (address) {

@@ -453,6 +453,8 @@ Payment.publish = function () {
   return function (payment) {
     var success = function () {
       payment.txid = payment.transaction.getId();
+      console.log('txID: ')
+      console.log(payment.txid)
       return payment;
     };
 
