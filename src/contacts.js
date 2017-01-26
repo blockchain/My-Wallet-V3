@@ -283,13 +283,16 @@ Contacts.prototype.digestMessage = function (message) {
 };
 
 Contacts.prototype.digestNewMessages = function () {
-  const mapPromises = (f, promises) => R.map(p => p.then(f), promises);
   return this.getMessages(true)
-   .then(msgs =>
-     R.map(this._sharedMetadata.decryptMessage.bind(this._sharedMetadata, this), msgs)
-  ).then(msgsP =>
-    mapPromises(this.digestMessage.bind(this), msgsP)
-  );
+    .then(
+    msgs => {
+      const messages = R.map(this._sharedMetadata.decryptMessage.bind(this._sharedMetadata, this), msgs);
+      return Promise.all(messages);
+    })
+    .then(msgs => {
+      return Promise.all(R.map(this.digestMessage.bind(this), msgs));
+    }
+    );
 };
 
 module.exports = Contacts;
