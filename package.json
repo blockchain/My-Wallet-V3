@@ -96,11 +96,13 @@
       "Audio",
       "describe",
       "it",
+      "xit",
       "beforeEach",
       "expect",
       "spyOn",
       "jasmine",
-      "pending"
+      "pending",
+      "localStorage"
     ]
   },
   "engines": {

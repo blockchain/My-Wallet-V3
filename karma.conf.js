@@ -83,7 +83,7 @@ module.exports = function (config) {
       'tests/mocks/*.js',
       'tests/transaction_spend_spec.js.coffee',
       'tests/wallet_spec.js.coffee',
-      'tests/bip38_spec.js.coffee',
+      'tests/bip38_spec.js',
       'tests/address_spec.js',
       'tests/external_spec.js.coffee',
       'tests/keychain_spec.js.coffee',
