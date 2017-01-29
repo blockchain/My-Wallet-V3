@@ -90,7 +90,7 @@ module.exports = function (config) {
       'tests/keyring_spec.js.coffee',
       'tests/hdaccount_spec.js.coffee',
       'tests/hdwallet_spec.js.coffee',
-      'tests/blockchain_wallet_spec.js.coffee',
+      'tests/blockchain_wallet_spec.js',
       'tests/rng_spec.js.coffee',
       'tests/payment_spec.js.coffee',
       'tests/wallet_transaction_spec.js.coffee',
