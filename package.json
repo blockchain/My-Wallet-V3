@@ -99,7 +99,8 @@
       "beforeEach",
       "expect",
       "spyOn",
-      "jasmine"
+      "jasmine",
+      "pending"
     ]
   },
   "engines": {
