@@ -89,13 +89,15 @@
     "semistandard": "8.*"
   },
   "semistandard": {
-    "ignore": [
-      "tests/"
-    ],
+    "ignore": [],
     "globals": [
       "fetch",
       "XMLHttpRequest",
-      "Audio"
+      "Audio",
+      "describe",
+      "it",
+      "beforeEach",
+      "expect"
     ]
   },
   "engines": {
