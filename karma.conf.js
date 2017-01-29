@@ -77,7 +77,7 @@ module.exports = function (config) {
       'tests/wallet_network_spec.js.coffee',
       'tests/api_spec.js',
       'tests/helpers_spec.js.coffee',
-      'tests/blockchain_socket.js.coffee',
+      'tests/blockchain_socket.js',
       // 'tests/**/*.coffee',
       // Or specify individual test files:
       'tests/mocks/*.js',
