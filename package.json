@@ -97,7 +97,9 @@
       "describe",
       "it",
       "beforeEach",
-      "expect"
+      "expect",
+      "spyOn",
+      "jasmine"
     ]
   },
   "engines": {
