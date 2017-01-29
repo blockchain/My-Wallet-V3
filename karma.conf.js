@@ -97,7 +97,7 @@ module.exports = function (config) {
       'tests/transaction_list_spec.js.coffee',
       'tests/wallet_crypto_spec.js.coffee',
       'tests/wallet_signup_spec.js.coffee',
-      'tests/blockchain_settings_api_spec.js.coffee',
+      'tests/blockchain_settings_api_spec.js',
       'tests/account_info_spec.js',
       'tests/metadata_spec.js.coffee',
       'tests/exchange_delegate_spec.js.coffee'
