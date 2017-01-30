@@ -56,29 +56,30 @@ const API = {
   request (action, method, {fields}, headers) {
     return new Promise((resolve, reject) => {
       if ((action === 'GET') && (method === 'wallet/signed-token')) {
-        if (emailVerified && (fields === 'email')) {
-          resolve({success: true, token: 'json-web-token-email'});
+        if (fields === 'email') {
+          if (emailVerified) {
+            resolve({success: true, token: 'json-web-token-email'});
+          } else {
+            resolve({success: false});
+          }
+        }
+        if (fields === 'email|mobile') {
+          if (emailVerified && mobileVerified) {
+            resolve({success: true, token: 'json-web-token-email-mobile'});
+          } else {
+            resolve({success: false});
+          }
         }
         if (emailVerified && (fields === 'email|wallet_age')) {
           resolve({success: true, token: 'json-web-token-email-wallet-age'});
         }
         if (emailVerified && (fields === 'mobile')) {
           resolve({success: true, token: 'json-web-token-mobile'});
-        }
-        if (emailVerified && (fields === 'email|mobile')) {
-          resolve({success: true, token: 'json-web-token-email-mobile'});
         } else {
           resolve({success: false});
         }
-      }
-      if ((action === 'GET') && (method === 'wallet/signed-token')) {
-        if (emailVerified && mobileVerified) {
-          return resolve({success: true, token: 'json-web-token'});
-        } else {
-          return resolve({success: false});
-        }
       } else {
-        return reject('bad call');
+        reject('bad call');
       }
     });
   }
@@ -169,21 +170,6 @@ describe('ExchangeDelegate', () => {
       it('should be true is users mobile is verified', () => expect(delegate.isMobileVerified()).toEqual(true))
     );
 
-    describe('getEmailToken()', () => {
-      afterEach(() => { emailVerified = true; });
-
-      it('should get the token', done => {
-        let promise = delegate.getEmailToken();
-        expect(promise).toBeResolvedWith('json-web-token-email-wallet-age', done);
-      });
-
-      it('should reject if email is not verified', done => {
-        emailVerified = false;
-        let promise = delegate.getEmailToken();
-        expect(promise).toBeRejected(done);
-      });
-    });
-
     describe('getToken()', () => {
       afterEach(() => {
         emailVerified = true;
@@ -191,19 +177,19 @@ describe('ExchangeDelegate', () => {
       });
 
       it('should get the token', done => {
-        let promise = delegate.getToken();
+        let promise = delegate.getToken('partner', {mobile: true});
         expect(promise).toBeResolvedWith('json-web-token-email-mobile', done);
       });
 
       it('should reject if email is not verified', done => {
         emailVerified = false;
-        let promise = delegate.getToken();
+        let promise = delegate.getToken('partner', {mobile: true});
         expect(promise).toBeRejected(done);
       });
 
       it('should reject if mobile is not verified', done => {
-        emailVerified = false;
-        let promise = delegate.getToken();
+        mobileVerified = false;
+        let promise = delegate.getToken('partner', {mobile: true});
         expect(promise).toBeRejected(done);
       });
     });
