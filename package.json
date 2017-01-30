@@ -104,6 +104,7 @@
       "except",
       "spyOn",
       "jasmine",
+      "JasminePromiseMatchers",
       "pending",
       "localStorage"
     ]
