@@ -81,7 +81,7 @@ module.exports = function (config) {
       // 'tests/**/*.coffee',
       // Or specify individual test files:
       'tests/mocks/*.js',
-      'tests/transaction_spend_spec.js.coffee',
+      'tests/transaction_spend_spec.js',
       'tests/wallet_spec.js.coffee',
       'tests/bip38_spec.js',
       'tests/address_spec.js',
