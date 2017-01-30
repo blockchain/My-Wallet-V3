@@ -108,7 +108,7 @@ let stubs = {
 
 let ExchangeDelegate = proxyquire('../src/exchange-delegate', stubs);
 
-fdescribe('ExchangeDelegate', () => {
+describe('ExchangeDelegate', () => {
   describe('class', () =>
     describe('new ExchangeDelegate()', () =>
       it('...', () => pending())

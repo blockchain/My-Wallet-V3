@@ -8,7 +8,7 @@ let BlockchainSettingsAPI;
 let BIP39;
 let RNG;
 
-fdescribe('Blockchain-Wallet', () => {
+describe('Blockchain-Wallet', () => {
   let wallet;
   let object = {
     'guid': 'c8d9fe67-2ba0-4c15-a2be-0d17981d3c0a',
