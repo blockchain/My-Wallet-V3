@@ -36,7 +36,7 @@ describe('WalletNetwork', () => {
           }
         } else if (method === 'wallet/poll-for-session-guid') {
           resolve({guid: '1234'});
-        } else if ((action === 'POST') && (method === 'sessions')) {
+        } else if ((action === 'POST') && (method === 'wallet/sessions')) {
           if (API.callFail) {
             throw new Error();
           } else {
@@ -314,7 +314,7 @@ describe('WalletNetwork', () => {
   });
 
   describe('obtainSessionToken()', () => {
-    it('should POST /sessions', done => {
+    it('should POST /wallet/sessions', done => {
       let promise = WalletNetwork.obtainSessionToken();
       expect(promise).toBeResolvedWith('token', done);
     });
