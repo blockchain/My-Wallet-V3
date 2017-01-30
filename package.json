@@ -94,6 +94,7 @@
       "fetch",
       "XMLHttpRequest",
       "Audio",
+      "assert",
       "describe",
       "it",
       "xit",
