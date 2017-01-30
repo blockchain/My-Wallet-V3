@@ -8,7 +8,6 @@ var API = require('./api');
 var Bitcoin = require('bitcoinjs-lib');
 var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
-var shared = require('./shared');
 var ImportExport = require('./import-export');
 var WalletCrypto = require('./wallet-crypto');
 var constants = require('./constants');
@@ -147,8 +146,8 @@ Address.import = function (key, label) {
     addr: null,
     priv: null,
     created_time: Date.now(),
-    created_device_name: shared.APP_NAME,
-    created_device_version: shared.APP_VERSION
+    created_device_name: constants.APP_NAME,
+    created_device_version: constants.APP_VERSION
   };
   switch (true) {
     case Helpers.isBitcoinAddress(key):

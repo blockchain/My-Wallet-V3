@@ -33,7 +33,6 @@ module.exports = {
   Helpers: require('./src/helpers'),
   API: require('./src/api'),
   Tx: require('./src/wallet-transaction'),
-  Shared: require('./src/shared'),
   WalletTokenEndpoints: require('./src/wallet-token-endpoints'),
   WalletNetwork: require('./src/wallet-network'),
   RNG: require('./src/rng'),
