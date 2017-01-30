@@ -26,6 +26,7 @@ class Metadata {
   }
 }
 
+Metadata.PURPOSE = 'info.blockchain.metadata';
 // network
 Metadata.request = function (method, endpoint, data) {
   const url = API.API_ROOT_URL + 'metadata/' + endpoint;
@@ -203,14 +204,14 @@ Metadata.fromMetadataHDNode = function (metadataHDNode, typeId) {
 
 // used to create a new metadata entry from wallet master hd node
 Metadata.fromMasterHDNode = function (masterHDNode, typeId) {
-  var metadataHDNode = Metadata.masterToMetaNode(masterHDNode);
+  var metadataHDNode = Metadata.masterToMetaNode(masterHDNode, Metadata.PURPOSE);
   return Metadata.fromMetadataHDNode(metadataHDNode, typeId);
 };
 
-Metadata.masterToMetaNode = function (masterHDNode) {
+Metadata.masterToMetaNode = function (masterHDNode, purposeString) {
   // BIP 43 purpose needs to be 31 bit or less. For lack of a BIP number
   // we take the first 31 bits of the SHA256 hash of a reverse domain.
-  var hash = WalletCrypto.sha256('info.blockchain.metadata');
+  var hash = WalletCrypto.sha256(purposeString);
   var purpose = hash.slice(0, 4).readUInt32BE(0) & 0x7FFFFFFF; // 510742
   return masterHDNode.deriveHardened(purpose);
 };

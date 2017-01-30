@@ -208,20 +208,51 @@ MyWallet.makePairingCode = function (success, error) {
      didDecrypt wallet has been decrypted (with the password)
      didBuildHD: HD part of wallet has been constructed in memory */
 
+var tryLoadExternal = function () {
+  var loadExternalFailed = function (message) {
+    console.warn('wallet.external not set:', message);
+  };
+  return MyWallet.wallet.loadExternal.bind(MyWallet.wallet)().catch(loadExternalFailed);
+};
+
+var incStats = function () {
+  return MyWallet.wallet.incStats.bind(MyWallet.wallet)();
+};
+var saveGUID = function () {
+  return MyWallet.wallet.saveGUIDtoMetadata();
+};
+
 MyWallet.login = function (guid, password, credentials, callbacks) {
   assert(credentials.twoFactor !== undefined, '2FA code must be null or set');
   assert(
     credentials.twoFactor === null ||
     (Helpers.isPositiveInteger(credentials.twoFactor.type) && Helpers.isString(credentials.twoFactor.code))
   );
-
   var loginPromise = new Promise(function (resolve, reject) {
+    var secondPasswordCheck = function () {
+      var proceed = function () {
+        resolve({guid: guid});
+      };
+      var createRecordOrAskPassword = function () {
+        if (!MyWallet.wallet.isDoubleEncrypted || credentials.secondPassword) {
+          MyWallet.wallet.saveMetadataHDnode(credentials.secondPassword).then(proceed);
+        } else {
+          callbacks.needsSecondPassword && callbacks.needsSecondPassword();
+          reject('SECOND_PASSWORD_NEEDED');
+        }
+      };
+      MyWallet.wallet.fetchMetadataHDnode()
+      //  .then(function (r){ console.log('response: '); console.log(r); return r ? proceed() : createRecordOrAskPassword() })
+        .then(proceed)
+        .catch(createRecordOrAskPassword);
+    };
+
     if (guid === WalletStore.getGuid() && WalletStore.getEncryptedWalletData()) {
       // If we already fetched the wallet before (e.g.
       // after user enters a wrong password), don't fetch it again:
-      MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
-        resolve({guid: guid});
-      }).catch(function (e) {
+      MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD)
+      .then(secondPasswordCheck)
+      .catch(function (e) {
         reject(e);
       });
     } else if (credentials.sharedKey) {
@@ -231,9 +262,9 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
         .then(function (obj) {
           callbacks.didFetch && callbacks.didFetch();
           MyWallet.didFetchWallet(obj).then(function () {
-            MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
-              resolve({guid: guid});
-            }).catch(function (e) {
+            MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD)
+            .then(secondPasswordCheck)
+            .catch(function (e) {
               reject(e);
             });
           });
@@ -271,9 +302,9 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
           .then(function (obj) {
             callbacks.didFetch && callbacks.didFetch();
             MyWallet.didFetchWallet(obj).then(function () {
-              MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
-                resolve({guid: guid});
-              }).catch(function (e) {
+              MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD)
+              .then(secondPasswordCheck)
+              .catch(function (e) {
                 reject(e);
               });
             });
@@ -286,9 +317,9 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
           .then(function (obj) {
             callbacks.didFetch && callbacks.didFetch();
             MyWallet.didFetchWallet(obj).then(function () {
-              MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
-                resolve({guid: guid});
-              }).catch(function (e) {
+              MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD)
+              .then(secondPasswordCheck)
+              .catch(function (e) {
                 reject(e);
               });
             });
@@ -303,7 +334,9 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
     }
   });
 
-  return loginPromise;
+  loginPromise.then(incStats);
+  loginPromise.then(saveGUID);
+  return loginPromise.then(tryLoadExternal);
 };
 
 MyWallet.didFetchWallet = function (obj) {
@@ -350,24 +383,7 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
     );
   };
 
-  // Attempt to load metadata for buy-sell
-  var tryLoadExternal = function () {
-    var loadExternalFailed = function (message) {
-      console.warn('wallet.external not set:', message);
-    };
-    return MyWallet.wallet.loadExternal.bind(MyWallet.wallet)().catch(loadExternalFailed);
-  };
-
-  var p = Promise.resolve().then(doInitialize);
-  var incStats = function () {
-    return MyWallet.wallet.incStats.bind(MyWallet.wallet)();
-  };
-  var saveGUID = function () {
-    return MyWallet.wallet.saveGUIDtoMetadata();
-  };
-  p.then(incStats);
-  p.then(saveGUID);
-  return p.then(tryLoadExternal);
+  return Promise.resolve().then(doInitialize);
 };
 
 // used on iOS
