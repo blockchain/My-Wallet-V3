@@ -74,7 +74,7 @@ module.exports = function (config) {
       'node_modules/babel-polyfill/dist/polyfill.js',
       'node_modules/jasmine-es6-promise-matchers/jasmine-es6-promise-matchers.js',
       'tests/wallet_token_endpoints.js.coffee',
-      'tests/wallet_network_spec.js.coffee',
+      'tests/wallet_network_spec.js',
       'tests/api_spec.js',
       'tests/helpers_spec.js',
       'tests/blockchain_socket.js',
