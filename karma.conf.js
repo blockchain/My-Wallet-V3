@@ -82,7 +82,7 @@ module.exports = function (config) {
       // Or specify individual test files:
       'tests/mocks/*.js',
       'tests/transaction_spend_spec.js',
-      'tests/wallet_spec.js.coffee',
+      'tests/wallet_spec.js',
       'tests/bip38_spec.js',
       'tests/address_spec.js',
       'tests/external_spec.js',
