@@ -1,25 +1,16 @@
 module.exports = function (config) {
   var configuration = {
     basePath: './',
-
     frameworks: ['jasmine', 'browserify'],
-
     browsers: ['PhantomJS'],
-
     browserNoActivityTimeout: 60000,
-
     // reportSlowerThan: 50,
-
     logLevel: config.LOG_WARN,
-
     client: {
       captureConsole: false
     },
-
     autoWatch: true,
-
     // logLevel: karma.LOG_DEBUG,
-
     reporters: ['progress', 'coverage'],
 
     coverageReporter: {
@@ -27,20 +18,17 @@ module.exports = function (config) {
         { type: 'html', dir: 'coverage/' },
         { type: 'lcov', dir: 'coverage-lcov/' }
       ],
-
       subdir: '.'
     },
 
     preprocessors: {
       'src/**/*.js': ['browserify'],
-      'tests/**/*.coffee': ['browserify'],
       'tests/**/*.js': ['browserify']
     },
 
     browserify: {
-      configure: function (bundle) {
+      configure (bundle) {
         bundle.once('prebundle', function () {
-          bundle.transform('coffeeify');
           bundle.transform('browserify-istanbul'); // Must go first
           bundle.transform('babelify', {
             presets: ['es2015'],
@@ -51,36 +39,21 @@ module.exports = function (config) {
             global: true,
             sourceMap: 'inline'
           });
-
           bundle.plugin('proxyquireify/plugin');
         });
       },
       debug: true
     },
 
-    coffeePreprocessor: {
-      // options passed to the coffee compiler
-      options: {
-        bare: true,
-        sourceMap: true
-      },
-      // transforming the filenames
-      transformPath: function (path) {
-        return path.replace(/\.coffee$/, '.js');
-      }
-    },
-
     files: [
       'node_modules/babel-polyfill/dist/polyfill.js',
       'node_modules/jasmine-es6-promise-matchers/jasmine-es6-promise-matchers.js',
+      'tests/mocks/*.js',
       'tests/wallet_token_endpoints.js',
       'tests/wallet_network_spec.js',
       'tests/api_spec.js',
       'tests/helpers_spec.js',
       'tests/blockchain_socket.js',
-      // 'tests/**/*.coffee',
-      // Or specify individual test files:
-      'tests/mocks/*.js',
       'tests/transaction_spend_spec.js',
       'tests/wallet_spec.js',
       'tests/bip38_spec.js',
