@@ -5,8 +5,9 @@ var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
 var BIP39 = require('bip39');
-var shared = require('./shared');
 var ImportExport = require('./import-export');
+var constants = require('./constants');
+var WalletCrypo = require('./wallet-crypto');
 
 var Helpers = {};
 Math.log2 = function (x) { return Math.log(x) / Math.LN2; };
@@ -23,13 +24,13 @@ Helpers.isInstanceOf = function (object, theClass) {
 Helpers.isBitcoinAddress = function (candidate) {
   try {
     var d = Bitcoin.address.fromBase58Check(candidate);
-    var n = Bitcoin.networks.bitcoin;
+    var n = constants.getNetwork();
     return d.version === n.pubKeyHash || d.version === n.scriptHash;
   } catch (e) { return false; }
 };
 Helpers.isBitcoinPrivateKey = function (candidate) {
   try {
-    Bitcoin.ECPair.fromWIF(candidate);
+    Bitcoin.ECPair.fromWIF(candidate, constants.getNetwork());
     return true;
   } catch (e) { return false; }
 };
@@ -37,10 +38,10 @@ Helpers.isBase58Key = function (str) {
   return Helpers.isString(str) && /^[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{40,44}$/.test(str);
 };
 Helpers.isXprivKey = function (k) {
-  return Helpers.isString(k) && k.substring(0, 4) === 'xprv';
+  return Helpers.isString(k) && (/^(x|t)prv/).test(k);
 };
 Helpers.isXpubKey = function (k) {
-  return Helpers.isString(k) && k.substring(0, 4) === 'xpub';
+  return Helpers.isString(k) && (/^(x|t)pub/).test(k);
 };
 Helpers.isAlphaNum = function (str) {
   return Helpers.isString(str) && /^[\-+,._\w\d\s]+$/.test(str);
@@ -130,12 +131,14 @@ Helpers.isEmptyArray = function (x) {
 Helpers.asyncOnce = function (f, milliseconds, before) {
   var timer = null;
   var oldArguments = [];
-  return function () {
+
+  trigger.cancel = function () {
+    clearTimeout(timer);
+  };
+
+  function trigger () {
+    trigger.cancel();
     before && before();
-    if (timer) {
-      clearTimeout(timer);
-      timer = null;
-    }
     var myArgs = [];
     // this is needed because arguments is not an 'Array' instance
     for (var i = 0; i < arguments.length; i++) { myArgs[i] = arguments[i]; }
@@ -145,7 +148,9 @@ Helpers.asyncOnce = function (f, milliseconds, before) {
       f.apply(this, myArgs);
       oldArguments = [];
     }, milliseconds);
-  };
+  }
+
+  return trigger;
 };
 
 Helpers.exponentialBackoff = function (f, maxTime) {
@@ -333,17 +338,31 @@ Helpers.privateKeyStringToKey = function (value, format) {
     throw new Error('Unsupported Key Format');
   }
 
-  return new Bitcoin.ECPair(new BigInteger.fromByteArrayUnsigned(keyBytes), null, {compressed: format !== 'sipa'}); // eslint-disable-line new-cap
+  return new Bitcoin.ECPair(
+    new BigInteger.fromByteArrayUnsigned(keyBytes), // eslint-disable-line new-cap
+    null,
+    { compressed: format !== 'sipa', network: constants.getNetwork() }
+  );
 };
 
 Helpers.detectPrivateKeyFormat = function (key) {
-  // 51 characters base58, always starts with a '5'
-  if (/^5[123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/.test(key)) {
+  var isTestnet = constants.NETWORK === 'testnet';
+
+  // 51 characters base58, always starts with 5 (or 9, for testnet)
+  var sipaRegex = isTestnet
+    ? (/^[9][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/)
+    : (/^[5][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{50}$/);
+
+  if (sipaRegex.test(key)) {
     return 'sipa';
   }
 
-  // 52 character compressed starts with L or K
-  if (/^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/.test(key)) {
+  // 52 character compressed starts with L or K (or c, for testnet)
+  var compsipaRegex = isTestnet
+    ? (/^[c][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/)
+    : (/^[LK][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{51}$/);
+
+  if (compsipaRegex.test(key)) {
     return 'compsipa';
   }
 
@@ -419,31 +438,8 @@ Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
   return new Promise(asyncParse).then(predicate);
 };
 
-function parseValueBitcoin (valueString) {
-  valueString = valueString.toString();
-  // TODO: Detect other number formats (e.g. comma as decimal separator)
-  var valueComp = valueString.split('.');
-  var integralPart = valueComp[0];
-  var fractionalPart = valueComp[1] || '0';
-  while (fractionalPart.length < 8) fractionalPart += '0';
-  fractionalPart = fractionalPart.replace(/^0+/g, '');
-  var value = BigInteger.valueOf(parseInt(integralPart, 10));
-  value = value.multiply(BigInteger.valueOf(100000000));
-  value = value.add(BigInteger.valueOf(parseInt(fractionalPart, 10)));
-  return value;
-}
-
-// The current 'shift' value - BTC = 1, mBTC = 3, uBTC = 6
-function sShift (symbol) {
-  return (shared.satoshi / symbol.conversion).toString().length - 1;
-}
-
-Helpers.precisionToSatoshiBN = function (x) {
-  return parseValueBitcoin(x).divide(BigInteger.valueOf(Math.pow(10, sShift(shared.getBTCSymbol())).toString()));
-};
-
 Helpers.verifyMessage = function (address, signature, message) {
-  return Bitcoin.message.verify(address, signature, message);
+  return Bitcoin.message.verify(address, signature, message, constants.getNetwork());
 };
 
 Helpers.getMobileOperatingSystem = function () {
@@ -456,6 +452,19 @@ Helpers.getMobileOperatingSystem = function () {
   } else {
     return 'unknown';
   }
+};
+
+Helpers.isEmailInvited = function (email, fraction) {
+  if (!email) {
+    return false;
+  }
+  if (!Helpers.isPositiveNumber(fraction)) {
+    return false;
+  }
+  if (fraction > 1) {
+    return false;
+  }
+  return WalletCrypo.sha256(email)[0] / 256 >= 1 - fraction;
 };
 
 module.exports = Helpers;

@@ -12,11 +12,11 @@ var API = require('./api');
 var Wallet = require('./blockchain-wallet');
 var Helpers = require('./helpers');
 var BlockchainSocket = require('./blockchain-socket');
-var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var RNG = require('./rng');
 var BIP39 = require('bip39');
 var Bitcoin = require('bitcoinjs-lib');
 var pbkdf2 = require('pbkdf2');
+var constants = require('./constants');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -70,7 +70,9 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
     if (lastOnChange.checksum !== newChecksum && oldChecksum !== newChecksum) {
       lastOnChange.checksum = newChecksum;
 
-      MyWallet.getWallet();
+      MyWallet.getWallet(function () {
+        WalletStore.sendEvent('on_change');
+      });
     }
   } else if (obj.op === 'utx') {
     WalletStore.sendEvent('on_tx_received', obj.x);
@@ -94,6 +96,8 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
   } else if (obj.op === 'email_verified') {
     MyWallet.wallet.accountInfo.isEmailVerified = Boolean(obj.x);
     WalletStore.sendEvent('on_email_verified', obj.x);
+  } else if (obj.op === 'wallet_logout') {
+    WalletStore.sendEvent('wallet_logout', obj.x);
   }
 };
 
@@ -354,7 +358,16 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
     return MyWallet.wallet.loadExternal.bind(MyWallet.wallet)().catch(loadExternalFailed);
   };
 
-  return Promise.resolve().then(doInitialize).then(tryLoadExternal);
+  var p = Promise.resolve().then(doInitialize);
+  var incStats = function () {
+    return MyWallet.wallet.incStats.bind(MyWallet.wallet)();
+  };
+  var saveGUID = function () {
+    return MyWallet.wallet.saveGUIDtoMetadata();
+  };
+  p.then(incStats);
+  p.then(saveGUID);
+  return p.then(tryLoadExternal);
 };
 
 // used on iOS
@@ -504,11 +517,6 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
   var success = function (createdGuid, createdSharedKey, createdPassword, sessionToken) {
     if (languageCode) {
       WalletStore.setLanguage(languageCode);
-      BlockchainSettingsAPI.changeLanguage(languageCode, function () {});
-    }
-
-    if (currencyCode) {
-      BlockchainSettingsAPI.changeLocalCurrency(currencyCode, function () {});
     }
 
     WalletStore.unsafeSetPassword(createdPassword);
@@ -518,7 +526,17 @@ MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccount
   var saveWallet = function (wallet) {
     // Generate a session token to facilitate future login attempts:
     WalletNetwork.establishSession(null).then(function (sessionToken) {
-      WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, {email: inputedEmail}, undefined, sessionToken).then(function () {
+      var extra = {email: inputedEmail};
+
+      if (languageCode) {
+        extra.language = languageCode;
+      }
+
+      if (currencyCode) {
+        extra.currency = currencyCode;
+      }
+
+      WalletNetwork.insertWallet(wallet.guid, wallet.sharedKey, inputedPassword, extra, undefined, sessionToken).then(function () {
         success(wallet.guid, wallet.sharedKey, inputedPassword, sessionToken);
       }).catch(function (e) {
         errorCallback(e);
@@ -555,22 +573,24 @@ MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic
 };
 
 // used frontend and mywallet
-MyWallet.logout = function (sessionToken, force) {
+MyWallet.logout = function (force) {
   if (!force && WalletStore.isLogoutDisabled()) {
+    console.log('logout_prevented');
     return;
   }
 
-  var reload = function () {
-    try { window.location.reload(); } catch (e) {
-      console.log(e);
-    }
-  };
+  try {
+    WalletStore.sendEvent('logging_out');
+    window.location.reload();
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+MyWallet.endSession = function (sessionToken) {
   var data = { format: 'plain' };
-  WalletStore.sendEvent('logging_out');
-
-  var headers = {sessionToken: sessionToken};
-
-  API.request('GET', 'wallet/logout', data, headers).then(reload).catch(reload);
+  var headers = { sessionToken: sessionToken };
+  return API.request('GET', 'wallet/logout', data, headers);
 };
 
 // In case of a non-mainstream browser, ensure it correctly implements the
@@ -578,16 +598,18 @@ MyWallet.logout = function (sessionToken, force) {
 MyWallet.browserCheck = function () {
   var mnemonic = 'daughter size twenty place alter glass small bid purse october faint beyond';
   var seed = BIP39.mnemonicToSeed(mnemonic, '');
-  var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed);
+  var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed, constants.getNetwork());
 
   var account = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(0);
   var address = account.derive(0).derive(0).getAddress();
-  return address === '1QBWUDG4AFL2kFmbqoZ9y4KsSpQoCTZKRw';
+  var answer = constants.NETWORK === 'testnet' ? 'n4hTmGM2yGmHXNFDZNXXnyYCJp1W8qoMw4' : '1QBWUDG4AFL2kFmbqoZ9y4KsSpQoCTZKRw';
+  return address === answer;
 };
 
 // Takes about 100 ms on a Macbook Pro
 MyWallet.browserCheckFast = function () {
   var mnemonic = 'daughter size twenty place alter glass small bid purse october faint beyond';
+  var network = constants.getNetwork();
 
   var seed = pbkdf2.pbkdf2Sync(mnemonic, 'mnemonic', 100, 64, 'sha512');
   var seedString = seed.toString('hex');
@@ -598,11 +620,26 @@ MyWallet.browserCheckFast = function () {
 
   seed = Buffer('9f3ad67c5f1eebbffcc8314cb8a3aacbfa28046fd4b3d0af6965a8c804a603e57f5b551320eca4017267550e5b01e622978c133f2085c5999f7ef57a340d0ae2', 'hex');
 
-  // master node -> xpriv (1 ms)
-  var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed);
-  var xpriv = masterkey.toString();
+  var vectors = {
+    'bitcoin': {
+      priv: 'xprv9s21ZrQH143K44XyzPUorz65tsvifDFiWZRoqeM69iTeYXd5KbSrz4WEAbWwB2CY6jCGJ2pKdXgw66oQPePPifrpxhWuGoDkumMGCZQwduP',
+      pub: 'xpub682P4gW4PvBwugpzCZoKp3QMZRcj6KTakpZ5jwZXZuv1nvYkPbcT84PNVk1vSKnf1XtLRfTzuwqRH6y7T2HYKRWohWHLDpEv2sfeqPCAFkH',
+      address: '1MGULYKjmADKfZG6BpWwQQ3qVw622HqhCR',
+      pubChild: 'xpub6BQQYoWs7yyp2oNXYABTjjfmcJNJN1vHogwZ9qFdRPAfYhh5EDrBH63MHdjv5uvaawU3E3HTDGZ4SWDhwDjtnmP2S7A3EyYoQiZdFaFju5e'
+    },
+    'testnet': {
+      priv: 'tprv8ZgxMBicQKsPesmWexLK2di5D1LvtjHir7Lvi4mYdgx8L8NAJxncVosg5mgbBParUAj3J8S5ntGjYxM9WrjLXj8RVLjCw9wops6geJMEiVB',
+      pub: 'tpubD8Q1avKk7C9QBV1qeknR1xjitYiP5hxeJT9P6VcfupfuYDDTTpTYGW4Cjn6hxpjtoSRF3EysT3fTyHTiqt8nCry6m72duLu9cqG4bRT3wcX',
+      address: 'n1nRdbQiaBeaSfjhuPVKEKGAMvgiuxaDHY',
+      pubChild: 'tpubDBn353LYqFwGJbZNzMAYwf18wRTxMQRMMKXrWPJmmHvZHzMnJShGRXiBXfphcQspNqzwqcoKkNP78giKL5b8gCqKVhuLvWD2zgA31b1vXZE'
+    }
+  }[constants.NETWORK];
 
-  if (xpriv !== 'xprv9s21ZrQH143K44XyzPUorz65tsvifDFiWZRoqeM69iTeYXd5KbSrz4WEAbWwB2CY6jCGJ2pKdXgw66oQPePPifrpxhWuGoDkumMGCZQwduP') {
+  // master node -> xpriv (1 ms)
+  var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed, network);
+  var priv = masterkey.toString();
+
+  if (priv !== vectors.priv) {
     return false;
   }
 
@@ -619,17 +656,17 @@ MyWallet.browserCheckFast = function () {
   //   return false;
   // }
 
-  var xpub = Bitcoin.HDNode.fromBase58('xpub682P4gW4PvBwugpzCZoKp3QMZRcj6KTakpZ5jwZXZuv1nvYkPbcT84PNVk1vSKnf1XtLRfTzuwqRH6y7T2HYKRWohWHLDpEv2sfeqPCAFkH');
+  var pub = Bitcoin.HDNode.fromBase58(vectors.pub, network);
 
   // xpub -> address // 2 ms
-  if (xpub.getAddress() !== '1MGULYKjmADKfZG6BpWwQQ3qVw622HqhCR') {
+  if (pub.getAddress() !== vectors.address) {
     return false;
   }
 
   // xpub -> xpub' // 100 ms
-  var xpubChild = xpub.derive(0);
+  var pubChild = pub.derive(0);
 
-  if (xpubChild.toString() !== 'xpub6BQQYoWs7yyp2oNXYABTjjfmcJNJN1vHogwZ9qFdRPAfYhh5EDrBH63MHdjv5uvaawU3E3HTDGZ4SWDhwDjtnmP2S7A3EyYoQiZdFaFju5e') {
+  if (pubChild.toString() !== vectors.pubChild) {
     return false;
   }
 

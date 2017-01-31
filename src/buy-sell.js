@@ -26,10 +26,8 @@ function BuySell (wallet, debug) {
     return;
   }
 
-  // Add Coinify if not already added:
-  if (!this._wallet.external.coinify) this._wallet.external.addCoinify();
-
   this._wallet.external.coinify.debug = this.debug;
+  this._wallet.external.sfox.debug = this.debug;
 }
 
 Object.defineProperties(BuySell.prototype, {
@@ -49,7 +47,8 @@ Object.defineProperties(BuySell.prototype, {
         !this._wallet.external.loaded
       ) return;
       return {
-        coinify: this._wallet.external.coinify
+        coinify: this._wallet.external.coinify,
+        sfox: this._wallet.external.sfox
       };
     }
   }

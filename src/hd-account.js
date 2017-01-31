@@ -9,6 +9,7 @@ var KeyRing = require('./keyring');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 var TxList = require('./transaction-list');
 var API = require('./api');
+var constants = require('./constants');
 
 // HDAccount Class
 
@@ -87,10 +88,7 @@ Object.defineProperties(HDAccount.prototype, {
       if (Helpers.isBoolean(value)) {
         this._archived = value;
         MyWallet.syncWallet();
-        if (!value) { // Unarchive
-          // we should define a way to update only the account, not the whole wallet
-          MyWallet.wallet.getHistory();
-        }
+        MyWallet.wallet.getHistory();
       } else {
         throw new Error('account.archived must be a boolean');
       }
@@ -230,7 +228,7 @@ HDAccount.fromWalletMasterKey = function (masterkey, index, label) {
 HDAccount.fromExtPublicKey = function (extPublicKey, index, label) {
   // this is creating a read-only account
   assert(Helpers.isXpubKey(extPublicKey), 'Extended public key must be given to create an account.');
-  var accountZero = Bitcoin.HDNode.fromBase58(extPublicKey);
+  var accountZero = Bitcoin.HDNode.fromBase58(extPublicKey, constants.getNetwork());
   var a = HDAccount.fromAccountMasterKey(accountZero, index, label);
   a._xpriv = null;
   return a;
@@ -238,7 +236,7 @@ HDAccount.fromExtPublicKey = function (extPublicKey, index, label) {
 
 HDAccount.fromExtPrivateKey = function (extPrivateKey, index, label) {
   assert(Helpers.isXprivKey(extPrivateKey), 'Extended private key must be given to create an account.');
-  var accountZero = Bitcoin.HDNode.fromBase58(extPrivateKey);
+  var accountZero = Bitcoin.HDNode.fromBase58(extPrivateKey, constants.getNetwork());
   return HDAccount.fromAccountMasterKey(accountZero, index, label);
 };
 

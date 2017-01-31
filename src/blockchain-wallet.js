@@ -14,13 +14,14 @@ var Address = require('./address');
 var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 var API = require('./api');
-var shared = require('./shared');
 var BlockchainSettingsAPI = require('./blockchain-settings-api');
 var KeyRing = require('./keyring');
 var TxList = require('./transaction-list');
 var Block = require('./bitcoin-block');
 var External = require('./external');
 var AccountInfo = require('./account-info');
+var Metadata = require('./metadata');
+var constants = require('./constants');
 
 // Wallet
 
@@ -35,10 +36,11 @@ function Wallet (object) {
   this._double_encryption = obj.double_encryption || false;
   this._dpasswordhash = obj.dpasswordhash;
   // options
-  this._pbkdf2_iterations = obj.options.pbkdf2_iterations;
-  this._fee_per_kb = obj.options.fee_per_kb == null ? 10000 : obj.options.fee_per_kb;
-  this._html5_notifications = obj.options.html5_notifications;
-  this._logout_time = obj.options.logout_time;
+  let options = Object.assign(constants.getDefaultWalletOptions(), obj.options);
+  this._pbkdf2_iterations = options.pbkdf2_iterations;
+  this._fee_per_kb = options.fee_per_kb;
+  this._html5_notifications = options.html5_notifications;
+  this._logout_time = options.logout_time;
 
   // legacy addresses list
   this._addresses = obj.keys ? obj.keys.reduce(Address.factory, {}) : undefined;
@@ -326,12 +328,6 @@ Object.defineProperties(Wallet.prototype, {
 // update-wallet-balances after multiaddr call
 Wallet.prototype._updateWalletInfo = function (obj) {
   if (obj.info) {
-    if (obj.info.symbol_local) {
-      shared.setLocalSymbol(obj.info.symbol_local);
-    }
-    if (obj.info.symbol_btc) {
-      shared.setBTCSymbol(obj.info.symbol_btc);
-    }
     if (obj.info.notice) {
       WalletStore.sendEvent('msg', {type: 'error', message: obj.info.notice});
     }
@@ -694,12 +690,7 @@ Wallet.new = function (guid, sharedKey, mnemonic, bip39Password, firstAccountLab
     guid: guid,
     sharedKey: sharedKey,
     double_encryption: false,
-    options: {
-      pbkdf2_iterations: 5000,
-      html5_notifications: false,
-      fee_per_kb: 10000,
-      logout_time: 600000
-    }
+    options: constants.getDefaultWalletOptions()
   };
   MyWallet.wallet = new Wallet(object);
   var label = firstAccountLabel || 'My Bitcoin Wallet';
@@ -876,5 +867,36 @@ Wallet.prototype.loadExternal = function () {
   } else {
     this._external = new External(this);
     return this._external.fetch();
+  }
+};
+
+Wallet.prototype.metadata = function (typeId) {
+  var masterhdnode = this.hdwallet.getMasterHDNode();
+  return Metadata.fromMasterHDNode(masterhdnode, typeId);
+};
+
+Wallet.prototype.incStats = function () {
+  API.incrementSecPassStats(this.isDoubleEncrypted);
+  return true;
+};
+
+Wallet.prototype.saveGUIDtoMetadata = function () {
+  var setOrCheckGuid = function (res) {
+    if (res === null) {
+      return m.create({ guid: MyWallet.wallet.guid });
+    } else if (!res || !res.guid || res.guid !== MyWallet.wallet.guid) {
+      return Promise.reject();
+    } else {
+      return res.guid;
+    }
+  };
+
+  // backupGUID not enabled if secondPassword active
+  if (!this.isDoubleEncrypted && this.isUpgradedToHD) {
+    var GUID_METADATA_TYPE = 0;
+    var m = this.metadata(GUID_METADATA_TYPE);
+    return m.fetch().then(setOrCheckGuid);
+  } else {
+    return Promise.reject();
   }
 };

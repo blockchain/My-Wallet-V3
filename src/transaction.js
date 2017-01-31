@@ -4,6 +4,7 @@ var assert = require('assert');
 var Bitcoin = require('bitcoinjs-lib');
 var Helpers = require('./helpers');
 var Buffer = require('buffer').Buffer;
+var constants = require('./constants');
 
 // Error messages that can be seen by the user should take the form of:
 // {error: "NOT_GOOD", some_param: 1}
@@ -15,7 +16,7 @@ var Transaction = function (payment, emitter) {
   var amounts = payment.amounts;
   var fee = payment.finalFee;
   var changeAddress = payment.change;
-  var BITCOIN_DUST = Bitcoin.networks.bitcoin.dustThreshold;
+  var BITCOIN_DUST = constants.getNetwork().dustThreshold;
 
   if (!Array.isArray(toAddresses) && toAddresses != null) { toAddresses = [toAddresses]; }
   if (!Array.isArray(amounts) && amounts != null) { amounts = [amounts]; }
@@ -33,7 +34,7 @@ var Transaction = function (payment, emitter) {
   assert(toAddresses.length === amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
   assert(this.amount >= BITCOIN_DUST, {error: 'BELOW_DUST_THRESHOLD', amount: this.amount, threshold: BITCOIN_DUST});
   assert(unspentOutputs && unspentOutputs.length > 0, {error: 'NO_UNSPENT_OUTPUTS'});
-  var transaction = new Bitcoin.TransactionBuilder();
+  var transaction = new Bitcoin.TransactionBuilder(constants.getNetwork());
   // add all outputs
   function addOutput (e, i) { transaction.addOutput(toAddresses[i], amounts[i]); }
   toAddresses.map(addOutput);
@@ -49,7 +50,7 @@ var Transaction = function (payment, emitter) {
     // Generate address from output script and add to private list so we can check if the private keys match the inputs later
     var scriptBuffer = Buffer(output.script, 'hex');
     assert.notEqual(Bitcoin.script.classifyOutput(scriptBuffer), 'nonstandard', {error: 'STRANGE_SCRIPT'});
-    var address = Bitcoin.address.fromOutputScript(scriptBuffer).toString();
+    var address = Bitcoin.address.fromOutputScript(scriptBuffer, constants.getNetwork()).toString();
     assert(address, {error: 'CANNOT_DECODE_OUTPUT_ADDRESS', tx_hash: output.tx_hash});
     this.addressesOfInputs.push(address);
 

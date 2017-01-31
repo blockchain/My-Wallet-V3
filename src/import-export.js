@@ -6,6 +6,7 @@ var Base58 = require('bs58');
 var Unorm = require('unorm');
 var WalletCrypto = require('./wallet-crypto');
 var Buffer = require('buffer').Buffer;
+var constants = require('./constants');
 
 var hash256 = Bitcoin.crypto.hash256;
 
@@ -68,7 +69,7 @@ var ImportExport = new function () {
     var AESopts = { mode: WalletCrypto.AES.ECB, padding: WalletCrypto.pad.NoPadding };
 
     var verifyHashAndReturn = function () {
-      var tmpkey = new Bitcoin.ECPair(decrypted, null, {compressed: isCompPoint});
+      var tmpkey = new Bitcoin.ECPair(decrypted, null, {compressed: isCompPoint, network: constants.getNetwork()});
 
       var base58Address = tmpkey.getAddress();
 
@@ -108,7 +109,7 @@ var ImportExport = new function () {
           passfactor = hash256(prefactorB);
         }
 
-        var kp = new Bitcoin.ECPair(BigInteger.fromBuffer(passfactor));
+        var kp = new Bitcoin.ECPair(BigInteger.fromBuffer(passfactor), null, {network: constants.getNetwork()});
 
         var passpoint = kp.getPublicKeyBuffer();
 

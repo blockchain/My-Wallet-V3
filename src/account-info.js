@@ -8,14 +8,7 @@ module.exports = AccountInfo;
 function AccountInfo (object) {
   this._email = object.email;
 
-  if (object.sms_number && object.sms_number.length > 5) {
-    this._mobile = {
-      countryCode: object.sms_number.split(' ')[0].substr(1),
-      number: object.sms_number.split(' ')[1]
-    };
-  } else {
-    this._mobile = null;
-  }
+  this.mobile = object.sms_number;
 
   this._countryCodeGuess = object.country_code; // Country guess by the backend
   this._dialCode = object.dial_code; // Dialcode guess by the backend
@@ -58,6 +51,16 @@ Object.defineProperties(AccountInfo.prototype, {
       return this._mobile == null
         ? null
         : '+' + this._mobile.countryCode + this._mobile.number.replace(/^0*/, '');
+    },
+    set: function (value) {
+      if (value && value.length > 5) {
+        this._mobile = {
+          countryCode: value.split(' ')[0].substr(1),
+          number: value.split(' ')[1]
+        };
+      } else {
+        this._mobile = null;
+      }
     }
   },
   'countryCodeGuess': {
@@ -78,7 +81,11 @@ Object.defineProperties(AccountInfo.prototype, {
   },
   'isMobileVerified': {
     configurable: false,
-    get: function () { return this._isMobileVerified; }
+    get: function () { return this._isMobileVerified; },
+    set: function (value) {
+      assert(Helpers.isBoolean(value), 'Boolean');
+      this._isMobileVerified = value;
+    }
   },
   'currency': {
     configurable: false,

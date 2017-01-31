@@ -7,8 +7,6 @@ var Helpers = require('./helpers');
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var MyWallet = require('./wallet');
-var Bitcoin = require('bitcoinjs-lib');
-var ECPair = Bitcoin.ECPair;
 
 // API class
 function API () {
@@ -139,24 +137,10 @@ API.prototype.getTransaction = function (txhash) {
   return this.retry(this.request.bind(this, 'GET', transaction, data));
 };
 
-API.prototype.getBalanceForRedeemCode = function (privatekey) {
-  var format = Helpers.detectPrivateKeyFormat(privatekey);
-  if (format == null) { return Promise.reject('Unknown private key format'); }
-  var privateKeyToSweep = Helpers.privateKeyStringToKey(privatekey, format);
-  var aC = new ECPair(privateKeyToSweep.d, null, {compressed: true}).getAddress();
-  var aU = new ECPair(privateKeyToSweep.d, null, {compressed: false}).getAddress();
-  var totalBalance = function (data) {
-    return Object.keys(data)
-                 .map(function (a) { return data[a].final_balance; })
-                 .reduce(Helpers.add, 0);
-  };
-  return this.getBalances([aC, aU]).then(totalBalance);
-};
-
 API.prototype.getFiatAtTime = function (time, value, currencyCode) {
   var data = {
     value: value,
-    currency: currencyCode,
+    currency: currencyCode.toUpperCase(),
     time: time,
     textual: false,
     nosavecurrency: true
@@ -288,4 +272,9 @@ API.prototype.exportHistory = function (active, currency, options) {
   if (options.start) data.start = options.start;
   if (options.end) data.end = options.end;
   return this.request('POST', 'v2/export-history', data);
+};
+
+API.prototype.incrementSecPassStats = function (activeBool) {
+  var active = activeBool ? 1 : 0;
+  return fetch(this.ROOT_URL + 'event?name=wallet_login_second_password_' + active);
 };

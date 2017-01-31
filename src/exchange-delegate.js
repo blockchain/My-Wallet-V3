@@ -25,6 +25,15 @@ Object.defineProperties(ExchangeDelegate.prototype, {
     set: function (value) {
       this._trades = value;
     }
+  },
+  'labelBase': {
+    configurable: false,
+    get: function () {
+      return this._labelBase || 'Exchange order';
+    },
+    set: function (value) {
+      this._labelBase = value;
+    }
   }
 });
 
@@ -36,24 +45,42 @@ ExchangeDelegate.prototype.email = function () {
   return this._wallet.accountInfo.email;
 };
 
+ExchangeDelegate.prototype.mobile = function () {
+  return this._wallet.accountInfo.mobile;
+};
+
 ExchangeDelegate.prototype.isEmailVerified = function () {
   return this._wallet.accountInfo.isEmailVerified;
 };
 
-ExchangeDelegate.prototype.getEmailToken = function () {
-  var self = this;
+ExchangeDelegate.prototype.isMobileVerified = function () {
+  return this._wallet.accountInfo.isMobileVerified;
+};
+
+ExchangeDelegate.prototype.getToken = function (partner, options) {
+  options = options || {};
+  // assert(partner, 'Specify exchange partner');
+
+  let fields = {
+    // partner: partner, // Coinify doesn't support this yet
+    guid: this._wallet.guid,
+    sharedKey: this._wallet.sharedKey,
+    fields: `email${options.mobile ? '|mobile' : ''}${options.walletAge ? '|wallet_age' : ''}`
+  };
+
+  if (partner) {
+    fields.partner = partner;
+  }
+
   return API.request(
     'GET',
-    'wallet/signed-email-token',
-    {
-      guid: self._wallet.guid,
-      sharedKey: self._wallet.sharedKey
-    }
+    'wallet/signed-token',
+    fields
   ).then(function (res) {
     if (res.success) {
       return res.token;
     } else {
-      throw new Error('Unable to obtain email verification proof');
+      throw new Error('Unable to obtain email & mobile verification proof');
     }
   });
 };
@@ -118,12 +145,11 @@ ExchangeDelegate.prototype.reserveReceiveAddress = function () {
   }
 
   function commitAddressLabel (trade) {
-    var labelBase = 'Coinify order';
     var ids = self._trades
       .filter(Helpers.propEq('receiveAddress', receiveAddress))
       .map(Helpers.pluck('id')).concat(trade.id);
 
-    var label = labelBase + ' #' + ids.join(', #');
+    var label = self.labelBase + ' #' + ids.join(', #');
     /* istanbul ignore if */
     if (self.debug) {
       console.info('Set label for receive index', receiveAddressIndex, label);

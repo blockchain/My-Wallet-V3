@@ -1,7 +1,9 @@
 'use strict';
 
-require('es6-promise').polyfill();
 require('isomorphic-fetch');
+require('es6-promise').polyfill();
+
+global.Symbol = require('core-js/es6/symbol');
 
 var Buffer = require('buffer').Buffer;
 
@@ -31,7 +33,6 @@ module.exports = {
   Helpers: require('./src/helpers'),
   API: require('./src/api'),
   Tx: require('./src/wallet-transaction'),
-  Shared: require('./src/shared'),
   WalletTokenEndpoints: require('./src/wallet-token-endpoints'),
   WalletNetwork: require('./src/wallet-network'),
   RNG: require('./src/rng'),
@@ -40,5 +41,11 @@ module.exports = {
   Metadata: require('./src/metadata'),
   Bitcoin: require('bitcoinjs-lib'),
   External: require('./src/external'),
-  BuySell: require('./src/buy-sell')
+  BuySell: require('./src/buy-sell'),
+  constants: require('./src/constants'),
+  BigInteger: require('bigi/lib'),
+  BIP39: require('bip39'),
+  Networks: require('bitcoinjs-lib/src/networks'),
+  ECDSA: require('bitcoinjs-lib/src/ecdsa'),
+  R: require('ramda')
 };

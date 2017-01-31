@@ -4,12 +4,13 @@ module.exports = Address;
 
 var Base58 = require('bs58');
 var RNG = require('./rng');
+var API = require('./api');
 var Bitcoin = require('bitcoinjs-lib');
 var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
-var shared = require('./shared');
 var ImportExport = require('./import-export');
 var WalletCrypto = require('./wallet-crypto');
+var constants = require('./constants');
 
 // Address class
 function Address (object) {
@@ -116,13 +117,9 @@ Object.defineProperties(Address.prototype, {
     get: function () { return this._tag === 2; },
     set: function (value) {
       if (Helpers.isBoolean(value)) {
-        if (value) { // Archive:
-          this._tag = 2;
-        } else { // Unarchive:
-          this._tag = 0;
-          MyWallet.wallet.getHistory();
-        }
+        this._tag = value ? 2 : 0;
         MyWallet.syncWallet();
+        MyWallet.wallet.getHistory();
       } else {
         throw new Error('address.archived must be a boolean');
       }
@@ -149,10 +146,9 @@ Address.import = function (key, label) {
     addr: null,
     priv: null,
     created_time: Date.now(),
-    created_device_name: shared.APP_NAME,
-    created_device_version: shared.APP_VERSION
+    created_device_name: constants.APP_NAME,
+    created_device_version: constants.APP_VERSION
   };
-
   switch (true) {
     case Helpers.isBitcoinAddress(key):
       object.addr = key;
@@ -163,7 +159,7 @@ Address.import = function (key, label) {
       object.priv = Base58.encode(key.d.toBuffer(32));
       break;
     case Helpers.isBitcoinPrivateKey(key):
-      key = Bitcoin.ECPair.fromWIF(key);
+      key = Bitcoin.ECPair.fromWIF(key, constants.getNetwork());
       object.addr = key.getAddress();
       object.priv = Base58.encode(key.d.toBuffer(32));
       break;
@@ -179,36 +175,66 @@ Address.import = function (key, label) {
 };
 
 Address.fromString = function (keyOrAddr, label, bipPass) {
-  var asyncParse = function (resolve, reject) {
-    if (Helpers.isBitcoinAddress(keyOrAddr)) {
-      return resolve(Address.import(keyOrAddr, label));
-    } else {
-      // Import private key
-      var format = Helpers.detectPrivateKeyFormat(keyOrAddr);
-      var okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
+  if (Helpers.isBitcoinAddress(keyOrAddr)) {
+    return Promise.resolve(Address.import(keyOrAddr, label));
+  } else {
+    // Import private key
+    var format = Helpers.detectPrivateKeyFormat(keyOrAddr);
+    var okFormats = ['base58', 'base64', 'hex', 'mini', 'sipa', 'compsipa'];
+    if (format === 'bip38') {
+      if (bipPass === undefined || bipPass === null || bipPass === '') {
+        return Promise.reject('needsBip38');
+      }
 
-      if (format === 'bip38') {
-        if (bipPass === undefined || bipPass === null || bipPass === '') {
-          return reject('needsBip38');
-        }
+      var parseBIP38Wrapper = function (resolve, reject) {
         ImportExport.parseBIP38toECPair(keyOrAddr, bipPass,
           function (key) { resolve(Address.import(key, label)); },
           function () { reject('wrongBipPass'); },
           function () { reject('importError'); }
         );
-      } else if (okFormats.indexOf(format) > -1) {
-        var k = Helpers.privateKeyStringToKey(keyOrAddr, format);
-        return resolve(Address.import(k, label));
-      } else { reject('unknown key format'); }
+      };
+      return new Promise(parseBIP38Wrapper);
+    } else if (format === 'mini' || format === 'base58') {
+      try {
+        var myk = Helpers.privateKeyStringToKey(keyOrAddr, format);
+      } catch (e) {
+        return Promise.reject(e);
+      }
+      myk.compressed = true;
+      var cad = myk.getAddress();
+      myk.compressed = false;
+      var uad = myk.getAddress();
+      return API.getBalances([cad, uad]).then(
+        function (o) {
+          var compBalance = o[cad].final_balance;
+          var ucompBalance = o[uad].final_balance;
+          if (compBalance === 0 && ucompBalance > 0) {
+            myk.compressed = false;
+          } else {
+            myk.compressed = true;
+          }
+          return Address.import(myk, label);
+        }
+      ).catch(
+        function (e) {
+          myk.compressed = true;
+          return Promise.resolve(Address.import(myk, label));
+        }
+      );
+    } else if (okFormats.indexOf(format) > -1) {
+      var k = Helpers.privateKeyStringToKey(keyOrAddr, format);
+      return Promise.resolve(Address.import(k, label));
+    } else {
+      return Promise.reject('unknown key format');
     }
-  };
-  return new Promise(asyncParse);
+  }
 };
 
 Address.new = function (label) {
   var key = Bitcoin.ECPair.makeRandom({
     rng: RNG.run.bind(RNG),
-    compressed: true
+    compressed: true,
+    network: constants.getNetwork()
   });
   return Address.import(key, label);
 };
@@ -243,7 +269,7 @@ Address.prototype.signMessage = function (message, secondPassword) {
   var keyPair = Helpers.privateKeyStringToKey(priv, 'base58');
 
   if (keyPair.getAddress() !== this.address) keyPair.compressed = false;
-  return Bitcoin.message.sign(keyPair, message).toString('base64');
+  return Bitcoin.message.sign(keyPair, message, constants.getNetwork()).toString('base64');
 };
 
 Address.prototype.encrypt = function (cipher) {

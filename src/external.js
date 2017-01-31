@@ -1,8 +1,8 @@
 'use strict';
 
-var Coinify = require('./coinify/coinify');
+var Coinify = require('bitcoin-coinify-client');
+var SFOX = require('bitcoin-sfox-client');
 var Metadata = require('./metadata');
-var assert = require('assert');
 var ExchangeDelegate = require('./exchange-delegate');
 
 var METADATA_TYPE_EXTERNAL = 3;
@@ -10,21 +10,49 @@ var METADATA_TYPE_EXTERNAL = 3;
 module.exports = External;
 
 function External (wallet) {
-  this._metadata = new Metadata(METADATA_TYPE_EXTERNAL);
+  var masterhdnode = wallet.hdwallet.getMasterHDNode();
+  this._metadata = Metadata.fromMasterHDNode(masterhdnode, METADATA_TYPE_EXTERNAL);
   this._coinify = undefined;
+  this._sfox = undefined;
   this._wallet = wallet;
 }
 
 Object.defineProperties(External.prototype, {
   'coinify': {
     configurable: false,
-    get: function () { return this._coinify; }
+    get: function () {
+      if (!this._coinify) {
+        var delegate = new ExchangeDelegate(this._wallet);
+        this._coinify = Coinify.new(delegate);
+        delegate.trades = this._coinify.trades;
+      }
+      return this._coinify;
+    }
+  },
+  'sfox': {
+    configurable: false,
+    get: function () {
+      if (!this._sfox) {
+        var delegate = new ExchangeDelegate(this._wallet);
+        this._sfox = SFOX.new(delegate);
+        delegate.trades = this._sfox.trades;
+      }
+      return this._sfox;
+    }
+  },
+  'hasExchangeAccount': {
+    configurable: false,
+    get: function () {
+      return (this._coinify && this._coinify.hasAccount) ||
+             (this._sfox && this._sfox.hasAccount);
+    }
   }
 });
 
 External.prototype.toJSON = function () {
   var external = {
-    coinify: this._coinify
+    coinify: this._coinify,
+    sfox: this._sfox
   };
   return external;
 };
@@ -34,9 +62,14 @@ External.prototype.fetch = function () {
     this.loaded = true;
     if (object !== null) {
       if (object.coinify) {
-        var delegate = new ExchangeDelegate(this._wallet);
-        this._coinify = new Coinify(object.coinify, delegate);
-        delegate.trades = this._coinify.trades;
+        var coinifyDelegate = new ExchangeDelegate(this._wallet);
+        this._coinify = new Coinify(object.coinify, coinifyDelegate);
+        coinifyDelegate.trades = this._coinify.trades;
+      }
+      if (object.sfox) {
+        var sfoxDelegate = new ExchangeDelegate(this._wallet);
+        this._sfox = new SFOX(object.sfox, sfoxDelegate);
+        sfoxDelegate.trades = this._sfox.trades;
       }
     }
     return this;
@@ -60,12 +93,5 @@ External.prototype.save = function () {
 External.prototype.wipe = function () {
   this._metadata.update({}).then(this.fetch.bind(this));
   this._coinify = undefined;
-};
-
-External.prototype.addCoinify = function () {
-  assert(!this._coinify, 'Already added');
-
-  var delegate = new ExchangeDelegate(this._wallet);
-  this._coinify = Coinify.new(delegate);
-  delegate.trades = this._coinify.trades;
+  this._sfox = undefined;
 };
