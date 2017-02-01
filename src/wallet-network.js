@@ -198,7 +198,7 @@ function obtainSessionToken () {
     return data.token;
   };
 
-  return API.request('POST', 'sessions').then(processResult);
+  return API.request('POST', 'wallet/sessions').then(processResult);
 }
 
 function establishSession (token) {
