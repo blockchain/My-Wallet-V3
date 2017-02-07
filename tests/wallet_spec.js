@@ -495,11 +495,8 @@ describe('Wallet', () => {
   }); // First attempt only
 
   describe('didFetchWallet', () => {
-    beforeEach(() => spyOn(WalletStore, 'setEncryptedWalletData').and.callThrough());
-
-    it('should resolve', done => {
-      let promise = MyWallet.didFetchWallet({payload: ''});
-      expect(promise).toBeResolved(done);
+    beforeEach(() => {
+      spyOn(WalletStore, 'setEncryptedWalletData').and.callThrough();
     });
 
     it('should update the wallet store', () => {
