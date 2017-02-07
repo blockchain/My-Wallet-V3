@@ -167,7 +167,7 @@ Payment.prototype.printJSON = function () {
   return this;
 };
 
-Payment.prototype.exportRawTx = function () {
+Payment.prototype.exportUnsignedRawTx = function () {
   return this.payment.then(
     function (p) {
       return {
@@ -482,7 +482,6 @@ Payment.publish = function () {
 };
 
 const PlainTransaction = function (tx) {
-  console.log('not doing bad stuff');
   this.transaction = tx.transaction;
   this.pathsOfNeededPrivateKeys = tx.pathsOfNeededPrivateKeys;
   this.addressesOfNeededPrivateKeys = tx.addressesOfNeededPrivateKeys;
@@ -490,16 +489,16 @@ const PlainTransaction = function (tx) {
 };
 PlainTransaction.prototype = Transaction.prototype;
 
-Payment.fromRawTransaction = function (rawJson) {
-  var tx = Bitcoin.Transaction.fromHex(rawJson.rawTx);
+Payment.fromUnsignedRawTransaction = function (json) {
+  var tx = Bitcoin.Transaction.fromHex(json.rawTx);
   var tb = Bitcoin.TransactionBuilder.fromTransaction(tx, constants.getNetwork());
-  var fromAccountIdx = rawJson.pathsOfNeededPrivateKeys[0] ? parseInt(rawJson.pathsOfNeededPrivateKeys[0].split('/')[1]) - 1 : null;
+  var fromAccountIdx = json.pathsOfNeededPrivateKeys[0] ? parseInt(json.pathsOfNeededPrivateKeys[0].split('/')[1]) - 1 : null;
   // M/1/96
   var myTx = {
     transaction: tb,
-    addressesOfInputs: rawJson.addressesOfInputs,
-    pathsOfNeededPrivateKeys: rawJson.pathsOfNeededPrivateKeys,
-    addressesOfNeededPrivateKeys: rawJson.addressesOfNeededPrivateKeys
+    addressesOfInputs: json.addressesOfInputs,
+    pathsOfNeededPrivateKeys: json.pathsOfNeededPrivateKeys,
+    addressesOfNeededPrivateKeys: json.addressesOfNeededPrivateKeys
   };
   var myPlainTx = new PlainTransaction(myTx);
   var payment = {
