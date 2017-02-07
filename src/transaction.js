@@ -117,18 +117,18 @@ Transaction.prototype.sign = function () {
     assert.equal(this.addressesOfInputs[i], this.privateKeys[i].getAddress(), 'Private key does not match bitcoin address ' + this.addressesOfInputs[i] + '!=' + this.privateKeys[i].getAddress() + ' while signing input ' + i);
   }
 
-  this.emitter.emit('on_begin_signing');
+  this.emitter && this.emitter.emit('on_begin_signing');
 
   var transaction = this.transaction;
 
   for (var ii = 0; ii < transaction.inputs.length; ii++) {
-    this.emitter.emit('on_sign_progress', ii + 1);
+    this.emitter && this.emitter.emit('on_sign_progress', ii + 1);
     var key = this.privateKeys[ii];
     transaction.sign(ii, key);
     assert(transaction.inputs[ii].scriptType === 'pubkeyhash', 'Error creating input script');
   }
 
-  this.emitter.emit('on_finish_signing');
+  this.emitter && this.emitter.emit('on_finish_signing');
   return transaction;
 };
 

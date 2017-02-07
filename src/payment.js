@@ -167,6 +167,20 @@ Payment.prototype.printJSON = function () {
   return this;
 };
 
+Payment.prototype.exportRawTx = function () {
+  return this.payment.then(
+    function (p) {
+      return {
+        rawTx: p.transaction.transaction.buildIncomplete().toHex(),
+        addressesOfNeededPrivateKeys: p.transaction.addressesOfNeededPrivateKeys,
+        pathsOfNeededPrivateKeys: p.transaction.pathsOfNeededPrivateKeys,
+        addressesOfInputs: p.transaction.addressesOfInputs
+      };
+    }
+  );
+};
+// var p = new Blockchain.Payment()
+// p.amount(10000).from(0).to('15GkvxvH1eRm3H45VsRptFncNXCxquHsSc').build().exportRawTx().then(console.log)
 Payment.return = function (payment) {
   var p = payment || {};
   return Promise.resolve(p);
@@ -465,6 +479,34 @@ Payment.publish = function () {
     return API.pushTx(payment.transaction.toHex())
       .then(success).catch(handleError);
   };
+};
+
+const PlainTransaction = function (tx) {
+  console.log('not doing bad stuff');
+  this.transaction = tx.transaction;
+  this.pathsOfNeededPrivateKeys = tx.pathsOfNeededPrivateKeys;
+  this.addressesOfNeededPrivateKeys = tx.addressesOfNeededPrivateKeys;
+  this.addressesOfInputs = tx.addressesOfInputs;
+};
+PlainTransaction.prototype = Transaction.prototype;
+
+Payment.fromRawTransaction = function (rawJson) {
+  var tx = Bitcoin.Transaction.fromHex(rawJson.rawTx);
+  var tb = Bitcoin.TransactionBuilder.fromTransaction(tx, constants.getNetwork());
+  var fromAccountIdx = rawJson.pathsOfNeededPrivateKeys[0] ? parseInt(rawJson.pathsOfNeededPrivateKeys[0].split('/')[1]) - 1 : null;
+  // M/1/96
+  var myTx = {
+    transaction: tb,
+    addressesOfInputs: rawJson.addressesOfInputs,
+    pathsOfNeededPrivateKeys: rawJson.pathsOfNeededPrivateKeys,
+    addressesOfNeededPrivateKeys: rawJson.addressesOfNeededPrivateKeys
+  };
+  var myPlainTx = new PlainTransaction(myTx);
+  var payment = {
+    transaction: myPlainTx,
+    fromAccountIdx: fromAccountIdx
+  };
+  return new Payment(payment);
 };
 
 module.exports = Payment;

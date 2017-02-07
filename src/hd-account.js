@@ -179,11 +179,11 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'isEncrypted': {
     configurable: false,
-    get: function () { return Helpers.isBase64(this._xpriv) && !Helpers.isXprivKey(this._xpriv); }
+    get: function () { return (this._xpriv === null) || (Helpers.isBase64(this._xpriv) && !Helpers.isXprivKey(this._xpriv)); }
   },
   'isUnEncrypted': {
     configurable: false,
-    get: function () { return Helpers.isXprivKey(this._xpriv); }
+    get: function () { return (this._xpriv === null) || Helpers.isXprivKey(this._xpriv); }
   },
   'index': {
     configurable: false,

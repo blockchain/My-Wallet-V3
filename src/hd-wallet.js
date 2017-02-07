@@ -91,7 +91,7 @@ Object.defineProperties(HDWallet.prototype, {
   'isEncrypted': {
     configurable: false,
     get: function () {
-      var isSeedEnc = Helpers.isBase64(this._seedHex) && !Helpers.isSeedHex(this._seedHex);
+      var isSeedEnc = (this._seedHex === null) || (Helpers.isBase64(this._seedHex) && !Helpers.isSeedHex(this._seedHex));
       return isSeedEnc && this._accounts.map(function (a) { return a.isEncrypted; })
                                           .reduce(Helpers.and, true);
     }
@@ -99,10 +99,14 @@ Object.defineProperties(HDWallet.prototype, {
   'isUnEncrypted': {
     configurable: false,
     get: function () {
-      var isSeedUnEnc = Helpers.isSeedHex(this._seedHex);
+      var isSeedUnEnc = (this._seedHex === null) || Helpers.isSeedHex(this._seedHex);
       return isSeedUnEnc && this._accounts.map(function (a) { return a.isUnEncrypted; })
                              .reduce(Helpers.and, true);
     }
+  },
+  'isReadOnly': {
+    configurable: false,
+    get: function () { return (this._seedHex === null); }
   },
   'lastAccount': {
     configurable: false,
