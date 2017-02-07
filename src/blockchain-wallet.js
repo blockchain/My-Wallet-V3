@@ -22,6 +22,7 @@ var External = require('./external');
 var AccountInfo = require('./account-info');
 var Metadata = require('./metadata');
 var constants = require('./constants');
+var Payment = require('./payment');
 
 // Wallet
 
@@ -875,4 +876,8 @@ Wallet.prototype.saveGUIDtoMetadata = function () {
   } else {
     return Promise.reject();
   }
+};
+
+Wallet.prototype.createPayment = function (initialState) {
+  return new Payment(this, initialState);
 };
