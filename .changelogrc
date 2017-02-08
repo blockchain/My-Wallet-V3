@@ -8,6 +8,10 @@
             "grep": "^fix"
         },
         {
+          "title": "Dependencies",
+          "grep": "^dep"
+        },
+        {
             "title": "Features",
             "grep": "^feat"
         },
