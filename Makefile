@@ -4,13 +4,13 @@ node_modules:
 	npm install
 
 build:
-	grunt build
+	npm run build
 
 test: build
 	./node_modules/karma/bin/karma start karma.conf.js --single-run
 
 dist/application.min.js:
-	grunt dist
+	npm run dist
 	npm shrinkwrap --dev
 
 semistandard:
@@ -29,5 +29,5 @@ changelog: node_modules
 	node_modules/git-changelog/tasks/command.js $(TAG_ARG)
 
 clean:
-	rm -rf build dist node_modules npm-shrinkwrap.json Changelog.md
+	rm -rf dist node_modules npm-shrinkwrap.json Changelog.md
 	npm cache clean
