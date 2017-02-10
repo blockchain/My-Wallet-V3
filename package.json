@@ -86,6 +86,7 @@
     "phantomjs-prebuilt": "2.1.*",
     "proxyquireify": "3.2.*",
     "semistandard": "8.*",
+    "string-replace-webpack-plugin": "0.0.5",
     "webpack": "~2.2.1"
   },
   "semistandard": {
