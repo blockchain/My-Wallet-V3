@@ -358,7 +358,19 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
     return MyWallet.wallet.loadExternal.bind(MyWallet.wallet)().catch(loadExternalFailed);
   };
 
-  var p = Promise.resolve().then(doInitialize);
+  var tryLoadMetadataHDNode = function () {
+    var createMetadataRecord = function () {
+      if (MyWallet.wallet.isDoubleEncrypted) {
+        return Promise.resolve({});
+      } else {
+        return MyWallet.wallet.saveMetadataHDnode();
+      }
+
+    };
+    return MyWallet.wallet.fetchMetadataHDnode.bind(MyWallet.wallet)().catch(createMetadataRecord)
+  }
+
+  var p = Promise.resolve().then(doInitialize).then(tryLoadMetadataHDNode);
   var incStats = function () {
     return MyWallet.wallet.incStats.bind(MyWallet.wallet)();
   };
