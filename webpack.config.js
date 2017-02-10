@@ -1,21 +1,26 @@
 
+let webpack = require('webpack');
 let StringReplacePlugin = require('string-replace-webpack-plugin');
 
-module.exports = {
+let config = {
   entry: './index.js',
   output: {
     path: 'dist',
     filename: 'my-wallet.js',
     library: 'Blockchain',
-    libraryTarget: 'window'
+    libraryTarget: 'var'
   },
   module: {
     rules: [
       {
         test: /\.js$/,
-        loader: 'babel-loader',
-        options: {
-          presets: ['es2015']
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              ['es2015', { modules: false }]
+            ]
+          }
         }
       },
       {
@@ -38,3 +43,15 @@ module.exports = {
     new StringReplacePlugin()
   ]
 };
+
+if (process.env.NODE_ENV === 'prod') {
+  let uglifyPlugin = new webpack.optimize.UglifyJsPlugin({
+    mangle: false,
+    comments: false
+  });
+
+  config.output.filename = 'my-wallet.min.js';
+  config.plugins.push(uglifyPlugin);
+}
+
+module.exports = config;

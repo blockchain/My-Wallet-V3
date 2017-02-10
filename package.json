@@ -28,9 +28,10 @@
   },
   "scripts": {
     "postinstall": "cd node_modules/sjcl || cd ../sjcl && ./configure --with-sha1 && make",
-    "build": "./node_modules/.bin/webpack",
-    "disc": "browserify --full-paths index.js | discify --open",
-    "disc:min": "browserify --full-paths index.js | uglifyjs | discify --open",
+    "dist": "NODE_ENV=\"prod\" ./node_modules/.bin/webpack",
+    "build": "./node_modules/.bin/webpack --progress",
+    "build:watch": "./node_modules/.bin/webpack -w",
+    "clean": "rm -rf dist/ coverage/ coverage-lcov/",
     "test": "./node_modules/karma/bin/karma start karma.conf.js"
   },
   "browser": {
