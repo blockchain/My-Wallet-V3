@@ -101,6 +101,10 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () { return this._double_encryption; }
   },
+  'isMetadataReady': {
+    configurable: false,
+    get: function () { return this._metadataHDNode != null; }
+  },
   'dpasswordhash': {
     configurable: false,
     get: function () { return this._dpasswordhash; }

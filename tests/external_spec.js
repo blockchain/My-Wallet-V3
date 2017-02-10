@@ -7,7 +7,7 @@ describe('External', () => {
   };
 
   let Metadata = {
-    fromMasterHDNode (n, masterhdnode) {
+    fromMetadataHDNode (metadatahdnode, n) {
       return {
         create () {},
         fetch () {
