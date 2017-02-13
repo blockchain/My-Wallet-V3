@@ -197,15 +197,14 @@ Contacts.prototype.sendPR = function (userId, intendedAmount, id = uuid(), note)
   const contact = this.get(userId);
   const account = MyWallet.wallet.hdwallet.defaultAccount;
   const address = account.receiveAddress;
-  const reserveAddress = (x) => {
+  const reserveAddress = () => {
     const label = 'payment request to ' + contact.name;
-    account.setLabelForReceivingAddress(account.receiveIndex, label);
-    return x;
+    return account.setLabelForReceivingAddress(account.receiveIndex, label);
   };
   const message = paymentRequest(id, intendedAmount, address);
-  return this.sendMessage(userId, PAYMENT_REQUEST_TYPE, message)
+  return reserveAddress()
+    .then(this.sendMessage.bind(this, userId, PAYMENT_REQUEST_TYPE, message))
     .then(contact.PR.bind(contact, intendedAmount, id, FacilitatedTx.PR_INITIATOR, address, note))
-    .then(reserveAddress)
     .then(this.save.bind(this));
 };
 
