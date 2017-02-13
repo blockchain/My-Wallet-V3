@@ -195,6 +195,13 @@ MyWallet.makePairingCode = function (success, error) {
   }
 };
 
+MyWallet.loginFromJSON = function (stringWallet, password) {
+  var walletJSON = JSON.parse(stringWallet);
+  MyWallet.wallet = new Wallet(walletJSON);
+  WalletStore.unsafeSetPassword(password);
+  return MyWallet.wallet.loadExternal();
+};
+
 /* guid: the wallet identifier
    password: to decrypt the wallet (which happens in the browser)
    server credentials:
@@ -464,6 +471,7 @@ MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function () {
  * @param {string} mnemonic: optional BIP 39 mnemonic
  * @param {string} bip39Password: optional BIP 39 passphrase
  */
+
  // used on mywallet, iOS and frontend
 MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, successCallback, errorCallback) {
   var success = function (createdGuid, createdSharedKey, createdPassword, sessionToken) {
