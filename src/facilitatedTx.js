@@ -9,23 +9,25 @@ class FacilitatedTx {
     this.tx_hash = o.tx_hash;
     this.role = o.role;
     this.note = o.note;
+    this.last_updated = o.last_updated;
   }
 }
 
 // create a Request for a Payment Request
-FacilitatedTx.RPR = function (intendedAmount, id, role, note) {
+FacilitatedTx.RPR = function (intendedAmount, id, role, note, lastUpdated) {
   return new FacilitatedTx(
     {
       state: FacilitatedTx.WAITING_ADDRESS,
       intended_amount: intendedAmount,
       role: role,
       id: id,
-      note: note
+      note: note,
+      last_updated: lastUpdated
     });
 };
 
 // create a payment request
-FacilitatedTx.PR = function (intendedAmount, id, role, address, note) {
+FacilitatedTx.PR = function (intendedAmount, id, role, address, note, lastUpdated) {
   return new FacilitatedTx(
     {
       state: FacilitatedTx.WAITING_PAYMENT,
@@ -33,7 +35,8 @@ FacilitatedTx.PR = function (intendedAmount, id, role, address, note) {
       role: role,
       id: id,
       address: address,
-      note: note
+      note: note,
+      last_updated: lastUpdated
     });
 };
 
