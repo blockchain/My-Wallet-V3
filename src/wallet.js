@@ -195,11 +195,13 @@ MyWallet.makePairingCode = function (success, error) {
   }
 };
 
-MyWallet.loginFromJSON = function (stringWallet, password) {
+MyWallet.loginFromJSON = function (stringWallet, stringExternal, password) {
   var walletJSON = JSON.parse(stringWallet);
+  var externalJSON = JSON.parse(stringExternal);
   MyWallet.wallet = new Wallet(walletJSON);
   WalletStore.unsafeSetPassword(password);
-  return MyWallet.wallet.loadExternal();
+  MyWallet.wallet.loadExternalFromJSON(externalJSON);
+  return true;
 };
 
 /* guid: the wallet identifier

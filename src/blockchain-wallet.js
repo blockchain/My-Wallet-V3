@@ -847,6 +847,16 @@ Wallet.prototype.loadExternal = function () {
   }
 };
 
+Wallet.prototype.loadExternalFromJSON = function (object) {
+  // patch (buy-sell does not work with double encryption for now)
+  if (this.isDoubleEncrypted === true || !this.isUpgradedToHD) {
+    return;
+  } else {
+    this._external = new External(this);
+    return this._external.fromJSON(object);
+  }
+};
+
 Wallet.prototype.metadata = function (typeId) {
   var masterhdnode = this.hdwallet.getMasterHDNode();
   return Metadata.fromMasterHDNode(masterhdnode, typeId);
