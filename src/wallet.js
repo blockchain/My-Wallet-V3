@@ -201,6 +201,7 @@ MyWallet.loginFromJSON = function (stringWallet, stringExternal, password) {
   MyWallet.wallet = new Wallet(walletJSON);
   WalletStore.unsafeSetPassword(password);
   MyWallet.wallet.loadExternalFromJSON(externalJSON);
+  setIsInitialized();
   return true;
 };
 
