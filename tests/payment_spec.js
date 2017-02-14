@@ -52,7 +52,9 @@ describe('Payment', () => {
     addresses: ['16SPAGz8vLpP3jNTcP7T2io1YccMbjhkee', '1FBHaa3JNjTbhvzMBdv2ymaahmgSSJ4Mis', '12C5rBJ7Ev3YGBCbJPY6C8nkGhkUTNqfW9']
   };
 
-  beforeEach(() => { payment = new Payment(); });
+  beforeEach(() => {
+    payment = new Payment(MyWallet.wallet);
+  });
 
   describe('new', () =>
 
