@@ -58,28 +58,29 @@ External.prototype.toJSON = function () {
 };
 
 External.prototype.fetch = function () {
-  var Populate = function (object) {
-    this.loaded = true;
-    if (object !== null) {
-      if (object.coinify) {
-        var coinifyDelegate = new ExchangeDelegate(this._wallet);
-        this._coinify = new Coinify(object.coinify, coinifyDelegate);
-        coinifyDelegate.trades = this._coinify.trades;
-      }
-      if (object.sfox) {
-        var sfoxDelegate = new ExchangeDelegate(this._wallet);
-        this._sfox = new SFOX(object.sfox, sfoxDelegate);
-        sfoxDelegate.trades = this._sfox.trades;
-      }
-    }
-    return this;
-  };
   var fetchFailed = function (e) {
     // Metadata service is down or unreachable.
     this.loaded = false;
     return Promise.reject(e);
   };
-  return this._metadata.fetch().then(Populate.bind(this)).catch(fetchFailed.bind(this));
+  return this._metadata.fetch().then(this.fromJSON.bind(this)).catch(fetchFailed.bind(this));
+};
+
+External.prototype.fromJSON = function (object) {
+  this.loaded = true;
+  if (object !== null) {
+    if (object.coinify) {
+      var coinifyDelegate = new ExchangeDelegate(this._wallet);
+      this._coinify = new Coinify(object.coinify, coinifyDelegate);
+      coinifyDelegate.trades = this._coinify.trades;
+    }
+    if (object.sfox) {
+      var sfoxDelegate = new ExchangeDelegate(this._wallet);
+      this._sfox = new SFOX(object.sfox, sfoxDelegate);
+      sfoxDelegate.trades = this._sfox.trades;
+    }
+  }
+  return this;
 };
 
 External.prototype.save = function () {
