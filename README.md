@@ -6,7 +6,7 @@ JavaScript Model for Blockchain.info wallet.
 
 ```sh
 npm install
-grunt build
+npm run build
 ```
 
 ## Tests
@@ -20,7 +20,7 @@ npm test
 Watch files and re-build
 
 ```sh
-grunt
+npm run build:watch
 ```
 
 ## Clean
