@@ -195,12 +195,13 @@ MyWallet.makePairingCode = function (success, error) {
   }
 };
 
-MyWallet.loginFromJSON = function (stringWallet, stringExternal, password) {
+MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHex, password) {
   var walletJSON = JSON.parse(stringWallet);
   var externalJSON = JSON.parse(stringExternal);
   MyWallet.wallet = new Wallet(walletJSON);
   WalletStore.unsafeSetPassword(password);
   MyWallet.wallet.loadExternalFromJSON(externalJSON);
+  MyWallet.wallet._external._metadata._magicHash = Buffer.from(magicHashHex, 'hex');
   setIsInitialized();
   return true;
 };
