@@ -53,7 +53,7 @@
     "ws": "2.0.*",
     "bitcoin-coinify-client": "0.3.*",
     "bitcoin-sfox-client": "0.1.*",
-    "uuid": "^3.0.1",
+    "uuid": "^3.0.1"
   },
   "devDependencies": {
     "babel-loader": "6.2.10",
