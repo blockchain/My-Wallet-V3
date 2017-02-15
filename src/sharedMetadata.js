@@ -5,7 +5,7 @@ const WalletCrypto = require('./wallet-crypto');
 const Bitcoin = require('bitcoinjs-lib');
 const jwtDecode = require('jwt-decode');
 const API = require('./sharedMetadataAPI');
-import * as R from 'ramda';
+const R = require('ramda');
 
 class SharedMetadata {
   constructor (mdidHDNode) {
