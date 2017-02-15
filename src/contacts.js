@@ -163,12 +163,13 @@ Contacts.prototype.completeRelation = function (uuid) {
 // Messaging facilities
 
 // :: returns a message string of a payment request
-const paymentRequest = function (id, intendedAmount, address) {
+const paymentRequest = function (id, intendedAmount, address, lastUpdated) {
   return JSON.stringify(
     {
       id: id,
       intended_amount: intendedAmount,
-      address: address
+      address: address,
+      last_updated: lastUpdated
     });
 };
 
@@ -177,7 +178,8 @@ const requestPaymentRequest = function (intendedAmount, id) {
   return JSON.stringify(
     {
       intended_amount: intendedAmount,
-      id: id
+      id: id,
+      last_updated: lastUpdated
     });
 };
 
@@ -191,7 +193,7 @@ const paymentRequestResponse = function (id, txHash) {
 };
 
 // I want you to pay me
-Contacts.prototype.sendPR = function (userId, intendedAmount, id = uuid(), note) {
+Contacts.prototype.sendPR = function (userId, intendedAmount, id = uuid(), note, lastUpdated) {
   // we should reserve the address (check buy-sell) - should probable be an argument
 
   const contact = this.get(userId);
@@ -204,16 +206,16 @@ Contacts.prototype.sendPR = function (userId, intendedAmount, id = uuid(), note)
   const message = paymentRequest(id, intendedAmount, address);
   return reserveAddress()
     .then(this.sendMessage.bind(this, userId, PAYMENT_REQUEST_TYPE, message))
-    .then(contact.PR.bind(contact, intendedAmount, id, FacilitatedTx.PR_INITIATOR, address, note))
+    .then(contact.PR.bind(contact, intendedAmount, id, FacilitatedTx.PR_INITIATOR, address, note, lastUpdated))
     .then(this.save.bind(this));
 };
 
 // request payment request (step-1)
-Contacts.prototype.sendRPR = function (userId, intendedAmount, id = uuid(), note) {
+Contacts.prototype.sendRPR = function (userId, intendedAmount, id = uuid(), note, lastUpdated) {
   const message = requestPaymentRequest(intendedAmount, id);
   const contact = this.get(userId);
   return this.sendMessage(userId, REQUEST_PAYMENT_REQUEST_TYPE, message)
-    .then(contact.RPR.bind(contact, intendedAmount, id, FacilitatedTx.RPR_INITIATOR), note)
+    .then(contact.RPR.bind(contact, intendedAmount, id, FacilitatedTx.RPR_INITIATOR), note, lastUpdated)
     .then(this.save.bind(this));
 };
 
@@ -238,7 +240,8 @@ Contacts.prototype.digestRPR = function (message) {
             message.payload.intended_amount,
             message.payload.id,
             FacilitatedTx.RPR_RECEIVER),
-            message.payload.note)
+            message.payload.note,
+            message.payload.last_updated)
     .then(this.save.bind(this));
 };
 
@@ -253,7 +256,8 @@ Contacts.prototype.digestPR = function (message) {
             message.payload.id,
             FacilitatedTx.PR_RECEIVER,
             message.payload.address,
-            message.payload.note))
+            message.payload.note,
+            message.payload.last_updated))
     .then(this.save.bind(this));
 };
 
