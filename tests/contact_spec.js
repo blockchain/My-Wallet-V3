@@ -14,7 +14,7 @@ const stubs = {
 
 const Contact = proxyquire('../src/contact', stubs);
 
-fdescribe('contact', () => {
+describe('contact', () => {
   it('should contruct an object with new', () => {
     const o = {
       id: 'id',

@@ -7,7 +7,7 @@ module.exports = function (config) {
     // reportSlowerThan: 50,
     logLevel: config.LOG_WARN,
     client: {
-      captureConsole: true
+      captureConsole: false
     },
     autoWatch: true,
     // logLevel: karma.LOG_DEBUG,
@@ -75,7 +75,8 @@ module.exports = function (config) {
       'tests/metadata_spec.js',
       'tests/exchange_delegate_spec.js',
       'tests/contact_spec.js',
-      'tests/facilitatedTx_spec.js'
+      'tests/facilitatedTx_spec.js',
+      'tests/contacts_spec.js'
     ]
   };
 
