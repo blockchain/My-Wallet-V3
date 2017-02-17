@@ -1,23 +1,24 @@
 let proxyquire = require('proxyquireify')(require);
 
-let uuid = () => 'my-uuid'
-
-let Metadata = {
-  read (mdid) {
-    console.log('fake news!')
-    return Promise.resolve({xpub: 'xpub'});
-  }
-};
-
-
-let stubs = {
-  './metadata': Metadata,
-  'uuid': uuid
-};
-
-let Contact = proxyquire('../src/contact', stubs);
-
 fdescribe('contact', () => {
+
+  let uuid = () => 'my-uuid'
+
+  let Metadata = {
+    read: (mdid) => {
+      console.log('fake news!')
+      return Promise.resolve({xpub: 'xpub'});
+    }
+  };
+
+  // console.log(Metadata.read('hola'))
+
+  let stubs = {
+    'uuid': uuid,
+    './metadata': Metadata
+  };
+
+  let Contact = proxyquire('../src/contact', stubs);
   it('should contruct an object with new', () => {
     const o = {
       id: 'id',
