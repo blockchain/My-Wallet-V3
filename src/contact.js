@@ -36,7 +36,6 @@ Contact.new = function (o) {
 };
 
 Contact.prototype.fetchXPUB = function () {
-  console.log('real one')
   return this.mdid
     ? Metadata.read(this.mdid).then((r) => { this.xpub = r.xpub; return r.xpub; })
     : Promise.reject('UNKNOWN_MDID');
