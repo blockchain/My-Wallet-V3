@@ -174,7 +174,7 @@ const paymentRequest = function (id, intendedAmount, address, lastUpdated) {
 };
 
 // :: returns a message string of a payment request
-const requestPaymentRequest = function (intendedAmount, id) {
+const requestPaymentRequest = function (intendedAmount, id, lastUpdated) {
   return JSON.stringify(
     {
       intended_amount: intendedAmount,
