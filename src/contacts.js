@@ -231,8 +231,6 @@ Contacts.prototype.sendPRR = function (userId, txHash, id = uuid()) {
 // /////////////////////////////////////////////////////////////////////////////
 // digestion logic
 Contacts.prototype.digestRPR = function (message) {
-  console.log('digesting a request payment request');
-  console.log(message);
   const result = this.search(message.sender);
   const contact = result[Object.keys(result)[0]];
   return this._sharedMetadata.processMessage(message.id)
@@ -246,8 +244,6 @@ Contacts.prototype.digestRPR = function (message) {
 };
 
 Contacts.prototype.digestPR = function (message) {
-  console.log('digesting a payment request');
-  console.log(message);
   const result = this.search(message.sender);
   const contact = result[Object.keys(result)[0]];
   return this._sharedMetadata.processMessage(message.id)
@@ -262,8 +258,6 @@ Contacts.prototype.digestPR = function (message) {
 };
 
 Contacts.prototype.digestPRR = function (message) {
-  console.log('digesting a payment request response');
-  console.log(message);
   const result = this.search(message.sender);
   const contact = result[Object.keys(result)[0]];
   // todo :: validate txhash on network and amount

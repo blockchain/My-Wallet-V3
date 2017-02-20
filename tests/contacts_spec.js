@@ -38,6 +38,12 @@ let SharedMetadata = {
       },
       addTrusted (mdid) {
         return Promise.resolve(true);
+      },
+      deleteTrusted (mdid) {
+        return Promise.resolve(true);
+      },
+      createInvitation () {
+        return Promise.resolve({id: "shared-link", mdid: "invitator-mdid", contact: null});
       }
     };
   }
@@ -112,17 +118,36 @@ describe('contacts', () => {
     return expect(promise).toBeResolved(done);
   });
 
-  // fit('add trusted', (done) => {
-  //   const cs = new Contacts('fakeMasterHDNode');
-  //   const myContact = {name: 'Trusted Contact'};
-  //   cs.new(myContact);
-  //   const promise = cs.addTrusted('my-uuid')
-  //     .then(c => {
-  //       expect(myContact.trusted).toBe(true);
-  //       return c;
-  //     });
-  //   return expect(promise).toBeResolved(done);
-  // });
+  it('add trusted', (done) => {
+    const cs = new Contacts('fakeMasterHDNode');
+    const myContact = cs.new({name: 'Trusted Contact'});
+    const promise = cs.addTrusted('my-uuid')
+      .then(c => {
+        expect(myContact.trusted).toBe(true);
+        return c;
+      });
+    return expect(promise).toBeResolved(done);
+  });
 
+  it('delete trusted', (done) => {
+    const cs = new Contacts('fakeMasterHDNode');
+    const myContact = cs.new({name: 'UnTrusted Contact'});
+    const promise = cs.deleteTrusted('my-uuid')
+      .then(c => {
+        expect(myContact.trusted).toBe(false);
+        return c;
+      });
+    return expect(promise).toBeResolved(done);
+  });
 
+  it('create invitation', (done) => {
+    const cs = new Contacts('fakeMasterHDNode');
+    const promise = cs.createInvitation({name: 'me'}, {name: 'him'})
+      .then(inv => {
+        expect(inv.name).toBe('me');
+        expect(inv.invitationReceived).toBe('shared-link');
+        return inv;
+      });
+    return expect(promise).toBeResolved(done);
+  });
 });
