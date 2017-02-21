@@ -232,7 +232,10 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
   } else if (credentials.sharedKey) {
     // If the shared key is known, 2FA and browser verification are skipped.
     // No session is needed in that case.
-    return WalletNetwork.fetchWalletWithSharedKey(guid, credentials.sharedKey).then(initializeWallet);
+    return WalletNetwork.fetchWalletWithSharedKey(guid, credentials.sharedKey)
+      .then(cb('didFetch'))
+      .then(MyWallet.didFetchWallet)
+      .then(initializeWallet);
   } else {
     // If a new browser is used, wait for user to click verification link.
     let authorizationRequired = (token) => () => {
