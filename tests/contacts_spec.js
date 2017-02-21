@@ -5,6 +5,35 @@ const uuid = () => 'my-uuid';
 
 let mockPayload = {};
 
+let RPRMessage = {
+  id: 'da8730bd-19ec-4f6f-b115-343008913dd2',
+  notified: false,
+  payload: {
+    id: '3c00935a-04bd-418e-94ba-2d87e98603cb',
+    intended_amount: 1000
+  },
+  processed: false,
+  recipient: '18gZzsF5T92rT7WpvdZDEdo6KEmE8vu5sJ',
+  sender: '13XvRvToUZxfaTSydniv4roTh3jY5rMcWH',
+  signature: 'H+BRYJzTDpTX+RqvFSw857CvsgpcchKQOXOvJG/tWJrzM6gUPIm9ulxpMoOF58wGP9ynpvTbx1LGHCmEVJMHeXQ=',
+  type: 0
+};
+
+let PRMessage = {
+  id: 'f863ac50-b5dc-49bc-9c75-d900dc229120',
+  notified: false,
+  payload: {
+    address: '1PbNwFMdJm1tnvacAA3LQCiC2aojbzzThf',
+    id: '3c00935a-04bd-418e-94ba-2d87e98603cb',
+    intended_amount: 1000
+  },
+  processed: false,
+  recipient: '13XvRvToUZxfaTSydniv4roTh3jY5rMcWH',
+  sender: '18gZzsF5T92rT7WpvdZDEdo6KEmE8vu5sJ',
+  signature: 'INOKgasWmu6H/92IXrC5JFxXOU7AQwDh7rbxqFRuAzcJXXzUTLoaujqUKlhMiNZVPPT49afBt8MhYVwzqk+mCkE=',
+  type: 1
+};
+
 let Metadata = {
   read (mdid) {
     return Promise.resolve('xpub');
@@ -43,7 +72,10 @@ let SharedMetadata = {
         return Promise.resolve(true);
       },
       createInvitation () {
-        return Promise.resolve({id: "shared-link", mdid: "invitator-mdid", contact: null});
+        return Promise.resolve({id: 'shared-link', mdid: 'invitator-mdid', contact: null});
+      },
+      processMessage (id) {
+        return Promise.resolve(true);
       }
     };
   }
@@ -149,5 +181,38 @@ describe('contacts', () => {
         return inv;
       });
     return expect(promise).toBeResolved(done);
+  });
+
+  it('digestion of RPR', (done) => {
+    spyOn(Contacts.prototype, 'save').and.callFake((something) => Promise.resolve({action: 'saved'}));
+    const cs = new Contacts('fakeMasterHDNode');
+    const contact = cs.new({name: 'Josep', mdid: '13XvRvToUZxfaTSydniv4roTh3jY5rMcWH'});
+    const promise = cs.digestRPR(RPRMessage);
+    promise.then(x => {
+      const k = Object.keys(contact.facilitatedTxList)[0];
+      const ftx = contact.facilitatedTxList[k];
+      expect(ftx.state).toBe('waiting_address');
+      expect(ftx.intended_amount).toBe(1000);
+      expect(ftx.role).toBe('rpr_receiver');
+      return x;
+    });
+    expect(promise).toBeResolvedWith(jasmine.objectContaining({action: 'saved'}), done);
+  });
+
+  it('digestion of PR', (done) => {
+    spyOn(Contacts.prototype, 'save').and.callFake((something) => Promise.resolve({action: 'saved'}));
+    const cs = new Contacts('fakeMasterHDNode');
+    const contact = cs.new({name: 'Enric', mdid: '18gZzsF5T92rT7WpvdZDEdo6KEmE8vu5sJ'});
+    const promise = cs.digestPR(PRMessage);
+    promise.then(x => {
+      const k = Object.keys(contact.facilitatedTxList)[0];
+      const ftx = contact.facilitatedTxList[k];
+      expect(ftx.state).toBe('waiting_payment');
+      expect(ftx.intended_amount).toBe(1000);
+      expect(ftx.role).toBe('pr_receiver');
+      expect(ftx.address).toBe('1PbNwFMdJm1tnvacAA3LQCiC2aojbzzThf');
+      return x;
+    });
+    expect(promise).toBeResolvedWith(jasmine.objectContaining({action: 'saved'}), done);
   });
 });
