@@ -240,7 +240,8 @@ Contacts.prototype.digestRPR = function (message) {
             FacilitatedTx.RPR_RECEIVER),
             message.payload.note,
             message.payload.last_updated)
-    .then(this.save.bind(this));
+    .then(this.save.bind(this))
+    .then(() => message);
 };
 
 Contacts.prototype.digestPR = function (message) {
@@ -254,7 +255,8 @@ Contacts.prototype.digestPR = function (message) {
             message.payload.address,
             message.payload.note,
             message.payload.last_updated))
-    .then(this.save.bind(this));
+    .then(this.save.bind(this))
+    .then(() => message);
 };
 
 Contacts.prototype.digestPRR = function (message) {
@@ -263,7 +265,8 @@ Contacts.prototype.digestPRR = function (message) {
   // todo :: validate txhash on network and amount
   return this._sharedMetadata.processMessage(message.id)
     .then(contact.PRR.bind(contact, message.payload.tx_hash, message.payload.id))
-    .then(this.save.bind(this));
+    .then(this.save.bind(this))
+    .then(() => message);
 };
 
 Contacts.prototype.digestMessage = function (message) {
