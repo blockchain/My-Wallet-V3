@@ -47,7 +47,7 @@ describe('FacilitatedTx', () => {
   });
 
   it('should contruct a Request for a Payment Request', () => {
-    const rpr = FacilitatedTx.RPR(1000, 'id', 'role', 'note', 0)
+    const rpr = FacilitatedTx.RPR(1000, 'id', 'role', 'note')
     expect(rpr.id).toEqual('id');
     expect(rpr.state).toEqual(FacilitatedTx.WAITING_ADDRESS);
     expect(rpr.intended_amount).toEqual(1000);
@@ -55,11 +55,10 @@ describe('FacilitatedTx', () => {
     expect(rpr.tx_hash).toEqual(undefined);
     expect(rpr.role).toEqual('role');
     expect(rpr.note).toEqual('note');
-    expect(rpr.last_updated).toEqual(0);
   });
 
   it('should contruct a Payment Request', () => {
-    const rpr = FacilitatedTx.PR(1000, 'id', 'role', 'address', 'note', 0)
+    const rpr = FacilitatedTx.PR(1000, 'id', 'role', 'address', 'note')
     expect(rpr.id).toEqual('id');
     expect(rpr.state).toEqual(FacilitatedTx.WAITING_PAYMENT);
     expect(rpr.intended_amount).toEqual(1000);
@@ -67,6 +66,5 @@ describe('FacilitatedTx', () => {
     expect(rpr.tx_hash).toEqual(undefined);
     expect(rpr.role).toEqual('role');
     expect(rpr.note).toEqual('note');
-    expect(rpr.last_updated).toEqual(0);
   });
 });

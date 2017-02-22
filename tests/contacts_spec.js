@@ -196,7 +196,7 @@ describe('contacts', () => {
       expect(ftx.role).toBe('rpr_receiver');
       return x;
     });
-    expect(promise).toBeResolvedWith(jasmine.objectContaining({action: 'saved'}), done);
+    expect(promise).toBeResolved(done);
   });
 
   it('digestion of PR', (done) => {
@@ -213,6 +213,6 @@ describe('contacts', () => {
       expect(ftx.address).toBe('1PbNwFMdJm1tnvacAA3LQCiC2aojbzzThf');
       return x;
     });
-    expect(promise).toBeResolvedWith(jasmine.objectContaining({action: 'saved'}), done);
+    expect(promise).toBeResolved(done);
   });
 });
