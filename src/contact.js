@@ -42,21 +42,22 @@ Contact.prototype.fetchXPUB = function () {
 };
 
 // create and add a request payment request to that contact facilitated tx list
-Contact.prototype.RPR = function (intendedAmount, id, role, note, lastUpdated) {
-  const rpr = FacilitatedTx.RPR(intendedAmount, id, role, note, lastUpdated);
+Contact.prototype.RPR = function (intendedAmount, id, role, note) {
+  const rpr = FacilitatedTx.RPR(intendedAmount, id, role, note);
   this.facilitatedTxList = assoc(id, rpr, this.facilitatedTxList);
   return rpr;
 };
 
 // create and/or add a payment request to that contact facilitated tx list
-Contact.prototype.PR = function (intendedAmount, id, role, address, note, lastUpdated) {
+Contact.prototype.PR = function (intendedAmount, id, role, address, note) {
   var existingTx = prop(id, this.facilitatedTxList);
   if (existingTx) {
     existingTx.address = address;
     existingTx.state = FacilitatedTx.WAITING_PAYMENT;
+    existingTx.last_updated = Date.now();
     return existingTx;
   } else {
-    const pr = FacilitatedTx.PR(intendedAmount, id, role, address, note, lastUpdated);
+    const pr = FacilitatedTx.PR(intendedAmount, id, role, address, note);
     this.facilitatedTxList = assoc(id, pr, this.facilitatedTxList);
     return pr;
   }
@@ -67,6 +68,7 @@ Contact.prototype.PRR = function (txHash, id) {
   var existingTx = prop(id, this.facilitatedTxList);
   existingTx.tx_hash = txHash;
   existingTx.state = FacilitatedTx.PAYMENT_BROADCASTED;
+  existingTx.last_updated = Date.now();
   return existingTx;
 };
 

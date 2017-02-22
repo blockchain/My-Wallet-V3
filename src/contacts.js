@@ -163,23 +163,25 @@ Contacts.prototype.completeRelation = function (uuid) {
 // Messaging facilities
 
 // :: returns a message string of a payment request
-const paymentRequest = function (id, intendedAmount, address, lastUpdated) {
-  return JSON.stringify(
-    {
-      id: id,
-      intended_amount: intendedAmount,
-      address: address,
-      last_updated: lastUpdated
-    });
+const paymentRequest = function (id, intendedAmount, address, note) {
+  const body = {
+    id: id,
+    intended_amount: intendedAmount,
+    address: address
+  }
+  if (note) {
+    body.note = note;
+  }
+  return JSON.stringify(body);
 };
 
 // :: returns a message string of a payment request
-const requestPaymentRequest = function (intendedAmount, id, lastUpdated) {
+const requestPaymentRequest = function (intendedAmount, id, note) {
   return JSON.stringify(
     {
       intended_amount: intendedAmount,
       id: id,
-      last_updated: lastUpdated
+      note: note
     });
 };
 
@@ -193,9 +195,9 @@ const paymentRequestResponse = function (id, txHash) {
 };
 
 // I want you to pay me
-Contacts.prototype.sendPR = function (userId, intendedAmount, id = uuid(), note, lastUpdated) {
+Contacts.prototype.sendPR = function (userId, intendedAmount, id, note) {
   // we should reserve the address (check buy-sell) - should probable be an argument
-
+  id = id ? id : uuid()
   const contact = this.get(userId);
   const account = MyWallet.wallet.hdwallet.defaultAccount;
   const address = account.receiveAddress;
@@ -203,24 +205,26 @@ Contacts.prototype.sendPR = function (userId, intendedAmount, id = uuid(), note,
     const label = 'payment request to ' + contact.name;
     return account.setLabelForReceivingAddress(account.receiveIndex, label);
   };
-  const message = paymentRequest(id, intendedAmount, address);
+  const message = paymentRequest(id, intendedAmount, address, note);
   return reserveAddress()
     .then(this.sendMessage.bind(this, userId, PAYMENT_REQUEST_TYPE, message))
-    .then(contact.PR.bind(contact, intendedAmount, id, FacilitatedTx.PR_INITIATOR, address, note, lastUpdated))
+    .then(contact.PR.bind(contact, intendedAmount, id, FacilitatedTx.PR_INITIATOR, address, note))
     .then(this.save.bind(this));
 };
 
 // request payment request (step-1)
-Contacts.prototype.sendRPR = function (userId, intendedAmount, id = uuid(), note, lastUpdated) {
-  const message = requestPaymentRequest(intendedAmount, id);
+Contacts.prototype.sendRPR = function (userId, intendedAmount, id, note) {
+  id = id ? id : uuid()
+  const message = requestPaymentRequest(intendedAmount, id, note);
   const contact = this.get(userId);
   return this.sendMessage(userId, REQUEST_PAYMENT_REQUEST_TYPE, message)
-    .then(contact.RPR.bind(contact, intendedAmount, id, FacilitatedTx.RPR_INITIATOR), note, lastUpdated)
+    .then(contact.RPR.bind(contact, intendedAmount, id, FacilitatedTx.RPR_INITIATOR, note))
     .then(this.save.bind(this));
 };
 
 // payment request response
-Contacts.prototype.sendPRR = function (userId, txHash, id = uuid()) {
+Contacts.prototype.sendPRR = function (userId, txHash, id) {
+  id = id ? id : uuid()
   const message = paymentRequestResponse(id, txHash);
   const contact = this.get(userId);
   return this.sendMessage(userId, PAYMENT_REQUEST_RESPONSE_TYPE, message)
@@ -231,20 +235,23 @@ Contacts.prototype.sendPRR = function (userId, txHash, id = uuid()) {
 // /////////////////////////////////////////////////////////////////////////////
 // digestion logic
 Contacts.prototype.digestRPR = function (message) {
+  // console.log('digesting RPR')
+  // console.log(message)
   const result = this.search(message.sender);
   const contact = result[Object.keys(result)[0]];
   return this._sharedMetadata.processMessage(message.id)
     .then(contact.RPR.bind(contact,
             message.payload.intended_amount,
             message.payload.id,
-            FacilitatedTx.RPR_RECEIVER),
-            message.payload.note,
-            message.payload.last_updated)
+            FacilitatedTx.RPR_RECEIVER,
+            message.payload.note))
     .then(this.save.bind(this))
     .then(() => message);
 };
 
 Contacts.prototype.digestPR = function (message) {
+  // console.log('digesting PR')
+  // console.log(message)
   const result = this.search(message.sender);
   const contact = result[Object.keys(result)[0]];
   return this._sharedMetadata.processMessage(message.id)
@@ -253,13 +260,14 @@ Contacts.prototype.digestPR = function (message) {
             message.payload.id,
             FacilitatedTx.PR_RECEIVER,
             message.payload.address,
-            message.payload.note,
-            message.payload.last_updated))
+            message.payload.note))
     .then(this.save.bind(this))
     .then(() => message);
 };
 
 Contacts.prototype.digestPRR = function (message) {
+  // console.log('digesting PRR')
+  // console.log(message)
   const result = this.search(message.sender);
   const contact = result[Object.keys(result)[0]];
   // todo :: validate txhash on network and amount
