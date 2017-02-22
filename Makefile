@@ -1,4 +1,4 @@
-all: clean node_modules semistandard test dist/application.min.js changelog
+all: clean node_modules semistandard test dist/my-wallet.js dist/my-wallet.min.js changelog
 
 node_modules:
 	npm install
@@ -9,7 +9,9 @@ build:
 test: build
 	./node_modules/karma/bin/karma start karma.conf.js --single-run
 
-dist/application.min.js:
+dist/my-wallet.js: build
+
+dist/my-wallet.min.js:
 	npm run dist
 	npm shrinkwrap --dev
 
