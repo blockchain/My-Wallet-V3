@@ -34,6 +34,21 @@ let PRMessage = {
   type: 1
 };
 
+let PRRMessage = {
+  id: 'e402dde8-3429-447f-9cb3-a20157930b3c',
+  notified: false,
+  payload: {
+    address: '13ZZBJPxYTrSBxGT6hFZMBMm9VUmY1yzam',
+    id: '79c1b029-cf84-474f-8e79-afadec42fc8e',
+    tx_hash: 'tx-hash'
+  },
+  processed: false,
+  recipient: '13XvRvToUZxfaTSydniv4roTh3jY5rMcWH',
+  sender: '18gZzsF5T92rT7WpvdZDEdo6KEmE8vu5sJ',
+  signature: 'IOXMhX3ErT74UcRvWcqq6PP+TCeJ+Ynb0THOUe/yGUP3cKBuxStR0z7AI0HFA5Gpa7dn8c0EWWZBOBO62+AYU3c=',
+  type: 2
+}
+
 let Metadata = {
   read (mdid) {
     return Promise.resolve('xpub');
@@ -211,6 +226,28 @@ describe('contacts', () => {
       expect(ftx.intended_amount).toBe(1000);
       expect(ftx.role).toBe('pr_receiver');
       expect(ftx.address).toBe('1PbNwFMdJm1tnvacAA3LQCiC2aojbzzThf');
+      return x;
+    });
+    expect(promise).toBeResolved(done);
+  });
+
+  it('digestion of PRR', (done) => {
+    spyOn(Contacts.prototype, 'save').and.callFake((something) => Promise.resolve({action: 'saved'}));
+    const cs = new Contacts('fakeMasterHDNode');
+    const contact = cs.new({name: 'you', mdid: '18gZzsF5T92rT7WpvdZDEdo6KEmE8vu5sJ'});
+    const algo = contact.PR(15000, '79c1b029-cf84-474f-8e79-afadec42fc8e', 'pr_initiator', '13ZZBJPxYTrSBxGT6hFZMBMm9VUmY1yzam', 'my-note')
+
+    const promise = cs.digestPRR(PRRMessage);
+    promise.then(x => {
+      const k = Object.keys(contact.facilitatedTxList)[0];
+      const ftx = contact.facilitatedTxList[k];
+      console.log(ftx)
+      expect(ftx.state).toBe('payment_broadcasted');
+      expect(ftx.intended_amount).toBe(15000);
+      expect(ftx.role).toBe('pr_initiator');
+      expect(ftx.note).toBe('my-note');
+      expect(ftx.address).toBe('13ZZBJPxYTrSBxGT6hFZMBMm9VUmY1yzam');
+      expect(ftx.tx_hash).toBe('tx-hash');
       return x;
     });
     expect(promise).toBeResolved(done);
