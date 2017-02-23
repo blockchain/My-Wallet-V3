@@ -1,11 +1,15 @@
 language: node_js
 node_js:
-- 5.8
+- 7.5
+cache:
+- node_modules
 before_install:
 - npm install -g snazzy
 before_script:
 - node_modules/.bin/semistandard --verbose | snazzy
-script: node_modules/karma/bin/karma start karma.conf.js --single-run && grunt coveralls
+script:
+- node_modules/karma/bin/karma start karma.conf.js --single-run
+- cat ./coverage-lcov/lcov.info | node_modules/coveralls/bin/coveralls.js
 notifications:
   slack:
     secure: QknuKmAVfKhlGjFoJVXbKaWh6ee/rph/gldqWcxCHnoXHtCQ+v02Q2WrEL9YiQtOIXQoPjqtMptjjVlBgoFYaAnXmQEpBa5IYwbTvm0T7A+fJaojr8bOi6HHohr8nrDuldtTSNLDVP135zJyzl/gpz0oUPyHCgJx02lQ3j5sVUmx99OxTFzPHAdHoRS+vj5AiCjRhalzkCrQBXq41UrJXmY4xdub4+attdQJf4lr5RMd1ZB1PNj4z94rTHSuYtvBxXrYNkiyPs58861JRCT7P+1dy5beS5OG0OeF+iN+tj9XUNBrqCiWnu3i4vKYmHr7xVyxLXOmo7DvR8o55qY9PhB1OkCmt5qHpoSB7r39f/Y2tg6mwwXz7dnnnnwnIMsKzQ1eVNXF4dqbf12iaJTQNOb4t69s6kn/ybeD3h7SGLTPl6Z1xQHWcTk4GrzfWNRK12cvMAULWOS7uyZlhJnNneyoIm7cLoBJKdsaQmSV998ZAu4qHjozKeHRi08UdNtyrsQ6KqUxof8haPU1L/p+enSCLJfYDBnYVspwtQVRIlFsmCqowM6JEl1Doc+be5/CVisQ7/IEROoNSz2Z7uNXIMgaiK+K3sB+3PFNWSuBT2Z35HtnCCNy2kwE5sAGxyGs/DUYe4uIQmE44ec7dtQRn4N8NaM/LlSclJaMlq/jVTk=

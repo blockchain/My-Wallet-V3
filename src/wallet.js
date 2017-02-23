@@ -215,107 +215,59 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
     (Helpers.isPositiveInteger(credentials.twoFactor.type) && Helpers.isString(credentials.twoFactor.code))
   );
 
-  var loginPromise = new Promise(function (resolve, reject) {
-    if (guid === WalletStore.getGuid() && WalletStore.getEncryptedWalletData()) {
-      // If we already fetched the wallet before (e.g.
-      // after user enters a wrong password), don't fetch it again:
-      MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
-        resolve({guid: guid});
-      }).catch(function (e) {
-        reject(e);
-      });
-    } else if (credentials.sharedKey) {
-      // If the shared key is known, 2FA and browser verification are skipped.
-      // No session is needed in that case.
-      return WalletNetwork.fetchWalletWithSharedKey(guid, credentials.sharedKey)
-        .then(function (obj) {
-          callbacks.didFetch && callbacks.didFetch();
-          MyWallet.didFetchWallet(obj).then(function () {
-            MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
-              resolve({guid: guid});
-            }).catch(function (e) {
-              reject(e);
-            });
-          });
-        });
-    } else {
-      // Estabish a session to enable 2FA and browser verification:
-      WalletNetwork.establishSession(credentials.sessionToken)
-      .then(function (token) {
-        if (typeof callbacks.newSessionToken === 'function') {
-          callbacks.newSessionToken(token);
-        }
-        // If a new browser is used, the user receives a verification email.
-        // We wait for them to click the link.
-        var authorizationRequired = function () {
-          var promise = new Promise(function (resolveA, rejectA) { // eslint-disable-line promise/param-names
-            if (typeof (callbacks.authorizationRequired) === 'function') {
-              callbacks.authorizationRequired(function () {
-                WalletNetwork.pollForSessionGUID(token).then(function () {
-                  resolveA();
-                }).catch(function (error) {
-                  rejectA(error);
-                });
-              });
-            }
-          });
-          return promise;
-        };
+  let cb = (name, reject) => (value) => {
+    typeof callbacks[name] === 'function' && callbacks[name](value);
+    return reject ? Promise.reject(value) : value;
+  };
 
-        var needsTwoFactorCode = function (authType) {
-          callbacks.needsTwoFactorCode(authType);
-        };
+  let initializeWallet = () => {
+    return MyWallet.initializeWallet(password, cb('didDecrypt'), cb('didBuildHD'))
+      .then(() => ({ guid: guid }));
+  };
 
-        if (credentials.twoFactor) {
-          WalletNetwork.fetchWalletWithTwoFactor(guid, token, credentials.twoFactor)
-          .then(function (obj) {
-            callbacks.didFetch && callbacks.didFetch();
-            MyWallet.didFetchWallet(obj).then(function () {
-              MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
-                resolve({guid: guid});
-              }).catch(function (e) {
-                reject(e);
-              });
-            });
-          }).catch(function (e) {
-            callbacks.wrongTwoFactorCode(e);
-          });
-        } else {
-          // Try without 2FA:
-          WalletNetwork.fetchWallet(guid, token, needsTwoFactorCode, authorizationRequired)
-          .then(function (obj) {
-            callbacks.didFetch && callbacks.didFetch();
-            MyWallet.didFetchWallet(obj).then(function () {
-              MyWallet.initializeWallet(password, callbacks.didDecrypt, callbacks.didBuildHD).then(function () {
-                resolve({guid: guid});
-              }).catch(function (e) {
-                reject(e);
-              });
-            });
-          }).catch(function (e) {
-            reject(e);
-          });
-        }
-      }).catch(function (error) {
-        console.log(error.message);
-        reject('Unable to establish session');
-      });
-    }
-  });
+  if (guid === WalletStore.getGuid() && WalletStore.getEncryptedWalletData()) {
+    // If we already fetched the wallet before (e.g.
+    // after user enters a wrong password), don't fetch it again:
+    return initializeWallet();
+  } else if (credentials.sharedKey) {
+    // If the shared key is known, 2FA and browser verification are skipped.
+    // No session is needed in that case.
+    return WalletNetwork.fetchWalletWithSharedKey(guid, credentials.sharedKey)
+      .then(cb('didFetch'))
+      .then(MyWallet.didFetchWallet)
+      .then(initializeWallet);
+  } else {
+    // If a new browser is used, wait for user to click verification link.
+    let authorizationRequired = (token) => () => {
+      cb('authorizationRequired')(() => {});
+      return WalletNetwork.pollForSessionGUID(token);
+    };
 
-  return loginPromise;
+    // Estabish a session to enable 2FA and browser verification:
+    return WalletNetwork.establishSession(credentials.sessionToken)
+      .then(cb('newSessionToken'))
+      .then(token => (
+        credentials.twoFactor
+          ? WalletNetwork.fetchWalletWithTwoFactor(guid, token, credentials.twoFactor).catch(cb('wrongTwoFactorCode', true))
+          : WalletNetwork.fetchWallet(guid, token, cb('needsTwoFactorCode'), authorizationRequired(token))
+      ),
+      (error) => {
+        console.error(error.message);
+        return Promise.reject('Unable to establish session');
+      })
+      .then(cb('didFetch'))
+      .then(MyWallet.didFetchWallet)
+      .then(initializeWallet);
+  }
 };
 
 MyWallet.didFetchWallet = function (obj) {
   if (obj.payload && obj.payload.length > 0 && obj.payload !== 'Not modified') {
     WalletStore.setEncryptedWalletData(obj.payload);
   }
-
   if (obj.language && WalletStore.getLanguage() !== obj.language) {
     WalletStore.setLanguage(obj.language);
   }
-
-  return Promise.resolve();
 };
 
 MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {

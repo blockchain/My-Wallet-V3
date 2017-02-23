@@ -1,7 +1,6 @@
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
-var MyWallet = require('./wallet');
 var WalletCrypto = require('./wallet-crypto');
 var Transaction = require('./transaction');
 var API = require('./api');
@@ -13,8 +12,9 @@ var constants = require('./constants');
 
 // Payment Class
 
-function Payment (payment) {
+function Payment (wallet, payment) {
   EventEmitter.call(this);
+  this._wallet = wallet;
 
   var serverFeeFallback = {
     'default': {
@@ -86,13 +86,13 @@ util.inherits(Payment, EventEmitter);
 
 // Payment instance methods (can be chained)
 Payment.prototype.to = function (destinations) {
-  this.payment = this.payment.then(Payment.to(destinations));
+  this.payment = this.payment.then(Payment.to.call(this, destinations));
   this.sideEffect(this.emit.bind(this, 'update'));
   return this;
 };
 
 Payment.prototype.from = function (origin, absoluteFee) {
-  this.payment = this.payment.then(Payment.from.bind(this, origin, absoluteFee)());
+  this.payment = this.payment.then(Payment.from.call(this, origin));
   this.then(Payment.prebuild(absoluteFee));
   return this;
 };
@@ -144,13 +144,13 @@ Payment.prototype.prebuild = function (absoluteFee) {
 };
 
 Payment.prototype.build = function () {
-  this.payment = this.payment.then(Payment.build.bind(this)());
+  this.payment = this.payment.then(Payment.build.call(this));
   this.sideEffect(this.emit.bind(this, 'update'));
   return this;
 };
 
 Payment.prototype.sign = function (password) {
-  this.payment = this.payment.then(Payment.sign(password));
+  this.payment = this.payment.then(Payment.sign.call(this, password));
   this.sideEffect(this.emit.bind(this, 'update'));
   return this;
 };
@@ -195,13 +195,14 @@ Payment.sideEffect = function (myFunction) {
 };
 
 Payment.to = function (destinations) {
+  var wallet = this._wallet;
   var formatDest = null;
   var isValidIndex = function (i) {
-    return Helpers.isPositiveInteger(i) && MyWallet.wallet.isUpgradedToHD && (i < MyWallet.wallet.hdwallet.accounts.length);
+    return Helpers.isPositiveInteger(i) && wallet.isUpgradedToHD && (i < wallet.hdwallet.accounts.length);
   };
   var accountToAddress = function (i) {
     if (Helpers.isPositiveInteger(i)) {
-      return MyWallet.wallet.hdwallet.accounts[i].receiveAddress;
+      return wallet.hdwallet.accounts[i].receiveAddress;
     } else {
       return i;
     }
@@ -266,6 +267,7 @@ Payment.amount = function (amounts, absoluteFee) {
 
 Payment.from = function (origin) {
   var that = this;
+  var wallet = this._wallet;
   var addresses = null;
   var change = null;
   var pkFormat = Helpers.detectPrivateKeyFormat(origin);
@@ -276,7 +278,7 @@ Payment.from = function (origin) {
   switch (true) {
     // no origin => assume origin = all the legacy addresses (non - watchOnly)
     case origin === null || origin === undefined || origin === '':
-      addresses = MyWallet.wallet.spendableActiveAddresses;
+      addresses = wallet.spendableActiveAddresses;
       change = addresses[0];
       break;
     // single bitcoin address
@@ -286,8 +288,8 @@ Payment.from = function (origin) {
       break;
     // single account index
     case Helpers.isPositiveInteger(origin) &&
-         (origin < MyWallet.wallet.hdwallet.accounts.length):
-      var fromAccount = MyWallet.wallet.hdwallet.accounts[origin];
+         (origin < wallet.hdwallet.accounts.length):
+      var fromAccount = wallet.hdwallet.accounts[origin];
       addresses = [fromAccount.extendedPublicKey];
       change = fromAccount.changeAddress;
       fromAccId = origin;
@@ -309,8 +311,8 @@ Payment.from = function (origin) {
       var addrComp = key.getAddress();
       var cWIF = key.toWIF();
 
-      var ukey = MyWallet.wallet.key(addrUncomp);
-      var ckey = MyWallet.wallet.key(addrComp);
+      var ukey = wallet.key(addrUncomp);
+      var ckey = wallet.key(addrComp);
 
       if (ukey && ukey.isWatchOnly) {
         wifs = [uWIF];
@@ -447,16 +449,17 @@ Payment.build = function () {
 };
 
 Payment.sign = function (password) {
+  var wallet = this._wallet;
   return function (payment) {
     var importWIF = function (WIF) {
-      MyWallet.wallet.importLegacyAddress(WIF, 'Redeemed code.', password)
+      wallet.importLegacyAddress(WIF, 'Redeemed code.', password)
         .then(function (A) { A.archived = true; });
     };
 
     if (!payment.transaction) throw new Error('This transaction hasn\'t been built yet');
     if (Array.isArray(payment.wifKeys) && !payment.fromWatchOnly) payment.wifKeys.forEach(importWIF);
 
-    payment.transaction.addPrivateKeys(getPrivateKeys(password, payment));
+    payment.transaction.addPrivateKeys(getPrivateKeys(wallet, password, payment));
     payment.transaction.sortBIP69();
     payment.transaction = payment.transaction.sign();
     return Promise.resolve(payment);
@@ -545,21 +548,19 @@ function getKey (priv, addr) {
 
 // obtain private key for an address
 // from Address
-function getKeyForAddress (password, addr) {
-  var k = MyWallet.wallet.key(addr).priv;
+function getKeyForAddress (wallet, password, addr) {
+  var k = wallet.key(addr).priv;
   var privateKeyBase58 = password == null ? k
-      : WalletCrypto.decryptSecretWithSecondPassword(k, password,
-          MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
+      : WalletCrypto.decryptSecretWithSecondPassword(k, password, wallet.sharedKey, wallet.pbkdf2_iterations);
   return getKey(privateKeyBase58, addr);
 }
 
-// getXPRIV :: password -> index -> xpriv
-function getXPRIV (password, accountIndex) {
-  var fromAccount = MyWallet.wallet.hdwallet.accounts[accountIndex];
+// getXPRIV :: wallet -> password -> index -> xpriv
+function getXPRIV (wallet, password, accountIndex) {
+  var fromAccount = wallet.hdwallet.accounts[accountIndex];
   return fromAccount.extendedPrivateKey == null || password == null
     ? fromAccount.extendedPrivateKey
-    : WalletCrypto.decryptSecretWithSecondPassword(fromAccount.extendedPrivateKey, password,
-      MyWallet.wallet.sharedKey, MyWallet.wallet.pbkdf2_iterations);
+    : WalletCrypto.decryptSecretWithSecondPassword(fromAccount.extendedPrivateKey, password, wallet.sharedKey, wallet.pbkdf2_iterations);
 }
 
 // getKeyForPath :: xpriv -> path -> ECPair
@@ -568,20 +569,20 @@ function getKeyForPath (extendedPrivateKey, neededPrivateKeyPath) {
   return keyring.privateKeyFromPath(neededPrivateKeyPath).keyPair;
 }
 
-// getPrivateKeys :: password -> payment -> [private key]
-function getPrivateKeys (password, payment) {
+// getPrivateKeys :: wallet -> password -> payment -> [private key]
+function getPrivateKeys (wallet, password, payment) {
   var transaction = payment.transaction;
   var privateKeys = [];
   // if from Account
   if (Helpers.isPositiveInteger(payment.fromAccountIdx)) {
-    var xpriv = getXPRIV(password, payment.fromAccountIdx);
+    var xpriv = getXPRIV(wallet, password, payment.fromAccountIdx);
     privateKeys = transaction.pathsOfNeededPrivateKeys.map(getKeyForPath.bind(this, xpriv));
   }
   // if from Addresses or redeem code (private key)
   if (payment.from && payment.from.every(Helpers.isBitcoinAddress) && !payment.fromWatchOnly) {
     privateKeys = payment.wifKeys.length
       ? transaction.addressesOfNeededPrivateKeys.map(function (a, i) { return getKey(payment.wifKeys[i], a); })
-      : transaction.addressesOfNeededPrivateKeys.map(getKeyForAddress.bind(this, password));
+      : transaction.addressesOfNeededPrivateKeys.map(getKeyForAddress.bind(null, wallet, password));
   }
   // if from Watch Only
   if (payment.from && Helpers.isBitcoinAddress(payment.from[0]) && payment.fromWatchOnly) {
