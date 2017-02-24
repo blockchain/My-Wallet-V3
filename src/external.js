@@ -49,6 +49,23 @@ Object.defineProperties(External.prototype, {
   }
 });
 
+External.prototype.canBuy = function (accountInfo, options) {
+  if (!accountInfo || !options) return false;
+
+  let whitelist = options.showBuySellTab || [];
+  let countryCodeGuess = accountInfo.countryCodeGuess;
+
+  let isCoinifyCountry = options.partners.coinify.countries.indexOf(countryCodeGuess) > -1;
+  let isCountryWhitelisted = whitelist.indexOf(countryCodeGuess) > -1;
+  let isUserInvited = accountInfo.invited && accountInfo.invited.sfox;
+
+  return (
+    this.hasExchangeAccount ||
+    isCoinifyCountry ||
+    (isUserInvited && isCountryWhitelisted)
+  );
+};
+
 External.prototype.toJSON = function () {
   var external = {
     coinify: this._coinify,
