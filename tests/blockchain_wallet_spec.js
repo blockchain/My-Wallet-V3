@@ -1,5 +1,6 @@
 let proxyquire = require('proxyquireify')(require);
 let MyWallet;
+let AddressesHD;
 let Address;
 let Wallet;
 let HDWallet;
@@ -71,6 +72,12 @@ describe('Blockchain-Wallet', () => {
         }
       },
       get_history () {}
+    };
+
+    AddressesHD = () => {
+      return {
+        mock: 'addresses'
+      };
     };
 
     Address = {
@@ -156,6 +163,7 @@ describe('Blockchain-Wallet', () => {
 
     let stubs = {
       './wallet': MyWallet,
+      './addresses': AddressesHD,
       './address': Address,
       './helpers': Helpers,
       './hd-wallet': HDWallet,
@@ -416,6 +424,17 @@ describe('Blockchain-Wallet', () => {
       it('defaultPbkdf2Iterations', () => expect(wallet.defaultPbkdf2Iterations).toEqual(5000));
 
       it('spendableActiveAddresses', () => expect(wallet.spendableActiveAddresses.length).toEqual(1));
+
+      describe('addressesHD', () => {
+        it('should be set', () => {
+          expect(wallet.addressesHD).toEqual({mock: 'addresses'});
+        });
+
+        it('should be reused', () => {
+          wallet.addressesHD.hello = 'world';
+          expect(wallet.addressesHD).toEqual({mock: 'addresses', hello: 'world'});
+        });
+      });
     });
 
     describe('Method', () => {
