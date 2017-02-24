@@ -23,6 +23,7 @@ var AccountInfo = require('./account-info');
 var Metadata = require('./metadata');
 var constants = require('./constants');
 var Payment = require('./payment');
+var AddressesHD = require('./addresses');
 
 // Wallet
 
@@ -318,6 +319,15 @@ Object.defineProperties(Wallet.prototype, {
   'accountInfo': {
     configurable: false,
     get: function () { return this._accountInfo; }
+  },
+  'addressesHD': {
+    configurable: false,
+    get: function () {
+      if (!this._addressesHD) {
+        this._addressesHD = new AddressesHD(this);
+      }
+      return this._addressesHD;
+    }
   }
 });
 

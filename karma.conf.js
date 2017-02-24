@@ -73,7 +73,8 @@ module.exports = function (config) {
       'tests/blockchain_settings_api_spec.js',
       'tests/account_info_spec.js',
       'tests/metadata_spec.js',
-      'tests/exchange_delegate_spec.js'
+      'tests/exchange_delegate_spec.js',
+      'tests/addresses_spec.js'
     ]
   };
 
