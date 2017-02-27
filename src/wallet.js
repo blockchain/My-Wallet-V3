@@ -201,7 +201,7 @@ MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHex, p
   MyWallet.wallet = new Wallet(walletJSON);
   WalletStore.unsafeSetPassword(password);
   MyWallet.wallet.loadExternalFromJSON(externalJSON);
-  MyWallet.wallet._external._metadata._magicHash = Buffer.from(magicHashHex, 'hex');
+  if (magicHashHex) { MyWallet.wallet._external._metadata._magicHash = Buffer.from(magicHashHex, 'hex'); }
   setIsInitialized();
   return true;
 };
