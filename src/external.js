@@ -1,5 +1,3 @@
-'use strict';
-
 var Coinify = require('bitcoin-coinify-client');
 var SFOX = require('bitcoin-sfox-client');
 var Metadata = require('./metadata');
@@ -9,12 +7,24 @@ var METADATA_TYPE_EXTERNAL = 3;
 
 module.exports = External;
 
-function External (wallet) {
-  var masterhdnode = wallet.hdwallet.getMasterHDNode();
-  this._metadata = Metadata.fromMasterHDNode(masterhdnode, METADATA_TYPE_EXTERNAL);
+function External (metadata, wallet, object) {
   this._coinify = undefined;
   this._sfox = undefined;
   this._wallet = wallet;
+  this._metadata = metadata;
+
+  if (object !== null) {
+    if (object.coinify) {
+      var coinifyDelegate = new ExchangeDelegate(wallet);
+      this._coinify = new Coinify(object.coinify, coinifyDelegate);
+      coinifyDelegate.trades = this._coinify.trades;
+    }
+    if (object.sfox) {
+      var sfoxDelegate = new ExchangeDelegate(wallet);
+      this._sfox = new SFOX(object.sfox, sfoxDelegate);
+      sfoxDelegate.trades = this._sfox.trades;
+    }
+  }
 }
 
 Object.defineProperties(External.prototype, {
@@ -74,30 +84,31 @@ External.prototype.toJSON = function () {
   return external;
 };
 
-External.prototype.fetch = function () {
-  var fetchFailed = function (e) {
-    // Metadata service is down or unreachable.
-    this.loaded = false;
-    return Promise.reject(e);
-  };
-  return this._metadata.fetch().then(this.fromJSON.bind(this)).catch(fetchFailed.bind(this));
+External.initMetadata = function (wallet) {
+  var masterhdnode = wallet.hdwallet.getMasterHDNode();
+  return Metadata.fromMasterHDNode(masterhdnode, METADATA_TYPE_EXTERNAL);
 };
 
-External.prototype.fromJSON = function (object) {
-  this.loaded = true;
-  if (object !== null) {
-    if (object.coinify) {
-      var coinifyDelegate = new ExchangeDelegate(this._wallet);
-      this._coinify = new Coinify(object.coinify, coinifyDelegate);
-      coinifyDelegate.trades = this._coinify.trades;
-    }
-    if (object.sfox) {
-      var sfoxDelegate = new ExchangeDelegate(this._wallet);
-      this._sfox = new SFOX(object.sfox, sfoxDelegate);
-      sfoxDelegate.trades = this._sfox.trades;
-    }
-  }
-  return this;
+External.fromJSON = function (wallet, json, magicHash) {
+  var success = (payload) => {
+    return new External(metadata, wallet, payload);
+  };
+  var metadata = External.initMetadata(wallet);
+  return metadata.fromObject(JSON.parse(json), magicHash).then(success);
+};
+
+External.fetch = function (wallet) {
+  var metadata = External.initMetadata(wallet);
+
+  var fetchSuccess = function (payload) {
+    return new External(metadata, wallet, payload);
+  };
+
+  var fetchFailed = function (e) {
+    // Metadata service is down or unreachable.
+    return Promise.reject(e);
+  };
+  return metadata.fetch().then(fetchSuccess).catch(fetchFailed);
 };
 
 External.prototype.save = function () {
