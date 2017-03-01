@@ -66,12 +66,12 @@ describe('External', () => {
     describe('new External()', () =>
       it('should transform an Object to an External', () => {
         e = new External(wallet);
-        return expect(e.constructor.name).toEqual('External');
+        expect(e.constructor.name).toEqual('External');
       })
     )
   );
 
-  return describe('instance', () => {
+  describe('instance', () => {
     beforeEach(() => {
       e = new External(wallet);
     });
@@ -80,31 +80,31 @@ describe('External', () => {
       it('should include partners if present', done => {
         let promise = e.fetch().then(res => {
           expect(e._coinify).toBeDefined();
-          return expect(e._sfox).toBeDefined();
+          expect(e._sfox).toBeDefined();
         });
-        return expect(promise).toBeResolved(done);
+        expect(promise).toBeResolved(done);
       });
 
       it('should not cointain any partner by default', done => {
         mockPayload = {};
         let promise = e.fetch().then(res => {
           expect(e._coinify).toBeUndefined();
-          return expect(e._sfox).toBeUndefined();
+          expect(e._sfox).toBeUndefined();
         });
-        return expect(promise).toBeResolved(done);
+        expect(promise).toBeResolved(done);
       });
 
       return it('should not deserialize non-expected fields', done => {
         mockPayload = {coinify: {}, rarefield: 'I am an intruder'};
         let promise = e.fetch().then(res => {
           expect(e._coinify).toBeDefined();
-          return expect(e._rarefield).toBeUndefined();
+          expect(e._rarefield).toBeUndefined();
         });
-        return expect(promise).toBeResolved(done);
+        expect(promise).toBeResolved(done);
       });
     });
 
-    return describe('JSON serializer', () => {
+    describe('JSON serializer', () => {
       beforeEach(() => {
         e._coinify = {};
         e._sfox = {};
@@ -112,16 +112,78 @@ describe('External', () => {
 
       it('should store partners', () => {
         let json = JSON.stringify(e, null, 2);
-        return expect(json).toEqual(JSON.stringify({coinify: {}, sfox: {}}, null, 2));
+        expect(json).toEqual(JSON.stringify({coinify: {}, sfox: {}}, null, 2));
       });
 
-      return it('should not serialize non-expected fields', () => {
+      it('should not serialize non-expected fields', () => {
         e.rarefield = 'I am an intruder';
         let json = JSON.stringify(e, null, 2);
         let obj = JSON.parse(json);
 
         expect(obj.coinify).toBeDefined();
-        return expect(obj.rarefield).not.toBeDefined();
+        expect(obj.rarefield).not.toBeDefined();
+      });
+    });
+  });
+
+  describe('canBuy', () => {
+    e = new External(wallet);
+
+    const accountInfo = {
+      countryCodeGuess: 'US',
+      invited: {
+        coinify: false,
+        sfox: false
+      }
+    };
+
+    const options = {
+      showBuySellTab: ['US'],
+      partners: {
+        coinify: {
+          countries: ['NL']
+        },
+        sfox: {
+          countries: ['US']
+        }
+      }
+    };
+
+    it('should be false in a non-coinify country by default', () => {
+      expect(e.canBuy(accountInfo, options)).toEqual(false);
+    });
+
+    describe('in a Coinify country', () => {
+      beforeEach(() => {
+        accountInfo.countryCodeGuess = 'NL';
+      });
+
+      it('should be true regardless of what backend says', () => {
+        accountInfo.countryCodeGuess = 'NL';
+        accountInfo.invited.coinify = false;
+        accountInfo.invited.sfox = false;
+        expect(e.canBuy(accountInfo, options)).toEqual(true);
+      });
+    });
+
+    describe('in an SFOX country', () => {
+      beforeEach(() => {
+        accountInfo.countryCodeGuess = 'US';
+      });
+
+      it('should be false when user is not invited', () => {
+        expect(e.canBuy(accountInfo, options)).toEqual(false);
+      });
+
+      it('should be true when user is invited', () => {
+        accountInfo.invited.sfox = true;
+        expect(e.canBuy(accountInfo, options)).toEqual(true);
+      });
+
+      it('should not be affected by coinify.invited', () => {
+        accountInfo.invited.coinify = true;
+        accountInfo.invited.sfox = false;
+        expect(e.canBuy(accountInfo, options)).toEqual(false);
       });
     });
   });
