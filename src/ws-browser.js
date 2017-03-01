@@ -1,5 +1,4 @@
 
-var global = (function () { return this; })();
 var WebSocket = global.WebSocket || global.MozWebSocket;
 
 function ws (uri, protocols, opts) {

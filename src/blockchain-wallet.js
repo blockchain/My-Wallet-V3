@@ -22,6 +22,7 @@ var External = require('./external');
 var AccountInfo = require('./account-info');
 var Metadata = require('./metadata');
 var constants = require('./constants');
+var Payment = require('./payment');
 
 // Wallet
 
@@ -846,6 +847,16 @@ Wallet.prototype.loadExternal = function () {
   }
 };
 
+Wallet.prototype.loadExternalFromJSON = function (object) {
+  // patch (buy-sell does not work with double encryption for now)
+  if (this.isDoubleEncrypted === true || !this.isUpgradedToHD) {
+    return;
+  } else {
+    this._external = new External(this);
+    return this._external.fromJSON(object);
+  }
+};
+
 Wallet.prototype.metadata = function (typeId) {
   var masterhdnode = this.hdwallet.getMasterHDNode();
   return Metadata.fromMasterHDNode(masterhdnode, typeId);
@@ -875,4 +886,8 @@ Wallet.prototype.saveGUIDtoMetadata = function () {
   } else {
     return Promise.reject();
   }
+};
+
+Wallet.prototype.createPayment = function (initialState) {
+  return new Payment(this, initialState);
 };
