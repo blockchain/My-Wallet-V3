@@ -160,23 +160,34 @@ Metadata.prototype.update = function (payload) {
   }
 };
 
+Metadata.prototype.fromObject = function (payload, magicHashHex) {
+  if (magicHashHex) {
+    this._magicHash = Buffer.from(magicHashHex, 'hex');
+  }
+
+  const saveValue = (res) => {
+    if (res === null) return res;
+    this._value = Metadata.toImmutable(res);
+    return res;
+  };
+
+  return Promise.resolve(payload).then(saveValue);
+};
+
 Metadata.prototype.fetch = function () {
+  const saveMagicHash = (res) => {
+    if (res === null) return res;
+    this._magicHash = prop('compute_new_magic_hash', res);
+    return res;
+  };
+
   return this.next(() => {
     const M = Metadata;
-    const saveMagicHash = (res) => {
-      if (res === null) return res;
-      this._magicHash = prop('compute_new_magic_hash', res);
-      return res;
-    };
-    const saveValue = (res) => {
-      if (res === null) return res;
-      this._value = Metadata.toImmutable(res);
-      return res;
-    };
+
     return M.GET(this._address).then(M.verifyResponse(this._address))
                                .then(saveMagicHash)
                                .then(M.extractResponse(this._encKeyBuffer))
-                               .then(saveValue)
+                               .then(this.fromObject.bind(this))
                                .catch((e) => {
                                  console.error(`Failed to fetch metadata entry ${this._typeId} at ${this._address}:`, e);
                                  return Promise.reject('METADATA_FETCH_FAILED');

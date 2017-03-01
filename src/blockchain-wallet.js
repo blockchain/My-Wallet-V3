@@ -1,5 +1,3 @@
-'use strict';
-
 module.exports = Wallet;
 
 // dependencies
@@ -23,7 +21,7 @@ var AccountInfo = require('./account-info');
 var Metadata = require('./metadata');
 var constants = require('./constants');
 var Payment = require('./payment');
-var AddressesHD = require('./addresses');
+var Labels = require('./labels');
 
 // Wallet
 
@@ -320,13 +318,10 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () { return this._accountInfo; }
   },
-  'addressesHD': {
+  'labels': {
     configurable: false,
     get: function () {
-      if (!this._addressesHD) {
-        this._addressesHD = new AddressesHD(this);
-      }
-      return this._addressesHD;
+      return this._labels;
     }
   }
 });
@@ -699,7 +694,7 @@ Wallet.prototype.upgradeToV3 = function (firstAccountLabel, pw, success, error) 
   this._hd_wallets.push(hd);
   var label = firstAccountLabel || 'My Bitcoin Wallet';
   this.newAccount(label, pw, this._hd_wallets.length - 1, true);
-  this.loadExternal();
+  this.loadMetadata();
   MyWallet.syncWallet(function (res) {
     success();
   }, error);
@@ -847,29 +842,62 @@ Wallet.prototype.fetchAccountInfo = function () {
   });
 };
 
-Wallet.prototype.loadExternal = function () {
+Wallet.prototype.metadata = function (typeId) {
+  var masterhdnode = this.hdwallet.getMasterHDNode();
+  return Metadata.fromMasterHDNode(masterhdnode, typeId);
+};
+
+Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
+  optionalPayloads = optionalPayloads || {};
+
+  var self = this;
+
   // patch (buy-sell does not work with double encryption for now)
   if (this.isDoubleEncrypted === true || !this.isUpgradedToHD) {
     return Promise.resolve();
   } else {
-    this._external = new External(this);
-    return this._external.fetch();
-  }
-};
+    var fetchExternal = function () {
+      var success = function (external) {
+        self._external = external;
+      };
 
-Wallet.prototype.loadExternalFromJSON = function (object) {
-  // patch (buy-sell does not work with double encryption for now)
-  if (this.isDoubleEncrypted === true || !this.isUpgradedToHD) {
-    return;
-  } else {
-    this._external = new External(this);
-    return this._external.fromJSON(object);
-  }
-};
+      var error = function (message) {
+        console.warn('wallet.external not set:', message);
+        self._external = null;
+        return Promise.resolve();
+      };
 
-Wallet.prototype.metadata = function (typeId) {
-  var masterhdnode = this.hdwallet.getMasterHDNode();
-  return Metadata.fromMasterHDNode(masterhdnode, typeId);
+      if (optionalPayloads.external) {
+        return External.fromJSON(this, optionalPayloads.external, magicHashes.external).then(success);
+      } else {
+        return External.fetch(this).then(success).catch(error);
+      }
+    };
+
+    var fetchLabels = function () {
+      var success = function (labels) {
+        console.log("Success fetchLabels", labels);
+        self._labels = labels;
+      };
+
+      var error = function (message) {
+        console.warn('wallet.labels not set:', message);
+        self._labels = null;
+        return Promise.resolve();
+      };
+
+      if (optionalPayloads.labels) {
+        return Labels.fromJSON(this, optionalPayloads.labels, magicHashes.labels).then(success);
+      } else {
+        return Labels.fetch(this).then(success).catch(error);
+      }
+    };
+
+    return Promise.all([
+      fetchExternal.bind(this)(),
+      fetchLabels.bind(this)()
+    ]);
+  }
 };
 
 Wallet.prototype.incStats = function () {
