@@ -94,10 +94,10 @@ Metadata.magic = curry(
 );
 
 Metadata.verify = (address, signature, hash) =>
-  Bitcoin.message.verify(address, signature, hash);
+  Bitcoin.message.verify(address, signature, hash, constants.getNetwork());
 
 // Metadata.sign :: keyPair -> msg -> Buffer
-Metadata.sign = (keyPair, msg) => Bitcoin.message.sign(keyPair, msg, Bitcoin.networks.bitcoin);
+Metadata.sign = (keyPair, msg) => Bitcoin.message.sign(keyPair, msg, constants.getNetwork());
 
 // Metadata.computeSignature :: keypair -> buffer -> buffer -> base64
 Metadata.computeSignature = (key, payloadBuff, magicHash) =>
@@ -177,7 +177,10 @@ Metadata.prototype.fetch = function () {
                                .then(saveMagicHash)
                                .then(M.extractResponse(this._encKeyBuffer))
                                .then(saveValue)
-                               .catch((e) => Promise.reject('METADATA_FETCH_FAILED'));
+                               .catch((e) => {
+                                 console.error(`Failed to fetch metadata entry ${this._typeId} at ${this._address}:`, e);
+                                 return Promise.reject('METADATA_FETCH_FAILED');
+                               });
   });
 };
 
