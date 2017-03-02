@@ -197,7 +197,7 @@ MyWallet.makePairingCode = function (success, error) {
 
 MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHex, password) {
   var walletJSON = JSON.parse(stringWallet);
-  var externalJSON = JSON.parse(stringExternal);
+  var externalJSON = stringExternal ? JSON.parse(stringExternal) : null;
   MyWallet.wallet = new Wallet(walletJSON);
   WalletStore.unsafeSetPassword(password);
   MyWallet.wallet.loadExternalFromJSON(externalJSON);
