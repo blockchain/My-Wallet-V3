@@ -3,7 +3,7 @@ all: clean node_modules semistandard test dist/my-wallet.js dist/my-wallet.min.j
 node_modules:
 	npm install
 
-build:
+build: node_modules
 	npm run build
 
 test: build
@@ -11,7 +11,7 @@ test: build
 
 dist/my-wallet.js: build
 
-dist/my-wallet.min.js:
+dist/my-wallet.min.js: node_modules
 	npm run dist
 	npm shrinkwrap --dev
 
