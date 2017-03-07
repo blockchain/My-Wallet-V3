@@ -65,7 +65,7 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
 
   if (obj.op === 'on_change') {
     var oldChecksum = WalletStore.generatePayloadChecksum();
-    var newChecksum = obj.checksum;
+    var newChecksum = obj.x.checksum;
 
     if (lastOnChange.checksum !== newChecksum && oldChecksum !== newChecksum) {
       lastOnChange.checksum = newChecksum;
