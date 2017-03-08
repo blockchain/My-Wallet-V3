@@ -876,7 +876,6 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
 
     var fetchLabels = function () {
       var success = function (labels) {
-        console.log("Success fetchLabels", labels);
         self._labels = labels;
       };
 
