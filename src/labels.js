@@ -53,8 +53,7 @@ class Labels {
   }
 
   static initMetadata (wallet) {
-    var masterhdnode = wallet.hdwallet.getMasterHDNode();
-    return Metadata.fromMasterHDNode(masterhdnode, METADATA_TYPE_LABELS);
+    return Metadata.fromMasterHDNode(wallet._metadataHDNode, METADATA_TYPE_LABELS);
   }
 
   toJSON () {
