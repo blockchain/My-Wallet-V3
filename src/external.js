@@ -85,8 +85,7 @@ External.prototype.toJSON = function () {
 };
 
 External.initMetadata = function (wallet) {
-  var masterhdnode = wallet.hdwallet.getMasterHDNode();
-  return Metadata.fromMasterHDNode(masterhdnode, METADATA_TYPE_EXTERNAL);
+  return Metadata.fromMasterHDNode(wallet._metadataHDNode, METADATA_TYPE_EXTERNAL);
 };
 
 External.fromJSON = function (wallet, json, magicHash) {

@@ -22,6 +22,7 @@ var Metadata = require('./metadata');
 var constants = require('./constants');
 var Payment = require('./payment');
 var Labels = require('./labels');
+var Bitcoin = require('bitcoinjs-lib');
 
 // Wallet
 
@@ -58,6 +59,8 @@ function Wallet (object) {
       }, {})
       : {};
 
+  this._metadataHDNode = null;
+  this.setMetadataNode(obj.metadataHDNode);
   // tx_notes dictionary
   this._tx_notes = obj.tx_notes || {};
 
@@ -79,6 +82,10 @@ function Wallet (object) {
 }
 
 Object.defineProperties(Wallet.prototype, {
+  'isMetadataReady': {
+    configurable: false,
+    get: function () { return this._metadataHDNode != null; }
+  },
   'guid': {
     configurable: false,
     get: function () { return this._guid; }
@@ -414,6 +421,7 @@ Wallet.prototype.toJSON = function () {
     sharedKey: this.sharedKey,
     double_encryption: this.isDoubleEncrypted,
     dpasswordhash: this.dpasswordhash,
+    metadataHDNode: this._metadataHDNode.toBase58(),
     options: {
       pbkdf2_iterations: this.pbkdf2_iterations,
       fee_per_kb: this.fee_per_kb,
@@ -928,3 +936,21 @@ Wallet.prototype.saveGUIDtoMetadata = function () {
 Wallet.prototype.createPayment = function (initialState) {
   return new Payment(this, initialState);
 };
+
+Wallet.prototype.setMetadataNode = function (hdnodebase58, secondPassword) {
+  if (hdnodebase58) {
+    this._metadataHDNode = Bitcoin.HDNode.fromBase58(hdnodebase58, constants.getNetwork());
+    return true;
+  }
+  if (!hdnodebase58 && !this.double_encryption) {
+    this._metadataHDNode = this.hdwallet.getMasterHDNode();
+    return true;
+  }
+  if (!hdnodebase58 && this.double_encryption && secondPassword) {
+    var cipher = WalletCrypto.cipherFunction.bind(undefined, secondPassword, this._sharedKey, this._pbkdf2_iterations);
+    this._metadataHDNode = this.hdwallet.getMasterHDNode(cipher);
+    return true;
+  }
+  // otherwise we cannot set it
+  return false
+}
