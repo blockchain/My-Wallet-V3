@@ -13,15 +13,26 @@ class Labels {
     this._metadata = metadata;
 
     // For migration and legacy support, we need to keep a reference:
-    this.hd_wallet = wallet.hd_wallet;
-
-    this._cache = {};
+    this.hdwallet = wallet.hdwallet;
 
     if (object !== null) {
       // TODO: run upgrade scripts
       // TODO: abort if major version changed
-      this._accounts = object.accounts || []; // TODO: integrity check
-      this._account_names = object.account_names || []; // TODO: integrity check
+      this._accounts = [];
+      for (let accountObject of object.accounts) {
+        let accountIndex = object.accounts.indexOf(accountObject);
+        let addresses = [];
+        for (let addressObject of accountObject) {
+          if (addressObject === null) {
+            addresses.push(null);
+          } else {
+            let hdAccount = wallet.hdwallet.accounts[accountIndex];
+            let addressIndex = accountObject.indexOf(addressObject);
+            addresses.push(new AddressHD(addressObject, hdAccount, addressIndex));
+          }
+        }
+        this._accounts[accountIndex] = addresses;
+      }
     } else {
       this.migrate();
     }
@@ -35,8 +46,13 @@ class Labels {
   toJSON () {
     return {
       version: '1.0.0',
-      accounts: this._accounts,
-      account_names: this._account_names
+      accounts: this._accounts.map((addresses) => {
+        // Remove trailing null values:
+        while (addresses[addresses.length - 1] === null || addresses[addresses.length - 1].label === null) {
+          addresses.pop();
+        }
+        return addresses;
+      })
     };
   }
 
@@ -76,8 +92,6 @@ class Labels {
   }
 
   migrate () {
-    this._labels = [];
-    this._account_names = [];
     // TODO: for each wallet account:
     // TODO:   go through address_labels, add entries here and delete in original wallet
     // TODO:   put placeholder entry with just the index
@@ -129,25 +143,19 @@ class Labels {
     assert(Helpers.isPositiveInteger(accountIndex), 'specify accountIndex');
     if (!this._accounts[accountIndex]) return null;
 
-    return this._accounts[accountIndex].map((currentValue, index) => {
-      let key = `address_hd_${accountIndex}_${index}`;
-      if (!this._cache[key]) {
-        if (currentValue === null) {
-          if (options.includeUnlabeled) {
-            this._cache[key] = new AddressHD(null,
-                                            this._wallet.hdwallet.accounts[accountIndex],
-                                            index);
-          } else {
-            return null;
-          }
-        } else {
-          this._cache[key] = new AddressHD(currentValue,
-                                          this._wallet.hdwallet.accounts[accountIndex],
-                                          index);
+    if (options.includeUnlabeled) {
+      // Add null entries up to the current receive index
+      let receiveIndex = this._wallet.hdwallet.accounts[accountIndex].receiveIndex;
+      for (let i = 0; i < receiveIndex; i++) {
+        if (!this._accounts[accountIndex][i]) {
+          this._accounts[accountIndex][i] = new AddressHD(null,
+                        this._wallet.hdwallet.accounts[accountIndex],
+                        i);
         }
       }
-      return this._cache[key];
-    });
+    }
+
+    return this._accounts[accountIndex].filter((a) => a !== null);
   }
 
   maxLabeledReceiveIndex (accountIndex) {
@@ -168,27 +176,86 @@ class Labels {
     return entry.label;
   }
 
-  addLabel (accountIndex, addressIndex, label) {
-    // TODO: check if it already exists
+  addLabel (accountIndex, label, maxGap) {
+    assert(Helpers.isPositiveInteger(accountIndex), 'specify accountIndex');
+    assert(Helpers.isString(label), 'specify label');
+    assert(maxGap <= 19, 'Max gap must be less than 20');
+
+    maxGap = maxGap || 19;
+
+    let receiveIndex = this._wallet.hdwallet.accounts[accountIndex].receiveIndex;
+    let lastUsedReceiveIndex = this._wallet.hdwallet.accounts[accountIndex].lastUsedReceiveIndex;
+
+    if (!Helpers.isValidLabel(label)) {
+      return Promise.reject('NOT_ALPHANUMERIC');
+    } else if (receiveIndex - lastUsedReceiveIndex >= maxGap) {
+      // Exceeds BIP 44 unused address gap limit
+      return Promise.reject('GAP');
+    }
+
+    this._wallet.hdwallet.accounts[accountIndex].incrementReceiveIndexIfLast(receiveIndex);
+    // Legacy:
+    if (false) { // TODO: check if this is the highest index for this account
+      // TODO: modify index of account.address_labels entry.
+    }
+
     if (!this._accounts[accountIndex]) {
       this._accounts[accountIndex] = [];
     }
-    this._accounts[accountIndex][addressIndex] = {label: label};
+
+    let addr = this._accounts[accountIndex][receiveIndex];
+    if (!addr) {
+      addr = new AddressHD(null,
+                           this._wallet.hdwallet.accounts[accountIndex],
+                           receiveIndex);
+      addr.used = false;
+      this._accounts[accountIndex][receiveIndex] = addr;
+    }
+
+    addr.label = label;
+
+    return this.save().then(() => {
+      return addr;
+    });
+  }
+
+  setLabel (accountIndex, address, label) {
+    assert(Helpers.isPositiveInteger(accountIndex), 'Account index required');
+    assert(this._accounts[accountIndex], `_accounts[${accountIndex}] should exist`);
+
+    let addressIndex = this._accounts[accountIndex].indexOf(address);
+
+    assert(Helpers.isPositiveInteger(addressIndex), 'Address not found');
+
+    if (!Helpers.isValidLabel(label)) {
+      return Promise.reject('NOT_ALPHANUMERIC');
+    }
+
+    address.label = label;
 
     // Legacy:
     if (false) { // TODO: check if this is the highest index for this account
       // TODO: modify index of account.address_labels entry.
     }
-    this.save();
+    return this.save();
   }
 
-  removeLabel (accountIndex, addressIndex) {
-    this._accounts[accountIndex][addressIndex] = undefined;
+  removeLabel (accountIndex, address) {
+    assert(Helpers.isPositiveInteger(accountIndex), 'Account index required');
+    assert(this._accounts[accountIndex], `_accounts[${accountIndex}] should exist`);
+
+    let addressIndex = this._accounts[accountIndex].indexOf(address);
+
+    assert(Helpers.isPositiveInteger(addressIndex), 'Address not found');
+
+    address.label = null;
+
     // Legacy:
     if (false) { // TODO: check if this was the highest index for this account
       // TODO: modify index of account.address_labels entry.
     }
-    this.save();
+
+    return this.save();
   }
 
 }

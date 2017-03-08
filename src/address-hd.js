@@ -20,6 +20,13 @@ class AddressHD {
     this._address = undefined;
   }
 
+  toJSON () {
+    if (this._label === null) return null;
+    return {
+      label: this._label
+    };
+  }
+
   get address () {
     if (!this._address) {
       this._address = this._account.receiveAddressAtIndex(this._index);
@@ -29,6 +36,10 @@ class AddressHD {
 
   get label () {
     return this._label;
+  }
+
+  set label (value) {
+    this._label = value;
   }
 
   get balance () {
