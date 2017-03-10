@@ -128,7 +128,7 @@ ExchangeDelegate.prototype.reserveReceiveAddress = function () {
   var self = this;
 
   // Respect the GAP limit:
-  if (receiveAddressIndex - account.lastUsedReceiveIndex >= 19) {
+  if (receiveAddressIndex - account.lastUsedReceiveIndex >= 20) {
     receiveAddressIndex = findLastExchangeIndex(account.receiveIndex);
     if (receiveAddressIndex == null) throw new Error('gap_limit');
   }

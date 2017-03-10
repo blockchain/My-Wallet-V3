@@ -159,7 +159,10 @@ class Labels {
   }
 
   maxLabeledReceiveIndex (accountIndex) {
-    // TODO
+    if (!this._accounts[accountIndex]) return -1;
+    let labeledAddresses = this._accounts[accountIndex].filter(a => a && a.label);
+    if (labeledAddresses.length === 0) return -1;
+    return this._accounts[accountIndex].indexOf(labeledAddresses.reverse()[0]);
   }
 
   getLabel (accountIndex, addressIndex) {
@@ -179,9 +182,9 @@ class Labels {
   addLabel (accountIndex, label, maxGap) {
     assert(Helpers.isPositiveInteger(accountIndex), 'specify accountIndex');
     assert(Helpers.isString(label), 'specify label');
-    assert(maxGap <= 19, 'Max gap must be less than 20');
+    assert(maxGap <= 20, 'Max gap must be less than 20');
 
-    maxGap = maxGap || 19;
+    maxGap = maxGap || 20;
 
     let receiveIndex = this._wallet.hdwallet.accounts[accountIndex].receiveIndex;
     let lastUsedReceiveIndex = this._wallet.hdwallet.accounts[accountIndex].lastUsedReceiveIndex;
@@ -193,7 +196,6 @@ class Labels {
       return Promise.reject('GAP');
     }
 
-    this._wallet.hdwallet.accounts[accountIndex].incrementReceiveIndexIfLast(receiveIndex);
     // Legacy:
     if (false) { // TODO: check if this is the highest index for this account
       // TODO: modify index of account.address_labels entry.

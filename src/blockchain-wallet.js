@@ -353,12 +353,8 @@ Wallet.prototype._updateWalletInfo = function (obj) {
       if (account) {
         account.balance = e.final_balance;
         account.n_tx = e.n_tx;
-        account.lastUsedReceiveIndex = e.account_index;
-        account.receiveIndex = Math.max(account.lastUsedReceiveIndex, account.maxLabeledReceiveIndex);
+        account.lastUsedReceiveIndex = e.account_index - 1;
         account.changeIndex = e.change_index;
-        if (account.getLabelForReceivingAddress(account.receiveIndex)) {
-          account.incrementReceiveIndex();
-        }
       }
     }
     var address = this.activeKey(e.address);

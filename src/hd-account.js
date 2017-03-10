@@ -12,10 +12,8 @@ var constants = require('./constants');
 // HDAccount Class
 
 function HDAccount (object) {
-  var self = this;
   var obj = object || {};
   obj.cache = obj.cache || {};
-  obj.address_labels = obj.address_labels || [];
   // serializable data
   this._label = obj.label;
   this._archived = obj.archived || false;
@@ -23,14 +21,15 @@ function HDAccount (object) {
   this._xpub = obj.xpub;
   this._network = obj.network || Bitcoin.networks.bitcoin;
 
-  this._address_labels = [];
-  obj.address_labels.map(function (e) { self._address_labels[e.index] = e.label; });
+  // Do not delete address_labels field when saving wallet:
+  // * backwards compatibility with mobile (we'll keep one entry for the highest label)
+  // * if user has 2nd password enabled and doesn't enter it during migration step
+  this._address_labels_backup = obj.address_labels;
 
   // computed properties
   this._keyRing = new KeyRing(obj.xpub, obj.cache);
-  this._receiveIndex = 0;
   // The highest receive index with transactions, as returned by the server:
-  this._lastUsedReceiveIndex = 0;
+  this._lastUsedReceiveIndex = -1;
   this._changeIndex = 0;
   this._n_tx = 0;
   this._balance = null;
@@ -40,7 +39,6 @@ function HDAccount (object) {
 // PUBLIC PROPERTIES
 
 Object.defineProperties(HDAccount.prototype, {
-
   'label': {
     configurable: false,
     get: function () { return this._label; },
@@ -94,13 +92,12 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'receiveIndex': {
     configurable: false,
-    get: function () { return this._receiveIndex; },
-    set: function (value) {
-      if (Helpers.isPositiveInteger(value)) {
-        this._receiveIndex = value;
-      } else {
-        throw new Error('account.receiveIndex must be a number');
+    get: function () {
+      let maxLabeledReceiveIndex = -1;
+      if (MyWallet.wallet.labels) {
+        maxLabeledReceiveIndex = MyWallet.wallet.labels.maxLabeledReceiveIndex(this.index);
       }
+      return Math.max(this.lastUsedReceiveIndex, maxLabeledReceiveIndex) + 1;
     }
   },
   'lastUsedReceiveIndex': {
@@ -114,19 +111,6 @@ Object.defineProperties(HDAccount.prototype, {
       }
     }
   },
-  'maxLabeledReceiveIndex': {
-    configurable: false,
-    get: function () {
-      var keys = Object.keys(this._address_labels).map(function (k) {
-        return parseInt(k, 10);
-      });
-      if (keys.length === 0) {
-        return -1;
-      } else {
-        return Math.max.apply(null, keys);
-      }
-    }
-  },
   'changeIndex': {
     configurable: false,
     get: function () { return this._changeIndex; },
@@ -136,25 +120,6 @@ Object.defineProperties(HDAccount.prototype, {
       } else {
         throw new Error('account.changeIndex must be a number');
       }
-    }
-  },
-  'receivingAddressesLabels': {
-    configurable: false,
-    get: function () {
-      var denseArray = [];
-      this._address_labels
-        .map(function (lab, ind) { denseArray.push({'index': ind, 'label': lab}); });
-      return denseArray;
-    }
-  },
-  'labeledReceivingAddresses': {
-    configurable: false,
-    get: function () {
-      var denseArray = [];
-      var outerThis = this;
-      this._address_labels
-        .map(function (lab, i) { denseArray.push(outerThis.receiveAddressAtIndex(i)); });
-      return denseArray;
     }
   },
   'extendedPublicKey': {
@@ -171,7 +136,7 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'receiveAddress': {
     configurable: false,
-    get: function () { return this._keyRing.receive.getAddress(this._receiveIndex); }
+    get: function () { return this._keyRing.receive.getAddress(this.receiveIndex); }
   },
   'changeAddress': {
     configurable: false,
@@ -250,7 +215,7 @@ HDAccount.prototype.toJSON = function () {
     archived: this._archived,
     xpriv: this._xpriv,
     xpub: this._xpub,
-    address_labels: this.receivingAddressesLabels,
+    address_labels: this._address_labels_backup,
     cache: this._keyRing
   };
 
@@ -260,42 +225,6 @@ HDAccount.prototype.toJSON = function () {
 HDAccount.reviver = function (k, v) {
   if (k === '') return new HDAccount(v);
   return v;
-};
-
-HDAccount.prototype.incrementReceiveIndex = function () {
-  this._receiveIndex++;
-  return this;
-};
-HDAccount.prototype.incrementReceiveIndexIfLast = function (index) {
-  if (this._receiveIndex === index) {
-    this.incrementReceiveIndex();
-  }
-  return this;
-};
-HDAccount.prototype.decrementReceiveIndex = function () {
-  this._receiveIndex--;
-  return this;
-};
-HDAccount.prototype.decrementReceiveIndexIfLast = function (index) {
-  if (this._receiveIndex === index + 1) {
-    this.decrementReceiveIndex();
-  }
-  return this;
-};
-
-// address labels
-
-HDAccount.prototype.removeLabelForReceivingAddress = function (index) {
-  assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
-  delete this._address_labels[index];
-  this.decrementReceiveIndexIfLast(index);
-  MyWallet.syncWallet();
-  return this;
-};
-
-HDAccount.prototype.getLabelForReceivingAddress = function (index) {
-  assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
-  return this._address_labels[index];
 };
 
 HDAccount.prototype.receiveAddressAtIndex = function (index) {
