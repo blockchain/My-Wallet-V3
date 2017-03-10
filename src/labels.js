@@ -9,32 +9,39 @@ var METADATA_TYPE_LABELS = 4;
 
 class Labels {
   constructor (metadata, wallet, object) {
+    this._readOnly = false; // Default
     this._wallet = wallet;
     this._metadata = metadata;
 
-    // For migration and legacy support, we need to keep a reference:
-    this.hdwallet = wallet.hdwallet;
+    let before = JSON.stringify(object);
+    object = this.migrateIfNeeded(object);
 
-    if (object !== null) {
-      // TODO: run upgrade scripts
-      // TODO: abort if major version changed
-      this._accounts = [];
-      for (let accountObject of object.accounts) {
-        let accountIndex = object.accounts.indexOf(accountObject);
-        let addresses = [];
-        for (let addressObject of accountObject) {
-          if (addressObject === null) {
-            addresses.push(null);
-          } else {
-            let hdAccount = wallet.hdwallet.accounts[accountIndex];
-            let addressIndex = accountObject.indexOf(addressObject);
-            addresses.push(new AddressHD(addressObject, hdAccount, addressIndex));
-          }
+    this.init(object);
+
+    if (JSON.stringify(object) !== before) {
+      this.save();
+    }
+  }
+
+  get readOnly () {
+    return this._readOnly || this._wallet.isDoubleEncrypted;
+  }
+
+  init (object) {
+    this._accounts = [];
+    for (let accountObject of object.accounts) {
+      let accountIndex = object.accounts.indexOf(accountObject);
+      let addresses = [];
+      for (let addressObject of accountObject) {
+        if (addressObject === null) {
+          addresses.push(null);
+        } else {
+          let hdAccount = this._wallet.hdwallet.accounts[accountIndex];
+          let addressIndex = accountObject.indexOf(addressObject);
+          addresses.push(new AddressHD(addressObject, hdAccount, addressIndex));
         }
-        this._accounts[accountIndex] = addresses;
       }
-    } else {
-      this.migrate();
+      this._accounts[accountIndex] = addresses;
     }
   }
 
@@ -47,9 +54,11 @@ class Labels {
     return {
       version: '1.0.0',
       accounts: this._accounts.map((addresses) => {
-        // Remove trailing null values:
-        while (addresses[addresses.length - 1] === null || addresses[addresses.length - 1].label === null) {
-          addresses.pop();
+        if (addresses.length > 1) {
+          // Remove trailing null values:
+          while (addresses[addresses.length - 1] === null || addresses[addresses.length - 1].label === null) {
+            addresses.pop();
+          }
         }
         return addresses;
       })
@@ -79,23 +88,92 @@ class Labels {
   }
 
   save () {
+    if (this.readOnly) {
+      console.info('Labels KV store is read-only, not saving');
+      return Promise.resolve();
+    }
     if (!this._metadata.existsOnServer) {
       return this._metadata.create(this);
     } else {
-      // TODO: do not write if minor or major version has increased
       return this._metadata.update(this);
     }
   }
 
   wipe () {
-    this._metadata.update({}).then(this.fetch.bind(this));
+    this._metadata.update(null).then(() => { console.log('Wipe complete. Reload browser.'); });
   }
 
-  migrate () {
-    // TODO: for each wallet account:
-    // TODO:   go through address_labels, add entries here and delete in original wallet
-    // TODO:   put placeholder entry with just the index
-    //     this.save();
+  migrateIfNeeded (object) {
+    let major;
+    let minor;
+    let patch;
+
+    if (object && object.version) {
+      major = parseInt(object.version.split('.')[0]);
+      minor = parseInt(object.version.split('.')[1]);
+      patch = parseInt(object.version.split('.')[2]);
+    }
+
+    // First time, migrate from wallet payload if needed
+    if (object === null || Helpers.isEmptyObject(object)) {
+      if (this._wallet.hdwallet.accounts[0]._address_labels_backup) {
+        console.info('Migrate address labels from wallet to KV-Store v1.0.0');
+      } else {
+        // This is a new wallet
+      }
+
+      if (this._wallet.isDoubleEncrypted) {
+        // 2nd password is enabled and we can't write to the KV store
+        this._readOnly = true;
+      }
+
+      object = {
+        version: '1.0.0',
+        accounts: []
+      };
+
+      for (let account of this._wallet.hdwallet.accounts) {
+        let labels = [];
+        for (let label of account._address_labels_backup || []) {
+          labels[label.index] = {label: label.label};
+        }
+        // Set undefined entries to null:
+        for (let i = 0; i < labels.length; i++) {
+          if (!labels[i]) {
+            labels[i] = null;
+          }
+        }
+        object.accounts.push(labels);
+
+        if (!this.readOnly) {
+          account._address_labels_backup = undefined;
+        }
+      }
+    } else if (major > 1) {
+      // Payload contains unsuppored new major version, abort:
+      throw new Error('LABELS_UNSUPPORTED_MAJOR_VERSION');
+    } else if (major === 1 && minor > 0) {
+      // New minor version can safely be used in read-only mode:
+      this._readOnly = true;
+    } else if (major === 1 && minor === 0 && patch > 0) {
+      // New patch version can safely to be used.
+    }
+
+    // Run (future) migration scripts:
+    // switch (object.version) {
+    //   case '1.0.0':
+    //     // Migrate from 1.0.1 to e.g. 1.0.2 or 1.1.0:
+    //     // ...
+    //     object.version = '1.0.1';
+    //     // falls through
+    //   case '1.0.1':
+    //     // Migrate from 1.0.1 to e.g. 1.0.2 or 1.1.0:
+    //     // ...
+    //     object.version = '1.0.2';
+    //     // falls through
+    //   default:
+    // }
+    return object;
   }
 
   // Goes through all labeled addresses and checks which ones have transactions.
@@ -196,11 +274,6 @@ class Labels {
       return Promise.reject('GAP');
     }
 
-    // Legacy:
-    if (false) { // TODO: check if this is the highest index for this account
-      // TODO: modify index of account.address_labels entry.
-    }
-
     if (!this._accounts[accountIndex]) {
       this._accounts[accountIndex] = [];
     }
@@ -235,10 +308,6 @@ class Labels {
 
     address.label = label;
 
-    // Legacy:
-    if (false) { // TODO: check if this is the highest index for this account
-      // TODO: modify index of account.address_labels entry.
-    }
     return this.save();
   }
 
@@ -251,11 +320,6 @@ class Labels {
     assert(Helpers.isPositiveInteger(addressIndex), 'Address not found');
 
     address.label = null;
-
-    // Legacy:
-    if (false) { // TODO: check if this was the highest index for this account
-      // TODO: modify index of account.address_labels entry.
-    }
 
     return this.save();
   }

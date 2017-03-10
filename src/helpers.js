@@ -123,6 +123,10 @@ Helpers.toArrayFormat = function (x) {
   return Array.isArray(x) ? x : [x];
 };
 
+Helpers.isEmptyObject = function (x) {
+  return (Object.keys(x).length === 0 && x.constructor === Object);
+};
+
 Helpers.isEmptyArray = function (x) {
   return Array.isArray(x) && x.length === 0;
 };

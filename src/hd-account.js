@@ -21,7 +21,7 @@ function HDAccount (object) {
   this._xpub = obj.xpub;
   this._network = obj.network || Bitcoin.networks.bitcoin;
 
-  // Do not delete address_labels field when saving wallet:
+  // Prevent deleting address_labels field when saving wallet:
   // * backwards compatibility with mobile (we'll keep one entry for the highest label)
   // * if user has 2nd password enabled and doesn't enter it during migration step
   this._address_labels_backup = obj.address_labels;
@@ -104,11 +104,7 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function () { return this._lastUsedReceiveIndex; },
     set: function (value) {
-      if (Helpers.isPositiveInteger(value)) {
-        this._lastUsedReceiveIndex = value;
-      } else {
-        throw new Error('account.lastUsedReceiveIndex must be a number');
-      }
+      this._lastUsedReceiveIndex = value;
     }
   },
   'changeIndex': {
@@ -209,13 +205,23 @@ HDAccount.factory = function (o) {
 // JSON SERIALIZER
 
 HDAccount.prototype.toJSON = function () {
-  // should we add checks on the serializer too?
+  let labelsJSON = this._address_labels_backup;
+
+  if (MyWallet.wallet.labels && !MyWallet.wallet.labels.readOnly) {
+    // New placeholder entry to prevent address reuse:
+    labelsJSON = [];
+    let max = MyWallet.wallet.labels.maxLabeledReceiveIndex(this._index);
+    if (max > -1) {
+      labelsJSON.push({index: max, label: ''});
+    }
+  }
+
   var hdaccount = {
     label: this._label,
     archived: this._archived,
     xpriv: this._xpriv,
     xpub: this._xpub,
-    address_labels: this._address_labels_backup,
+    address_labels: labelsJSON,
     cache: this._keyRing
   };
 
