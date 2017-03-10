@@ -65,7 +65,7 @@ function Wallet (object) {
     this._metadataHDNode = Bitcoin.HDNode.fromBase58(obj.metadataHDNode, constants.getNetwork());
   } else if (!this.isUpgradedToHD) {
   } else if (!this.isDoubleEncrypted) {
-    this._metadataHDNode = this.hdwallet.getMasterHDNode();
+    this._metadataHDNode = Metadata.deriveMetadataNode(this.hdwallet.getMasterHDNode());
     MyWallet.syncWallet();
   } else {
     console.warn('Second password required to prepare KV Store');
@@ -866,50 +866,53 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
 
   var self = this;
 
-  if (!this.isMetadataReady) {
-    return Promise.resolve();
-  } else {
-    var fetchExternal = function () {
-      var success = function (external) {
-        self._external = external;
-      };
-
-      var error = function (message) {
-        console.warn('wallet.external not set:', message);
-        self._external = null;
-        return Promise.resolve();
-      };
-
-      if (optionalPayloads.external) {
-        return External.fromJSON(this, optionalPayloads.external, magicHashes.external).then(success);
-      } else {
-        return External.fetch(this).then(success).catch(error);
-      }
+  var fetchExternal = function () {
+    var success = function (external) {
+      self._external = external;
     };
 
-    var fetchLabels = function () {
-      var success = function (labels) {
-        self._labels = labels;
-      };
-
-      var error = function (message) {
-        console.warn('wallet.labels not set:', message);
-        self._labels = null;
-        return Promise.resolve();
-      };
-
-      if (optionalPayloads.labels) {
-        return Labels.fromJSON(this, optionalPayloads.labels, magicHashes.labels).then(success);
-      } else {
-        return Labels.fetch(this).then(success).catch(error);
-      }
+    var error = function (message) {
+      console.warn('wallet.external not set:', message);
+      self._external = null;
+      return Promise.resolve();
     };
 
-    return Promise.all([
-      fetchExternal.bind(this)(),
-      fetchLabels.bind(this)()
-    ]);
+    if (optionalPayloads.external) {
+      return External.fromJSON(this, optionalPayloads.external, magicHashes.external).then(success);
+    } else {
+      return External.fetch(this).then(success).catch(error);
+    }
+  };
+
+  var fetchLabels = function () {
+    var success = function (labels) {
+      self._labels = labels;
+    };
+
+    var error = function (message) {
+      console.warn('wallet.labels not set:', message);
+      self._labels = null;
+      return Promise.resolve();
+    };
+
+    if (optionalPayloads.labels) {
+      return Labels.fromJSON(this, optionalPayloads.labels, magicHashes.labels).then(success);
+    } else {
+      return Labels.fetch(this).then(success).catch(error);
+    }
+  };
+
+  let promises = [];
+
+  if (this.isMetadataReady) {
+    // No fallback is metadata is disabled
+    promises.push(fetchExternal.bind(this)());
   }
+
+  // Falls back to read-only based on wallet payload if metadata is disabled
+  promises.push(fetchLabels.bind(this)());
+
+  return Promise.all(promises);
 };
 
 Wallet.prototype.incStats = function () {
@@ -944,9 +947,8 @@ Wallet.prototype.createPayment = function (initialState) {
 Wallet.prototype.cacheMetadataKey = function (secondPassword) {
   if (!secondPassword) { return Promise.reject('second password needed'); }
   if (!this.validateSecondPassword(secondPassword)) { return Promise.reject('wrong second password'); }
-
   var cipher = WalletCrypto.cipherFunction.bind(undefined, secondPassword, this._sharedKey, this._pbkdf2_iterations);
-  this._metadataHDNode = this.hdwallet.getMasterHDNode(cipher);
+  this._metadataHDNode = Metadata.deriveMetadataNode(this.hdwallet.getMasterHDNode(cipher));
   MyWallet.syncWallet();
   return Promise.resolve();
 };

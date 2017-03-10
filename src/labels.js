@@ -80,7 +80,7 @@ class Labels {
   }
 
   static fetch (wallet) {
-    var metadata = Labels.initMetadata(wallet);
+    var metadata = wallet.isMetadataReady ? Labels.initMetadata(wallet) : null;
 
     var fetchSuccess = function (payload) {
       return new Labels(metadata, wallet, payload);
@@ -90,7 +90,12 @@ class Labels {
       // Metadata service is down or unreachable.
       return Promise.reject(e);
     };
-    return metadata.fetch().then(fetchSuccess).catch(fetchFailed);
+
+    if (wallet.isMetadataReady) {
+      return metadata.fetch().then(fetchSuccess).catch(fetchFailed);
+    } else {
+      return Promise.resolve(null).then(fetchSuccess);
+    }
   }
 
   save () {
@@ -268,6 +273,8 @@ class Labels {
     assert(Helpers.isString(label), 'specify label');
     assert(maxGap <= 20, 'Max gap must be less than 20');
 
+    if (this.readOnly) return Promise.reject('KV_LABELS_READ_ONLY');
+
     maxGap = maxGap || 20;
 
     let receiveIndex = this._wallet.hdwallet.accounts[accountIndex].receiveIndex;
@@ -306,6 +313,8 @@ class Labels {
     assert(Helpers.isPositiveInteger(accountIndex), 'Account index required');
     assert(this._accounts[accountIndex], `_accounts[${accountIndex}] should exist`);
 
+    if (this.readOnly) return Promise.reject('KV_LABELS_READ_ONLY');
+
     let addressIndex = this._accounts[accountIndex].indexOf(address);
 
     assert(Helpers.isPositiveInteger(addressIndex), 'Address not found');
@@ -326,6 +335,8 @@ class Labels {
   }
 
   removeLabel (accountIndex, address) {
+    if (this.readOnly) return Promise.reject('KV_LABELS_READ_ONLY');
+
     assert(Helpers.isPositiveInteger(accountIndex), 'Account index required');
     assert(this._accounts[accountIndex], `_accounts[${accountIndex}] should exist`);
 

@@ -220,13 +220,17 @@ Metadata.fromMetadataHDNode = function (metadataHDNode, typeId) {
   return new Metadata(node.keyPair, encryptionKey, typeId);
 };
 
-// used to create a new metadata entry from wallet master hd node
-Metadata.fromMasterHDNode = function (masterHDNode, typeId) {
+Metadata.deriveMetadataNode = function (masterHDNode) {
   // BIP 43 purpose needs to be 31 bit or less. For lack of a BIP number
   // we take the first 31 bits of the SHA256 hash of a reverse domain.
   var hash = WalletCrypto.sha256('info.blockchain.metadata');
   var purpose = hash.slice(0, 4).readUInt32BE(0) & 0x7FFFFFFF; // 510742
-  var metadataHDNode = masterHDNode.deriveHardened(purpose);
+  return masterHDNode.deriveHardened(purpose);
+};
+
+// used to create a new metadata entry from wallet master hd node
+Metadata.fromMasterHDNode = function (masterHDNode, typeId) {
+  var metadataHDNode = Metadata.deriveMetadataNode(masterHDNode);
   return Metadata.fromMetadataHDNode(metadataHDNode, typeId);
 };
 
