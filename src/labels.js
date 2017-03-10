@@ -10,6 +10,7 @@ var METADATA_TYPE_LABELS = 4;
 class Labels {
   constructor (metadata, wallet, object) {
     this._readOnly = false; // Default
+    this._dirty = true;
     this._wallet = wallet;
     this._metadata = metadata;
 
@@ -20,11 +21,17 @@ class Labels {
 
     if (JSON.stringify(object) !== before) {
       this.save();
+    } else {
+      this._dirty = false;
     }
   }
 
   get readOnly () {
     return this._readOnly || this._wallet.isDoubleEncrypted;
+  }
+
+  get dirty () {
+    return this._dirty;
   }
 
   init (object) {
@@ -93,9 +100,13 @@ class Labels {
       return Promise.resolve();
     }
     if (!this._metadata.existsOnServer) {
-      return this._metadata.create(this);
+      return this._metadata.create(this).then(() => {
+        this._dirty = false;
+      });
     } else {
-      return this._metadata.update(this);
+      return this._metadata.update(this).then(() => {
+        this._dirty = false;
+      });
     }
   }
 
@@ -144,10 +155,6 @@ class Labels {
           }
         }
         object.accounts.push(labels);
-
-        if (!this.readOnly) {
-          account._address_labels_backup = undefined;
-        }
       }
     } else if (major > 1) {
       // Payload contains unsuppored new major version, abort:
@@ -289,6 +296,8 @@ class Labels {
 
     addr.label = label;
 
+    this._dirty = true;
+
     return this.save().then(() => {
       return addr;
     });
@@ -306,7 +315,13 @@ class Labels {
       return Promise.reject('NOT_ALPHANUMERIC');
     }
 
+    if (address.label === label) {
+      return Promise.resolve();
+    }
+
     address.label = label;
+
+    this._dirty = true;
 
     return this.save();
   }
@@ -320,6 +335,8 @@ class Labels {
     assert(Helpers.isPositiveInteger(addressIndex), 'Address not found');
 
     address.label = null;
+
+    this._dirty = true;
 
     return this.save();
   }

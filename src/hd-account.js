@@ -207,8 +207,9 @@ HDAccount.factory = function (o) {
 HDAccount.prototype.toJSON = function () {
   let labelsJSON = this._address_labels_backup;
 
-  if (MyWallet.wallet.labels && !MyWallet.wallet.labels.readOnly) {
-    // New placeholder entry to prevent address reuse:
+  // Hold on to the backup until labels are saved in KV store.
+  if (MyWallet.wallet.labels && !MyWallet.wallet.labels.readOnly && !MyWallet.wallet.labels.dirty) {
+    // Use placeholder entry to prevent address reuse:
     labelsJSON = [];
     let max = MyWallet.wallet.labels.maxLabeledReceiveIndex(this._index);
     if (max > -1) {
