@@ -27,7 +27,7 @@ class Labels {
   }
 
   get readOnly () {
-    return this._readOnly || this._wallet.isDoubleEncrypted;
+    return this._readOnly || !this._wallet.isMetadataReady;
   }
 
   get dirty () {
@@ -132,7 +132,7 @@ class Labels {
         // This is a new wallet
       }
 
-      if (this._wallet.isDoubleEncrypted) {
+      if (!this._wallet.isMetadataReady) {
         // 2nd password is enabled and we can't write to the KV store
         this._readOnly = true;
       }

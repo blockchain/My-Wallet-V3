@@ -60,7 +60,17 @@ function Wallet (object) {
       : {};
 
   this._metadataHDNode = null;
-  this.setMetadataNode(obj.metadataHDNode);
+
+  if (obj.metadataHDNode) {
+    this._metadataHDNode = Bitcoin.HDNode.fromBase58(obj.metadataHDNode, constants.getNetwork());
+  } else if (!this.isUpgradedToHD) {
+  } else if (!this.isDoubleEncrypted) {
+    this._metadataHDNode = this.hdwallet.getMasterHDNode();
+    MyWallet.syncWallet();
+  } else {
+    console.warn('Second password required to prepare KV Store');
+  }
+
   // tx_notes dictionary
   this._tx_notes = obj.tx_notes || {};
 
@@ -417,7 +427,7 @@ Wallet.prototype.toJSON = function () {
     sharedKey: this.sharedKey,
     double_encryption: this.isDoubleEncrypted,
     dpasswordhash: this.dpasswordhash,
-    metadataHDNode: this._metadataHDNode.toBase58(),
+    metadataHDNode: this._metadataHDNode && this._metadataHDNode.toBase58(),
     options: {
       pbkdf2_iterations: this.pbkdf2_iterations,
       fee_per_kb: this.fee_per_kb,
@@ -856,8 +866,7 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
 
   var self = this;
 
-  // patch (buy-sell does not work with double encryption for now)
-  if (this.isDoubleEncrypted === true || !this.isUpgradedToHD) {
+  if (!this.isMetadataReady) {
     return Promise.resolve();
   } else {
     var fetchExternal = function () {
@@ -919,8 +928,7 @@ Wallet.prototype.saveGUIDtoMetadata = function () {
     }
   };
 
-  // backupGUID not enabled if secondPassword active
-  if (!this.isDoubleEncrypted && this.isUpgradedToHD) {
+  if (this.isMetadataReady) {
     var GUID_METADATA_TYPE = 0;
     var m = this.metadata(GUID_METADATA_TYPE);
     return m.fetch().then(setOrCheckGuid);
@@ -933,20 +941,12 @@ Wallet.prototype.createPayment = function (initialState) {
   return new Payment(this, initialState);
 };
 
-Wallet.prototype.setMetadataNode = function (hdnodebase58, secondPassword) {
-  if (hdnodebase58) {
-    this._metadataHDNode = Bitcoin.HDNode.fromBase58(hdnodebase58, constants.getNetwork());
-    return true;
-  }
-  if (!hdnodebase58 && !this.double_encryption) {
-    this._metadataHDNode = this.hdwallet.getMasterHDNode();
-    return true;
-  }
-  if (!hdnodebase58 && this.double_encryption && secondPassword) {
-    var cipher = WalletCrypto.cipherFunction.bind(undefined, secondPassword, this._sharedKey, this._pbkdf2_iterations);
-    this._metadataHDNode = this.hdwallet.getMasterHDNode(cipher);
-    return true;
-  }
-  // otherwise we cannot set it
-  return false
-}
+Wallet.prototype.cacheMetadataKey = function (secondPassword) {
+  if (!secondPassword) { return Promise.reject('second password needed'); }
+  if (!this.validateSecondPassword(secondPassword)) { return Promise.reject('wrong second password'); }
+
+  var cipher = WalletCrypto.cipherFunction.bind(undefined, secondPassword, this._sharedKey, this._pbkdf2_iterations);
+  this._metadataHDNode = this.hdwallet.getMasterHDNode(cipher);
+  MyWallet.syncWallet();
+  return Promise.resolve();
+};
