@@ -310,6 +310,7 @@ class Labels {
   setLabel (accountIndex, address, label) {
     assert(Helpers.isPositiveInteger(accountIndex), 'Account index required');
     assert(this._accounts[accountIndex], `_accounts[${accountIndex}] should exist`);
+    assert(address.constructor && address.constructor.name === 'AddressHD', 'address should be AddressHD instance');
 
     if (this.readOnly) return Promise.reject('KV_LABELS_READ_ONLY');
 
@@ -334,6 +335,7 @@ class Labels {
 
   removeLabel (accountIndex, address) {
     if (this.readOnly) return Promise.reject('KV_LABELS_READ_ONLY');
+    assert(address.constructor && address.constructor.name === 'AddressHD', 'address should be AddressHD instance');
 
     assert(Helpers.isPositiveInteger(accountIndex), 'Account index required');
     assert(this._accounts[accountIndex], `_accounts[${accountIndex}] should exist`);
