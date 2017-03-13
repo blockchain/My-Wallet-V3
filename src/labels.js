@@ -62,7 +62,7 @@ class Labels {
       accounts: this._accounts.map((addresses) => {
         if (addresses.length > 1) {
           // Remove trailing null values:
-          while (addresses[addresses.length - 1] === null || addresses[addresses.length - 1].label === null) {
+          while (!addresses[addresses.length - 1] || addresses[addresses.length - 1].label === null) {
             addresses.pop();
           }
         }
