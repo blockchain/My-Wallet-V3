@@ -340,8 +340,7 @@ function stretchPassword (password, salt, iterations, keylen) {
 
 function pbkdf2 (password, salt, iterations, keylen, algorithm) {
   algorithm = algorithm || ALGO.SHA1;
-  var iv = salt.toString('binary');
-  return crypto.pbkdf2Sync(password, iv, iterations, keylen, algorithm);
+  return crypto.pbkdf2Sync(password, salt, iterations, keylen, algorithm);
 }
 
 function hashNTimes (data, iterations) {
