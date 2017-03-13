@@ -268,14 +268,12 @@ class Labels {
     return entry.label;
   }
 
-  addLabel (accountIndex, label, maxGap) {
+  addLabel (accountIndex, maxGap, label) {
     assert(Helpers.isPositiveInteger(accountIndex), 'specify accountIndex');
     assert(Helpers.isString(label), 'specify label');
-    assert(maxGap <= 20, 'Max gap must be less than 20');
+    assert(Helpers.isPositiveInteger(maxGap) && maxGap <= 20, 'Max gap must be less than 20');
 
     if (this.readOnly) return Promise.reject('KV_LABELS_READ_ONLY');
-
-    maxGap = maxGap || 20;
 
     let receiveIndex = this._wallet.hdwallet.accounts[accountIndex].receiveIndex;
     let lastUsedReceiveIndex = this._wallet.hdwallet.accounts[accountIndex].lastUsedReceiveIndex;
