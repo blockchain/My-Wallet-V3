@@ -254,17 +254,30 @@ class Labels {
     return this._accounts[accountIndex].indexOf(labeledAddresses.reverse()[0]);
   }
 
-  getLabel (accountIndex, addressIndex) {
+  getAddress (accountIndex, receiveIndex) {
     if (!this._accounts[accountIndex]) {
-      return null;
+      if (this._wallet.hdwallet.accounts.length > accountIndex) {
+        this._accounts[accountIndex] = [];
+      } else {
+        return null;
+      }
     }
 
-    const entry = this._accounts[accountIndex][addressIndex];
+    var entry = this._accounts[accountIndex][receiveIndex];
 
     if (!entry) {
-      return null;
+      entry = new AddressHD(null,
+                           this._wallet.hdwallet.accounts[accountIndex],
+                           receiveIndex);
+      entry.used = null;
+      this._accounts[accountIndex][receiveIndex] = entry;
     }
 
+    return entry;
+  }
+
+  getLabel (accountIndex, addressIndex) {
+    let entry = this.getAddress(accountIndex, addressIndex);
     return entry.label;
   }
 
@@ -285,20 +298,10 @@ class Labels {
       return Promise.reject('GAP');
     }
 
-    if (!this._accounts[accountIndex]) {
-      this._accounts[accountIndex] = [];
-    }
-
-    let addr = this._accounts[accountIndex][receiveIndex];
-    if (!addr) {
-      addr = new AddressHD(null,
-                           this._wallet.hdwallet.accounts[accountIndex],
-                           receiveIndex);
-      addr.used = false;
-      this._accounts[accountIndex][receiveIndex] = addr;
-    }
+    let addr = this.getAddress(accountIndex, receiveIndex);
 
     addr.label = label;
+    addr.used = false;
 
     this._dirty = true;
 
@@ -307,16 +310,24 @@ class Labels {
     });
   }
 
+  // address: either an AddressHD object or a receive index Integer
   setLabel (accountIndex, address, label) {
     assert(Helpers.isPositiveInteger(accountIndex), 'Account index required');
     assert(this._accounts[accountIndex], `_accounts[${accountIndex}] should exist`);
-    assert(address.constructor && address.constructor.name === 'AddressHD', 'address should be AddressHD instance');
+    assert(
+      Helpers.isPositiveInteger(address) ||
+      (address.constructor && address.constructor.name === 'AddressHD'),
+    'address should be AddressHD instance or Int');
 
     if (this.readOnly) return Promise.reject('KV_LABELS_READ_ONLY');
 
-    let addressIndex = this._accounts[accountIndex].indexOf(address);
-
-    assert(Helpers.isPositiveInteger(addressIndex), 'Address not found');
+    if (Helpers.isPositiveInteger(address)) {
+      let receiveIndex = address;
+      address = this.getAddress(accountIndex, receiveIndex);
+    } else {
+      let receiveIndex = this._accounts[accountIndex].indexOf(address);
+      assert(Helpers.isPositiveInteger(receiveIndex), 'Address not found');
+    }
 
     if (!Helpers.isValidLabel(label)) {
       return Promise.reject('NOT_ALPHANUMERIC');
@@ -351,6 +362,77 @@ class Labels {
     return this.save();
   }
 
+  // options:
+  //   Int || null reusableIndex: allow reuse in case of the gap limit
+  reserveReceiveAddress (accountIndex, options = {}) {
+    assert(Helpers.isPositiveInteger(accountIndex), 'Account index required');
+    if (options.reusableIndex !== undefined) {
+      assert(
+        options.reusableIndex === null ||
+        Helpers.isPositiveInteger(options.reusableIndex),
+      'not an integer');
+    }
+
+    var self = this;
+    var account = this._wallet.hdwallet.accounts[accountIndex];
+
+    let receiveIndex = account.receiveIndex;
+    var originalLabel; // In case of address reuse
+
+    // Respect the GAP limit:
+    if (receiveIndex - account.lastUsedReceiveIndex >= 20) {
+      receiveIndex = options.reusableIndex;
+      if (receiveIndex == null) throw new Error('gap_limit');
+      originalLabel = this.getLabel(accountIndex, receiveIndex);
+    }
+
+    var receiveAddress = account.receiveAddressAtIndex(receiveIndex);
+
+    //   String label: will be appended in case of reuse
+    function commitAddressLabel (label = '') {
+      if (originalLabel) label = `${originalLabel}, ${label}`;
+
+      self.setLabel(accountIndex, receiveIndex, label);
+    }
+
+    return {
+      receiveIndex: receiveIndex,
+      receiveAddress: receiveAddress,
+      commit: commitAddressLabel
+    };
+  }
+
+  releaseReceiveAddress (accountIndex, receiveIndex, options = {}) {
+    assert(Helpers.isPositiveInteger(accountIndex), 'Account index required');
+    assert(Helpers.isPositiveInteger(receiveIndex), 'Receive index required');
+
+    if (options.expectedLabel !== undefined) {
+      assert(
+        options.expectedLabel === null ||
+        Helpers.isString(options.expectedLabel),
+      'not a string');
+    }
+
+    let address = this.getAddress(accountIndex, receiveIndex);
+
+    if (options.expectedLabel) {
+      if (address.label.includes(options.expectedLabel)) {
+        const firstEntry = address.label.indexOf(options.expectedLabel) === 0;
+        this.setLabel(
+          accountIndex,
+          address,
+          firstEntry
+            ? address.label.replace(options.expectedLabel + ', ', '')
+            : address.label.replace(', ' + options.expectedLabel, '')
+        );
+      } else {
+        // Don't touch the label
+      }
+    } else {
+      // Remove label
+      this.removeLabel(accountIndex, address);
+    }
+  }
 }
 
 module.exports = Labels;

@@ -120,58 +120,46 @@ ExchangeDelegate.prototype.getReceiveAddress = function (trade) {
   }
 };
 
-ExchangeDelegate.prototype.reserveReceiveAddress = function () {
-  assert(this._trades, 'delegate.trades array should be set for reserveReceiveAddress');
+ExchangeDelegate.prototype.findLastExchangeIndex = function () {
   var account = this._wallet.hdwallet.defaultAccount;
   var receiveAddressIndex = account.receiveIndex;
 
+  var receiveIndexes = this._trades.map(Helpers.pluck('_receive_index'));
+  var index = receiveAddressIndex;
+  for (var i = index - 1; i > index - 20; i--) {
+    if (receiveIndexes.filter(Helpers.eq(i)).length > 0) return i;
+  }
+  return null;
+};
+
+ExchangeDelegate.prototype.reserveReceiveAddress = function () {
+  assert(this._trades, 'delegate.trades array should be set for reserveReceiveAddress');
+
   var self = this;
 
-  // Respect the GAP limit:
-  if (receiveAddressIndex - account.lastUsedReceiveIndex >= 20) {
-    receiveAddressIndex = findLastExchangeIndex(account.receiveIndex);
-    if (receiveAddressIndex == null) throw new Error('gap_limit');
-  }
+  var account = this._wallet.hdwallet.defaultAccount;
 
-  var receiveAddress = account.receiveAddressAtIndex(receiveAddressIndex);
-
-  function findLastExchangeIndex (currentReceiveIndex) {
-    var receiveIndexes = self._trades.map(Helpers.pluck('_receive_index'));
-    var index = currentReceiveIndex;
-    for (var i = index - 1; i > index - 20; i--) {
-      if (receiveIndexes.filter(Helpers.eq(i)).length > 0) return i;
-    }
-    return null;
-  }
-
-  function commitAddressLabel (trade) {
-    var ids = self._trades
-      .filter(Helpers.propEq('receiveAddress', receiveAddress))
-      .map(Helpers.pluck('id')).concat(trade.id);
-
-    var label = self.labelBase + ' #' + ids.join(', #');
-    /* istanbul ignore if */
-    if (self.debug) {
-      console.info('Set label for receive index', receiveAddressIndex, label);
-    }
-
-    account.setLabelForReceivingAddress(receiveAddressIndex, label);
-    trade._account_index = account.index;
-    trade._receive_index = receiveAddressIndex;
-  }
+  let reservation = this._wallet.labels.reserveReceiveAddress(account.index, {
+    reusableIndex: this.findLastExchangeIndex()
+  });
 
   return {
-    receiveAddress: receiveAddress,
-    commit: commitAddressLabel
+    receiveAddress: reservation.receiveAddress,
+    commit: (trade) => {
+      /* istanbul ignore if */
+      if (self.debug) {
+        console.info('Set label for receive index', reservation.receiveIndex);
+      }
+      trade._account_index = account.index;
+      trade._receive_index = reservation.receiveIndex;
+      reservation.commit(`${self.labelBase} #${trade.id}`);
+    }
   };
 };
 
 ExchangeDelegate.prototype.releaseReceiveAddress = function (trade) {
   assert(this._trades, 'delegate.trades array should be set for releaseReceiveAddress');
-  var labelBase = 'Coinify order';
   if (Helpers.isPositiveInteger(trade._account_index) && Helpers.isPositiveInteger(trade._receive_index)) {
-    var account = this._wallet.hdwallet.accounts[trade._account_index];
-
     var ids = this._trades
       .filter(Helpers.propEq('receiveAddress', trade.receiveAddress))
       .map(Helpers.pluck('id'))
@@ -184,14 +172,19 @@ ExchangeDelegate.prototype.releaseReceiveAddress = function (trade) {
       if (self.debug) {
         console.info('Remove label for receive index', trade._receive_index);
       }
-      account.removeLabelForReceivingAddress(trade._receive_index);
+      this._wallet.labels.releaseReceiveAddress(trade._account_index, trade._receive_index);
     } else {
-      var label = labelBase + ' #' + ids.join(', #');
       /* istanbul ignore if */
       if (self.debug) {
-        console.info('Rename label for receive index', trade._receive_index, label);
+        console.info('Rename label for receive index', trade._receive_index);
       }
-      account.setLabelForReceivingAddress(trade._receive_index, label);
+      this._wallet.labels.releaseReceiveAddress(
+        trade._account_index,
+        trade._receive_index,
+        {
+          expectedLabel: `${self.labelBase} #${trade.id}`
+        }
+      );
     }
   }
 };
