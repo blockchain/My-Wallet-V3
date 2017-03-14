@@ -2,8 +2,8 @@ let proxyquire = require('proxyquireify')(require);
 let MyWallet;
 let HDAccount;
 
-describe('HDAccount', () => {
 // TODO: use more mocks, this file takes 7 seconds to run
+describe('HDAccount', () => {
   let account;
   let object = {
     'label': 'My great wallet',

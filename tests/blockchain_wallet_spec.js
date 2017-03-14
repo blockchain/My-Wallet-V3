@@ -1,6 +1,7 @@
 let proxyquire = require('proxyquireify')(require);
 let MyWallet;
-let AddressesHD;
+let Labels;
+let External;
 let Address;
 let Wallet;
 let HDWallet;
@@ -9,11 +10,13 @@ let BlockchainSettingsAPI;
 let BIP39;
 let RNG;
 
+// TODO: use more mocks, this takes 45 seconds
 describe('Blockchain-Wallet', () => {
   let wallet;
   let object = {
     'guid': 'c8d9fe67-2ba0-4c15-a2be-0d17981d3c0a',
     'sharedKey': '981b98e8-03f5-48fa-b369-038e2a7fdc09',
+    'metadataHDNode': 'xprv9uY6wEbTjx2yNybELE8fSdgsyYqf9WkDUgEV5GzX3FwAsMNeefsA8qnnnULyr7SEh6s56p1uHiL8wuJy9zSWnLLcKfdce9Y3GygdjzxuRF4',
     'double_encryption': false,
     'options': {
       'pbkdf2_iterations': 5000,
@@ -55,7 +58,6 @@ describe('Blockchain-Wallet', () => {
         'archived': false,
         'xpriv': 'xprv9yko4kDvhYSdUcqK5e8naLwtGE1Ca57mwJ6JMB8WxeYq8t1w3PpiZfGGvLN6N6GEwLF8XuHnp8HeNLrWWviAjXxb2BFEiLaW2UgukMZ3Zva',
         'xpub': 'xpub6Ck9UFkpXuzvh6unBffnwUtcpFqgyXqdJX1u9ZY8Wz5p1gM5aw8y7TakmcEWLA9rJkc59BJzn61p3qqKSaqFkSPMbbhGA9YDNmphj9SKBVJ',
-        'address_labels': [{'index': 170, 'label': 'Utilities'}],
         'cache': {
           'receiveAccount': 'xpub6FD59hfbH1UWQA9B8NP1C8bh3jc6i2tpM6b8f4Wi9gHWQttZbBBtEsDDZAiPsw7e3427SzvQsFu2sdubjbZHDQdqYXN6x3hTDCrG5bZFEhB',
           'changeAccount': 'xpub6FD59hfbH1UWRrY38bVLPPLPLxcA1XBqsQgB95AgsSWngxbwqPBMd5Z3of8PNicLwE9peQ9g4SeWWtBTzUKLwfjSioAg73RRh7dJ5rWYxM7'
@@ -71,13 +73,22 @@ describe('Blockchain-Wallet', () => {
           return success();
         }
       },
-      get_history () {}
+      get_history () {},
+      wallet: {
+        labels: null
+      }
     };
 
-    AddressesHD = () => {
-      return {
-        mock: 'addresses'
-      };
+    Labels = {
+      fetch: () => {
+        return Promise.resolve({mock: 'labels'});
+      }
+    };
+
+    External = {
+      fetch: () => {
+        return Promise.resolve({mock: 'external'});
+      }
     };
 
     Address = {
@@ -163,7 +174,8 @@ describe('Blockchain-Wallet', () => {
 
     let stubs = {
       './wallet': MyWallet,
-      './addresses': AddressesHD,
+      './labels': Labels,
+      './external': External,
       './address': Address,
       './helpers': Helpers,
       './hd-wallet': HDWallet,
@@ -189,7 +201,6 @@ describe('Blockchain-Wallet', () => {
     });
 
     it('should transform an Object to a Wallet', () => {
-      Wallet = proxyquire('../src/blockchain-wallet', {});
       wallet = new Wallet(object);
 
       expect(wallet._guid).toEqual(object.guid);
@@ -228,7 +239,7 @@ describe('Blockchain-Wallet', () => {
         expect(wallet.dpasswordhash).not.toEqual('not allowed');
       });
 
-      it('fee_per_kb  should throw exception if is non-number set', () => {
+      it('fee_per_kb should throw exception if is non-number set', () => {
         let wrongSet = () => { wallet.fee_per_kb = 'failure'; };
         expect(wrongSet).toThrow();
         expect(MyWallet.syncWallet).not.toHaveBeenCalled();
@@ -424,16 +435,20 @@ describe('Blockchain-Wallet', () => {
       it('defaultPbkdf2Iterations', () => expect(wallet.defaultPbkdf2Iterations).toEqual(5000));
 
       it('spendableActiveAddresses', () => expect(wallet.spendableActiveAddresses.length).toEqual(1));
+    });
 
-      describe('addressesHD', () => {
-        it('should be set', () => {
-          expect(wallet.addressesHD).toEqual({mock: 'addresses'});
-        });
-
-        it('should be reused', () => {
-          wallet.addressesHD.hello = 'world';
-          expect(wallet.addressesHD).toEqual({mock: 'addresses', hello: 'world'});
-        });
+    describe('loadMetadata', () => {
+      it('should set labels', (done) => {
+        let checks = () => {
+          expect(wallet.labels).toEqual({mock: 'labels'});
+        };
+        wallet.loadMetadata().then(checks).then(done);
+      });
+      it('should set external', (done) => {
+        let checks = () => {
+          expect(wallet.external).toEqual({mock: 'external'});
+        };
+        wallet.loadMetadata().then(checks).then(done);
       });
     });
 
@@ -651,7 +666,7 @@ describe('Blockchain-Wallet', () => {
           spyOn(wallet, 'newAccount').and.callFake(() => {});
           spyOn(BIP39, 'generateMnemonic').and.callThrough();
           spyOn(RNG, 'run').and.callThrough();
-          spyOn(wallet, 'loadExternal').and.callFake(() => {});
+          spyOn(wallet, 'loadMetadata').and.callFake(() => {});
         });
 
         it('should successCallback', () => {
@@ -665,9 +680,9 @@ describe('Blockchain-Wallet', () => {
           expect(RNG.run).toHaveBeenCalled();
         });
 
-        it('should call loadExternal', () => {
+        it('should call loadMetadata', () => {
           wallet.upgradeToV3('ACC-LABEL', null, cb.success, cb.error);
-          expect(wallet.loadExternal).toHaveBeenCalled();
+          expect(wallet.loadMetadata).toHaveBeenCalled();
         });
 
         it('should throw if RNG throws', () => {
@@ -745,19 +760,6 @@ describe('Blockchain-Wallet', () => {
           expect(MyWallet.syncWallet).toHaveBeenCalled();
 
           expect(wallet.getNote('hash')).toEqual(undefined);
-        });
-
-        it('should have a placeholder given a received transaction and account filter', () => {
-          let outputs = [
-            {'identity': 0, 'label': 'Car', 'coinType': '0/0/171'},
-            {'identity': 0, 'label': 'Utilities', 'coinType': '0/0/170'}
-          ];
-
-          expect(wallet.getNotePlaceholder(0, {'txType': 'received', 'processedOutputs': outputs})).toEqual('Utilities');
-
-          expect(wallet.getNotePlaceholder(0, {'txType': 'sent', 'processedOutputs': outputs})).toEqual('');
-
-          expect(wallet.getNotePlaceholder(0, {'txType': 'transferred', 'processedOutputs': outputs})).toEqual('');
         });
       });
 
@@ -867,8 +869,8 @@ describe('Blockchain-Wallet', () => {
         // expect(wallet.txList.fetched).toEqual(1)
 
     describe('JSON serialization', () =>
-
       it('should hold: fromJSON . toJSON = id', () => {
+        wallet._labels = null;
         let json1 = JSON.stringify(wallet, null, 2);
         let rwall = JSON.parse(json1, Wallet.reviver);
         let json2 = JSON.stringify(rwall, null, 2);
