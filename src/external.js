@@ -54,7 +54,7 @@ Object.defineProperties(External.prototype, {
     configurable: false,
     get: function () {
       return (this._coinify && this._coinify.hasAccount) ||
-             (this._sfox && this._sfox.hasAccount);
+             (this._sfox && this._sfox.hasAccount) || false;
     }
   }
 });
