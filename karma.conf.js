@@ -74,7 +74,7 @@ module.exports = function (config) {
       'tests/account_info_spec.js',
       'tests/metadata_spec.js',
       'tests/exchange_delegate_spec.js',
-      'tests/addresses_spec.js'
+      'tests/address_hd_spec.js'
     ]
   };
 
