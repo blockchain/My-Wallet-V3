@@ -761,34 +761,6 @@ Wallet.prototype.deleteNote = function (txHash) {
   MyWallet.syncWallet();
 };
 
-Wallet.prototype.getNotePlaceholder = function (filter, tx) {
-  // Given a filter and received transaction, returns the first label shared by both the output(s') hd addresses and the account, otherwise returns a string of length 0.
-  // If using no account filter or filtering by imported addresses, pass in a non-numeric string. It will use the first account found in the outputs as the filtered account.
-  if (tx.txType === 'received' && this.isUpgradedToHD) {
-    var account = parseInt(filter, 10);
-    var addresses = tx.processedOutputs.filter(function (processedOutput) { return processedOutput.identity >= 0; });
-    var indexesAndLabels = addresses.map(function (processedOutput) {
-      var coinType = processedOutput.coinType.split('/');
-      var addressIndex = coinType[2];
-      return {index: addressIndex, label: processedOutput.label};
-    });
-
-    if (addresses.length) {
-      var match = function (a, b, prop) {
-        var seen = [];
-        for (var i = 0, aLength = a.length; i < aLength; i++) seen[prop ? a[i][prop] : a[i]] = true;
-        for (var j = 0, bLength = b.length; j < bLength; j++) if (seen[prop ? b[j][prop] : b[j]]) return b[j];
-        return false;
-      };
-      if (isNaN(account)) account = addresses[0].identity;
-      var hdAddresses = this.hdwallet.accounts[account].receivingAddressesLabels;
-      var matchedLabel = match(indexesAndLabels, hdAddresses, 'index').label;
-      if (matchedLabel && matchedLabel.length) return matchedLabel;
-    }
-  }
-  return '';
-};
-
 Wallet.prototype.getMnemonic = function (password) {
   var seedHex = this.isDoubleEncrypted
       ? WalletCrypto.decryptSecretWithSecondPassword(this.hdwallet.seedHex, password, this.sharedKey, this.pbkdf2_iterations)
