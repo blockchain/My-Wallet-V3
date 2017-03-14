@@ -520,7 +520,7 @@ describe('Wallet', () => {
     beforeEach(() =>
       spyOn(MyWallet, 'decryptAndInitializeWallet').and.callFake(() => {
         MyWallet.wallet = {
-          loadExternal () {
+          loadMetadata () {
             return Promise.resolve();
           },
           incStats () {

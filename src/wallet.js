@@ -1,5 +1,3 @@
-'use strict';
-
 var MyWallet = module.exports = {};
 
 var assert = require('assert');

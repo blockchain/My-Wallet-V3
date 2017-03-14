@@ -1,6 +1,6 @@
 let proxyquire = require('proxyquireify')(require);
 
-fdescribe('Labels', () => {
+describe('Labels', () => {
   const latestVersion = '1.0.0';
 
   let mockPayload = {
