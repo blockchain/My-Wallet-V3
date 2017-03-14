@@ -96,6 +96,8 @@ Object.defineProperties(HDAccount.prototype, {
       let maxLabeledReceiveIndex = -1;
       if (MyWallet.wallet.labels) {
         maxLabeledReceiveIndex = MyWallet.wallet.labels.maxLabeledReceiveIndex(this.index);
+      } else if (this._address_labels_backup && this._address_labels_backup.length) {
+        maxLabeledReceiveIndex = this._address_labels_backup.reverse()[0].index;
       }
       return Math.max(this.lastUsedReceiveIndex, maxLabeledReceiveIndex) + 1;
     }
@@ -104,6 +106,7 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function () { return this._lastUsedReceiveIndex; },
     set: function (value) {
+      assert(Helpers.isPositiveInteger(value + 1), 'should be >= -1');
       this._lastUsedReceiveIndex = value;
     }
   },
