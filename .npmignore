@@ -1,0 +1,11 @@
+node_modules
+build
+coverage
+coverage-lcov
+npm-debug.log
+tests
+.travis.yml
+Changelog.md
+karma.conf.js
+Makefile
+webpack.config.js
