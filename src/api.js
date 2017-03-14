@@ -12,6 +12,7 @@ var MyWallet = require('./wallet');
 function API () {
   // private members
   this.ROOT_URL = 'https://blockchain.info/';
+  this.API_ROOT_URL = 'https://api.blockchain.info/';
   this.AJAX_RETRY_DEFAULT = 2;
   this.API_CODE = '1770d5d9-bcea-4d28-ad21-6cbd5be018a8';
   this.SERVER_TIME_OFFSET = null;
