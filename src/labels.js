@@ -34,7 +34,12 @@ class Labels {
     return this._dirty;
   }
 
+  get version () {
+    return this._version;
+  }
+
   init (object) {
+    this._version = object.version;
     this._accounts = [];
     for (let accountObject of object.accounts) {
       let accountIndex = object.accounts.indexOf(accountObject);
@@ -58,7 +63,7 @@ class Labels {
 
   toJSON () {
     return {
-      version: '1.0.0',
+      version: this.version,
       accounts: this._accounts.map((addresses) => {
         if (addresses.length > 1) {
           // Remove trailing null values:
