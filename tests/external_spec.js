@@ -92,7 +92,6 @@ describe('External', () => {
         expect(e._sfox).toBeUndefined();
       });
 
-
       it('should work with a null payload', () => {
         mockPayload = {};
         e = new External(metadata, wallet, null);
