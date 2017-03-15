@@ -90,6 +90,7 @@
       "Audio",
       "assert",
       "describe",
+      "xdescribe",
       "it",
       "xit",
       "beforeEach",
