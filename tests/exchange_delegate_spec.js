@@ -28,16 +28,6 @@ let MyWallet = {
     external: {
       save () {}
     },
-    // receivingAddressesLabels: [],
-    // getLabelForReceivingAddress (i) {
-    //   return this.labels[i];
-    // },
-    // setLabelForReceivingAddress (i, label) {
-    //   this.labels[i] = label;
-    // },
-    // removeLabelForReceivingAddress (i) {
-    //   this.labels[i] = undefined;
-    // }
     labels: {
       reserveReceiveAddress: () => {
         return {
@@ -119,7 +109,7 @@ let stubs = {
 
 let ExchangeDelegate = proxyquire('../src/exchange-delegate', stubs);
 
-xdescribe('ExchangeDelegate', () => {
+describe('ExchangeDelegate', () => {
   describe('class', () => {
     describe('new ExchangeDelegate()', () => {
       it('...', () => {
@@ -144,9 +134,21 @@ xdescribe('ExchangeDelegate', () => {
       })
     );
 
-    describe('getters', () =>
-      it('trades should be an array', () => expect(delegate.trades.length).toBeDefined())
-    );
+    describe('getters', () => {
+      it('trades should be an array', () => {
+        expect(delegate.trades.length).toBeDefined();
+      });
+
+      it('labelbase has a default', () => {
+        delegate._labelBase = undefined;
+        expect(delegate.labelBase).toEqual('Exchange order');
+      });
+
+      it('labelbase can be set', () => {
+        delegate.labelBase = 'Coinify order';
+        expect(delegate.labelBase).toEqual('Coinify order');
+      });
+    });
 
     describe('save()', () =>
       it('should call save on external', () => {
@@ -206,13 +208,18 @@ xdescribe('ExchangeDelegate', () => {
       });
     });
 
-    describe('getReceiveAddress()', () =>
+    describe('getReceiveAddress()', () => {
       it('should get the trades receive address', () => {
         trade._account_index = 0;
         trade._receive_index = 0;
         expect(delegate.getReceiveAddress(trade)).toEqual('0-0');
-      })
-    );
+      });
+
+      it("should return null if trade doesn't have account index", () => {
+        trade._account_index = undefined;
+        expect(delegate.getReceiveAddress(trade)).toEqual(null);
+      });
+    });
 
     describe('reserveReceiveAddress()', () => {
       let account;
@@ -264,7 +271,13 @@ xdescribe('ExchangeDelegate', () => {
         spyOn(MyWallet.wallet.labels, 'releaseReceiveAddress').and.callThrough();
         account = MyWallet.wallet.hdwallet.accounts[0];
         account.receiveIndex = 1;
-        trade = { id: 1, receiveAddress: '0-16', _account_index: 0, _receive_index: 0 };
+        trade = { id: 1, receiveAddress: '0-16', _account_index: 0, _receive_index: 0, debug: true };
+      });
+
+      it('should gracefully do nothing is account_index is missing', () => {
+        trade._account_index = undefined;
+        delegate.releaseReceiveAddress(trade);
+        expect(MyWallet.wallet.labels.releaseReceiveAddress).not.toHaveBeenCalled();
       });
 
       it('should remove the label', () => {

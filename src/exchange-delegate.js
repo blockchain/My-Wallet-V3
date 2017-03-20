@@ -117,6 +117,9 @@ ExchangeDelegate.prototype.getReceiveAddress = function (trade) {
   if (Helpers.isPositiveInteger(trade._account_index)) {
     var account = this._wallet.hdwallet.accounts[trade._account_index];
     return account.receiveAddressAtIndex(trade._receive_index);
+  } else {
+    // trade.account_index could be missing, although that shouldn't happen
+    return null;
   }
 };
 
@@ -186,6 +189,12 @@ ExchangeDelegate.prototype.releaseReceiveAddress = function (trade) {
           expectedLabel: `${self.labelBase} #${trade.id}`
         }
       );
+    }
+  } else {
+    // trade.account_index could be missing, although that shouldn't happen
+    /* istanbul ignore if */
+    if (this.debug) {
+      console.info('account_index missing for trade #', trade.id);
     }
   }
 };
