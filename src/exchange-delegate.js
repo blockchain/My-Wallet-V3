@@ -144,6 +144,7 @@ ExchangeDelegate.prototype.reserveReceiveAddress = function () {
   });
 
   return {
+    _reservation: reservation,
     receiveAddress: reservation.receiveAddress,
     commit: (trade) => {
       /* istanbul ignore if */
