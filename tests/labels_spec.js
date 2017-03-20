@@ -28,17 +28,22 @@ describe('Labels', () => {
 
   let Labels = proxyquire('../src/labels', stubs);
 
-  let wallet = {
-    hdwallet: {
-      accounts: [{
-        index: 0,
-        receiveAddressAtIndex: (index) => `0-${index}`,
-        receiveIndex: 2
-      }]
-    }
-  };
+  let wallet;
 
   let l;
+
+  beforeEach(() => {
+    wallet = {
+      hdwallet: {
+        accounts: [{
+          index: 0,
+          receiveAddressAtIndex: (index) => `0-${index}`,
+          receiveIndex: 2,
+          lastUsedReceiveIndex: 1
+        }]
+      }
+    };
+  });
 
   describe('class', () => {
     let metadata = {};
@@ -135,73 +140,102 @@ describe('Labels', () => {
     });
 
     describe('reserveReceiveAddress()', () => {
+      let account;
+
+      beforeEach(() => {
+        account = wallet.hdwallet.accounts[0];
+      });
+
       it('should return the first available address', () => {
         expect(l.reserveReceiveAddress(0).receiveAddress).toEqual('0-2');
       });
 
-      // it('should fail if gap limit', () => {
-      //   MyWallet.wallet.hdwallet.accounts[0].receiveIndex = 19;
-      //   MyWallet.wallet.hdwallet.accounts[0].lastUsedReceiveIndex = 0;
-      //   delegate.trades = [];
-      //   expect(() => delegate.reserveReceiveAddress()).toThrow(new Error('gap_limit'));
-      // });
-      //
-      // describe('.commit()', () => {
-      //   let account;
-      //
-      //   beforeEach(() => {
-      //     account = MyWallet.wallet.hdwallet.accounts[0];
-      //     account.receiveIndex = 0;
-      //     account.lastUsedReceiveIndex = 0;
-      //     trade = { id: 1, _account_index: 0, _receive_index: 0 };
-      //   });
-      //
-      //   it('should label the address', () => {
-      //     delegate.trades = [];
-      //     let reservation = delegate.reserveReceiveAddress();
-      //     reservation.commit(trade);
-      //     expect(account.getLabelForReceivingAddress(0)).toEqual('Exchange order #1');
-      //   });
-      //
-      //   it('should allow custom label prefix for each exchange', () => {
-      //     delegate.trades = [];
-      //     delegate.labelBasl = 'Coinify order';
-      //     let reservation = delegate.reserveReceiveAddress();
-      //     reservation.commit(trade);
-      //     expect(account.getLabelForReceivingAddress(0)).toEqual('Coinify order #1');
-      //   });
-      //
-      //   it('should append to existing label if at gap limit', () => {
-      //     delegate.trades = [{ id: 0, _receive_index: 16, receiveAddress: '0-16', state: 'completed' }];
-      //     account.receiveIndex = 19;
-      //     let reservation = delegate.reserveReceiveAddress();
-      //     reservation.commit(trade);
-      //     expect(account.getLabelForReceivingAddress(16)).toEqual('Exchange order #0, #1');
-      //   });
-      // });
+      it('should check if reusableIndex is null or integer if present', () => {
+        expect(() => {
+          l.reserveReceiveAddress(0, {reusableIndex: 0});
+        }).not.toThrow();
+
+        expect(() => {
+          l.reserveReceiveAddress(0, {reusableIndex: null});
+        }).not.toThrow();
+
+        expect(() => {
+          l.reserveReceiveAddress(0, {reusableIndex: -1});
+        }).toThrow();
+      });
+
+      it('should fail if GAP limit is reached and no reusable index is given', () => {
+        account.receiveIndex = 25;
+        expect(() => {
+          l.reserveReceiveAddress(0);
+        }).toThrow(Error('gap_limit'));
+      });
+
+      describe('.commit()', () => {
+        let reservation;
+        beforeEach(() => {
+          reservation = l.reserveReceiveAddress(0);
+          spyOn(l, 'setLabel');
+        });
+
+        it('should label the address', () => {
+          reservation.commit('Exchange order #1');
+          expect(l.setLabel).toHaveBeenCalledWith(0, 2, 'Exchange order #1');
+        });
+
+        it('should append label if reusableIndex is present and gap limit reached', () => {
+          account.lastUsedReceiveIndex = 0;
+          account.receiveIndex = 20;
+
+          spyOn(l, 'getLabel').and.returnValue('Exchange order #1');
+
+          reservation = l.reserveReceiveAddress(0, {reusableIndex: 1});
+
+          reservation.commit('Exchange order #2');
+          expect(l.getLabel).toHaveBeenCalledWith(0, 1);
+          expect(l.setLabel).toHaveBeenCalledWith(0, 1, 'Exchange order #1, Exchange order #2');
+        });
+      });
     });
-    //
-    // describe('releaseReceiveAddress()', () => {
-    //   let account;
-    //
-    //   beforeEach(() => {
-    //     account = MyWallet.wallet.hdwallet.accounts[0];
-    //     account.receiveIndex = 1;
-    //     trade = { id: 1, receiveAddress: '0-16', _account_index: 0, _receive_index: 0 };
-    //   });
-    //
-    //   it('should remove the label', () => {
-    //     account.labels[0] = 'Coinify order #1';
-    //     delegate.releaseReceiveAddress(trade);
-    //     expect(account.labels[0]).not.toBeDefined();
-    //   });
-    //
-    //   it('should remove one of multible ids in a label', () => {
-    //     account.labels[0] = 'Coinify order #0, 1';
-    //     delegate.trades = [{ id: 0, _receive_index: 16, receiveAddress: '0-16', state: 'completed' }];
-    //     delegate.releaseReceiveAddress(trade);
-    //     expect(account.labels[0]).toEqual('Coinify order #0');
-    //   });
-    // });
+
+    describe('releaseReceiveAddress()', () => {
+      let addressHD = {
+        constructor: {
+          name: 'AddressHD'
+        }
+      };
+
+      beforeEach(() => {
+        spyOn(l, 'removeLabel');
+        spyOn(l, 'setLabel');
+        spyOn(l, 'getAddress').and.returnValue(addressHD);
+      });
+
+      it('should remove the label', () => {
+        l.releaseReceiveAddress(0, 1);
+        expect(l.removeLabel).toHaveBeenCalledWith(0, addressHD);
+      });
+
+      it('should remove one of multible ids in a label', () => {
+        addressHD.label = 'Exchange Order #1, Exchange Order #2';
+        l.releaseReceiveAddress(0, 2, {expectedLabel: 'Exchange Order #2'});
+        expect(l.setLabel).toHaveBeenCalledWith(0, addressHD, 'Exchange Order #1');
+      });
+
+      it('should deal with comma', () => {
+        addressHD.label = 'Exchange Order #2, Exchange Order #1';
+        l.releaseReceiveAddress(0, 2, {expectedLabel: 'Exchange Order #2'});
+        expect(l.setLabel).toHaveBeenCalledWith(0, addressHD, 'Exchange Order #1');
+      });
+
+      it('should not touch existing label when in doubt, for multible ids in a label', () => {
+        addressHD.label = 'Exchange Order #1, Customized Order #2 label';
+        l.releaseReceiveAddress(0, 2, {expectedLabel: 'Exchange Order #2'});
+        expect(l.setLabel).not.toHaveBeenCalled();
+
+        l.releaseReceiveAddress(0, 2);
+        expect(l.setLabel).not.toHaveBeenCalled();
+      });
+    });
   });
 });
