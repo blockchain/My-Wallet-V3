@@ -235,7 +235,7 @@ class Labels {
 
   all (accountIndex, options = {}) {
     assert(Helpers.isPositiveInteger(accountIndex), 'specify accountIndex');
-    if (!this._accounts[accountIndex]) return null;
+    if (!this._accounts[accountIndex]) return [];
 
     if (options.includeUnlabeled) {
       // Add null entries up to the current receive index
