@@ -43,14 +43,25 @@ class Labels {
     this._accounts = [];
     for (let accountObject of object.accounts) {
       let accountIndex = object.accounts.indexOf(accountObject);
+      let hdAccount = this._wallet.hdwallet.accounts[accountIndex];
+      let receiveIndex = hdAccount.receiveIndex;
       let addresses = [];
+
       for (let addressObject of accountObject) {
         if (addressObject === null) {
-          addresses.push(null);
+          addresses.push(null); // Placeholder, will be replaced below
         } else {
-          let hdAccount = this._wallet.hdwallet.accounts[accountIndex];
           let addressIndex = accountObject.indexOf(addressObject);
           addresses.push(new AddressHD(addressObject, hdAccount, addressIndex));
+        }
+      }
+
+      // Add null entries up to the current receive index
+      for (let i = 0; i < receiveIndex; i++) {
+        if (!addresses[i]) {
+          addresses[i] = new AddressHD(null,
+                        hdAccount,
+                        i);
         }
       }
       this._accounts[accountIndex] = addresses;
@@ -66,6 +77,7 @@ class Labels {
       version: this.version,
       accounts: this._accounts.map((addresses) => {
         if (addresses.length > 1) {
+          addresses = Helpers.deepClone(addresses);
           // Remove trailing null values:
           while (!addresses[addresses.length - 1] || addresses[addresses.length - 1].label === null) {
             addresses.pop();
@@ -198,19 +210,17 @@ class Labels {
   checkIfUsed (accountIndex) {
     assert(Helpers.isPositiveInteger(accountIndex), 'specify accountIndex');
     let labeledAddresses = this.all(accountIndex).filter((a) => a !== null);
-    let addresses = labeledAddresses.map((a) => a.address);
+    let addresses = labeledAddresses.filter((a) => a.label).map((a) => a.address);
 
     if (addresses.length === 0) return Promise.resolve();
 
-    BlockchainAPI.getBalances(addresses).then((data) => {
+    return BlockchainAPI.getBalances(addresses).then((data) => {
       for (let labeledAddress of labeledAddresses) {
         if (data[labeledAddress.address]) {
           labeledAddress.used = data[labeledAddress.address].n_tx > 0;
         }
       }
     });
-
-    return Promise.resolve();
   }
 
   fetchBalance (hdAddresses) {
@@ -235,30 +245,19 @@ class Labels {
 
   all (accountIndex, options = {}) {
     assert(Helpers.isPositiveInteger(accountIndex), 'specify accountIndex');
-    if (!this._accounts[accountIndex]) return [];
-
-    if (options.includeUnlabeled) {
-      // Add null entries up to the current receive index
-      let receiveIndex = this._wallet.hdwallet.accounts[accountIndex].receiveIndex;
-      for (let i = 0; i < receiveIndex; i++) {
-        if (!this._accounts[accountIndex][i]) {
-          this._accounts[accountIndex][i] = new AddressHD(null,
-                        this._wallet.hdwallet.accounts[accountIndex],
-                        i);
-        }
-      }
-    }
-
-    return this._accounts[accountIndex].filter((a) => a !== null);
+    return this._accounts[accountIndex] || [];
   }
 
+  // returns Int or null
   maxLabeledReceiveIndex (accountIndex) {
-    if (!this._accounts[accountIndex]) return -1;
+    if (!this._accounts[accountIndex]) return null;
     let labeledAddresses = this._accounts[accountIndex].filter(a => a && a.label);
-    if (labeledAddresses.length === 0) return -1;
-    return this._accounts[accountIndex].indexOf(labeledAddresses.reverse()[0]);
+    if (labeledAddresses.length === 0) return null;
+    const indexOf = this._accounts[accountIndex].indexOf(labeledAddresses[labeledAddresses.length - 1]);
+    return indexOf > -1 ? indexOf : null;
   }
 
+  // Side-effect: adds a new entry if there is a new account or receive index.
   getAddress (accountIndex, receiveIndex) {
     if (!this._accounts[accountIndex]) {
       if (this._wallet.hdwallet.accounts.length > accountIndex) {

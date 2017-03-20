@@ -471,4 +471,8 @@ Helpers.isEmailInvited = function (email, fraction) {
   return WalletCrypo.sha256(email)[0] / 256 >= 1 - fraction;
 };
 
+Helpers.deepClone = function (object) {
+  return JSON.parse(JSON.stringify(object));
+};
+
 module.exports = Helpers;

@@ -271,11 +271,11 @@ describe('HDAccount', () => {
         expect(wrongSet).toThrow();
       });
 
-      it('lastUsedReceiveIndex must be an integer >= -1', () => {
+      it('lastUsedReceiveIndex must be an integer or null', () => {
         let invalid = () => { account.lastUsedReceiveIndex = '1'; };
         let valid = () => { account.lastUsedReceiveIndex = 1; };
         expect(invalid).toThrow();
-        expect(account.lastUsedReceiveIndex).toEqual(-1);
+        expect(account.lastUsedReceiveIndex).toEqual(null);
         expect(valid).not.toThrow();
         expect(account.lastUsedReceiveIndex).toEqual(1);
       });

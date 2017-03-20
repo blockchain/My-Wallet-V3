@@ -29,7 +29,7 @@ function HDAccount (object) {
   // computed properties
   this._keyRing = new KeyRing(obj.xpub, obj.cache);
   // The highest receive index with transactions, as returned by the server:
-  this._lastUsedReceiveIndex = -1;
+  this._lastUsedReceiveIndex = null;
   this._changeIndex = 0;
   this._n_tx = 0;
   this._balance = null;
@@ -93,20 +93,23 @@ Object.defineProperties(HDAccount.prototype, {
   'receiveIndex': {
     configurable: false,
     get: function () {
-      let maxLabeledReceiveIndex = -1;
+      let maxLabeledReceiveIndex = null;
       if (MyWallet.wallet.labels) {
         maxLabeledReceiveIndex = MyWallet.wallet.labels.maxLabeledReceiveIndex(this.index);
       } else if (this._address_labels_backup && this._address_labels_backup.length) {
-        maxLabeledReceiveIndex = this._address_labels_backup.reverse()[0].index;
+        maxLabeledReceiveIndex = this._address_labels_backup[this._address_labels_backup.length - 1].index;
       }
-      return Math.max(this.lastUsedReceiveIndex, maxLabeledReceiveIndex) + 1;
+      return Math.max(
+        this.lastUsedReceiveIndex === null ? -1 : this.lastUsedReceiveIndex,
+        maxLabeledReceiveIndex === null ? -1 : maxLabeledReceiveIndex
+      ) + 1;
     }
   },
   'lastUsedReceiveIndex': {
     configurable: false,
     get: function () { return this._lastUsedReceiveIndex; },
     set: function (value) {
-      assert(Helpers.isPositiveInteger(value + 1), 'should be >= -1');
+      assert(value === null || Helpers.isPositiveInteger(value), 'should be null or >= 0');
       this._lastUsedReceiveIndex = value;
     }
   },

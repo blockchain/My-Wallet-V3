@@ -370,7 +370,7 @@ Wallet.prototype._updateWalletInfo = function (obj) {
       if (account) {
         account.balance = e.final_balance;
         account.n_tx = e.n_tx;
-        account.lastUsedReceiveIndex = e.account_index - 1;
+        account.lastUsedReceiveIndex = e.account_index === 0 ? null : e.account_index - 1;
         account.changeIndex = e.change_index;
       }
     }
@@ -878,11 +878,11 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
 
   if (this.isMetadataReady) {
     // No fallback is metadata is disabled
-    promises.push(fetchExternal.bind(this)());
+    promises.push(fetchExternal.call(this));
   }
 
   // Falls back to read-only based on wallet payload if metadata is disabled
-  promises.push(fetchLabels.bind(this)());
+  promises.push(fetchLabels.call(this));
 
   return Promise.all(promises);
 };
