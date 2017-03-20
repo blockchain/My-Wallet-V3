@@ -36,7 +36,7 @@ describe('Labels', () => {
     }
   };
 
-  let e;
+  let l;
 
   describe('class', () => {
     let metadata = {};
@@ -54,24 +54,24 @@ describe('Labels', () => {
       });
 
       it('should transform an Object to Labels', () => {
-        e = new Labels(metadata, wallet, mockPayload);
-        expect(e.constructor.name).toEqual('Labels');
+        l = new Labels(metadata, wallet, mockPayload);
+        expect(l.constructor.name).toEqual('Labels');
       });
 
       it('should deserialize the version', () => {
-        e = new Labels(metadata, wallet, mockPayload);
-        expect(e.version).toEqual(latestVersion);
+        l = new Labels(metadata, wallet, mockPayload);
+        expect(l.version).toEqual(latestVersion);
       });
 
       it('should not deserialize non-expected fields', () => {
         mockPayload.non_expected_field = 'I am an intruder';
-        e = new Labels(metadata, wallet, mockPayload);
-        expect(e._non_expected_field).toBeUndefined();
+        l = new Labels(metadata, wallet, mockPayload);
+        expect(l._non_expected_field).toBeUndefined();
       });
 
       it('should call save if migration changes anything', () => {
         mockPayload.version = '0.1.0';
-        e = new Labels(metadata, wallet, mockPayload);
+        l = new Labels(metadata, wallet, mockPayload);
         expect(Labels.prototype.save).toHaveBeenCalled();
       });
     });
@@ -88,7 +88,7 @@ describe('Labels', () => {
   describe('instance', () => {
     beforeEach(() => {
       let metadata = {};
-      e = new Labels(metadata, wallet, mockPayload);
+      l = new Labels(metadata, wallet, mockPayload);
     });
 
     describe('toJSON', () => {
@@ -96,15 +96,15 @@ describe('Labels', () => {
       });
 
       it('should store version', () => {
-        let json = JSON.stringify(e);
+        let json = JSON.stringify(l);
         expect(JSON.parse(json)).toEqual(
           jasmine.objectContaining({version: latestVersion}
         ));
       });
 
       it('should not serialize non-expected fields', () => {
-        e.rarefield = 'I am an intruder';
-        let json = JSON.stringify(e, null, 2);
+        l.rarefield = 'I am an intruder';
+        let json = JSON.stringify(l, null, 2);
         let obj = JSON.parse(json);
 
         expect(obj.version).toBeDefined();
@@ -114,21 +114,21 @@ describe('Labels', () => {
 
     describe('readOnly', () => {
       it('should be true when _readOnly is true', () => {
-        e._readOnly = true;
-        expect(e.readOnly).toEqual(true);
+        l._readOnly = true;
+        expect(l.readOnly).toEqual(true);
       });
 
       it('should be true if KV store doesn\'t work', () => {
-        e._readOnly = false;
-        e._wallet.isMetadataReady = false;
-        expect(e.readOnly).toEqual(true);
+        l._readOnly = false;
+        l._wallet.isMetadataReady = false;
+        expect(l.readOnly).toEqual(true);
       });
     });
 
     describe('dirty', () => {
       it('should be true when _dirty is true', () => {
-        e._dirty = true;
-        expect(e.dirty).toEqual(true);
+        l._dirty = true;
+        expect(l.dirty).toEqual(true);
       });
     });
 
