@@ -205,7 +205,7 @@ MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHexExt
     externalJSON = JSON.parse(stringExternal);
   }
 
-  if (stringExternal) {
+  if (stringLabels) {
     assert(magicHashHexLabels, 'Magic hash for labels required');
     labelsJSON = JSON.parse(stringLabels);
   }

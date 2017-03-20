@@ -156,13 +156,22 @@ describe('External', () => {
 
     describe('JSON serializer', () => {
       beforeEach(() => {
-        e._coinify = {};
+        e._coinify = {
+          hasAccount: true,
+          toJSON: () => { return { user: '1' }; }
+        };
         e._sfox = {};
       });
 
-      it('should store partners', () => {
+      it('should store partners if one is set', () => {
         let json = JSON.stringify(e, null, 2);
-        expect(json).toEqual(JSON.stringify({coinify: {}, sfox: {}}, null, 2));
+        expect(json).toEqual(JSON.stringify({coinify: {'user': '1'}, sfox: {}}, null, 2));
+      });
+
+      it('should not store partners if none are set', () => {
+        e._coinify.hasAccount = false;
+        let json = JSON.stringify(e, null, 2);
+        expect(json).toBeUndefined();
       });
 
       it('should not serialize non-expected fields', () => {

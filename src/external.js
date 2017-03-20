@@ -77,6 +77,9 @@ External.prototype.canBuy = function (accountInfo, options) {
 };
 
 External.prototype.toJSON = function () {
+  if (!this.hasExchangeAccount) {
+    return undefined;
+  }
   var external = {
     coinify: this._coinify,
     sfox: this._sfox
@@ -111,6 +114,11 @@ External.fetch = function (wallet) {
 };
 
 External.prototype.save = function () {
+  if (this.toJSON() === undefined) {
+    console.info('Not saving before any exchange account is created.');
+    return Promise.resolve();
+  }
+
   if (!this._metadata.existsOnServer) {
     return this._metadata.create(this);
   } else {
