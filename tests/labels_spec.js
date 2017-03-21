@@ -83,25 +83,31 @@ describe('Labels', () => {
         spyOn(Labels.prototype, 'save').and.returnValue(true);
       });
 
+      it('should require syncWallet function', () => {
+        expect(() => {
+          l = new Labels(metadata, wallet, mockPayload);
+        }).toThrow();
+      });
+
       it('should transform an Object to Labels', () => {
-        l = new Labels(metadata, wallet, mockPayload);
+        l = new Labels(metadata, wallet, mockPayload, () => {});
         expect(l.constructor.name).toEqual('Labels');
       });
 
       it('should deserialize the version', () => {
-        l = new Labels(metadata, wallet, mockPayload);
+        l = new Labels(metadata, wallet, mockPayload, () => {});
         expect(l.version).toEqual(latestVersion);
       });
 
       it('should not deserialize non-expected fields', () => {
         mockPayload.non_expected_field = 'I am an intruder';
-        l = new Labels(metadata, wallet, mockPayload);
+        l = new Labels(metadata, wallet, mockPayload, () => {});
         expect(l._non_expected_field).toBeUndefined();
       });
 
       it('should call save if migration changes anything', () => {
         mockPayload.version = '0.1.0';
-        l = new Labels(metadata, wallet, mockPayload);
+        l = new Labels(metadata, wallet, mockPayload, () => {});
         expect(Labels.prototype.save).toHaveBeenCalled();
       });
     });
@@ -124,7 +130,7 @@ describe('Labels', () => {
         update: () => Promise.resolve()
       };
       spyOn(Labels.prototype, 'migrateIfNeeded').and.callFake((object) => object);
-      l = new Labels(metadata, wallet, mockPayload);
+      l = new Labels(metadata, wallet, mockPayload, () => {});
     });
 
     describe('toJSON', () => {
@@ -242,6 +248,30 @@ describe('Labels', () => {
         let promise = l.save().then(checks);
         expect(promise).toBeResolved(done);
       });
+
+      it('should sync MyWallet if needed', (done) => {
+        spyOn(l, '_syncWallet').and.callFake((success) => success());
+
+        l._walletNeedsSync = true;
+        const checks = () => {
+          expect(l._syncWallet).toHaveBeenCalled();
+          expect(l._walletNeedsSync).toEqual(false);
+        };
+        let promise = l.save().then(checks);
+        expect(promise).toBeResolved(done);
+      });
+
+      it('should not sync MyWallet if not needed', (done) => {
+        spyOn(l, '_syncWallet').and.callFake((success) => success());
+
+        expect(l._walletNeedsSync).toEqual(false);
+
+        const checks = () => {
+          expect(l._syncWallet).not.toHaveBeenCalled();
+        };
+        let promise = l.save().then(checks);
+        expect(promise).toBeResolved(done);
+      });
     });
 
     describe('migrateIfNeeded()', () => {
@@ -273,11 +303,13 @@ describe('Labels', () => {
         });
 
         describe('wallet with existing labels', () => {
-          const expectedPayload = {
-            version: latestVersion,
-            accounts: [[null, {label: 'Hello'}]]
-          };
+          it('should not trigger a wallet sync', () => {
+            l.migrateIfNeeded(null);
+            expect(l._walletNeedsSync).toEqual(false);
+          });
+        });
 
+        describe('wallet with existing labels', () => {
           beforeEach(() => {
             l._wallet.hdwallet.accounts = [{_address_labels_backup: [
               {index: 1, label: 'Hello'}
@@ -285,6 +317,11 @@ describe('Labels', () => {
           });
 
           it('should import labels', () => {
+            const expectedPayload = {
+              version: latestVersion,
+              accounts: [[null, {label: 'Hello'}]]
+            };
+
             let res = l.migrateIfNeeded(null);
             expect(res).toEqual(expectedPayload);
           });
@@ -293,6 +330,17 @@ describe('Labels', () => {
             l._wallet.hdwallet.accounts.push([]);
             let res = l.migrateIfNeeded({});
             expect(res.accounts.length).toEqual(2);
+          });
+
+          it('should trigger a wallet sync', () => {
+            l.migrateIfNeeded(null);
+            expect(l._walletNeedsSync).toEqual(true);
+          });
+
+          it('should not trigger a wallet sync if read-only', () => {
+            l._readOnly = true;
+            l.migrateIfNeeded(null);
+            expect(l._walletNeedsSync).toEqual(false);
           });
         });
       });
@@ -424,6 +472,61 @@ describe('Labels', () => {
           expect(l.getLabel).toHaveBeenCalledWith(0, 1);
           expect(l.setLabel).toHaveBeenCalledWith(0, 1, 'Exchange order #1, Exchange order #2');
         });
+      });
+    });
+
+    describe('setLabel()', () => {
+      it('should call save()', () => {
+        spyOn(l, 'save');
+        l.setLabel(0, 1, 'Updated Label');
+        expect(l.save).toHaveBeenCalled();
+      });
+
+      it('should not call save() if label is unchanged', () => {
+        spyOn(l, 'save');
+        l.setLabel(0, 1, 'Hello');
+        expect(l.save).not.toHaveBeenCalled();
+      });
+
+      it('should normally not sync MyWallet', () => {
+        l.setLabel(0, 1, 'Updated Label');
+        expect(l._walletNeedsSync).toEqual(false);
+      });
+
+      it('should sync MyWallet if highest labeled index', () => {
+        l.setLabel(0, 2, 'New Label');
+        expect(l._walletNeedsSync).toEqual(true);
+      });
+    });
+
+    describe('addLabel()', () => {
+      it('should call save()', () => {
+        spyOn(l, 'save').and.callThrough();
+        l.addLabel(0, 15, 'New Label');
+        expect(l.save).toHaveBeenCalled();
+      });
+
+      it('should sync MyWallet', () => {
+        l.addLabel(0, 15, 'New Label');
+        expect(l._walletNeedsSync).toEqual(true);
+      });
+    });
+
+    describe('removeLabel()', () => {
+      it('should call save()', () => {
+        spyOn(l, 'save');
+        l.removeLabel(0, 1);
+        expect(l.save).toHaveBeenCalled();
+      });
+
+      it('should normally not sync MyWallet', () => {
+        l.removeLabel(0, 0);
+        expect(l._walletNeedsSync).toEqual(false);
+      });
+
+      it('should sync MyWallet if highest labeled index', () => {
+        l.removeLabel(0, 1, 'New Label');
+        expect(l._walletNeedsSync).toEqual(true);
       });
     });
 

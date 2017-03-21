@@ -868,9 +868,9 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     };
 
     if (optionalPayloads.labels) {
-      return Labels.fromJSON(this, optionalPayloads.labels, magicHashes.labels).then(success);
+      return Labels.fromJSON(this, optionalPayloads.labels, magicHashes.labels, MyWallet.syncWallet).then(success);
     } else {
-      return Labels.fetch(this).then(success).catch(error);
+      return Labels.fetch(this, MyWallet.syncWallet).then(success).catch(error);
     }
   };
 

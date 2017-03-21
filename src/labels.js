@@ -10,10 +10,15 @@ var METADATA_TYPE_LABELS = 4;
 const CURRENT_VERSION = '1.1.0';
 
 class Labels {
-  constructor (metadata, wallet, object) {
+  constructor (metadata, wallet, object, syncWallet) {
+    assert(syncWallet instanceof Function, 'syncWallet function required');
     this._readOnly = false; // Default
     this._wallet = wallet;
     this._metadata = metadata;
+
+    // Required for initial migration and whenever placeholder needs an update
+    this._syncWallet = syncWallet;
+    this._walletNeedsSync = false;
 
     this._before = JSON.stringify(object);
 
@@ -64,10 +69,6 @@ class Labels {
       }
       this._accounts[accountIndex] = addresses;
     }
-    if (!this._wallet.isMetadataReady) {
-      // 2nd password is enabled and we can't write to the KV store
-      this._readOnly = true;
-    }
   }
 
   static initMetadata (wallet) {
@@ -90,19 +91,19 @@ class Labels {
     };
   }
 
-  static fromJSON (wallet, json, magicHash) {
+  static fromJSON (wallet, json, magicHash, syncWallet) {
     var success = (payload) => {
-      return new Labels(metadata, wallet, payload);
+      return new Labels(metadata, wallet, payload, syncWallet);
     };
     var metadata = Labels.initMetadata(wallet);
     return metadata.fromObject(JSON.parse(json), magicHash).then(success);
   }
 
-  static fetch (wallet) {
+  static fetch (wallet, syncWallet) {
     var metadata = wallet.isMetadataReady ? Labels.initMetadata(wallet) : null;
 
     var fetchSuccess = function (payload) {
-      return new Labels(metadata, wallet, payload);
+      return new Labels(metadata, wallet, payload, syncWallet);
     };
 
     var fetchFailed = function (e) {
@@ -133,6 +134,12 @@ class Labels {
     }
     return promise.then(() => {
       this._before = JSON.stringify(this);
+      if (this._walletNeedsSync) {
+        console.info('Sync MyWallet address label placeholder');
+        this._syncWallet(() => {
+          this._walletNeedsSync = false;
+        });
+      }
     });
   }
 
@@ -141,14 +148,10 @@ class Labels {
   }
 
   migrateIfNeeded (object) {
-    let major;
-    let minor;
-    let patch;
+    let major, minor, patch;
 
     if (object && object.version) {
-      major = parseInt(object.version.split('.')[0]);
-      minor = parseInt(object.version.split('.')[1]);
-      patch = parseInt(object.version.split('.')[2]);
+      [major, minor, patch] = object.version.split('.').map(n => parseInt(n, 10));
     }
 
     // First time, migrate from wallet payload if needed
@@ -173,6 +176,10 @@ class Labels {
             }
           }
           object.accounts.push(labels);
+        }
+
+        if (!this.readOnly) {
+          this._walletNeedsSync = true;
         }
       } else {
         // This is a new wallet, create placeholders for each account:
@@ -310,6 +317,8 @@ class Labels {
     addr.used = false;
     addr.amount = amount;
 
+    this._walletNeedsSync = true;
+
     return this.save().then(() => {
       return addr;
     });
@@ -330,12 +339,15 @@ class Labels {
 
     if (this.readOnly) return Promise.reject('KV_LABELS_READ_ONLY');
 
+    let receiveIndex;
+
+    let maxLabeledReceiveIndexBefore = this.maxLabeledReceiveIndex(accountIndex);
+
     if (Helpers.isPositiveInteger(address)) {
-      let receiveIndex = address;
+      receiveIndex = address;
       address = this.getAddress(accountIndex, receiveIndex);
     } else {
-      let receiveIndex = this._accounts[accountIndex].indexOf(address);
-      assert(Helpers.isPositiveInteger(receiveIndex), 'Address not found');
+      receiveIndex = this._accounts[accountIndex].indexOf(address);
     }
 
     if (!Helpers.isValidLabel(label)) {
@@ -349,21 +361,41 @@ class Labels {
     address.label = label;
     address.amount = amount;
 
+    if (receiveIndex > maxLabeledReceiveIndexBefore) {
+      this._walletNeedsSync = true;
+    }
+
     return this.save();
   }
 
   removeLabel (accountIndex, address) {
     if (this.readOnly) return Promise.reject('KV_LABELS_READ_ONLY');
-    assert(address.constructor && address.constructor.name === 'AddressHD', 'address should be AddressHD instance');
 
     assert(Helpers.isPositiveInteger(accountIndex), 'Account index required');
+
+    assert(
+      Helpers.isPositiveInteger(address) ||
+      (address.constructor && address.constructor.name === 'AddressHD'),
+    'address should be AddressHD instance or Int');
+
     assert(this._accounts[accountIndex], `_accounts[${accountIndex}] should exist`);
 
-    let addressIndex = this._accounts[accountIndex].indexOf(address);
+    let addressIndex;
+    if (Helpers.isPositiveInteger(address)) {
+      addressIndex = address;
+      address = this._accounts[accountIndex][address];
+    } else {
+      addressIndex = this._accounts[accountIndex].indexOf(address);
+      assert(Helpers.isPositiveInteger(addressIndex), 'Address not found');
+    }
 
-    assert(Helpers.isPositiveInteger(addressIndex), 'Address not found');
+    let maxLabeledReceiveIndexBefore = this.maxLabeledReceiveIndex(accountIndex);
 
     address.label = null;
+
+    if (addressIndex === maxLabeledReceiveIndexBefore) {
+      this._walletNeedsSync = true;
+    }
 
     return this.save();
   }
