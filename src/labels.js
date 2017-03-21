@@ -10,20 +10,16 @@ var METADATA_TYPE_LABELS = 4;
 class Labels {
   constructor (metadata, wallet, object) {
     this._readOnly = false; // Default
-    this._dirty = true;
     this._wallet = wallet;
     this._metadata = metadata;
 
-    let before = JSON.stringify(object);
+    this._before = JSON.stringify(object);
+
     object = this.migrateIfNeeded(object);
 
     this.init(object);
 
-    if (JSON.stringify(object) !== before) {
-      this.save();
-    } else {
-      this._dirty = false;
-    }
+    this.save(); // Only saves if migration changed something
   }
 
   get readOnly () {
@@ -31,7 +27,7 @@ class Labels {
   }
 
   get dirty () {
-    return this._dirty;
+    return this._before !== JSON.stringify(this);
   }
 
   get version () {
@@ -65,6 +61,10 @@ class Labels {
         }
       }
       this._accounts[accountIndex] = addresses;
+    }
+    if (!this._wallet.isMetadataReady) {
+      // 2nd password is enabled and we can't write to the KV store
+      this._readOnly = true;
     }
   }
 
@@ -116,19 +116,22 @@ class Labels {
   }
 
   save () {
+    if (!this.dirty) {
+      return Promise.resolve();
+    }
     if (this.readOnly) {
       console.info('Labels KV store is read-only, not saving');
       return Promise.resolve();
     }
+    let promise;
     if (!this._metadata.existsOnServer) {
-      return this._metadata.create(this).then(() => {
-        this._dirty = false;
-      });
+      promise = this._metadata.create(this);
     } else {
-      return this._metadata.update(this).then(() => {
-        this._dirty = false;
-      });
+      promise = this._metadata.update(this);
     }
+    return promise.then(() => {
+      this._before = JSON.stringify(this);
+    });
   }
 
   wipe () {
@@ -148,34 +151,30 @@ class Labels {
 
     // First time, migrate from wallet payload if needed
     if (object === null || Helpers.isEmptyObject(object)) {
-      if (this._wallet.hdwallet.accounts[0]._address_labels_backup) {
-        console.info('Migrate address labels from wallet to KV-Store v1.0.0');
-      } else {
-        // This is a new wallet
-      }
-
-      if (!this._wallet.isMetadataReady) {
-        // 2nd password is enabled and we can't write to the KV store
-        this._readOnly = true;
-      }
-
       object = {
         version: '1.0.0',
         accounts: []
       };
 
-      for (let account of this._wallet.hdwallet.accounts) {
-        let labels = [];
-        for (let label of account._address_labels_backup || []) {
-          labels[label.index] = {label: label.label};
-        }
-        // Set undefined entries to null:
-        for (let i = 0; i < labels.length; i++) {
-          if (!labels[i]) {
-            labels[i] = null;
+      if (this._wallet.hdwallet.accounts[0]._address_labels_backup) {
+        console.info('Migrate address labels from wallet to KV-Store v1.0.0');
+
+        for (let account of this._wallet.hdwallet.accounts) {
+          let labels = [];
+          for (let label of account._address_labels_backup || []) {
+            labels[label.index] = {label: label.label};
           }
+          // Set undefined entries to null:
+          for (let i = 0; i < labels.length; i++) {
+            if (!labels[i]) {
+              labels[i] = null;
+            }
+          }
+          object.accounts.push(labels);
         }
-        object.accounts.push(labels);
+      } else {
+        // This is a new wallet, create placeholders for each account:
+        object.accounts = this._wallet.hdwallet.accounts.map(() => []);
       }
     } else if (major > 1) {
       // Payload contains unsuppored new major version, abort:
@@ -307,8 +306,6 @@ class Labels {
     addr.label = label;
     addr.used = false;
 
-    this._dirty = true;
-
     return this.save().then(() => {
       return addr;
     });
@@ -343,8 +340,6 @@ class Labels {
 
     address.label = label;
 
-    this._dirty = true;
-
     return this.save();
   }
 
@@ -360,8 +355,6 @@ class Labels {
     assert(Helpers.isPositiveInteger(addressIndex), 'Address not found');
 
     address.label = null;
-
-    this._dirty = true;
 
     return this.save();
   }

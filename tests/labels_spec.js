@@ -3,10 +3,12 @@ let proxyquire = require('proxyquireify')(require);
 describe('Labels', () => {
   const latestVersion = '1.0.0';
 
-  let mockPayload = {
+  const defaultInitialPayload = {
     version: latestVersion,
-    accounts: [[null, {label: 'Hello'}]]
+    accounts: [[]]
   };
+
+  let mockPayload;
 
   let Metadata = {
     fromMasterHDNode (n, masterhdnode) {
@@ -19,7 +21,21 @@ describe('Labels', () => {
     }
   };
 
-  let AddressHD = () => {};
+  let AddressHD = (obj) => {
+    return {
+      constructor: {
+        name: 'AddressHD'
+      },
+      label: obj === null ? null : obj.label,
+      toJSON: () => {
+        if (obj && obj.label !== null) {
+          return {label: obj.label};
+        } else {
+          return null;
+        }
+      }
+    };
+  };
 
   let stubs = {
     './metadata': Metadata,
@@ -33,6 +49,11 @@ describe('Labels', () => {
   let l;
 
   beforeEach(() => {
+    mockPayload = {
+      version: latestVersion,
+      accounts: [[null, {label: 'Hello'}]]
+    };
+
     wallet = {
       hdwallet: {
         accounts: [{
@@ -41,7 +62,8 @@ describe('Labels', () => {
           receiveIndex: 2,
           lastUsedReceiveIndex: 1
         }]
-      }
+      },
+      isMetadataReady: true
     };
   });
 
@@ -93,8 +115,14 @@ describe('Labels', () => {
   });
 
   describe('instance', () => {
+    let metadata;
     beforeEach(() => {
-      let metadata = {};
+      metadata = {
+        existsOnServer: true,
+        create: () => Promise.resolve(),
+        update: () => Promise.resolve()
+      };
+      spyOn(Labels.prototype, 'migrateIfNeeded').and.callFake((object) => object);
       l = new Labels(metadata, wallet, mockPayload);
     });
 
@@ -107,6 +135,20 @@ describe('Labels', () => {
         expect(JSON.parse(json)).toEqual(
           jasmine.objectContaining({version: latestVersion}
         ));
+      });
+
+      it('should store labels', () => {
+        let json = JSON.stringify(l);
+        let res = JSON.parse(json);
+        expect(res.accounts[0].length).toEqual(2);
+        expect(res.accounts[0][1].label).toEqual('Hello');
+      });
+
+      it('should remove trailing null values', () => {
+        l._accounts[0].push(AddressHD(null));
+        let json = JSON.stringify(l);
+        let res = JSON.parse(json);
+        expect(res.accounts[0].length).toEqual(2);
       });
 
       it('should not serialize non-expected fields', () => {
@@ -133,9 +175,190 @@ describe('Labels', () => {
     });
 
     describe('dirty', () => {
-      it('should be true when _dirty is true', () => {
-        l._dirty = true;
+      it('should be true if something changed', () => {
+        expect(l.dirty).toEqual(false);
+        l._accounts.push([]);
         expect(l.dirty).toEqual(true);
+      });
+    });
+
+    describe('save()', () => {
+      beforeEach(() => {
+        spyOn(metadata, 'create').and.callThrough();
+        spyOn(metadata, 'update').and.callThrough();
+        l._accounts.push([]); // Create a change to mark object dirty
+      });
+
+      it('should create a new metadata entry the first time', (done) => {
+        l._metadata.existsOnServer = false;
+        const checks = () => {
+          expect(l._metadata.create).toHaveBeenCalled();
+        };
+        let promise = l.save().then(checks);
+        expect(promise).toBeResolved(done);
+      });
+
+      it('should update existing metadata entry', (done) => {
+        const checks = () => {
+          expect(l._metadata.update).toHaveBeenCalled();
+        };
+        let promise = l.save().then(checks);
+        expect(promise).toBeResolved(done);
+      });
+
+      it('should not save if read-only', (done) => {
+        l._readOnly = true;
+        const checks = () => {
+          expect(l._metadata.update).not.toHaveBeenCalled();
+        };
+        let promise = l.save().then(checks);
+        expect(promise).toBeResolved(done);
+      });
+
+      it('should not save if not dirty', (done) => {
+        l._accounts.pop(); // Undo change, so object is not dirty
+        const checks = () => {
+          expect(l._metadata.update).not.toHaveBeenCalled();
+        };
+        let promise = l.save().then(checks);
+        expect(promise).toBeResolved(done);
+      });
+
+      it('should result in !dirty', (done) => {
+        const checks = () => {
+          expect(l.dirty).toEqual(false);
+        };
+        let promise = l.save().then(checks);
+        expect(promise).toBeResolved(done);
+      });
+
+      it('should remain dirty if read-only', (done) => {
+        l._readOnly = true;
+
+        const checks = () => {
+          expect(l.dirty).toEqual(true);
+        };
+        let promise = l.save().then(checks);
+        expect(promise).toBeResolved(done);
+      });
+    });
+
+    describe('migrateIfNeeded()', () => {
+      beforeEach(() => {
+        Labels.prototype.migrateIfNeeded.and.callThrough(); // Remove spy
+      });
+
+      describe('first time', () => {
+        it('should create an initial payload', () => {
+          let res = l.migrateIfNeeded(null);
+          expect(res).toEqual(defaultInitialPayload);
+        });
+
+        it('should also replace empty object with initial payload', () => {
+          let res = l.migrateIfNeeded({});
+          expect(res).toEqual(defaultInitialPayload);
+        });
+
+        describe('wallet without existing labels', () => {
+          beforeEach(() => {
+            l._wallet.hdwallet.accounts = [{address_labels_backup: undefined}];
+          });
+
+          it('should create a placeholder for each account', () => {
+            l._wallet.hdwallet.accounts.push([]);
+            let res = l.migrateIfNeeded(null);
+            expect(res.accounts.length).toEqual(2);
+          });
+        });
+
+        describe('wallet with existing labels', () => {
+          beforeEach(() => {
+            l._wallet.hdwallet.accounts = [{_address_labels_backup: [
+              {index: 1, label: 'Hello'}
+            ]}];
+          });
+
+          it('should import labels', () => {
+            let res = l.migrateIfNeeded(null);
+            expect(res).toEqual(mockPayload);
+          });
+
+          it('should create a placeholder for each account', () => {
+            l._wallet.hdwallet.accounts.push([]);
+            let res = l.migrateIfNeeded({});
+            expect(res.accounts.length).toEqual(2);
+          });
+        });
+      });
+
+      describe('no version change', () => {
+        it('should not change anything', () => {
+          let res = l.migrateIfNeeded(mockPayload);
+          expect(res).toEqual(mockPayload);
+        });
+      });
+
+      // describe('version 1.0.0', () => {
+      //   it('should upgrade to 1.1.0', () => {
+      //     let oldPayload = {
+      //       version: '1.0.0',
+      //       accounts: [[null, {label: 'Hello'}]]
+      //     };
+      //     let res = l.migrateIfNeeded(oldPayload);
+      //     expect(res).toEqual(mockPayload);
+      //   });
+      // });
+
+      describe('unrecognized new major version', () => {
+        it('should throw', () => {
+          let v = latestVersion.split('.').map((i) => parseInt(i));
+          v[0] += 1;
+          let newVersion = v.join('.');
+          expect(() => { l.migrateIfNeeded({version: newVersion}); }).toThrow(
+            Error('LABELS_UNSUPPORTED_MAJOR_VERSION')
+          );
+        });
+      });
+
+      describe('unrecognized new minor version', () => {
+        it('should switch to readOnly', () => {
+          let v = latestVersion.split('.').map((i) => parseInt(i));
+          v[1] += 1;
+          let newVersion = v.join('.');
+          l.migrateIfNeeded({version: newVersion});
+          expect(l.readOnly).toEqual(true);
+        });
+      });
+
+      describe('unrecognized new patch version', () => {
+        let res;
+        let mockPayLoadNewVersion;
+
+        beforeEach(() => {
+          let v = latestVersion.split('.').map((i) => parseInt(i));
+          v[2] += 1;
+          mockPayLoadNewVersion = JSON.parse(JSON.stringify(mockPayload));
+          mockPayLoadNewVersion.version = v.join('.');
+
+          res = l.migrateIfNeeded(mockPayLoadNewVersion);
+        });
+
+        it('should not modify the payload', () => {
+          expect(res).toEqual(mockPayLoadNewVersion);
+        });
+
+        it('should not switch to read-only', () => {
+          expect(l.readOnly).toEqual(false);
+        });
+
+        it('should downgrade the payload if saved', (done) => {
+          const checks = () => {
+            expect(l.version).toEqual(latestVersion);
+          };
+
+          let promise = l.save().then(checks);
+          expect(promise).toBeResolved(done);
+        });
       });
     });
 
