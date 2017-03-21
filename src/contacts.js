@@ -13,6 +13,8 @@ const METADATA_TYPE_EXTERNAL = 4;
 const REQUEST_PAYMENT_REQUEST_TYPE = 0;
 const PAYMENT_REQUEST_TYPE = 1;
 const PAYMENT_REQUEST_RESPONSE_TYPE = 2;
+const DECLINE_RESPONSE_TYPE = 3;
+const CANCEL_RESPONSE_TYPE = 4;
 
 class Contacts {
   constructor (masterhdnode) {
@@ -194,6 +196,16 @@ const paymentRequestResponse = function (id, txHash) {
     });
 };
 
+// :: returns a message string of a decline response
+const declineResponse = function (id) {
+  return JSON.stringify({id: id});
+};
+
+// :: returns a message string of a cancel response
+const cancelResponse = function (id) {
+  return JSON.stringify({id: id});
+};
+
 // I want you to pay me
 Contacts.prototype.sendPR = function (userId, intendedAmount, id, note) {
   // we should reserve the address (check buy-sell) - should probable be an argument
@@ -232,6 +244,22 @@ Contacts.prototype.sendPRR = function (userId, txHash, id) {
     .then(this.save.bind(this));
 };
 
+// decline response
+Contacts.prototype.sendDeclination = function (userId, id) {
+  const message = declineResponse(id);
+  const contact = this.get(userId);
+  return this.sendMessage(userId, DECLINE_RESPONSE_TYPE, message)
+    .then(contact.Decline.bind(contact, id))
+    .then(this.save.bind(this));
+};
+// cancel response
+Contacts.prototype.sendCancellation = function (userId, id) {
+  const message = cancelResponse(id);
+  const contact = this.get(userId);
+  return this.sendMessage(userId, CANCEL_RESPONSE_TYPE, message)
+    .then(contact.Cancel.bind(contact, id))
+    .then(this.save.bind(this));
+};
 // /////////////////////////////////////////////////////////////////////////////
 // digestion logic
 Contacts.prototype.digestRPR = function (message) {
@@ -245,6 +273,28 @@ Contacts.prototype.digestRPR = function (message) {
             message.payload.id,
             FacilitatedTx.RPR_RECEIVER,
             message.payload.note))
+    .then(this.save.bind(this))
+    .then(() => message);
+};
+
+Contacts.prototype.digestDecline = function (message) {
+  // console.log('digesting Cancellation')
+  // console.log(message)
+  const result = this.search(message.sender);
+  const contact = result[Object.keys(result)[0]];
+  return this._sharedMetadata.processMessage(message.id)
+    .then(contact.Cancel.bind(contact, message.payload.id))
+    .then(this.save.bind(this))
+    .then(() => message);
+};
+
+Contacts.prototype.digestCancel = function (message) {
+  // console.log('digesting Declination')
+  // console.log(message)
+  const result = this.search(message.sender);
+  const contact = result[Object.keys(result)[0]];
+  return this._sharedMetadata.processMessage(message.id)
+    .then(contact.Cancel.bind(contact, message.payload.id))
     .then(this.save.bind(this))
     .then(() => message);
 };
@@ -285,6 +335,10 @@ Contacts.prototype.digestMessage = function (message) {
       return this.digestPR(message);
     case PAYMENT_REQUEST_RESPONSE_TYPE:
       return this.digestPRR(message);
+    case DECLINE_RESPONSE_TYPE:
+      return this.digestDecline(message);
+    case CANCEL_RESPONSE_TYPE:
+      return this.digestCancel(message);
     default:
       return message;
   }

@@ -72,4 +72,19 @@ Contact.prototype.PRR = function (txHash, id) {
   return existingTx;
 };
 
+// modify the state of facilitated tx to declined
+Contact.prototype.Decline = function (id) {
+  var existingTx = prop(id, this.facilitatedTxList);
+  existingTx.state = FacilitatedTx.DECLINED;
+  existingTx.last_updated = Date.now();
+  return existingTx;
+};
+
+// modify the state of facilitated tx to Cancelled
+Contact.prototype.Cancel = function (id) {
+  var existingTx = prop(id, this.facilitatedTxList);
+  existingTx.state = FacilitatedTx.CANCELLED;
+  existingTx.last_updated = Date.now();
+  return existingTx;
+};
 module.exports = Contact;

@@ -46,7 +46,6 @@ FacilitatedTx.PR = function (intendedAmount, id, role, address, note) {
 FacilitatedTx.factory = function (o) {
   return new FacilitatedTx(o);
 };
-
 // ftx roles
 FacilitatedTx.RPR_INITIATOR = 'rpr_initiator';
 FacilitatedTx.RPR_RECEIVER = 'rpr_receiver';
@@ -57,5 +56,7 @@ FacilitatedTx.PR_RECEIVER = 'pr_receiver';
 FacilitatedTx.WAITING_ADDRESS = 'waiting_address';
 FacilitatedTx.WAITING_PAYMENT = 'waiting_payment';
 FacilitatedTx.PAYMENT_BROADCASTED = 'payment_broadcasted';
+FacilitatedTx.DECLINED = 'declined'
+FacilitatedTx.CANCELLED = 'cancelled'
 
 module.exports = FacilitatedTx;
