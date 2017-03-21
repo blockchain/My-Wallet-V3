@@ -249,7 +249,7 @@ describe('Labels', () => {
       });
 
       it('should sync MyWallet if needed', (done) => {
-        spyOn(l, '_syncWallet').and.callFake(() => Promise.resolve());
+        spyOn(l, '_syncWallet').and.callFake((success) => success());
 
         l._walletNeedsSync = true;
         const checks = () => {
@@ -261,7 +261,7 @@ describe('Labels', () => {
       });
 
       it('should not sync MyWallet if not needed', (done) => {
-        spyOn(l, '_syncWallet').and.callFake(() => Promise.resolve());
+        spyOn(l, '_syncWallet').and.callFake((success) => success());
 
         expect(l._walletNeedsSync).toEqual(false);
 

@@ -134,7 +134,7 @@ class Labels {
       this._before = JSON.stringify(this);
       if (this._walletNeedsSync) {
         console.info('Sync MyWallet address label placeholder');
-        this._syncWallet().then(() => {
+        this._syncWallet(() => {
           this._walletNeedsSync = false;
         });
       }
