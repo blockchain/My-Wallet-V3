@@ -1,5 +1,3 @@
-'use strict';
-
 var MyWallet = module.exports = {};
 
 var assert = require('assert');
@@ -195,13 +193,34 @@ MyWallet.makePairingCode = function (success, error) {
   }
 };
 
-MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHex, password) {
+MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHexExternal, stringLabels, magicHashHexLabels, password) {
+  assert(stringWallet, 'Wallet JSON required');
+
+  // If metadata service returned 404, do not pass in a string.
+  var externalJSON = null;
+  var labelsJSON = null;
+
+  if (stringExternal) {
+    assert(magicHashHexExternal, 'Magic hash for external required');
+    externalJSON = JSON.parse(stringExternal);
+  }
+
+  if (stringLabels) {
+    assert(magicHashHexLabels, 'Magic hash for labels required');
+    labelsJSON = JSON.parse(stringLabels);
+  }
+
   var walletJSON = JSON.parse(stringWallet);
-  var externalJSON = stringExternal ? JSON.parse(stringExternal) : null;
+
   MyWallet.wallet = new Wallet(walletJSON);
   WalletStore.unsafeSetPassword(password);
-  MyWallet.wallet.loadExternalFromJSON(externalJSON);
-  if (magicHashHex) { MyWallet.wallet._external._metadata._magicHash = Buffer.from(magicHashHex, 'hex'); }
+  MyWallet.wallet.loadMetaData({
+    external: externalJSON,
+    labels: labelsJSON
+  }, {
+    external: magicHashHexExternal ? Buffer.from(magicHashHexExternal, 'hex') : null,
+    labels: magicHashHexExternal ? Buffer.from(magicHashHexLabels, 'hex') : null
+  });
   setIsInitialized();
   return true;
 };
@@ -313,14 +332,6 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
     );
   };
 
-  // Attempt to load metadata for buy-sell
-  var tryLoadExternal = function () {
-    var loadExternalFailed = function (message) {
-      console.warn('wallet.external not set:', message);
-    };
-    return MyWallet.wallet.loadExternal.bind(MyWallet.wallet)().catch(loadExternalFailed);
-  };
-
   var p = Promise.resolve().then(doInitialize);
   var incStats = function () {
     return MyWallet.wallet.incStats.bind(MyWallet.wallet)();
@@ -328,9 +339,12 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
   var saveGUID = function () {
     return MyWallet.wallet.saveGUIDtoMetadata();
   };
+  var loadMetadata = function () {
+    return MyWallet.wallet.loadMetadata.bind(MyWallet.wallet)();
+  };
   p.then(incStats);
   p.then(saveGUID);
-  return p.then(tryLoadExternal);
+  return p.then(loadMetadata);
 };
 
 // used on iOS
