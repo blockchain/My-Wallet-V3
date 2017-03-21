@@ -7,6 +7,8 @@ var assert = require('assert');
 
 var METADATA_TYPE_LABELS = 4;
 
+const CURRENT_VERSION = '1.1.0';
+
 class Labels {
   constructor (metadata, wallet, object, syncWallet) {
     assert(syncWallet instanceof Function, 'syncWallet function required');
@@ -75,7 +77,7 @@ class Labels {
 
   toJSON () {
     return {
-      version: this.version,
+      version: CURRENT_VERSION,
       accounts: this._accounts.map((addresses) => {
         if (addresses.length > 1) {
           addresses = Helpers.deepClone(addresses);
@@ -155,12 +157,12 @@ class Labels {
     // First time, migrate from wallet payload if needed
     if (object === null || Helpers.isEmptyObject(object)) {
       object = {
-        version: '1.0.0',
+        version: CURRENT_VERSION,
         accounts: []
       };
 
       if (this._wallet.hdwallet.accounts[0]._address_labels_backup) {
-        console.info('Migrate address labels from wallet to KV-Store v1.0.0');
+        console.info(`Migrate address labels from wallet to KV-Store v${CURRENT_VERSION}`);
 
         for (let account of this._wallet.hdwallet.accounts) {
           let labels = [];
@@ -186,27 +188,26 @@ class Labels {
     } else if (major > 1) {
       // Payload contains unsuppored new major version, abort:
       throw new Error('LABELS_UNSUPPORTED_MAJOR_VERSION');
-    } else if (major === 1 && minor > 0) {
+    } else if (major === 1 && minor > 1) {
       // New minor version can safely be used in read-only mode:
       this._readOnly = true;
-    } else if (major === 1 && minor === 0 && patch > 0) {
+    } else if (major === 1 && minor === 1 && patch > 0) {
       // New patch version can safely to be used.
     }
 
     // Run (future) migration scripts:
-    // switch (object.version) {
-    //   case '1.0.0':
-    //     // Migrate from 1.0.1 to e.g. 1.0.2 or 1.1.0:
-    //     // ...
-    //     object.version = '1.0.1';
-    //     // falls through
-    //   case '1.0.1':
-    //     // Migrate from 1.0.1 to e.g. 1.0.2 or 1.1.0:
-    //     // ...
-    //     object.version = '1.0.2';
-    //     // falls through
-    //   default:
-    // }
+    switch (object.version) {
+      case '1.0.0':
+        // Migrate from 1.0.0 to 1.1.0 which allows an amount and used field
+        object.version = '1.1.0';
+        // falls through
+      // case '1.1.0':
+      //   // Migrate from 1.1.0 to e.g. 1.1.1 or 1.2.0:
+      //   // ...
+      //   object.version = '1.1.1';
+      //   // falls through
+      default:
+    }
     return object;
   }
 
@@ -215,8 +216,9 @@ class Labels {
   // this is an implementation detail and we don't save it.
   checkIfUsed (accountIndex) {
     assert(Helpers.isPositiveInteger(accountIndex), 'specify accountIndex');
-    let labeledAddresses = this.all(accountIndex).filter((a) => a !== null);
-    let addresses = labeledAddresses.filter((a) => a.label).map((a) => a.address);
+    let labeledAddresses = this.all(accountIndex).filter((a) =>
+                            a !== null && a.label && !a.used);
+    let addresses = labeledAddresses.map((a) => a.address);
 
     if (addresses.length === 0) return Promise.resolve();
 
@@ -291,10 +293,11 @@ class Labels {
     return entry.label;
   }
 
-  addLabel (accountIndex, maxGap, label) {
+  addLabel (accountIndex, maxGap, label, amount) {
     assert(Helpers.isPositiveInteger(accountIndex), 'specify accountIndex');
     assert(Helpers.isString(label), 'specify label');
     assert(Helpers.isPositiveInteger(maxGap) && maxGap <= 20, 'Max gap must be less than 20');
+    assert(amount === undefined || Helpers.isPositiveInteger(accountIndex), 'Specificy amount or leave empty');
 
     if (this.readOnly) return Promise.reject('KV_LABELS_READ_ONLY');
 
@@ -312,6 +315,7 @@ class Labels {
 
     addr.label = label;
     addr.used = false;
+    addr.amount = amount;
 
     this._walletNeedsSync = true;
 
@@ -321,37 +325,41 @@ class Labels {
   }
 
   // address: either an AddressHD object or a receive index Integer
-  setLabel (accountIndex, address, label) {
+  setLabel (accountIndex, address, label, amount) {
     assert(Helpers.isPositiveInteger(accountIndex), 'Account index required');
     assert(this._accounts[accountIndex], `_accounts[${accountIndex}] should exist`);
     assert(
       Helpers.isPositiveInteger(address) ||
       (address.constructor && address.constructor.name === 'AddressHD'),
     'address should be AddressHD instance or Int');
+    assert(amount === undefined || Helpers.isPositiveInteger(accountIndex), 'Specificy amount or leave empty');
+    if (amount === undefined) {
+      amount = null;
+    }
 
     if (this.readOnly) return Promise.reject('KV_LABELS_READ_ONLY');
 
     let receiveIndex;
+
+    let maxLabeledReceiveIndexBefore = this.maxLabeledReceiveIndex(accountIndex);
 
     if (Helpers.isPositiveInteger(address)) {
       receiveIndex = address;
       address = this.getAddress(accountIndex, receiveIndex);
     } else {
       receiveIndex = this._accounts[accountIndex].indexOf(address);
-      assert(Helpers.isPositiveInteger(receiveIndex), 'Address not found');
     }
 
     if (!Helpers.isValidLabel(label)) {
       return Promise.reject('NOT_ALPHANUMERIC');
     }
 
-    if (address.label === label) {
+    if (address.label === label && address.amount === amount) {
       return Promise.resolve();
     }
 
-    let maxLabeledReceiveIndexBefore = this.maxLabeledReceiveIndex(accountIndex);
-
     address.label = label;
+    address.amount = amount;
 
     if (receiveIndex > maxLabeledReceiveIndexBefore) {
       this._walletNeedsSync = true;
