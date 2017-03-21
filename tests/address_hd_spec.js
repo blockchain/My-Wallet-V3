@@ -28,6 +28,21 @@ describe('AddressHD', () => {
         expect(a.label).toEqual('Hello');
       });
 
+      it('should deserialize the amount', () => {
+        a = new AddressHD({label: 'Hello', amount: 1000}, account, 0);
+        expect(a.amount).toEqual(1000);
+      });
+
+      it('should deserialize the used status', () => {
+        a = new AddressHD({label: 'Hello', used: true}, account, 0);
+        expect(a.used).toEqual(true);
+      });
+
+      it('should set used to null by default', () => {
+        a = new AddressHD({label: 'Hello'}, account, 0);
+        expect(a.used).toEqual(null);
+      });
+
       it('for a null entry, should set label to null', () => {
         a = new AddressHD(null, account, 0);
         expect(a.label).toEqual(null);
@@ -37,7 +52,7 @@ describe('AddressHD', () => {
 
   describe('instance', () => {
     beforeEach(() => {
-      a = new AddressHD({label: 'Hello'}, account, 0);
+      a = new AddressHD({label: 'Hello', amount: 1000}, account, 0);
     });
 
     describe('toJSON', () => {
@@ -46,6 +61,35 @@ describe('AddressHD', () => {
         expect(JSON.parse(json)).toEqual(
           jasmine.objectContaining({label: 'Hello'}
         ));
+      });
+
+      it('should store the amount', () => {
+        let json = JSON.stringify(a);
+        expect(JSON.parse(json)).toEqual(
+          jasmine.objectContaining({amount: 1000}
+        ));
+      });
+
+      it('should not store an amount field if no amount is set', () => {
+        a.amount = null;
+        let json = JSON.stringify(a);
+        let res = JSON.parse(json);
+        expect(res.amount).not.toBeDefined();
+      });
+
+      it('should store if used if true', () => {
+        a.used = true;
+        let json = JSON.stringify(a);
+        expect(JSON.parse(json)).toEqual(
+          jasmine.objectContaining({used: true}
+        ));
+      });
+
+      it('should not store if used if false', () => {
+        a.used = false;
+        let json = JSON.stringify(a);
+        let res = JSON.parse(json);
+        expect(res.used).not.toBeDefined();
       });
 
       it('should store a null entry if label is null', () => {

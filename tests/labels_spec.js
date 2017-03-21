@@ -1,7 +1,7 @@
 let proxyquire = require('proxyquireify')(require);
 
 describe('Labels', () => {
-  const latestVersion = '1.0.0';
+  const latestVersion = '1.1.0';
 
   const defaultInitialPayload = {
     version: latestVersion,
@@ -27,9 +27,10 @@ describe('Labels', () => {
         name: 'AddressHD'
       },
       label: obj === null ? null : obj.label,
+      amount: obj === null ? undefined : obj.amount,
       toJSON: () => {
         if (obj && obj.label !== null) {
-          return {label: obj.label};
+          return {label: obj.label, amount: obj.amount};
         } else {
           return null;
         }
@@ -51,7 +52,7 @@ describe('Labels', () => {
   beforeEach(() => {
     mockPayload = {
       version: latestVersion,
-      accounts: [[null, {label: 'Hello'}]]
+      accounts: [[null, {label: 'Hello'}, {label: 'World', amount: 1000000}]]
     };
 
     wallet = {
@@ -140,7 +141,7 @@ describe('Labels', () => {
       it('should store labels', () => {
         let json = JSON.stringify(l);
         let res = JSON.parse(json);
-        expect(res.accounts[0].length).toEqual(2);
+        expect(res.accounts[0].length).toEqual(3);
         expect(res.accounts[0][1].label).toEqual('Hello');
       });
 
@@ -148,7 +149,7 @@ describe('Labels', () => {
         l._accounts[0].push(AddressHD(null));
         let json = JSON.stringify(l);
         let res = JSON.parse(json);
-        expect(res.accounts[0].length).toEqual(2);
+        expect(res.accounts[0].length).toEqual(3);
       });
 
       it('should not serialize non-expected fields', () => {
@@ -272,6 +273,11 @@ describe('Labels', () => {
         });
 
         describe('wallet with existing labels', () => {
+          const expectedPayload = {
+            version: latestVersion,
+            accounts: [[null, {label: 'Hello'}]]
+          };
+
           beforeEach(() => {
             l._wallet.hdwallet.accounts = [{_address_labels_backup: [
               {index: 1, label: 'Hello'}
@@ -280,7 +286,7 @@ describe('Labels', () => {
 
           it('should import labels', () => {
             let res = l.migrateIfNeeded(null);
-            expect(res).toEqual(mockPayload);
+            expect(res).toEqual(expectedPayload);
           });
 
           it('should create a placeholder for each account', () => {
@@ -298,16 +304,16 @@ describe('Labels', () => {
         });
       });
 
-      // describe('version 1.0.0', () => {
-      //   it('should upgrade to 1.1.0', () => {
-      //     let oldPayload = {
-      //       version: '1.0.0',
-      //       accounts: [[null, {label: 'Hello'}]]
-      //     };
-      //     let res = l.migrateIfNeeded(oldPayload);
-      //     expect(res).toEqual(mockPayload);
-      //   });
-      // });
+      describe('version 1.0.0', () => {
+        it('should upgrade to 1.1.0', () => {
+          let oldPayload = {
+            version: '1.0.0',
+            accounts: [[null, {label: 'Hello'}, {label: 'World'}]]
+          };
+          let res = l.migrateIfNeeded(oldPayload);
+          expect(res).toEqual(oldPayload);
+        });
+      });
 
       describe('unrecognized new major version', () => {
         it('should throw', () => {

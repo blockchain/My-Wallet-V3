@@ -14,16 +14,21 @@ class AddressHD {
       this._label = null;
     } else {
       this._label = object.label;
+      this._used = Helpers.isBoolean(object.used) ? object.used : null;
+      this._amount = Helpers.isPositiveInteger(object.amount) ? object.amount : null;
     }
-    this._used = null;
     this._balance = null;
     this._address = undefined;
   }
 
   toJSON () {
     if (this._label === null) return null;
+    // To save space, the used and amount fields are not stored if empty
     return {
-      label: this._label
+      label: this._label,
+      used: this._used ? this._used : undefined,
+      amount: Helpers.isPositiveInteger(this._amount) && this._amount > 0
+              ? this._amount : undefined
     };
   }
 
@@ -56,6 +61,14 @@ class AddressHD {
 
   set used (value) {
     this._used = value;
+  }
+
+  get amount () {
+    return this._amount;
+  }
+
+  set amount (value) {
+    this._amount = value;
   }
 }
 
