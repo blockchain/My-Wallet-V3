@@ -139,14 +139,10 @@ class Labels {
   }
 
   migrateIfNeeded (object) {
-    let major;
-    let minor;
-    let patch;
+    let major, minor, patch;
 
     if (object && object.version) {
-      major = parseInt(object.version.split('.')[0]);
-      minor = parseInt(object.version.split('.')[1]);
-      patch = parseInt(object.version.split('.')[2]);
+      [major, minor, patch] = object.version.split('.').map(n => parseInt(n, 10));
     }
 
     // First time, migrate from wallet payload if needed
