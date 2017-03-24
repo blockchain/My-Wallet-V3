@@ -77,6 +77,16 @@ describe('AddressHD', () => {
       });
     });
 
+    describe('index', () => {
+      it('should have a getter', () => {
+        expect(a.index).toEqual(0);
+      });
+
+      it('should not have a setter', () => {
+        expect(() => { a.index = 1; }).toThrow();
+      });
+    });
+
     describe('label', () => {
       it('should have a getter and setter', () => {
         a.label = 'World';

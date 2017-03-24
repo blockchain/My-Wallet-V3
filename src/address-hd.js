@@ -34,6 +34,10 @@ class AddressHD {
     return this._address;
   }
 
+  get index () {
+    return this._index;
+  }
+
   get label () {
     return this._label;
   }
