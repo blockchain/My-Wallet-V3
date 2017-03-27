@@ -193,21 +193,15 @@ MyWallet.makePairingCode = function (success, error) {
   }
 };
 
-MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHexExternal, stringLabels, magicHashHexLabels, password) {
+MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHexExternal, password) {
   assert(stringWallet, 'Wallet JSON required');
 
   // If metadata service returned 404, do not pass in a string.
   var externalJSON = null;
-  var labelsJSON = null;
 
   if (stringExternal) {
     assert(magicHashHexExternal, 'Magic hash for external required');
     externalJSON = JSON.parse(stringExternal);
-  }
-
-  if (stringLabels) {
-    assert(magicHashHexLabels, 'Magic hash for labels required');
-    labelsJSON = JSON.parse(stringLabels);
   }
 
   var walletJSON = JSON.parse(stringWallet);
@@ -215,11 +209,9 @@ MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHexExt
   MyWallet.wallet = new Wallet(walletJSON);
   WalletStore.unsafeSetPassword(password);
   MyWallet.wallet.loadMetaData({
-    external: externalJSON,
-    labels: labelsJSON
+    external: externalJSON
   }, {
-    external: magicHashHexExternal ? Buffer.from(magicHashHexExternal, 'hex') : null,
-    labels: magicHashHexExternal ? Buffer.from(magicHashHexLabels, 'hex') : null
+    external: magicHashHexExternal ? Buffer.from(magicHashHexExternal, 'hex') : null
   });
   setIsInitialized();
   return true;
