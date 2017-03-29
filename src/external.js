@@ -127,7 +127,7 @@ External.prototype.save = function () {
 };
 
 External.prototype.wipe = function () {
-  this._metadata.update({}).then(this.fetch.bind(this));
+  this._metadata.update({});
   this._coinify = undefined;
   this._sfox = undefined;
 };
