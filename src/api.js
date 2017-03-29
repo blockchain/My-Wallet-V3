@@ -274,3 +274,11 @@ API.prototype.incrementSecPassStats = function (activeBool) {
   var active = activeBool ? 1 : 0;
   return fetch(this.ROOT_URL + 'event?name=wallet_login_second_password_' + active);
 };
+
+API.prototype.getBlockchainAddress = function (network) {
+  if (network === 'testnet') {
+    return Promise.resolve({"address":"myuiCQ6KwDdQc36zK3nHJpcwm1J84NuDY6","success":true})
+  } else {
+    return this.request.bind(this, 'GET', 'charge_address')
+  }
+}

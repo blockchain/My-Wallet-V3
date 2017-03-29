@@ -467,4 +467,15 @@ Helpers.isEmailInvited = function (email, fraction) {
   return WalletCrypo.sha256(email)[0] / 256 >= 1 - fraction;
 };
 
+// var feeOptionsEx = {
+//    "min_tx_amount": 10000000,
+//    "max_service_charge": 10000000,
+//    "percent": 0.004
+// }
+
+Helpers.blockchainFee = (amount, options) =>
+  amount < options.min_tx_amount ? 0
+    : Math.min(Math.floor(amount * options.percent), options.max_service_charge)
+
+
 module.exports = Helpers;
