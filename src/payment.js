@@ -384,7 +384,7 @@ Payment.prebuild = function (absoluteFee) {
     var max = Transaction.maxAvailableAmount(usableCoins, payment.feePerKb);
     payment.sweepAmount = max.amount;
     if (payment.blockchainFeeFlag) {
-      payment.sweepAmount -= payment.amounts[payment.amounts - 1];
+      payment.sweepAmount -= payment.amounts[payment.amounts.length - 1];
     }
     payment.sweepFee = max.fee;
     payment.balance = Transaction.sumOfCoins(payment.coins);
