@@ -21,10 +21,7 @@ function HDAccount (object) {
   this._xpub = obj.xpub;
   this._network = obj.network || Bitcoin.networks.bitcoin;
 
-  // Prevent deleting address_labels field when saving wallet:
-  // * backwards compatibility with mobile (we'll keep one entry for the highest label)
-  // * if user has 2nd password enabled and doesn't enter it during migration step
-  this._address_labels_backup = obj.address_labels;
+  this._address_labels = obj.address_labels;
 
   // computed properties
   this._keyRing = new KeyRing(obj.xpub, obj.cache);
@@ -94,10 +91,10 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function () {
       let maxLabeledReceiveIndex = null;
-      if (MyWallet.wallet.labels) {
+      if (MyWallet.wallet.labels) { // May not be set yet
         maxLabeledReceiveIndex = MyWallet.wallet.labels.maxLabeledReceiveIndex(this.index);
-      } else if (this._address_labels_backup && this._address_labels_backup.length) {
-        maxLabeledReceiveIndex = this._address_labels_backup[this._address_labels_backup.length - 1].index;
+      } else if (this._address_labels && this._address_labels.length) {
+        maxLabeledReceiveIndex = this._address_labels[this._address_labels.length - 1].index;
       }
       return Math.max(
         this.lastUsedReceiveIndex === null ? -1 : this.lastUsedReceiveIndex,
@@ -211,24 +208,12 @@ HDAccount.factory = function (o) {
 // JSON SERIALIZER
 
 HDAccount.prototype.toJSON = function () {
-  let labelsJSON = this._address_labels_backup;
-
-  // Hold on to the backup until labels are saved in KV store.
-  if (MyWallet.wallet.labels && !MyWallet.wallet.labels.readOnly && !MyWallet.wallet.labels.dirty) {
-    // Use placeholder entry to prevent address reuse:
-    labelsJSON = [];
-    let max = MyWallet.wallet.labels.maxLabeledReceiveIndex(this._index);
-    if (max > -1) {
-      labelsJSON.push({index: max, label: ''});
-    }
-  }
-
   var hdaccount = {
     label: this._label,
     archived: this._archived,
     xpriv: this._xpriv,
     xpub: this._xpub,
-    address_labels: labelsJSON,
+    address_labels: this._address_labels,
     cache: this._keyRing
   };
 

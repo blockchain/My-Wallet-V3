@@ -131,46 +131,8 @@ describe('HDAccount', () => {
         expect(json1).toEqual(json2);
       });
 
-      describe('labeled_addresses placeholder', () => {
-        it('should be set if KV store entry is saved', () => {
-          maxLabeledReceiveIndex = 3;
-          expect(account.toJSON()).toEqual(jasmine.objectContaining({
-            address_labels: [{
-              index: maxLabeledReceiveIndex,
-              label: ''
-            }]
-          }));
-        });
-
-        it('should be empty array if there are no labels', () => {
-          maxLabeledReceiveIndex = -1;
-          expect(account.toJSON()).toEqual(jasmine.objectContaining({
-            address_labels: []
-          }));
-        });
-
+      describe('labeled_addresses', () => {
         it('should resave original if KV store is read-only', () => {
-          MyWallet.wallet.labels.readOnly = true;
-          expect(account.toJSON()).toEqual(jasmine.objectContaining({
-            address_labels: [{
-              index: 3,
-              label: 'Hello'
-            }]
-          }));
-        });
-
-        it('should resave original if KV store is unsaved', () => {
-          MyWallet.wallet.labels.dirty = true;
-          expect(account.toJSON()).toEqual(jasmine.objectContaining({
-            address_labels: [{
-              index: 3,
-              label: 'Hello'
-            }]
-          }));
-        });
-
-        it('should resave original if KV store doesn\'t work', () => {
-          MyWallet.wallet.labels = null;
           expect(account.toJSON()).toEqual(jasmine.objectContaining({
             address_labels: [{
               index: 3,
@@ -288,19 +250,11 @@ describe('HDAccount', () => {
         expect(account.receiveIndex).toEqual(4);
       });
 
-      it('receiveIndex falls back to legacy labels if KV store doesn\'t work', () => {
+      it('receiveIndex falls back to legacy labels if Labels doesn\'t work', () => {
         maxLabeledReceiveIndex = 3;
         MyWallet.wallet.labels = null;
         account.lastUsedReceiveIndex = 2;
         expect(account.receiveIndex).toEqual(4);
-      });
-
-      it('receiveIndex ignores labeled index if nothing works', () => {
-        maxLabeledReceiveIndex = 3;
-        MyWallet.wallet.labels = null;
-        account.lastUsedReceiveIndex = 2;
-        account._address_labels_backup = undefined;
-        expect(account.receiveIndex).toEqual(3);
       });
 
       it('changeIndex must be a number', () => {

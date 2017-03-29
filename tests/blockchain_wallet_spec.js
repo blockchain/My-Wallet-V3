@@ -79,10 +79,8 @@ describe('Blockchain-Wallet', () => {
       }
     };
 
-    Labels = {
-      fetch: () => {
-        return Promise.resolve({mock: 'labels'});
-      }
+    Labels = () => {
+      return {mock: 'labels'};
     };
 
     External = {
@@ -444,6 +442,7 @@ describe('Blockchain-Wallet', () => {
         };
         wallet.loadMetadata().then(checks).then(done);
       });
+
       it('should set external', (done) => {
         let checks = () => {
           expect(wallet.external).toEqual({mock: 'external'});
