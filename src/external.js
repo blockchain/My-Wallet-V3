@@ -96,7 +96,7 @@ External.fromJSON = function (wallet, json, magicHash) {
     return new External(metadata, wallet, payload);
   };
   var metadata = External.initMetadata(wallet);
-  return metadata.fromObject(JSON.parse(json), magicHash).then(success);
+  return metadata.fromObject(json, magicHash).then(success);
 };
 
 External.fetch = function (wallet) {
