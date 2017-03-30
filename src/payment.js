@@ -447,7 +447,7 @@ Payment.build = function (feeToMiners) {
           payment.finalFee += bfee;
           payment.blockchainFeeFlag = false;
         } else {
-          return API.getBlockchainAddress(constants.NETWORK).then(function (object) {
+          return API.getBlockchainAddress().then(function (object) {
             payment.to.push(object.address);
             payment.transaction = new Transaction(payment, this);
             return payment;

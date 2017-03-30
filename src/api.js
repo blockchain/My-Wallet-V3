@@ -285,10 +285,6 @@ API.prototype.pushTxStats = function (guid) {
   return fetch(this.ROOT_URL + 'event?name=wallet_fee_experiment_' + group + '_pushed_tx');
 };
 
-API.prototype.getBlockchainAddress = function (network) {
-  if (network === 'testnet') {
-    return Promise.resolve({"address":"myuiCQ6KwDdQc36zK3nHJpcwm1J84NuDY6","success":true})
-  } else {
-    return this.request.bind(this, 'GET', 'charge_address')
-  }
-}
+API.prototype.getBlockchainAddress = function () {
+  return this.request('GET', 'charge_address');
+};
