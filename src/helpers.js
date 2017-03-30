@@ -467,4 +467,14 @@ Helpers.isEmailInvited = function (email, fraction) {
   return WalletCrypo.sha256(email)[0] / 256 >= 1 - fraction;
 };
 
+Helpers.blockchainFee = (amount, options) =>
+  amount < options.min_tx_amount
+    ? 0
+    : Math.min(Math.floor(amount * options.percent), options.max_service_charge);
+
+Helpers.guidToGroup = (guid) => {
+  const first = parseInt(guid.charAt(0), 16);
+  return first > 7 ? 'b' : 'a';
+};
+
 module.exports = Helpers;
