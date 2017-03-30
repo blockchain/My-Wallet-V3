@@ -280,9 +280,9 @@ API.prototype.confirmationScreenStats = function (guid) {
   return fetch(this.ROOT_URL + 'event?name=wallet_fee_experiment_' + group + '_confirmation_screen');
 };
 
-API.prototype.pushTxStats = function (guid) {
+API.prototype.pushTxStats = function (guid, advanced) {
   var group = Helpers.guidToGroup(guid);
-  return fetch(this.ROOT_URL + 'event?name=wallet_fee_experiment_' + group + '_pushed_tx');
+  return fetch(this.ROOT_URL + 'event?name=wallet_fee_experiment_' + group + '_pushed_tx' + (advanced ? '_advanced' : ''));
 };
 
 API.prototype.getBlockchainAddress = function () {
