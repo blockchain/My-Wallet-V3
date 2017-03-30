@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.30.6",
+  "version": "3.30.7",
   "description": "Blockchain.info JavaScript Wallet",
   "homepage": "https://github.com/blockchain/my-wallet-v3",
   "bugs": {
@@ -50,7 +50,7 @@
     "sjcl": "1.0.3",
     "unorm": "^1.4.1",
     "ws": "2.0.*",
-    "bitcoin-coinify-client": "0.4.0-dev.4",
+    "bitcoin-coinify-client": "0.4.0-dev.5",
     "bitcoin-sfox-client": "0.1.*"
   },
   "devDependencies": {
