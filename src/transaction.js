@@ -24,6 +24,11 @@ var Transaction = function (payment, emitter) {
   assert(toAddresses && toAddresses.length, 'Missing destination address');
   assert(amounts && amounts.length, 'Missing amount to pay');
 
+  if (payment.blockchainFee && payment.blockchainAddress) {
+    amounts = amounts.concat(payment.blockchainFee);
+    toAddresses = toAddresses.concat(payment.blockchainAddress);
+  }
+
   this.emitter = emitter;
   this.amount = amounts.reduce(Helpers.add, 0);
   this.addressesOfInputs = [];
@@ -31,7 +36,7 @@ var Transaction = function (payment, emitter) {
   this.addressesOfNeededPrivateKeys = [];
   this.pathsOfNeededPrivateKeys = [];
 
-  assert(toAddresses.length === amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
+  assert(toAddresses.length === amounts.length, 'The number of destination addresses and destination amounts should be the same.');
   assert(this.amount >= BITCOIN_DUST, {error: 'BELOW_DUST_THRESHOLD', amount: this.amount, threshold: BITCOIN_DUST});
   assert(unspentOutputs && unspentOutputs.length > 0, {error: 'NO_UNSPENT_OUTPUTS'});
   var transaction = new Bitcoin.TransactionBuilder(constants.getNetwork());
