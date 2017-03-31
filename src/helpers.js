@@ -473,8 +473,8 @@ Helpers.blockchainFee = (amount, options) =>
     : Math.min(Math.floor(amount * options.percent), options.max_service_charge);
 
 Helpers.guidToGroup = (guid) => {
-  const first = parseInt(guid.charAt(0), 16);
-  return first > 7 ? 'b' : 'a';
+  let hashed = WalletCrypo.sha256(new Buffer(guid.replace(/-/g, ''), 'hex'));
+  return hashed[0] & 1 ? 'b' : 'a';
 };
 
 module.exports = Helpers;
