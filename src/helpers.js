@@ -474,8 +474,7 @@ Helpers.blockchainFee = (amount, options) =>
 
 Helpers.guidToGroup = (guid) => {
   let hashed = WalletCrypo.sha256(new Buffer(guid.replace(/-/g, ''), 'hex'));
-  let leadByte = parseInt(hashed.toString('hex').slice(0, 2), 16);
-  return leadByte & 1 ? 'b' : 'a';
+  return hashed[0] & 1 ? 'b' : 'a';
 };
 
 module.exports = Helpers;
