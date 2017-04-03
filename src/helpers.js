@@ -486,9 +486,9 @@ Helpers.balanceMinusFee = (balance, options) => {
     const maxWithFee = Math.floor(balance / (1 + options.percent));
     return Math.max(maxWithFee, options.min_tx_amount);
   }
-  if (point < balance) {
-    return balance - options.max_service_charge;
-  }
+  return point < balance
+    ? balance - options.max_service_charge
+    : balance;
 };
 
 Helpers.guidToGroup = (guid) => {
