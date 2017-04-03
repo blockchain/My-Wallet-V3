@@ -20,7 +20,7 @@ describe('External', () => {
   };
 
   let Metadata = {
-    fromMasterHDNode (n, masterhdnode) {
+    fromMetadataHDNode (n, masterhdnode) {
       return metaDataInstance;
     }
   };
