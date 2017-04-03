@@ -3,7 +3,8 @@
 require('isomorphic-fetch');
 require('es6-promise').polyfill();
 
-global.Symbol = require('core-js/es6/symbol');
+require('core-js/modules/es6.symbol');
+require('core-js/modules/web.dom.iterable');
 
 var Buffer = require('buffer').Buffer;
 
