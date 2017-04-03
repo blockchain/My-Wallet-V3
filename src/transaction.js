@@ -168,7 +168,6 @@ Transaction.sumOfCoins = function (coins) {
 
 Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
   var amount = amounts.reduce(Helpers.add, 0);
-  var nouts = amounts.length;
   var sorted = usableCoins.sort(function (a, b) { return b.value - a.value; });
   var len = sorted.length;
   var sel = [];
@@ -186,7 +185,7 @@ Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
     for (var ii = 0; ii < len; ii++) {
       var coin2 = sorted[ii];
       accAm = accAm + coin2.value;
-      accFee = Transaction.guessFee(ii + 1, nouts + 1, fee);
+      accFee = Transaction.guessFee(ii + 1, 2, fee);
       sel.push(coin2);
       if (accAm >= accFee + amount) { return {'coins': sel, 'fee': accFee}; }
     }
