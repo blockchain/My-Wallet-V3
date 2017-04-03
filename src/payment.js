@@ -69,7 +69,8 @@ function Payment (wallet, payment) {
     confEstimation: 'unknown',
     txSize: 0, // transaciton size
     blockchainFee: 0,
-    blockchainAddress: null
+    blockchainAddress: null,
+    serviceChargeOptions: {}
   };
 
   var p = payment || initialState;
@@ -248,6 +249,7 @@ Payment.amount = function (amounts, absoluteFee, feeOptions) {
       console.log('No amounts set.');
   } // fi switch
   return function (payment) {
+    payment.serviceChargeOptions = feeOptions || {};
     payment.blockchainFee = feeOptions
       ? Helpers.blockchainFee(formatAmo.reduce(Helpers.add, 0), feeOptions)
       : 0;
@@ -376,7 +378,7 @@ Payment.prebuild = function (absoluteFee) {
 
     var usableCoins = Transaction.filterUsableCoins(payment.coins, payment.feePerKb);
     var max = Transaction.maxAvailableAmount(usableCoins, payment.feePerKb);
-    payment.sweepAmount = max.amount - payment.blockchainFee;
+    payment.sweepAmount = Helpers.balanceMinusFee(max.amount, payment.serviceChargeOptions);
     payment.sweepFee = max.fee;
     payment.balance = Transaction.sumOfCoins(payment.coins);
 

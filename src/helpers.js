@@ -468,9 +468,28 @@ Helpers.isEmailInvited = function (email, fraction) {
 };
 
 Helpers.blockchainFee = (amount, options) =>
-  amount < options.min_tx_amount
+  amount <= options.min_tx_amount
     ? 0
     : Math.min(Math.floor(amount * options.percent), options.max_service_charge);
+
+Helpers.balanceMinusFee = (balance, options) => {
+  if (!options || options.max_service_charge === undefined ||
+                  options.percent === undefined ||
+                  options.min_tx_amount === undefined) {
+    return balance;
+  }
+  if (balance <= options.min_tx_amount) {
+    return balance;
+  }
+  const point = Math.floor(options.max_service_charge * ((1 / options.percent) + 1));
+  if (options.min_tx_amount < balance && balance <= point) {
+    const maxWithFee = Math.floor(balance / (1 + options.percent));
+    return Math.max(maxWithFee, options.min_tx_amount);
+  }
+  return point < balance
+    ? balance - options.max_service_charge
+    : balance;
+};
 
 Helpers.guidToGroup = (guid) => {
   let hashed = WalletCrypo.sha256(new Buffer(guid.replace(/-/g, ''), 'hex'));
