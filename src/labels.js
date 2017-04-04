@@ -9,7 +9,12 @@ class Labels {
     assert(syncWallet instanceof Function, 'syncWallet function required');
     this._wallet = wallet;
 
-    this._syncWallet = syncWallet;
+    this._syncWallet = () => Promise.resolve().then(() => {
+      syncWallet(
+        () => Promise.resolve(),
+        (e) => Promise.reject(e)
+      );
+    });
 
     this.init();
   }
@@ -51,13 +56,6 @@ class Labels {
 
   get readOnly () {
     return false;
-  }
-
-  syncWallet () {
-    const syncWallet = () => {
-      this._syncWallet(() => Promise.resolve(), (e) => Promise.reject(e));
-    };
-    return Promise.resolve().then(syncWallet);
   }
 
   // For debugging only, not used to save.
@@ -186,7 +184,7 @@ class Labels {
     };
     labels.push(labelEntry);
 
-    return this.syncWallet().then(() => {
+    return this._syncWallet().then(() => {
       return addr;
     });
   }
@@ -232,7 +230,7 @@ class Labels {
 
     labelEntry.label = label;
 
-    return this.syncWallet();
+    return this._syncWallet();
   }
 
   removeLabel (accountIndex, address) {
@@ -259,7 +257,7 @@ class Labels {
     let labelEntry = labels.find((label) => label.index === addressIndex);
     labels.splice(labels.indexOf(labelEntry), 1);
 
-    return this.syncWallet();
+    return this._syncWallet();
   }
 
   // options:
