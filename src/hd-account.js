@@ -211,7 +211,7 @@ HDAccount.prototype.toJSON = function () {
     archived: this._archived,
     xpriv: this._xpriv,
     xpub: this._xpub,
-    address_labels: this._address_labels,
+    address_labels: this._address_labels.sort(o => o.index),
     cache: this._keyRing
   };
 
@@ -267,7 +267,9 @@ HDAccount.prototype.addLabel = function (receiveIndex, label) {
 };
 
 HDAccount.prototype.getLabels = function () {
-  return this._address_labels.map(o => ({index: o.index, label: o.label}));
+  return this._address_labels
+          .sort(o => o.index)
+          .map(o => ({index: o.index, label: o.label}));
 };
 
 HDAccount.prototype.setLabel = function (receiveIndex, label) {
