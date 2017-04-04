@@ -4,22 +4,23 @@ let HDAccount;
 
 // TODO: use more mocks, this file takes 7 seconds to run
 describe('HDAccount', () => {
-  let account;
-  let object = {
-    'label': 'My great wallet',
-    'archived': false,
-    'xpriv': 'xprv9zJ1cTHnqzgBXr9Uq9jXrdbk2LwApa3Vu6dquzhmckQyj1hvK9xugPNsycfveTGcTy2571Rq71daBpe1QESUsjX7d2ZHVVXEwJEwDiiMD7E',
-    'xpub': 'xpub6DHN1xpggNEUkLDwwBGYDmYUaNmfE2mMGKZSiP7PB5wxbp34rhHAEBhMpsjHEwZWsHY2kPmPPD1w6gxGSBe3bXQzCn2WV8FRd7ZKpsiGHMq',
-    'address_labels': [{'index': 3, 'label': 'Hello'}], // Backwards compatibility
-    'cache': {
-      'receiveAccount': 'xpub6FMWuMox3fJxEv2TSLN6jYQg6tHZBS7tKRSu7w4Q7F9K2UsSu4RxtwxfeHVhUv3csTSCRkKREpiVdr8EquBPXfBDZSMe84wmN9LzR3rwNZP',
-      'changeAccount': 'xpub6FMWuMox3fJxGARtaDVY6e9st4Hk5j8Ui6r7XLnBPFXPXkajXNiAfiEqBakuDKYYeRf4ERtPm1TawBqKaBWj2dsHNJT4rSsugssTnaDsz2m'
-    }
-  };
+  let account, object;
 
   let maxLabeledReceiveIndex = -1;
 
   beforeEach(() => {
+    object = {
+      'label': 'My great wallet',
+      'archived': false,
+      'xpriv': 'xprv9zJ1cTHnqzgBXr9Uq9jXrdbk2LwApa3Vu6dquzhmckQyj1hvK9xugPNsycfveTGcTy2571Rq71daBpe1QESUsjX7d2ZHVVXEwJEwDiiMD7E',
+      'xpub': 'xpub6DHN1xpggNEUkLDwwBGYDmYUaNmfE2mMGKZSiP7PB5wxbp34rhHAEBhMpsjHEwZWsHY2kPmPPD1w6gxGSBe3bXQzCn2WV8FRd7ZKpsiGHMq',
+      'address_labels': [{'index': 3, 'label': 'Hello'}],
+      'cache': {
+        'receiveAccount': 'xpub6FMWuMox3fJxEv2TSLN6jYQg6tHZBS7tKRSu7w4Q7F9K2UsSu4RxtwxfeHVhUv3csTSCRkKREpiVdr8EquBPXfBDZSMe84wmN9LzR3rwNZP',
+        'changeAccount': 'xpub6FMWuMox3fJxGARtaDVY6e9st4Hk5j8Ui6r7XLnBPFXPXkajXNiAfiEqBakuDKYYeRf4ERtPm1TawBqKaBWj2dsHNJT4rSsugssTnaDsz2m'
+      }
+    };
+
     MyWallet = {
       syncWallet () {},
       wallet: {
@@ -274,6 +275,47 @@ describe('HDAccount', () => {
     });
 
     describe('Getter', () => {
+    });
+
+    describe('Labeled addresses', () => {
+      describe('getLabels()', () => {
+        it('should return a copy of _address_labels', () => {
+          expect(account.getLabels()).toEqual(account._address_labels);
+        });
+        it('should sort _address_labels by index', () => {
+          account._address_labels = [{index: 1, label: 'One'}, {index: 0, label: 'Zero'}];
+          expect(account.getLabels()).toEqual([{index: 0, label: 'Zero'}, {index: 1, label: 'One'}]);
+        });
+      });
+
+      describe('addLabel()', () => {
+        it('should push a label entry', () => {
+          let before = account._address_labels.length;
+          account.addLabel(2, 'New Label');
+          expect(account._address_labels.length).toEqual(before + 1);
+        });
+      });
+
+      describe('setLabel()', () => {
+        it('should update existing label entry', () => {
+          account.setLabel(3, 'Updated Label');
+          expect(account._address_labels[0].label).toEqual('Updated Label');
+        });
+
+        it('should push a label entry if none exists', () => {
+          let before = account._address_labels.length;
+          account.setLabel(2, 'New Label');
+          expect(account._address_labels.length).toEqual(before + 1);
+        });
+      });
+
+      describe('removeLabel()', () => {
+        it('should remove a label entry', () => {
+          let before = account._address_labels.length;
+          account.removeLabel(3);
+          expect(account._address_labels.length).toEqual(before - 1);
+        });
+      });
     });
 
     describe('.encrypt', () => {

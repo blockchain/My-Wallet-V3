@@ -27,16 +27,23 @@ describe('Labels', () => {
 
   let l;
 
+  let account;
+
   beforeEach(() => {
+    account = {
+      index: 0,
+      receiveAddressAtIndex: (index) => `0-${index}`,
+      receiveIndex: 2,
+      lastUsedReceiveIndex: 1,
+      getLabels: () => [{index: 1, label: 'Hello'}],
+      addLabel: () => {},
+      setLabel: () => {},
+      removeLabel: () => {}
+    };
+
     wallet = {
       hdwallet: {
-        accounts: [{
-          index: 0,
-          receiveAddressAtIndex: (index) => `0-${index}`,
-          receiveIndex: 2,
-          lastUsedReceiveIndex: 1,
-          _address_labels: [{index: 1, label: 'Hello'}]
-        }]
+        accounts: [account]
       }
     };
   });
@@ -53,6 +60,22 @@ describe('Labels', () => {
         expect(() => {
           l = new Labels(wallet);
         }).toThrow();
+      });
+
+      it('should wrap syncWallet in a promise (resolve)', (done) => {
+        let syncWalletSuccess = (success, error) => { success(); };
+
+        l = new Labels(wallet, syncWalletSuccess);
+
+        expect(l._syncWallet()).toBeResolved(done);
+      });
+
+      it('should wrap syncWallet in a promise (reject)', (done) => {
+        let syncWalletFail = (success, error) => { error(); };
+
+        l = new Labels(wallet, syncWalletFail);
+
+        expect(l._syncWallet()).toBeRejected(done);
       });
     });
   });
@@ -155,32 +178,50 @@ describe('Labels', () => {
     });
 
     describe('setLabel()', () => {
-      it('should call syncWallet()', () => {
-        spyOn(l, 'syncWallet');
+      it('should call account.setLabel()', () => {
+        spyOn(account, 'setLabel').and.callThrough();
         l.setLabel(0, 1, 'Updated Label');
-        expect(l.syncWallet).toHaveBeenCalled();
+        expect(account.setLabel).toHaveBeenCalledWith(1, 'Updated Label');
       });
 
-      it('should not call syncWallet() if label is unchanged', () => {
-        spyOn(l, 'syncWallet');
+      it('should call _syncWallet()', () => {
+        spyOn(l, '_syncWallet');
+        l.setLabel(0, 1, 'Updated Label');
+        expect(l._syncWallet).toHaveBeenCalled();
+      });
+
+      it('should not call _syncWallet() if label is unchanged', () => {
+        spyOn(l, '_syncWallet');
         l.setLabel(0, 1, 'Hello');
-        expect(l.syncWallet).not.toHaveBeenCalled();
+        expect(l._syncWallet).not.toHaveBeenCalled();
       });
     });
 
     describe('addLabel()', () => {
-      it('should call syncWallet()', () => {
-        spyOn(l, 'syncWallet').and.callThrough();
+      it('should call account.addLabel()', () => {
+        spyOn(account, 'addLabel').and.callThrough();
         l.addLabel(0, 15, 'New Label');
-        expect(l.syncWallet).toHaveBeenCalled();
+        expect(account.addLabel).toHaveBeenCalledWith(2, 'New Label');
+      });
+
+      it('should call _syncWallet()', () => {
+        spyOn(l, '_syncWallet').and.callThrough();
+        l.addLabel(0, 15, 'New Label');
+        expect(l._syncWallet).toHaveBeenCalled();
       });
     });
 
     describe('removeLabel()', () => {
-      it('should call syncWallet()', () => {
-        spyOn(l, 'syncWallet');
+      it('should call account.removeLabel()', () => {
+        spyOn(account, 'removeLabel').and.callThrough();
         l.removeLabel(0, 1);
-        expect(l.syncWallet).toHaveBeenCalled();
+        expect(account.removeLabel).toHaveBeenCalledWith(1);
+      });
+
+      it('should call _syncWallet()', () => {
+        spyOn(l, '_syncWallet');
+        l.removeLabel(0, 1);
+        expect(l._syncWallet).toHaveBeenCalled();
       });
     });
 

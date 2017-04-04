@@ -9,7 +9,7 @@ class Labels {
     assert(syncWallet instanceof Function, 'syncWallet function required');
     this._wallet = wallet;
 
-    this._syncWallet = syncWallet;
+    this._syncWallet = () => new Promise(syncWallet);
 
     this.init();
   }
@@ -22,12 +22,7 @@ class Labels {
       let receiveIndex = hdAccount.receiveIndex;
       let addresses = [];
 
-      let maxLabeledReceiveIndex = -1;
-
-      for (let addressLabel of hdAccount._address_labels) {
-        if (addressLabel.index > maxLabeledReceiveIndex) {
-          maxLabeledReceiveIndex = addressLabel.index;
-        }
+      for (let addressLabel of hdAccount.getLabels()) {
         addresses[addressLabel.index] = new AddressHD(
           {
             label: addressLabel.label
@@ -38,7 +33,7 @@ class Labels {
       }
 
       // Add null entries up to the current (labeled) receive index
-      for (let i = 0; i < Math.max(receiveIndex, maxLabeledReceiveIndex); i++) {
+      for (let i = 0; i < Math.max(receiveIndex + 1, addresses.length); i++) {
         if (!addresses[i]) {
           addresses[i] = new AddressHD(null,
                         hdAccount,
@@ -51,13 +46,6 @@ class Labels {
 
   get readOnly () {
     return false;
-  }
-
-  syncWallet () {
-    const syncWallet = () => {
-      this._syncWallet(() => Promise.resolve(), (e) => Promise.reject(e));
-    };
-    return Promise.resolve().then(syncWallet);
   }
 
   // For debugging only, not used to save.
@@ -82,8 +70,8 @@ class Labels {
   // this is an implementation detail and we don't save it.
   checkIfUsed (accountIndex) {
     assert(Helpers.isPositiveInteger(accountIndex), 'specify accountIndex');
-    let labeledAddresses = this.all(accountIndex).filter((a) => a !== null);
-    let addresses = labeledAddresses.filter((a) => a.label !== null).map((a) => a.address);
+    let labeledAddresses = this.all(accountIndex).filter((a) => a !== null && a.label !== null);
+    let addresses = labeledAddresses.map((a) => a.address);
     if (addresses.length === 0) return Promise.resolve();
 
     return BlockchainAPI.getBalances(addresses).then((data) => {
@@ -178,15 +166,9 @@ class Labels {
     addr.used = false;
 
     // Update wallet:
-    let labels = this._wallet.hdwallet.accounts[accountIndex]._address_labels;
+    this._wallet.hdwallet.accounts[accountIndex].addLabel(receiveIndex, label);
 
-    let labelEntry = {
-      index: receiveIndex,
-      label: label
-    };
-    labels.push(labelEntry);
-
-    return this.syncWallet().then(() => {
+    return this._syncWallet().then(() => {
       return addr;
     });
   }
@@ -220,19 +202,10 @@ class Labels {
 
     address.label = label;
 
-    let labels = this._wallet.hdwallet.accounts[accountIndex]._address_labels;
-
     // Update in wallet:
-    let labelEntry = labels.find((label) => label.index === receiveIndex);
+    this._wallet.hdwallet.accounts[accountIndex].setLabel(receiveIndex, label);
 
-    if (!labelEntry) {
-      labelEntry = {index: receiveIndex};
-      labels.push(labelEntry);
-    }
-
-    labelEntry.label = label;
-
-    return this.syncWallet();
+    return this._syncWallet();
   }
 
   removeLabel (accountIndex, address) {
@@ -255,11 +228,9 @@ class Labels {
     address.label = null;
 
     // Remove from wallet:
-    let labels = this._wallet.hdwallet.accounts[accountIndex]._address_labels;
-    let labelEntry = labels.find((label) => label.index === addressIndex);
-    labels.splice(labels.indexOf(labelEntry), 1);
+    this._wallet.hdwallet.accounts[accountIndex].removeLabel(addressIndex);
 
-    return this.syncWallet();
+    return this._syncWallet();
   }
 
   // options:

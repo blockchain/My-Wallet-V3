@@ -1,5 +1,3 @@
-'use strict';
-
 module.exports = HDAccount;
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -213,7 +211,7 @@ HDAccount.prototype.toJSON = function () {
     archived: this._archived,
     xpriv: this._xpriv,
     xpub: this._xpub,
-    address_labels: this._address_labels,
+    address_labels: this._orderedAddressLabels(),
     cache: this._keyRing
   };
 
@@ -251,4 +249,48 @@ HDAccount.prototype.persist = function () {
   this._xpriv = this._temporal_xpriv;
   delete this._temporal_xpriv;
   return this;
+};
+
+// Address labels:
+
+HDAccount.prototype._orderedAddressLabels = function () {
+  return this._address_labels.sort((a, b) => a.index - b.index);
+};
+
+HDAccount.prototype.addLabel = function (receiveIndex, label) {
+  assert(Helpers.isPositiveInteger(receiveIndex));
+
+  let labels = this._address_labels;
+
+  let labelEntry = {
+    index: receiveIndex,
+    label: label
+  };
+
+  labels.push(labelEntry);
+};
+
+HDAccount.prototype.getLabels = function () {
+  return this._address_labels
+          .sort((a, b) => a.index - b.index)
+          .map(o => ({index: o.index, label: o.label}));
+};
+
+HDAccount.prototype.setLabel = function (receiveIndex, label) {
+  let labels = this._address_labels;
+
+  let labelEntry = labels.find((label) => label.index === receiveIndex);
+
+  if (!labelEntry) {
+    labelEntry = {index: receiveIndex};
+    labels.push(labelEntry);
+  }
+
+  labelEntry.label = label;
+};
+
+HDAccount.prototype.removeLabel = function (receiveIndex) {
+  let labels = this._address_labels;
+  let labelEntry = labels.find((label) => label.index === receiveIndex);
+  labels.splice(labels.indexOf(labelEntry), 1);
 };
