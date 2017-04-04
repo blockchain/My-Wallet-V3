@@ -211,7 +211,7 @@ HDAccount.prototype.toJSON = function () {
     archived: this._archived,
     xpriv: this._xpriv,
     xpub: this._xpub,
-    address_labels: this._address_labels.sort(o => o.index),
+    address_labels: this._orderedAddressLabels(),
     cache: this._keyRing
   };
 
@@ -253,6 +253,10 @@ HDAccount.prototype.persist = function () {
 
 // Address labels:
 
+HDAccount.prototype._orderedAddressLabels = function () {
+  return this._address_labels.sort((a, b) => a.index - b.index);
+};
+
 HDAccount.prototype.addLabel = function (receiveIndex, label) {
   assert(Helpers.isPositiveInteger(receiveIndex));
 
@@ -268,7 +272,7 @@ HDAccount.prototype.addLabel = function (receiveIndex, label) {
 
 HDAccount.prototype.getLabels = function () {
   return this._address_labels
-          .sort(o => o.index)
+          .sort((a, b) => a.index - b.index)
           .map(o => ({index: o.index, label: o.label}));
 };
 

@@ -282,6 +282,10 @@ describe('HDAccount', () => {
         it('should return a copy of _address_labels', () => {
           expect(account.getLabels()).toEqual(account._address_labels);
         });
+        it('should sort _address_labels by index', () => {
+          account._address_labels = [{index: 1, label: 'One'}, {index: 0, label: 'Zero'}];
+          expect(account.getLabels()).toEqual([{index: 0, label: 'Zero'}, {index: 1, label: 'One'}]);
+        });
       });
 
       describe('addLabel()', () => {
