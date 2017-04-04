@@ -267,7 +267,7 @@ HDAccount.prototype.addLabel = function (receiveIndex, label) {
 };
 
 HDAccount.prototype.getLabels = function () {
-  return JSON.parse(JSON.stringify(this._address_labels));
+  return this._address_labels.map(o => ({index: o.index, label: o.label}));
 };
 
 HDAccount.prototype.setLabel = function (receiveIndex, label) {
