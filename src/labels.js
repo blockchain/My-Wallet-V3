@@ -33,7 +33,7 @@ class Labels {
       }
 
       // Add null entries up to the current (labeled) receive index
-      for (let i = 0; i < Math.max(receiveIndex, addresses.length - 1); i++) {
+      for (let i = 0; i < Math.max(receiveIndex + 1, addresses.length); i++) {
         if (!addresses[i]) {
           addresses[i] = new AddressHD(null,
                         hdAccount,
@@ -70,8 +70,8 @@ class Labels {
   // this is an implementation detail and we don't save it.
   checkIfUsed (accountIndex) {
     assert(Helpers.isPositiveInteger(accountIndex), 'specify accountIndex');
-    let labeledAddresses = this.all(accountIndex).filter((a) => a !== null);
-    let addresses = labeledAddresses.filter((a) => a.label !== null).map((a) => a.address);
+    let labeledAddresses = this.all(accountIndex).filter((a) => a !== null && a.label !== null);
+    let addresses = labeledAddresses.map((a) => a.address);
     if (addresses.length === 0) return Promise.resolve();
 
     return BlockchainAPI.getBalances(addresses).then((data) => {
