@@ -2,6 +2,7 @@ var Coinify = require('bitcoin-coinify-client');
 var SFOX = require('bitcoin-sfox-client');
 var Metadata = require('./metadata');
 var ExchangeDelegate = require('./exchange-delegate');
+var Helpers = require('./helpers');
 
 var METADATA_TYPE_EXTERNAL = 3;
 
@@ -74,6 +75,17 @@ External.prototype.canBuy = function (accountInfo, options) {
     isCoinifyCountry ||
     (isUserInvited && isCountryWhitelisted)
   );
+};
+
+External.prototype.sellCheck = function (email, options) {
+  let re = /(@blockchain.com(?!.)|@coinify.com(?!.))/;
+  let isClearedEmail = re.test(email);
+  if (isClearedEmail === false) {
+    return false;
+  } else {
+    let fraction = options.partners.coinify.showSellFraction;
+    return Helpers.isEmailInvited(email, fraction);
+  }
 };
 
 External.prototype.toJSON = function () {
