@@ -9,12 +9,7 @@ class Labels {
     assert(syncWallet instanceof Function, 'syncWallet function required');
     this._wallet = wallet;
 
-    this._syncWallet = () => Promise.resolve().then(() => {
-      syncWallet(
-        () => Promise.resolve(),
-        (e) => Promise.reject(e)
-      );
-    });
+    this._syncWallet = () => new Promise(syncWallet);
 
     this.init();
   }

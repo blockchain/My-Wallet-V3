@@ -61,6 +61,22 @@ describe('Labels', () => {
           l = new Labels(wallet);
         }).toThrow();
       });
+
+      it('should wrap syncWallet in a promise (resolve)', (done) => {
+        let syncWalletSuccess = (success, error) => { success(); };
+
+        l = new Labels(wallet, syncWalletSuccess);
+
+        expect(l._syncWallet()).toBeResolved(done);
+      });
+
+      it('should wrap syncWallet in a promise (reject)', (done) => {
+        let syncWalletFail = (success, error) => { error(); };
+
+        l = new Labels(wallet, syncWalletFail);
+
+        expect(l._syncWallet()).toBeRejected(done);
+      });
     });
   });
 
