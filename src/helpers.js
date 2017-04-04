@@ -8,6 +8,10 @@ var BIP39 = require('bip39');
 var ImportExport = require('./import-export');
 var constants = require('./constants');
 var WalletCrypo = require('./wallet-crypto');
+var has = require('ramda/src/has');
+var allPass = require('ramda/src/allPass');
+var map = require('ramda/src/map');
+
 
 var Helpers = {};
 Math.log2 = function (x) { return Math.log(x) / Math.LN2; };
@@ -467,28 +471,39 @@ Helpers.isEmailInvited = function (email, fraction) {
   return WalletCrypo.sha256(email)[0] / 256 >= 1 - fraction;
 };
 
+// Helpers.isFeeOptions :: object => Boolean
+Helpers.isFeeOptions = object => {
+  const props = ['min_tx_amount', 'percent', 'max_service_charge', 'send_to_miner'];
+  return object ? allPass(map(has, props))(object) : false;
+};
+
 Helpers.blockchainFee = (amount, options) =>
-  amount <= options.min_tx_amount
-    ? 0
-    : Math.min(Math.floor(amount * options.percent), options.max_service_charge);
+  Helpers.isFeeOptions(options) && Helpers.isPositiveNumber(amount) && amount > options.min_tx_amount
+    ? Math.min(Math.floor(amount * options.percent), options.max_service_charge)
+    : 0;
 
 Helpers.balanceMinusFee = (balance, options) => {
-  if (!options || options.max_service_charge === undefined ||
-                  options.percent === undefined ||
-                  options.min_tx_amount === undefined) {
-    return balance;
-  }
-  if (balance <= options.min_tx_amount) {
-    return balance;
-  }
-  const point = Math.floor(options.max_service_charge * ((1 / options.percent) + 1));
-  if (options.min_tx_amount < balance && balance <= point) {
-    const maxWithFee = Math.floor(balance / (1 + options.percent));
-    return Math.max(maxWithFee, options.min_tx_amount);
-  }
-  return point < balance
-    ? balance - options.max_service_charge
-    : balance;
+  const maxFeePoint = () => Math.floor(options.max_service_charge * ((1 / options.percent) + 1));
+  switch (true) {
+    // negative balance
+    case !Helpers.isPositiveNumber(balance):
+      return 0;
+    // no valid options
+    case !Helpers.isFeeOptions(options):
+      return balance;
+    // balance in [0, min_tx_amount] -> no fee
+    case balance <= options.min_tx_amount:
+      return balance;
+    // balance in (min_tx_amount, maxFeePoint] --> max(max with fee, max without fee)
+    case (options.min_tx_amount < balance) && (balance <= maxFeePoint()):
+      const maxWithFee = Math.floor(balance / (1 + options.percent));
+      return Math.max(maxWithFee, options.min_tx_amount);
+    // balance in (maxFeePoint, +inf) --> maximum fee
+    case maxFeePoint() < balance:
+      return balance - options.max_service_charge;
+    default:
+      return balance;
+  } // fi switch
 };
 
 Helpers.guidToGroup = (guid) => {
