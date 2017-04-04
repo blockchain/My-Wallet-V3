@@ -27,16 +27,23 @@ describe('Labels', () => {
 
   let l;
 
+  let account;
+
   beforeEach(() => {
+    account = {
+      index: 0,
+      receiveAddressAtIndex: (index) => `0-${index}`,
+      receiveIndex: 2,
+      lastUsedReceiveIndex: 1,
+      getLabels: () => [{index: 1, label: 'Hello'}],
+      addLabel: () => {},
+      setLabel: () => {},
+      removeLabel: () => {}
+    };
+
     wallet = {
       hdwallet: {
-        accounts: [{
-          index: 0,
-          receiveAddressAtIndex: (index) => `0-${index}`,
-          receiveIndex: 2,
-          lastUsedReceiveIndex: 1,
-          _address_labels: [{index: 1, label: 'Hello'}]
-        }]
+        accounts: [account]
       }
     };
   });
@@ -155,6 +162,12 @@ describe('Labels', () => {
     });
 
     describe('setLabel()', () => {
+      it('should call account.setLabel()', () => {
+        spyOn(account, 'setLabel').and.callThrough();
+        l.setLabel(0, 1, 'Updated Label');
+        expect(account.setLabel).toHaveBeenCalledWith(1, 'Updated Label');
+      });
+
       it('should call _syncWallet()', () => {
         spyOn(l, '_syncWallet');
         l.setLabel(0, 1, 'Updated Label');
@@ -169,6 +182,12 @@ describe('Labels', () => {
     });
 
     describe('addLabel()', () => {
+      it('should call account.addLabel()', () => {
+        spyOn(account, 'addLabel').and.callThrough();
+        l.addLabel(0, 15, 'New Label');
+        expect(account.addLabel).toHaveBeenCalledWith(2, 'New Label');
+      });
+
       it('should call _syncWallet()', () => {
         spyOn(l, '_syncWallet').and.callThrough();
         l.addLabel(0, 15, 'New Label');
@@ -177,6 +196,12 @@ describe('Labels', () => {
     });
 
     describe('removeLabel()', () => {
+      it('should call account.removeLabel()', () => {
+        spyOn(account, 'removeLabel').and.callThrough();
+        l.removeLabel(0, 1);
+        expect(account.removeLabel).toHaveBeenCalledWith(1);
+      });
+
       it('should call _syncWallet()', () => {
         spyOn(l, '_syncWallet');
         l.removeLabel(0, 1);

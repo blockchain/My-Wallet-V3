@@ -1,5 +1,3 @@
-'use strict';
-
 module.exports = HDAccount;
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -251,4 +249,42 @@ HDAccount.prototype.persist = function () {
   this._xpriv = this._temporal_xpriv;
   delete this._temporal_xpriv;
   return this;
+};
+
+// Address labels:
+
+HDAccount.prototype.addLabel = function (receiveIndex, label) {
+  assert(Helpers.isPositiveInteger(receiveIndex));
+
+  let labels = this._address_labels;
+
+  let labelEntry = {
+    index: receiveIndex,
+    label: label
+  };
+
+  labels.push(labelEntry);
+};
+
+HDAccount.prototype.getLabels = function () {
+  return JSON.parse(JSON.stringify(this._address_labels));
+};
+
+HDAccount.prototype.setLabel = function (receiveIndex, label) {
+  let labels = this._address_labels;
+
+  let labelEntry = labels.find((label) => label.index === receiveIndex);
+
+  if (!labelEntry) {
+    labelEntry = {index: receiveIndex};
+    labels.push(labelEntry);
+  }
+
+  labelEntry.label = label;
+};
+
+HDAccount.prototype.removeLabel = function (receiveIndex) {
+  let labels = this._address_labels;
+  let labelEntry = labels.find((label) => label.index === receiveIndex);
+  labels.splice(labels.indexOf(labelEntry), 1);
 };

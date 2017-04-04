@@ -27,12 +27,7 @@ class Labels {
       let receiveIndex = hdAccount.receiveIndex;
       let addresses = [];
 
-      let maxLabeledReceiveIndex = -1;
-
-      for (let addressLabel of hdAccount._address_labels) {
-        if (addressLabel.index > maxLabeledReceiveIndex) {
-          maxLabeledReceiveIndex = addressLabel.index;
-        }
+      for (let addressLabel of hdAccount.getLabels()) {
         addresses[addressLabel.index] = new AddressHD(
           {
             label: addressLabel.label
@@ -43,7 +38,7 @@ class Labels {
       }
 
       // Add null entries up to the current (labeled) receive index
-      for (let i = 0; i < Math.max(receiveIndex, maxLabeledReceiveIndex); i++) {
+      for (let i = 0; i < Math.max(receiveIndex, addresses.length - 1); i++) {
         if (!addresses[i]) {
           addresses[i] = new AddressHD(null,
                         hdAccount,
@@ -176,13 +171,7 @@ class Labels {
     addr.used = false;
 
     // Update wallet:
-    let labels = this._wallet.hdwallet.accounts[accountIndex]._address_labels;
-
-    let labelEntry = {
-      index: receiveIndex,
-      label: label
-    };
-    labels.push(labelEntry);
+    this._wallet.hdwallet.accounts[accountIndex].addLabel(receiveIndex, label);
 
     return this._syncWallet().then(() => {
       return addr;
@@ -218,17 +207,8 @@ class Labels {
 
     address.label = label;
 
-    let labels = this._wallet.hdwallet.accounts[accountIndex]._address_labels;
-
     // Update in wallet:
-    let labelEntry = labels.find((label) => label.index === receiveIndex);
-
-    if (!labelEntry) {
-      labelEntry = {index: receiveIndex};
-      labels.push(labelEntry);
-    }
-
-    labelEntry.label = label;
+    this._wallet.hdwallet.accounts[accountIndex].setLabel(receiveIndex, label);
 
     return this._syncWallet();
   }
@@ -253,9 +233,7 @@ class Labels {
     address.label = null;
 
     // Remove from wallet:
-    let labels = this._wallet.hdwallet.accounts[accountIndex]._address_labels;
-    let labelEntry = labels.find((label) => label.index === addressIndex);
-    labels.splice(labels.indexOf(labelEntry), 1);
+    this._wallet.hdwallet.accounts[accountIndex].removeLabel(addressIndex);
 
     return this._syncWallet();
   }
