@@ -60,9 +60,9 @@ S.deleteTrusted = (token, mdid) => S.request('DELETE', 'trusted/' + mdid, null, 
 S.getTrustedList = (token) => S.request('GET', 'trusted', null, token);
 
 // invitation process
-S.createInvitation = (token) => S.request('POST', 'share', null, token);
-S.readInvitation = (token, uuid) => S.request('GET', 'share/' + uuid, null, token);
-S.acceptInvitation = (token, uuid) => S.request('POST', 'share/' + uuid, null, token);
-S.deleteInvitation = (token, uuid) => S.request('DELETE', 'share/' + uuid, null, token);
+S.createInvitation = (token) => S.request('POST', 'share', '{}', token);
+S.readInvitation = (token, uuid) => S.request('GET', 'share/' + uuid, '{}', token);
+S.acceptInvitation = (token, uuid) => S.request('POST', 'share/' + uuid, '{}', token);
+S.deleteInvitation = (token, uuid) => S.request('DELETE', 'share/' + uuid, '{}', token);
 
 module.exports = S;
