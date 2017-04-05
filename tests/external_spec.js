@@ -244,19 +244,19 @@ describe('External', () => {
       });
     });
 
-    describe('sellCheck', () => {
+    describe('should display sell tab', () => {
       const email = 'random@blockghain.com';
 
       const options = {
         partners: {
           coinify: {
-            showSellFraction: 1
+            showSellFraction: 0
           }
         }
       };
 
       it('should be false with a non-blockchain.com email', () => {
-        expect(e.sellCheck(email, options)).toEqual(false);
+        expect(e.shouldDisplaySellTab(email, options, 'coinify')).toEqual(false);
       });
     });
 

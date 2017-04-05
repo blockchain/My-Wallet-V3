@@ -77,15 +77,11 @@ External.prototype.canBuy = function (accountInfo, options) {
   );
 };
 
-External.prototype.sellCheck = function (email, options) {
+External.prototype.shouldDisplaySellTab = function (email, options, partner) {
   let re = /(@blockchain.com(?!.)|@coinify.com(?!.))/;
   let isClearedEmail = re.test(email);
-  if (isClearedEmail === false) {
-    return false;
-  } else {
-    let fraction = options.partners.coinify.showSellFraction;
-    return Helpers.isEmailInvited(email, fraction);
-  }
+  let fraction = options.partners[partner].showSellFraction;
+  return isClearedEmail || Helpers.isEmailInvited(email, fraction);
 };
 
 External.prototype.toJSON = function () {
