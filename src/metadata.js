@@ -160,23 +160,34 @@ Metadata.prototype.update = function (payload) {
   }
 };
 
+Metadata.prototype.fromObject = function (payload, magicHashHex) {
+  if (magicHashHex) {
+    this._magicHash = Buffer.from(magicHashHex, 'hex');
+  }
+
+  const saveValue = (res) => {
+    if (res === null) return res;
+    this._value = Metadata.toImmutable(res);
+    return res;
+  };
+
+  return Promise.resolve(payload).then(saveValue);
+};
+
 Metadata.prototype.fetch = function () {
+  const saveMagicHash = (res) => {
+    if (res === null) return res;
+    this._magicHash = prop('compute_new_magic_hash', res);
+    return res;
+  };
+
   return this.next(() => {
     const M = Metadata;
-    const saveMagicHash = (res) => {
-      if (res === null) return res;
-      this._magicHash = prop('compute_new_magic_hash', res);
-      return res;
-    };
-    const saveValue = (res) => {
-      if (res === null) return res;
-      this._value = Metadata.toImmutable(res);
-      return res;
-    };
+
     return M.GET(this._address).then(M.verifyResponse(this._address))
                                .then(saveMagicHash)
                                .then(M.extractResponse(this._encKeyBuffer))
-                               .then(saveValue)
+                               .then(this.fromObject.bind(this))
                                .catch((e) => {
                                  console.error(`Failed to fetch metadata entry ${this._typeId} at ${this._address}:`, e);
                                  return Promise.reject('METADATA_FETCH_FAILED');
@@ -209,13 +220,17 @@ Metadata.fromMetadataHDNode = function (metadataHDNode, typeId) {
   return new Metadata(node.keyPair, encryptionKey, typeId);
 };
 
-// used to create a new metadata entry from wallet master hd node
-Metadata.fromMasterHDNode = function (masterHDNode, typeId) {
+Metadata.deriveMetadataNode = function (masterHDNode) {
   // BIP 43 purpose needs to be 31 bit or less. For lack of a BIP number
   // we take the first 31 bits of the SHA256 hash of a reverse domain.
   var hash = WalletCrypto.sha256('info.blockchain.metadata');
   var purpose = hash.slice(0, 4).readUInt32BE(0) & 0x7FFFFFFF; // 510742
-  var metadataHDNode = masterHDNode.deriveHardened(purpose);
+  return masterHDNode.deriveHardened(purpose);
+};
+
+// used to create a new metadata entry from wallet master hd node
+Metadata.fromMasterHDNode = function (masterHDNode, typeId) {
+  var metadataHDNode = Metadata.deriveMetadataNode(masterHDNode);
   return Metadata.fromMetadataHDNode(metadataHDNode, typeId);
 };
 

@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.28.6",
+  "version": "3.29.3",
   "description": "Blockchain.info JavaScript Wallet",
   "homepage": "https://github.com/blockchain/my-wallet-v3",
   "bugs": {
@@ -90,6 +90,7 @@
       "Audio",
       "assert",
       "describe",
+      "xdescribe",
       "it",
       "xit",
       "beforeEach",
