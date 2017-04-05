@@ -403,4 +403,130 @@ describe('Helpers', () => {
 
     it('should not verify invalid messages', () => expect(Helpers.verifyMessage('12cbQLTFMXRnSzktFkuoG3eHoMeFtpTu3S', 'IH+xpXCKouEcd0E8Hv3NkrYWbhq0P7pAQpI1GcQ2hF2AAsqL2o4agDE8V81i071/bTMz00YKw2YRMoyFMzThZwM=', 'Wright, it is not the same as if I sign Craig Wright, Satoshi.')).toBeFalsy());
   });
+
+  describe('isFeeOptions', () => {
+    it('should return false for all these cases', () => {
+      expect(Helpers.isFeeOptions({})).toBeFalsy();
+      expect(Helpers.isFeeOptions(null)).toBeFalsy();
+      expect(Helpers.isFeeOptions(undefined)).toBeFalsy();
+      expect(Helpers.isFeeOptions(1)).toBeFalsy();
+      expect(Helpers.isFeeOptions(0)).toBeFalsy();
+      expect(Helpers.isFeeOptions('hello')).toBeFalsy();
+      expect(Helpers.isFeeOptions('')).toBeFalsy();
+      expect(Helpers.isFeeOptions()).toBeFalsy();
+      expect(Helpers.isFeeOptions({min_tx_amount: 0})).toBeFalsy();
+    });
+
+    it('should return true for an object at least containing the exptected properties', () => {
+      expect(Helpers.isFeeOptions({min_tx_amount: 0, percent: 0, max_service_charge: 0, send_to_miner: 0, extraProperty: 0})).toBeTruthy();
+    });
+  });
+
+  describe('blockchainFee', () => {
+    it('should return 0 for all these cases', () => {
+      const validOptions = {min_tx_amount: 0, percent: 0.05, max_service_charge: 1000, send_to_miner: true};
+      expect(Helpers.blockchainFee(10000, {})).toBe(0);
+      expect(Helpers.blockchainFee(10000, null)).toBe(0);
+      expect(Helpers.blockchainFee(10000, undefined)).toBe(0);
+      expect(Helpers.blockchainFee(10000, {min_tx_amount: 0})).toBe(0);
+      expect(Helpers.blockchainFee(undefined, {min_tx_amount: 0})).toBe(0);
+      expect(Helpers.blockchainFee(-100, validOptions)).toBe(0);
+      expect(Helpers.blockchainFee(0, validOptions)).toBe(0);
+      expect(Helpers.blockchainFee(null, validOptions)).toBe(0);
+      expect(Helpers.blockchainFee()).toBe(0);
+      expect(Helpers.blockchainFee(100)).toBe(0);
+      expect(Helpers.blockchainFee('string', validOptions)).toBe(0);
+      expect(Helpers.blockchainFee([], validOptions)).toBe(0);
+    });
+
+    it('should work with 0% fee', () => {
+      const opt = {min_tx_amount: 0, percent: 0, max_service_charge: 1000, send_to_miner: true};
+      expect(Helpers.blockchainFee(100000000, opt)).toBe(0);
+    });
+
+    it('should work with 5% fee not reaching max fee', () => {
+      const opt = {min_tx_amount: 0, percent: 0.05, max_service_charge: 1000, send_to_miner: true};
+      expect(Helpers.blockchainFee(10000, opt)).toBe(500);
+    });
+
+    it('should work with 40 basis points fee not reaching max fee', () => {
+      const opt = {min_tx_amount: 0, percent: 0.004, max_service_charge: 1000, send_to_miner: true};
+      expect(Helpers.blockchainFee(1000, opt)).toBe(4);
+    });
+
+    it('should set max fee when overpassing it', () => {
+      const opt = {min_tx_amount: 0, percent: 0.05, max_service_charge: 1000, send_to_miner: true};
+      expect(Helpers.blockchainFee(100000000, opt)).toBe(1000);
+    });
+
+    it('should be 0 for the exact minimum fee amount', () => {
+      const opt = {min_tx_amount: 100, percent: 0.05, max_service_charge: 1000, send_to_miner: true};
+      expect(Helpers.blockchainFee(100, opt)).toBe(0);
+    });
+  });
+
+  describe('balanceMinusFee', () => {
+    it('should return 0 for negative balances', () => {
+      const validOptions = {min_tx_amount: 0, percent: 0.05, max_service_charge: 1000, send_to_miner: true};
+      expect(Helpers.balanceMinusFee(-1000, {})).toBe(0);
+      expect(Helpers.balanceMinusFee(-1000, null)).toBe(0);
+      expect(Helpers.balanceMinusFee(-1000, undefined)).toBe(0);
+      expect(Helpers.balanceMinusFee(-1000)).toBe(0);
+      expect(Helpers.balanceMinusFee(-1000, validOptions)).toBe(0);
+      expect(Helpers.balanceMinusFee(0, validOptions)).toBe(0);
+    });
+
+    it('should work with normal fee conditions', () => {
+      const opt = {min_tx_amount: 100, percent: 0.05, max_service_charge: 200, send_to_miner: true};
+      expect(Helpers.balanceMinusFee(0, opt)).toBe(0);
+      expect(Helpers.balanceMinusFee(95, opt)).toBe(95);
+      expect(Helpers.balanceMinusFee(100, opt)).toBe(100);
+      expect(Helpers.balanceMinusFee(103, opt)).toBe(100);
+      expect(Helpers.balanceMinusFee(105, opt)).toBe(100);
+      expect(Helpers.balanceMinusFee(130, opt)).toBe(123);
+      expect(Helpers.balanceMinusFee(3445, opt)).toBe(3280);
+      expect(Helpers.balanceMinusFee(4200, opt)).toBe(4000);
+      expect(Helpers.balanceMinusFee(4400, opt)).toBe(4200);
+      expect(Helpers.balanceMinusFee(10000, opt)).toBe(9800);
+    });
+
+    it('should work with 0% fee', () => {
+      const opt = {min_tx_amount: 100, percent: 0, max_service_charge: 200, send_to_miner: true};
+      expect(Helpers.balanceMinusFee(0, opt)).toBe(0);
+      expect(Helpers.balanceMinusFee(95, opt)).toBe(95);
+      expect(Helpers.balanceMinusFee(100, opt)).toBe(100);
+      expect(Helpers.balanceMinusFee(103, opt)).toBe(103);
+      expect(Helpers.balanceMinusFee(105, opt)).toBe(105);
+      expect(Helpers.balanceMinusFee(130, opt)).toBe(130);
+      expect(Helpers.balanceMinusFee(3445, opt)).toBe(3445);
+      expect(Helpers.balanceMinusFee(4200, opt)).toBe(4200);
+      expect(Helpers.balanceMinusFee(4400, opt)).toBe(4400);
+      expect(Helpers.balanceMinusFee(10000, opt)).toBe(10000);
+    });
+
+    it('should work with 100% fee', () => {
+      const opt = {min_tx_amount: 100, percent: 1, max_service_charge: 200, send_to_miner: true};
+      expect(Helpers.balanceMinusFee(0, opt)).toBe(0);
+      expect(Helpers.balanceMinusFee(95, opt)).toBe(95);
+      expect(Helpers.balanceMinusFee(100, opt)).toBe(100);
+      expect(Helpers.balanceMinusFee(103, opt)).toBe(100);
+      expect(Helpers.balanceMinusFee(105, opt)).toBe(100);
+      expect(Helpers.balanceMinusFee(130, opt)).toBe(100);
+      expect(Helpers.balanceMinusFee(3445, opt)).toBe(3245);
+      expect(Helpers.balanceMinusFee(4200, opt)).toBe(4000);
+      expect(Helpers.balanceMinusFee(4400, opt)).toBe(4200);
+      expect(Helpers.balanceMinusFee(10000, opt)).toBe(9800);
+    });
+
+    it('should work with maxFeePoint < min_tx_amount', () => {
+      const opt = {min_tx_amount: 1000, percent: 0.5, max_service_charge: 1, send_to_miner: true};
+      expect(Helpers.balanceMinusFee(0, opt)).toBe(0);
+      expect(Helpers.balanceMinusFee(990, opt)).toBe(990);
+      expect(Helpers.balanceMinusFee(1000, opt)).toBe(1000);
+      expect(Helpers.balanceMinusFee(1001, opt)).toBe(1000);
+      expect(Helpers.balanceMinusFee(1002, opt)).toBe(1001);
+      expect(Helpers.balanceMinusFee(1003, opt)).toBe(1002);
+      expect(Helpers.balanceMinusFee(10000, opt)).toBe(9999);
+    });
+  });
 });
