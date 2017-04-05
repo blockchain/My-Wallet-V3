@@ -12,7 +12,6 @@ var has = require('ramda/src/has');
 var allPass = require('ramda/src/allPass');
 var map = require('ramda/src/map');
 
-
 var Helpers = {};
 Math.log2 = function (x) { return Math.log(x) / Math.LN2; };
 
