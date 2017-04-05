@@ -50,7 +50,7 @@
     "sjcl": "1.0.3",
     "unorm": "^1.4.1",
     "ws": "2.0.*",
-    "bitcoin-coinify-client": "0.4.0-dev.5",
+    "bitcoin-coinify-client": "~0.4.1",
     "bitcoin-sfox-client": "0.1.*"
   },
   "devDependencies": {
