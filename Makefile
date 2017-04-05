@@ -22,7 +22,8 @@ semistandard:
 # just tagged a release. Use the previous tag instead.
 IS_TAGGED_COMMIT:=$(shell git describe --exact-match HEAD > /dev/null && echo 1 || echo 0)
 ifeq ($(IS_TAGGED_COMMIT), 1)
-	TAG_ARG:=-t "$(shell git tag --sort=version:refname | tail -n2 | head -1)"
+	TAG=$(shell git tag --sort=version:refname | grep '^v[0-9]*\.[0-9]*\.[0-9]*' | tail -n2 | head -1)
+	TAG_ARG:=-t $(TAG)
 else
   TAG_ARG:=
 endif
