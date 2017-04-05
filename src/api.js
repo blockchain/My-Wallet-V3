@@ -274,3 +274,17 @@ API.prototype.incrementSecPassStats = function (activeBool) {
   var active = activeBool ? 1 : 0;
   return fetch(this.ROOT_URL + 'event?name=wallet_login_second_password_' + active);
 };
+
+API.prototype.confirmationScreenStats = function (guid) {
+  var group = Helpers.guidToGroup(guid);
+  return fetch(this.ROOT_URL + 'event?name=wallet_fee_experiment_' + group + '_confirmation_screen');
+};
+
+API.prototype.pushTxStats = function (guid, advanced) {
+  var group = Helpers.guidToGroup(guid);
+  return fetch(this.ROOT_URL + 'event?name=wallet_fee_experiment_' + group + '_pushed_tx' + (advanced ? '_advanced' : ''));
+};
+
+API.prototype.getBlockchainAddress = function () {
+  return this.request('GET', 'charge_address');
+};
