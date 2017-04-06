@@ -190,8 +190,6 @@ class Labels {
       assert(Helpers.isPositiveInteger(receiveIndex), 'Address not found');
     }
 
-    console.log('receiveIndex: ', receiveIndex);
-
     if (!Helpers.isValidLabel(label)) {
       return Promise.reject('NOT_ALPHANUMERIC');
     }
