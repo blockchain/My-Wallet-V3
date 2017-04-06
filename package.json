@@ -52,7 +52,10 @@
     "ramda": "^0.22.1",
     "randombytes": "^2.0.1",
     "unorm": "^1.4.1",
-    "ws": "2.0.*"
+    "ws": "2.0.*",
+    "bitcoin-coinify-client": "~0.4.3",
+    "bitcoin-sfox-client": "0.1.*",
+    "bitcoin-unocoin-client": "blockchain/bitcoin-unocoin-client"
   },
   "devDependencies": {
     "babel-cli": "~6.24.0",

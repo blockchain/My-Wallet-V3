@@ -1,5 +1,6 @@
 var Coinify = require('bitcoin-coinify-client');
 var SFOX = require('bitcoin-sfox-client');
+var Unocoin = require('bitcoin-unocoin-client');
 var Metadata = require('./metadata');
 var ExchangeDelegate = require('./exchange-delegate');
 var Helpers = require('./helpers');
@@ -11,6 +12,7 @@ module.exports = External;
 function External (metadata, wallet, object) {
   this._coinify = undefined;
   this._sfox = undefined;
+  this._unocoin = undefined;
   this._wallet = wallet;
   this._metadata = metadata;
 
@@ -24,6 +26,11 @@ function External (metadata, wallet, object) {
       var sfoxDelegate = new ExchangeDelegate(wallet);
       this._sfox = new SFOX(object.sfox, sfoxDelegate);
       sfoxDelegate.trades = this._sfox.trades;
+    }
+    if (object.unocoin) {
+      var unocoinDelegate = new ExchangeDelegate(wallet);
+      this._unocoin = new Unocoin(object.unocoin, unocoinDelegate);
+      unocoinDelegate.trades = this._unocoin.trades;
     }
   }
 }
@@ -51,11 +58,23 @@ Object.defineProperties(External.prototype, {
       return this._sfox;
     }
   },
+  'unocoin': {
+    configurable: false,
+    get: function () {
+      if (!this._unocoin) {
+        var delegate = new ExchangeDelegate(this._wallet);
+        this._unocoin = Unocoin.new(delegate);
+        delegate.trades = this._unocoin.trades;
+      }
+      return this._unocoin;
+    }
+  },
   'hasExchangeAccount': {
     configurable: false,
     get: function () {
       return (this._coinify && this._coinify.hasAccount) ||
-             (this._sfox && this._sfox.hasAccount) || false;
+             (this._sfox && this._sfox.hasAccount) ||
+             (this._unocoin && this._unocoin.hasAccount) || false;
     }
   }
 });
