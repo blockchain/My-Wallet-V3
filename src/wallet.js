@@ -243,7 +243,9 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
 
   let initializeWallet = () => {
     return MyWallet.initializeWallet(password, cb('didDecrypt'), cb('didBuildHD'))
-      .then(() => ({ guid: guid }));
+      .then(() => {
+        return { guid: guid };
+      });
   };
 
   if (guid === WalletStore.getGuid() && WalletStore.getEncryptedWalletData()) {
@@ -331,7 +333,7 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
     return MyWallet.wallet.saveGUIDtoMetadata();
   };
   var loadMetadata = function () {
-    return MyWallet.wallet.loadMetadata.bind(MyWallet.wallet)();
+    return MyWallet.wallet.loadMetadata();
   };
   p.then(incStats);
   p.then(saveGUID);
