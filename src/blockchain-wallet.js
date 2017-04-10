@@ -871,8 +871,11 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     promises.push(fetchExternal.call(this));
   }
 
-  // Labels currently don't use the KV Store, so this should never fail.
-  promises.push(fetchLabels.call(this));
+  // Labels only works for v3 wallets
+  if (this.isUpgradedToHD) {
+    // Labels currently don't use the KV Store, so this should never fail.
+    promises.push(fetchLabels.call(this));
+  }
 
   return Promise.all(promises);
 };
