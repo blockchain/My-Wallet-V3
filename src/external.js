@@ -109,7 +109,8 @@ External.prototype.toJSON = function () {
   }
   var external = {
     coinify: this._coinify,
-    sfox: this._sfox
+    sfox: this._sfox,
+    unocoin: this._unocoin
   };
   return external;
 };
@@ -157,4 +158,5 @@ External.prototype.wipe = function () {
   this._metadata.update({});
   this._coinify = undefined;
   this._sfox = undefined;
+  this._unocoin = undefined;
 };
