@@ -126,16 +126,16 @@ SharedMetadata.prototype.publishXPUB = function () {
   });
 };
 // createInvitation :: Promise InvitationID
-SharedMetadata.prototype.createInvitation = function () {
-  return this.authorize().then((t) => this.next(API.createInvitation.bind(null, t)));
+SharedMetadata.prototype.createInvitation = function (data) {
+  return this.authorize().then((t) => this.next(API.createInvitation.bind(null, t, data)));
 };
 // readInvitation :: String -> Promise RequesterID
 SharedMetadata.prototype.readInvitation = function (uuid) {
   return this.authorize().then((t) => this.next(API.readInvitation.bind(null, t, uuid)));
 };
 // acceptInvitation :: String -> Promise ()
-SharedMetadata.prototype.acceptInvitation = function (uuid) {
-  return this.authorize().then((t) => this.next(API.acceptInvitation.bind(null, t, uuid)));
+SharedMetadata.prototype.acceptInvitation = function (uuid, data) {
+  return this.authorize().then((t) => this.next(API.acceptInvitation.bind(null, t, uuid, data)));
 };
 // deleteInvitation :: String -> Promise ()
 SharedMetadata.prototype.deleteInvitation = function (uuid) {

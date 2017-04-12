@@ -85,6 +85,13 @@ Contacts.prototype.readInvitation = function (invitation) {
   return this._sharedMetadata.readInvitation(invitation.invitationReceived)
     .then((i) => {
       const c = this.new(R.assoc('mdid', i.mdid, invitation));
+
+      contact.RPR.bind(contact,
+              message.payload.intended_amount,
+              message.payload.id,
+              FacilitatedTx.RPR_RECEIVER,
+              message.payload.note)
+
       return c;
     });
 };
@@ -134,10 +141,10 @@ Contacts.prototype.readMessage = function (messageId) {
 // //////////////////////////////////////////////////////////////////////////////
 
 // returns a promise with the invitation and updates my contact list
-Contacts.prototype.createInvitation = function (myInfoToShare, contactInfo) {
+Contacts.prototype.createInvitation = function (myInfoToShare, contactInfo, message) {
   // myInfoToShare could be a contact object that will be encoded on the QR
   // contactInfo comes from a form that is filled before pressing invite (I am inviting James bla bla)
-  return this._sharedMetadata.createInvitation()
+  return this._sharedMetadata.createInvitation(message)
     .then((i) => {
       this.new(R.assoc('invitationSent', i.id, contactInfo));
       return R.assoc('invitationReceived', i.id, myInfoToShare);
@@ -176,6 +183,7 @@ const paymentRequest = function (id, intendedAmount, address, note) {
   }
   return JSON.stringify(body);
 };
+Contacts.prototype.paymentRequest = R.compose(JSON.parse, paymentRequest)
 
 // :: returns a message string of a payment request
 const requestPaymentRequest = function (intendedAmount, id, note) {
@@ -187,6 +195,7 @@ const requestPaymentRequest = function (intendedAmount, id, note) {
     });
 };
 
+Contacts.prototype.requestPaymentRequest = R.compose(JSON.parse, requestPaymentRequest)
 // :: returns a message string of a payment request
 const paymentRequestResponse = function (id, txHash) {
   return JSON.stringify(
@@ -195,6 +204,7 @@ const paymentRequestResponse = function (id, txHash) {
       tx_hash: txHash
     });
 };
+Contacts.prototype.paymentRequestResponse = R.compose(JSON.parse, paymentRequestResponse)
 
 // :: returns a message string of a decline response
 const declineResponse = function (id) {
