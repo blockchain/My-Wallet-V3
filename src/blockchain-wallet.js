@@ -22,6 +22,7 @@ var External = require('./external');
 var AccountInfo = require('./account-info');
 var Metadata = require('./metadata');
 var constants = require('./constants');
+var Bitcoin = require('bitcoinjs-lib');
 
 // Wallet
 
@@ -57,6 +58,17 @@ function Wallet (object) {
         return o;
       }, {})
       : {};
+
+  this._metadataHDNode = null;
+
+  if (obj.metadataHDNode) {
+    this._metadataHDNode = Bitcoin.HDNode.fromBase58(obj.metadataHDNode, constants.getNetwork());
+  } else if (!this.isUpgradedToHD) {
+  } else if (!this.isDoubleEncrypted) {
+    this._metadataHDNode = Metadata.deriveMetadataNode(this.hdwallet.getMasterHDNode());
+  } else {
+    console.warn('Second password required to prepare KV Store');
+  }
 
   // tx_notes dictionary
   this._tx_notes = obj.tx_notes || {};
@@ -408,6 +420,7 @@ Wallet.prototype.toJSON = function () {
     sharedKey: this.sharedKey,
     double_encryption: this.isDoubleEncrypted,
     dpasswordhash: this.dpasswordhash,
+    metadataHDNode: this._metadataHDNode && this._metadataHDNode.toBase58(),
     options: {
       pbkdf2_iterations: this.pbkdf2_iterations,
       fee_per_kb: this.fee_per_kb,
