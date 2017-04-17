@@ -833,6 +833,9 @@ Wallet.prototype.metadata = function (typeId) {
   return Metadata.fromMasterHDNode(masterhdnode, typeId);
 };
 
+// This sets:
+// * wallet.external (buy-sell, KV Store type 3)
+// * wallet.labels (not yet using KV Store)
 Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
   optionalPayloads = optionalPayloads || {};
 
@@ -857,21 +860,8 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
   };
 
   var fetchLabels = function () {
-    var success = function (labels) {
-      self._labels = labels;
-    };
-
-    var error = function (message) {
-      console.warn('wallet.labels not set:', message);
-      self._labels = null;
-      return Promise.resolve();
-    };
-
-    if (optionalPayloads.labels) {
-      return Labels.fromJSON(this, optionalPayloads.labels, magicHashes.labels, MyWallet.syncWallet).then(success);
-    } else {
-      return Labels.fetch(this, MyWallet.syncWallet).then(success).catch(error);
-    }
+    this._labels = new Labels(this, MyWallet.syncWallet);
+    return Promise.resolve();
   };
 
   let promises = [];
@@ -881,8 +871,11 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     promises.push(fetchExternal.call(this));
   }
 
-  // Falls back to read-only based on wallet payload if metadata is disabled
-  promises.push(fetchLabels.call(this));
+  // Labels only works for v3 wallets
+  if (this.isUpgradedToHD) {
+    // Labels currently don't use the KV Store, so this should never fail.
+    promises.push(fetchLabels.call(this));
+  }
 
   return Promise.all(promises);
 };

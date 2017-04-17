@@ -20,7 +20,7 @@ describe('External', () => {
   };
 
   let Metadata = {
-    fromMasterHDNode (n, masterhdnode) {
+    fromMetadataHDNode (n, masterhdnode) {
       return metaDataInstance;
     }
   };
@@ -241,6 +241,22 @@ describe('External', () => {
           accountInfo.invited.sfox = false;
           expect(e.canBuy(accountInfo, options)).toEqual(false);
         });
+      });
+    });
+
+    describe('should display sell tab', () => {
+      const email = 'random@blockghain.com';
+
+      const options = {
+        partners: {
+          coinify: {
+            showSellFraction: 0
+          }
+        }
+      };
+
+      it('should be false with a non-blockchain.com email', () => {
+        expect(e.shouldDisplaySellTab(email, options, 'coinify')).toEqual(false);
       });
     });
 

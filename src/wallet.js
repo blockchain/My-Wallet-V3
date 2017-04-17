@@ -193,33 +193,24 @@ MyWallet.makePairingCode = function (success, error) {
   }
 };
 
-MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHexExternal, stringLabels, magicHashHexLabels, password) {
+MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHexExternal, password) {
   assert(stringWallet, 'Wallet JSON required');
 
   // If metadata service returned 404, do not pass in a string.
   var externalJSON = null;
-  var labelsJSON = null;
 
   if (stringExternal) {
-    assert(magicHashHexExternal, 'Magic hash for external required');
     externalJSON = JSON.parse(stringExternal);
-  }
-
-  if (stringLabels) {
-    assert(magicHashHexLabels, 'Magic hash for labels required');
-    labelsJSON = JSON.parse(stringLabels);
   }
 
   var walletJSON = JSON.parse(stringWallet);
 
   MyWallet.wallet = new Wallet(walletJSON);
   WalletStore.unsafeSetPassword(password);
-  MyWallet.wallet.loadMetaData({
-    external: externalJSON,
-    labels: labelsJSON
+  MyWallet.wallet.loadMetadata({
+    external: externalJSON
   }, {
-    external: magicHashHexExternal ? Buffer.from(magicHashHexExternal, 'hex') : null,
-    labels: magicHashHexExternal ? Buffer.from(magicHashHexLabels, 'hex') : null
+    external: magicHashHexExternal ? Buffer.from(magicHashHexExternal, 'hex') : null
   });
   setIsInitialized();
   return true;
@@ -252,7 +243,9 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
 
   let initializeWallet = () => {
     return MyWallet.initializeWallet(password, cb('didDecrypt'), cb('didBuildHD'))
-      .then(() => ({ guid: guid }));
+      .then(() => {
+        return { guid: guid };
+      });
   };
 
   if (guid === WalletStore.getGuid() && WalletStore.getEncryptedWalletData()) {
@@ -340,7 +333,7 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
     return MyWallet.wallet.saveGUIDtoMetadata();
   };
   var loadMetadata = function () {
-    return MyWallet.wallet.loadMetadata.bind(MyWallet.wallet)();
+    return MyWallet.wallet.loadMetadata();
   };
   p.then(incStats);
   p.then(saveGUID);
