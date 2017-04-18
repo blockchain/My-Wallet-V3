@@ -323,11 +323,23 @@ Helpers.privateKeyStringToKey = function (value, format) {
     return Bitcoin.ECPair.fromWIF(value, constants.getNetwork());
   } else {
     var keyBuffer = null;
-    if (format === 'base58') keyBuffer = Base58.decode(value);
-    else if (format === 'base64') keyBuffer = new Buffer(value, 'base64');
-    else if (format === 'hex') keyBuffer = new Buffer(value, 'hex');
-    else if (format === 'mini') keyBuffer = parseMiniKey(value);
-    else throw new Error('Unsupported Key Format');
+
+    switch (format) {
+      case 'base58':
+        keyBuffer = Base58.decode(value);
+        break;
+      case 'base64':
+        keyBuffer = new Buffer(value, 'base64');
+        break;
+      case 'hex':
+        keyBuffer = new Buffer(value, 'hex');
+        break;
+      case 'mini':
+        keyBuffer = parseMiniKey(value);
+        break;
+      default:
+        throw new Error('Unsupported Key Format');
+    }
 
     var d = BigInteger.fromBuffer(keyBuffer);
     return new Bitcoin.ECPair(d, null, { network: constants.getNetwork() });
