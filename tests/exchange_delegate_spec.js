@@ -5,19 +5,10 @@ let delegate;
 let trade;
 
 let acc0 = {
+  index: 0,
   labels: {},
   receiveIndex: 0,
-  receivingAddressesLabels: [],
-  receiveAddressAtIndex (i) { return `0-${i}`; },
-  getLabelForReceivingAddress (i) {
-    return this.labels[i];
-  },
-  setLabelForReceivingAddress (i, label) {
-    this.labels[i] = label;
-  },
-  removeLabelForReceivingAddress (i) {
-    this.labels[i] = undefined;
-  }
+  receiveAddressAtIndex (i) { return `0-${i}`; }
 };
 
 let MyWallet = {
@@ -36,6 +27,15 @@ let MyWallet = {
     },
     external: {
       save () {}
+    },
+    labels: {
+      reserveReceiveAddress: () => {
+        return {
+          receiveAddress: '',
+          commit: () => {}
+        };
+      },
+      releaseReceiveAddress: () => {}
     }
   }
 };
@@ -110,11 +110,13 @@ let stubs = {
 let ExchangeDelegate = proxyquire('../src/exchange-delegate', stubs);
 
 describe('ExchangeDelegate', () => {
-  describe('class', () =>
-    describe('new ExchangeDelegate()', () =>
-      it('...', () => pending())
-    )
-  );
+  describe('class', () => {
+    describe('new ExchangeDelegate()', () => {
+      it('...', () => {
+        pending();
+      });
+    });
+  });
 
   describe('instance', () => {
     beforeEach(() => {
@@ -132,9 +134,21 @@ describe('ExchangeDelegate', () => {
       })
     );
 
-    describe('getters', () =>
-      it('trades should be an array', () => expect(delegate.trades.length).toBeDefined())
-    );
+    describe('getters', () => {
+      it('trades should be an array', () => {
+        expect(delegate.trades.length).toBeDefined();
+      });
+
+      it('labelbase has a default', () => {
+        delegate._labelBase = undefined;
+        expect(delegate.labelBase).toEqual('Exchange order');
+      });
+
+      it('labelbase can be set', () => {
+        delegate.labelBase = 'Coinify order';
+        expect(delegate.labelBase).toEqual('Coinify order');
+      });
+    });
 
     describe('save()', () =>
       it('should call save on external', () => {
@@ -194,55 +208,58 @@ describe('ExchangeDelegate', () => {
       });
     });
 
-    describe('getReceiveAddress()', () =>
+    describe('getReceiveAddress()', () => {
       it('should get the trades receive address', () => {
         trade._account_index = 0;
         trade._receive_index = 0;
         expect(delegate.getReceiveAddress(trade)).toEqual('0-0');
-      })
-    );
+      });
+
+      it("should return null if trade doesn't have account index", () => {
+        trade._account_index = undefined;
+        expect(delegate.getReceiveAddress(trade)).toEqual(null);
+      });
+    });
 
     describe('reserveReceiveAddress()', () => {
-      it('should return the first available address', () => expect(delegate.reserveReceiveAddress().receiveAddress).toEqual('0-0'));
+      let account;
 
-      it('should fail if gap limit', () => {
-        MyWallet.wallet.hdwallet.accounts[0].receiveIndex = 19;
-        MyWallet.wallet.hdwallet.accounts[0].lastUsedReceiveIndex = 0;
-        delegate.trades = [];
-        expect(() => delegate.reserveReceiveAddress()).toThrow(new Error('gap_limit'));
+      beforeEach(() => {
+        spyOn(MyWallet.wallet.labels, 'reserveReceiveAddress').and.callThrough();
+        account = MyWallet.wallet.hdwallet.accounts[0];
+      });
+
+      it('should call labels.reserveReceiveAddress', () => {
+        delegate.reserveReceiveAddress();
+        expect(MyWallet.wallet.labels.reserveReceiveAddress).toHaveBeenCalled();
+      });
+
+      it('should provide a reusable index in case of gap limit', () => {
+        delegate.trades = [{ id: 0, _receive_index: 16, receiveAddress: '0-16', state: 'completed' }];
+        account.receiveIndex = 19;
+        delegate.reserveReceiveAddress();
+        expect(MyWallet.wallet.labels.reserveReceiveAddress).toHaveBeenCalledWith(
+          0, jasmine.objectContaining({ reusableIndex: 16 })
+        );
       });
 
       describe('.commit()', () => {
-        let account;
+        let reservation;
 
         beforeEach(() => {
           account = MyWallet.wallet.hdwallet.accounts[0];
           account.receiveIndex = 0;
           account.lastUsedReceiveIndex = 0;
           trade = { id: 1, _account_index: 0, _receive_index: 0 };
+
+          reservation = delegate.reserveReceiveAddress();
+
+          spyOn(reservation._reservation, 'commit').and.callThrough();
         });
 
         it('should label the address', () => {
-          delegate.trades = [];
-          let reservation = delegate.reserveReceiveAddress();
           reservation.commit(trade);
-          expect(account.getLabelForReceivingAddress(0)).toEqual('Exchange order #1');
-        });
-
-        it('should allow custom label prefix for each exchange', () => {
-          delegate.trades = [];
-          delegate.labelBase = 'Coinify order';
-          let reservation = delegate.reserveReceiveAddress();
-          reservation.commit(trade);
-          expect(account.getLabelForReceivingAddress(0)).toEqual('Coinify order #1');
-        });
-
-        it('should append to existing label if at gap limit', () => {
-          delegate.trades = [{ id: 0, _receive_index: 16, receiveAddress: '0-16', state: 'completed' }];
-          account.receiveIndex = 19;
-          let reservation = delegate.reserveReceiveAddress();
-          reservation.commit(trade);
-          expect(account.getLabelForReceivingAddress(16)).toEqual('Exchange order #0, #1');
+          expect(reservation._reservation.commit).toHaveBeenCalledWith('Exchange order #1');
         });
       });
     });
@@ -251,22 +268,31 @@ describe('ExchangeDelegate', () => {
       let account;
 
       beforeEach(() => {
+        spyOn(MyWallet.wallet.labels, 'releaseReceiveAddress').and.callThrough();
         account = MyWallet.wallet.hdwallet.accounts[0];
         account.receiveIndex = 1;
-        trade = { id: 1, receiveAddress: '0-16', _account_index: 0, _receive_index: 0 };
+        trade = { id: 1, receiveAddress: '0-16', _account_index: 0, _receive_index: 0, debug: true };
+      });
+
+      it('should gracefully do nothing is account_index is missing', () => {
+        trade._account_index = undefined;
+        delegate.releaseReceiveAddress(trade);
+        expect(MyWallet.wallet.labels.releaseReceiveAddress).not.toHaveBeenCalled();
       });
 
       it('should remove the label', () => {
-        account.labels[0] = 'Coinify order #1';
         delegate.releaseReceiveAddress(trade);
-        expect(account.labels[0]).not.toBeDefined();
+        expect(MyWallet.wallet.labels.releaseReceiveAddress).toHaveBeenCalledWith(0, 0);
       });
 
       it('should remove one of multible ids in a label', () => {
-        account.labels[0] = 'Coinify order #0, 1';
         delegate.trades = [{ id: 0, _receive_index: 16, receiveAddress: '0-16', state: 'completed' }];
         delegate.releaseReceiveAddress(trade);
-        expect(account.labels[0]).toEqual('Coinify order #0');
+        expect(MyWallet.wallet.labels.releaseReceiveAddress).toHaveBeenCalledWith(
+          0,
+          0,
+          jasmine.objectContaining({expectedLabel: 'Exchange order #1'})
+        );
       });
     });
 

@@ -8,8 +8,12 @@
             "grep": "^fix"
         },
         {
-            "title": "Development and build tools",
+            "title": "Development tools",
             "grep": "^dev"
+        },
+        {
+            "title": "Build process",
+            "grep": "^build"
         },
         {
           "title": "Dependencies",

@@ -1,5 +1,3 @@
-'use strict';
-
 var MyWallet = module.exports = {};
 
 var assert = require('assert');
@@ -65,7 +63,7 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
 
   if (obj.op === 'on_change') {
     var oldChecksum = WalletStore.generatePayloadChecksum();
-    var newChecksum = obj.checksum;
+    var newChecksum = obj.x.checksum;
 
     if (lastOnChange.checksum !== newChecksum && oldChecksum !== newChecksum) {
       lastOnChange.checksum = newChecksum;
@@ -195,6 +193,38 @@ MyWallet.makePairingCode = function (success, error) {
   }
 };
 
+MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHexExternal, stringLabels, magicHashHexLabels, password) {
+  assert(stringWallet, 'Wallet JSON required');
+
+  // If metadata service returned 404, do not pass in a string.
+  var externalJSON = null;
+  var labelsJSON = null;
+
+  if (stringExternal) {
+    assert(magicHashHexExternal, 'Magic hash for external required');
+    externalJSON = JSON.parse(stringExternal);
+  }
+
+  if (stringLabels) {
+    assert(magicHashHexLabels, 'Magic hash for labels required');
+    labelsJSON = JSON.parse(stringLabels);
+  }
+
+  var walletJSON = JSON.parse(stringWallet);
+
+  MyWallet.wallet = new Wallet(walletJSON);
+  WalletStore.unsafeSetPassword(password);
+  MyWallet.wallet.loadMetaData({
+    external: externalJSON,
+    labels: labelsJSON
+  }, {
+    external: magicHashHexExternal ? Buffer.from(magicHashHexExternal, 'hex') : null,
+    labels: magicHashHexExternal ? Buffer.from(magicHashHexLabels, 'hex') : null
+  });
+  setIsInitialized();
+  return true;
+};
+
 /* guid: the wallet identifier
    password: to decrypt the wallet (which happens in the browser)
    server credentials:
@@ -302,14 +332,6 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
     );
   };
 
-  // Attempt to load metadata for buy-sell
-  var tryLoadExternal = function () {
-    var loadExternalFailed = function (message) {
-      console.warn('wallet.external not set:', message);
-    };
-    return MyWallet.wallet.loadExternal.bind(MyWallet.wallet)().catch(loadExternalFailed);
-  };
-
   var p = Promise.resolve().then(doInitialize);
   var incStats = function () {
     return MyWallet.wallet.incStats.bind(MyWallet.wallet)();
@@ -317,9 +339,12 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
   var saveGUID = function () {
     return MyWallet.wallet.saveGUIDtoMetadata();
   };
+  var loadMetadata = function () {
+    return MyWallet.wallet.loadMetadata.bind(MyWallet.wallet)();
+  };
   p.then(incStats);
   p.then(saveGUID);
-  return p.then(tryLoadExternal);
+  return p.then(loadMetadata);
 };
 
 // used on iOS
@@ -464,6 +489,7 @@ MyWallet.syncWallet = Helpers.asyncOnce(syncWallet, 1500, function () {
  * @param {string} mnemonic: optional BIP 39 mnemonic
  * @param {string} bip39Password: optional BIP 39 passphrase
  */
+
  // used on mywallet, iOS and frontend
 MyWallet.createNewWallet = function (inputedEmail, inputedPassword, firstAccountName, languageCode, currencyCode, successCallback, errorCallback) {
   var success = function (createdGuid, createdSharedKey, createdPassword, sessionToken) {

@@ -47,6 +47,7 @@ let config = {
 if (process.env.NODE_ENV === 'prod') {
   let uglifyPlugin = new webpack.optimize.UglifyJsPlugin({
     mangle: false,
+    compress: false,
     comments: false
   });
 

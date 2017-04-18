@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.28.0",
+  "version": "3.29.3",
   "description": "Blockchain.info JavaScript Wallet",
   "homepage": "https://github.com/blockchain/my-wallet-v3",
   "bugs": {
@@ -51,11 +51,12 @@
     "sjcl": "1.0.3",
     "unorm": "^1.4.1",
     "ws": "2.0.*",
-    "bitcoin-coinify-client": "0.3.*",
+    "bitcoin-coinify-client": "0.3.2*",
     "bitcoin-sfox-client": "0.1.*",
     "uuid": "^3.0.1"
   },
   "devDependencies": {
+    "babel-plugin-transform-object-assign": "~6.22.0",
     "babel-loader": "6.2.10",
     "babel-polyfill": "6.16.*",
     "babel-preset-es2015": "~6.16.0",
@@ -91,6 +92,7 @@
       "Audio",
       "assert",
       "describe",
+      "xdescribe",
       "it",
       "xit",
       "beforeEach",

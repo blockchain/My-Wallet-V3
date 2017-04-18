@@ -8,6 +8,9 @@ var BIP39 = require('bip39');
 var ImportExport = require('./import-export');
 var constants = require('./constants');
 var WalletCrypo = require('./wallet-crypto');
+var has = require('ramda/src/has');
+var allPass = require('ramda/src/allPass');
+var map = require('ramda/src/map');
 
 var Helpers = {};
 Math.log2 = function (x) { return Math.log(x) / Math.LN2; };
@@ -121,6 +124,10 @@ Helpers.memoize = function (f) {
 
 Helpers.toArrayFormat = function (x) {
   return Array.isArray(x) ? x : [x];
+};
+
+Helpers.isEmptyObject = function (x) {
+  return (Object.keys(x).length === 0 && x.constructor === Object);
 };
 
 Helpers.isEmptyArray = function (x) {
@@ -465,6 +472,50 @@ Helpers.isEmailInvited = function (email, fraction) {
     return false;
   }
   return WalletCrypo.sha256(email)[0] / 256 >= 1 - fraction;
+};
+
+// Helpers.isFeeOptions :: object => Boolean
+Helpers.isFeeOptions = object => {
+  const props = ['min_tx_amount', 'percent', 'max_service_charge', 'send_to_miner'];
+  return object ? allPass(map(has, props))(object) : false;
+};
+
+Helpers.blockchainFee = (amount, options) =>
+  Helpers.isFeeOptions(options) && Helpers.isPositiveNumber(amount) && amount > options.min_tx_amount
+    ? Math.min(Math.floor(amount * options.percent), options.max_service_charge)
+    : 0;
+
+Helpers.balanceMinusFee = (balance, options) => {
+  const maxFeePoint = () => Math.floor(options.max_service_charge * ((1 / options.percent) + 1));
+  switch (true) {
+    // negative balance
+    case !Helpers.isPositiveNumber(balance):
+      return 0;
+    // no valid options
+    case !Helpers.isFeeOptions(options):
+      return balance;
+    // balance in [0, min_tx_amount] -> no fee
+    case balance <= options.min_tx_amount:
+      return balance;
+    // balance in (min_tx_amount, maxFeePoint] --> max(max with fee, max without fee)
+    case (options.min_tx_amount < balance) && (balance <= maxFeePoint()):
+      const maxWithFee = Math.floor(balance / (1 + options.percent));
+      return Math.max(maxWithFee, options.min_tx_amount);
+    // balance in (maxFeePoint, +inf) --> maximum fee
+    case maxFeePoint() < balance:
+      return balance - options.max_service_charge;
+    default:
+      return balance;
+  } // fi switch
+};
+
+Helpers.guidToGroup = (guid) => {
+  let hashed = WalletCrypo.sha256(new Buffer(guid.replace(/-/g, ''), 'hex'));
+  return hashed[0] & 1 ? 'b' : 'a';
+};
+
+Helpers.deepClone = function (object) {
+  return JSON.parse(JSON.stringify(object));
 };
 
 module.exports = Helpers;

@@ -1,5 +1,3 @@
-'use strict';
-
 module.exports = Wallet;
 
 // dependencies
@@ -25,6 +23,8 @@ var constants = require('./constants');
 var Payment = require('./payment');
 var SharedMetadata = require('./sharedMetadata');
 var Contacts = require('./contacts');
+var Labels = require('./labels');
+var Bitcoin = require('bitcoinjs-lib');
 
 // Wallet
 
@@ -61,6 +61,18 @@ function Wallet (object) {
       }, {})
       : {};
 
+  this._metadataHDNode = null;
+
+  if (obj.metadataHDNode) {
+    this._metadataHDNode = Bitcoin.HDNode.fromBase58(obj.metadataHDNode, constants.getNetwork());
+  } else if (!this.isUpgradedToHD) {
+  } else if (!this.isDoubleEncrypted) {
+    this._metadataHDNode = Metadata.deriveMetadataNode(this.hdwallet.getMasterHDNode());
+    MyWallet.syncWallet();
+  } else {
+    console.warn('Second password required to prepare KV Store');
+  }
+
   // tx_notes dictionary
   this._tx_notes = obj.tx_notes || {};
 
@@ -83,6 +95,10 @@ function Wallet (object) {
 }
 
 Object.defineProperties(Wallet.prototype, {
+  'isMetadataReady': {
+    configurable: false,
+    get: function () { return this._metadataHDNode != null; }
+  },
   'guid': {
     configurable: false,
     get: function () { return this._guid; }
@@ -325,6 +341,12 @@ Object.defineProperties(Wallet.prototype, {
   'accountInfo': {
     configurable: false,
     get: function () { return this._accountInfo; }
+  },
+  'labels': {
+    configurable: false,
+    get: function () {
+      return this._labels;
+    }
   }
 });
 
@@ -355,12 +377,8 @@ Wallet.prototype._updateWalletInfo = function (obj) {
       if (account) {
         account.balance = e.final_balance;
         account.n_tx = e.n_tx;
-        account.lastUsedReceiveIndex = e.account_index;
-        account.receiveIndex = Math.max(account.lastUsedReceiveIndex, account.maxLabeledReceiveIndex);
+        account.lastUsedReceiveIndex = e.account_index === 0 ? null : e.account_index - 1;
         account.changeIndex = e.change_index;
-        if (account.getLabelForReceivingAddress(account.receiveIndex)) {
-          account.incrementReceiveIndex();
-        }
       }
     }
     var address = this.activeKey(e.address);
@@ -416,6 +434,7 @@ Wallet.prototype.toJSON = function () {
     sharedKey: this.sharedKey,
     double_encryption: this.isDoubleEncrypted,
     dpasswordhash: this.dpasswordhash,
+    metadataHDNode: this._metadataHDNode && this._metadataHDNode.toBase58(),
     options: {
       pbkdf2_iterations: this.pbkdf2_iterations,
       fee_per_kb: this.fee_per_kb,
@@ -696,7 +715,7 @@ Wallet.prototype.upgradeToV3 = function (firstAccountLabel, pw, success, error) 
   this._hd_wallets.push(hd);
   var label = firstAccountLabel || 'My Bitcoin Wallet';
   this.newAccount(label, pw, this._hd_wallets.length - 1, true);
-  this.loadExternal();
+  this.loadMetadata();
   MyWallet.syncWallet(function (res) {
     success();
   }, error);
@@ -747,34 +766,6 @@ Wallet.prototype.setNote = function (txHash, text) {
 Wallet.prototype.deleteNote = function (txHash) {
   delete this._tx_notes[txHash];
   MyWallet.syncWallet();
-};
-
-Wallet.prototype.getNotePlaceholder = function (filter, tx) {
-  // Given a filter and received transaction, returns the first label shared by both the output(s') hd addresses and the account, otherwise returns a string of length 0.
-  // If using no account filter or filtering by imported addresses, pass in a non-numeric string. It will use the first account found in the outputs as the filtered account.
-  if (tx.txType === 'received' && this.isUpgradedToHD) {
-    var account = parseInt(filter, 10);
-    var addresses = tx.processedOutputs.filter(function (processedOutput) { return processedOutput.identity >= 0; });
-    var indexesAndLabels = addresses.map(function (processedOutput) {
-      var coinType = processedOutput.coinType.split('/');
-      var addressIndex = coinType[2];
-      return {index: addressIndex, label: processedOutput.label};
-    });
-
-    if (addresses.length) {
-      var match = function (a, b, prop) {
-        var seen = [];
-        for (var i = 0, aLength = a.length; i < aLength; i++) seen[prop ? a[i][prop] : a[i]] = true;
-        for (var j = 0, bLength = b.length; j < bLength; j++) if (seen[prop ? b[j][prop] : b[j]]) return b[j];
-        return false;
-      };
-      if (isNaN(account)) account = addresses[0].identity;
-      var hdAddresses = this.hdwallet.accounts[account].receivingAddressesLabels;
-      var matchedLabel = match(indexesAndLabels, hdAddresses, 'index').label;
-      if (matchedLabel && matchedLabel.length) return matchedLabel;
-    }
-  }
-  return '';
 };
 
 Wallet.prototype.getMnemonic = function (password) {
@@ -844,16 +835,6 @@ Wallet.prototype.fetchAccountInfo = function () {
   });
 };
 
-Wallet.prototype.loadExternal = function () {
-  // patch (buy-sell does not work with double encryption for now)
-  if (this.isDoubleEncrypted === true || !this.isUpgradedToHD) {
-    return Promise.resolve();
-  } else {
-    this._external = new External(this);
-    return this._external.fetch();
-  }
-};
-
 Wallet.prototype.loadContacts = function () {
   if (this.isDoubleEncrypted === true || !this.isUpgradedToHD) {
     return Promise.resolve();
@@ -869,6 +850,60 @@ Wallet.prototype.loadContacts = function () {
 Wallet.prototype.metadata = function (typeId) {
   var masterhdnode = this.hdwallet.getMasterHDNode();
   return Metadata.fromMasterHDNode(masterhdnode, typeId);
+};
+
+Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
+  optionalPayloads = optionalPayloads || {};
+
+  var self = this;
+
+  var fetchExternal = function () {
+    var success = function (external) {
+      self._external = external;
+    };
+
+    var error = function (message) {
+      console.warn('wallet.external not set:', message);
+      self._external = null;
+      return Promise.resolve();
+    };
+
+    if (optionalPayloads.external) {
+      return External.fromJSON(this, optionalPayloads.external, magicHashes.external).then(success);
+    } else {
+      return External.fetch(this).then(success).catch(error);
+    }
+  };
+
+  var fetchLabels = function () {
+    var success = function (labels) {
+      self._labels = labels;
+    };
+
+    var error = function (message) {
+      console.warn('wallet.labels not set:', message);
+      self._labels = null;
+      return Promise.resolve();
+    };
+
+    if (optionalPayloads.labels) {
+      return Labels.fromJSON(this, optionalPayloads.labels, magicHashes.labels, MyWallet.syncWallet).then(success);
+    } else {
+      return Labels.fetch(this, MyWallet.syncWallet).then(success).catch(error);
+    }
+  };
+
+  let promises = [];
+
+  if (this.isMetadataReady) {
+    // No fallback is metadata is disabled
+    promises.push(fetchExternal.call(this));
+  }
+
+  // Falls back to read-only based on wallet payload if metadata is disabled
+  promises.push(fetchLabels.call(this));
+
+  return Promise.all(promises);
 };
 
 Wallet.prototype.incStats = function () {
@@ -887,8 +922,7 @@ Wallet.prototype.saveGUIDtoMetadata = function () {
     }
   };
 
-  // backupGUID not enabled if secondPassword active
-  if (!this.isDoubleEncrypted && this.isUpgradedToHD) {
+  if (this.isMetadataReady) {
     var GUID_METADATA_TYPE = 0;
     var m = this.metadata(GUID_METADATA_TYPE);
     return m.fetch().then(setOrCheckGuid);
@@ -900,6 +934,7 @@ Wallet.prototype.saveGUIDtoMetadata = function () {
 Wallet.prototype.createPayment = function (initialState) {
   return new Payment(this, initialState);
 };
+
 Wallet.prototype.MDIDregistration = function (method, signedMDID) {
   // method: register-mdid / unregister-mdid
   var data = {
@@ -910,4 +945,13 @@ Wallet.prototype.MDIDregistration = function (method, signedMDID) {
     length: signedMDID.length
   };
   return API.request('POST', 'wallet', data);
+};
+
+Wallet.prototype.cacheMetadataKey = function (secondPassword) {
+  if (!secondPassword) { return Promise.reject('second password needed'); }
+  if (!this.validateSecondPassword(secondPassword)) { return Promise.reject('wrong second password'); }
+  var cipher = WalletCrypto.cipherFunction.bind(undefined, secondPassword, this._sharedKey, this._pbkdf2_iterations);
+  this._metadataHDNode = Metadata.deriveMetadataNode(this.hdwallet.getMasterHDNode(cipher));
+  MyWallet.syncWallet();
+  return Promise.resolve();
 };

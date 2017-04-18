@@ -466,6 +466,19 @@ describe('WalletCrypto', () => {
     it('should not modify the operation is unknown', () => expect(WalletCrypto.cipherFunction('password', 'key', 1000, 'nop')('toto')).toEqual('toto'));
   });
 
+  describe('pbkdf2', () => {
+    it('should compute the correct result', () => {
+      let password = 'password123';
+      let salt = new Buffer('acf98ce0f6fb15ac868f0c2cdbc2c263', 'hex');
+      let iterations = 5000;
+      let keylen = 32;
+
+      let result = WalletCrypto.pbkdf2(password, salt, iterations, keylen);
+      let resultHex = 'f32463775c57e37148b4f54010c794403b34847e99e0b6f381418df09e281900';
+      expect(result.toString('hex')).toEqual(resultHex);
+    });
+  });
+
   describe('scrypt', () => {
     let observer =
       {callback (hash) {}};
