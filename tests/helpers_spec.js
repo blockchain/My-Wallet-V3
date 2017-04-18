@@ -291,6 +291,12 @@ describe('Helpers', () => {
       expect(res.getAddress()).toEqual(data.addr);
     }));
 
+    it('should fail given a key with an invalid checksum', () => {
+      let e = new Error('Invalid checksum');
+      let badKey = 'L3dDv2KUyLfPwkcnhALEaHnd47gewa1BVvnCwWL3gVWsb2H27xyz';
+      expect(() => Helpers.privateKeyStringToKey(badKey, 'compsipa')).toThrow(e);
+    });
+
     it('should fail if given an unknown format', () => {
       let e = new Error('Unsupported Key Format');
       expect(() => Helpers.privateKeyStringToKey('', 'unknown')).toThrow(e);
