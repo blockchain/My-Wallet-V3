@@ -319,37 +319,31 @@ function parseMiniKey (miniKey) {
 }
 
 Helpers.privateKeyStringToKey = function (value, format) {
-  var keyBytes = null;
-  var tbytes;
-
-  if (format === 'base58') {
-    keyBytes = Helpers.buffertoByteArray(Base58.decode(value));
-  } else if (format === 'base64') {
-    keyBytes = Helpers.buffertoByteArray(new Buffer(value, 'base64'));
-  } else if (format === 'hex') {
-    keyBytes = Helpers.buffertoByteArray(new Buffer(value, 'hex'));
-  } else if (format === 'mini') {
-    keyBytes = Helpers.buffertoByteArray(parseMiniKey(value));
-  } else if (format === 'sipa') {
-    tbytes = Helpers.buffertoByteArray(Base58.decode(value));
-    tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
-    tbytes.shift();
-    keyBytes = tbytes.slice(0, tbytes.length - 4);
-  } else if (format === 'compsipa') {
-    tbytes = Helpers.buffertoByteArray(Base58.decode(value));
-    tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
-    tbytes.shift();
-    tbytes.pop();
-    keyBytes = tbytes.slice(0, tbytes.length - 4);
+  if (format === 'sipa' || format === 'compsipa') {
+    return Bitcoin.ECPair.fromWIF(value, constants.getNetwork());
   } else {
-    throw new Error('Unsupported Key Format');
-  }
+    var keyBuffer = null;
 
-  return new Bitcoin.ECPair(
-    new BigInteger.fromByteArrayUnsigned(keyBytes), // eslint-disable-line new-cap
-    null,
-    { compressed: format !== 'sipa', network: constants.getNetwork() }
-  );
+    switch (format) {
+      case 'base58':
+        keyBuffer = Base58.decode(value);
+        break;
+      case 'base64':
+        keyBuffer = new Buffer(value, 'base64');
+        break;
+      case 'hex':
+        keyBuffer = new Buffer(value, 'hex');
+        break;
+      case 'mini':
+        keyBuffer = parseMiniKey(value);
+        break;
+      default:
+        throw new Error('Unsupported Key Format');
+    }
+
+    var d = BigInteger.fromBuffer(keyBuffer);
+    return new Bitcoin.ECPair(d, null, { network: constants.getNetwork() });
+  }
 };
 
 Helpers.detectPrivateKeyFormat = function (key) {
