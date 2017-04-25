@@ -5,7 +5,7 @@ JavaScript Model for Blockchain.info wallet.
 ## Build
 
 ```sh
-npm install
+yarn # recommended, can also use `npm install`
 npm run build
 ```
 

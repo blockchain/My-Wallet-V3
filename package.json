@@ -40,6 +40,8 @@
   "dependencies": {
     "bigi": "1.4.*",
     "bip39": "2.1.*",
+    "bitcoin-coinify-client": "^0.4.5",
+    "bitcoin-sfox-client": "^0.1.11",
     "bitcoinjs-lib": "2.1.*",
     "bs58": "2.0.*",
     "es6-promise": "^3.0.2",
@@ -49,13 +51,11 @@
     "randombytes": "^2.0.1",
     "sjcl": "1.0.3",
     "unorm": "^1.4.1",
-    "ws": "2.0.*",
-    "bitcoin-coinify-client": "~0.4.3",
-    "bitcoin-sfox-client": "0.1.*"
+    "ws": "2.0.*"
   },
   "devDependencies": {
-    "babel-plugin-transform-object-assign": "~6.22.0",
     "babel-loader": "6.2.10",
+    "babel-plugin-transform-object-assign": "~6.22.0",
     "babel-polyfill": "6.16.*",
     "babel-preset-es2015": "~6.16.0",
     "babelify": "7.3.*",
