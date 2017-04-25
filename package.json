@@ -43,7 +43,7 @@
     "bitcoinjs-lib": "2.1.*",
     "bs58": "2.0.*",
     "es6-promise": "^3.0.2",
-    "isomorphic-fetch": "^2.2.0",
+    "isomorphic-fetch": "^2.2.1",
     "pbkdf2": "3.0.4",
     "ramda": "^0.22.1",
     "randombytes": "^2.0.1",
