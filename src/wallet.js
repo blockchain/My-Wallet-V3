@@ -197,23 +197,17 @@ MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHexExt
   assert(stringWallet, 'Wallet JSON required');
 
   // If metadata service returned 404, do not pass in a string.
-  var externalJSON = null;
-
-  if (stringExternal) {
-    externalJSON = JSON.parse(stringExternal);
-  }
-
   var walletJSON = JSON.parse(stringWallet);
+  var externalJSON = stringExternal ? JSON.parse(stringExternal) : null;
 
   MyWallet.wallet = new Wallet(walletJSON);
   WalletStore.unsafeSetPassword(password);
-  MyWallet.wallet.loadMetadata({
+  setIsInitialized();
+  return MyWallet.wallet.loadMetadata({
     external: externalJSON
   }, {
     external: magicHashHexExternal ? Buffer.from(magicHashHexExternal, 'hex') : null
   });
-  setIsInitialized();
-  return true;
 };
 
 /* guid: the wallet identifier
