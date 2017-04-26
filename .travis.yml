@@ -2,7 +2,7 @@ language: node_js
 node_js:
 - 7.5
 cache:
-- node_modules
+- yarn
 before_install:
 - npm install -g snazzy
 before_script:

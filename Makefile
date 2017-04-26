@@ -1,7 +1,7 @@
 all: clean node_modules semistandard test dist/my-wallet.js dist/my-wallet.min.js changelog
 
 node_modules:
-	npm install
+	yarn
 
 build: node_modules
 	npm run build
@@ -13,7 +13,6 @@ dist/my-wallet.js: build
 
 dist/my-wallet.min.js: node_modules
 	npm run dist
-	npm shrinkwrap --dev
 
 semistandard:
 	node_modules/.bin/semistandard
@@ -32,5 +31,5 @@ changelog: node_modules
 	node_modules/git-changelog/tasks/command.js $(TAG_ARG)
 
 clean:
-	rm -rf dist node_modules npm-shrinkwrap.json Changelog.md
+	rm -rf dist node_modules Changelog.md
 	npm cache clean
