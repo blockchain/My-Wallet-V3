@@ -1,6 +1,7 @@
 all: clean node_modules semistandard test dist/my-wallet.js dist/my-wallet.min.js changelog
 
 node_modules:
+	npm i -g yarn
 	yarn
 
 build: node_modules
