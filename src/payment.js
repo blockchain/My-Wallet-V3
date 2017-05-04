@@ -17,36 +17,9 @@ function Payment (wallet, payment) {
   this._wallet = wallet;
 
   var serverFeeFallback = {
-    'default': {
-      'fee': 35000.00,
-      'surge': false,
-      'ok': true
-    },
-    'estimate': [{
-      'fee': 45000.0,
-      'surge': false,
-      'ok': true
-    }, {
-      'fee': 35000.00,
-      'surge': false,
-      'ok': true
-    }, {
-      'fee': 22000.0,
-      'surge': false,
-      'ok': true
-    }, {
-      'fee': 19000.0,
-      'surge': false,
-      'ok': true
-    }, {
-      'fee': 15000.0,
-      'surge': false,
-      'ok': true
-    }, {
-      'fee': 12000.0,
-      'surge': false,
-      'ok': true
-    }]
+    'lowerLimit': 50,
+    'legacyCapped': 120,
+    'priority': 220
   };
 
   var initialState = {
@@ -56,16 +29,16 @@ function Payment (wallet, payment) {
     from: null, // origin
     amounts: [], // list of amounts to spend entered in the form
     to: [], // list of destinations entered in the form
-    feePerKb: serverFeeFallback.default.fee, // default fee-per-kb used in basic send
+    feePerKb: serverFeeFallback.legacyCapped, // default fee-per-kb used in basic send
     extraFeeConsumption: 0, // if there is change consumption to fee will be reflected here
     sweepFee: 0,  // computed fee to sweep an account in basic send (depends on fee-per-kb)
     sweepAmount: 0, // computed max spendable amount depending on fee-per-kb
     balance: 0, // sum of all unspents values with any filtering     [ payment.sumOfCoins ]
     finalFee: 0, // final absolute fee that it is going to be used no matter how was obtained (advanced or regular send)
     changeAmount: 0, // final change
-    absoluteFeeBounds: [0, 0, 0, 0, 0, 0], // fee bounds (absolute) per fixed amount
-    sweepFees: [0, 0, 0, 0, 0, 0], // sweep absolute fee per each fee per kb (1, 2, 3, 4, 5, 6)
-    maxSpendableAmounts: [0, 0, 0, 0, 0, 0],  // max amount per each fee-per-kb
+    absoluteFeeBounds: [0, 0, 0], // fee bounds (absolute) per fixed amount
+    sweepFees: [0, 0, 0], // sweep absolute fee per each fee per kb (slow, regular, priority)
+    maxSpendableAmounts: [0, 0, 0],  // max amount per each fee-per-kb
     confEstimation: 'unknown',
     txSize: 0, // transaciton size
     blockchainFee: 0,
@@ -357,18 +330,18 @@ Payment.from = function (origin) {
 Payment.updateFees = function () {
   return function (payment) {
     return API.getFees().then(
-          function (fees) {
-            payment.fees = fees;
-            payment.feePerKb = fees.default.fee;
-            return payment;
-          }
-        ).catch(
-          // this could fail for network issues - fallback default fee
-          function (error) {
-            console.log(error);
-            return payment;
-          }
-        );
+      function (fees) {
+        payment.fees = fees;
+        payment.feePerKb = fees.legacyCapped * 1000;
+        return payment;
+      }
+    ).catch(
+      // this could fail for network issues - fallback default fee
+      function (error) {
+        console.log(error);
+        return payment;
+      }
+    );
   };
 };
 
@@ -384,11 +357,11 @@ Payment.prebuild = function (absoluteFee) {
 
     // compute max spendable limits per each fee-per-kb
     var maxSpendablesPerFeePerKb = function (e) {
-      var c = Transaction.filterUsableCoins(payment.coins, e.fee);
-      var s = Transaction.maxAvailableAmount(c, e.fee);
+      var c = Transaction.filterUsableCoins(payment.coins, e[1] * 1000);
+      var s = Transaction.maxAvailableAmount(c, e[1] * 1000);
       return s.amount;
     };
-    payment.maxSpendableAmounts = payment.fees.estimate.map(maxSpendablesPerFeePerKb);
+    payment.maxSpendableAmounts = Object.entries(payment.fees).map(maxSpendablesPerFeePerKb);
     payment.sweepFees = payment.maxSpendableAmounts.map(function (v) { return payment.balance - v; });
 
     // if amounts defined refresh computations
@@ -414,13 +387,13 @@ Payment.prebuild = function (absoluteFee) {
         payment.extraFeeConsumption = 0;
       }
 
-      // compute absolute fee bounds for 1,2,3,4,5,6 block confirmations
+      // compute absolute fee bounds for slow, regular, priority block confirmations
       var toAbsoluteFee = function (e) {
-        var c = Transaction.filterUsableCoins(payment.coins, e.fee);
-        var s = Transaction.selectCoins(c, amounts, e.fee, false);
+        var c = Transaction.filterUsableCoins(payment.coins, e[1] * 1000);
+        var s = Transaction.selectCoins(c, amounts, e[1] * 1000, false);
         return s.fee;
       };
-      payment.absoluteFeeBounds = payment.fees.estimate.map(toAbsoluteFee);
+      payment.absoluteFeeBounds = Object.entries(payment.fees).map(toAbsoluteFee);
 
       // estimation of confirmation in number of blocks
       payment.confEstimation = Transaction.confirmationEstimation(payment.absoluteFeeBounds, payment.finalFee);
