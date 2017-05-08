@@ -31,15 +31,16 @@ function Payment (wallet, payment) {
     from: null, // origin
     amounts: [], // list of amounts to spend entered in the form
     to: [], // list of destinations entered in the form
-    feePerKb: serverFeeFallback.legacyCapped, // default fee-per-kb used in basic send
+    feeType: 'legacyCapped',
+    feePerKb: Helpers.bytesToKb(serverFeeFallback.legacyCapped), // default fee-per-kb used in basic send
     extraFeeConsumption: 0, // if there is change consumption to fee will be reflected here
     sweepFee: 0,  // computed fee to sweep an account in basic send (depends on fee-per-kb)
     sweepAmount: 0, // computed max spendable amount depending on fee-per-kb
     balance: 0, // sum of all unspents values with any filtering     [ payment.sumOfCoins ]
     finalFee: 0, // final absolute fee that it is going to be used no matter how was obtained (advanced or regular send)
     changeAmount: 0, // final change
-    sweepFees: {slow: 0, regular: 0, priority: 0, priorityCap: 0}, // sweep absolute fee per each fee per kb (slow, regular, priority)
-    maxSpendableAmounts: {slow: 0, regular: 0, priority: 0, priorityCap: 0},  // max amount per each fee-per-kb
+    sweepFees: {lowerLimit: 0, legacyCapped: 0, priority: 0, priorityCap: 0}, // sweep absolute fee per each fee per kb (slow, regular, priority)
+    maxSpendableAmounts: {lowerLimit: 0, legacyCapped: 0, priority: 0, priorityCap: 0},  // max amount per each fee-per-kb
     txSize: 0, // transaciton size
     blockchainFee: 0,
     blockchainAddress: null,
@@ -110,6 +111,12 @@ Payment.prototype.useAll = function (absoluteFee) {
 Payment.prototype.updateFees = function () {
   this.payment = this.payment.then(Payment.updateFees());
   this.sideEffect(this.emit.bind(this, 'update'));
+  return this;
+};
+
+Payment.prototype.updateFeeType = function (feeType) {
+  this.payment = this.payment.then(Payment.updateFeeType(feeType));
+  this.then(Payment.prebuild());
   return this;
 };
 
@@ -343,6 +350,14 @@ Payment.updateFees = function () {
         return payment;
       }
     );
+  };
+};
+
+Payment.updateFeeType = function (feeType) {
+  return function (payment) {
+    payment.feeType = feeType;
+    payment.feePerKb = Helpers.bytesToKb(payment.fees[feeType]);
+    return Promise.resolve(payment);
   };
 };
 
