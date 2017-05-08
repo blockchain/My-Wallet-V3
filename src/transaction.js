@@ -192,16 +192,4 @@ Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
   }
   return {'coins': [], 'fee': 0};
 };
-
-Transaction.confirmationEstimation = function (absoluteFees, fee) {
-  var len = absoluteFees.length;
-  for (var i = 0; i < len; i++) {
-    if (absoluteFees[i] > 0 && fee >= absoluteFees[i]) {
-      return i + 1;
-    } else {
-      if (absoluteFees[i] > 0 && (i + 1 === len)) { return Infinity; }
-    }
-  }
-  return null;
-};
 module.exports = Transaction;

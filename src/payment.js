@@ -9,6 +9,7 @@ var KeyRing = require('./keyring');
 var EventEmitter = require('events');
 var util = require('util');
 var constants = require('./constants');
+var mapObjIndexed = require('ramda/src/mapObjIndexed');
 
 // Payment Class
 
@@ -19,7 +20,8 @@ function Payment (wallet, payment) {
   var serverFeeFallback = {
     'lowerLimit': 50,
     'legacyCapped': 120,
-    'priority': 220
+    'priority': 220,
+    'priorityCap': 300
   };
 
   var initialState = {
@@ -36,10 +38,8 @@ function Payment (wallet, payment) {
     balance: 0, // sum of all unspents values with any filtering     [ payment.sumOfCoins ]
     finalFee: 0, // final absolute fee that it is going to be used no matter how was obtained (advanced or regular send)
     changeAmount: 0, // final change
-    absoluteFeeBounds: [0, 0, 0], // fee bounds (absolute) per fixed amount
-    sweepFees: [0, 0, 0], // sweep absolute fee per each fee per kb (slow, regular, priority)
-    maxSpendableAmounts: [0, 0, 0],  // max amount per each fee-per-kb
-    confEstimation: 'unknown',
+    sweepFees: {slow: 0, regular: 0, priority: 0, priorityCap: 0}, // sweep absolute fee per each fee per kb (slow, regular, priority)
+    maxSpendableAmounts: {slow: 0, regular: 0, priority: 0, priorityCap: 0},  // max amount per each fee-per-kb
     txSize: 0, // transaciton size
     blockchainFee: 0,
     blockchainAddress: null,
@@ -332,7 +332,8 @@ Payment.updateFees = function () {
     return API.getFees().then(
       function (fees) {
         payment.fees = fees;
-        payment.feePerKb = fees.legacyCapped * 1000;
+        payment.fees.lowerLimit = 50;
+        payment.feePerKb = Helpers.bytesToKb(fees.legacyCapped);
         return payment;
       }
     ).catch(
@@ -356,13 +357,16 @@ Payment.prebuild = function (absoluteFee) {
     payment.balance = Transaction.sumOfCoins(payment.coins);
 
     // compute max spendable limits per each fee-per-kb
-    var maxSpendablesPerFeePerKb = function (e) {
-      var c = Transaction.filterUsableCoins(payment.coins, e[1] * 1000);
-      var s = Transaction.maxAvailableAmount(c, e[1] * 1000);
+    var maxSpendablesPerFeePerKb = function (fee, key) {
+      var c = Transaction.filterUsableCoins(payment.coins, Helpers.bytesToKb(fee));
+      var s = Transaction.maxAvailableAmount(c, Helpers.bytesToKb(fee));
       return s.amount;
     };
-    payment.maxSpendableAmounts = Object.entries(payment.fees).map(maxSpendablesPerFeePerKb);
-    payment.sweepFees = payment.maxSpendableAmounts.map(function (v) { return payment.balance - v; });
+
+    var sweepFees = function (fee, key) { return payment.balance - fee; };
+
+    payment.maxSpendableAmounts = mapObjIndexed(maxSpendablesPerFeePerKb, payment.fees);
+    payment.sweepFees = mapObjIndexed(sweepFees, payment.maxSpendableAmounts);
 
     // if amounts defined refresh computations
     if (Array.isArray(payment.amounts) && payment.amounts.length > 0) {
@@ -386,17 +390,6 @@ Payment.prebuild = function (absoluteFee) {
       } else {
         payment.extraFeeConsumption = 0;
       }
-
-      // compute absolute fee bounds for slow, regular, priority block confirmations
-      var toAbsoluteFee = function (e) {
-        var c = Transaction.filterUsableCoins(payment.coins, e[1] * 1000);
-        var s = Transaction.selectCoins(c, amounts, e[1] * 1000, false);
-        return s.fee;
-      };
-      payment.absoluteFeeBounds = Object.entries(payment.fees).map(toAbsoluteFee);
-
-      // estimation of confirmation in number of blocks
-      payment.confEstimation = Transaction.confirmationEstimation(payment.absoluteFeeBounds, payment.finalFee);
     }
 
     return Promise.resolve(payment);

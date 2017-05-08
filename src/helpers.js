@@ -225,6 +225,10 @@ Helpers.guessSize = function (nInputs, nOutputs) {
   return (nInputs * 148 + nOutputs * 34 + 10);
 };
 
+Helpers.bytesToKb = function (bytes) {
+  return bytes * 1000;
+};
+
 Helpers.guessFee = function (nInputs, nOutputs, feePerKb) {
   var sizeBytes = Helpers.guessSize(nInputs, nOutputs);
   return Math.ceil(feePerKb * (sizeBytes / 1000));

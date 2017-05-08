@@ -1,39 +1,6 @@
 {
-   "default":{
-      "fee":20000.00,
-      "surge":false,
-      "ok":true
-   },
-   "estimate":[
-      {
-         "fee":25000.0,
-         "surge":false,
-         "ok":true
-      },
-      {
-         "fee":20000.00,
-         "surge":false,
-         "ok":true
-      },
-      {
-         "fee":15000.0,
-         "surge":false,
-         "ok":true
-      },
-      {
-         "fee":10000.0,
-         "surge":false,
-         "ok":true
-      },
-      {
-         "fee":8000.0,
-         "surge":false,
-         "ok":true
-      },
-      {
-         "fee":5000.0,
-         "surge":false,
-         "ok":true
-      }
-   ]
+  "lowerLimit": 50,
+  "legacyCapped": 120,
+  "priority": 220,
+  "priorityCap": 300
 }

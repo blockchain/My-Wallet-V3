@@ -242,27 +242,21 @@ API.prototype.pushTx = function (txHex, note) {
 };
 
 API.prototype.getFees = function () {
-  // var handleNetworkError = function () {
-  //   return Promise.reject({ initial_error: 'Connectivity error, failed to send network request' });
-  // };
-  //
-  // var checkStatus = function (response) {
-  //   if (response.status >= 200 && response.status < 300) {
-  //     return response.json();
-  //   } else {
-  //     return response.text().then(Promise.reject.bind(Promise));
-  //   }
-  // };
+  var handleNetworkError = function () {
+    return Promise.reject({ initial_error: 'Connectivity error, failed to send network request' });
+  };
 
-  // return fetch(this.CHARTS_ROOT_URL + 'fees')
-  // return fetch('https://charts.prod.blockchain.info/fees')
-  //           .then(checkStatus)
-  //           .catch(handleNetworkError);
-  return Promise.resolve({
-    'lowerLimit': 50,
-    'legacyCapped': 120,
-    'priority': 220
-  });
+  var checkStatus = function (response) {
+    if (response.status >= 200 && response.status < 300) {
+      return response.json();
+    } else {
+      return response.text().then(Promise.reject.bind(Promise));
+    }
+  };
+
+  return fetch(this.API_ROOT_URL + 'mempool/fees?cors=true')
+            .then(checkStatus)
+            .catch(handleNetworkError);
 };
 
 API.prototype.exportHistory = function (active, currency, options) {
