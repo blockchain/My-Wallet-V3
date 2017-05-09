@@ -141,7 +141,6 @@ Transaction.inputCost = function (feePerKb) {
   return Math.ceil(feePerKb * 0.148);
 };
 Transaction.guessSize = function (nInputs, nOutputs) {
-  if (nInputs < 1 || nOutputs < 1) { return 0; }
   return (nInputs * 148 + nOutputs * 34 + 10);
 };
 

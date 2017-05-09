@@ -32,15 +32,15 @@ function Payment (wallet, payment) {
     amounts: [], // list of amounts to spend entered in the form
     to: [], // list of destinations entered in the form
     feeType: 'legacyCapped',
-    feePerKb: Helpers.bytesToKb(serverFeeFallback.legacyCapped), // default fee-per-kb used in basic send
+    feePerKb: Helpers.bytesToKb(serverFeeFallback.legacyCapped), // default fee-per-kb used
     extraFeeConsumption: 0, // if there is change consumption to fee will be reflected here
     sweepFee: 0,  // computed fee to sweep an account in basic send (depends on fee-per-kb)
     sweepAmount: 0, // computed max spendable amount depending on fee-per-kb
     balance: 0, // sum of all unspents values with any filtering     [ payment.sumOfCoins ]
     finalFee: 0, // final absolute fee that it is going to be used no matter how was obtained (advanced or regular send)
     changeAmount: 0, // final change
-    sweepFees: {lowerLimit: 0, legacyCapped: 0, priority: 0, priorityCap: 0}, // sweep absolute fee per each fee per kb (slow, regular, priority)
-    maxSpendableAmounts: {lowerLimit: 0, legacyCapped: 0, priority: 0, priorityCap: 0},  // max amount per each fee-per-kb
+    feesPerKb: {lowerLimit: 0, legacyCapped: 0, priority: 0, priorityCap: 0}, // each fee-per-kb (slow, regular, priority, priorityCap)
+    maxSpendableAmounts: {lowerLimit: 0, legacyCapped: 0, priority: 0, priorityCap: 0},  // max amount for each fee-per-kb
     txSize: 0, // transaciton size
     blockchainFee: 0,
     blockchainAddress: null,
@@ -76,6 +76,7 @@ Payment.prototype.from = function (origin, absoluteFee) {
 
 Payment.prototype.fee = function (absoluteFee) {
   this.then(Payment.prebuild(absoluteFee));
+  this.sideEffect(this.emit.bind(this, 'update'));
   return this;
 };
 
@@ -378,33 +379,30 @@ Payment.prebuild = function (absoluteFee) {
       return s.amount;
     };
 
-    var sweepFees = function (fee, key) { return payment.balance - fee; };
+    var feesPerKb = function (fee, key) { return payment.balance - fee; };
 
     payment.maxSpendableAmounts = mapObjIndexed(maxSpendablesPerFeePerKb, payment.fees);
-    payment.sweepFees = mapObjIndexed(sweepFees, payment.maxSpendableAmounts);
+    payment.feesPerKb = mapObjIndexed(feesPerKb, payment.maxSpendableAmounts);
 
-    // if amounts defined refresh computations
-    if (Array.isArray(payment.amounts) && payment.amounts.length > 0) {
-      // coin selection
-      var amounts = payment.blockchainFee > 0
-        ? payment.amounts.concat(payment.blockchainFee)
-        : payment.amounts;
-      var s = Helpers.isPositiveNumber(absoluteFee)
-        ? Transaction.selectCoins(payment.coins, amounts, absoluteFee, true)
-        : Transaction.selectCoins(usableCoins, amounts, payment.feePerKb, false);
-      payment.finalFee = s.fee;
-      payment.selectedCoins = s.coins;
-      payment.txSize = Transaction.guessSize(payment.selectedCoins.length, amounts.length + 1);
-      var c = Transaction.sumOfCoins(payment.selectedCoins) - amounts.reduce(Helpers.add, 0) - payment.finalFee;
-      payment.changeAmount = c > 0 ? c : 0;
+    // coin selection
+    var amounts = payment.blockchainFee > 0
+      ? payment.amounts.concat(payment.blockchainFee)
+      : payment.amounts;
+    var s = Helpers.isPositiveNumber(absoluteFee)
+      ? Transaction.selectCoins(payment.coins, amounts, absoluteFee, true)
+      : Transaction.selectCoins(usableCoins, amounts, payment.feePerKb, false);
+    payment.finalFee = s.fee;
+    payment.selectedCoins = s.coins;
+    payment.txSize = Transaction.guessSize(payment.selectedCoins.length, 2);
+    var c = Transaction.sumOfCoins(payment.selectedCoins) - amounts.reduce(Helpers.add, 0) - payment.finalFee;
+    payment.changeAmount = c > 0 ? c : 0;
 
-      // change consumption
-      if (payment.changeAmount > 0 && payment.changeAmount < dust) {
-        payment.extraFeeConsumption = payment.changeAmount;
-        payment.changeAmount = 0;
-      } else {
-        payment.extraFeeConsumption = 0;
-      }
+    // change consumption
+    if (payment.changeAmount > 0 && payment.changeAmount < dust) {
+      payment.extraFeeConsumption = payment.changeAmount;
+      payment.changeAmount = 0;
+    } else {
+      payment.extraFeeConsumption = 0;
     }
 
     return Promise.resolve(payment);
