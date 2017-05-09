@@ -210,6 +210,24 @@ MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHexExt
   });
 };
 
+MyWallet.checkForCompletedTrades = function (stringWallet, stringExternal, magicHashHexExternal, password, callback) {
+  MyWallet.loginFromJSON(stringWallet, stringExternal, magicHashHexExternal, password).then(() => {
+    let external = MyWallet.wallet.external;
+    let exchange = external.coinify.hasAccount
+      ? external.coinify : external.sfox.hasAccount
+      ? external.sfox : null;
+
+    if (exchange) {
+      exchange.debug = true;
+      let trades = exchange.trades;
+      if (trades.length) {
+        trades.forEach(t => t.watchAddress().then(() => callback(t)));
+        exchange._TradeClass._checkOnce(trades, trades[0]._delegate);
+      }
+    }
+  });
+};
+
 /* guid: the wallet identifier
    password: to decrypt the wallet (which happens in the browser)
    server credentials:
