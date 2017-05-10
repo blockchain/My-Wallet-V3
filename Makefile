@@ -2,12 +2,13 @@ all: clean node_modules semistandard test dist/my-wallet.js dist/my-wallet.min.j
 
 node_modules:
 	yarn
+	cd node_modules/sjcl || cd ../sjcl && ./configure --with-sha1 && make
 
 build: node_modules
 	npm run build
 
 test: build
-	# ./node_modules/karma/bin/karma start karma.conf.js --single-run
+	./node_modules/karma/bin/karma start karma.conf.js --single-run
 
 dist/my-wallet.js: build
 
