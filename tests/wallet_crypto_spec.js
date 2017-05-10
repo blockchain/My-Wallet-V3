@@ -1,10 +1,9 @@
 let proxyquire = require('proxyquireify')(require);
 
-let Crypto = {
-};
+let crypto = {};
 
 let stubs = {
-  'crypto': Crypto
+  'crypto': crypto
 };
 
 let WalletCrypto = proxyquire('../src/wallet-crypto', stubs);
@@ -12,15 +11,35 @@ let WalletCrypto = proxyquire('../src/wallet-crypto', stubs);
 describe('WalletCrypto', () => {
   let walletData = require('./data/wallet-data');
 
-  describe('stretchPassword()', () =>
-    it('should stretch a password', () => {
-      let password = '1234567890';
-      let salt = 'a633e05b567f64482d7620170bd45201';
-      let pbkdf2Iterations = 10;
+  describe('stretchPassword()', () => {
+    let password = '1234567890';
+    let salt = 'a633e05b567f64482d7620170bd45201';
+    let pbkdf2Iterations = 10;
+    let expected = '4be158806522094dd184bc9c093ea185c6a4ec003bdc6323108e3f5eeb7e388d';
 
-      expect(WalletCrypto.stretchPassword(password, salt, pbkdf2Iterations).toString('hex')).toBe('4be158806522094dd184bc9c093ea185c6a4ec003bdc6323108e3f5eeb7e388d');
-    })
-  );
+    let stretchPasswordSuite = (stretchPassword) => {
+      it('should stretch a password with a salt string', () => {
+        let stretched = stretchPassword(password, salt, pbkdf2Iterations);
+        expect(stretched.toString('hex')).toBe(expected);
+      });
+
+      it('should stretch a password with a salt buffer', () => {
+        let saltBuffer = new Buffer(salt, 'hex');
+        let stretched = stretchPassword(password, saltBuffer, pbkdf2Iterations);
+        expect(stretched.toString('hex')).toBe(expected);
+      });
+    };
+
+    describe('using sjcl', () => {
+      let WCrypto = proxyquire('../src/wallet-crypto', { crypto });
+      stretchPasswordSuite(WCrypto.stretchPassword);
+    });
+
+    describe('using crypto/crypto-browserify', () => {
+      let WCrypto = proxyquire('../src/wallet-crypto', { sjcl: null, crypto });
+      stretchPasswordSuite(WCrypto.stretchPassword);
+    });
+  });
 
   describe('decryptPasswordWithProcessedPin()', () =>
     it('should return the password', () => {
@@ -42,7 +61,7 @@ describe('WalletCrypto', () => {
           toString (type) { return `${res}|${type}`; }
         };
       });
-      spyOn(Crypto, 'randomBytes').and.callFake(() => 'random-bytes');
+      spyOn(crypto, 'randomBytes').and.callFake(() => 'random-bytes');
     });
 
     let data = JSON.stringify({hello: 'world'});
@@ -318,7 +337,7 @@ describe('WalletCrypto', () => {
     let v3 = walletData.v3[0];
 
     it('should encrypt a v3 wallet', () => {
-      spyOn(Crypto, 'randomBytes').and.callFake(bytes => {
+      spyOn(crypto, 'randomBytes').and.callFake(bytes => {
         let salt = new Buffer(v3.iv, 'hex');
         let padding = new Buffer(v3.pad, 'hex');
         return bytes === 16 ? salt : padding;
@@ -424,9 +443,9 @@ describe('WalletCrypto', () => {
       });
 
       it('should pad using random bytes', () => {
-        spyOn(Crypto, 'randomBytes').and.callThrough();
+        spyOn(crypto, 'randomBytes').and.callThrough();
         pad.Iso10126.pad(input, BLOCK_SIZE_BYTES);
-        expect(Crypto.randomBytes).toHaveBeenCalledWith(5);
+        expect(crypto.randomBytes).toHaveBeenCalledWith(5);
       });
 
       it('should unpad based on the last byte', () => {

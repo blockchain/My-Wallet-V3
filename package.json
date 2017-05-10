@@ -27,7 +27,7 @@
     "url": "https://github.com/blockchain/my-wallet-v3.git"
   },
   "scripts": {
-    "postinstall": "cd node_modules/sjcl || cd ../sjcl && ./configure --with-sha1 && make",
+    "postinstall": "(cd node_modules/sjcl || cd ../sjcl && ./configure --with-sha1 && make) || (echo 'SJCL was not configured'; exit 0)",
     "dist": "NODE_ENV=\"prod\" ./node_modules/.bin/webpack",
     "build": "./node_modules/.bin/webpack --progress",
     "build:watch": "./node_modules/.bin/webpack -w",
@@ -47,11 +47,13 @@
     "pbkdf2": "3.0.4",
     "ramda": "^0.22.1",
     "randombytes": "^2.0.1",
-    "sjcl": "1.0.3",
     "unorm": "^1.4.1",
     "ws": "2.0.*",
     "bitcoin-coinify-client": "~0.4.3",
     "bitcoin-sfox-client": "0.1.*"
+  },
+  "optionalDependencies": {
+    "sjcl": "1.0.3"
   },
   "devDependencies": {
     "babel-plugin-transform-object-assign": "~6.22.0",
