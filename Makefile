@@ -2,9 +2,11 @@ all: clean node_modules semistandard test dist/my-wallet.js dist/my-wallet.min.j
 
 node_modules:
 	yarn
-	cd node_modules/sjcl || cd ../sjcl && ./configure --with-sha1 && make
 
-build: node_modules
+node_modules/sjcl/sjcl.js: node_modules
+	cd node_modules/sjcl && ./configure --with-sha1 && make
+
+build: node_modules node_modules/sjcl/sjcl.js
 	npm run build
 
 test: build
