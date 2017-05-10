@@ -115,8 +115,8 @@ Payment.prototype.updateFees = function () {
   return this;
 };
 
-Payment.prototype.updateFeeType = function (feeType) {
-  this.payment = this.payment.then(Payment.updateFeeType(feeType));
+Payment.prototype.updateFeePerKb = function (fee) {
+  this.payment = this.payment.then(Payment.updateFeePerKb(fee));
   this.then(Payment.prebuild());
   return this;
 };
@@ -354,10 +354,9 @@ Payment.updateFees = function () {
   };
 };
 
-Payment.updateFeeType = function (feeType) {
+Payment.updateFeePerKb = function (fee) {
   return function (payment) {
-    payment.feeType = feeType;
-    payment.feePerKb = Helpers.bytesToKb(payment.fees[feeType]);
+    payment.feePerKb = Helpers.bytesToKb(fee);
     return Promise.resolve(payment);
   };
 };
