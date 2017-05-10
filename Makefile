@@ -3,19 +3,22 @@ all: clean node_modules semistandard test dist/my-wallet.js dist/my-wallet.min.j
 node_modules:
 	yarn
 
-build: node_modules
+node_modules/sjcl/sjcl.js: node_modules
+	cd node_modules/sjcl && ./configure --with-sha1 && make
+
+build: node_modules node_modules/sjcl/sjcl.js
 	npm run build
 
 test: build
-	# ./node_modules/karma/bin/karma start karma.conf.js --single-run
+	./node_modules/karma/bin/karma start karma.conf.js --single-run
 
 dist/my-wallet.js: build
 
 dist/my-wallet.min.js: node_modules
 	npm run dist
 
-semistandard:
-	node_modules/.bin/semistandard
+semistandard: node_modules
+	node_modules/.bin/semistandard --verbose | snazzy
 
 # git-changelog uses the most recent tag, which is not what we want after we
 # just tagged a release. Use the previous tag instead.

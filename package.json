@@ -27,7 +27,6 @@
     "url": "https://github.com/blockchain/my-wallet-v3.git"
   },
   "scripts": {
-    "postinstall": "cd node_modules/sjcl || cd ../sjcl && ./configure --with-sha1 && make",
     "dist": "NODE_ENV=\"prod\" ./node_modules/.bin/webpack",
     "build": "./node_modules/.bin/webpack --progress",
     "build:watch": "./node_modules/.bin/webpack -w",
@@ -69,10 +68,10 @@
     "istanbul": "~0.4.5",
     "jasmine-core": "^2.2.0",
     "jasmine-es6-promise-matchers": "^2.0.1",
-    "karma": "0.13.*",
+    "karma": "1.7.*",
     "karma-browserify": "5.1.*",
     "karma-coverage": "1.1.*",
-    "karma-jasmine": "1.0.*",
+    "karma-jasmine": "1.1.*",
     "karma-osx-reporter": "0.2.*",
     "karma-phantomjs-launcher": "1.0.*",
     "phantomjs-prebuilt": "2.1.*",
@@ -80,7 +79,7 @@
     "semistandard": "8.*",
     "string-replace-webpack-plugin": "0.0.5",
     "watchify": "~3.9.0",
-    "webpack": "2.2.1"
+    "webpack": "2.5.*"
   },
   "semistandard": {
     "ignore": [],
