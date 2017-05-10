@@ -15,8 +15,8 @@ dist/my-wallet.js: build
 dist/my-wallet.min.js: node_modules
 	npm run dist
 
-semistandard:
-	node_modules/.bin/semistandard
+semistandard: node_modules
+	node_modules/.bin/semistandard --verbose | snazzy
 
 # git-changelog uses the most recent tag, which is not what we want after we
 # just tagged a release. Use the previous tag instead.
