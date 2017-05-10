@@ -39,7 +39,7 @@ function Payment (wallet, payment) {
     balance: 0, // sum of all unspents values with any filtering     [ payment.sumOfCoins ]
     finalFee: 0, // final absolute fee that it is going to be used no matter how was obtained (advanced or regular send)
     changeAmount: 0, // final change
-    feesPerKb: {lowerLimit: 0, legacyCapped: 0, priority: 0, priorityCap: 0}, // each fee-per-kb (slow, regular, priority, priorityCap)
+    maxFees: {lowerLimit: 0, legacyCapped: 0, priority: 0, priorityCap: 0}, // each fee-per-kb (slow, regular, priority, priorityCap)
     maxSpendableAmounts: {lowerLimit: 0, legacyCapped: 0, priority: 0, priorityCap: 0},  // max amount for each fee-per-kb
     txSize: 0, // transaciton size
     blockchainFee: 0,
@@ -379,10 +379,10 @@ Payment.prebuild = function (absoluteFee) {
       return s.amount;
     };
 
-    var feesPerKb = function (fee, key) { return payment.balance - fee; };
+    var maxFees = function (fee, key) { return payment.balance - fee; };
 
     payment.maxSpendableAmounts = mapObjIndexed(maxSpendablesPerFeePerKb, payment.fees);
-    payment.feesPerKb = mapObjIndexed(feesPerKb, payment.maxSpendableAmounts);
+    payment.maxFees = mapObjIndexed(maxFees, payment.maxSpendableAmounts);
 
     // coin selection
     var amounts = payment.blockchainFee > 0
