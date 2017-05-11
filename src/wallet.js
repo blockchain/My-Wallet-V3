@@ -126,7 +126,9 @@ MyWallet.getWallet = function (success, error) {
     MyWallet.decryptAndInitializeWallet(function () {
       MyWallet.wallet.getHistory();
 
-      if (success) success();
+      MyWallet.wallet.loadExternal().then(function () {
+        if (success) success();
+      });
     }, function () {
       // When re-fetching the wallet after a remote update, if we can't decrypt
       // it, logout for safety.
