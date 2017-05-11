@@ -1,7 +1,7 @@
 all: clean node_modules semistandard test dist/my-wallet.js dist/my-wallet.min.js changelog
 
 node_modules:
-	yarn
+	yarn --ignore-engines
 
 node_modules/sjcl/sjcl.js: node_modules
 	cd node_modules/sjcl && ./configure --with-sha1 && make
