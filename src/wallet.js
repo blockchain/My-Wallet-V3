@@ -223,9 +223,9 @@ MyWallet.checkForCompletedTrades = function (stringWallet, stringExternal, magic
       exchange.debug = true;
       let trades = exchange.trades;
       if (trades.length) {
-        let watchTrade = (t) => t.watchAddress().then(() => callback(t));
-        trades.filter(t => !t.bitcoinReceived).forEach(watchTrade);
-        exchange._TradeClass._checkOnce(trades, exchange._delegate).then(() => {
+        let pendingTrades = trades.filter(t => !t.bitcoinReceived);
+        pendingTrades.forEach((t) => t.watchAddress().then(() => callback(t)));
+        exchange._TradeClass._checkOnce(pendingTrades, exchange._delegate).then(() => {
           external.save();
         });
       }
