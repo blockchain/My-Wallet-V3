@@ -321,19 +321,23 @@ function decryptDataWithPassword (data, password, iterations, options) {
   return res;
 }
 
-function stretchPassword (password, salt, iterations, keylen) {
-  assert(salt, 'salt missing');
-  assert(password, 'password missing');
-  assert(iterations, 'iterations missing');
+function stretchPassword (password, salt, iterations, keyLenBits, algorithm) {
+  var supportedAlgorithms = [ALGO.SHA1, ALGO.SHA256];
+  algorithm = algorithm || ALGO.SHA1;
+
+  assert(salt != null, 'salt buffer missing');
+  assert(password != null, 'password string missing');
+  assert(iterations != null, 'iterations missing');
+  assert(supportedAlgorithms.indexOf(algorithm) > -1, 'optional algorithm must be one of: ' + supportedAlgorithms.join(' '));
   assert(typeof (sjcl.hash.sha1) === 'function', 'missing sha1, make sure sjcl is configured correctly');
 
   var hmacSHA1 = function (key) {
-    var hasher = new sjcl.misc.hmac(key, sjcl.hash.sha1); // eslint-disable-line new-cap
+    var hasher = new sjcl.misc.hmac(key, sjcl.hash[algorithm]); // eslint-disable-line new-cap
     this.encrypt = hasher.encrypt.bind(hasher);
   };
 
   salt = sjcl.codec.hex.toBits(salt.toString('hex'));
-  var stretched = sjcl.misc.pbkdf2(password, salt, iterations, keylen || 256, hmacSHA1);
+  var stretched = sjcl.misc.pbkdf2(password, salt, iterations, keyLenBits || 256, hmacSHA1);
 
   return new Buffer(sjcl.codec.hex.fromBits(stretched), 'hex');
 }
@@ -541,15 +545,11 @@ function scrypt (passwd, salt, N, r, p, dkLen, callback) {
   if (N > MAX_VALUE / 128 / r) throw Error('Parameter N is too large');
   if (r > MAX_VALUE / 128 / p) throw Error('Parameter r is too large');
 
-  if (!Buffer.isBuffer(passwd)) {
-    passwd = new Buffer(passwd, 'utf8');
-  }
-
   if (!Buffer.isBuffer(salt)) {
     salt = new Buffer(salt, 'utf8');
   }
 
-  var B = pbkdf2(passwd, salt, 1, (p * 128 * r), ALGO.SHA256);
+  var B = module.exports.stretchPassword(passwd, salt, 1, (p * 128 * r) * 8, ALGO.SHA256);
 
   var XY = [];
   var V = [];
@@ -558,7 +558,7 @@ function scrypt (passwd, salt, N, r, p, dkLen, callback) {
     smix(B, i * 128 * r, r, N, V, XY);
   }
 
-  callback(pbkdf2(passwd, B, 1, dkLen, ALGO.SHA256));
+  callback(module.exports.stretchPassword(passwd, B, 1, dkLen * 8, ALGO.SHA256));
 }
 
 module.exports = {
