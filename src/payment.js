@@ -476,6 +476,10 @@ Payment.sign = function (password) {
 Payment.publish = function () {
   return function (payment) {
     var success = function () {
+      if (Helpers.isArray(payment.to) && Helpers.isNumber(payment.to[0])) {
+        var myacc = MyWallet.wallet.hdwallet.accounts[payment.to[0]];
+        myacc.incrementReceiveIndex();
+      }
       payment.txid = payment.transaction.getId();
       return payment;
     };
