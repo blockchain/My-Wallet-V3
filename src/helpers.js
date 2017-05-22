@@ -225,8 +225,8 @@ Helpers.guessSize = function (nInputs, nOutputs) {
   return (nInputs * 148 + nOutputs * 34 + 10);
 };
 
-Helpers.bytesToKb = function (bytes) {
-  return bytes * 1000;
+Helpers.toFeePerKb = function (fee) {
+  return fee * 1000;
 };
 
 Helpers.guessFee = function (nInputs, nOutputs, feePerKb) {

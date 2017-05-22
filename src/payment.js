@@ -31,8 +31,7 @@ function Payment (wallet, payment) {
     from: null, // origin
     amounts: [], // list of amounts to spend entered in the form
     to: [], // list of destinations entered in the form
-    feeType: 'legacyCapped',
-    feePerKb: Helpers.bytesToKb(serverFeeFallback.legacyCapped), // default fee-per-kb used
+    feePerKb: Helpers.toFeePerKb(serverFeeFallback.legacyCapped), // default fee-per-kb used
     extraFeeConsumption: 0, // if there is change consumption to fee will be reflected here
     sweepFee: 0,  // computed fee to sweep an account in basic send (depends on fee-per-kb)
     sweepAmount: 0, // computed max spendable amount depending on fee-per-kb
@@ -341,7 +340,7 @@ Payment.updateFees = function () {
       function (fees) {
         payment.fees = fees;
         payment.fees.lowerLimit = 50;
-        payment.feePerKb = Helpers.bytesToKb(fees.legacyCapped);
+        payment.feePerKb = Helpers.toFeePerKb(fees.legacyCapped);
         return payment;
       }
     ).catch(
@@ -356,7 +355,7 @@ Payment.updateFees = function () {
 
 Payment.updateFeePerKb = function (fee) {
   return function (payment) {
-    payment.feePerKb = Helpers.bytesToKb(fee);
+    payment.feePerKb = Helpers.toFeePerKb(fee);
     return Promise.resolve(payment);
   };
 };
@@ -373,8 +372,8 @@ Payment.prebuild = function (absoluteFee) {
 
     // compute max spendable limits per each fee-per-kb
     var maxSpendablesPerFeePerKb = function (fee, key) {
-      var c = Transaction.filterUsableCoins(payment.coins, Helpers.bytesToKb(fee));
-      var s = Transaction.maxAvailableAmount(c, Helpers.bytesToKb(fee));
+      var c = Transaction.filterUsableCoins(payment.coins, Helpers.toFeePerKb(fee));
+      var s = Transaction.maxAvailableAmount(c, Helpers.toFeePerKb(fee));
       return s.amount;
     };
 
@@ -392,7 +391,7 @@ Payment.prebuild = function (absoluteFee) {
       : Transaction.selectCoins(usableCoins, amounts, payment.feePerKb, false);
     payment.finalFee = s.fee;
     payment.selectedCoins = s.coins;
-    payment.txSize = Transaction.guessSize(payment.selectedCoins.length, 2);
+    payment.txSize = Transaction.guessSize(payment.selectedCoins.length, (amounts.length || 1) + 1);
     var c = Transaction.sumOfCoins(payment.selectedCoins) - amounts.reduce(Helpers.add, 0) - payment.finalFee;
     payment.changeAmount = c > 0 ? c : 0;
 
