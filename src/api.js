@@ -254,7 +254,7 @@ API.prototype.getFees = function () {
     }
   };
 
-  return fetch(this.API_ROOT_URL + 'mempool/fees?cors=true')
+  return fetch(this.API_ROOT_URL + 'mempool/fees')
             .then(checkStatus)
             .catch(handleNetworkError);
 };
