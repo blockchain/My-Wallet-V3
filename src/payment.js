@@ -18,10 +18,12 @@ function Payment (wallet, payment) {
   this._wallet = wallet;
 
   var serverFeeFallback = {
-    'lowerLimit': 50,
-    'legacyCapped': 120,
-    'priority': 220,
-    'priorityCap': 300
+    'limits': {
+      'min': 50,
+      'max': 450
+    },
+    'regular': 240,
+    'priority': 300
   };
 
   var initialState = {
@@ -31,15 +33,15 @@ function Payment (wallet, payment) {
     from: null, // origin
     amounts: [], // list of amounts to spend entered in the form
     to: [], // list of destinations entered in the form
-    feePerKb: Helpers.toFeePerKb(serverFeeFallback.legacyCapped), // default fee-per-kb used
+    feePerKb: Helpers.toFeePerKb(serverFeeFallback.regular), // default fee-per-kb used
     extraFeeConsumption: 0, // if there is change consumption to fee will be reflected here
     sweepFee: 0,  // computed fee to sweep an account in basic send (depends on fee-per-kb)
     sweepAmount: 0, // computed max spendable amount depending on fee-per-kb
     balance: 0, // sum of all unspents values with any filtering     [ payment.sumOfCoins ]
     finalFee: 0, // final absolute fee that it is going to be used no matter how was obtained (advanced or regular send)
     changeAmount: 0, // final change
-    maxFees: {lowerLimit: 0, legacyCapped: 0, priority: 0, priorityCap: 0}, // each fee-per-kb (slow, regular, priority, priorityCap)
-    maxSpendableAmounts: {lowerLimit: 0, legacyCapped: 0, priority: 0, priorityCap: 0},  // max amount for each fee-per-kb
+    maxFees: {limits: { 'min': 0, 'max': 0 }, regular: 0, priority: 0}, // each fee-per-kb (regular, priority)
+    maxSpendableAmounts: {limits: { 'min': 0, 'max': 0 }, regular: 0, priority: 0},  // max amount for each fee-per-kb
     txSize: 0, // transaciton size
     blockchainFee: 0,
     blockchainAddress: null,
@@ -339,8 +341,7 @@ Payment.updateFees = function () {
     return API.getFees().then(
       function (fees) {
         payment.fees = fees;
-        payment.fees.lowerLimit = 50;
-        payment.feePerKb = Helpers.toFeePerKb(fees.legacyCapped);
+        payment.feePerKb = Helpers.toFeePerKb(fees.regular);
         return payment;
       }
     ).catch(
