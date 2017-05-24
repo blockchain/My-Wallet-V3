@@ -6,7 +6,7 @@ JavaScript Model for Blockchain.info wallet.
 
 ```sh
 npm install
-npm run build
+grunt build
 ```
 
 ## Tests
@@ -20,7 +20,7 @@ npm test
 Watch files and re-build
 
 ```sh
-npm run build:watch
+grunt
 ```
 
 ## Clean
@@ -28,7 +28,7 @@ npm run build:watch
 Clean generated files:
 
 ```sh
-make clean
+grunt clean
 ```
 
 ## Getting Started
@@ -99,6 +99,23 @@ MyWallet.get_history(_successFun, _errorFun);
 ```
 
 `get_history` will trigger the `did_multiaddr` event on completion, so the wallet stats and display can be updated.
+
+## Distribution
+
+Run `GITHUB_USER=... GITHUB_PASSWORD=... grunt dist` to check all dependencies against `dependency-whitelist.json` and generate `my-wallet.min.js``.
+
+If package.json contains a version like "1.2.*", the latest version is 1.2.3, but the latest whitelisted version is 1.2.2 then it will use 1.2.2 and show a warning. This also applies to dependencies! Even if you specificy a package version like 1.2.*, if that package depends on an another package and specifies a specific version that's not whitelist, the script will abort.
+
+## Adding a browserified dependency
+
+1. `npm install newpackage --save`
+2. Add the require where needed
+3. `npm install`
+
+### Whitelist dependencies
+
+1. Add the tagged version and the commit hash to dependency-whitelist.json.
+2. Run `grunt dist`
 
 ## Security
 
