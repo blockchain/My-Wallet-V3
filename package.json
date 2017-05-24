@@ -39,7 +39,7 @@
   "dependencies": {
     "bigi": "1.4.*",
     "bip39": "2.1.*",
-    "bitcoin-coinify-client": "^0.6.1",
+    "bitcoin-coinify-client": "^0.6.2",
     "bitcoin-sfox-client": "^0.1.11",
     "bitcoinjs-lib": "2.1.*",
     "bs58": "2.0.*",
