@@ -126,7 +126,9 @@ MyWallet.getWallet = function (success, error) {
     MyWallet.decryptAndInitializeWallet(function () {
       MyWallet.wallet.getHistory();
 
-      if (success) success();
+      MyWallet.wallet.loadExternal().then(function () {
+        if (success) success();
+      });
     }, function () {
       // When re-fetching the wallet after a remote update, if we can't decrypt
       // it, logout for safety.
@@ -197,23 +199,38 @@ MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHexExt
   assert(stringWallet, 'Wallet JSON required');
 
   // If metadata service returned 404, do not pass in a string.
-  var externalJSON = null;
-
-  if (stringExternal) {
-    externalJSON = JSON.parse(stringExternal);
-  }
-
   var walletJSON = JSON.parse(stringWallet);
+  var externalJSON = stringExternal ? JSON.parse(stringExternal) : null;
 
   MyWallet.wallet = new Wallet(walletJSON);
   WalletStore.unsafeSetPassword(password);
-  MyWallet.wallet.loadMetadata({
+  setIsInitialized();
+  return MyWallet.wallet.loadMetadata({
     external: externalJSON
   }, {
     external: magicHashHexExternal ? Buffer.from(magicHashHexExternal, 'hex') : null
   });
-  setIsInitialized();
-  return true;
+};
+
+MyWallet.checkForCompletedTrades = function (stringWallet, stringExternal, magicHashHexExternal, password, callback) {
+  MyWallet.loginFromJSON(stringWallet, stringExternal, magicHashHexExternal, password).then(() => {
+    let external = MyWallet.wallet.external;
+    let exchange = external.coinify.hasAccount
+      ? external.coinify : external.sfox.hasAccount
+      ? external.sfox : null;
+
+    if (exchange) {
+      exchange.debug = true;
+      let trades = exchange.trades;
+      if (trades.length) {
+        let pendingTrades = trades.filter(t => !t.bitcoinReceived);
+        pendingTrades.forEach((t) => t.watchAddress().then(() => callback(t)));
+        exchange._TradeClass._checkOnce(pendingTrades, exchange._delegate).then(() => {
+          external.save();
+        });
+      }
+    }
+  });
 };
 
 /* guid: the wallet identifier
