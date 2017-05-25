@@ -132,41 +132,40 @@ describe('Helpers', () => {
   });
 
   describe('asyncOnce', () => {
-    it('should only execute once', done => {
-      let observer = {
-        func () {},
-        before () {}
+    let observer;
+
+    beforeEach(() => {
+      jasmine.clock().install();
+      observer = {
+        func: jasmine.createSpy('func'),
+        before: jasmine.createSpy('before')
       };
-
-      spyOn(observer, 'func');
-      spyOn(observer, 'before');
-
-      let async = Helpers.asyncOnce(observer.func, 20, observer.before);
-
-      async();
-      async();
-      async();
-      async();
-
-      let result = () => {
-        expect(observer.func).toHaveBeenCalledTimes(1);
-        expect(observer.before).toHaveBeenCalledTimes(4);
-
-        done();
-      };
-
-      return setTimeout(result, 1000);
     });
 
-    it('should work with arguments', done => {
-      let observer = {
-        func () {},
-        before () {}
-      };
+    afterEach(() => {
+      jasmine.clock().uninstall();
+    });
 
-      spyOn(observer, 'func');
-      spyOn(observer, 'before');
+    it('should only execute once', () => {
+      let async = Helpers.asyncOnce(observer.func, 20, observer.before);
 
+      async();
+      async();
+      async();
+      async();
+
+      jasmine.clock().tick(10);
+
+      expect(observer.func).toHaveBeenCalledTimes(0);
+      expect(observer.before).toHaveBeenCalledTimes(4);
+
+      jasmine.clock().tick(10);
+
+      expect(observer.func).toHaveBeenCalledTimes(1);
+      expect(observer.before).toHaveBeenCalledTimes(4);
+    });
+
+    it('should work with arguments', () => {
       let async = Helpers.asyncOnce(observer.func, 20, observer.before);
 
       async(1);
@@ -174,15 +173,16 @@ describe('Helpers', () => {
       async(1);
       async(1);
 
-      let result = () => {
-        expect(observer.func).toHaveBeenCalledTimes(1);
-        expect(observer.func).toHaveBeenCalledWith(1);
-        expect(observer.before).toHaveBeenCalledTimes(4);
+      jasmine.clock().tick(10);
 
-        done();
-      };
+      expect(observer.func).toHaveBeenCalledTimes(0);
+      expect(observer.before).toHaveBeenCalledTimes(4);
 
-      return setTimeout(result, 1000);
+      jasmine.clock().tick(10);
+
+      expect(observer.func).toHaveBeenCalledTimes(1);
+      expect(observer.func).toHaveBeenCalledWith(1);
+      expect(observer.before).toHaveBeenCalledTimes(4);
     });
   });
 
