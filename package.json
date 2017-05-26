@@ -45,7 +45,7 @@
     "bs58": "2.0.*",
     "es6-promise": "^3.0.2",
     "isomorphic-fetch": "^2.2.1",
-    "pbkdf2": "3.0.4",
+    "pbkdf2": "^3.0.12",
     "ramda": "^0.22.1",
     "randombytes": "^2.0.1",
     "sjcl": "1.0.3",

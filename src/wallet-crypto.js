@@ -2,6 +2,7 @@
 
 var crypto = require('crypto');
 var assert = require('assert');
+var { pbkdf2Sync } = require('pbkdf2');
 
 var SUPPORTED_ENCRYPTION_VERSION = 3;
 var SALT_BYTES = 16;
@@ -333,7 +334,7 @@ function stretchPassword (password, salt, iterations, keyLenBits) {
 
 function pbkdf2 (password, salt, iterations, keyLenBytes, algorithm) {
   algorithm = algorithm || ALGO.SHA1;
-  return crypto.pbkdf2Sync(password, salt, iterations, keyLenBytes, algorithm);
+  return pbkdf2Sync(password, salt, iterations, keyLenBytes, algorithm);
 }
 
 function hashNTimes (data, iterations) {
