@@ -2,7 +2,7 @@
 
 var crypto = require('crypto');
 var assert = require('assert');
-var { pbkdf2Sync } = require('pbkdf2');
+var { pbkdf2: pbkdf2Async, pbkdf2Sync } = require('pbkdf2');
 
 var SUPPORTED_ENCRYPTION_VERSION = 3;
 var SALT_BYTES = 16;
@@ -237,12 +237,66 @@ function cipherFunction (password, sharedKey, pbkdf2Iterations, operation) {
   }
 }
 
+function cipherFunctionAsync (password, sharedKey, iterations, operation) {
+  let tasks = [];
+  let hasStarted = false;
+
+  let cipherFunction = (x) => x;
+  if (operation === 'enc') {
+    cipherFunction = (msg, callback) => encryptSecretWithSecondPasswordAsync(msg, password, sharedKey, iterations, callback);
+  }
+  if (operation === 'dec') {
+    cipherFunction = (msg, callback) => decryptSecretWithSecondPasswordAsync(msg, password, sharedKey, iterations, callback);
+  }
+
+  return {
+    cipher (data) {
+      if (hasStarted) {
+        throw new Error('cipher called after start');
+      }
+
+      var cipherResult = new Promise((resolve, reject) => {
+        tasks.push(() => {
+          cipherFunction(data, (error, result) => {
+            error ? reject(error) : resolve(result);
+          });
+          return cipherResult;
+        });
+      });
+
+      return cipherResult;
+    },
+    start (progressCallback) {
+      hasStarted = true;
+
+      let complete = 0;
+      let total = tasks.length;
+      let runningTasks = tasks.map((task) => task());
+
+      runningTasks.forEach((p) => p.then(() => {
+        complete++;
+        progressCallback({ complete, total });
+      }));
+
+      return Promise.all(runningTasks);
+    }
+  };
+}
+
 function encryptSecretWithSecondPassword (base58, password, sharedKey, pbkdf2Iterations) {
   return encryptDataWithPassword(base58, sharedKey + password, pbkdf2Iterations);
 }
 
+function encryptSecretWithSecondPasswordAsync (base58, password, sharedKey, pbkdf2Iterations, callback) {
+  return encryptDataWithPasswordAsync(base58, sharedKey + password, pbkdf2Iterations, callback);
+}
+
 function decryptSecretWithSecondPassword (secret, password, sharedKey, pbkdf2Iterations) {
   return decryptDataWithPassword(secret, sharedKey + password, pbkdf2Iterations);
+}
+
+function decryptSecretWithSecondPasswordAsync (secret, password, sharedKey, pbkdf2Iterations, callback) {
+  return decryptDataWithPasswordAsync(secret, sharedKey + password, pbkdf2Iterations, {}, callback);
 }
 
 function decryptPasswordWithProcessedPin (data, password, pbkdf2Iterations) {
@@ -275,6 +329,17 @@ function encryptDataWithPassword (data, password, iterations) {
   var key = module.exports.stretchPassword(password, salt, iterations, KEY_BIT_LEN);
 
   return encryptDataWithKey(data, key, salt);
+}
+
+function encryptDataWithPasswordAsync (data, password, iterations, callback) {
+  assert(data, 'data missing');
+  assert(password, 'password missing');
+  assert(iterations, 'iterations missing');
+
+  var salt = crypto.randomBytes(SALT_BYTES);
+  module.exports.stretchPasswordAsync(password, salt, iterations, KEY_BIT_LEN, (error, key) => {
+    callback(error, key ? encryptDataWithKey(data, key, salt) : null);
+  });
 }
 
 // payload: Base64 encoded concatenated payload + iv
@@ -321,6 +386,23 @@ function decryptDataWithPassword (data, password, iterations, options) {
   return res;
 }
 
+function decryptDataWithPasswordAsync (data, password, iterations, options, callback) {
+  assert(data, 'data missing');
+  assert(password, 'password missing');
+  assert(iterations, 'iterations missing');
+
+  var dataHex = new Buffer(data, 'base64');
+
+  var iv = dataHex.slice(0, SALT_BYTES);
+  var payload = dataHex.slice(SALT_BYTES);
+
+  //  AES initialization vector is also used as the salt in password stretching
+  var salt = iv;
+  module.exports.stretchPasswordAsync(password, salt, iterations, KEY_BIT_LEN, (error, key) => {
+    callback(error, key ? module.exports.decryptBufferWithKey(payload, iv, key, options) : null);
+  });
+}
+
 function stretchPassword (password, salt, iterations, keyLenBits) {
   assert(salt, 'salt missing');
   assert(typeof password === 'string', 'password string required');
@@ -330,6 +412,17 @@ function stretchPassword (password, salt, iterations, keyLenBits) {
   var saltBuffer = new Buffer(salt, 'hex');
   var keyLenBytes = (keyLenBits || 256) / 8;
   return pbkdf2(password, saltBuffer, iterations, keyLenBytes, ALGO.SHA1);
+}
+
+function stretchPasswordAsync (password, salt, iterations, keyLenBits, callback) {
+  assert(salt, 'salt missing');
+  assert(typeof password === 'string', 'password string required');
+  assert(typeof iterations === 'number' && !isNaN(iterations), 'iterations number required');
+  assert(keyLenBits == null || keyLenBits % 8 === 0, 'key length must be evenly divisible into bytes');
+
+  var saltBuffer = new Buffer(salt, 'hex');
+  var keyLenBytes = (keyLenBits || 256) / 8;
+  pbkdf2Async(password, saltBuffer, iterations, keyLenBytes, ALGO.SHA1, callback);
 }
 
 function pbkdf2 (password, salt, iterations, keyLenBytes, algorithm) {
@@ -560,6 +653,7 @@ module.exports = {
   decryptWallet: decryptWallet,
   decryptWalletSync: decryptWalletSync,
   cipherFunction: cipherFunction,
+  cipherFunctionAsync: cipherFunctionAsync,
   encryptDataWithKey: encryptDataWithKey,
   decryptBufferWithKey: decryptBufferWithKey,
   decryptDataWithKey: decryptDataWithKey,
@@ -569,6 +663,7 @@ module.exports = {
   decrypt: decryptDataWithPassword,
   encrypt: encryptDataWithPassword,
   stretchPassword: stretchPassword,
+  stretchPasswordAsync: stretchPasswordAsync,
   pbkdf2: pbkdf2,
   hashNTimes: hashNTimes,
   sha256: sha256,
