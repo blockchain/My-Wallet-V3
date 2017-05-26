@@ -10,7 +10,7 @@ build: node_modules node_modules/sjcl/sjcl.js
 	npm run build
 
 test: build
-	# ./node_modules/karma/bin/karma start karma.conf.js --single-run
+	./node_modules/karma/bin/karma start karma.conf.js --single-run
 
 dist/my-wallet.js: build
 
