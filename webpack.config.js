@@ -1,11 +1,11 @@
-
+const path = require('path');
 let webpack = require('webpack');
 let StringReplacePlugin = require('string-replace-webpack-plugin');
 
 let config = {
   entry: './index.js',
   output: {
-    path: 'dist',
+    path: path.resolve(__dirname, 'dist'),
     filename: 'my-wallet.js',
     library: 'Blockchain',
     libraryTarget: 'var'

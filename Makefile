@@ -1,9 +1,12 @@
 all: clean node_modules semistandard test dist/my-wallet.js dist/my-wallet.min.js changelog
 
 node_modules:
-	npm install
+	yarn --ignore-engines
 
-build: node_modules
+node_modules/sjcl/sjcl.js: node_modules
+	cd node_modules/sjcl && ./configure --with-sha1 && make
+
+build: node_modules node_modules/sjcl/sjcl.js
 	npm run build
 
 test: build
@@ -13,10 +16,9 @@ dist/my-wallet.js: build
 
 dist/my-wallet.min.js: node_modules
 	npm run dist
-	npm shrinkwrap --dev
 
-semistandard:
-	node_modules/.bin/semistandard
+semistandard: node_modules
+	node_modules/.bin/semistandard --verbose | snazzy
 
 # git-changelog uses the most recent tag, which is not what we want after we
 # just tagged a release. Use the previous tag instead.
@@ -32,5 +34,5 @@ changelog: node_modules
 	node_modules/git-changelog/tasks/command.js $(TAG_ARG)
 
 clean:
-	rm -rf dist node_modules npm-shrinkwrap.json Changelog.md
+	rm -rf dist node_modules Changelog.md
 	npm cache clean
