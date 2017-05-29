@@ -42,7 +42,7 @@ function Payment (wallet, payment) {
     changeAmount: 0, // final change
     maxFees: {limits: { 'min': 0, 'max': 0 }, regular: 0, priority: 0}, // each fee-per-kb (regular, priority)
     maxSpendableAmounts: {limits: { 'min': 0, 'max': 0 }, regular: 0, priority: 0},  // max amount for each fee-per-kb
-    txSize: 0, // transaciton size
+    txSize: 0, // transaction size
     blockchainFee: 0,
     blockchainAddress: null,
     serviceChargeOptions: {}

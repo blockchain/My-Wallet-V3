@@ -1,6 +1,8 @@
 {
-  "lowerLimit": 50,
-  "legacyCapped": 120,
-  "priority": 220,
-  "priorityCap": 300
+  "limits": {
+    "min": 50,
+    "max": 450
+  },
+  "regular": 240,
+  "priority": 300
 }
