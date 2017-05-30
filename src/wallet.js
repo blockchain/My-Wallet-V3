@@ -126,7 +126,7 @@ MyWallet.getWallet = function (success, error) {
     MyWallet.decryptAndInitializeWallet(function () {
       MyWallet.wallet.getHistory();
 
-      MyWallet.wallet.loadExternal().then(function () {
+      MyWallet.wallet.loadMetadata().then(function () {
         if (success) success();
       });
     }, function () {
