@@ -324,7 +324,7 @@ function decryptDataWithPassword (data, password, iterations, options) {
 function stretchPassword (password, salt, iterations, keyLenBits) {
   assert(salt, 'salt missing');
   assert(password && typeof password === 'string', 'password string required');
-  assert(typeof iterations === 'number' && !isNaN(iterations), 'iterations number required');
+  assert(typeof iterations === 'number' && iterations > 0, 'positive iterations number required');
   assert(keyLenBits == null || keyLenBits % 8 === 0, 'key length must be evenly divisible into bytes');
 
   var saltBuffer = new Buffer(salt, 'hex');
