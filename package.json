@@ -21,12 +21,14 @@
     "Kevin Woudini",
     "Justin Tormey"
   ],
-  "main": "index.js",
+  "main": "lib/index.js",
+  "module": "src/index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/blockchain/my-wallet-v3.git"
   },
   "scripts": {
+    "prepublish": "node_modules/.bin/babel src --presets babel-preset-es2015 --out-dir lib",
     "dist": "NODE_ENV=\"prod\" ./node_modules/.bin/webpack",
     "build": "./node_modules/.bin/webpack --progress",
     "build:watch": "./node_modules/.bin/webpack -w",
@@ -52,6 +54,7 @@
     "ws": "2.0.*"
   },
   "devDependencies": {
+    "babel-cli": "~6.24.0",
     "babel-loader": "6.2.10",
     "babel-plugin-transform-object-assign": "~6.22.0",
     "babel-polyfill": "6.16.*",
