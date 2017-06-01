@@ -180,12 +180,14 @@ MyWallet.decryptAndInitializeWallet = function (success, error, decryptSuccess, 
   );
 };
 
-// used in the frontend
+const PAIRING_CODE_PBKDF2_ITERATIONS = 10;
+
+// Used in the frontend / ios
 MyWallet.makePairingCode = function (success, error) {
   try {
     API.securePostCallbacks('wallet', { method: 'pairing-encryption-password' }, function (encryptionPhrase) {
       var pwHex = new Buffer(WalletStore.getPassword()).toString('hex');
-      var encrypted = WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + pwHex, encryptionPhrase, 10);
+      var encrypted = WalletCrypto.encrypt(MyWallet.wallet.sharedKey + '|' + pwHex, encryptionPhrase, PAIRING_CODE_PBKDF2_ITERATIONS);
       success('1|' + MyWallet.wallet.guid + '|' + encrypted);
     }, function (e) {
       error(e);
@@ -193,6 +195,45 @@ MyWallet.makePairingCode = function (success, error) {
   } catch (e) {
     error(e);
   }
+};
+
+MyWallet.parsePairingCode = function (pairingCode) {
+  if (pairingCode == null || pairingCode.length === 0) {
+    return Promise.reject('Invalid Pairing QR Code');
+  }
+
+  let [version, guid, encrypted] = pairingCode.split('|');
+
+  if (version !== '1') {
+    return Promise.reject('Invalid Pairing Version Code ' + version);
+  }
+
+  if (guid == null || guid.length !== 36) {
+    return Promise.reject('Invalid Pairing QR Code, GUID is invalid');
+  }
+
+  let data = {
+    guid,
+    format: 'plain',
+    method: 'pairing-encryption-password'
+  };
+
+  let requestSuccess = (encryptionPhrase) => {
+    let decrypted = WalletCrypto.decrypt(encrypted, encryptionPhrase, PAIRING_CODE_PBKDF2_ITERATIONS);
+    if (decrypted != null && decrypted.length) {
+      let [sharedKey, passwordHex] = decrypted.split('|');
+      let password = new Buffer(passwordHex, 'hex').toString('utf8');
+      return { version, guid, sharedKey, password };
+    } else {
+      return Promise.reject('Decryption Error');
+    }
+  };
+
+  let requestError = (res) => {
+    return Promise.reject('Pairing Code Server Error');
+  };
+
+  return API.request('POST', 'wallet', data).then(requestSuccess, requestError);
 };
 
 MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHexExternal, password) {
@@ -317,7 +358,6 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
     }
 
     function _success () {
-      return;
     }
 
     function _error (e) {
