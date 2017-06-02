@@ -286,6 +286,10 @@ API.prototype.pushTxStats = function (guid, advanced) {
   return fetch(this.ROOT_URL + 'event?name=wallet_fee_experiment_' + group + '_pushed_tx' + (advanced ? '_advanced' : ''));
 };
 
+API.prototype.incrementLoginViaQrStats = function () {
+  return fetch(this.ROOT_URL + 'event?name=wallet_login_web_via_qr');
+};
+
 API.prototype.getBlockchainAddress = function () {
   return this.request('GET', 'charge_address');
 };
