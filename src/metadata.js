@@ -5,7 +5,12 @@ var Bitcoin = require('bitcoinjs-lib');
 var API = require('./api');
 var Helpers = require('./helpers');
 var constants = require('./constants');
-var R = require('ramda');
+
+// individual imports to reduce bundle size
+var assoc = require('ramda/src/assoc');
+var curry = require('ramda/src/curry');
+var compose = require('ramda/src/compose');
+var prop = require('ramda/src/prop');
 
 class Metadata {
   constructor (ecPair, encKeyBuffer, typeId) {
@@ -13,7 +18,7 @@ class Metadata {
     // encKeyBuffer :: Buffer (nullable = no encrypted save)
     // TypeId :: Int (nullable = default -1)
     this.VERSION = 1;
-    this._typeId = typeId || -1;
+    this._typeId = typeId == null ? -1 : typeId;
     this._magicHash = null;
     this._address = ecPair.getAddress();
     this._signKey = ecPair;
@@ -60,15 +65,15 @@ Metadata.read = (address) => Metadata.request('GET', address)
                                       .then(Metadata.extractResponse(null));
 
 // //////////////////////////////////////////////////////////////////////////////
-Metadata.encrypt = R.curry((key, data) => WalletCrypto.encryptDataWithKey(data, key));
-Metadata.decrypt = R.curry((key, data) => WalletCrypto.decryptDataWithKey(data, key));
+Metadata.encrypt = curry((key, data) => WalletCrypto.encryptDataWithKey(data, key));
+Metadata.decrypt = curry((key, data) => WalletCrypto.decryptDataWithKey(data, key));
 Metadata.B64ToBuffer = (base64) => Buffer.from(base64, 'base64');
 Metadata.BufferToB64 = (buff) => buff.toString('base64');
 Metadata.StringToBuffer = (base64) => Buffer.from(base64);
 Metadata.BufferToString = (buff) => buff.toString();
 
 // Metadata.message :: Buffer -> Buffer -> Base64String
-Metadata.message = R.curry(
+Metadata.message = curry(
   function (payload, prevMagic) {
     if (prevMagic) {
       const hash = WalletCrypto.sha256(payload);
@@ -81,7 +86,7 @@ Metadata.message = R.curry(
 );
 
 // Metadata.magic :: Buffer -> Buffer -> Buffer
-Metadata.magic = R.curry(
+Metadata.magic = curry(
   function (payload, prevMagic) {
     const msg = this.message(payload, prevMagic);
     return Bitcoin.message.magicHash(msg, constants.getNetwork());
@@ -89,16 +94,16 @@ Metadata.magic = R.curry(
 );
 
 Metadata.verify = (address, signature, hash) =>
-  Bitcoin.message.verify(address, signature, hash);
+  Bitcoin.message.verify(address, signature, hash, constants.getNetwork());
 
 // Metadata.sign :: keyPair -> msg -> Buffer
-Metadata.sign = (keyPair, msg) => Bitcoin.message.sign(keyPair, msg, Bitcoin.networks.bitcoin);
+Metadata.sign = (keyPair, msg) => Bitcoin.message.sign(keyPair, msg, constants.getNetwork());
 
 // Metadata.computeSignature :: keypair -> buffer -> buffer -> base64
 Metadata.computeSignature = (key, payloadBuff, magicHash) =>
   Metadata.sign(key, Metadata.message(payloadBuff, magicHash));
 
-Metadata.verifyResponse = R.curry((address, res) => {
+Metadata.verifyResponse = curry((address, res) => {
   if (res === null) return res;
   const M = Metadata;
   const sB = res.signature ? Buffer.from(res.signature, 'base64') : undefined;
@@ -106,29 +111,29 @@ Metadata.verifyResponse = R.curry((address, res) => {
   const mB = res.prev_magic_hash ? Buffer.from(res.prev_magic_hash, 'hex') : undefined;
   const verified = Metadata.verify(address, sB, M.message(pB, mB));
   if (!verified) throw new Error('METADATA_SIGNATURE_VERIFICATION_ERROR');
-  return R.assoc('compute_new_magic_hash', M.magic(pB, mB), res);
+  return assoc('compute_new_magic_hash', M.magic(pB, mB), res);
 });
 
-Metadata.extractResponse = R.curry((encKey, res) => {
+Metadata.extractResponse = curry((encKey, res) => {
   const M = Metadata;
   if (res === null) {
     return res;
   } else {
     return encKey
-      ? R.compose(JSON.parse, M.decrypt(encKey), R.prop('payload'))(res)
-      : R.compose(JSON.parse, M.BufferToString, M.B64ToBuffer, R.prop('payload'))(res);
+      ? compose(JSON.parse, M.decrypt(encKey), prop('payload'))(res)
+      : compose(JSON.parse, M.BufferToString, M.B64ToBuffer, prop('payload'))(res);
   }
 });
 
-Metadata.toImmutable = R.compose(Object.freeze, JSON.parse, JSON.stringify);
+Metadata.toImmutable = compose(Object.freeze, JSON.parse, JSON.stringify);
 
 Metadata.prototype.create = function (payload) {
   const M = Metadata;
   payload = M.toImmutable(payload);
   return this.next(() => {
     const encPayloadBuffer = this._encKeyBuffer
-      ? R.compose(M.B64ToBuffer, M.encrypt(this._encKeyBuffer), JSON.stringify)(payload)
-      : R.compose(M.StringToBuffer, JSON.stringify)(payload);
+      ? compose(M.B64ToBuffer, M.encrypt(this._encKeyBuffer), JSON.stringify)(payload)
+      : compose(M.StringToBuffer, JSON.stringify)(payload);
     const signatureBuffer = M.computeSignature(this._signKey, encPayloadBuffer, this._magicHash);
     const body = {
       'version': this.VERSION,
@@ -155,24 +160,38 @@ Metadata.prototype.update = function (payload) {
   }
 };
 
+Metadata.prototype.fromObject = function (payload, magicHashHex) {
+  if (magicHashHex) {
+    this._magicHash = Buffer.from(magicHashHex, 'hex');
+  }
+
+  const saveValue = (res) => {
+    if (res === null) return res;
+    this._value = Metadata.toImmutable(res);
+    return res;
+  };
+
+  return Promise.resolve(payload).then(saveValue);
+};
+
 Metadata.prototype.fetch = function () {
+  const saveMagicHash = (res) => {
+    if (res === null) return res;
+    this._magicHash = prop('compute_new_magic_hash', res);
+    return res;
+  };
+
   return this.next(() => {
     const M = Metadata;
-    const saveMagicHash = (res) => {
-      if (res === null) return res;
-      this._magicHash = R.prop('compute_new_magic_hash', res);
-      return res;
-    };
-    const saveValue = (res) => {
-      if (res === null) return res;
-      this._value = Metadata.toImmutable(res);
-      return res;
-    };
+
     return M.GET(this._address).then(M.verifyResponse(this._address))
                                .then(saveMagicHash)
                                .then(M.extractResponse(this._encKeyBuffer))
-                               .then(saveValue)
-                               .catch((e) => Promise.reject('METADATA_FETCH_FAILED'));
+                               .then(this.fromObject.bind(this))
+                               .catch((e) => {
+                                 console.error(`Failed to fetch metadata entry ${this._typeId} at ${this._address}:`, e);
+                                 return Promise.reject('METADATA_FETCH_FAILED');
+                               });
   });
 };
 
@@ -201,13 +220,17 @@ Metadata.fromMetadataHDNode = function (metadataHDNode, typeId) {
   return new Metadata(node.keyPair, encryptionKey, typeId);
 };
 
-// used to create a new metadata entry from wallet master hd node
-Metadata.fromMasterHDNode = function (masterHDNode, typeId) {
+Metadata.deriveMetadataNode = function (masterHDNode) {
   // BIP 43 purpose needs to be 31 bit or less. For lack of a BIP number
   // we take the first 31 bits of the SHA256 hash of a reverse domain.
   var hash = WalletCrypto.sha256('info.blockchain.metadata');
   var purpose = hash.slice(0, 4).readUInt32BE(0) & 0x7FFFFFFF; // 510742
-  var metadataHDNode = masterHDNode.deriveHardened(purpose);
+  return masterHDNode.deriveHardened(purpose);
+};
+
+// used to create a new metadata entry from wallet master hd node
+Metadata.fromMasterHDNode = function (masterHDNode, typeId) {
+  var metadataHDNode = Metadata.deriveMetadataNode(masterHDNode);
   return Metadata.fromMetadataHDNode(metadataHDNode, typeId);
 };
 

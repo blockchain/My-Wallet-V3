@@ -30,7 +30,11 @@ let MyWallet = {
 
 const API = {
   getUnspent (addresses, conf) { return Promise.resolve(unspent); },
-  getFees () { return Promise.resolve(fees); }
+  getFees () { return Promise.resolve(fees); },
+  getBlockchainAddress () {
+    return Promise.resolve(
+      { address: '19gPGVysbWPaV65GaVBvEWjQbxSffSeyW1', success: true });
+  }
 };
 
 let Helpers =
@@ -52,7 +56,9 @@ describe('Payment', () => {
     addresses: ['16SPAGz8vLpP3jNTcP7T2io1YccMbjhkee', '1FBHaa3JNjTbhvzMBdv2ymaahmgSSJ4Mis', '12C5rBJ7Ev3YGBCbJPY6C8nkGhkUTNqfW9']
   };
 
-  beforeEach(() => { payment = new Payment(); });
+  beforeEach(() => {
+    payment = new Payment(MyWallet.wallet);
+  });
 
   describe('new', () =>
 
@@ -112,9 +118,10 @@ describe('Payment', () => {
 
     it('should set the correct sweep amount and sweep fee', done => {
       payment.from(data.address);
+      payment.updateFeePerKb(10);
       payment.payment.then(({sweepAmount, sweepFee}) => {
-        expect(sweepAmount).toEqual(12520);
-        expect(sweepFee).toEqual(7480);
+        expect(sweepAmount).toEqual(16260);
+        expect(sweepFee).toEqual(3740);
 
         done();
       });
@@ -134,17 +141,17 @@ describe('Payment', () => {
   describe('amount', () => {
     it('should not set negative amounts', done => {
       payment.amount(-1);
-      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ amounts: null }), done);
+      expect(payment.payment).toBeRejected(done);
     });
 
     it('should not set amounts that aren\'t positive integers', done => {
       payment.amount('100000000');
-      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ amounts: null }), done);
+      expect(payment.payment).toBeRejected(done);
     });
 
     it('should not set amounts if an element of the array is invalid', done => {
       payment.amount([10000, 20000, 30000, '324345']);
-      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ amounts: null }), done);
+      expect(payment.payment).toBeRejected(done);
     });
 
     it('should set amounts from a valid number', done => {
@@ -156,21 +163,126 @@ describe('Payment', () => {
       payment.amount([3000, 20000]);
       expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ amounts: [3000, 20000] }), done);
     });
+
+    it('should add normal service charge fee', done => {
+      let chargeOptions = {
+        min_tx_amount: 0,
+        max_service_charge: 100000,
+        percent: 0.5,
+        send_to_miner: true
+      };
+      payment.amount(10000, null, chargeOptions);
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ blockchainFee: 5000 }), done);
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ amounts: [10000] }), done);
+    });
+
+    it('should not add service charge fee (0)', done => {
+      let chargeOptions = {
+        min_tx_amount: 1000000,
+        max_service_charge: 100000,
+        percent: 0.5,
+        send_to_miner: true
+      };
+      payment.amount(10000, null, chargeOptions);
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ blockchainFee: 0 }), done);
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ amounts: [10000] }), done);
+    });
+
+    it('should add maximum fee', done => {
+      let chargeOptions = {
+        min_tx_amount: 0,
+        max_service_charge: 100,
+        percent: 0.5,
+        send_to_miner: true
+      };
+      payment.amount(10000, null, chargeOptions);
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ blockchainFee: 100 }), done);
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ amounts: [10000] }), done);
+    });
+
+    it('should add no fee if percent is 0', done => {
+      let chargeOptions = {
+        min_tx_amount: 0,
+        max_service_charge: 100000,
+        percent: 0,
+        send_to_miner: true
+      };
+      payment.amount(10000, null, chargeOptions);
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ blockchainFee: 0 }), done);
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ amounts: [10000] }), done);
+    });
+
+    it('should add no fee if max is 0', done => {
+      let chargeOptions = {
+        min_tx_amount: 0,
+        max_service_charge: 0,
+        percent: 0.5,
+        send_to_miner: true
+      };
+      payment.amount(10000, null, chargeOptions);
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ blockchainFee: 0 }), done);
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ amounts: [10000] }), done);
+    });
+  });
+
+  describe('build', () => {
+    it('should add service charge fee to an extra output', () => {
+      let chargeOptions = {
+        min_tx_amount: 0,
+        max_service_charge: 1000000,
+        percent: 0.5,
+        send_to_miner: true
+      };
+      payment.from('5JrXwqEhjpVF7oXnHPsuddTc6CceccLRTfNpqU2AZH8RkPMvZZu')
+             .to(1)
+             .amount(5000, null, chargeOptions)
+             .build()
+             .sideEffect(
+               p => {
+                 const [out, charge, change] = p.transaction.transaction.tx.outs.map(o => o.value);
+                 expect(out).toBe(5000);
+                 expect(charge).toBe(2500);
+                 expect(change).toBe(5020);
+               }
+             );
+    });
+
+    it('should not add the extra output with the service fee charge', () => {
+      let chargeOptions = {
+        min_tx_amount: 0,
+        max_service_charge: 1000000,
+        percent: 0.5,
+        send_to_miner: true
+      };
+      payment.from('5JrXwqEhjpVF7oXnHPsuddTc6CceccLRTfNpqU2AZH8RkPMvZZu')
+             .to(1)
+             .amount(5000, null, chargeOptions)
+             .build(true)
+             .sideEffect(
+               p => {
+                 const [out, change] = p.transaction.transaction.tx.outs.map(o => o.value);
+                 expect(out).toBe(5000);
+                 expect(change).toBe(5020);
+               }
+             );
+    });
   });
 
   describe('fee', () => {
-    it('should not set a non positive integer fee (use 2 blocks fee-per-kb)', done => {
+    it('should not set a non positive integer fee', done => {
       payment.from('5JrXwqEhjpVF7oXnHPsuddTc6CceccLRTfNpqU2AZH8RkPMvZZu');
+      payment.updateFeePerKb(10);
       payment.amount(5000);
       payment.fee(-3000);
-      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ finalFee: 4520 }), done);
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ finalFee: 2260 }), done);
     });
 
-    it('should not set a string fee (use 2 blocks fee-per-kb)', done => {
+    it('should not set a string fee', done => {
       payment.from('5JrXwqEhjpVF7oXnHPsuddTc6CceccLRTfNpqU2AZH8RkPMvZZu');
+      payment.updateFeePerKb(10);
       payment.amount(5000);
       payment.fee('3000');
-      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ finalFee: 4520 }), done);
+      expect(payment.payment).toBeResolvedWith(jasmine.objectContaining({ finalFee: 2260 }), done);
     });
 
     it('should set a valid fee', done => {

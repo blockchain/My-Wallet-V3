@@ -1,5 +1,3 @@
-'use strict';
-
 module.exports = HDAccount;
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -14,10 +12,8 @@ var constants = require('./constants');
 // HDAccount Class
 
 function HDAccount (object) {
-  var self = this;
   var obj = object || {};
   obj.cache = obj.cache || {};
-  obj.address_labels = obj.address_labels || [];
   // serializable data
   this._label = obj.label;
   this._archived = obj.archived || false;
@@ -25,14 +21,12 @@ function HDAccount (object) {
   this._xpub = obj.xpub;
   this._network = obj.network || Bitcoin.networks.bitcoin;
 
-  this._address_labels = [];
-  obj.address_labels.map(function (e) { self._address_labels[e.index] = e.label; });
+  this._address_labels = obj.address_labels || [];
 
   // computed properties
   this._keyRing = new KeyRing(obj.xpub, obj.cache);
-  this._receiveIndex = 0;
   // The highest receive index with transactions, as returned by the server:
-  this._lastUsedReceiveIndex = 0;
+  this._lastUsedReceiveIndex = null;
   this._changeIndex = 0;
   this._n_tx = 0;
   this._txList = new TxList();
@@ -43,7 +37,6 @@ function HDAccount (object) {
 // PUBLIC PROPERTIES
 
 Object.defineProperties(HDAccount.prototype, {
-
   'label': {
     configurable: false,
     get: function () { return this._label; },
@@ -101,37 +94,25 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'receiveIndex': {
     configurable: false,
-    get: function () { return this._receiveIndex; },
-    set: function (value) {
-      if (Helpers.isPositiveInteger(value)) {
-        this._receiveIndex = value;
-      } else {
-        throw new Error('account.receiveIndex must be a number');
+    get: function () {
+      let maxLabeledReceiveIndex = null;
+      if (MyWallet.wallet.labels) { // May not be set yet
+        maxLabeledReceiveIndex = MyWallet.wallet.labels.maxLabeledReceiveIndex(this.index);
+      } else if (this._address_labels && this._address_labels.length) {
+        maxLabeledReceiveIndex = this._address_labels[this._address_labels.length - 1].index;
       }
+      return Math.max(
+        this.lastUsedReceiveIndex === null ? -1 : this.lastUsedReceiveIndex,
+        maxLabeledReceiveIndex === null ? -1 : maxLabeledReceiveIndex
+      ) + 1;
     }
   },
   'lastUsedReceiveIndex': {
     configurable: false,
     get: function () { return this._lastUsedReceiveIndex; },
     set: function (value) {
-      if (Helpers.isPositiveInteger(value)) {
-        this._lastUsedReceiveIndex = value;
-      } else {
-        throw new Error('account.lastUsedReceiveIndex must be a number');
-      }
-    }
-  },
-  'maxLabeledReceiveIndex': {
-    configurable: false,
-    get: function () {
-      var keys = Object.keys(this._address_labels).map(function (k) {
-        return parseInt(k, 10);
-      });
-      if (keys.length === 0) {
-        return -1;
-      } else {
-        return Math.max.apply(null, keys);
-      }
+      assert(value === null || Helpers.isPositiveInteger(value), 'should be null or >= 0');
+      this._lastUsedReceiveIndex = value;
     }
   },
   'changeIndex': {
@@ -143,25 +124,6 @@ Object.defineProperties(HDAccount.prototype, {
       } else {
         throw new Error('account.changeIndex must be a number');
       }
-    }
-  },
-  'receivingAddressesLabels': {
-    configurable: false,
-    get: function () {
-      var denseArray = [];
-      this._address_labels
-        .map(function (lab, ind) { denseArray.push({'index': ind, 'label': lab}); });
-      return denseArray;
-    }
-  },
-  'labeledReceivingAddresses': {
-    configurable: false,
-    get: function () {
-      var denseArray = [];
-      var outerThis = this;
-      this._address_labels
-        .map(function (lab, i) { denseArray.push(outerThis.receiveAddressAtIndex(i)); });
-      return denseArray;
     }
   },
   'extendedPublicKey': {
@@ -178,7 +140,7 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'receiveAddress': {
     configurable: false,
-    get: function () { return this._keyRing.receive.getAddress(this._receiveIndex); }
+    get: function () { return this._keyRing.receive.getAddress(this.receiveIndex); }
   },
   'changeAddress': {
     configurable: false,
@@ -251,13 +213,12 @@ HDAccount.factory = function (o) {
 // JSON SERIALIZER
 
 HDAccount.prototype.toJSON = function () {
-  // should we add checks on the serializer too?
   var hdaccount = {
     label: this._label,
     archived: this._archived,
     xpriv: this._xpriv,
     xpub: this._xpub,
-    address_labels: this.receivingAddressesLabels,
+    address_labels: this._orderedAddressLabels(),
     cache: this._keyRing
   };
 
@@ -267,60 +228,6 @@ HDAccount.prototype.toJSON = function () {
 HDAccount.reviver = function (k, v) {
   if (k === '') return new HDAccount(v);
   return v;
-};
-
-HDAccount.prototype.incrementReceiveIndex = function () {
-  this._receiveIndex++;
-  return this;
-};
-HDAccount.prototype.incrementReceiveIndexIfLast = function (index) {
-  if (this._receiveIndex === index) {
-    this.incrementReceiveIndex();
-  }
-  return this;
-};
-HDAccount.prototype.decrementReceiveIndex = function () {
-  this._receiveIndex--;
-  return this;
-};
-HDAccount.prototype.decrementReceiveIndexIfLast = function (index) {
-  if (this._receiveIndex === index + 1) {
-    this.decrementReceiveIndex();
-  }
-  return this;
-};
-
-// address labels
-HDAccount.prototype.setLabelForReceivingAddress = function (index, label, maxGap) {
-  maxGap = maxGap || 19;
-  assert(maxGap <= 19, 'Max gap must be less than 20');
-  assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
-
-  if (!Helpers.isValidLabel(label)) {
-    return Promise.reject('NOT_ALPHANUMERIC');
-    // Error: address label must be alphanumeric
-  } else if (index - this.lastUsedReceiveIndex >= maxGap) {
-    // Exceeds BIP 44 unused address gap limit
-    return Promise.reject('GAP');
-  } else {
-    this._address_labels[index] = label;
-    this.incrementReceiveIndexIfLast(index);
-    MyWallet.syncWallet();
-    return Promise.resolve();
-  }
-};
-
-HDAccount.prototype.removeLabelForReceivingAddress = function (index) {
-  assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
-  delete this._address_labels[index];
-  this.decrementReceiveIndexIfLast(index);
-  MyWallet.syncWallet();
-  return this;
-};
-
-HDAccount.prototype.getLabelForReceivingAddress = function (index) {
-  assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
-  return this._address_labels[index];
 };
 
 HDAccount.prototype.receiveAddressAtIndex = function (index) {
@@ -364,7 +271,49 @@ HDAccount.prototype.fetchTransactions = function () {
     this.txList.pushTxs(o.txs);
     return o.txs.length;
   };
-  return API.getHistory(MyWallet.wallet.context, 0, this.txList.fetched,
-                        this.txList.loadNumber, false, [this._xpub])
+  return API.getHistory(MyWallet.wallet.context, 0, this.txList.fetched, this.txList.loadNumber, false, [this._xpub])
     .then(_updateAccount.bind(this));
+};
+
+// Address labels:
+HDAccount.prototype._orderedAddressLabels = function () {
+  return this._address_labels.sort((a, b) => a.index - b.index);
+};
+
+HDAccount.prototype.addLabel = function (receiveIndex, label) {
+  assert(Helpers.isPositiveInteger(receiveIndex));
+
+  let labels = this._address_labels;
+
+  let labelEntry = {
+    index: receiveIndex,
+    label: label
+  };
+
+  labels.push(labelEntry);
+};
+
+HDAccount.prototype.getLabels = function () {
+  return this._address_labels
+          .sort((a, b) => a.index - b.index)
+          .map(o => ({index: o.index, label: o.label}));
+};
+
+HDAccount.prototype.setLabel = function (receiveIndex, label) {
+  let labels = this._address_labels;
+
+  let labelEntry = labels.find((label) => label.index === receiveIndex);
+
+  if (!labelEntry) {
+    labelEntry = {index: receiveIndex};
+    labels.push(labelEntry);
+  }
+
+  labelEntry.label = label;
+};
+
+HDAccount.prototype.removeLabel = function (receiveIndex) {
+  let labels = this._address_labels;
+  let labelEntry = labels.find((label) => label.index === receiveIndex);
+  labels.splice(labels.indexOf(labelEntry), 1);
 };

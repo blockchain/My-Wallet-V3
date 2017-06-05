@@ -2,34 +2,38 @@ let proxyquire = require('proxyquireify')(require);
 let MyWallet;
 let HDAccount;
 
+// TODO: use more mocks, this file takes 7 seconds to run
 describe('HDAccount', () => {
-  // account = HDAccount.fromExtPublicKey("xpub6DHN1xpggNEUkLDwwBGYDmYUaNmfE2mMGKZSiP7PB5wxbp34rhHAEBhMpsjHEwZWsHY2kPmPPD1w6gxGSBe3bXQzCn2WV8FRd7ZKpsiGHMq", undefined, "Example account");
+  let account, object;
 
-  let account;
-  let object = {
-    'label': 'My great wallet',
-    'archived': false,
-    'xpriv': 'xprv9zJ1cTHnqzgBXr9Uq9jXrdbk2LwApa3Vu6dquzhmckQyj1hvK9xugPNsycfveTGcTy2571Rq71daBpe1QESUsjX7d2ZHVVXEwJEwDiiMD7E',
-    'xpub': 'xpub6DHN1xpggNEUkLDwwBGYDmYUaNmfE2mMGKZSiP7PB5wxbp34rhHAEBhMpsjHEwZWsHY2kPmPPD1w6gxGSBe3bXQzCn2WV8FRd7ZKpsiGHMq',
-    'address_labels': [{'index': 0, 'label': 'root'}],
-    'cache': {
-      'receiveAccount': 'xpub6FMWuMox3fJxEv2TSLN6jYQg6tHZBS7tKRSu7w4Q7F9K2UsSu4RxtwxfeHVhUv3csTSCRkKREpiVdr8EquBPXfBDZSMe84wmN9LzR3rwNZP',
-      'changeAccount': 'xpub6FMWuMox3fJxGARtaDVY6e9st4Hk5j8Ui6r7XLnBPFXPXkajXNiAfiEqBakuDKYYeRf4ERtPm1TawBqKaBWj2dsHNJT4rSsugssTnaDsz2m'
-    }
-  };
+  let maxLabeledReceiveIndex = -1;
 
   beforeEach(() => {
+    object = {
+      'label': 'My great wallet',
+      'archived': false,
+      'xpriv': 'xprv9zJ1cTHnqzgBXr9Uq9jXrdbk2LwApa3Vu6dquzhmckQyj1hvK9xugPNsycfveTGcTy2571Rq71daBpe1QESUsjX7d2ZHVVXEwJEwDiiMD7E',
+      'xpub': 'xpub6DHN1xpggNEUkLDwwBGYDmYUaNmfE2mMGKZSiP7PB5wxbp34rhHAEBhMpsjHEwZWsHY2kPmPPD1w6gxGSBe3bXQzCn2WV8FRd7ZKpsiGHMq',
+      'address_labels': [{'index': 3, 'label': 'Hello'}],
+      'cache': {
+        'receiveAccount': 'xpub6FMWuMox3fJxEv2TSLN6jYQg6tHZBS7tKRSu7w4Q7F9K2UsSu4RxtwxfeHVhUv3csTSCRkKREpiVdr8EquBPXfBDZSMe84wmN9LzR3rwNZP',
+        'changeAccount': 'xpub6FMWuMox3fJxGARtaDVY6e9st4Hk5j8Ui6r7XLnBPFXPXkajXNiAfiEqBakuDKYYeRf4ERtPm1TawBqKaBWj2dsHNJT4rSsugssTnaDsz2m'
+      }
+    };
+
     MyWallet = {
       syncWallet () {},
       wallet: {
-        getHistory () {}
+        getHistory () {},
+        labels: {
+          maxLabeledReceiveIndex: () => maxLabeledReceiveIndex
+        }
       }
     };
 
     spyOn(MyWallet, 'syncWallet');
     spyOn(MyWallet.wallet, 'getHistory');
   });
-    // account = new HDAccount(object)
 
   describe('Constructor', () => {
     describe('without arguments', () => {
@@ -45,9 +49,8 @@ describe('HDAccount', () => {
         expect(account.balance).toEqual(null);
         expect(account.archived).not.toBeTruthy();
         expect(account.active).toBeTruthy();
-        expect(account.receiveIndex).toEqual(0);
-        expect(account.changeIndex).toEqual(0);
-        expect(account.maxLabeledReceiveIndex).toEqual(-1);
+        expect(account.receiveIndex).toEqual(0, 'Unexpected receive index');
+        expect(account.changeIndex).toEqual(0, 'Unexpected change index');
       });
 
       it('should create an HDAccount from AccountMasterKey', () => {
@@ -111,18 +114,8 @@ describe('HDAccount', () => {
       expect(account.keyRing).toBeDefined();
       expect(account.receiveAddress).toBeDefined();
       expect(account.changeAddress).toBeDefined();
-      expect(account.receivingAddressesLabels.length).toEqual(1);
     });
   });
-
-  describe('JSON serializer', () =>
-    it('should hold: fromJSON . toJSON = id', () => {
-      let json1 = JSON.stringify(account, null, 2);
-      let racc = JSON.parse(json1, HDAccount.reviver);
-      let json2 = JSON.stringify(racc, null, 2);
-      expect(json1).toEqual(json2);
-    })
-  );
 
   describe('instance', () => {
     beforeEach(() => {
@@ -131,61 +124,23 @@ describe('HDAccount', () => {
       account = new HDAccount(object);
     });
 
-    describe('.incrementReceiveIndex', () =>
-      it('should increment the received index', () => {
-        let initial = account.receiveIndex;
-        account.incrementReceiveIndex();
-        let final = account.receiveIndex;
-        expect(final).toEqual(initial + 1);
-      })
-    );
-
-    describe('.incrementReceiveIndexIfLast', () => {
-      it('should not increment the received index', () => {
-        account._receiveIndex = 10;
-        let initial = account.receiveIndex;
-        account.incrementReceiveIndexIfLast(5);
-        let final = account.receiveIndex;
-        expect(final).toEqual(initial);
+    describe('JSON serializer', () => {
+      it('should hold: fromJSON . toJSON = id', () => {
+        let json1 = JSON.stringify(account, null, 2);
+        let racc = JSON.parse(json1, HDAccount.reviver);
+        let json2 = JSON.stringify(racc, null, 2);
+        expect(json1).toEqual(json2);
       });
 
-      it('should increment the received index', () => {
-        account._receiveIndex = 10;
-        let initial = account.receiveIndex;
-        account.incrementReceiveIndexIfLast(10);
-        let final = account.receiveIndex;
-        expect(final).toEqual(initial + 1);
-      });
-    });
-
-    describe('.get/setLabelForReceivingAddress', () => {
-      it('should set the label sync and get the label', () => {
-        let fail = reason => console.log(reason);
-
-        let success = () => {};
-
-        account.setLabelForReceivingAddress(10, 'my label').then(success).catch(fail);
-        expect(account._address_labels[10]).toEqual('my label');
-        expect(MyWallet.syncWallet).toHaveBeenCalled();
-        expect(account.getLabelForReceivingAddress(10)).toEqual('my label');
-      });
-
-      it('should not set a non-valid label', () => {
-        let fail = reason => except(reason).toEqual('NOT_ALPHANUMERIC');
-
-        let success = () => {};
-
-        account.setLabelForReceivingAddress(10, 0).then(success).catch(fail);
-        expect(MyWallet.syncWallet).not.toHaveBeenCalled();
-      });
-
-      it('should not set a label with a gap too wide', () => {
-        let fail = reason => except(reason).toEqual('GAP');
-
-        let success = () => {};
-
-        account.setLabelForReceivingAddress(100, 'my label').then(success).catch(fail);
-        expect(MyWallet.syncWallet).not.toHaveBeenCalled();
+      describe('labeled_addresses', () => {
+        it('should resave original if KV store is read-only', () => {
+          expect(account.toJSON()).toEqual(jasmine.objectContaining({
+            address_labels: [{
+              index: 3,
+              label: 'Hello'
+            }]
+          }));
+        });
       });
     });
 
@@ -279,34 +234,28 @@ describe('HDAccount', () => {
         expect(wrongSet).toThrow();
       });
 
-      it('lastUsedReceiveIndex must be a number', () => {
+      it('lastUsedReceiveIndex must be an integer or null', () => {
         let invalid = () => { account.lastUsedReceiveIndex = '1'; };
         let valid = () => { account.lastUsedReceiveIndex = 1; };
         expect(invalid).toThrow();
-        expect(account.lastUsedReceiveIndex).toEqual(0);
+        expect(account.lastUsedReceiveIndex).toEqual(null);
         expect(valid).not.toThrow();
         expect(account.lastUsedReceiveIndex).toEqual(1);
       });
 
-      it('lastUsedReceiveIndex must be a positive number', () => {
-        let invalid = () => { account.lastUsedReceiveIndex = -534.23; };
-        expect(invalid).toThrow();
-        expect(account.lastUsedReceiveIndex).toEqual(0);
+      it('receiveIndex is max(used, labeled) + 1', () => {
+        account.lastUsedReceiveIndex = 2;
+        expect(account.receiveIndex).toEqual(3);
+
+        maxLabeledReceiveIndex = 3;
+        expect(account.receiveIndex).toEqual(4);
       });
 
-      it('receiveIndex must be a number', () => {
-        let invalid = () => { account.receiveIndex = '1'; };
-        let valid = () => { account.receiveIndex = 1; };
-        expect(invalid).toThrow();
-        expect(account.receiveIndex).toEqual(0);
-        expect(valid).not.toThrow();
-        expect(account.receiveIndex).toEqual(1);
-      });
-
-      it('receiveIndex must be a positive number', () => {
-        let invalid = () => { account.receiveIndex = -534.34; };
-        expect(invalid).toThrow();
-        expect(account.receiveIndex).toEqual(0);
+      it('receiveIndex falls back to legacy labels if Labels doesn\'t work', () => {
+        maxLabeledReceiveIndex = 3;
+        MyWallet.wallet.labels = null;
+        account.lastUsedReceiveIndex = 2;
+        expect(account.receiveIndex).toEqual(4);
       });
 
       it('changeIndex must be a number', () => {
@@ -326,22 +275,46 @@ describe('HDAccount', () => {
     });
 
     describe('Getter', () => {
-      it('maxLabeledReceiveIndex should return the highest labeled index', () => {
-        expect(account.maxLabeledReceiveIndex).toEqual(0);
+    });
 
-        account.setLabelForReceivingAddress(1, 'label1');
-        account.setLabelForReceivingAddress(10, 'label100');
-
-        expect(account.maxLabeledReceiveIndex).toEqual(10);
+    describe('Labeled addresses', () => {
+      describe('getLabels()', () => {
+        it('should return a copy of _address_labels', () => {
+          expect(account.getLabels()).toEqual(account._address_labels);
+        });
+        it('should sort _address_labels by index', () => {
+          account._address_labels = [{index: 1, label: 'One'}, {index: 0, label: 'Zero'}];
+          expect(account.getLabels()).toEqual([{index: 0, label: 'Zero'}, {index: 1, label: 'One'}]);
+        });
       });
 
-      it('labeledReceivingAddresses should return all the labeled receiving addresses', () => {
-        expect(account.labeledReceivingAddresses.length).toEqual(1);
+      describe('addLabel()', () => {
+        it('should push a label entry', () => {
+          let before = account._address_labels.length;
+          account.addLabel(2, 'New Label');
+          expect(account._address_labels.length).toEqual(before + 1);
+        });
+      });
 
-        account.setLabelForReceivingAddress(1, 'label1');
-        account.setLabelForReceivingAddress(10, 'label100');
+      describe('setLabel()', () => {
+        it('should update existing label entry', () => {
+          account.setLabel(3, 'Updated Label');
+          expect(account._address_labels[0].label).toEqual('Updated Label');
+        });
 
-        expect(account.labeledReceivingAddresses.length).toEqual(3);
+        it('should push a label entry if none exists', () => {
+          let before = account._address_labels.length;
+          account.setLabel(2, 'New Label');
+          expect(account._address_labels.length).toEqual(before + 1);
+        });
+      });
+
+      describe('removeLabel()', () => {
+        it('should remove a label entry', () => {
+          let before = account._address_labels.length;
+          account.removeLabel(3);
+          expect(account._address_labels.length).toEqual(before - 1);
+        });
       });
     });
 
@@ -428,20 +401,6 @@ describe('HDAccount', () => {
         expect(MyWallet.syncWallet).not.toHaveBeenCalled();
       });
     });
-
-    describe('.removeLabelForReceivingAddress', () =>
-      it('should remove the label and sync the wallet', () => {
-        let fail = reason => console.log(reason);
-
-        let resolve = () => {};
-
-        account.setLabelForReceivingAddress(0, 'Savings').then(resolve).catch(fail);
-        expect(MyWallet.syncWallet).toHaveBeenCalled();
-        account.removeLabelForReceivingAddress(0);
-        expect(MyWallet.syncWallet).toHaveBeenCalled();
-        expect(account.getLabelForReceivingAddress(0)).not.toEqual('Savings');
-      })
-    );
 
     describe('.fromExtPublicKey', () => {
       it('should import a correct key', () => {

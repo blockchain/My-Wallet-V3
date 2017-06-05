@@ -31,14 +31,7 @@ let hdwallet = {
   guid: '1234',
   sharedKey: 'shared',
   scanBip44 () {
-    return {
-      then (cb) {
-        cb();
-        return {
-          catch () {}
-        };
-      }
-    };
+    return Promise.resolve();
   }
 };
 
@@ -56,89 +49,52 @@ const API = {
 const WalletNetwork = {
   insertWallet () {
     console.log(WalletNetwork.failInsertion);
-    if (WalletNetwork.failInsertion) {
-      return new Promise((resolve, reject) => reject());
-    } else {
-      return new Promise(resolve => resolve());
-    }
+    return WalletNetwork.failInsertion ? Promise.reject('INSERTION_FAILED') : Promise.resolve();
   },
 
   establishSession (token) {
-    return {
-      then (cb) {
-        if (token !== 'token') {
-          token = 'new_token';
-        }
-        cb(token);
-        return {
-          catch (cb) {}
-        };
-      }
-    };
+    if (token !== 'token') token = 'new_token';
+    return Promise.resolve(token);
   },
 
   fetchWallet (guid, sessionToken, needsTwoFactorCode, authorizationRequired) {
-    return {
-      then (cb) {
-        if (guid === 'wallet-2fa') {
+    return new Promise((resolve, reject) => {
+      if (guid === 'wallet-2fa') {
+        needsTwoFactorCode(1);
+        reject();
+      } else if (guid === 'wallet-email-auth') {
+        authorizationRequired().then(() =>
+          // WalletNetwork proceeds with login and then calls success:
+          resolve({guid, payload: 'encrypted'})
+        );
+      } else if (guid === 'wallet-email-auth-2fa') {
+        authorizationRequired().then(() => {
+          // WalletNetwork proceeds with login and now asks for 2FA:
           needsTwoFactorCode(1);
-        } else if (guid === 'wallet-email-auth') {
-          authorizationRequired().then(() =>
-            // WalletNetwork proceeds with login and then calls success:
-            cb({guid, payload: 'encrypted'})
-          );
-        } else if (guid === 'wallet-email-auth-2fa') {
-          authorizationRequired().then(() =>
-            // WalletNetwork proceeds with login and now asks for 2FA:
-            needsTwoFactorCode(1)
-          );
-        } else {
-          WalletStore.setGuid(guid);
-          WalletStore.setEncryptedWalletData('encrypted');
-          cb({guid, payload: 'encrypted'});
-        }
-        return {
-          catch (cb) {}
-        };
+          reject();
+        });
+      } else {
+        WalletStore.setGuid(guid);
+        WalletStore.setEncryptedWalletData('encrypted');
+        resolve({guid, payload: 'encrypted'});
       }
-    };
+    });
   },
 
   fetchWalletWithSharedKey (guid) {
-    return {
-      then (cb) {
-        WalletStore.setGuid(guid);
-        WalletStore.setEncryptedWalletData('encrypted');
-        cb({guid, payload: 'encrypted'});
-        return {
-          catch (cb) {}
-        };
-      }
-    };
+    WalletStore.setGuid(guid);
+    WalletStore.setEncryptedWalletData('encrypted');
+    return Promise.resolve({guid, payload: 'encrypted'});
   },
 
   fetchWalletWithTwoFactor (guid, sessionToken, twoFactorCode) {
-    return {
-      then (cb) {
-        WalletStore.setGuid(guid);
-        WalletStore.setEncryptedWalletData('encrypted');
-        cb({guid, payload: 'encrypted'});
-        return {
-          catch (cb) {}
-        };
-      }
-    };
+    WalletStore.setGuid(guid);
+    WalletStore.setEncryptedWalletData('encrypted');
+    return Promise.resolve({guid, payload: 'encrypted'});
   },
 
   pollForSessionGUID (token) {
-    return {
-      then (cb) {
-        cb();
-        return {
-          catch (cb) {}
-        };
-      }
-    };
+    return Promise.resolve();
   }
 };
 
@@ -177,7 +133,7 @@ describe('Wallet', () => {
 
   beforeEach(() => {
     WalletStore.setGuid(undefined);
-    return WalletStore.setEncryptedWalletData(undefined);
+    WalletStore.setEncryptedWalletData(undefined);
   });
 
   describe('makePairingCode()', () => {
@@ -220,33 +176,13 @@ describe('Wallet', () => {
     };
 
     beforeEach(() => {
-      spyOn(MyWallet, 'didFetchWallet').and.callFake(obj =>
-        ({
-          then (cb) {
-            obj.encrypted = undefined;
-            cb(obj);
-            return {
-              catch (cb) {}
-            };
-          }
-        })
-      );
+      spyOn(MyWallet, 'didFetchWallet').and.callFake(obj => {
+        obj.encrypted = undefined;
+        return Promise.resolve(obj);
+      });
 
       spyOn(MyWallet, 'initializeWallet').and.callFake((inputedPassword, didDecrypt, didBuildHD) =>
-        ({
-          then (cb) {
-            if (inputedPassword === 'password') {
-              cb();
-            }
-            return {
-              catch (cb) {
-                if (inputedPassword !== 'password') {
-                  return cb('WRONG_PASSWORD');
-                }
-              }
-            };
-          }
-        })
+        inputedPassword === 'password' ? Promise.resolve() : Promise.reject('WRONG_PASSWORD')
       );
 
       spyOn(callbacks, 'success');
@@ -268,8 +204,10 @@ describe('Wallet', () => {
           callbacks
         );
 
-        expect(promise).toBeResolved(done);
-        expect(WalletNetwork.establishSession).not.toHaveBeenCalled();
+        expect(promise).toBeResolved(() => {
+          expect(WalletNetwork.establishSession).not.toHaveBeenCalled();
+          done();
+        });
       });
 
       it('should return the guid', done => {
@@ -288,8 +226,8 @@ describe('Wallet', () => {
     });
 
     describe('without shared key', () => {
-      it('should use a session token', () => {
-        MyWallet.login(
+      it('should use a session token', (done) => {
+        let promise = MyWallet.login(
           '1234',
           'password',
           {
@@ -298,7 +236,10 @@ describe('Wallet', () => {
           callbacks
         );
 
-        expect(WalletNetwork.establishSession).toHaveBeenCalled();
+        expect(promise).toBeResolved(() => {
+          expect(WalletNetwork.establishSession).toHaveBeenCalled();
+          done();
+        });
       });
 
       it('should return guid', done => {
@@ -311,13 +252,11 @@ describe('Wallet', () => {
           callbacks
         );
 
-        expect(promise).toBeResolvedWith(jasmine.objectContaining(
-          {guid: '1234'}
-        ), done);
+        expect(promise).toBeResolvedWith(jasmine.objectContaining({guid: '1234'}), done);
       });
 
-      it('should reuse an existing session token if provided', () => {
-        MyWallet.login(
+      it('should reuse an existing session token if provided', (done) => {
+        let promise = MyWallet.login(
           '1234',
           'password',
           {
@@ -327,11 +266,14 @@ describe('Wallet', () => {
           callbacks
         );
 
-        expect(WalletNetwork.establishSession).toHaveBeenCalledWith('token');
+        expect(promise).toBeResolved(() => {
+          expect(WalletNetwork.establishSession).toHaveBeenCalledWith('token');
+          done();
+        });
       });
 
-      it('should not reuse a null token', () => {
-        MyWallet.login(
+      it('should not reuse a null token', (done) => {
+        let promise = MyWallet.login(
           '1234',
           'password',
           {
@@ -341,13 +283,16 @@ describe('Wallet', () => {
           callbacks
         );
 
-        expect(WalletNetwork.establishSession).not.toHaveBeenCalledWith(null);
+        expect(promise).toBeResolved(() => {
+          expect(WalletNetwork.establishSession).not.toHaveBeenCalledWith(null);
+          done();
+        });
       });
 
-      it('should announce a new session token', () => {
-        spyOn(callbacks, 'newSessionToken');
+      it('should announce a new session token', (done) => {
+        spyOn(callbacks, 'newSessionToken').and.callThrough();
 
-        MyWallet.login(
+        let promise = MyWallet.login(
           'wallet-2fa',
           'password',
           {
@@ -356,13 +301,17 @@ describe('Wallet', () => {
           },
           callbacks
         );
-        expect(callbacks.newSessionToken).toHaveBeenCalledWith('new_token');
+
+        expect(promise).toBeRejected(() => {
+          expect(callbacks.newSessionToken).toHaveBeenCalledWith('new_token');
+          done();
+        });
       });
 
-      it('should ask for 2FA if applicable and include method', () => {
+      it('should ask for 2FA if applicable and include method', (done) => {
         spyOn(callbacks, 'needsTwoFactorCode');
 
-        MyWallet.login(
+        let promise = MyWallet.login(
           'wallet-2fa',
           'password',
           {
@@ -371,7 +320,10 @@ describe('Wallet', () => {
           },
           callbacks
         );
-        expect(callbacks.needsTwoFactorCode).toHaveBeenCalledWith(1);
+        expect(promise).toBeRejected(() => {
+          expect(callbacks.needsTwoFactorCode).toHaveBeenCalledWith(1);
+          done();
+        });
       });
     });
 
@@ -392,22 +344,32 @@ describe('Wallet', () => {
         );
       });
 
-      it('should notify user if applicable', () => expect(callbacks.authorizationRequired).toHaveBeenCalled());
+      it('should notify user if applicable', (done) => {
+        expect(promise).toBeResolved(() => {
+          expect(callbacks.authorizationRequired).toHaveBeenCalled();
+          done();
+        });
+      });
 
-      it('should start polling to check for authoritzation, using token', () => expect(WalletNetwork.pollForSessionGUID).toHaveBeenCalledWith('token'));
+      it('should start polling to check for authoritzation, using token', (done) => {
+        expect(promise).toBeResolved(() => {
+          expect(WalletNetwork.pollForSessionGUID).toHaveBeenCalledWith('token');
+          done();
+        });
+      });
 
       it('should continue login after request is approved', done =>
-        expect(promise).toBeResolvedWith(jasmine.objectContaining(
-          {guid: 'wallet-email-auth'}
-        ), done)
+        expect(promise).toBeResolvedWith(jasmine.objectContaining({guid: 'wallet-email-auth'}), done)
       );
     });
 
     describe('email authoritzation and 2FA', () => {
+      let promise;
+
       beforeEach(() => {
         spyOn(WalletNetwork, 'pollForSessionGUID').and.callThrough();
 
-        MyWallet.login(
+        promise = MyWallet.login(
           'wallet-email-auth-2fa',
           'password',
           {
@@ -418,7 +380,12 @@ describe('Wallet', () => {
         );
       });
 
-      it('should start polling to check for authoritzation, using token', () => expect(WalletNetwork.pollForSessionGUID).toHaveBeenCalledWith('token'));
+      it('should start polling to check for authoritzation, using token', (done) => {
+        expect(promise).toBeRejected(() => {
+          expect(WalletNetwork.pollForSessionGUID).toHaveBeenCalledWith('token');
+          done();
+        });
+      });
 
       it('should ask for 2FA after email auth', done =>
         spyOn(callbacks, 'needsTwoFactorCode').and.callFake(method => {
@@ -456,12 +423,12 @@ describe('Wallet', () => {
           callbacks
         );
 
-        expect(promise).toBeResolved(done);
-        expect(WalletNetwork.fetchWalletWithTwoFactor).toHaveBeenCalled();
-        expect(WalletNetwork.fetchWalletWithTwoFactor.calls.argsFor(0)[2]).toEqual(
-          {type: 5, code: 'BF399'}
-        );
-        expect(WalletNetwork.fetchWalletWithTwoFactor.calls.argsFor(0)[1]).toEqual('token');
+        expect(promise).toBeResolved(() => {
+          expect(WalletNetwork.fetchWalletWithTwoFactor).toHaveBeenCalled();
+          expect(WalletNetwork.fetchWalletWithTwoFactor.calls.argsFor(0)[2]).toEqual({type: 5, code: 'BF399'});
+          expect(WalletNetwork.fetchWalletWithTwoFactor.calls.argsFor(0)[1]).toEqual('token');
+          done();
+        });
       });
 
       it('should not call fetchWalletWithTwoFactor() when null', done => {
@@ -475,8 +442,10 @@ describe('Wallet', () => {
           callbacks
         );
 
-        expect(promise).toBeResolvedWith(jasmine.objectContaining({guid: '1234'}), done);
-        expect(WalletNetwork.fetchWalletWithTwoFactor).not.toHaveBeenCalled();
+        expect(promise).toBeResolvedWith(jasmine.objectContaining({guid: '1234'}), () => {
+          expect(WalletNetwork.fetchWalletWithTwoFactor).not.toHaveBeenCalled();
+          done();
+        });
       });
     });
 
@@ -498,34 +467,36 @@ describe('Wallet', () => {
       });
 
       it('should fetch the wallet and throw an error', done => {
-        expect(promise).toBeRejectedWith('WRONG_PASSWORD', done);
-        expect(WalletNetwork.fetchWallet).toHaveBeenCalled();
+        expect(promise).toBeRejectedWith('WRONG_PASSWORD', () => {
+          expect(WalletNetwork.fetchWallet).toHaveBeenCalled();
+          done();
+        });
       });
 
       it('should not fetch wallet again at the next attempt', done => {
-        // Second attempt:
-        promise = MyWallet.login(
-          '1234',
-          'password',
-          {
-            twoFactor: null,
-            sessionToken: 'token'
-          },
-          callbacks
-        );
-
-        expect(promise).toBeResolvedWith(jasmine.objectContaining({guid: '1234'}), done);
-        expect(WalletNetwork.fetchWallet.calls.count()).toEqual(1);
+        expect(promise).toBeRejectedWith('WRONG_PASSWORD', () => {
+          // Second attempt:
+          promise = MyWallet.login(
+            '1234',
+            'password',
+            {
+              twoFactor: null,
+              sessionToken: 'token'
+            },
+            callbacks
+          );
+          expect(promise).toBeResolvedWith(jasmine.objectContaining({guid: '1234'}), () => {
+            expect(WalletNetwork.fetchWallet.calls.count()).toEqual(1);
+            done();
+          });
+        });
       });
     });
   }); // First attempt only
 
   describe('didFetchWallet', () => {
-    beforeEach(() => spyOn(WalletStore, 'setEncryptedWalletData').and.callThrough());
-
-    it('should resolve', done => {
-      let promise = MyWallet.didFetchWallet({payload: ''});
-      expect(promise).toBeResolved(done);
+    beforeEach(() => {
+      spyOn(WalletStore, 'setEncryptedWalletData').and.callThrough();
     });
 
     it('should update the wallet store', () => {
@@ -536,13 +507,11 @@ describe('Wallet', () => {
     it("should not update the wallet store if there's no payload", () => {
       MyWallet.didFetchWallet({});
       MyWallet.didFetchWallet({payload: ''});
-
       expect(WalletStore.setEncryptedWalletData).not.toHaveBeenCalled();
     });
 
     it("should not update the wallet store if payload is 'Not modified'", () => {
       MyWallet.didFetchWallet({payload: 'Not modified'});
-
       expect(WalletStore.setEncryptedWalletData).not.toHaveBeenCalled();
     });
   });
@@ -551,7 +520,7 @@ describe('Wallet', () => {
     beforeEach(() =>
       spyOn(MyWallet, 'decryptAndInitializeWallet').and.callFake(() => {
         MyWallet.wallet = {
-          loadExternal () {
+          loadMetadata () {
             return Promise.resolve();
           },
           incStats () {
@@ -598,39 +567,38 @@ describe('Wallet', () => {
       spyOn(WalletStore, 'unsafeSetPassword');
     });
 
-    it('should generate a new wallet', () => {
-      MyWallet.recoverFromMnemonic('a@b.com', 'secret', 'nuclear bunker sphaghetti monster dim sum sauce', undefined, () => {});
-      expect(WalletSignup.generateNewWallet).toHaveBeenCalled();
-      expect(WalletSignup.generateNewWallet.calls.argsFor(0)[0]).toEqual('secret');
-      expect(WalletSignup.generateNewWallet.calls.argsFor(0)[1]).toEqual('a@b.com');
-      expect(WalletSignup.generateNewWallet.calls.argsFor(0)[2]).toEqual('nuclear bunker sphaghetti monster dim sum sauce');
+    it('should generate a new wallet', (done) => {
+      MyWallet.recoverFromMnemonic('a@b.com', 'secret', 'nuclear bunker sphaghetti monster dim sum sauce', undefined, () => {
+        expect(WalletSignup.generateNewWallet).toHaveBeenCalled();
+        expect(WalletSignup.generateNewWallet.calls.argsFor(0)[0]).toEqual('secret');
+        expect(WalletSignup.generateNewWallet.calls.argsFor(0)[1]).toEqual('a@b.com');
+        expect(WalletSignup.generateNewWallet.calls.argsFor(0)[2]).toEqual('nuclear bunker sphaghetti monster dim sum sauce');
+        done();
+      });
     });
 
-    it('should call unsafeSetPassword', () => {
-      MyWallet.recoverFromMnemonic('a@b.com', 'secret', 'nuclear bunker sphaghetti monster dim sum sauce', undefined, () => {});
-      expect(WalletStore.unsafeSetPassword).toHaveBeenCalledWith('secret');
+    it('should call unsafeSetPassword', (done) => {
+      MyWallet.recoverFromMnemonic('a@b.com', 'secret', 'nuclear bunker sphaghetti monster dim sum sauce', undefined, () => {
+        expect(WalletStore.unsafeSetPassword).toHaveBeenCalledWith('secret');
+        done();
+      });
     });
 
     it('should pass guid, shared key, password and session token upon success', done => {
-      let obs = {
-        success () {}
-      };
-      spyOn(obs, 'success').and.callThrough();
+      let promise = new Promise(resolve => {
+        MyWallet.recoverFromMnemonic('a@b.com', 'secret', 'nuclear bunker sphaghetti monster dim sum sauce', undefined, resolve);
+      });
 
-      MyWallet.recoverFromMnemonic('a@b.com', 'secret', 'nuclear bunker sphaghetti monster dim sum sauce', undefined, obs.success);
-
-      let result = () => {
-        expect(obs.success).toHaveBeenCalledWith({ guid: '1234', sharedKey: 'shared', password: 'secret', sessionToken: 'new_token' });
-        done();
-      };
-
-      setTimeout(result, 1);
+      let expected = { guid: '1234', sharedKey: 'shared', password: 'secret', sessionToken: 'new_token' };
+      expect(promise).toBeResolvedWith(jasmine.objectContaining(expected), done);
     });
 
-    it('should scan address space', () => {
+    it('should scan address space', (done) => {
       spyOn(hdwallet, 'scanBip44').and.callThrough();
-      MyWallet.recoverFromMnemonic('a@b.com', 'secret', 'nuclear bunker sphaghetti monster dim sum sauce', undefined, () => {});
-      expect(hdwallet.scanBip44).toHaveBeenCalled();
+      MyWallet.recoverFromMnemonic('a@b.com', 'secret', 'nuclear bunker sphaghetti monster dim sum sauce', undefined, () => {
+        expect(hdwallet.scanBip44).toHaveBeenCalled();
+        done();
+      });
     });
   });
 
@@ -646,19 +614,22 @@ describe('Wallet', () => {
       expect(RNG.run).toHaveBeenCalled();
     });
 
-    it('should call errorCallback if RNG throws', done => {
+    it('should call errorCallback if RNG throws', () => {
       // E.g. because there was a network failure.
       // This assumes BIP39.generateMnemonic does not rescue a throw
       // inside the RNG
 
       let observers =
-        {error () { done(); }};
+        {
+          error (e) {}
+        };
 
       spyOn(observers, 'error').and.callThrough();
 
       RNG.shouldThrow = true;
       MyWallet.createNewWallet('a@b.com', '1234', 'My Wallet', 'en', 'usd', observers.success, observers.error);
-      expect(observers.error).toHaveBeenCalledWith('Connection failed');
+      expect(observers.error).toHaveBeenCalled();
+      expect(observers.error.calls.argsFor(0)[0].message).toEqual('Connection failed');
 
       RNG.shouldThrow = false;
     });
@@ -676,7 +647,7 @@ describe('Wallet', () => {
         spyOn(observers, 'error').and.callThrough();
 
         WalletNetwork.failInsertion = true;
-        return MyWallet.createNewWallet('a@b.com', '1234', 'My Wallet', 'en', 'usd', observers.success, observers.error);
+        MyWallet.createNewWallet('a@b.com', '1234', 'My Wallet', 'en', 'usd', observers.success, observers.error);
       });
 
       it('should fail', () => {

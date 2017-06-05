@@ -33,7 +33,7 @@ BlockchainSocket.prototype._initialize = function (onOpen, onMessage, onClose) {
       this.socket.on('message', onMessage);
       this.socket.on('close', onClose);
     } catch (e) {
-      console.log('Failed to connect to websocket');
+      console.error('Failed to connect to websocket', e);
     }
   }
 };

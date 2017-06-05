@@ -413,7 +413,7 @@ describe('Transaction', () => {
       let fee = 10000;
       let isAbsFee = false;
       let s = Transaction.selectCoins(coins, amounts, fee, isAbsFee);
-      expect(s).toEqual({'coins': [{value: 40000}, {value: 30000}], 'fee': 4080});
+      expect(s).toEqual({'coins': [{value: 40000}, {value: 30000}], 'fee': 3740});
     });
 
     it('Transaction.selectCoins with absolute fee', () => {
@@ -423,41 +423,6 @@ describe('Transaction', () => {
       let isAbsFee = true;
       let s = Transaction.selectCoins(coins, amounts, fee, isAbsFee);
       expect(s).toEqual({'coins': [{value: 40000}, {value: 30000}], 'fee': 10000});
-    });
-
-    it('Transaction.confirmationEstimation with absolute fee', () => {
-      let feeRanges = [60000, 50000, 40000, 30000, 20000, 10000];
-      let fee = 12000;
-      let s = Transaction.confirmationEstimation(feeRanges, fee);
-      expect(s).toEqual(6);
-    });
-
-    it('Transaction.confirmationEstimation with absolute fee', () => {
-      let feeRanges = [60000, 50000, 40000, 30000, 20000, 10000];
-      let fee = 12000;
-      let s = Transaction.confirmationEstimation(feeRanges, fee);
-      expect(s).toEqual(6);
-    });
-
-    it('Transaction.confirmationEstimation with absolute fee', () => {
-      let feeRanges = [60000, 50000, 40000, 30000, 20000, 10000];
-      let fee = 30000;
-      let s = Transaction.confirmationEstimation(feeRanges, fee);
-      expect(s).toEqual(4);
-    });
-
-    it('Transaction.confirmationEstimation with absolute fee', () => {
-      let feeRanges = [60000, 50000, 40000, 30000, 20000, 10000];
-      let fee = 2000;
-      let s = Transaction.confirmationEstimation(feeRanges, fee);
-      expect(s).toEqual(Infinity);
-    });
-
-    it('Transaction.confirmationEstimation with absolute fee', () => {
-      let feeRanges = [0, 0, 0, 0, 0, 0];
-      let fee = 70000;
-      let s = Transaction.confirmationEstimation(feeRanges, fee);
-      expect(s).toBeNull();
     });
   });
 });

@@ -24,6 +24,11 @@ var Transaction = function (payment, emitter) {
   assert(toAddresses && toAddresses.length, 'Missing destination address');
   assert(amounts && amounts.length, 'Missing amount to pay');
 
+  if (payment.blockchainFee && payment.blockchainAddress) {
+    amounts = amounts.concat(payment.blockchainFee);
+    toAddresses = toAddresses.concat(payment.blockchainAddress);
+  }
+
   this.emitter = emitter;
   this.amount = amounts.reduce(Helpers.add, 0);
   this.addressesOfInputs = [];
@@ -31,7 +36,7 @@ var Transaction = function (payment, emitter) {
   this.addressesOfNeededPrivateKeys = [];
   this.pathsOfNeededPrivateKeys = [];
 
-  assert(toAddresses.length === amounts.length, 'The number of destiny addresses and destiny amounts should be the same.');
+  assert(toAddresses.length === amounts.length, 'The number of destination addresses and destination amounts should be the same.');
   assert(this.amount >= BITCOIN_DUST, {error: 'BELOW_DUST_THRESHOLD', amount: this.amount, threshold: BITCOIN_DUST});
   assert(unspentOutputs && unspentOutputs.length > 0, {error: 'NO_UNSPENT_OUTPUTS'});
   var transaction = new Bitcoin.TransactionBuilder(constants.getNetwork());
@@ -163,7 +168,6 @@ Transaction.sumOfCoins = function (coins) {
 
 Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
   var amount = amounts.reduce(Helpers.add, 0);
-  var nouts = amounts.length;
   var sorted = usableCoins.sort(function (a, b) { return b.value - a.value; });
   var len = sorted.length;
   var sel = [];
@@ -181,23 +185,11 @@ Transaction.selectCoins = function (usableCoins, amounts, fee, isAbsoluteFee) {
     for (var ii = 0; ii < len; ii++) {
       var coin2 = sorted[ii];
       accAm = accAm + coin2.value;
-      accFee = Transaction.guessFee(ii + 1, nouts + 1, fee);
+      accFee = Transaction.guessFee(ii + 1, 2, fee);
       sel.push(coin2);
       if (accAm >= accFee + amount) { return {'coins': sel, 'fee': accFee}; }
     }
   }
   return {'coins': [], 'fee': 0};
-};
-
-Transaction.confirmationEstimation = function (absoluteFees, fee) {
-  var len = absoluteFees.length;
-  for (var i = 0; i < len; i++) {
-    if (absoluteFees[i] > 0 && fee >= absoluteFees[i]) {
-      return i + 1;
-    } else {
-      if (absoluteFees[i] > 0 && (i + 1 === len)) { return Infinity; }
-    }
-  }
-  return null;
 };
 module.exports = Transaction;

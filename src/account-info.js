@@ -56,7 +56,7 @@ Object.defineProperties(AccountInfo.prototype, {
       if (value && value.length > 5) {
         this._mobile = {
           countryCode: value.split(' ')[0].substr(1),
-          number: value.split(' ')[1]
+          number: value.split(' ')[1] || ''
         };
       } else {
         this._mobile = null;

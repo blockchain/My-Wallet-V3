@@ -8,6 +8,9 @@ var BIP39 = require('bip39');
 var ImportExport = require('./import-export');
 var constants = require('./constants');
 var WalletCrypo = require('./wallet-crypto');
+var has = require('ramda/src/has');
+var allPass = require('ramda/src/allPass');
+var map = require('ramda/src/map');
 
 var Helpers = {};
 Math.log2 = function (x) { return Math.log(x) / Math.LN2; };
@@ -123,6 +126,10 @@ Helpers.toArrayFormat = function (x) {
   return Array.isArray(x) ? x : [x];
 };
 
+Helpers.isEmptyObject = function (x) {
+  return (Object.keys(x).length === 0 && x.constructor === Object);
+};
+
 Helpers.isEmptyArray = function (x) {
   return Array.isArray(x) && x.length === 0;
 };
@@ -216,6 +223,10 @@ Function.prototype.compose = function (g) { // eslint-disable-line no-extend-nat
 
 Helpers.guessSize = function (nInputs, nOutputs) {
   return (nInputs * 148 + nOutputs * 34 + 10);
+};
+
+Helpers.toFeePerKb = function (fee) {
+  return fee * 1000;
 };
 
 Helpers.guessFee = function (nInputs, nOutputs, feePerKb) {
@@ -312,37 +323,31 @@ function parseMiniKey (miniKey) {
 }
 
 Helpers.privateKeyStringToKey = function (value, format) {
-  var keyBytes = null;
-  var tbytes;
-
-  if (format === 'base58') {
-    keyBytes = Helpers.buffertoByteArray(Base58.decode(value));
-  } else if (format === 'base64') {
-    keyBytes = Helpers.buffertoByteArray(new Buffer(value, 'base64'));
-  } else if (format === 'hex') {
-    keyBytes = Helpers.buffertoByteArray(new Buffer(value, 'hex'));
-  } else if (format === 'mini') {
-    keyBytes = Helpers.buffertoByteArray(parseMiniKey(value));
-  } else if (format === 'sipa') {
-    tbytes = Helpers.buffertoByteArray(Base58.decode(value));
-    tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
-    tbytes.shift();
-    keyBytes = tbytes.slice(0, tbytes.length - 4);
-  } else if (format === 'compsipa') {
-    tbytes = Helpers.buffertoByteArray(Base58.decode(value));
-    tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
-    tbytes.shift();
-    tbytes.pop();
-    keyBytes = tbytes.slice(0, tbytes.length - 4);
+  if (format === 'sipa' || format === 'compsipa') {
+    return Bitcoin.ECPair.fromWIF(value, constants.getNetwork());
   } else {
-    throw new Error('Unsupported Key Format');
-  }
+    var keyBuffer = null;
 
-  return new Bitcoin.ECPair(
-    new BigInteger.fromByteArrayUnsigned(keyBytes), // eslint-disable-line new-cap
-    null,
-    { compressed: format !== 'sipa', network: constants.getNetwork() }
-  );
+    switch (format) {
+      case 'base58':
+        keyBuffer = Base58.decode(value);
+        break;
+      case 'base64':
+        keyBuffer = new Buffer(value, 'base64');
+        break;
+      case 'hex':
+        keyBuffer = new Buffer(value, 'hex');
+        break;
+      case 'mini':
+        keyBuffer = parseMiniKey(value);
+        break;
+      default:
+        throw new Error('Unsupported Key Format');
+    }
+
+    var d = BigInteger.fromBuffer(keyBuffer);
+    return new Bitcoin.ECPair(d, null, { network: constants.getNetwork() });
+  }
 };
 
 Helpers.detectPrivateKeyFormat = function (key) {
@@ -465,6 +470,50 @@ Helpers.isEmailInvited = function (email, fraction) {
     return false;
   }
   return WalletCrypo.sha256(email)[0] / 256 >= 1 - fraction;
+};
+
+// Helpers.isFeeOptions :: object => Boolean
+Helpers.isFeeOptions = object => {
+  const props = ['min_tx_amount', 'percent', 'max_service_charge', 'send_to_miner'];
+  return object ? allPass(map(has, props))(object) : false;
+};
+
+Helpers.blockchainFee = (amount, options) =>
+  Helpers.isFeeOptions(options) && Helpers.isPositiveNumber(amount) && amount > options.min_tx_amount
+    ? Math.min(Math.floor(amount * options.percent), options.max_service_charge)
+    : 0;
+
+Helpers.balanceMinusFee = (balance, options) => {
+  const maxFeePoint = () => Math.floor(options.max_service_charge * ((1 / options.percent) + 1));
+  switch (true) {
+    // negative balance
+    case !Helpers.isPositiveNumber(balance):
+      return 0;
+    // no valid options
+    case !Helpers.isFeeOptions(options):
+      return balance;
+    // balance in [0, min_tx_amount] -> no fee
+    case balance <= options.min_tx_amount:
+      return balance;
+    // balance in (min_tx_amount, maxFeePoint] --> max(max with fee, max without fee)
+    case (options.min_tx_amount < balance) && (balance <= maxFeePoint()):
+      const maxWithFee = Math.floor(balance / (1 + options.percent));
+      return Math.max(maxWithFee, options.min_tx_amount);
+    // balance in (maxFeePoint, +inf) --> maximum fee
+    case maxFeePoint() < balance:
+      return balance - options.max_service_charge;
+    default:
+      return balance;
+  } // fi switch
+};
+
+Helpers.guidToGroup = (guid) => {
+  let hashed = WalletCrypo.sha256(new Buffer(guid.replace(/-/g, ''), 'hex'));
+  return hashed[0] & 1 ? 'b' : 'a';
+};
+
+Helpers.deepClone = function (object) {
+  return JSON.parse(JSON.stringify(object));
 };
 
 module.exports = Helpers;

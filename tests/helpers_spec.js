@@ -132,41 +132,40 @@ describe('Helpers', () => {
   });
 
   describe('asyncOnce', () => {
-    it('should only execute once', done => {
-      let observer = {
-        func () {},
-        before () {}
+    let observer;
+
+    beforeEach(() => {
+      jasmine.clock().install();
+      observer = {
+        func: jasmine.createSpy('func'),
+        before: jasmine.createSpy('before')
       };
-
-      spyOn(observer, 'func');
-      spyOn(observer, 'before');
-
-      let async = Helpers.asyncOnce(observer.func, 20, observer.before);
-
-      async();
-      async();
-      async();
-      async();
-
-      let result = () => {
-        expect(observer.func).toHaveBeenCalledTimes(1);
-        expect(observer.before).toHaveBeenCalledTimes(4);
-
-        done();
-      };
-
-      return setTimeout(result, 1000);
     });
 
-    it('should work with arguments', done => {
-      let observer = {
-        func () {},
-        before () {}
-      };
+    afterEach(() => {
+      jasmine.clock().uninstall();
+    });
 
-      spyOn(observer, 'func');
-      spyOn(observer, 'before');
+    it('should only execute once', () => {
+      let async = Helpers.asyncOnce(observer.func, 20, observer.before);
 
+      async();
+      async();
+      async();
+      async();
+
+      jasmine.clock().tick(10);
+
+      expect(observer.func).toHaveBeenCalledTimes(0);
+      expect(observer.before).toHaveBeenCalledTimes(4);
+
+      jasmine.clock().tick(10);
+
+      expect(observer.func).toHaveBeenCalledTimes(1);
+      expect(observer.before).toHaveBeenCalledTimes(4);
+    });
+
+    it('should work with arguments', () => {
       let async = Helpers.asyncOnce(observer.func, 20, observer.before);
 
       async(1);
@@ -174,15 +173,16 @@ describe('Helpers', () => {
       async(1);
       async(1);
 
-      let result = () => {
-        expect(observer.func).toHaveBeenCalledTimes(1);
-        expect(observer.func).toHaveBeenCalledWith(1);
-        expect(observer.before).toHaveBeenCalledTimes(4);
+      jasmine.clock().tick(10);
 
-        done();
-      };
+      expect(observer.func).toHaveBeenCalledTimes(0);
+      expect(observer.before).toHaveBeenCalledTimes(4);
 
-      return setTimeout(result, 1000);
+      jasmine.clock().tick(10);
+
+      expect(observer.func).toHaveBeenCalledTimes(1);
+      expect(observer.func).toHaveBeenCalledWith(1);
+      expect(observer.before).toHaveBeenCalledTimes(4);
     });
   });
 
@@ -275,12 +275,41 @@ describe('Helpers', () => {
     });
   });
 
-  describe('privateKeyStringToKey', () =>
-    it('should convert sipa format', () => {
-      let res = Helpers.privateKeyStringToKey('5JFXNQvtFZSobCCRPxnTZiW1PDVnXvGBg5XeuUDoUCi8LRsV3gn', 'sipa');
+  describe('privateKeyStringToKey', () => {
+    let fixtures = [
+      { format: 'base58', key: 'DXuhJcNCPfgjYN8NQFjVh9yri8Rau5B7ixWJjpSeqW7W', addr: '1EgGs4Pd5ygy1ZCvMCgqpkrkMHtawYcnam' },
+      { format: 'base64', key: 'pbc8OCl5SdqjILx4R+yfvljZ7edUr65osjkzjqH2YQw=', addr: '1EL2ha3KWUFa2q7hfLk49XmUfiBV1yCzYG' },
+      { format: 'hex', key: '46DA1C47CF7FE23A97497665C217963F048EBC3E4287734947B180D64C7D81DF', addr: '19CK8suvcJptn96vfvLjfNnbcbEoyHS9G' },
+      { format: 'mini', key: 'S6c56bnXQiBjk9mqSYE7ykVQ7NzrRy', addr: '1PZuicD1ACRfBuKEgp2XaJhVvnwpeETDyn' },
+      { format: 'sipa', key: '5JFXNQvtFZSobCCRPxnTZiW1PDVnXvGBg5XeuUDoUCi8LRsV3gn', addr: '1BDSbDEechSue77wS44Jn2uDiFaQWom2dG' },
+      { format: 'compsipa', key: 'L3dDv2KUyLfPwkcnhALEaHnd47gewa1BVvnCwWL3gVWsb2H27PY9', addr: '1Mum7V38a3fGLiXN3oCrzdf83mZUKNXmGq' }
+    ];
+
+    let errorFixtures = [
+      { format: 'base58', key: 'DXuhJcNCPfgjYN8NQFjVh9yri8Rau5B7ixWJjpSeqW7=', error: 'Non-base58 character' },
+      { format: 'base64', key: 'pbc8OCl5SdqjILx4R+yfvljZ7edUr65osjkzjqH2YQw+', error: 'Private key must be less than the curve order' },
+      { format: 'hex', key: 'abcdefg', error: 'Invalid hex string' },
+      { format: 'mini', key: 'S6c56bnXQiBjk9mqSYE7ykVQ7NzrRz', error: 'Invalid mini key' },
+      { format: 'sipa', key: '5JFXNQvtFZSobCCRPxnTZiW1PDVnXvGBg5XeuUDoUCi8LRsVxyz', error: 'Invalid checksum' },
+      { format: 'compsipa', key: 'L3dDv2KUyLfPwkcnhALEaHnd47gewa1BVvnCwWL3gVWsb2H27xyz', error: 'Invalid checksum' }
+    ];
+
+    fixtures.forEach(data => it(`should convert ${data.format} format`, () => {
+      let res = Helpers.privateKeyStringToKey(data.key, data.format);
       expect(Helpers.isKey(res)).toBeTruthy();
-    })
-  );
+      expect(res.getAddress()).toEqual(data.addr);
+    }));
+
+    errorFixtures.forEach(data => it(`should fail for ${data.format} given a bad key`, () => {
+      let e = new Error(data.error);
+      expect(() => Helpers.privateKeyStringToKey(data.key, data.format)).toThrow(e);
+    }));
+
+    it('should fail if given an unknown format', () => {
+      let e = new Error('Unsupported Key Format');
+      expect(() => Helpers.privateKeyStringToKey('', 'unknown')).toThrow(e);
+    });
+  });
 
   describe('privateKeyCorrespondsToAddress', () => {
     afterEach(() => {
@@ -402,5 +431,131 @@ describe('Helpers', () => {
     it('should verify valid messages', () => expect(Helpers.verifyMessage('1LGAzcG9dafqtW8eHkFUPjkDKemjv5dxKd', 'HxvX3mVUI4cQgpKB98bjl/NOYi2BiaSZEsdfCulyJ7GAWrfP/9WkDazCe45lyhWPZQwZKnYZILz5h3SHn4xFPzg=', 'Wright, it is not the same as if I sign Craig Wright, Satoshi.')).toBeTruthy());
 
     it('should not verify invalid messages', () => expect(Helpers.verifyMessage('12cbQLTFMXRnSzktFkuoG3eHoMeFtpTu3S', 'IH+xpXCKouEcd0E8Hv3NkrYWbhq0P7pAQpI1GcQ2hF2AAsqL2o4agDE8V81i071/bTMz00YKw2YRMoyFMzThZwM=', 'Wright, it is not the same as if I sign Craig Wright, Satoshi.')).toBeFalsy());
+  });
+
+  describe('isFeeOptions', () => {
+    it('should return false for all these cases', () => {
+      expect(Helpers.isFeeOptions({})).toBeFalsy();
+      expect(Helpers.isFeeOptions(null)).toBeFalsy();
+      expect(Helpers.isFeeOptions(undefined)).toBeFalsy();
+      expect(Helpers.isFeeOptions(1)).toBeFalsy();
+      expect(Helpers.isFeeOptions(0)).toBeFalsy();
+      expect(Helpers.isFeeOptions('hello')).toBeFalsy();
+      expect(Helpers.isFeeOptions('')).toBeFalsy();
+      expect(Helpers.isFeeOptions()).toBeFalsy();
+      expect(Helpers.isFeeOptions({min_tx_amount: 0})).toBeFalsy();
+    });
+
+    it('should return true for an object at least containing the exptected properties', () => {
+      expect(Helpers.isFeeOptions({min_tx_amount: 0, percent: 0, max_service_charge: 0, send_to_miner: 0, extraProperty: 0})).toBeTruthy();
+    });
+  });
+
+  describe('blockchainFee', () => {
+    it('should return 0 for all these cases', () => {
+      const validOptions = {min_tx_amount: 0, percent: 0.05, max_service_charge: 1000, send_to_miner: true};
+      expect(Helpers.blockchainFee(10000, {})).toBe(0);
+      expect(Helpers.blockchainFee(10000, null)).toBe(0);
+      expect(Helpers.blockchainFee(10000, undefined)).toBe(0);
+      expect(Helpers.blockchainFee(10000, {min_tx_amount: 0})).toBe(0);
+      expect(Helpers.blockchainFee(undefined, {min_tx_amount: 0})).toBe(0);
+      expect(Helpers.blockchainFee(-100, validOptions)).toBe(0);
+      expect(Helpers.blockchainFee(0, validOptions)).toBe(0);
+      expect(Helpers.blockchainFee(null, validOptions)).toBe(0);
+      expect(Helpers.blockchainFee()).toBe(0);
+      expect(Helpers.blockchainFee(100)).toBe(0);
+      expect(Helpers.blockchainFee('string', validOptions)).toBe(0);
+      expect(Helpers.blockchainFee([], validOptions)).toBe(0);
+    });
+
+    it('should work with 0% fee', () => {
+      const opt = {min_tx_amount: 0, percent: 0, max_service_charge: 1000, send_to_miner: true};
+      expect(Helpers.blockchainFee(100000000, opt)).toBe(0);
+    });
+
+    it('should work with 5% fee not reaching max fee', () => {
+      const opt = {min_tx_amount: 0, percent: 0.05, max_service_charge: 1000, send_to_miner: true};
+      expect(Helpers.blockchainFee(10000, opt)).toBe(500);
+    });
+
+    it('should work with 40 basis points fee not reaching max fee', () => {
+      const opt = {min_tx_amount: 0, percent: 0.004, max_service_charge: 1000, send_to_miner: true};
+      expect(Helpers.blockchainFee(1000, opt)).toBe(4);
+    });
+
+    it('should set max fee when overpassing it', () => {
+      const opt = {min_tx_amount: 0, percent: 0.05, max_service_charge: 1000, send_to_miner: true};
+      expect(Helpers.blockchainFee(100000000, opt)).toBe(1000);
+    });
+
+    it('should be 0 for the exact minimum fee amount', () => {
+      const opt = {min_tx_amount: 100, percent: 0.05, max_service_charge: 1000, send_to_miner: true};
+      expect(Helpers.blockchainFee(100, opt)).toBe(0);
+    });
+  });
+
+  describe('balanceMinusFee', () => {
+    it('should return 0 for negative balances', () => {
+      const validOptions = {min_tx_amount: 0, percent: 0.05, max_service_charge: 1000, send_to_miner: true};
+      expect(Helpers.balanceMinusFee(-1000, {})).toBe(0);
+      expect(Helpers.balanceMinusFee(-1000, null)).toBe(0);
+      expect(Helpers.balanceMinusFee(-1000, undefined)).toBe(0);
+      expect(Helpers.balanceMinusFee(-1000)).toBe(0);
+      expect(Helpers.balanceMinusFee(-1000, validOptions)).toBe(0);
+      expect(Helpers.balanceMinusFee(0, validOptions)).toBe(0);
+    });
+
+    it('should work with normal fee conditions', () => {
+      const opt = {min_tx_amount: 100, percent: 0.05, max_service_charge: 200, send_to_miner: true};
+      expect(Helpers.balanceMinusFee(0, opt)).toBe(0);
+      expect(Helpers.balanceMinusFee(95, opt)).toBe(95);
+      expect(Helpers.balanceMinusFee(100, opt)).toBe(100);
+      expect(Helpers.balanceMinusFee(103, opt)).toBe(100);
+      expect(Helpers.balanceMinusFee(105, opt)).toBe(100);
+      expect(Helpers.balanceMinusFee(130, opt)).toBe(123);
+      expect(Helpers.balanceMinusFee(3445, opt)).toBe(3280);
+      expect(Helpers.balanceMinusFee(4200, opt)).toBe(4000);
+      expect(Helpers.balanceMinusFee(4400, opt)).toBe(4200);
+      expect(Helpers.balanceMinusFee(10000, opt)).toBe(9800);
+    });
+
+    it('should work with 0% fee', () => {
+      const opt = {min_tx_amount: 100, percent: 0, max_service_charge: 200, send_to_miner: true};
+      expect(Helpers.balanceMinusFee(0, opt)).toBe(0);
+      expect(Helpers.balanceMinusFee(95, opt)).toBe(95);
+      expect(Helpers.balanceMinusFee(100, opt)).toBe(100);
+      expect(Helpers.balanceMinusFee(103, opt)).toBe(103);
+      expect(Helpers.balanceMinusFee(105, opt)).toBe(105);
+      expect(Helpers.balanceMinusFee(130, opt)).toBe(130);
+      expect(Helpers.balanceMinusFee(3445, opt)).toBe(3445);
+      expect(Helpers.balanceMinusFee(4200, opt)).toBe(4200);
+      expect(Helpers.balanceMinusFee(4400, opt)).toBe(4400);
+      expect(Helpers.balanceMinusFee(10000, opt)).toBe(10000);
+    });
+
+    it('should work with 100% fee', () => {
+      const opt = {min_tx_amount: 100, percent: 1, max_service_charge: 200, send_to_miner: true};
+      expect(Helpers.balanceMinusFee(0, opt)).toBe(0);
+      expect(Helpers.balanceMinusFee(95, opt)).toBe(95);
+      expect(Helpers.balanceMinusFee(100, opt)).toBe(100);
+      expect(Helpers.balanceMinusFee(103, opt)).toBe(100);
+      expect(Helpers.balanceMinusFee(105, opt)).toBe(100);
+      expect(Helpers.balanceMinusFee(130, opt)).toBe(100);
+      expect(Helpers.balanceMinusFee(3445, opt)).toBe(3245);
+      expect(Helpers.balanceMinusFee(4200, opt)).toBe(4000);
+      expect(Helpers.balanceMinusFee(4400, opt)).toBe(4200);
+      expect(Helpers.balanceMinusFee(10000, opt)).toBe(9800);
+    });
+
+    it('should work with maxFeePoint < min_tx_amount', () => {
+      const opt = {min_tx_amount: 1000, percent: 0.5, max_service_charge: 1, send_to_miner: true};
+      expect(Helpers.balanceMinusFee(0, opt)).toBe(0);
+      expect(Helpers.balanceMinusFee(990, opt)).toBe(990);
+      expect(Helpers.balanceMinusFee(1000, opt)).toBe(1000);
+      expect(Helpers.balanceMinusFee(1001, opt)).toBe(1000);
+      expect(Helpers.balanceMinusFee(1002, opt)).toBe(1001);
+      expect(Helpers.balanceMinusFee(1003, opt)).toBe(1002);
+      expect(Helpers.balanceMinusFee(10000, opt)).toBe(9999);
+    });
   });
 });
