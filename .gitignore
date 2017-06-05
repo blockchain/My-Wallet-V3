@@ -16,6 +16,7 @@ npm-debug.log
 # Generated js files
 build
 dist
+lib
 
 # Generated coverage reports
 coverage

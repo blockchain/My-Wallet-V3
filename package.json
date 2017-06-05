@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.31.5",
+  "version": "3.32.4",
   "description": "Blockchain.info JavaScript Wallet",
   "homepage": "https://github.com/blockchain/my-wallet-v3",
   "bugs": {
@@ -21,12 +21,14 @@
     "Kevin Woudini",
     "Justin Tormey"
   ],
-  "main": "index.js",
+  "main": "lib/index.js",
+  "module": "src/index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/blockchain/my-wallet-v3.git"
   },
   "scripts": {
+    "prepublish": "node_modules/.bin/babel src --presets babel-preset-es2015 --out-dir lib",
     "dist": "NODE_ENV=\"prod\" ./node_modules/.bin/webpack",
     "build": "./node_modules/.bin/webpack --progress",
     "build:watch": "./node_modules/.bin/webpack -w",
@@ -39,20 +41,21 @@
   "dependencies": {
     "bigi": "1.4.*",
     "bip39": "2.1.*",
-    "bitcoin-coinify-client": "^0.6.2",
+    "bitcoin-coinify-client": "^0.6.3",
+    "bitcoin-exchange-client": "^0.4.3",
     "bitcoin-sfox-client": "^0.1.11",
     "bitcoinjs-lib": "2.1.*",
     "bs58": "2.0.*",
     "es6-promise": "^3.0.2",
     "isomorphic-fetch": "^2.2.1",
-    "pbkdf2": "3.0.4",
+    "pbkdf2": "^3.0.12",
     "ramda": "^0.22.1",
     "randombytes": "^2.0.1",
-    "sjcl": "1.0.3",
     "unorm": "^1.4.1",
     "ws": "2.0.*"
   },
   "devDependencies": {
+    "babel-cli": "~6.24.0",
     "babel-loader": "6.2.10",
     "babel-plugin-transform-object-assign": "~6.22.0",
     "babel-polyfill": "6.16.*",

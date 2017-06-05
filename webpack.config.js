@@ -3,7 +3,7 @@ let webpack = require('webpack');
 let StringReplacePlugin = require('string-replace-webpack-plugin');
 
 let config = {
-  entry: './index.js',
+  entry: './src/index.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'my-wallet.js',
