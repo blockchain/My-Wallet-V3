@@ -287,7 +287,7 @@ API.prototype.pushTxStats = function (guid, advanced) {
 };
 
 API.prototype.incrementLoginViaQrStats = function () {
-  return fetch(this.ROOT_URL + 'event?name=wallet_login_web_via_qr');
+  return fetch(this.ROOT_URL + 'event?name=wallet_web_login_via_qr');
 };
 
 API.prototype.getBlockchainAddress = function () {
