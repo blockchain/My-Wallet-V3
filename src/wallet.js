@@ -15,6 +15,7 @@ var BIP39 = require('bip39');
 var Bitcoin = require('bitcoinjs-lib');
 var pbkdf2 = require('pbkdf2');
 var constants = require('./constants');
+var range = require('ramda/src/range');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
@@ -477,11 +478,13 @@ function syncWallet (successcallback, errorcallback) {
           // Include HD addresses unless in lame mode:
           var hdAddresses = [];
           if (MyWallet.wallet.hdwallet !== undefined && MyWallet.wallet.hdwallet.accounts !== undefined) {
+            var nAccounts = MyWallet.wallet.hdwallet.accounts.length;
+            var nAddresses = range(0, Helpers.addressesePerAccount(nAccounts));
             var subscribeAccount = function (acc) {
               var ri = acc.receiveIndex;
               var labeled = acc.labeledReceivingAddresses ? acc.labeledReceivingAddresses : [];
               var getAddress = function (i) { return acc.receiveAddressAtIndex(i + ri); };
-              return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map(getAddress).concat(labeled);
+              return nAddresses.map(getAddress).concat(labeled);
             };
             hdAddresses = MyWallet.wallet.hdwallet.accounts.map(subscribeAccount).reduce(function (a, b) { return a.concat(b); }, []);
           }
