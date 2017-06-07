@@ -516,4 +516,23 @@ Helpers.deepClone = function (object) {
   return JSON.parse(JSON.stringify(object));
 };
 
+Helpers.addressesePerAccount = function (n) {
+  switch (true) {
+    case n > 0 && n < 4:
+      return 20;
+    case n > 3 && n < 7:
+      return 15;
+    case n > 6 && n < 11:
+      return 10;
+    case n > 10 && n < 21:
+      return 5;
+    case n > 20 && n < 31:
+      return 3;
+    case n > 30 && n < 51:
+      return 2;
+    default:
+      return 1;
+  }
+};
+
 module.exports = Helpers;
