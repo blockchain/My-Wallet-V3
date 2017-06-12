@@ -772,15 +772,9 @@ bitcoin-exchange-client@0.2.*:
   dependencies:
     isomorphic-fetch "^2.2.0"
 
-bitcoin-exchange-client@^0.4.3:
+bitcoin-exchange-client@^0.4.3, bitcoin-exchange-client@~0.4.0:
   version "0.4.3"
   resolved "https://registry.yarnpkg.com/bitcoin-exchange-client/-/bitcoin-exchange-client-0.4.3.tgz#f2d2121a36eb9d1d18a504c1397987bfa39d7ddb"
-  dependencies:
-    isomorphic-fetch "^2.2.0"
-
-bitcoin-exchange-client@~0.4.0:
-  version "0.4.2"
-  resolved "https://registry.yarnpkg.com/bitcoin-exchange-client/-/bitcoin-exchange-client-0.4.2.tgz#b9de81025ed180197c3f41f3e039336a29a4dbbe"
   dependencies:
     isomorphic-fetch "^2.2.0"
 
