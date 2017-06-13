@@ -132,41 +132,40 @@ describe('Helpers', () => {
   });
 
   describe('asyncOnce', () => {
-    it('should only execute once', done => {
-      let observer = {
-        func () {},
-        before () {}
+    let observer;
+
+    beforeEach(() => {
+      jasmine.clock().install();
+      observer = {
+        func: jasmine.createSpy('func'),
+        before: jasmine.createSpy('before')
       };
-
-      spyOn(observer, 'func');
-      spyOn(observer, 'before');
-
-      let async = Helpers.asyncOnce(observer.func, 20, observer.before);
-
-      async();
-      async();
-      async();
-      async();
-
-      let result = () => {
-        expect(observer.func).toHaveBeenCalledTimes(1);
-        expect(observer.before).toHaveBeenCalledTimes(4);
-
-        done();
-      };
-
-      return setTimeout(result, 1000);
     });
 
-    it('should work with arguments', done => {
-      let observer = {
-        func () {},
-        before () {}
-      };
+    afterEach(() => {
+      jasmine.clock().uninstall();
+    });
 
-      spyOn(observer, 'func');
-      spyOn(observer, 'before');
+    it('should only execute once', () => {
+      let async = Helpers.asyncOnce(observer.func, 20, observer.before);
 
+      async();
+      async();
+      async();
+      async();
+
+      jasmine.clock().tick(10);
+
+      expect(observer.func).toHaveBeenCalledTimes(0);
+      expect(observer.before).toHaveBeenCalledTimes(4);
+
+      jasmine.clock().tick(10);
+
+      expect(observer.func).toHaveBeenCalledTimes(1);
+      expect(observer.before).toHaveBeenCalledTimes(4);
+    });
+
+    it('should work with arguments', () => {
       let async = Helpers.asyncOnce(observer.func, 20, observer.before);
 
       async(1);
@@ -174,15 +173,16 @@ describe('Helpers', () => {
       async(1);
       async(1);
 
-      let result = () => {
-        expect(observer.func).toHaveBeenCalledTimes(1);
-        expect(observer.func).toHaveBeenCalledWith(1);
-        expect(observer.before).toHaveBeenCalledTimes(4);
+      jasmine.clock().tick(10);
 
-        done();
-      };
+      expect(observer.func).toHaveBeenCalledTimes(0);
+      expect(observer.before).toHaveBeenCalledTimes(4);
 
-      return setTimeout(result, 1000);
+      jasmine.clock().tick(10);
+
+      expect(observer.func).toHaveBeenCalledTimes(1);
+      expect(observer.func).toHaveBeenCalledWith(1);
+      expect(observer.before).toHaveBeenCalledTimes(4);
     });
   });
 
@@ -275,12 +275,41 @@ describe('Helpers', () => {
     });
   });
 
-  describe('privateKeyStringToKey', () =>
-    it('should convert sipa format', () => {
-      let res = Helpers.privateKeyStringToKey('5JFXNQvtFZSobCCRPxnTZiW1PDVnXvGBg5XeuUDoUCi8LRsV3gn', 'sipa');
+  describe('privateKeyStringToKey', () => {
+    let fixtures = [
+      { format: 'base58', key: 'DXuhJcNCPfgjYN8NQFjVh9yri8Rau5B7ixWJjpSeqW7W', addr: '1EgGs4Pd5ygy1ZCvMCgqpkrkMHtawYcnam' },
+      { format: 'base64', key: 'pbc8OCl5SdqjILx4R+yfvljZ7edUr65osjkzjqH2YQw=', addr: '1EL2ha3KWUFa2q7hfLk49XmUfiBV1yCzYG' },
+      { format: 'hex', key: '46DA1C47CF7FE23A97497665C217963F048EBC3E4287734947B180D64C7D81DF', addr: '19CK8suvcJptn96vfvLjfNnbcbEoyHS9G' },
+      { format: 'mini', key: 'S6c56bnXQiBjk9mqSYE7ykVQ7NzrRy', addr: '1PZuicD1ACRfBuKEgp2XaJhVvnwpeETDyn' },
+      { format: 'sipa', key: '5JFXNQvtFZSobCCRPxnTZiW1PDVnXvGBg5XeuUDoUCi8LRsV3gn', addr: '1BDSbDEechSue77wS44Jn2uDiFaQWom2dG' },
+      { format: 'compsipa', key: 'L3dDv2KUyLfPwkcnhALEaHnd47gewa1BVvnCwWL3gVWsb2H27PY9', addr: '1Mum7V38a3fGLiXN3oCrzdf83mZUKNXmGq' }
+    ];
+
+    let errorFixtures = [
+      { format: 'base58', key: 'DXuhJcNCPfgjYN8NQFjVh9yri8Rau5B7ixWJjpSeqW7=', error: 'Non-base58 character' },
+      { format: 'base64', key: 'pbc8OCl5SdqjILx4R+yfvljZ7edUr65osjkzjqH2YQw+', error: 'Private key must be less than the curve order' },
+      { format: 'hex', key: 'abcdefg', error: 'Invalid hex string' },
+      { format: 'mini', key: 'S6c56bnXQiBjk9mqSYE7ykVQ7NzrRz', error: 'Invalid mini key' },
+      { format: 'sipa', key: '5JFXNQvtFZSobCCRPxnTZiW1PDVnXvGBg5XeuUDoUCi8LRsVxyz', error: 'Invalid checksum' },
+      { format: 'compsipa', key: 'L3dDv2KUyLfPwkcnhALEaHnd47gewa1BVvnCwWL3gVWsb2H27xyz', error: 'Invalid checksum' }
+    ];
+
+    fixtures.forEach(data => it(`should convert ${data.format} format`, () => {
+      let res = Helpers.privateKeyStringToKey(data.key, data.format);
       expect(Helpers.isKey(res)).toBeTruthy();
-    })
-  );
+      expect(res.getAddress()).toEqual(data.addr);
+    }));
+
+    errorFixtures.forEach(data => it(`should fail for ${data.format} given a bad key`, () => {
+      let e = new Error(data.error);
+      expect(() => Helpers.privateKeyStringToKey(data.key, data.format)).toThrow(e);
+    }));
+
+    it('should fail if given an unknown format', () => {
+      let e = new Error('Unsupported Key Format');
+      expect(() => Helpers.privateKeyStringToKey('', 'unknown')).toThrow(e);
+    });
+  });
 
   describe('privateKeyCorrespondsToAddress', () => {
     afterEach(() => {

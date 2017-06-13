@@ -225,6 +225,10 @@ Helpers.guessSize = function (nInputs, nOutputs) {
   return (nInputs * 148 + nOutputs * 34 + 10);
 };
 
+Helpers.toFeePerKb = function (fee) {
+  return fee * 1000;
+};
+
 Helpers.guessFee = function (nInputs, nOutputs, feePerKb) {
   var sizeBytes = Helpers.guessSize(nInputs, nOutputs);
   return Math.ceil(feePerKb * (sizeBytes / 1000));
@@ -319,37 +323,31 @@ function parseMiniKey (miniKey) {
 }
 
 Helpers.privateKeyStringToKey = function (value, format) {
-  var keyBytes = null;
-  var tbytes;
-
-  if (format === 'base58') {
-    keyBytes = Helpers.buffertoByteArray(Base58.decode(value));
-  } else if (format === 'base64') {
-    keyBytes = Helpers.buffertoByteArray(new Buffer(value, 'base64'));
-  } else if (format === 'hex') {
-    keyBytes = Helpers.buffertoByteArray(new Buffer(value, 'hex'));
-  } else if (format === 'mini') {
-    keyBytes = Helpers.buffertoByteArray(parseMiniKey(value));
-  } else if (format === 'sipa') {
-    tbytes = Helpers.buffertoByteArray(Base58.decode(value));
-    tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
-    tbytes.shift();
-    keyBytes = tbytes.slice(0, tbytes.length - 4);
-  } else if (format === 'compsipa') {
-    tbytes = Helpers.buffertoByteArray(Base58.decode(value));
-    tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
-    tbytes.shift();
-    tbytes.pop();
-    keyBytes = tbytes.slice(0, tbytes.length - 4);
+  if (format === 'sipa' || format === 'compsipa') {
+    return Bitcoin.ECPair.fromWIF(value, constants.getNetwork());
   } else {
-    throw new Error('Unsupported Key Format');
-  }
+    var keyBuffer = null;
 
-  return new Bitcoin.ECPair(
-    new BigInteger.fromByteArrayUnsigned(keyBytes), // eslint-disable-line new-cap
-    null,
-    { compressed: format !== 'sipa', network: constants.getNetwork() }
-  );
+    switch (format) {
+      case 'base58':
+        keyBuffer = Base58.decode(value);
+        break;
+      case 'base64':
+        keyBuffer = new Buffer(value, 'base64');
+        break;
+      case 'hex':
+        keyBuffer = new Buffer(value, 'hex');
+        break;
+      case 'mini':
+        keyBuffer = parseMiniKey(value);
+        break;
+      default:
+        throw new Error('Unsupported Key Format');
+    }
+
+    var d = BigInteger.fromBuffer(keyBuffer);
+    return new Bitcoin.ECPair(d, null, { network: constants.getNetwork() });
+  }
 };
 
 Helpers.detectPrivateKeyFormat = function (key) {
@@ -516,6 +514,25 @@ Helpers.guidToGroup = (guid) => {
 
 Helpers.deepClone = function (object) {
   return JSON.parse(JSON.stringify(object));
+};
+
+Helpers.addressesePerAccount = function (n) {
+  switch (true) {
+    case n > 0 && n < 4:
+      return 20;
+    case n > 3 && n < 7:
+      return 15;
+    case n > 6 && n < 11:
+      return 10;
+    case n > 10 && n < 21:
+      return 5;
+    case n > 20 && n < 31:
+      return 3;
+    case n > 30 && n < 51:
+      return 2;
+    default:
+      return 1;
+  }
 };
 
 module.exports = Helpers;

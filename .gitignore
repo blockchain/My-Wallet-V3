@@ -12,11 +12,11 @@ Changelog.md
 # Node
 node_modules
 npm-debug.log
-npm-shrinkwrap.json
 
 # Generated js files
 build
 dist
+lib
 
 # Generated coverage reports
 coverage

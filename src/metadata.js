@@ -18,7 +18,7 @@ class Metadata {
     // encKeyBuffer :: Buffer (nullable = no encrypted save)
     // TypeId :: Int (nullable = default -1)
     this.VERSION = 1;
-    this._typeId = typeId || -1;
+    this._typeId = typeId == null ? -1 : typeId;
     this._magicHash = null;
     this._address = ecPair.getAddress();
     this._signKey = ecPair;

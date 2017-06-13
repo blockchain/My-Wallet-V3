@@ -12,6 +12,7 @@ var MyWallet = require('./wallet');
 function API () {
   // private members
   this.ROOT_URL = 'https://blockchain.info/';
+  this.API_ROOT_URL = 'https://api.blockchain.info/';
   this.AJAX_RETRY_DEFAULT = 2;
   this.API_CODE = '1770d5d9-bcea-4d28-ad21-6cbd5be018a8';
   this.SERVER_TIME_OFFSET = null;
@@ -254,7 +255,7 @@ API.prototype.getFees = function () {
     }
   };
 
-  return fetch(this.API_ROOT_URL + 'fees')
+  return fetch(this.API_ROOT_URL + 'mempool/fees')
             .then(checkStatus)
             .catch(handleNetworkError);
 };
@@ -283,6 +284,10 @@ API.prototype.confirmationScreenStats = function (guid) {
 API.prototype.pushTxStats = function (guid, advanced) {
   var group = Helpers.guidToGroup(guid);
   return fetch(this.ROOT_URL + 'event?name=wallet_fee_experiment_' + group + '_pushed_tx' + (advanced ? '_advanced' : ''));
+};
+
+API.prototype.incrementLoginViaQrStats = function () {
+  return fetch(this.ROOT_URL + 'event?name=wallet_web_login_via_qr');
 };
 
 API.prototype.getBlockchainAddress = function () {

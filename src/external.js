@@ -2,6 +2,7 @@ var Coinify = require('bitcoin-coinify-client');
 var SFOX = require('bitcoin-sfox-client');
 var Metadata = require('./metadata');
 var ExchangeDelegate = require('./exchange-delegate');
+var Helpers = require('./helpers');
 
 var METADATA_TYPE_EXTERNAL = 3;
 
@@ -76,6 +77,13 @@ External.prototype.canBuy = function (accountInfo, options) {
   );
 };
 
+External.prototype.shouldDisplaySellTab = function (email, options, partner) {
+  let re = /(@blockchain.com(?!.)|@coinify.com(?!.))/;
+  let isClearedEmail = re.test(email);
+  let fraction = options.partners[partner].showSellFraction;
+  return isClearedEmail || Helpers.isEmailInvited(email, fraction);
+};
+
 External.prototype.toJSON = function () {
   if (!this.hasExchangeAccount) {
     return undefined;
@@ -88,7 +96,7 @@ External.prototype.toJSON = function () {
 };
 
 External.initMetadata = function (wallet) {
-  return Metadata.fromMasterHDNode(wallet._metadataHDNode, METADATA_TYPE_EXTERNAL);
+  return Metadata.fromMetadataHDNode(wallet._metadataHDNode, METADATA_TYPE_EXTERNAL);
 };
 
 External.fromJSON = function (wallet, json, magicHash) {
@@ -96,7 +104,7 @@ External.fromJSON = function (wallet, json, magicHash) {
     return new External(metadata, wallet, payload);
   };
   var metadata = External.initMetadata(wallet);
-  return metadata.fromObject(JSON.parse(json), magicHash).then(success);
+  return metadata.fromObject(json, magicHash).then(success);
 };
 
 External.fetch = function (wallet) {
@@ -127,7 +135,7 @@ External.prototype.save = function () {
 };
 
 External.prototype.wipe = function () {
-  this._metadata.update({}).then(this.fetch.bind(this));
+  this._metadata.update({});
   this._coinify = undefined;
   this._sfox = undefined;
 };
