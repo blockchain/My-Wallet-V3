@@ -221,9 +221,10 @@ Contacts.prototype.sendPR = function (userId, intendedAmount, id, note) {
   const contact = this.get(userId);
   const account = MyWallet.wallet.hdwallet.defaultAccount;
   const address = account.receiveAddress;
+  const accountIndex = MyWallet.wallet.hdwallet.defaultAccountIndex;
   const reserveAddress = () => {
     const label = 'payment request to ' + contact.name;
-    return account.setLabelForReceivingAddress(account.receiveIndex, label);
+    return MyWallet.wallet.labels.setLabel(accountIndex, account.receiveIndex, label);
   };
   const message = paymentRequest(id, intendedAmount, address, note);
   return reserveAddress()
