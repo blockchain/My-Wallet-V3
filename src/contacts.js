@@ -85,13 +85,11 @@ Contacts.prototype.readInvitation = function (invitation) {
   return this._sharedMetadata.readInvitation(invitation.invitationReceived)
     .then((i) => {
       const c = this.new(R.assoc('mdid', i.mdid, invitation));
-
-      contact.RPR.bind(contact,
-              message.payload.intended_amount,
-              message.payload.id,
-              FacilitatedTx.RPR_RECEIVER,
-              message.payload.note)
-
+      // contact.RPR.bind(contact,
+      //         message.payload.intended_amount,
+      //         message.payload.id,
+      //         FacilitatedTx.RPR_RECEIVER,
+      //         message.payload.note)
       return c;
     });
 };
