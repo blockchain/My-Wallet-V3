@@ -3,7 +3,7 @@ const API = require('./api');
 const S = {};
 
 S.request = function (method, endpoint, data, authToken) {
-  var url = API.API_ROOT_URL + 'metadata/' + endpoint;
+  var url = API.API_ROOT_URL + 'iwcs/' + endpoint;
   var options = {
     headers: { 'Content-Type': 'application/json' },
     credentials: 'omit'
