@@ -44,6 +44,7 @@
     "bitcoin-coinify-client": "^0.6.4",
     "bitcoin-exchange-client": "^0.4.3",
     "bitcoin-sfox-client": "^0.1.11",
+    "bitcoin-unocoin-client": "^0.1.1",
     "bitcoinjs-lib": "2.1.*",
     "bs58": "2.0.*",
     "core-js": "^2.4.1",
