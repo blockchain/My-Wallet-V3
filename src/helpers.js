@@ -79,6 +79,9 @@ Helpers.isValidLabel = function (text) {
 Helpers.isInRange = function (val, min, max) {
   return min <= val && val < max;
 };
+Helpers.isNonNull = function (val) {
+  return val !== null;
+};
 Helpers.add = function (x, y) {
   return x + y;
 };

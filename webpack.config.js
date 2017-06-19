@@ -39,6 +39,9 @@ let config = {
       }
     ]
   },
+  node: {
+    fs: 'empty'
+  },
   plugins: [
     new StringReplacePlugin()
   ]

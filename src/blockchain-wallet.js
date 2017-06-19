@@ -22,6 +22,7 @@ var Metadata = require('./metadata');
 var constants = require('./constants');
 var Payment = require('./payment');
 var Labels = require('./labels');
+var EthWallet = require('./eth-wallet');
 var Bitcoin = require('bitcoinjs-lib');
 
 // Wallet
@@ -339,6 +340,12 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () {
       return this._labels;
+    }
+  },
+  'eth': {
+    configurable: false,
+    get: function () {
+      return this._eth;
     }
   }
 });
@@ -864,11 +871,17 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     return Promise.resolve();
   };
 
+  var fetchEthWallet = function () {
+    this._eth = EthWallet.construct(this);
+    return this._eth.fetch();
+  };
+
   let promises = [];
 
   if (this.isMetadataReady) {
     // No fallback is metadata is disabled
     promises.push(fetchExternal.call(this));
+    promises.push(fetchEthWallet.call(this));
   }
 
   // Labels only works for v3 wallets
