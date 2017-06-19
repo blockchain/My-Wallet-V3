@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.32.3",
+  "version": "3.32.6",
   "description": "Blockchain.info JavaScript Wallet",
   "homepage": "https://github.com/blockchain/my-wallet-v3",
   "bugs": {
@@ -41,12 +41,13 @@
   "dependencies": {
     "bigi": "1.4.*",
     "bip39": "2.1.*",
-    "bitcoin-coinify-client": "^0.6.3",
+    "bitcoin-coinify-client": "^0.6.4",
     "bitcoin-exchange-client": "^0.4.3",
     "bitcoin-sfox-client": "^0.1.11",
     "bitcoin-unocoin-client": "blockchain/bitcoin-unocoin-client",
     "bitcoinjs-lib": "2.1.*",
     "bs58": "2.0.*",
+    "core-js": "^2.4.1",
     "es6-promise": "^3.0.2",
     "isomorphic-fetch": "^2.2.1",
     "pbkdf2": "^3.0.12",
