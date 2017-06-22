@@ -22,7 +22,7 @@ var Metadata = require('./metadata');
 var constants = require('./constants');
 var Payment = require('./payment');
 var Labels = require('./labels');
-var EthWallet = require('./eth-wallet');
+var EthWallet = require('./eth/eth-wallet');
 var Bitcoin = require('bitcoinjs-lib');
 
 // Wallet

@@ -1,7 +1,7 @@
 const R = require('ramda');
-const H = require('./helpers');
+const H = require('../helpers');
 const Web3 = require('web3');
-const Metadata = require('./metadata');
+const Metadata = require('../metadata');
 const EthKey = require('./eth-key');
 const METADATA_TYPE_ETH = 4;
 
