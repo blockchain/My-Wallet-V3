@@ -20,7 +20,7 @@ class EthWallet {
   }
 
   get wei () {
-    return this.keys.map(k => k.wei).filter(H.isNonNull).reduce(H.add, 0);
+    return this.accounts.map(k => k.wei).filter(H.isNonNull).reduce(H.add, 0);
   }
 
   get balance () {
@@ -28,7 +28,15 @@ class EthWallet {
   }
 
   get txCount () {
-    return this.keys.map(k => k.txCount).filter(H.isNonNull).reduce(H.add, 0);
+    return this.accounts.map(k => k.txCount).filter(H.isNonNull).reduce(H.add, 0);
+  }
+
+  get defaultAccountIdx () {
+    return this._defaultAccountIdx;
+  }
+
+  get defaultAccount () {
+    return this.accounts[this.defaultAccountIdx];
   }
 
   get accounts () {
@@ -50,22 +58,36 @@ class EthWallet {
     this.sync();
   }
 
-  archiveAccount (index) {
-    this.getAccount(index).archived = true;
+  archiveAccount (account) {
+    if (account === this.defaultAccount) {
+      throw new Error('Cannot archive default account');
+    }
+    account.archived = true;
     this.sync();
   }
 
-  unarchiveAccount (index) {
-    this.getAccount(index).archived = false;
+  unarchiveAccount (account) {
+    account.archived = false;
     this.sync();
   }
 
   createAccount (label) {
-    let accountNode = this._wallet.deriveChild(this.accounts.length);
+    let accountNode = this._hdWallet.deriveChild(this.accounts.length);
     let account = EthAccount.fromWallet(accountNode.getWallet());
-    account.label = label || `${EthWallet.defaultLabel} ${this.accounts.length}`;
+    account.label = label || EthAccount.defaultLabel(this.accounts.length);
     this._accounts.push(account);
     this.sync();
+  }
+
+  setDefaultAccountIndex (i) {
+    if (!H.isPositiveNumber(i)) {
+      throw new Error('Account index must be a number >= 0');
+    } else if (i < this.accounts.length - 1) {
+      throw new Error('Account index out of bounds');
+    } else {
+      this._defaultAccountIdx = i;
+      this.sync();
+    }
   }
 
   fetch () {
@@ -92,19 +114,15 @@ class EthWallet {
   }
 
   fetchBalances () {
-    let keys = this.keys;
-    let addresses = keys.map(k => k.address);
+    let accounts = this.accounts.filter(a => !a.archived);
+    let addresses = accounts.map(k => k.address);
     return fetch('/eth/addresses', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ addresses })
     }).then(res => res.json()).then((balances) => {
-      balances.forEach((data, i) => { keys[i].setData(data); });
+      balances.forEach((data, i) => { accounts[i].setData(data); });
     });
-  }
-
-  static get defaultLabel () {
-    return 'My Ethereum Wallet';
   }
 
   static construct (wallet) {

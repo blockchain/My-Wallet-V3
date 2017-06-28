@@ -9,7 +9,7 @@ class EthAccount {
   constructor (obj) {
     this._priv = Buffer.from(obj.priv, 'hex');
     this.label = obj.label;
-    this.archived = obj.archived;
+    this.archived = obj.archived || false;
     this._balance = null;
     this._txCount = null;
   }
@@ -78,7 +78,7 @@ class EthAccount {
     return {
       label: this.label,
       archived: this.archived,
-      priv: this.priv.toString('hex')
+      priv: this.privateKey.toString('hex')
     };
   }
 
@@ -90,6 +90,15 @@ class EthAccount {
     }).then(r =>
       r.status === 200 ? r.json() : r.json().then((err) => Promise.reject(err))
     );
+  }
+
+  static defaultLabel (accountIdx) {
+    let label = 'My Ethereum Wallet';
+    return accountIdx > 0 ? `${label} ${accountIdx + 1}` : label;
+  }
+
+  static fromPriv (privateKey) {
+    return new EthAccount({ priv: Buffer.from(privateKey, 'hex') });
   }
 
   static fromWallet (wallet) {
