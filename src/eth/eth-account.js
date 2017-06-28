@@ -62,6 +62,11 @@ class EthAccount {
     return EthAccount.pushtx(rawtx);
   }
 
+  sweepFrom (privateKey, fee) {
+    let account = EthAccount.fromPriv(privateKey);
+    return account.fetchBalance().sweep(this.address, fee);
+  }
+
   fetchBalance () {
     let address = this.address;
     return fetch(`/eth/address/${address}`)
