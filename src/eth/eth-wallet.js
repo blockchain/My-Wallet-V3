@@ -115,7 +115,7 @@ class EthWallet {
     );
   }
 
-  static construct (wallet) {
+  static fromBlockchainWallet (wallet) {
     let metadata = Metadata.fromMetadataHDNode(wallet._metadataHDNode, METADATA_TYPE_ETH);
     return new EthWallet(wallet.hdwallet.seedHex, metadata);
   }
