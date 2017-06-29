@@ -1,5 +1,6 @@
 const keythereum = require('keythereum');
 const EthTx = require('./eth-tx');
+const EthWalletTx = require('./eth-wallet-tx');
 const Web3 = require('web3');
 const web3 = new Web3();
 
@@ -11,7 +12,7 @@ class EthAccount {
     this.label = obj.label;
     this.archived = obj.archived || false;
     this._balance = null;
-    this._txCount = null;
+    this._nonce = null;
   }
 
   get address () {
@@ -30,8 +31,12 @@ class EthAccount {
     return web3.fromWei(this.wei, 'ether');
   }
 
-  get txCount () {
-    return this._txCount;
+  get txs () {
+    return this._txs;
+  }
+
+  get nonce () {
+    return this._nonce;
   }
 
   spend (to, amount, fee) {
@@ -40,7 +45,7 @@ class EthAccount {
       .setGasLimit(GAS_LIMIT)
       .setGasPrice(parseInt(web3.toWei(fee, 'gwei')))
       .setValue(parseInt(web3.toWei(amount, 'ether')))
-      .setNonce(this.txCount)
+      .setNonce(this.nonce)
       .setData(null)
       .sign(this)
       .toRaw();
@@ -54,7 +59,7 @@ class EthAccount {
       .setGasLimit(GAS_LIMIT)
       .setGasPrice(parseInt(web3.toWei(fee, 'gwei')))
       .sweep(this)
-      .setNonce(this.txCount)
+      .setNonce(this.nonce)
       .setData(null)
       .sign(this)
       .toRaw();
@@ -68,15 +73,17 @@ class EthAccount {
   }
 
   fetchBalance () {
-    let address = this.address;
-    return fetch(`/eth/address/${address}`)
+    return fetch(`/eth/account/${this.address}`)
       .then(res => res.json())
-      .then((data) => this.setData(data));
+      .then((data) => this.setData(
+        data.account === this.address ? data : { balance: 0, nonce: 0 }
+      ));
   }
 
-  setData (data) {
-    this._balance = data.balance;
-    this._txCount = data.txCount;
+  setData ({ balance, nonce, txns = [] } = {}) {
+    this._balance = balance;
+    this._nonce = nonce;
+    this._txs = txns.map(EthWalletTx.fromJSON);
   }
 
   toJSON () {
@@ -108,7 +115,7 @@ class EthAccount {
 
   static fromWallet (wallet) {
     let account = new EthAccount({ priv: wallet.getPrivateKey() });
-    account.setData({ balance: 0, txCount: 0 });
+    account.setData({ balance: 0, nonce: 0 });
     return account;
   }
 }

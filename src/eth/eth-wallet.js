@@ -27,10 +27,6 @@ class EthWallet {
     return web3.fromWei(this.wei, 'ether');
   }
 
-  get txCount () {
-    return this.accounts.map(k => k.txCount).filter(H.isNonNull).reduce(H.add, 0);
-  }
-
   get defaultAccountIdx () {
     return this._defaultAccountIdx;
   }
@@ -114,15 +110,9 @@ class EthWallet {
   }
 
   fetchBalances () {
-    let accounts = this.accounts.filter(a => !a.archived);
-    let addresses = accounts.map(k => k.address);
-    return fetch('/eth/addresses', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ addresses })
-    }).then(res => res.json()).then((balances) => {
-      balances.forEach((data, i) => { accounts[i].setData(data); });
-    });
+    return Promise.all(
+      this.accounts.filter(a => !a.archived).map(a => a.fetchBalance())
+    );
   }
 
   static construct (wallet) {
