@@ -12,6 +12,7 @@ const DERIVATION_PATH = "m/44'/60'/0'/0";
 
 class EthWallet {
   constructor (seed, metadata) {
+    this.web3 = web3;
     this._hdWallet = EthHd.fromMasterSeed(seed).derivePath(DERIVATION_PATH);
     this._metadata = metadata;
     this._defaultAccountIdx = 0;
