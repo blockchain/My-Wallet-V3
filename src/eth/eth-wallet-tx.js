@@ -20,7 +20,7 @@ class EthWalletTx {
 
   get fee () {
     let weiUsed = web3.toBigNumber(this._gasPrice).mul(this._gasUsed);
-    return web3.fromWei(weiUsed, 'ether');
+    return web3.fromWei(weiUsed, 'ether').toString();
   }
 
   get to () {
