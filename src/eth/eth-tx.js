@@ -3,24 +3,23 @@ const util = require('ethereumjs-util');
 const Web3 = require('web3');
 const web3 = new Web3();
 
+const GAS_LIMIT = 21000;
+
 class EthTx {
-  constructor () {
+  constructor (account) {
+    this._account = account;
     this._tx = new EthereumTx(null, 1);
+    this._tx.nonce = this._account.nonce;
+    this._tx.gasLimit = GAS_LIMIT;
   }
 
-  setNonce (nonce) {
-    this._tx.nonce = nonce;
-    return this;
+  get fee () {
   }
 
-  setGasPrice (gasPrice) {
-    this._tx.gasPrice = gasPrice;
-    return this;
+  get amount () {
   }
 
-  setGasLimit (gasLimit) {
-    this._tx.gasLimit = gasLimit;
-    return this;
+  get available () {
   }
 
   setTo (to) {
@@ -31,35 +30,45 @@ class EthTx {
     return this;
   }
 
-  setValue (value) {
-    this._tx.value = value;
+  setValue (amount) {
+    this._tx.value = parseInt(web3.toWei(amount, 'ether'));
     return this;
   }
 
-  setData (data) {
-    this._tx.data = data;
+  setGasPrice (gasPrice) {
+    this._tx.gasPrice = parseInt(web3.toWei(gasPrice, 'gwei'));
     return this;
   }
 
-  sweep (key) {
+  setSweep () {
     this.setValue(0);
-    let balance = web3.toBigNumber(key.wei);
+    let balance = web3.toBigNumber(this._account.wei);
     let amount = balance.sub(this._tx.getUpfrontCost());
     this.setValue(amount.toNumber());
     return this;
   }
 
-  sign (key) {
-    this._tx.sign(key.privateKey);
+  sign () {
+    this._tx.sign(this._account.privateKey);
     return this;
   }
 
-  serialize () {
-    return this._tx.serialize();
+  publish () {
+    return EthTx.pushTx(this.toRaw());
   }
 
   toRaw () {
-    return '0x' + this.serialize().toString('hex');
+    return '0x' + this._tx.serialize().toString('hex');
+  }
+
+  static pushTx (rawtx) {
+    return fetch('/eth/pushtx', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rawtx })
+    }).then(r =>
+      r.status === 200 ? r.json() : r.json().then((err) => Promise.reject(err))
+    );
   }
 }
 

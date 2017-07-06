@@ -4,8 +4,6 @@ const EthWalletTx = require('./eth-wallet-tx');
 const Web3 = require('web3');
 const web3 = new Web3();
 
-const GAS_LIMIT = 21000;
-
 class EthAccount {
   constructor (obj) {
     this._priv = Buffer.from(obj.priv, 'hex');
@@ -39,32 +37,26 @@ class EthAccount {
     return this._nonce;
   }
 
-  spend (to, amount, fee) {
-    let rawtx = new EthTx()
-      .setTo(to)
-      .setGasLimit(GAS_LIMIT)
-      .setGasPrice(parseInt(web3.toWei(fee, 'gwei')))
-      .setValue(parseInt(web3.toWei(amount, 'ether')))
-      .setNonce(this.nonce)
-      .setData(null)
-      .sign(this)
-      .toRaw();
+  createPayment () {
+    return new EthTx(this);
+  }
 
-    return EthAccount.pushtx(rawtx);
+  spend (to, amount, fee) {
+    return this.createPayment()
+      .setTo(to)
+      .setValue(amount)
+      .setGasPrice(fee)
+      .sign()
+      .publish();
   }
 
   sweep (to, fee) {
-    let rawtx = new EthTx()
+    return this.createPayment()
       .setTo(to)
-      .setGasLimit(GAS_LIMIT)
-      .setGasPrice(parseInt(web3.toWei(fee, 'gwei')))
-      .sweep(this)
-      .setNonce(this.nonce)
-      .setData(null)
-      .sign(this)
-      .toRaw();
-
-    return EthAccount.pushtx(rawtx);
+      .setGasPrice(fee)
+      .setSweep()
+      .sign()
+      .publish();
   }
 
   sweepFrom (privateKey, fee) {
@@ -92,16 +84,6 @@ class EthAccount {
       archived: this.archived,
       priv: this.privateKey.toString('hex')
     };
-  }
-
-  static pushtx (rawtx) {
-    return fetch('/eth/pushtx', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rawtx })
-    }).then(r =>
-      r.status === 200 ? r.json() : r.json().then((err) => Promise.reject(err))
-    );
   }
 
   static defaultLabel (accountIdx) {
