@@ -242,22 +242,29 @@ API.prototype.pushTx = function (txHex, note) {
   return this.request('POST', 'pushtx', data).then(responseTXHASH);
 };
 
-API.prototype.getFees = function () {
+API.prototype.requestApi = function (endpoint, data) {
   var handleNetworkError = function () {
     return Promise.reject({ initial_error: 'Connectivity error, failed to send network request' });
   };
 
   var checkStatus = function (response) {
-    if (response.status >= 200 && response.status < 300) {
-      return response.json();
-    } else {
-      return response.text().then(Promise.reject.bind(Promise));
-    }
+    return response.status >= 200 && response.status < 300
+      ? response.json()
+      : response.text().then(Promise.reject.bind(Promise));
   };
 
-  return fetch(this.API_ROOT_URL + 'mempool/fees')
-            .then(checkStatus)
-            .catch(handleNetworkError);
+  var url = data ? `${endpoint}?${this.encodeFormData(data)}` : endpoint;
+
+  return fetch(this.API_ROOT_URL + url)
+    .then(checkStatus, handleNetworkError);
+};
+
+API.prototype.getFees = function () {
+  return this.requestApi('mempool/fees');
+};
+
+API.prototype.getExchangeRate = function (currency, base) {
+  return this.requestApi('ticker', { currency, base });
 };
 
 API.prototype.exportHistory = function (active, currency, options) {
