@@ -4,7 +4,7 @@ const Web3 = require('web3');
 const EthHd = require('ethereumjs-wallet/hdkey');
 const Metadata = require('../metadata');
 const EthAccount = require('./eth-account');
-const METADATA_TYPE_ETH = 4;
+const METADATA_TYPE_ETH = 5;
 
 const web3 = new Web3();
 
