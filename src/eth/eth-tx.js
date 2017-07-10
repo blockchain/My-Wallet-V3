@@ -2,6 +2,7 @@ const EthereumTx = require('ethereumjs-tx');
 const util = require('ethereumjs-util');
 const Web3 = require('web3');
 const web3 = new Web3();
+const API = require('../api');
 
 const GAS_LIMIT = 21000;
 
@@ -62,7 +63,7 @@ class EthTx {
   }
 
   static pushTx (rawtx) {
-    return fetch('/eth/pushtx', {
+    return fetch(`${API.API_ROOT_URL}eth/pushtx`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ rawtx })

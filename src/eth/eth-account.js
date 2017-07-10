@@ -3,6 +3,7 @@ const EthTx = require('./eth-tx');
 const EthWalletTx = require('./eth-wallet-tx');
 const Web3 = require('web3');
 const web3 = new Web3();
+const API = require('../api');
 
 class EthAccount {
   constructor (obj) {
@@ -65,7 +66,7 @@ class EthAccount {
   }
 
   fetchBalance () {
-    return fetch(`/eth/account/${this.address}`)
+    return fetch(`${API.API_ROOT_URL}eth/account/${this.address}`)
       .then(res => res.json())
       .then((data) => this.setData(
         data.account === this.address ? data : { balance: 0, nonce: 0 }
