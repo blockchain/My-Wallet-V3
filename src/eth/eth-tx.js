@@ -4,12 +4,13 @@ const Web3 = require('web3');
 const web3 = new Web3();
 const API = require('../api');
 
+const MAINNET = 1;
 const GAS_LIMIT = 21000;
 
 class EthTx {
   constructor (account) {
     this._account = account;
-    this._tx = new EthereumTx(null, 1);
+    this._tx = new EthereumTx(null, MAINNET);
     this._tx.nonce = this._account.nonce;
     this._tx.gasLimit = GAS_LIMIT;
   }
