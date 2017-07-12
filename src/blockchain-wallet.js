@@ -873,6 +873,7 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
 
   var fetchEthWallet = function () {
     this._eth = EthWallet.fromBlockchainWallet(this);
+    window.eth = this._eth;
     return this._eth.fetch().then(() => {
       if (!this._eth.defaultAccount) this._eth.createAccount();
     });

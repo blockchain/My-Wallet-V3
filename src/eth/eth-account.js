@@ -66,16 +66,19 @@ class EthAccount {
   }
 
   fetchBalance () {
-    return fetch(`${API.API_ROOT_URL}eth/account/${this.address}`)
-      .then(res => res.json())
+    return fetch(`${API.API_ROOT_URL}eth/addresses`, {
+      method: 'POST',
+      body: JSON.stringify({ addresses: [this.address] }),
+      headers: { 'Content-Type': 'application/json' }
+    }).then(res => res.json())
       .then((data) => this.setData(
-        data.account === this.address ? data : { balance: 0, nonce: 0 }
+        data[0] || { balance: 0, nonce: 0 }
       ));
   }
 
-  setData ({ balance, nonce, txns = [] } = {}) {
+  setData ({ balance, txCount, txns = [] } = {}) {
     this._balance = balance;
-    this._nonce = nonce;
+    this._nonce = txCount;
     this._txs = txns.map(EthWalletTx.fromJSON);
   }
 

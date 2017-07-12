@@ -7,6 +7,9 @@ const API = require('../api');
 const MAINNET = 1;
 const GAS_LIMIT = 21000;
 
+window.web3 = web3;
+window.util = util;
+
 class EthTx {
   constructor (account) {
     this._account = account;
@@ -16,12 +19,30 @@ class EthTx {
   }
 
   get fee () {
+    return parseFloat(web3.fromWei(this.feeBN, 'ether'));
+  }
+
+  get feeBN () {
+    let gas = new util.BN(this._tx.gas);
+    let gasPrice = new util.BN(this._tx.gasPrice);
+    return gas.mul(gasPrice);
   }
 
   get amount () {
+    return parseFloat(web3.fromWei(this.amountBN, 'ether'));
+  }
+
+  get amountBN () {
+    return new util.BN(this._tx.value);
   }
 
   get available () {
+    return parseFloat(web3.fromWei(this.availableBN, 'ether'));
+  }
+
+  get availableBN () {
+    let balance = web3.toBigNumber(this._account.wei);
+    return balance.sub(this.feeBN);
   }
 
   setTo (to) {
@@ -46,7 +67,7 @@ class EthTx {
     this.setValue(0);
     let balance = web3.toBigNumber(this._account.wei);
     let amount = balance.sub(this._tx.getUpfrontCost());
-    this.setValue(amount.toNumber());
+    this.setValue(web3.fromWei(amount, 'ether'));
     return this;
   }
 
