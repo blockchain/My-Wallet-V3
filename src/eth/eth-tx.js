@@ -84,11 +84,11 @@ class EthTx {
     return '0x' + this._tx.serialize().toString('hex');
   }
 
-  static pushTx (rawtx) {
+  static pushTx (rawTx) {
     return fetch(`${API.API_ROOT_URL}eth/pushtx`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rawtx })
+      body: JSON.stringify({ rawTx })
     }).then(r =>
       r.status === 200 ? r.json() : r.json().then((err) => Promise.reject(err))
     );

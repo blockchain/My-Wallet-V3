@@ -71,9 +71,9 @@ class EthAccount {
       .then(data => this.setData(data));
   }
 
-  setData ({ balance, txCount, txns = [] } = {}) {
+  setData ({ balance, nonce, txns = [] } = {}) {
     this._balance = balance;
-    this._nonce = txCount;
+    this._nonce = nonce;
     this._txs = txns.map(EthWalletTx.fromJSON);
   }
 
