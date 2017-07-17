@@ -2,6 +2,7 @@ const R = require('ramda');
 const H = require('../helpers');
 const Web3 = require('web3');
 const EthHd = require('ethereumjs-wallet/hdkey');
+const EthTx = require('./eth-tx');
 const Metadata = require('../metadata');
 const EthAccount = require('./eth-account');
 const METADATA_TYPE_ETH = 5;
@@ -45,6 +46,13 @@ class EthWallet {
 
   get syncing () {
     return this._syncing;
+  }
+
+  get defaults () {
+    return {
+      GAS_PRICE: EthTx.GAS_PRICE,
+      GAS_LIMIT: EthTx.GAS_LIMIT
+    };
   }
 
   getAccount (index) {

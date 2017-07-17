@@ -5,7 +5,6 @@ const web3 = new Web3();
 const API = require('../api');
 
 const MAINNET = 1;
-const GAS_LIMIT = 21000;
 
 window.web3 = web3;
 window.util = util;
@@ -15,7 +14,6 @@ class EthTx {
     this._account = account;
     this._tx = new EthereumTx(null, MAINNET);
     this._tx.nonce = this._account.nonce;
-    this._tx.gasLimit = GAS_LIMIT;
   }
 
   get fee () {
@@ -63,6 +61,11 @@ class EthTx {
     return this;
   }
 
+  setGasLimit (gasLimit) {
+    this._tx.gasLimit = gasLimit;
+    return this;
+  }
+
   setSweep () {
     this.setValue(0);
     let balance = web3.toBigNumber(this._account.wei);
@@ -82,6 +85,14 @@ class EthTx {
 
   toRaw () {
     return '0x' + this._tx.serialize().toString('hex');
+  }
+
+  static get GAS_PRICE () {
+    return 21; // gwei
+  }
+
+  static get GAS_LIMIT () {
+    return 21000;
   }
 
   static pushTx (rawTx) {

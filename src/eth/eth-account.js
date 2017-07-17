@@ -47,6 +47,7 @@ class EthAccount {
       .setTo(to)
       .setValue(amount)
       .setGasPrice(fee)
+      .setGasLimit(EthTx.GAS_LIMIT)
       .sign()
       .publish();
   }
@@ -55,6 +56,7 @@ class EthAccount {
     return this.createPayment()
       .setTo(to)
       .setGasPrice(fee)
+      .setGasLimit(EthTx.GAS_LIMIT)
       .setSweep()
       .sign()
       .publish();
