@@ -99,6 +99,10 @@ class EthAccount {
     return txns;
   }
 
+  updateConfirmations (latestBlock) {
+    this.txs.forEach(tx => tx.updateConfirmations(latestBlock));
+  }
+
   toJSON () {
     return {
       label: this.label,

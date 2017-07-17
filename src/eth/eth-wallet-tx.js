@@ -12,6 +12,7 @@ class EthWalletTx {
     this._gas = obj.gas;
     this._gasPrice = obj.gasPrice;
     this._gasUsed = obj.gasUsed;
+    this._confirmations = 0;
   }
 
   get amount () {
@@ -39,12 +40,16 @@ class EthWalletTx {
     return this._timeStamp;
   }
 
+  get confirmations () {
+    return this._confirmations;
+  }
+
   isFromAccount (account) {
     return this._from === account.address;
   }
 
-  getConfirmations (currentBlock) {
-    return currentBlock - this._blockNumber;
+  updateConfirmations (latestBlock) {
+    this._confirmations = latestBlock - this._blockNumber;
   }
 
   static fromJSON (json) {

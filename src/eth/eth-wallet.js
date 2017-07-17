@@ -44,6 +44,10 @@ class EthWallet {
     return this.accounts.filter(a => !a.archived);
   }
 
+  get latestBlock () {
+    return this._latestBlock;
+  }
+
   get syncing () {
     return this._syncing;
   }
@@ -122,7 +126,13 @@ class EthWallet {
   }
 
   fetchHistory () {
-    return Promise.all(this.activeAccounts.map(a => a.fetchHistory()));
+    return Promise.all([
+      this.getLatestBlock(),
+      ...this.activeAccounts.map(a => a.fetchHistory())
+    ]).then((result) => {
+      this.activeAccounts.forEach(a => a.updateConfirmations(this.latestBlock));
+      return result;
+    });
   }
 
   fetchBalance () {
@@ -141,6 +151,12 @@ class EthWallet {
     return fetch(`${API.API_ROOT_URL}eth/account/${address}/isContract`)
       .then(res => res.json())
       .then(({ contract }) => contract);
+  }
+
+  getLatestBlock () {
+    return fetch(`${API.API_ROOT_URL}eth/latestblock`)
+      .then(res => res.json())
+      .then(block => { this._latestBlock = block.number; });
   }
 
   static fromBlockchainWallet (wallet) {
