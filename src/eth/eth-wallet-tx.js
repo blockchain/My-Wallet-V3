@@ -35,6 +35,14 @@ class EthWalletTx {
     return this._hash;
   }
 
+  get time () {
+    return this._timeStamp;
+  }
+
+  isFromAccount (account) {
+    return this._from === account.address;
+  }
+
   getConfirmations (currentBlock) {
     return currentBlock - this._blockNumber;
   }
