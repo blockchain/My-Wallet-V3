@@ -65,6 +65,15 @@ class EthAccount {
     return account.fetchBalance().sweep(this.address, fee);
   }
 
+  fetchHistory () {
+    return Promise.all([
+      this.fetchBalance(),
+      this.fetchTransactions()
+    ]).then(([data, txs]) => (
+      Object.assign(data, { txs })
+    ));
+  }
+
   fetchBalance () {
     return fetch(`${API.API_ROOT_URL}eth/account/${this.address}/balance`)
       .then(res => res.json())
@@ -80,10 +89,12 @@ class EthAccount {
   setData ({ balance, nonce } = {}) {
     this._balance = balance;
     this._nonce = nonce;
+    return { balance, nonce };
   }
 
   setTransactions ({ txns = [] }) {
     this._txs = txns.map(EthWalletTx.fromJSON);
+    return txns;
   }
 
   toJSON () {

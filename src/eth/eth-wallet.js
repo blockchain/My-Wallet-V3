@@ -113,7 +113,11 @@ class EthWallet {
     };
   }
 
-  fetchBalances () {
+  fetchHistory () {
+    return Promise.all(this.activeAccounts.map(a => a.fetchHistory()));
+  }
+
+  fetchBalance () {
     return Promise.all(this.activeAccounts.map(a => a.fetchBalance()));
   }
 
