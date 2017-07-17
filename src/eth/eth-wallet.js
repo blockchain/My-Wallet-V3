@@ -91,17 +91,16 @@ class EthWallet {
     this.sync();
   }
 
-  getTxNote (ethTx) {
-    if (!R.is(EthTx)) throw new Error('setTxNote must be passed an EthTx');
-    return this._txNotes[ethTx.hash] || null;
+  getTxNote (hash) {
+    return this._txNotes[hash] || null;
   }
 
-  setTxNote (ethTx, note) {
-    if (!R.is(EthTx) || typeof note !== 'string') {
-      throw new Error('setTxNote must be passed an EthTx and a string');
+  setTxNote (hash, note) {
+    if (typeof note !== 'string') {
+      throw new Error('setTxNote note must be a string');
     }
-    this._txNotes[ethTx.hash] = note;
-    ethTx.update(this);
+    this._txNotes[hash] = note;
+    this.activeAccounts.forEach(a => a.updateTxs(this));
     this.sync();
   }
 
