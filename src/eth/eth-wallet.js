@@ -39,6 +39,10 @@ class EthWallet {
     return this._accounts;
   }
 
+  get activeAccounts () {
+    return this.accounts.filter(a => !a.archived);
+  }
+
   get syncing () {
     return this._syncing;
   }
@@ -110,9 +114,11 @@ class EthWallet {
   }
 
   fetchBalances () {
-    return Promise.all(
-      this.accounts.filter(a => !a.archived).map(a => a.fetchBalance())
-    );
+    return Promise.all(this.activeAccounts.map(a => a.fetchBalance()));
+  }
+
+  fetchTransactions () {
+    return Promise.all(this.activeAccounts.map(a => a.fetchTransactions()));
   }
 
   isAddress (address) {

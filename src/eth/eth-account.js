@@ -71,9 +71,18 @@ class EthAccount {
       .then(data => this.setData(data));
   }
 
-  setData ({ balance, nonce, txns = [] } = {}) {
+  fetchTransactions () {
+    return fetch(`${API.API_ROOT_URL}eth/account/${this.address}`)
+      .then(res => res.json())
+      .then(data => this.setTransactions(data));
+  }
+
+  setData ({ balance, nonce } = {}) {
     this._balance = balance;
     this._nonce = nonce;
+  }
+
+  setTransactions ({ txns = [] }) {
     this._txs = txns.map(EthWalletTx.fromJSON);
   }
 
