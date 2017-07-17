@@ -100,7 +100,7 @@ class EthAccount {
   }
 
   updateTxs (ethWallet) {
-    this.txs.forEach(tx => tx.updateData(ethWallet));
+    this.txs.forEach(tx => tx.update(ethWallet));
   }
 
   toJSON () {
