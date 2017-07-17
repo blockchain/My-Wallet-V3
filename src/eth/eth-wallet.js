@@ -16,6 +16,7 @@ class EthWallet {
     this._metadata = metadata;
     this._defaultAccountIdx = 0;
     this._accounts = [];
+    this._txNotes = {};
     this._syncing = false;
   }
 
@@ -90,6 +91,20 @@ class EthWallet {
     this.sync();
   }
 
+  getTxNote (ethTx) {
+    if (!R.is(EthTx)) throw new Error('setTxNote must be passed an EthTx');
+    return this._txNotes[ethTx.hash] || null;
+  }
+
+  setTxNote (ethTx, note) {
+    if (!R.is(EthTx) || typeof note !== 'string') {
+      throw new Error('setTxNote must be passed an EthTx and a string');
+    }
+    this._txNotes[ethTx.hash] = note;
+    ethTx.update(this);
+    this.sync();
+  }
+
   setDefaultAccountIndex (i) {
     if (!H.isPositiveNumber(i)) {
       throw new Error('Account index must be a number >= 0');
@@ -107,6 +122,7 @@ class EthWallet {
         let { ethereum } = data;
         this._defaultAccountIdx = ethereum.default_account_idx;
         this._accounts = ethereum.accounts.map(R.construct(EthAccount));
+        this._txNotes = ethereum.tx_notes || {};
       }
     });
   }
@@ -120,7 +136,8 @@ class EthWallet {
   toJSON () {
     return {
       default_account_idx: this._defaultAccountIdx,
-      accounts: this._accounts
+      accounts: this._accounts,
+      tx_notes: this._txNotes
     };
   }
 
@@ -129,7 +146,7 @@ class EthWallet {
       this.getLatestBlock(),
       ...this.activeAccounts.map(a => a.fetchHistory())
     ]).then((result) => {
-      this.activeAccounts.forEach(a => a.updateConfirmations(this.latestBlock));
+      this.activeAccounts.forEach(a => a.updateTxs(this));
       return result;
     });
   }

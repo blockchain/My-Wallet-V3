@@ -99,8 +99,8 @@ class EthAccount {
     return txns;
   }
 
-  updateConfirmations (latestBlock) {
-    this.txs.forEach(tx => tx.updateConfirmations(latestBlock));
+  updateTxs (ethWallet) {
+    this.txs.forEach(tx => tx.updateData(ethWallet));
   }
 
   toJSON () {

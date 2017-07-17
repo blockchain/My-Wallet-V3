@@ -13,6 +13,7 @@ class EthWalletTx {
     this._gasPrice = obj.gasPrice;
     this._gasUsed = obj.gasUsed;
     this._confirmations = 0;
+    this._note = null;
   }
 
   get amount () {
@@ -44,12 +45,17 @@ class EthWalletTx {
     return this._confirmations;
   }
 
+  get note () {
+    return this._note;
+  }
+
   isFromAccount (account) {
     return this._from === account.address;
   }
 
-  updateConfirmations (latestBlock) {
-    this._confirmations = latestBlock - this._blockNumber;
+  update (ethWallet) {
+    this._confirmations = ethWallet.latestBlock - this._blockNumber;
+    this._note = ethWallet.getTxNote(this.hash);
   }
 
   static txTimeSort (txA, txB) {
