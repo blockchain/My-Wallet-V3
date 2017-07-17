@@ -95,7 +95,7 @@ class EthAccount {
   }
 
   setTransactions ({ txns = [] }) {
-    this._txs = txns.map(EthWalletTx.fromJSON);
+    this._txs = txns.map(EthWalletTx.fromJSON).sort(EthWalletTx.txTimeSort);
     return txns;
   }
 

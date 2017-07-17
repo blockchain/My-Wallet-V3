@@ -52,6 +52,10 @@ class EthWalletTx {
     this._confirmations = latestBlock - this._blockNumber;
   }
 
+  static txTimeSort (txA, txB) {
+    return txB.time - txA.time;
+  }
+
   static fromJSON (json) {
     return new EthWalletTx(json);
   }
