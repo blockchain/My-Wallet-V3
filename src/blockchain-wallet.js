@@ -836,8 +836,7 @@ Wallet.prototype.fetchAccountInfo = function () {
 };
 
 Wallet.prototype.metadata = function (typeId) {
-  var masterhdnode = this.hdwallet.getMasterHDNode();
-  return Metadata.fromMasterHDNode(masterhdnode, typeId);
+  return Metadata.fromMetadataHDNode(this._metadataHDNode, typeId);
 };
 
 // This sets:

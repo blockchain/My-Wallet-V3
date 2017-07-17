@@ -3,7 +3,6 @@ const H = require('../helpers');
 const Web3 = require('web3');
 const EthHd = require('ethereumjs-wallet/hdkey');
 const EthTx = require('./eth-tx');
-const Metadata = require('../metadata');
 const EthAccount = require('./eth-account');
 const API = require('../api');
 
@@ -160,7 +159,7 @@ class EthWallet {
   }
 
   static fromBlockchainWallet (wallet) {
-    let metadata = Metadata.fromMetadataHDNode(wallet._metadataHDNode, METADATA_TYPE_ETH);
+    let metadata = wallet.metadata(METADATA_TYPE_ETH);
     return new EthWallet(wallet.hdwallet.seedHex, metadata);
   }
 }
