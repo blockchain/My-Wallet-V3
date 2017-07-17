@@ -5,11 +5,10 @@ const EthHd = require('ethereumjs-wallet/hdkey');
 const EthTx = require('./eth-tx');
 const Metadata = require('../metadata');
 const EthAccount = require('./eth-account');
+
 const METADATA_TYPE_ETH = 5;
-
-const web3 = new Web3();
-
 const DERIVATION_PATH = "m/44'/60'/0'/0";
+const web3 = new Web3();
 
 class EthWallet {
   constructor (seed, metadata) {
