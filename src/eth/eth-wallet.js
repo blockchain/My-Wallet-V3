@@ -5,6 +5,7 @@ const EthHd = require('ethereumjs-wallet/hdkey');
 const EthTx = require('./eth-tx');
 const Metadata = require('../metadata');
 const EthAccount = require('./eth-account');
+const API = require('../api');
 
 const METADATA_TYPE_ETH = 5;
 const DERIVATION_PATH = "m/44'/60'/0'/0";
@@ -134,6 +135,12 @@ class EthWallet {
 
   isAddress (address) {
     return web3.isAddress(address);
+  }
+
+  isContractAddress (address) {
+    return fetch(`${API.API_ROOT_URL}eth/account/${address}/isContract`)
+      .then(res => res.json())
+      .then(({ contract }) => contract);
   }
 
   static fromBlockchainWallet (wallet) {
