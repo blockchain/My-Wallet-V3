@@ -1,4 +1,5 @@
 let proxyquire = require('proxyquireify')(require);
+let exchangeMock = require('./mocks/bitcoin-exchange-client.mock');
 
 let walletStoreGuid;
 let walletStoreEncryptedWalletData;
@@ -116,6 +117,7 @@ const RNG = {
 };
 
 let stubs = {
+  'bitcoin-exchange-client': exchangeMock,
   './wallet-store': WalletStore,
   './wallet-crypto': WalletCrypto,
   './wallet-signup': WalletSignup,

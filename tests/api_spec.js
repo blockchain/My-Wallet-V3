@@ -1,5 +1,4 @@
-let proxyquire = require('proxyquireify')(require);
-let API = proxyquire('../src/api', {});
+let API = require('../src/api');
 
 describe('API', () => {
   describe('encodeFormData', () => {
