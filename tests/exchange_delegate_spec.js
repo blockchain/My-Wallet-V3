@@ -1,4 +1,5 @@
 let proxyquire = require('proxyquireify')(require);
+let exchangeMock = require('./mocks/bitcoin-exchange-client.mock');
 
 let delegate;
 
@@ -101,6 +102,7 @@ const TX = ({hash, block_height}) => ({
 });
 
 let stubs = {
+  'bitcoin-exchange-client': exchangeMock,
   './wallet': MyWallet,
   './api': API,
   './wallet-store': WalletStore,

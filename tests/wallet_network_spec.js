@@ -1,4 +1,5 @@
 let proxyquire = require('proxyquireify')(require);
+let exchangeMock = require('./mocks/bitcoin-exchange-client.mock');
 
 describe('WalletNetwork', () => {
   const API = {
@@ -105,6 +106,7 @@ describe('WalletNetwork', () => {
   };
 
   let WalletNetwork = proxyquire('../src/wallet-network', {
+    'bitcoin-exchange-client': exchangeMock,
     './api': API,
     './wallet-crypto': WalletCrypto,
     './wallet': MyWallet,
