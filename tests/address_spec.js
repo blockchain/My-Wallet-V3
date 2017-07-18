@@ -1,4 +1,5 @@
 let Bitcoin = require('bitcoinjs-lib');
+let exchangeMock = require('./mocks/bitcoin-exchange-client.mock');
 
 let proxyquire = require('proxyquireify')(require);
 
@@ -129,6 +130,7 @@ let WalletCrypto = {
 };
 
 let stubs = {
+  'bitcoin-exchange-client': exchangeMock,
   './wallet': MyWallet,
   './rng': RNG,
   './api': API,

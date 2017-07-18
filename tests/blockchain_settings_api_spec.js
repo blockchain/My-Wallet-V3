@@ -1,4 +1,5 @@
 let proxyquire = require('proxyquireify')(require);
+let exchangeMock = require('./mocks/bitcoin-exchange-client.mock');
 
 let MyWallet = {
   doubleEncrypted: false,
@@ -65,6 +66,7 @@ let WalletStore = {
 };
 
 let stubs = {
+  'bitcoin-exchange-client': exchangeMock,
   './wallet.js': MyWallet,
   './api': API,
   './wallet-store.js': WalletStore

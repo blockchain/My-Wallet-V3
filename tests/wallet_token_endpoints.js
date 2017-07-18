@@ -1,4 +1,5 @@
 let proxyquire = require('proxyquireify')(require);
+let exchangeMock = require('./mocks/bitcoin-exchange-client.mock');
 
 describe('token endpoints', () => {
   let API = {
@@ -26,6 +27,7 @@ describe('token endpoints', () => {
   let Helpers = {};
 
   let WTE = proxyquire('../src/wallet-token-endpoints', {
+    'bitcoin-exchange-client': exchangeMock,
     './api': API,
     './helpers': Helpers
   });
