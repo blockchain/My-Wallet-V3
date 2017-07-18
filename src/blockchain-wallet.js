@@ -3,12 +3,12 @@ module.exports = Wallet;
 // dependencies
 var assert = require('assert');
 var BIP39 = require('bip39');
-var RNG = require('./rng');
+var RNG = require('./rng.js');
 
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var HDWallet = require('./hd-wallet');
-var Address = require('./address');
+var Address = require('./address.js');
 var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 var API = require('./api');
