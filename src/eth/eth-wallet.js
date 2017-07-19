@@ -11,8 +11,8 @@ const DERIVATION_PATH = "m/44'/60'/0'/0";
 const web3 = new Web3();
 
 class EthWallet {
-  constructor (seed, metadata) {
-    this._hdWallet = EthHd.fromMasterSeed(seed).derivePath(DERIVATION_PATH);
+  constructor (wallet, metadata) {
+    this._wallet = wallet;
     this._metadata = metadata;
     this._defaultAccountIdx = 0;
     this._accounts = [];
@@ -83,8 +83,8 @@ class EthWallet {
     this.sync();
   }
 
-  createAccount (label) {
-    let accountNode = this._hdWallet.deriveChild(this.accounts.length);
+  createAccount (label, secPass) {
+    let accountNode = this.deriveChild(this.accounts.length, secPass);
     let account = EthAccount.fromWallet(accountNode.getWallet());
     account.label = label || EthAccount.defaultLabel(this.accounts.length);
     this._accounts.push(account);
@@ -180,9 +180,16 @@ class EthWallet {
       .then(block => { this._latestBlock = block.number; });
   }
 
+  deriveChild (index, secPass) {
+    let w = this._wallet;
+    let getSeedHex = w.isDoubleEncrypted ? w.createCipher(secPass, 'dec') : x => x;
+    let seed = getSeedHex(w.hdwallet.seedHex);
+    return EthHd.fromMasterSeed(seed).derivePath(DERIVATION_PATH).deriveChild(index);
+  }
+
   static fromBlockchainWallet (wallet) {
     let metadata = wallet.metadata(METADATA_TYPE_ETH);
-    return new EthWallet(wallet.hdwallet.seedHex, metadata);
+    return new EthWallet(wallet, metadata);
   }
 }
 
