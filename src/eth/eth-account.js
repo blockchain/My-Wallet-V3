@@ -12,6 +12,7 @@ class EthAccount {
     this.archived = obj.archived || false;
     this._balance = null;
     this._nonce = null;
+    this._txs = [];
   }
 
   get address () {

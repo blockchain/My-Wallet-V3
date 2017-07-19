@@ -89,6 +89,7 @@ class EthWallet {
     account.label = label || EthAccount.defaultLabel(this.accounts.length);
     this._accounts.push(account);
     this.sync();
+    return account;
   }
 
   getTxNote (hash) {
@@ -107,8 +108,10 @@ class EthWallet {
   setDefaultAccountIndex (i) {
     if (!H.isPositiveNumber(i)) {
       throw new Error('Account index must be a number >= 0');
-    } else if (i < this.accounts.length - 1) {
+    } else if (i >= this.accounts.length) {
       throw new Error('Account index out of bounds');
+    } else if (this._defaultAccountIdx === i) {
+      return;
     } else {
       this._defaultAccountIdx = i;
       this.sync();

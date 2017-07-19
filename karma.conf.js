@@ -75,7 +75,8 @@ module.exports = function (config) {
       'tests/metadata_spec.js',
       'tests/exchange_delegate_spec.js',
       'tests/labels_spec.js',
-      'tests/address_hd_spec.js'
+      'tests/address_hd_spec.js',
+      'tests/eth/eth-wallet.spec.js'
     ]
   };
 
