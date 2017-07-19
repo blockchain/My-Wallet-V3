@@ -49,6 +49,10 @@ class EthWalletTx {
     return this._note;
   }
 
+  isToAccount (account) {
+    return this._to === account.address;
+  }
+
   isFromAccount (account) {
     return this._from === account.address;
   }
