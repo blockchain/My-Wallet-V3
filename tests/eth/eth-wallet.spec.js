@@ -60,7 +60,7 @@ describe('EthWallet', () => {
 
     describe('.setAccountLabel', () => {
       it('should set the account label', () => {
-        expect(eth.defaultAccount.label).toEqual('My Ethereum Wallet');
+        expect(eth.defaultAccount.label).toEqual('My Ether Wallet');
         eth.setAccountLabel(0, 'Renamed');
         expect(eth.defaultAccount.label).toEqual('Renamed');
       });
@@ -118,7 +118,7 @@ describe('EthWallet', () => {
     describe('.createAccount', () => {
       it('should create a new account', () => {
         let account = eth.createAccount();
-        expect(account.label).toEqual('My Ethereum Wallet 2');
+        expect(account.label).toEqual('My Ether Wallet 2');
       });
 
       it('should create with a custom label', () => {
@@ -227,7 +227,7 @@ describe('EthWallet', () => {
         eth.setDefaultAccountIndex(1);
         eth.setTxNote('<hash>', 'my note');
         let json = JSON.stringify(eth.toJSON());
-        expect(json).toEqual('{"default_account_idx":1,"accounts":[{"label":"My Ethereum Wallet","archived":false,"priv":"6c7a48436661d678c17dc4ef39862767c3d5cb54b3d22dd065c4b963e1e28924"},{"label":"New","archived":false,"priv":"bd94a5572e6c9aa9ca499834f080519a3def23ebab41ff9b3d8db16c467375df"}],"tx_notes":{"<hash>":"my note"}}');
+        expect(json).toEqual('{"default_account_idx":1,"accounts":[{"label":"My Ether Wallet","archived":false,"priv":"6c7a48436661d678c17dc4ef39862767c3d5cb54b3d22dd065c4b963e1e28924"},{"label":"New","archived":false,"priv":"bd94a5572e6c9aa9ca499834f080519a3def23ebab41ff9b3d8db16c467375df"}],"tx_notes":{"<hash>":"my note"}}');
       });
     });
   });

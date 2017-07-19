@@ -113,7 +113,7 @@ class EthAccount {
   }
 
   static defaultLabel (accountIdx) {
-    let label = 'My Ethereum Wallet';
+    let label = 'My Ether Wallet';
     return accountIdx > 0 ? `${label} ${accountIdx + 1}` : label;
   }
 
