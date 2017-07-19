@@ -163,6 +163,18 @@ describe('EthWallet', () => {
         expect(setTxNote).toThrow();
       });
 
+      it('should fail if the note is undefined', () => {
+        let setTxNote = () => eth.setTxNote('<hash>');
+        expect(setTxNote).toThrow();
+      });
+
+      it('should remove a note when passed an empty string', () => {
+        eth.setTxNote('<hash>', 'my note');
+        expect(eth.getTxNote('<hash>')).toEqual('my note');
+        eth.setTxNote('<hash>', '');
+        expect(eth.getTxNote('<hash>')).toEqual(null);
+      });
+
       it('should update account txs', () => {
         spyOn(eth.defaultAccount, 'updateTxs');
         eth.setTxNote('<hash>', 'my note');

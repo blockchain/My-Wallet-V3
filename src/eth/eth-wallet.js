@@ -97,10 +97,13 @@ class EthWallet {
   }
 
   setTxNote (hash, note) {
-    if (typeof note !== 'string') {
-      throw new Error('setTxNote note must be a string');
+    if (note === null || note === '') {
+      delete this._txNotes[hash];
+    } else if (typeof note !== 'string') {
+      throw new Error('setTxNote note must be a string or null');
+    } else {
+      this._txNotes[hash] = note;
     }
-    this._txNotes[hash] = note;
     this.activeAccounts.forEach(a => a.updateTxs(this));
     this.sync();
   }
