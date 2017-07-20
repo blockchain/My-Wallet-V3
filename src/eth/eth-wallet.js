@@ -180,6 +180,12 @@ class EthWallet {
       .then(block => { this._latestBlock = block.number; });
   }
 
+  getPrivateKeyForAccount (account, secPass) {
+    let index = this.accounts.indexOf(account);
+    let wallet = this.deriveChild(index, secPass).getWallet();
+    return wallet.getPrivateKey();
+  }
+
   deriveChild (index, secPass) {
     let w = this._wallet;
     let getSeedHex = w.isDoubleEncrypted ? w.createCipher(secPass, 'dec') : x => x;

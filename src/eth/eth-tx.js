@@ -74,8 +74,8 @@ class EthTx {
     return this;
   }
 
-  sign () {
-    this._tx.sign(this._account.privateKey);
+  sign (privateKey) {
+    this._tx.sign(privateKey);
     return this;
   }
 

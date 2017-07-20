@@ -7,7 +7,8 @@ const API = require('../api');
 
 class EthAccount {
   constructor (obj) {
-    this._priv = Buffer.from(obj.priv, 'hex');
+    this._priv = obj.priv && Buffer.from(obj.priv, 'hex');
+    this._addr = obj.priv ? keythereum.privateKeyToAddress(this._priv) : obj.addr;
     this.label = obj.label;
     this.archived = obj.archived || false;
     this._balance = null;
@@ -16,7 +17,7 @@ class EthAccount {
   }
 
   get address () {
-    return keythereum.privateKeyToAddress(this.privateKey);
+    return this._addr;
   }
 
   get privateKey () {
@@ -108,7 +109,7 @@ class EthAccount {
     return {
       label: this.label,
       archived: this.archived,
-      priv: this.privateKey.toString('hex')
+      addr: this.address
     };
   }
 
@@ -122,7 +123,8 @@ class EthAccount {
   }
 
   static fromWallet (wallet) {
-    let account = new EthAccount({ priv: wallet.getPrivateKey() });
+    let addr = keythereum.privateKeyToAddress(wallet.getPrivateKey());
+    let account = new EthAccount({ addr });
     account.setData({ balance: 0, nonce: 0 });
     return account;
   }
