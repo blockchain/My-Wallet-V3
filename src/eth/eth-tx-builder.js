@@ -9,7 +9,7 @@ const MAINNET = 1;
 window.web3 = web3;
 window.util = util;
 
-class EthTx {
+class EthTxBuilder {
   constructor (account) {
     this._account = account;
     this._tx = new EthereumTx(null, MAINNET);
@@ -80,7 +80,7 @@ class EthTx {
   }
 
   publish () {
-    return EthTx.pushTx(this.toRaw());
+    return EthTxBuilder.pushTx(this.toRaw());
   }
 
   toRaw () {
@@ -106,4 +106,4 @@ class EthTx {
   }
 }
 
-module.exports = EthTx;
+module.exports = EthTxBuilder;

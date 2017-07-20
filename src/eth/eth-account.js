@@ -1,5 +1,5 @@
 const keythereum = require('keythereum');
-const EthTx = require('./eth-tx');
+const EthTxBuilder = require('./eth-tx-builder');
 const EthWalletTx = require('./eth-wallet-tx');
 const Web3 = require('web3');
 const web3 = new Web3();
@@ -41,7 +41,7 @@ class EthAccount {
   }
 
   createPayment () {
-    return new EthTx(this);
+    return new EthTxBuilder(this);
   }
 
   spend (to, amount, fee) {
@@ -49,7 +49,7 @@ class EthAccount {
       .setTo(to)
       .setValue(amount)
       .setGasPrice(fee)
-      .setGasLimit(EthTx.GAS_LIMIT)
+      .setGasLimit(EthTxBuilder.GAS_LIMIT)
       .sign()
       .publish();
   }
@@ -58,7 +58,7 @@ class EthAccount {
     return this.createPayment()
       .setTo(to)
       .setGasPrice(fee)
-      .setGasLimit(EthTx.GAS_LIMIT)
+      .setGasLimit(EthTxBuilder.GAS_LIMIT)
       .setSweep()
       .sign()
       .publish();

@@ -2,7 +2,7 @@ const R = require('ramda');
 const H = require('../helpers');
 const Web3 = require('web3');
 const EthHd = require('ethereumjs-wallet/hdkey');
-const EthTx = require('./eth-tx');
+const EthTxBuilder = require('./eth-tx-builder');
 const EthAccount = require('./eth-account');
 const API = require('../api');
 
@@ -54,8 +54,8 @@ class EthWallet {
 
   get defaults () {
     return {
-      GAS_PRICE: EthTx.GAS_PRICE,
-      GAS_LIMIT: EthTx.GAS_LIMIT
+      GAS_PRICE: EthTxBuilder.GAS_PRICE,
+      GAS_LIMIT: EthTxBuilder.GAS_LIMIT
     };
   }
 
