@@ -40,7 +40,7 @@ class EthTxBuilder {
 
   get availableBN () {
     let balance = web3.toBigNumber(this._account.wei);
-    return balance.sub(this.feeBN);
+    return Math.max(parseFloat(balance.sub(this.feeBN)), 0);
   }
 
   setTo (to) {
@@ -69,7 +69,7 @@ class EthTxBuilder {
   setSweep () {
     this.setValue(0);
     let balance = web3.toBigNumber(this._account.wei);
-    let amount = balance.sub(this._tx.getUpfrontCost());
+    let amount = Math.max(balance.sub(this._tx.getUpfrontCost()), 0);
     this.setValue(web3.fromWei(amount, 'ether'));
     return this;
   }
