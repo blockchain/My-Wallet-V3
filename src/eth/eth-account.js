@@ -71,7 +71,7 @@ class EthAccount {
 
   setData ({ balance, nonce } = {}) {
     this._balance = balance;
-    this._nonce = nonce;
+    this._nonce = Math.max(this._nonce, nonce); // keep higher nonce in case it was incremented
     return { balance, nonce };
   }
 
