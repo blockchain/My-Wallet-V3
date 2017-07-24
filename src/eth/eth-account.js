@@ -48,31 +48,6 @@ class EthAccount {
     this._nonce++;
   }
 
-  spend (to, amount, fee) {
-    return this.createPayment()
-      .setTo(to)
-      .setValue(amount)
-      .setGasPrice(fee)
-      .setGasLimit(EthTxBuilder.GAS_LIMIT)
-      .sign()
-      .publish();
-  }
-
-  sweep (to, fee) {
-    return this.createPayment()
-      .setTo(to)
-      .setGasPrice(fee)
-      .setGasLimit(EthTxBuilder.GAS_LIMIT)
-      .setSweep()
-      .sign()
-      .publish();
-  }
-
-  sweepFrom (privateKey, fee) {
-    let account = EthAccount.fromPriv(privateKey);
-    return account.fetchBalance().sweep(this.address, fee);
-  }
-
   fetchHistory () {
     return Promise.all([
       this.fetchBalance(),
@@ -120,10 +95,6 @@ class EthAccount {
   static defaultLabel (accountIdx) {
     let label = 'My Ether Wallet';
     return accountIdx > 0 ? `${label} ${accountIdx + 1}` : label;
-  }
-
-  static fromPriv (privateKey) {
-    return new EthAccount({ priv: Buffer.from(privateKey, 'hex') });
   }
 
   static fromWallet (wallet) {
