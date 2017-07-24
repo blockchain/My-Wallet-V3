@@ -192,6 +192,9 @@ class EthWallet {
 
   deriveChild (index, secPass) {
     let w = this._wallet;
+    if (w.isDoubleEncrypted && !secPass) {
+      throw new Error('Second password required to derive ethereum wallet');
+    }
     let getSeedHex = w.isDoubleEncrypted ? w.createCipher(secPass, 'dec') : x => x;
     let seed = getSeedHex(w.hdwallet.seedHex);
     return EthHd.fromMasterSeed(seed).derivePath(DERIVATION_PATH).deriveChild(index);
