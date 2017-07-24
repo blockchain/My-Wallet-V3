@@ -80,7 +80,10 @@ class EthTxBuilder {
   }
 
   publish () {
-    return EthTxBuilder.pushTx(this.toRaw());
+    return EthTxBuilder.pushTx(this.toRaw()).then((response) => {
+      this._account.incrementNonce();
+      return response;
+    });
   }
 
   toRaw () {

@@ -44,6 +44,10 @@ class EthAccount {
     return new EthTxBuilder(this);
   }
 
+  incrementNonce () {
+    this._nonce++;
+  }
+
   spend (to, amount, fee) {
     return this.createPayment()
       .setTo(to)
