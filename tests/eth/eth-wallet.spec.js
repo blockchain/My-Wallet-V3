@@ -44,6 +44,7 @@ describe('EthWallet', () => {
     beforeEach(() => {
       let wallet = new BlockchainWalletMock();
       eth = EthWallet.fromBlockchainWallet(wallet);
+      eth.connect();
       eth.createAccount();
     });
 

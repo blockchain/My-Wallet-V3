@@ -5,6 +5,7 @@ const EthHd = require('ethereumjs-wallet/hdkey');
 const EthTxBuilder = require('./eth-tx-builder');
 const EthAccount = require('./eth-account');
 const API = require('../api');
+const EthSocket = require('./eth-socket');
 
 const METADATA_TYPE_ETH = 5;
 const DERIVATION_PATH = "m/44'/60'/0'/0";
@@ -80,6 +81,7 @@ class EthWallet {
 
   unarchiveAccount (account) {
     account.archived = false;
+    this._socket.subscribeToAccount(account);
     this.sync();
   }
 
@@ -88,6 +90,7 @@ class EthWallet {
     let account = EthAccount.fromWallet(accountNode.getWallet());
     account.label = label || EthAccount.defaultLabel(this.accounts.length);
     this._accounts.push(account);
+    this._socket.subscribeToAccount(account);
     this.sync();
     return account;
   }
@@ -104,7 +107,7 @@ class EthWallet {
     } else {
       this._txNotes[hash] = note;
     }
-    this.activeAccounts.forEach(a => a.updateTxs(this));
+    this.updateTxs();
     this.sync();
   }
 
@@ -128,6 +131,7 @@ class EthWallet {
         this._defaultAccountIdx = ethereum.default_account_idx;
         this._accounts = ethereum.accounts.map(R.construct(EthAccount));
         this._txNotes = ethereum.tx_notes || {};
+        this.activeAccounts.forEach(a => this._socket.subscribeToAccount(a));
       }
     });
   }
@@ -151,7 +155,7 @@ class EthWallet {
       this.getLatestBlock(),
       ...this.activeAccounts.map(a => a.fetchHistory())
     ]).then((result) => {
-      this.activeAccounts.forEach(a => a.updateTxs(this));
+      this.updateTxs();
       return result;
     });
   }
@@ -178,6 +182,18 @@ class EthWallet {
     return fetch(`${API.API_ROOT_URL}eth/latestblock`)
       .then(res => res.json())
       .then(block => { this._latestBlock = block.number; });
+  }
+
+  connect () {
+    if (this._socket) return;
+    this._socket = new EthSocket();
+    this._socket.on('message', () => {
+      this.getLatestBlock().then(() => { this.updateTxs(); });
+    });
+  }
+
+  updateTxs () {
+    this.activeAccounts.forEach(a => a.updateTxs(this));
   }
 
   getPrivateKeyForAccount (account, secPass) {

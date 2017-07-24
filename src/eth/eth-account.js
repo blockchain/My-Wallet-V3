@@ -69,6 +69,13 @@ class EthAccount {
       .then(data => this.setTransactions(data));
   }
 
+  fetchTransaction (hash) {
+    return fetch(`${API.API_ROOT_URL}eth/tx/${hash}`)
+      .then(res => res.json())
+      .then(EthWalletTx.fromJSON)
+      .then(tx => { this._txs.unshift(tx); });
+  }
+
   setData ({ balance, nonce } = {}) {
     this._balance = balance;
     this._nonce = Math.max(this._nonce, nonce); // keep higher nonce in case it was incremented

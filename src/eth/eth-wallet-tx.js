@@ -4,7 +4,7 @@ const web3 = new Web3();
 class EthWalletTx {
   constructor (obj) {
     this._blockNumber = obj.blockNumber;
-    this._timeStamp = obj.timeStamp;
+    this._timeStamp = obj.timeStamp || (Date.now() / 1000);
     this._hash = obj.hash;
     this._from = obj.from;
     this._to = obj.to;
@@ -21,7 +21,7 @@ class EthWalletTx {
   }
 
   get fee () {
-    let weiUsed = web3.toBigNumber(this._gasPrice).mul(this._gasUsed);
+    let weiUsed = web3.toBigNumber(this._gasPrice).mul(this._gasUsed || this._gas);
     return web3.fromWei(weiUsed, 'ether').toString();
   }
 
