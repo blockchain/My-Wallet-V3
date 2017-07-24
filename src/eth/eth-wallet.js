@@ -183,7 +183,11 @@ class EthWallet {
   getPrivateKeyForAccount (account, secPass) {
     let index = this.accounts.indexOf(account);
     let wallet = this.deriveChild(index, secPass).getWallet();
-    return wallet.getPrivateKey();
+    let privateKey = wallet.getPrivateKey();
+    if (!account.isCorrectPrivateKey(privateKey)) {
+      throw new Error('Failed to derive correct private key');
+    }
+    return privateKey;
   }
 
   deriveChild (index, secPass) {

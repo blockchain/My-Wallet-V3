@@ -92,6 +92,10 @@ class EthAccount {
     };
   }
 
+  isCorrectPrivateKey (privateKey) {
+    return keythereum.privateKeyToAddress(privateKey) === this.address;
+  }
+
   static defaultLabel (accountIdx) {
     let label = 'My Ether Wallet';
     return accountIdx > 0 ? `${label} ${accountIdx + 1}` : label;
