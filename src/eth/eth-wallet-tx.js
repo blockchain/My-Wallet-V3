@@ -49,6 +49,15 @@ class EthWalletTx {
     return this._note;
   }
 
+  getTxType (account) {
+    if (this.isToAccount(account)) {
+      return 'received';
+    } else if (this.isFromAccount(account)) {
+      return 'sent';
+    }
+    return null;
+  }
+
   isToAccount (account) {
     return this._to === account.address;
   }
