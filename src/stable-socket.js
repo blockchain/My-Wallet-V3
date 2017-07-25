@@ -10,6 +10,10 @@ class StableSocket extends EventEmitter {
     this._messageQueue = [];
   }
 
+  get url () {
+    return this._url;
+  }
+
   get isOpen () {
     return this._socket.readyState === this._socket.OPEN;
   }
