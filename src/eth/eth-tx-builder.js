@@ -75,8 +75,12 @@ class EthTxBuilder {
   }
 
   sign (privateKey) {
-    this._tx.sign(privateKey);
-    return this;
+    if (this._account.isCorrectPrivateKey(privateKey)) {
+      this._tx.sign(privateKey);
+      return this;
+    } else {
+      throw new Error('Incorrect private key');
+    }
   }
 
   publish () {
