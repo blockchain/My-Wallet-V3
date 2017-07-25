@@ -10,7 +10,7 @@ class EthSocket extends StableSocket {
     this.send(EthSocket.accountSub(account));
     this.on('message', (data) => {
       let parsed = JSON.parse(data);
-      if (parsed.txHash) {
+      if (parsed.address === account.address) {
         account.setData(parsed);
         account.fetchTransaction(parsed.txHash);
       }
