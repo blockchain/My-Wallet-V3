@@ -10,13 +10,29 @@ class EthSocket extends StableSocket {
     this.send(EthSocket.accountSub(account));
     this.on('message', (data) => {
       let parsed = JSON.parse(data);
-      account.setData(parsed);
-      account.fetchTransaction(parsed.txHash);
+      if (parsed.txHash) {
+        account.setData(parsed);
+        account.fetchTransaction(parsed.txHash);
+      }
+    });
+  }
+
+  subscribeToBlocks (ethWallet) {
+    this.send(EthSocket.blocksSub());
+    this.on('message', (data) => {
+      let parsed = JSON.parse(data);
+      if (parsed.number) {
+        ethWallet.setLatestBlock(parsed.number);
+      }
     });
   }
 
   static accountSub (account) {
     return JSON.stringify({ op: 'balance', account: account.address });
+  }
+
+  static blocksSub () {
+    return JSON.stringify({ op: 'block' });
   }
 }
 

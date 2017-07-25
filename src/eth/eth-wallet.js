@@ -151,13 +151,8 @@ class EthWallet {
   }
 
   fetchHistory () {
-    return Promise.all([
-      this.getLatestBlock(),
-      ...this.activeAccounts.map(a => a.fetchHistory())
-    ]).then((result) => {
-      this.updateTxs();
-      return result;
-    });
+    return Promise.all(this.activeAccounts.map(a => a.fetchHistory()))
+      .then(() => this.getLatestBlock());
   }
 
   fetchBalance () {
@@ -181,15 +176,18 @@ class EthWallet {
   getLatestBlock () {
     return fetch(`${API.API_ROOT_URL}eth/latestblock`)
       .then(res => res.json())
-      .then(block => { this._latestBlock = block.number; });
+      .then(block => this.setLatestBlock(block.number));
+  }
+
+  setLatestBlock (blockNumber) {
+    this._latestBlock = blockNumber;
+    this.updateTxs();
   }
 
   connect () {
     if (this._socket) return;
     this._socket = new EthSocket();
-    this._socket.on('message', () => {
-      this.getLatestBlock().then(() => { this.updateTxs(); });
-    });
+    this._socket.subscribeToBlocks(this);
   }
 
   updateTxs () {
