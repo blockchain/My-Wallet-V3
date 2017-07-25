@@ -18,7 +18,6 @@ class EthWallet {
     this._defaultAccountIdx = 0;
     this._accounts = [];
     this._txNotes = {};
-    this._syncing = false;
   }
 
   get wei () {
@@ -47,10 +46,6 @@ class EthWallet {
 
   get latestBlock () {
     return this._latestBlock;
-  }
-
-  get syncing () {
-    return this._syncing;
   }
 
   get defaults () {
@@ -137,9 +132,8 @@ class EthWallet {
   }
 
   sync () {
-    this._syncing = true;
     let data = { ethereum: this };
-    return this._metadata.update(data).catch(() => {}).then(() => { this._syncing = false; });
+    return this._metadata.update(data);
   }
 
   toJSON () {
