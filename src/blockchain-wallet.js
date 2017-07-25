@@ -877,7 +877,7 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
 
   var fetchEthWallet = function () {
     this._eth = EthWallet.fromBlockchainWallet(this);
-    this._eth.connect();
+    this._eth.connect(MyWallet.ws.wsUrl.replace('/inv', '/eth/inv'));
     window.eth = this._eth;
     return this._eth.fetch();
   };

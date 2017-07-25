@@ -184,9 +184,9 @@ class EthWallet {
     this.updateTxs();
   }
 
-  connect () {
+  connect (wsUrl) {
     if (this._socket) return;
-    this._socket = new EthSocket();
+    this._socket = new EthSocket(wsUrl);
     this._socket.subscribeToBlocks(this);
   }
 
