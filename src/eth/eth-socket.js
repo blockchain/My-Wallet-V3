@@ -2,7 +2,7 @@ const StableSocket = require('../stable-socket');
 
 class EthSocket extends StableSocket {
   constructor () {
-    super('wss://ws.dev.blockchain.info/eth/ws');
+    super('wss://ws.dev.blockchain.info/eth/inv');
     this.connect();
   }
 
