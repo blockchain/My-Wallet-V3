@@ -18,6 +18,7 @@ class EthWallet {
     this._defaultAccountIdx = 0;
     this._accounts = [];
     this._txNotes = {};
+    this._latestBlock = null;
   }
 
   get wei () {

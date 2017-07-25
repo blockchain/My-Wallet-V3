@@ -1,4 +1,6 @@
 const EthWallet = require('../../src/eth/eth-wallet');
+const EthAccount = require('../../src/eth/eth-account');
+const EthSocket = require('../../src/eth/eth-socket');
 
 class MetadataMock {
   update () {
@@ -14,13 +16,24 @@ class BlockchainWalletMock {
     this.hdwallet = {
       seedHex: 'b90ea8ac99ff3d3368eca05d061f068cc66d42636d6558940a6d4275000c89b6d44a83b43c9798fc06f6213f424438a086ed14e3a7ce9d2841c2f06f5297da51'
     };
+    this.isDoubleEncrypted = false;
   }
   metadata (type) {
     return new MetadataMock();
   }
+  createCipher (secPass) {
+    return (x) => {
+      if (secPass !== 'correct') {
+        throw new Error('Second password incorrect');
+      }
+      return x;
+    };
+  }
 }
 
 describe('EthWallet', () => {
+  const wsUrl = 'wss://ws.blockchain.com/eth/inv';
+
   describe('static', () => {
     it('should be given the correct defaults', () => {
       let eth = new EthWallet('', null);
@@ -40,12 +53,47 @@ describe('EthWallet', () => {
 
   describe('instance', () => {
     let eth;
+    let wallet;
 
     beforeEach(() => {
-      let wallet = new BlockchainWalletMock();
+      wallet = new BlockchainWalletMock();
       eth = EthWallet.fromBlockchainWallet(wallet);
-      eth.connect('wss://ws.blockchain.com/eth/inv');
+      eth.connect(wsUrl);
       eth.createAccount();
+    });
+
+    describe('getters', () => {
+      it('should have: wei', () => {
+        expect(eth.wei).toEqual(0);
+      });
+
+      it('should have: balance', () => {
+        expect(eth.balance).toEqual('0');
+      });
+
+      it('should have: defaultAccountIdx', () => {
+        expect(eth.defaultAccountIdx).toEqual(0);
+      });
+
+      it('should have: defaultAccount', () => {
+        expect(eth.defaultAccount).toEqual(eth.accounts[eth.defaultAccountIdx]);
+      });
+
+      it('should have: accounts', () => {
+        expect(eth.accounts).toEqual([jasmine.any(EthAccount)]);
+      });
+
+      it('should have: activeAccounts', () => {
+        expect(eth.activeAccounts).toEqual([jasmine.any(EthAccount)]);
+      });
+
+      it('should have: latestBlock', () => {
+        expect(eth.latestBlock).toEqual(null);
+      });
+
+      it('should have: defaults', () => {
+        expect(eth.defaults).toEqual({ GAS_PRICE: 21, GAS_LIMIT: 21000 });
+      });
     });
 
     describe('.getAccount', () => {
@@ -219,6 +267,81 @@ describe('EthWallet', () => {
         spyOn(eth, 'sync');
         eth.setDefaultAccountIndex(1);
         expect(eth.sync).toHaveBeenCalled();
+      });
+    });
+
+    describe('.setLatestBlock', () => {
+      it('should set the latest block', () => {
+        eth.setLatestBlock(123);
+        expect(eth.latestBlock).toEqual(123);
+      });
+
+      it('should tell the wallet eth accounts to update txs', () => {
+        spyOn(eth, 'updateTxs');
+        eth.setLatestBlock(123);
+        expect(eth.updateTxs).toHaveBeenCalled();
+      });
+    });
+
+    describe('.connect', () => {
+      beforeEach(() => {
+        delete eth._socket;
+      });
+
+      it('should connect the initialize the socket', () => {
+        eth.connect(wsUrl);
+        expect(eth._socket).toBeDefined();
+        expect(eth._socket.constructor).toEqual(EthSocket);
+      });
+
+      it('should only create the socket once', () => {
+        eth.connect(wsUrl);
+        let s = eth._socket;
+        eth.connect(wsUrl);
+        expect(eth._socket).toEqual(s);
+      });
+
+      it('should start listening for new blocks', () => {
+        spyOn(EthSocket, 'blockMessageHandler').and.callThrough();
+        eth.connect(wsUrl);
+        expect(EthSocket.blockMessageHandler).toHaveBeenCalledWith(eth);
+      });
+    });
+
+    describe('.updateTxs', () => {
+      it('should tell the eth accounts to update txs', () => {
+        spyOn(eth.defaultAccount, 'updateTxs');
+        eth.updateTxs();
+        expect(eth.defaultAccount.updateTxs).toHaveBeenCalledWith(eth);
+      });
+    });
+
+    describe('.getPrivateKeyForAccount', () => {
+      const correctKey = '6c7a48436661d678c17dc4ef39862767c3d5cb54b3d22dd065c4b963e1e28924';
+
+      it('should get the correct private key', () => {
+        let priv = eth.getPrivateKeyForAccount(eth.defaultAccount);
+        expect(priv.toString('hex')).toEqual(correctKey);
+      });
+
+      it('should get the correct private key when encrypted', () => {
+        wallet.isDoubleEncrypted = true;
+        let priv = eth.getPrivateKeyForAccount(eth.defaultAccount, 'correct');
+        expect(priv.toString('hex')).toEqual(correctKey);
+      });
+
+      it('should fail when encrypted and passed the wrong secpass', () => {
+        wallet.isDoubleEncrypted = true;
+        let get = () => eth.getPrivateKeyForAccount(eth.defaultAccount, 'wrong');
+        expect(get).toThrow();
+      });
+    });
+
+    describe('.deriveChild', () => {
+      it('should fail if wallet is encrypted and pw is missing', () => {
+        wallet.isDoubleEncrypted = true;
+        let derive = () => eth.deriveChild(0);
+        expect(derive).toThrow();
       });
     });
 
