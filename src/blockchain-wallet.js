@@ -929,9 +929,12 @@ Wallet.prototype.createPayment = function (initialState) {
 };
 
 Wallet.prototype.cacheMetadataKey = function (secondPassword) {
-  if (!secondPassword) { return Promise.reject('second password needed'); }
-  if (!this.validateSecondPassword(secondPassword)) { return Promise.reject('wrong second password'); }
-  var cipher = this.createCipher(secondPassword);
+  var cipher;
+  if (this.isDoubleEncrypted) {
+    if (!secondPassword) return Promise.reject('second password needed');
+    if (!this.validateSecondPassword(secondPassword)) return Promise.reject('wrong second password');
+    cipher = this.createCipher(secondPassword);
+  }
   this._metadataHDNode = Metadata.deriveMetadataNode(this.hdwallet.getMasterHDNode(cipher));
   MyWallet.syncWallet();
   return Promise.resolve();
