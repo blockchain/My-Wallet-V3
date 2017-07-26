@@ -297,20 +297,14 @@ API.prototype.incrementLoginViaQrStats = function () {
   return fetch(this.ROOT_URL + 'event?name=wallet_web_login_via_qr');
 };
 
-API.prototype.btcEthUsageStats = function (btcBalance, ethBalance, btcTxs, ethTxs) {
-  let base = 'event?web_wallet_btc_eth_usage_';
-  let counterId = this.calcBtcEthUsageCounterId(btcBalance, ethBalance, btcTxs, ethTxs);
-  return fetch(this.ROOT_URL + base + counterId);
+API.prototype.incrementBtcEthUsageStats = function (btcBalance, ethBalance) {
+  let base = this.ROOT_URL + 'event?wallet_login_balance_';
+  let makeEventUrl = (curr, cond) => base + curr + '_' + (cond ? 1 : 0);
+  fetch(makeEventUrl('btc', btcBalance > 0));
+  fetch(makeEventUrl('eth', ethBalance > 0));
+  fetch(makeEventUrl('btceth', btcBalance > 0 && ethBalance > 0));
 };
 
 API.prototype.getBlockchainAddress = function () {
   return this.request('GET', 'charge_address');
-};
-
-API.prototype.calcBtcEthUsageCounterId = function (btcBalance, ethBalance, btcTxsCount, ethTxsCount) {
-  // computes a number in the range 0..15 (represents each possible state given 4 binary options)
-  // bits 0, 1, 2, and 3, respectively:
-  return [ethTxsCount, btcTxsCount, ethBalance, btcBalance]
-    .map(field => field === 0 ? 0 : 1)
-    .reduce((acc, bit, index) => acc | (bit << index));
 };

@@ -1,3 +1,5 @@
+/* eslint-disable semi */
+require('isomorphic-fetch')
 let API = require('../src/api');
 
 describe('API', () => {
@@ -17,37 +19,44 @@ describe('API', () => {
     });
   });
 
-  describe('calcBtcEthUsageCounterId', () => {
-    // values: BTC Balance, ETH Balance, BTC Txs, Eth Txs
-    const fixtures = [
-      { id: 0, values: [0, 0, 0, 0] },
-      { id: 1, values: [0, 0, 0, 1] },
-      { id: 2, values: [0, 0, 1, 0] },
-      { id: 3, values: [0, 0, 1, 1] },
-      { id: 4, values: [0, 1, 0, 0] },
-      { id: 5, values: [0, 1, 0, 1] },
-      { id: 6, values: [0, 1, 1, 0] },
-      { id: 7, values: [0, 1, 1, 1] },
-      { id: 8, values: [1, 0, 0, 0] },
-      { id: 9, values: [1, 0, 0, 1] },
-      { id: 10, values: [1, 0, 1, 0] },
-      { id: 11, values: [1, 0, 1, 1] },
-      { id: 12, values: [1, 1, 0, 0] },
-      { id: 13, values: [1, 1, 0, 1] },
-      { id: 14, values: [1, 1, 1, 0] },
-      { id: 15, values: [1, 1, 1, 1] }
-    ];
+  describe('.incrementBtcEthUsageStats', () => {
+    let eventUrl = (event) => `https://blockchain.info/event?wallet_login_balance_${event}`
 
-    let symbol = (val) => val === 0 ? '== 0' : '> 0';
+    beforeEach(() => {
+      spyOn(window, 'fetch')
+    })
 
-    let renderValues = ([btcBal, ethBal, btcTxs, ethTxs]) => (
-      `BTC Balance ${symbol(btcBal)}, ETH Balance ${symbol(ethBal)}, BTC Txs ${symbol(btcTxs)}, and ETH Txs ${symbol(ethTxs)}`
-    );
+    it('should make three requests, one for each stat', () => {
+      API.incrementBtcEthUsageStats(0, 0)
+      expect(window.fetch).toHaveBeenCalledTimes(3)
+    })
 
-    fixtures.forEach(({ id, values }) => {
-      it(`should produce counter id = ${id} with ${renderValues(values)}`, () => {
-        expect(API.calcBtcEthUsageCounterId.apply(API, values)).toEqual(id);
-      });
-    });
-  });
+    it('should record correctly for btc=0, eth=0', () => {
+      API.incrementBtcEthUsageStats(0, 0)
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('btc_0'))
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('eth_0'))
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('btceth_0'))
+    })
+
+    it('should record correctly for btc>0, eth=0', () => {
+      API.incrementBtcEthUsageStats(1, 0)
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('btc_1'))
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('eth_0'))
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('btceth_0'))
+    })
+
+    it('should record correctly for btc=0, eth>0', () => {
+      API.incrementBtcEthUsageStats(0, 1)
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('btc_0'))
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('eth_1'))
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('btceth_0'))
+    })
+
+    it('should record correctly for btc>0, eth>0', () => {
+      API.incrementBtcEthUsageStats(1, 1)
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('btc_1'))
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('eth_1'))
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('btceth_1'))
+    })
+  })
 });
