@@ -28,7 +28,7 @@ describe('EthAccount', () => {
       })
 
       it('should have: wei', () => {
-        expect(account.wei).toEqual(0)
+        expect(account.wei.toString()).toEqual('0')
       })
 
       it('should have: balance', () => {
@@ -49,6 +49,13 @@ describe('EthAccount', () => {
 
       it('should have: archived', () => {
         expect(account.archived).toEqual(false)
+      })
+    })
+
+    describe('.getApproximateBalance()', () => {
+      it('should get the balance at 8 decimals', () => {
+        account.setData({ balance: '12345678900000000' })
+        expect(account.getApproximateBalance(8)).toEqual('0.01234568')
       })
     })
 

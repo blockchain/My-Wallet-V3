@@ -11,7 +11,7 @@ class EthAccount {
     this._addr = obj.priv ? keythereum.privateKeyToAddress(this._priv) : obj.addr;
     this.label = obj.label;
     this.archived = obj.archived || false;
-    this._balance = null;
+    this._wei = null;
     this._nonce = null;
     this._txs = [];
   }
@@ -25,11 +25,11 @@ class EthAccount {
   }
 
   get wei () {
-    return this._balance;
+    return this._wei;
   }
 
   get balance () {
-    return web3.fromWei(this.wei, 'ether');
+    return web3.fromWei(this.wei, 'ether').toString();
   }
 
   get txs () {
@@ -38,6 +38,10 @@ class EthAccount {
 
   get nonce () {
     return this._nonce;
+  }
+
+  getApproximateBalance (digits) {
+    return web3.fromWei(this.wei).round(digits).toString();
   }
 
   createPayment () {
@@ -77,7 +81,7 @@ class EthAccount {
   }
 
   setData ({ balance, nonce } = {}) {
-    this._balance = balance;
+    this._wei = web3.toBigNumber(balance);
     this._nonce = Math.max(this._nonce, nonce); // keep higher nonce in case it was incremented
     return { balance, nonce };
   }
@@ -111,7 +115,7 @@ class EthAccount {
   static fromWallet (wallet) {
     let addr = keythereum.privateKeyToAddress(wallet.getPrivateKey());
     let account = new EthAccount({ addr });
-    account.setData({ balance: 0, nonce: 0 });
+    account.setData({ balance: '0', nonce: 0 });
     return account;
   }
 }

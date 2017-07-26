@@ -1,10 +1,10 @@
-const R = require('ramda');
-const H = require('../helpers');
 const Web3 = require('web3');
 const EthHd = require('ethereumjs-wallet/hdkey');
+const { compose, reduce, filter, map, construct } = require('ramda');
+const { isNonNull, isPositiveNumber } = require('../helpers');
+const API = require('../api');
 const EthTxBuilder = require('./eth-tx-builder');
 const EthAccount = require('./eth-account');
-const API = require('../api');
 const EthSocket = require('./eth-socket');
 
 const METADATA_TYPE_ETH = 5;
@@ -22,11 +22,16 @@ class EthWallet {
   }
 
   get wei () {
-    return this.accounts.map(k => k.wei).filter(H.isNonNull).reduce(H.add, 0);
+    let getAccountsWei = compose(
+      reduce((acc, n) => acc.add(n), web3.toBigNumber(0)),
+      filter(isNonNull),
+      map(a => a.wei)
+    );
+    return getAccountsWei(this.activeAccounts);
   }
 
   get balance () {
-    return web3.fromWei(this.wei, 'ether');
+    return web3.fromWei(this.wei, 'ether').toString();
   }
 
   get defaultAccountIdx () {
@@ -54,6 +59,10 @@ class EthWallet {
       GAS_PRICE: EthTxBuilder.GAS_PRICE,
       GAS_LIMIT: EthTxBuilder.GAS_LIMIT
     };
+  }
+
+  getApproximateBalance (digits) {
+    return web3.fromWei(this.wei).round(digits).toString();
   }
 
   getAccount (index) {
@@ -108,7 +117,7 @@ class EthWallet {
   }
 
   setDefaultAccountIndex (i) {
-    if (!H.isPositiveNumber(i)) {
+    if (!isPositiveNumber(i)) {
       throw new Error('Account index must be a number >= 0');
     } else if (i >= this.accounts.length) {
       throw new Error('Account index out of bounds');
@@ -125,7 +134,7 @@ class EthWallet {
       if (data) {
         let { ethereum } = data;
         this._defaultAccountIdx = ethereum.default_account_idx;
-        this._accounts = ethereum.accounts.map(R.construct(EthAccount));
+        this._accounts = ethereum.accounts.map(construct(EthAccount));
         this._txNotes = ethereum.tx_notes || {};
         this.activeAccounts.forEach(a => this._socket.subscribeToAccount(a));
       }

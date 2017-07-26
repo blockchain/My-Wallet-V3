@@ -64,7 +64,7 @@ describe('EthWallet', () => {
 
     describe('getters', () => {
       it('should have: wei', () => {
-        expect(eth.wei).toEqual(0);
+        expect(eth.wei.toString()).toEqual('0');
       });
 
       it('should have: balance', () => {
@@ -93,6 +93,13 @@ describe('EthWallet', () => {
 
       it('should have: defaults', () => {
         expect(eth.defaults).toEqual({ GAS_PRICE: 21, GAS_LIMIT: 21000 });
+      });
+    });
+
+    describe('.getApproximateBalance()', () => {
+      it('should get the balance at 8 decimals', () => {
+        eth.defaultAccount.setData({ balance: '12345678900000000' });
+        expect(eth.getApproximateBalance(8)).toEqual('0.01234568');
       });
     });
 
