@@ -462,8 +462,8 @@ Helpers.getMobileOperatingSystem = function () {
   }
 };
 
-Helpers.isEmailInvited = function (email, fraction) {
-  if (!email) {
+Helpers.isStringHashInFraction = function (str, fraction) {
+  if (!str) {
     return false;
   }
   if (!Helpers.isPositiveNumber(fraction)) {
@@ -472,7 +472,7 @@ Helpers.isEmailInvited = function (email, fraction) {
   if (fraction > 1) {
     return false;
   }
-  return WalletCrypo.sha256(email)[0] / 256 >= 1 - fraction;
+  return WalletCrypo.sha256(str)[0] / 256 >= 1 - fraction;
 };
 
 // Helpers.isFeeOptions :: object => Boolean
