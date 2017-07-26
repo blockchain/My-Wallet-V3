@@ -1,4 +1,8 @@
+const { pipe } = require('ramda');
 const StableSocket = require('../stable-socket');
+
+const OP_ACCOUNT_SUB = 'account_sub';
+const OP_BLOCK_SUB = 'block_sub';
 
 class EthSocket extends StableSocket {
   constructor (wsUrl) {
@@ -17,30 +21,28 @@ class EthSocket extends StableSocket {
   }
 
   static accountMessageHandler (account) {
-    return (data) => {
-      let parsed = JSON.parse(data);
-      if (parsed.address === account.address) {
-        account.setData(parsed);
-        account.fetchTransaction(parsed.txHash);
+    return pipe(JSON.parse, (data) => {
+      if (data.op === OP_ACCOUNT_SUB && data.address === account.address) {
+        account.setData(data);
+        account.fetchTransaction(data.txHash);
       }
-    };
+    });
   }
 
   static blockMessageHandler (ethWallet) {
-    return (data) => {
-      let parsed = JSON.parse(data);
-      if (parsed.number) {
-        ethWallet.setLatestBlock(parsed.number);
+    return pipe(JSON.parse, (data) => {
+      if (data.op === OP_BLOCK_SUB) {
+        ethWallet.setLatestBlock(data.height);
       }
-    };
+    });
   }
 
   static accountSub (account) {
-    return JSON.stringify({ op: 'balance', account: account.address });
+    return JSON.stringify({ op: OP_ACCOUNT_SUB, account: account.address });
   }
 
   static blocksSub () {
-    return JSON.stringify({ op: 'block' });
+    return JSON.stringify({ op: OP_BLOCK_SUB });
   }
 }
 

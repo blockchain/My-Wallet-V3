@@ -3,8 +3,8 @@ const EthSocket = require('../../src/eth/eth-socket');
 
 describe('EthSocket', () => {
   const url = 'wss://ws.blockchain.info/eth/inv'
-  const balanceResponse = JSON.stringify({ address: '0xasdf', balance: '1000', nonce: 1, txHash: 'xyz' })
-  const blockResponse = JSON.stringify({ number: 123 })
+  const balanceResponse = JSON.stringify({ op: 'account_sub', address: '0xasdf', balance: '1000', nonce: 1, txHash: 'xyz' })
+  const blockResponse = JSON.stringify({ op: 'block_sub', height: 123 })
 
   let account
   let ethWallet
@@ -81,7 +81,7 @@ describe('EthSocket', () => {
       it('should do nothing when the message address does not match', () => {
         let handler = EthSocket.accountMessageHandler(account)
         spyOn(account, 'setData')
-        handler(JSON.stringify({ address: '0xfdsa' }))
+        handler(JSON.stringify({ op: 'account_sub', address: '0xfdsa' }))
         expect(account.setData).not.toHaveBeenCalled()
       })
     })
@@ -104,13 +104,13 @@ describe('EthSocket', () => {
 
     describe('.accountSub()', () => {
       it('should produce the correct json', () => {
-        expect(EthSocket.accountSub(account)).toEqual('{"op":"balance","account":"0xasdf"}')
+        expect(EthSocket.accountSub(account)).toEqual('{"op":"account_sub","account":"0xasdf"}')
       })
     })
 
     describe('.blocksSub()', () => {
       it('should produce the correct json', () => {
-        expect(EthSocket.blocksSub()).toEqual('{"op":"block"}')
+        expect(EthSocket.blocksSub()).toEqual('{"op":"block_sub"}')
       })
     })
   })
