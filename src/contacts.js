@@ -219,9 +219,9 @@ Contacts.prototype.sendPR = function (userId, intendedAmount, id, note, initiato
   // we should reserve the address (check buy-sell) - should probable be an argument
   id = id ? id : uuid()
   const contact = this.get(userId);
-  const account = initiatorSource ? MyWallet.wallet.hdwallet.accounts[initiatorSource] : MyWallet.wallet.hdwallet.defaultAccount;
+  const account = initiatorSource != null ? MyWallet.wallet.hdwallet.accounts[initiatorSource] : MyWallet.wallet.hdwallet.defaultAccount;
   const address = account.receiveAddress;
-  const accountIndex = initiatorSource ? initiatorSource : MyWallet.wallet.hdwallet.defaultAccountIndex;
+  const accountIndex = initiatorSource != null ? initiatorSource : MyWallet.wallet.hdwallet.defaultAccountIndex;
   const reserveAddress = () => {
     const label = 'payment request to ' + contact.name;
     return MyWallet.wallet.labels.setLabel(accountIndex, account.receiveIndex, label);
