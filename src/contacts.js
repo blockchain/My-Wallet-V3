@@ -204,13 +204,8 @@ const paymentRequestResponse = function (id, txHash) {
 };
 Contacts.prototype.paymentRequestResponse = R.compose(JSON.parse, paymentRequestResponse)
 
-// :: returns a message string of a decline response
-const declineResponse = function (id) {
-  return JSON.stringify({id: id});
-};
-
-// :: returns a message string of a cancel response
-const cancelResponse = function (id) {
+// :: returns a message string of a general response
+const generalResponse = function (id) {
   return JSON.stringify({id: id});
 };
 
@@ -255,7 +250,7 @@ Contacts.prototype.sendPRR = function (userId, txHash, id) {
 
 // decline response
 Contacts.prototype.sendDeclination = function (userId, id) {
-  const message = declineResponse(id);
+  const message = generalResponse(id);
   const contact = this.get(userId);
   return this.sendMessage(userId, DECLINE_RESPONSE_TYPE, message)
     .then(contact.Decline.bind(contact, id))
@@ -263,10 +258,18 @@ Contacts.prototype.sendDeclination = function (userId, id) {
 };
 // cancel response
 Contacts.prototype.sendCancellation = function (userId, id) {
-  const message = cancelResponse(id);
+  const message = generalResponse(id);
   const contact = this.get(userId);
   return this.sendMessage(userId, CANCEL_RESPONSE_TYPE, message)
     .then(contact.Cancel.bind(contact, id))
+    .then(this.save.bind(this));
+};
+
+Contacts.prototype.hideNotificationBadge = function (userId, id) {
+  const message = generalResponse(id);
+  const contact = this.get(userId);
+  return this.sendMessage(userId, null, message)
+    .then(contact.HideNotificationBadge.bind(contact, id))
     .then(this.save.bind(this));
 };
 // /////////////////////////////////////////////////////////////////////////////
@@ -282,7 +285,8 @@ Contacts.prototype.digestRPR = function (message) {
             message.payload.id,
             FacilitatedTx.RPR_RECEIVER,
             message.payload.note,
-            message.payload.initiator_source))
+            message.payload.initiator_source,
+            message.payload.show_notification_badge))
     .then(this.save.bind(this))
     .then(() => message);
 };
@@ -321,7 +325,8 @@ Contacts.prototype.digestPR = function (message) {
             FacilitatedTx.PR_RECEIVER,
             message.payload.address,
             message.payload.note,
-            message.payload.initiator_source))
+            message.payload.initiator_source,
+            message.payload.show_notification_badge))
     .then(this.save.bind(this))
     .then(() => message);
 };
