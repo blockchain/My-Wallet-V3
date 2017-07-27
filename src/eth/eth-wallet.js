@@ -156,6 +156,7 @@ class EthWallet {
 
   fetchHistory () {
     return Promise.all(this.activeAccounts.map(a => a.fetchHistory()))
+      .then(() => this.updateTxs())
       .then(() => this.getLatestBlock());
   }
 
@@ -164,7 +165,8 @@ class EthWallet {
   }
 
   fetchTransactions () {
-    return Promise.all(this.activeAccounts.map(a => a.fetchTransactions()));
+    return Promise.all(this.activeAccounts.map(a => a.fetchTransactions()))
+      .then(() => this.updateTxs());
   }
 
   isAddress (address) {
