@@ -268,9 +268,8 @@ Contacts.prototype.sendCancellation = function (userId, id) {
 Contacts.prototype.hideNotificationBadge = function (userId, id) {
   const message = generalResponse(id);
   const contact = this.get(userId);
-  return this.sendMessage(userId, null, message)
-    .then(contact.HideNotificationBadge.bind(contact, id))
-    .then(this.save.bind(this));
+  contact.HideNotificationBadge(id);
+  return this.save();
 };
 // /////////////////////////////////////////////////////////////////////////////
 // digestion logic
