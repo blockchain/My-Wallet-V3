@@ -12,6 +12,8 @@ class EthAccount {
     this.label = obj.label;
     this.archived = obj.archived || false;
     this._wei = null;
+    this._balance = null;
+    this._approximateBalance = null;
     this._nonce = null;
     this._txs = [];
   }
@@ -29,7 +31,7 @@ class EthAccount {
   }
 
   get balance () {
-    return web3.fromWei(this.wei, 'ether').toString();
+    return this._balance;
   }
 
   get txs () {
@@ -40,8 +42,8 @@ class EthAccount {
     return this._nonce;
   }
 
-  getApproximateBalance (digits) {
-    return web3.fromWei(this.wei).round(digits).toString();
+  getApproximateBalance () {
+    return this._approximateBalance;
   }
 
   createPayment () {
@@ -82,6 +84,8 @@ class EthAccount {
 
   setData ({ balance, nonce } = {}) {
     this._wei = web3.toBigNumber(balance);
+    this._balance = web3.fromWei(this.wei, 'ether').toString();
+    this._approximateBalance = web3.fromWei(this.wei).round(8).toString();
     this._nonce = Math.max(this._nonce, nonce); // keep higher nonce in case it was incremented
     return { balance, nonce };
   }

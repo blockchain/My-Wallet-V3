@@ -14,33 +14,19 @@ class EthTxBuilder {
     this._account = account;
     this._tx = new EthereumTx(null, MAINNET);
     this._tx.nonce = this._account.nonce;
+    this.update();
   }
 
   get fee () {
-    return parseFloat(web3.fromWei(this.feeBN, 'ether'));
-  }
-
-  get feeBN () {
-    let gas = new util.BN(this._tx.gas);
-    let gasPrice = new util.BN(this._tx.gasPrice);
-    return gas.mul(gasPrice);
+    return this._fee;
   }
 
   get amount () {
-    return parseFloat(web3.fromWei(this.amountBN, 'ether'));
-  }
-
-  get amountBN () {
-    return new util.BN(this._tx.value);
+    return this._amount;
   }
 
   get available () {
-    return parseFloat(web3.fromWei(this.availableBN, 'ether'));
-  }
-
-  get availableBN () {
-    let balance = this._account.wei;
-    return Math.max(parseFloat(balance.sub(this.feeBN)), 0);
+    return this._available;
   }
 
   setTo (to) {
@@ -53,16 +39,19 @@ class EthTxBuilder {
 
   setValue (amount) {
     this._tx.value = parseInt(web3.toWei(amount, 'ether'));
+    this.update();
     return this;
   }
 
   setGasPrice (gasPrice) {
     this._tx.gasPrice = parseInt(web3.toWei(gasPrice, 'gwei'));
+    this.update();
     return this;
   }
 
   setGasLimit (gasLimit) {
     this._tx.gasLimit = gasLimit;
+    this.update();
     return this;
   }
 
@@ -92,6 +81,15 @@ class EthTxBuilder {
 
   toRaw () {
     return '0x' + this._tx.serialize().toString('hex');
+  }
+
+  update () {
+    let feeBN = new util.BN(this._tx.gas).mul(new util.BN(this._tx.gasPrice));
+    let amountBN = new util.BN(this._tx.value);
+    let availableBN = Math.max(parseFloat(this._account.wei.sub(feeBN)), 0);
+    this._fee = parseFloat(web3.fromWei(feeBN, 'ether'));
+    this._amount = parseFloat(web3.fromWei(amountBN, 'ether'));
+    this._available = parseFloat(web3.fromWei(availableBN, 'ether'));
   }
 
   static get GAS_PRICE () {

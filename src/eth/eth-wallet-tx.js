@@ -14,15 +14,25 @@ class EthWalletTx {
     this._gasUsed = obj.gasUsed;
     this._confirmations = 0;
     this._note = null;
+
+    this._amount = null;
+    if (this._value) {
+      this._amount = web3.fromWei(this._value, 'ether');
+    }
+
+    this._fee = null;
+    if (this._gasPrice && (this._gasUsed || this.gas)) {
+      let feeWei = web3.toBigNumber(this._gasPrice).mul(this._gasUsed || this._gas);
+      this._fee = web3.fromWei(feeWei, 'ether').toString();
+    }
   }
 
   get amount () {
-    return web3.fromWei(this._value, 'ether');
+    return this._amount;
   }
 
   get fee () {
-    let weiUsed = web3.toBigNumber(this._gasPrice).mul(this._gasUsed || this._gas);
-    return web3.fromWei(weiUsed, 'ether').toString();
+    return this._fee;
   }
 
   get to () {

@@ -1,7 +1,7 @@
 const Web3 = require('web3');
 const EthHd = require('ethereumjs-wallet/hdkey');
-const { compose, reduce, filter, map, construct } = require('ramda');
-const { isNonNull, isPositiveNumber } = require('../helpers');
+const { construct } = require('ramda');
+const { isPositiveNumber } = require('../helpers');
 const API = require('../api');
 const EthTxBuilder = require('./eth-tx-builder');
 const EthAccount = require('./eth-account');
@@ -22,16 +22,11 @@ class EthWallet {
   }
 
   get wei () {
-    let getAccountsWei = compose(
-      reduce((acc, n) => acc.add(n), web3.toBigNumber(0)),
-      filter(isNonNull),
-      map(a => a.wei)
-    );
-    return getAccountsWei(this.activeAccounts);
+    return this.defaultAccount ? this.defaultAccount.wei : null;
   }
 
   get balance () {
-    return web3.fromWei(this.wei, 'ether').toString();
+    return this.defaultAccount ? this.defaultAccount.balance : null;
   }
 
   get defaultAccountIdx () {
@@ -61,8 +56,8 @@ class EthWallet {
     };
   }
 
-  getApproximateBalance (digits) {
-    return web3.fromWei(this.wei).round(digits).toString();
+  getApproximateBalance () {
+    return this.defaultAccount ? this.defaultAccount.getApproximateBalance() : null;
   }
 
   getAccount (index) {
