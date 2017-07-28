@@ -75,7 +75,10 @@ class EthAccount {
     return fetch(`${API.API_ROOT_URL}eth/tx/${hash}`)
       .then(res => res.json())
       .then(EthWalletTx.fromJSON)
-      .then(tx => { this._txs.unshift(tx); });
+      .then(tx => {
+        let txExists = this._txs.find(({ hash }) => hash === tx.hash) != null;
+        if (!txExists) this._txs.unshift(tx);
+      });
   }
 
   setData ({ balance, nonce } = {}) {
