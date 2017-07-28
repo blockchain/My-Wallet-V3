@@ -44,7 +44,7 @@ Contact.prototype.fetchXPUB = function () {
 
 // create and add a request payment request to that contact facilitated tx list
 Contact.prototype.RPR = function (intendedAmount, id, role, note, initiatorSource) {
-  const rpr = FacilitatedTx.RPR(intendedAmount, id, role, note, initiatorSource, 1);
+  const rpr = FacilitatedTx.RPR(intendedAmount, id, role, note, initiatorSource, 0);
   this.facilitatedTxList = assoc(id, rpr, this.facilitatedTxList);
   return rpr;
 };
@@ -56,10 +56,10 @@ Contact.prototype.PR = function (intendedAmount, id, role, address, note, initia
     existingTx.address = address;
     existingTx.state = FacilitatedTx.WAITING_PAYMENT;
     existingTx.last_updated = Date.now();
-    existingTx.show_notification_badge = 1;
+    existingTx.read = 0;
     return existingTx;
   } else {
-    const pr = FacilitatedTx.PR(intendedAmount, id, role, address, note, initiatorSource, 1);
+    const pr = FacilitatedTx.PR(intendedAmount, id, role, address, note, initiatorSource, 0);
     this.facilitatedTxList = assoc(id, pr, this.facilitatedTxList);
     return pr;
   }
@@ -90,9 +90,9 @@ Contact.prototype.Cancel = function (id) {
   return existingTx;
 };
 
-Contact.prototype.HideNotificationBadge = function (id) {
+Contact.prototype.Read = function (id) {
   var existingTx = prop(id, this.facilitatedTxList);
-  existingTx.show_notification_badge = 0;
+  existingTx.read = 1;
   return existingTx;
 }
 

@@ -265,10 +265,10 @@ Contacts.prototype.sendCancellation = function (userId, id) {
     .then(this.save.bind(this));
 };
 
-Contacts.prototype.hideNotificationBadge = function (userId, id) {
+Contacts.prototype.read = function (userId, id) {
   const message = generalResponse(id);
   const contact = this.get(userId);
-  contact.HideNotificationBadge(id);
+  contact.Read(id);
   return this.save();
 };
 // /////////////////////////////////////////////////////////////////////////////
@@ -285,7 +285,7 @@ Contacts.prototype.digestRPR = function (message) {
             FacilitatedTx.RPR_RECEIVER,
             message.payload.note,
             message.payload.initiator_source,
-            message.payload.show_notification_badge))
+            message.payload.read))
     .then(this.save.bind(this))
     .then(() => message);
 };
@@ -325,7 +325,7 @@ Contacts.prototype.digestPR = function (message) {
             message.payload.address,
             message.payload.note,
             message.payload.initiator_source,
-            message.payload.show_notification_badge))
+            message.payload.read))
     .then(this.save.bind(this))
     .then(() => message);
 };
