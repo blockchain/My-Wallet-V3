@@ -103,7 +103,7 @@ class EthTxBuilder {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ rawTx })
     }).then(r =>
-      r.status === 200 ? r.json() : Promise.reject(r.json())
+      r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e))
     );
   }
 }

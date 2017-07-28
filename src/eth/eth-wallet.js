@@ -170,13 +170,13 @@ class EthWallet {
 
   isContractAddress (address) {
     return fetch(`${API.API_ROOT_URL}eth/account/${address}/isContract`)
-      .then(res => res.status === 200 ? res.json() : Promise.reject(res.json()))
+      .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
       .then(({ contract }) => contract);
   }
 
   getLatestBlock () {
     return fetch(`${API.API_ROOT_URL}eth/latestblock`)
-      .then(res => res.status === 200 ? res.json() : Promise.reject(res.json()))
+      .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
       .then(block => this.setLatestBlock(block.number));
   }
 
