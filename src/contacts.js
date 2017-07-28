@@ -204,8 +204,13 @@ const paymentRequestResponse = function (id, txHash) {
 };
 Contacts.prototype.paymentRequestResponse = R.compose(JSON.parse, paymentRequestResponse)
 
-// :: returns a message string of a general response
-const generalResponse = function (id) {
+// :: returns a message string of a decline response
+const declineResponse = function (id) {
+  return JSON.stringify({id: id});
+};
+
+// :: returns a message string of a cancel response
+const cancelResponse = function (id) {
   return JSON.stringify({id: id});
 };
 
@@ -250,7 +255,7 @@ Contacts.prototype.sendPRR = function (userId, txHash, id) {
 
 // decline response
 Contacts.prototype.sendDeclination = function (userId, id) {
-  const message = generalResponse(id);
+  const message = declineResponse(id);
   const contact = this.get(userId);
   return this.sendMessage(userId, DECLINE_RESPONSE_TYPE, message)
     .then(contact.Decline.bind(contact, id))
@@ -258,7 +263,7 @@ Contacts.prototype.sendDeclination = function (userId, id) {
 };
 // cancel response
 Contacts.prototype.sendCancellation = function (userId, id) {
-  const message = generalResponse(id);
+  const message = cancelResponse(id);
   const contact = this.get(userId);
   return this.sendMessage(userId, CANCEL_RESPONSE_TYPE, message)
     .then(contact.Cancel.bind(contact, id))
@@ -266,7 +271,6 @@ Contacts.prototype.sendCancellation = function (userId, id) {
 };
 
 Contacts.prototype.read = function (userId, id) {
-  const message = generalResponse(id);
   const contact = this.get(userId);
   contact.Read(id);
   return this.save();
