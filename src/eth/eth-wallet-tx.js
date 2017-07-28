@@ -21,7 +21,7 @@ class EthWalletTx {
     }
 
     this._fee = null;
-    if (this._gasPrice && (this._gasUsed || this.gas)) {
+    if (this._gasPrice && (this._gasUsed || this._gas)) {
       let feeWei = web3.toBigNumber(this._gasPrice).mul(this._gasUsed || this._gas);
       this._fee = web3.fromWei(feeWei, 'ether').toString();
     }
