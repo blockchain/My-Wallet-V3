@@ -73,10 +73,7 @@ class EthTxBuilder {
   }
 
   publish () {
-    return EthTxBuilder.pushTx(this.toRaw()).then((response) => {
-      this._account.incrementNonce();
-      return response;
-    });
+    return EthTxBuilder.pushTx(this.toRaw());
   }
 
   toRaw () {

@@ -107,14 +107,6 @@ describe('EthTxBuilder', () => {
         payment.publish()
         expect(EthTxBuilder.pushTx).toHaveBeenCalledWith('0xf86c038504e3b2920082520894d70073f72621fb90060ac257f38cf2ff566ea6bb880161b4620d317000801ba0ae46bd95a2483d464b8a61663928b36f7a310a01e3207301eb1e9ce19dc6188ea0645036efbb4ad2c567e873653a021e7ccd5c4818546f0c3be16ffb1d4b1075fd')
       })
-
-      it('should increment account nonce after a successful send', (done) => {
-        spyOn(account, 'incrementNonce')
-        payment.publish().then(() => {
-          expect(account.incrementNonce).toHaveBeenCalled()
-          done()
-        })
-      })
     })
 
     describe('.toRaw()', () => {

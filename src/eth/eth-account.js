@@ -50,10 +50,6 @@ class EthAccount {
     return new EthTxBuilder(this);
   }
 
-  incrementNonce () {
-    this._nonce++;
-  }
-
   fetchHistory () {
     return Promise.all([
       this.fetchBalance(),
@@ -86,7 +82,7 @@ class EthAccount {
     this._wei = web3.toBigNumber(balance);
     this._balance = web3.fromWei(this.wei, 'ether').toString();
     this._approximateBalance = web3.fromWei(this.wei).round(8).toString();
-    this._nonce = Math.max(this._nonce, nonce); // keep higher nonce in case it was incremented
+    this._nonce = nonce;
     return { balance, nonce };
   }
 

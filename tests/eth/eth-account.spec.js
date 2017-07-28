@@ -66,13 +66,6 @@ describe('EthAccount', () => {
       })
     })
 
-    describe('.incrementNonce()', () => {
-      it('should increment the nonce', () => {
-        account.incrementNonce()
-        expect(account.nonce).toEqual(1)
-      })
-    })
-
     describe('.setData()', () => {
       it('should set the account balance', () => {
         account.setData({ balance: '10000000000000000' })
@@ -82,11 +75,6 @@ describe('EthAccount', () => {
       it('should set the account nonce', () => {
         account.setData({ nonce: 10 })
         expect(account.nonce).toEqual(10)
-      })
-
-      it('should not set a nonce lower than the current one', () => {
-        account.setData({ nonce: -1 })
-        expect(account.nonce).toEqual(0)
       })
     })
 
