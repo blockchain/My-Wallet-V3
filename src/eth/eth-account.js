@@ -61,19 +61,19 @@ class EthAccount {
 
   fetchBalance () {
     return fetch(`${API.API_ROOT_URL}eth/account/${this.address}/balance`)
-      .then(res => res.json())
+      .then(res => res.status === 200 ? res.json() : Promise.reject(res.json()))
       .then(data => this.setData(data));
   }
 
   fetchTransactions () {
     return fetch(`${API.API_ROOT_URL}eth/account/${this.address}`)
-      .then(res => res.json())
+      .then(res => res.status === 200 ? res.json() : Promise.reject(res.json()))
       .then(data => this.setTransactions(data));
   }
 
   fetchTransaction (hash) {
     return fetch(`${API.API_ROOT_URL}eth/tx/${hash}`)
-      .then(res => res.json())
+      .then(res => res.status === 200 ? res.json() : Promise.reject(res.json()))
       .then(EthWalletTx.fromJSON)
       .then(tx => {
         let txExists = this._txs.find(({ hash }) => hash === tx.hash) != null;
