@@ -293,7 +293,7 @@ Contacts.prototype.digestDecline = function (message) {
   const result = this.search(message.sender);
   const contact = result[Object.keys(result)[0]];
   return this._sharedMetadata.processMessage(message.id)
-    .then(contact.Cancel.bind(contact, message.payload.id))
+    .then(contact.Decline.bind(contact, message.payload.id))
     .then(this.save.bind(this))
     .then(() => message);
 };
