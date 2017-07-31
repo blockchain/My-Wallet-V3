@@ -31,6 +31,7 @@ class ShapeShift {
       payment.from(this._wallet.hdwallet.defaultAccountIndex)
       payment.to(quote.depositAddress)
       payment.amount(Math.round(parseFloat(quote.depositAmount) * 1e8))
+      payment.updateFeePerKb('priority')
       payment.build()
       payment.sign(secPass)
 
