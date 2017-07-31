@@ -33,6 +33,12 @@ class ShapeShift {
   }
 
   shift (quote, secPass) {
+    let success = () => {
+      let trade = Trade.fromQuote(quote)
+      this._trades.unshift(trade)
+      return this.sync().then(() => trade)
+    }
+
     if (quote.fromCurrency === 'btc') {
       let payment = this._wallet.createPayment()
 
@@ -43,14 +49,24 @@ class ShapeShift {
       payment.build()
       payment.sign(secPass)
 
-      return payment.publish().then(() => {
-        let trade = Trade.fromQuote(quote)
-        this._trades.push(trade)
-        return this.sync().then(() => trade)
-      })
-    } else {
-      throw new Error('ETH not implemented')
+      return payment.publish().then(success)
     }
+
+    if (quote.fromCurrency === 'eth') {
+      let eth = this._wallet.eth
+      let payment = eth.defaultAccount.createPayment()
+      let privateKey = eth.getPrivateKeyForAccount(eth.defaultAccount, secPass)
+
+      payment.setTo(quote.depositAddress)
+      payment.setValue(quote.depositAmount)
+      payment.setGasPrice(eth.defaults.GAS_PRICE)
+      payment.setGasLimit(eth.defaults.GAS_LIMIT)
+      payment.sign(privateKey)
+
+      return payment.publish().then(success)
+    }
+
+    throw new Error(`Tried to shift unsupported currency '${quote.fromCurrency}'`)
   }
 
   watchTradeForCompletion (trade, { pollTime = 1000 } = {}) {
