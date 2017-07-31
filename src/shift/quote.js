@@ -46,6 +46,17 @@ class Quote {
     return this.pair.split('_')[1]
   }
 
+  toJSON () {
+    return {
+      pair: this._pair,
+      rate: this._rate,
+      deposit: this._deposit,
+      depositAmount: this._depositAmount,
+      withdrawal: this._withdrawal,
+      withdrawalAmount: this._withdrawalAmount
+    }
+  }
+
   static fromApiResponse (response) {
     return new Quote(response)
   }

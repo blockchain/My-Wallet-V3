@@ -4,10 +4,18 @@ const Api = require('./api')
 const Trade = require('./trade')
 const Quote = require('./quote')
 
+const METADATA_TYPE_SHAPE_SHIFT = 6;
+
 class ShapeShift {
-  constructor (wallet) {
+  constructor (wallet, metadata) {
     this._wallet = wallet
+    this._metadata = metadata
     this._api = new Api();
+    this._trades = []
+  }
+
+  get trades () {
+    return this._trades
   }
 
   getRate (coinPair) {
@@ -36,7 +44,9 @@ class ShapeShift {
       payment.sign(secPass)
 
       return payment.publish().then(() => {
-        return Trade.fromQuote(quote)
+        let trade = Trade.fromQuote(quote)
+        this._trades.push(trade)
+        return this.sync().then(() => trade)
       })
     } else {
       throw new Error('ETH not implemented')
@@ -52,8 +62,12 @@ class ShapeShift {
   }
 
   updateTradeStatus (trade) {
-    return this._api.getTradeStatus(trade.depositAddress)
-      .then(status => trade.setStatus(status))
+    return this._api.getTradeStatus(trade.depositAddress).then(status => {
+      let shouldSync = status.status !== trade.status
+      trade.setStatus(status)
+      if (shouldSync) this.sync()
+      return trade
+    })
   }
 
   nextAddressForCurrency (currency) {
@@ -66,8 +80,27 @@ class ShapeShift {
     throw new Error(`Currency '${currency}' is not supported`)
   }
 
+  fetch () {
+    return this._metadata.fetch().then(data => {
+      if (data) {
+        this._trades = data.trades.map(Trade.fromMetadata)
+      }
+    })
+  }
+
+  sync () {
+    return this._metadata.update(this)
+  }
+
+  toJSON () {
+    return {
+      trades: this._trades
+    }
+  }
+
   static fromBlockchainWallet (wallet) {
-    return new ShapeShift(wallet)
+    let metadata = wallet.metadata(METADATA_TYPE_SHAPE_SHIFT);
+    return new ShapeShift(wallet, metadata)
   }
 }
 

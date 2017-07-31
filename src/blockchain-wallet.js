@@ -893,7 +893,8 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
 
   var fetchShapeShift = function () {
     this._shapeshift = ShapeShift.fromBlockchainWallet(this);
-    return Promise.resolve();
+    window.shapeshift = this._shapeshift;
+    return this._shapeshift.fetch();
   };
 
   let promises = [];

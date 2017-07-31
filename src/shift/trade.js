@@ -1,31 +1,44 @@
 /* eslint-disable semi */
+const Quote = require('./quote')
+
 class Trade {
   constructor (obj) {
-    this._pair = obj.pair
-    this._deposit = obj.deposit
-    this._withdrawal = obj.withdrawal
-    this._status = null
-    this._error = null
+    this._status = obj.status
+    this._error = obj.error
+    this._hash = obj.hash
+    this._quote = obj.quote
   }
 
   get pair () {
-    return this._pair
+    return this._quote.pair
+  }
+
+  get rate () {
+    return this._quote.rate
   }
 
   get fromCurrency () {
-    return this.pair.split('_')[0]
+    return this._quote.fromCurrency
   }
 
   get toCurrency () {
-    return this.pair.split('_')[1]
+    return this._quote.toCurrency
   }
 
   get depositAddress () {
-    return this._deposit
+    return this._quote.depositAddress
+  }
+
+  get depositAmount () {
+    return this._quote.depositAmount
   }
 
   get withdrawalAddress () {
-    return this._withdrawal
+    return this._quote.withdrawalAddress
+  }
+
+  get withdrawalAmount () {
+    return this._quote.withdrawalAmount
   }
 
   get status () {
@@ -52,14 +65,28 @@ class Trade {
     return this._error
   }
 
+  get hash () {
+    return this._hash
+  }
+
   setStatus (status) {
     this._status = status.status
     if (this.isCompleted) {
+      this._hash = status.transaction
     }
     if (this.isFailed) {
       this._error = status.error
     }
     return this
+  }
+
+  toJSON () {
+    return {
+      status: this._status,
+      error: this._error,
+      hash: this._hash,
+      quote: this._quote
+    }
   }
 
   static get NO_DEPOSITS () {
@@ -78,14 +105,13 @@ class Trade {
     return 'failed'
   }
 
+  static fromMetadata (data) {
+    data = Object.assign({}, data, { quote: new Quote(data.quote) })
+    return new Trade(data)
+  }
+
   static fromQuote (quote) {
-    let trade = new Trade({
-      pair: quote.pair,
-      deposit: quote.depositAddress,
-      withdrawal: quote.withdrawalAddress
-    })
-    trade.setStatus({ status: Trade.NO_DEPOSITS })
-    return trade
+    return new Trade({ status: Trade.NO_DEPOSITS, quote: quote })
   }
 }
 
