@@ -23,6 +23,7 @@ var constants = require('./constants');
 var Payment = require('./payment');
 var Labels = require('./labels');
 var EthWallet = require('./eth/eth-wallet');
+var ShapeShift = require('./shift');
 var Bitcoin = require('bitcoinjs-lib');
 
 // Wallet
@@ -90,6 +91,8 @@ function Wallet (object) {
   this._latestBlock = null;
   this._accountInfo = null;
   this._external = null;
+
+
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -346,6 +349,12 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () {
       return this._eth;
+    }
+  },
+  'shapeshift': {
+    configurable: false,
+    get: function () {
+      return this._shapeshift;
     }
   }
 });
@@ -882,12 +891,18 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     return this._eth.fetch();
   };
 
+  var fetchShapeShift = function () {
+    this._shapeshift = ShapeShift.fromBlockchainWallet(this);
+    return Promise.resolve();
+  };
+
   let promises = [];
 
   if (this.isMetadataReady) {
     // No fallback is metadata is disabled
     promises.push(fetchExternal.call(this));
     promises.push(fetchEthWallet.call(this));
+    promises.push(fetchShapeShift.call(this));
   }
 
   // Labels only works for v3 wallets
