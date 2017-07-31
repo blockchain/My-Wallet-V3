@@ -6,6 +6,7 @@ class Trade {
     this._status = obj.status
     this._error = obj.error
     this._hash = obj.hash
+    this._time = obj.time ? new Date(obj.time) : void 0
     this._quote = obj.quote
   }
 
@@ -69,6 +70,10 @@ class Trade {
     return this._hash
   }
 
+  get time () {
+    return this._time
+  }
+
   setStatus (status) {
     this._status = status.status
     if (this.isCompleted) {
@@ -85,6 +90,7 @@ class Trade {
       status: this._status,
       error: this._error,
       hash: this._hash,
+      time: this._time && this._time.toString(),
       quote: this._quote
     }
   }
@@ -111,7 +117,7 @@ class Trade {
   }
 
   static fromQuote (quote) {
-    return new Trade({ status: Trade.NO_DEPOSITS, quote: quote })
+    return new Trade({ status: Trade.NO_DEPOSITS, time: Date.now(), quote })
   }
 }
 
