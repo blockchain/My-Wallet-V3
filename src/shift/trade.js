@@ -76,7 +76,7 @@ class Trade {
 
   setStatus (status) {
     this._status = status.status
-    if (this.isCompleted) {
+    if (this.isComplete) {
       this._hash = status.transaction
     }
     if (this.isFailed) {

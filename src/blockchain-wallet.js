@@ -91,8 +91,6 @@ function Wallet (object) {
   this._latestBlock = null;
   this._accountInfo = null;
   this._external = null;
-
-
 }
 
 Object.defineProperties(Wallet.prototype, {
