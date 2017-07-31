@@ -51,4 +51,4 @@ class Quote {
   }
 }
 
-module.exorts = Quote
+module.exports = Quote
