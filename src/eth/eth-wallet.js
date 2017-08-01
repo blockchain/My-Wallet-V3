@@ -1,4 +1,3 @@
-const Web3 = require('web3');
 const EthHd = require('ethereumjs-wallet/hdkey');
 const { construct } = require('ramda');
 const { isPositiveNumber } = require('../helpers');
@@ -9,7 +8,6 @@ const EthSocket = require('./eth-socket');
 
 const METADATA_TYPE_ETH = 5;
 const DERIVATION_PATH = "m/44'/60'/0'/0";
-const web3 = new Web3();
 
 class EthWallet {
   constructor (wallet, metadata) {
@@ -162,10 +160,6 @@ class EthWallet {
   fetchTransactions () {
     return Promise.all(this.activeAccounts.map(a => a.fetchTransactions()))
       .then(() => this.updateTxs());
-  }
-
-  isAddress (address) {
-    return web3.isAddress(address);
   }
 
   isContractAddress (address) {
