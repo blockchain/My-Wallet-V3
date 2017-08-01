@@ -14,7 +14,6 @@ class Contact {
     this.id = o.id;
     this.mdid = o.mdid;
     this.name = o.name;
-    this.senderName = o.senderName;
     this.xpub = o.xpub;
     this.trusted = o.trusted;
     this.invitationSent = o.invitationSent;  // I invited somebody
