@@ -12,11 +12,12 @@ class FacilitatedTx {
     this.created = o.created;
     this.last_updated = o.last_updated;
     this.initiator_source = o.initiator_source;
+    this.read = o.read;
   }
 }
 
 // create a Request for a Payment Request
-FacilitatedTx.RPR = function (intendedAmount, id, role, note, initiatorSource) {
+FacilitatedTx.RPR = function (intendedAmount, id, role, note, initiatorSource, read) {
   return new FacilitatedTx(
     {
       state: FacilitatedTx.WAITING_ADDRESS,
@@ -26,12 +27,13 @@ FacilitatedTx.RPR = function (intendedAmount, id, role, note, initiatorSource) {
       note: note,
       created: Date.now(),
       last_updated: Date.now(),
-      initiator_source: initiatorSource
+      initiator_source: initiatorSource,
+      read: read
     });
 };
 
 // create a payment request
-FacilitatedTx.PR = function (intendedAmount, id, role, address, note, initiatorSource) {
+FacilitatedTx.PR = function (intendedAmount, id, role, address, note, initiatorSource, read) {
   return new FacilitatedTx(
     {
       state: FacilitatedTx.WAITING_PAYMENT,
@@ -42,7 +44,8 @@ FacilitatedTx.PR = function (intendedAmount, id, role, address, note, initiatorS
       note: note,
       created: Date.now(),
       last_updated: Date.now(),
-      initiator_source: initiatorSource
+      initiator_source: initiatorSource,
+      read: read
     });
 };
 
