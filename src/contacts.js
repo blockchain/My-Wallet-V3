@@ -317,7 +317,7 @@ Contacts.prototype.digestPR = function (message) {
     .then(contact.PR.bind(contact,
             message.payload.intended_amount,
             message.payload.id,
-            FacilitatedTx.PR_RECEIVER,
+            contact.facilitatedTxList[message.payload.id] ? message.payload.role : FacilitatedTx.PR_RECEIVER,
             message.payload.address,
             message.payload.note))
     .then(this.save.bind(this))
