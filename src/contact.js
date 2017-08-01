@@ -42,14 +42,14 @@ Contact.prototype.fetchXPUB = function () {
 };
 
 // create and add a request payment request to that contact facilitated tx list
-Contact.prototype.RPR = function (intendedAmount, id, role, note, initiatorSource) {
-  const rpr = FacilitatedTx.RPR(intendedAmount, id, role, note, initiatorSource);
+Contact.prototype.RPR = function (intendedAmount, id, role, note) {
+  const rpr = FacilitatedTx.RPR(intendedAmount, id, role, note);
   this.facilitatedTxList = assoc(id, rpr, this.facilitatedTxList);
   return rpr;
 };
 
 // create and/or add a payment request to that contact facilitated tx list
-Contact.prototype.PR = function (intendedAmount, id, role, address, note, initiatorSource) {
+Contact.prototype.PR = function (intendedAmount, id, role, address, note) {
   var existingTx = prop(id, this.facilitatedTxList);
   if (existingTx) {
     existingTx.address = address;
@@ -57,7 +57,7 @@ Contact.prototype.PR = function (intendedAmount, id, role, address, note, initia
     existingTx.last_updated = Date.now();
     return existingTx;
   } else {
-    const pr = FacilitatedTx.PR(intendedAmount, id, role, address, note, initiatorSource);
+    const pr = FacilitatedTx.PR(intendedAmount, id, role, address, note);
     this.facilitatedTxList = assoc(id, pr, this.facilitatedTxList);
     return pr;
   }

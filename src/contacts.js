@@ -226,20 +226,20 @@ Contacts.prototype.sendPR = function (userId, intendedAmount, id, note, initiato
     const label = 'payment request to ' + contact.name;
     return MyWallet.wallet.labels.setLabel(accountIndex, account.receiveIndex, label);
   };
-  const message = paymentRequest(id, intendedAmount, address, note, initiatorSource);
+  const message = paymentRequest(id, intendedAmount, address, note);
   return reserveAddress()
     .then(this.sendMessage.bind(this, userId, PAYMENT_REQUEST_TYPE, message))
-    .then(contact.PR.bind(contact, intendedAmount, id, FacilitatedTx.PR_INITIATOR, address, note, initiatorSource))
+    .then(contact.PR.bind(contact, intendedAmount, id, FacilitatedTx.PR_INITIATOR, address, note))
     .then(this.save.bind(this));
 };
 
 // request payment request (step-1)
-Contacts.prototype.sendRPR = function (userId, intendedAmount, id, note, initiatorSource) {
+Contacts.prototype.sendRPR = function (userId, intendedAmount, id, note) {
   id = id ? id : uuid()
   const message = requestPaymentRequest(intendedAmount, id, note);
   const contact = this.get(userId);
   return this.sendMessage(userId, REQUEST_PAYMENT_REQUEST_TYPE, message)
-    .then(contact.RPR.bind(contact, intendedAmount, id, FacilitatedTx.RPR_INITIATOR, note, initiatorSource))
+    .then(contact.RPR.bind(contact, intendedAmount, id, FacilitatedTx.RPR_INITIATOR, note))
     .then(this.save.bind(this));
 };
 
@@ -281,8 +281,7 @@ Contacts.prototype.digestRPR = function (message) {
             message.payload.intended_amount,
             message.payload.id,
             FacilitatedTx.RPR_RECEIVER,
-            message.payload.note,
-            message.payload.initiator_source))
+            message.payload.note))
     .then(this.save.bind(this))
     .then(() => message);
 };
@@ -320,8 +319,7 @@ Contacts.prototype.digestPR = function (message) {
             message.payload.id,
             FacilitatedTx.PR_RECEIVER,
             message.payload.address,
-            message.payload.note,
-            message.payload.initiator_source))
+            message.payload.note))
     .then(this.save.bind(this))
     .then(() => message);
 };
