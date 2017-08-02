@@ -2,7 +2,7 @@ const keythereum = require('keythereum');
 const EthTxBuilder = require('./eth-tx-builder');
 const EthWalletTx = require('./eth-wallet-tx');
 const API = require('../api');
-const { toBigNumber, fromWei } = require('../helpers');
+const { toBigNumber, toWei, fromWei } = require('../helpers');
 
 class EthAccount {
   constructor (obj) {
@@ -107,6 +107,14 @@ class EthAccount {
 
   isCorrectPrivateKey (privateKey) {
     return keythereum.privateKeyToAddress(privateKey) === this.address;
+  }
+
+  getAvailableBalance (gasLimit = EthTxBuilder.GAS_LIMIT, gasPrice = EthTxBuilder.GAS_PRICE) {
+    return new Promise(resolve => {
+      let fee = toBigNumber(gasLimit).mul(toWei(gasPrice, 'gwei'));
+      let available = Math.max(parseFloat(this.wei.sub(fee)), 0);
+      resolve(parseFloat(fromWei(available, 'ether')));
+    });
   }
 
   static defaultLabel (accountIdx) {
