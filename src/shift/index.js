@@ -45,7 +45,7 @@ class ShapeShift {
     }
 
     if (quote.depositAddress == null) {
-      throw new Error('Quote is missing deposit address')
+      return Promise.reject(new Error('Quote is missing deposit address'))
     }
 
     if (quote.fromCurrency === 'btc') {
@@ -75,7 +75,7 @@ class ShapeShift {
       return payment.publish().then(success)
     }
 
-    throw new Error(`Tried to shift unsupported currency '${quote.fromCurrency}'`)
+    return Promise.reject(new Error(`Tried to shift unsupported currency '${quote.fromCurrency}'`))
   }
 
   watchTradeForCompletion (trade, { pollTime = 1000 } = {}) {
