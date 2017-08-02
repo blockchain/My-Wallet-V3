@@ -11,6 +11,10 @@ class Quote {
     this._quotedRate = obj.quotedRate
   }
 
+  get orderId () {
+    return this._orderId
+  }
+
   get pair () {
     return this._pair
   }
