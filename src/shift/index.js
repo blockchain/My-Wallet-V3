@@ -44,6 +44,10 @@ class ShapeShift {
       return this.sync().then(() => trade)
     }
 
+    if (quote.depositAddress == null) {
+      throw new Error('Quote is missing deposit address')
+    }
+
     if (quote.fromCurrency === 'btc') {
       let payment = this._wallet.createPayment()
 
