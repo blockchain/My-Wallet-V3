@@ -32,6 +32,11 @@ class ShapeShift {
       .then(Quote.fromApiResponse)
   }
 
+  getApproximateQuote (coinPair, amount) {
+    return this._api.getQuote(coinPair, amount)
+      .then(Quote.fromApiResponse)
+  }
+
   shift (quote, secPass) {
     let success = () => {
       let trade = Trade.fromQuote(quote)

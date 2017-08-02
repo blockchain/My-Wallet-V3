@@ -1,6 +1,7 @@
 /* eslint-disable semi */
 class Quote {
   constructor (obj) {
+    this._orderId = obj.orderId
     this._pair = obj.pair
     this._deposit = obj.deposit
     this._depositAmount = obj.depositAmount
@@ -48,6 +49,7 @@ class Quote {
 
   toJSON () {
     return {
+      orderId: this._orderId,
       pair: this._pair,
       rate: this._rate,
       deposit: this._deposit,
