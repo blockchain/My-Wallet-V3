@@ -6,7 +6,6 @@ const Metadata = require('./metadata');
 const assoc = require('ramda/src/assoc');
 const prop = require('ramda/src/prop');
 const map = require('ramda/src/map');
-const uuid = require('uuid');
 const FacilitatedTx = require('./facilitatedTx');
 
 class Contact {
@@ -29,8 +28,7 @@ Contact.factory = function (o) {
   return new Contact(o);
 };
 
-Contact.new = function (o) {
-  const id = uuid();
+Contact.new = function (o, id) {
   const namedContact = assoc('id', id, o);
   return new Contact(namedContact);
 };
