@@ -44,6 +44,7 @@
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
     "babel-preset-stage-0": "^6.24.1",
     "bigi": "1.4.*",
+    "bignumber.js": "^4.0.2",
     "bip39": "2.1.*",
     "bitcoin-coinify-client": "^0.6.4",
     "bitcoin-exchange-client": "^0.4.3",
@@ -62,7 +63,6 @@
     "ramda": "^0.22.1",
     "randombytes": "^2.0.1",
     "unorm": "^1.4.1",
-    "web3": "git+https://github.com/jtormey/web3.js.git#7e4966997e15c537edb8b6cd0276e65a8dd6fa82",
     "ws": "2.0.*"
   },
   "devDependencies": {

@@ -1,9 +1,8 @@
 const keythereum = require('keythereum');
 const EthTxBuilder = require('./eth-tx-builder');
 const EthWalletTx = require('./eth-wallet-tx');
-const Web3 = require('web3');
-const web3 = new Web3();
 const API = require('../api');
+const { toBigNumber, fromWei } = require('../helpers');
 
 class EthAccount {
   constructor (obj) {
@@ -82,9 +81,9 @@ class EthAccount {
   }
 
   setData ({ balance, nonce } = {}) {
-    this._wei = web3.toBigNumber(balance);
-    this._balance = web3.fromWei(this.wei, 'ether').toString();
-    this._approximateBalance = web3.fromWei(this.wei).round(8).toString();
+    this._wei = toBigNumber(balance);
+    this._balance = fromWei(this.wei, 'ether').toString();
+    this._approximateBalance = fromWei(this.wei, 'ether').round(8).toString();
     this._nonce = nonce;
     return { balance, nonce };
   }

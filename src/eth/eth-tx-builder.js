@@ -1,13 +1,9 @@
 const EthereumTx = require('ethereumjs-tx');
 const util = require('ethereumjs-util');
-const Web3 = require('web3');
-const web3 = new Web3();
 const API = require('../api');
+const { toWei, fromWei } = require('../helpers');
 
 const MAINNET = 1;
-
-window.web3 = web3;
-window.util = util;
 
 class EthTxBuilder {
   constructor (account) {
@@ -38,13 +34,13 @@ class EthTxBuilder {
   }
 
   setValue (amount) {
-    this._tx.value = parseInt(web3.toWei(amount, 'ether'));
+    this._tx.value = parseInt(toWei(amount, 'ether'));
     this.update();
     return this;
   }
 
   setGasPrice (gasPrice) {
-    this._tx.gasPrice = parseInt(web3.toWei(gasPrice, 'gwei'));
+    this._tx.gasPrice = parseInt(toWei(gasPrice, 'gwei'));
     this.update();
     return this;
   }
@@ -59,7 +55,7 @@ class EthTxBuilder {
     this.setValue(0);
     let balance = this._account.wei;
     let amount = Math.max(balance.sub(this._tx.getUpfrontCost()), 0);
-    this.setValue(web3.fromWei(amount, 'ether'));
+    this.setValue(fromWei(amount, 'ether'));
     return this;
   }
 
@@ -84,9 +80,9 @@ class EthTxBuilder {
     let feeBN = new util.BN(this._tx.gas).mul(new util.BN(this._tx.gasPrice));
     let amountBN = new util.BN(this._tx.value);
     let availableBN = Math.max(parseFloat(this._account.wei.sub(feeBN)), 0);
-    this._fee = parseFloat(web3.fromWei(feeBN, 'ether'));
-    this._amount = parseFloat(web3.fromWei(amountBN, 'ether'));
-    this._available = parseFloat(web3.fromWei(availableBN, 'ether'));
+    this._fee = parseFloat(fromWei(feeBN, 'ether'));
+    this._amount = parseFloat(fromWei(amountBN, 'ether'));
+    this._available = parseFloat(fromWei(availableBN, 'ether'));
   }
 
   static get GAS_PRICE () {

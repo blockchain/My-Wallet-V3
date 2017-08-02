@@ -5,6 +5,8 @@ var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
 var BIP39 = require('bip39');
+var BigNumber = require('bignumber.js');
+var ethUtil = require('ethereumjs-util');
 var ImportExport = require('./import-export');
 var constants = require('./constants');
 var WalletCrypo = require('./wallet-crypto');
@@ -541,5 +543,44 @@ Helpers.addressesePerAccount = function (n) {
 Helpers.delay = (time) => new Promise((resolve) => {
   setTimeout(resolve, time);
 });
+
+const etherUnits = {
+  kwei: new BigNumber(1e3),
+  mwei: new BigNumber(1e6),
+  gwei: new BigNumber(1e9),
+  szabo: new BigNumber(1e12),
+  finney: new BigNumber(1e15),
+  ether: new BigNumber(1e18)
+};
+
+Helpers.toWei = function (x, unit) {
+  unit = unit || 'ether';
+  if (!etherUnits[unit]) {
+    throw new Error(`Unsupported ether unit in toWei: ${unit}`);
+  }
+  let result = Helpers.toBigNumber(x).mul(etherUnits[unit]);
+  return Helpers.isBigNumber(x) ? result : result.toString();
+};
+
+Helpers.fromWei = function (x, unit) {
+  unit = unit || 'ether';
+  if (!etherUnits[unit]) {
+    throw new Error(`Unsupported ether unit in fromWei: ${unit}`);
+  }
+  let result = Helpers.toBigNumber(x).div(etherUnits[unit]);
+  return Helpers.isBigNumber(x) ? result : result.toString();
+};
+
+Helpers.isBigNumber = function (x) {
+  return x instanceof BigNumber;
+};
+
+Helpers.toBigNumber = function (x) {
+  return Helpers.isBigNumber(x) ? x : new BigNumber((x || 0).toString());
+};
+
+Helpers.isEtherAddress = function (address) {
+  return ethUtil.isValidAddress(address);
+};
 
 module.exports = Helpers;
