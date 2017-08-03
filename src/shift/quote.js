@@ -55,7 +55,7 @@ class Quote {
     return {
       orderId: this._orderId,
       pair: this._pair,
-      rate: this._rate,
+      quotedRate: this._quotedRate,
       deposit: this._deposit,
       depositAmount: this._depositAmount,
       withdrawal: this._withdrawal,
