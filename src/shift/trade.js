@@ -5,9 +5,14 @@ class Trade {
   constructor (obj) {
     this._status = obj.status
     this._error = obj.error
-    this._hash = obj.hash
+    this._hashIn = obj.hashIn
+    this._hashOut = obj.hashOut
     this._time = obj.time ? new Date(obj.time) : void 0
     this._quote = obj.quote
+  }
+
+  get quote () {
+    return this._quote
   }
 
   get pair () {
@@ -66,8 +71,12 @@ class Trade {
     return this._error
   }
 
-  get hash () {
-    return this._hash
+  get depositHash () {
+    return this._hashIn
+  }
+
+  get withdrawalHash () {
+    return this._hashOut
   }
 
   get time () {
@@ -77,7 +86,7 @@ class Trade {
   setStatus (status) {
     this._status = status.status
     if (this.isComplete) {
-      this._hash = status.transaction
+      this._hashOut = status.transaction
     }
     if (this.isFailed) {
       this._error = status.error
@@ -85,11 +94,17 @@ class Trade {
     return this
   }
 
+  setDepositHash (hash) {
+    this._hashIn = hash
+    return this
+  }
+
   toJSON () {
     return {
       status: this._status,
       error: this._error,
-      hash: this._hash,
+      hashIn: this._hashIn,
+      hashOut: this._hashOut,
       time: this._time && this._time.toString(),
       quote: this._quote
     }

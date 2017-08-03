@@ -25,7 +25,9 @@ class BtcPayment extends ShiftPayment {
 
   publish (secPass) {
     this._payment.sign(secPass)
-    return this._payment.publish()
+    return this._payment.publish().then(response => ({
+      hash: response.txid
+    }))
   }
 }
 

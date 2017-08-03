@@ -57,8 +57,10 @@ class ShapeShift {
   }
 
   shift (payment, secPass) {
-    return payment.publish(secPass).then(() => {
+    return payment.publish(secPass).then(({ hash }) => {
+      payment.saveWithdrawalLabel()
       let trade = Trade.fromQuote(payment.quote)
+      trade.setDepositHash(hash)
       this._trades.unshift(trade)
       return this.sync().then(() => trade)
     })
@@ -89,6 +91,14 @@ class ShapeShift {
       return this._wallet.eth.defaultAccount.address
     }
     throw new Error(`Currency '${currency}' is not supported`)
+  }
+
+  isDepositTx (hash) {
+    return this.trades.some(t => t.depositHash === hash)
+  }
+
+  isWithdrawalTx (hash) {
+    return this.trades.filter(t => t.isComplete).some(t => t.withdrawalHash === hash)
   }
 
   fetch () {

@@ -289,6 +289,7 @@ HDAccount.prototype.setLabel = function (receiveIndex, label) {
   }
 
   labelEntry.label = label;
+  MyWallet.syncWallet();
 };
 
 HDAccount.prototype.removeLabel = function (receiveIndex) {

@@ -8,6 +8,9 @@ class ShiftPayment {
     this._quote = quote
   }
 
+  saveWithdrawalLabel () {
+  }
+
   static fromWallet (wallet) {
     return new this(wallet)
   }
