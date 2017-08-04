@@ -784,9 +784,9 @@ bitcoin-sfox-client@^0.1.11:
   dependencies:
     bitcoin-exchange-client "0.2.*"
 
-bitcoin-unocoin-client@^0.3.1:
-  version "0.3.1"
-  resolved "https://registry.yarnpkg.com/bitcoin-unocoin-client/-/bitcoin-unocoin-client-0.3.1.tgz#a523aedc5f914716df1366935f64cee50f67d8f5"
+bitcoin-unocoin-client@^0.3.3:
+  version "0.3.3"
+  resolved "https://registry.yarnpkg.com/bitcoin-unocoin-client/-/bitcoin-unocoin-client-0.3.3.tgz#723fd3aa72399606a72072fba13600ff822777c3"
   dependencies:
     babel-cli "^6.24.1"
     babel-polyfill "6.16.*"
