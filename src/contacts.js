@@ -50,14 +50,10 @@ Contacts.prototype.wipe = function () {
 };
 
 Contacts.prototype.new = function (object) {
-  const c = Contact.new(object, this.uuid());
+  const c = Contact.new(object);
   this.list = R.assoc(c.id, c, this.list);
   return c;
 };
-
-Contacts.prototype.uuid = function() {
-  return uuid();
-}
 
 const fromNull = (str) => str || '';
 const isContact = (uniqueId) => R.where({id: R.equals(uniqueId)});
@@ -221,7 +217,7 @@ const cancelResponse = function (id) {
 // I want you to pay me
 Contacts.prototype.sendPR = function (userId, intendedAmount, id, note, initiatorSource) {
   // we should reserve the address (check buy-sell) - should probable be an argument
-  id = id ? id : this.uuid()
+  id = id ? id : uuid()
   const contact = this.get(userId);
   const account = initiatorSource != null ? MyWallet.wallet.hdwallet.accounts[initiatorSource] : MyWallet.wallet.hdwallet.defaultAccount;
   const address = account.receiveAddress;
@@ -239,7 +235,7 @@ Contacts.prototype.sendPR = function (userId, intendedAmount, id, note, initiato
 
 // request payment request (step-1)
 Contacts.prototype.sendRPR = function (userId, intendedAmount, id, note) {
-  id = id ? id : this.uuid()
+  id = id ? id : uuid()
   const message = requestPaymentRequest(intendedAmount, id, note);
   const contact = this.get(userId);
   return this.sendMessage(userId, REQUEST_PAYMENT_REQUEST_TYPE, message)
@@ -249,7 +245,7 @@ Contacts.prototype.sendRPR = function (userId, intendedAmount, id, note) {
 
 // payment request response
 Contacts.prototype.sendPRR = function (userId, txHash, id) {
-  id = id ? id : this.uuid()
+  id = id ? id : uuid()
   const message = paymentRequestResponse(id, txHash);
   const contact = this.get(userId);
   return this.sendMessage(userId, PAYMENT_REQUEST_RESPONSE_TYPE, message)
