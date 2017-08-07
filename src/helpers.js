@@ -407,10 +407,8 @@ Helpers.isValidBIP39Mnemonic = function (mnemonic) {
 
 Helpers.isValidPrivateKey = function (candidate) {
   try {
-    var format = Helpers.detectPrivateKeyFormat(candidate);
-    if (format === 'bip38') { return true; }
-    var key = Helpers.privateKeyStringToKey(candidate, format);
-    return key.getAddress();
+    let format = Helpers.detectPrivateKeyFormat(candidate);
+    return format === 'bip38' || Helpers.privateKeyStringToKey(candidate, format) != null;
   } catch (e) {
     return false;
   }
