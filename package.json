@@ -49,12 +49,14 @@
     "bs58": "2.0.*",
     "core-js": "^2.4.1",
     "es6-promise": "^3.0.2",
+    "jwt-decode": "^2.1.0",
     "isomorphic-fetch": "^2.2.1",
     "pbkdf2": "^3.0.12",
     "ramda": "^0.22.1",
     "randombytes": "^2.0.1",
     "unorm": "^1.4.1",
-    "ws": "2.0.*"
+    "ws": "2.0.*",
+    "uuid": "^3.0.1"
   },
   "devDependencies": {
     "babel-cli": "~6.24.0",
