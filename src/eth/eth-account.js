@@ -1,4 +1,4 @@
-const keythereum = require('keythereum');
+const ethUtil = require('ethereumjs-util');
 const EthTxBuilder = require('./eth-tx-builder');
 const EthWalletTx = require('./eth-wallet-tx');
 const API = require('../api');
@@ -7,7 +7,7 @@ const { toBigNumber, toWei, fromWei } = require('../helpers');
 class EthAccount {
   constructor (obj) {
     this._priv = obj.priv && Buffer.from(obj.priv, 'hex');
-    this._addr = obj.priv ? keythereum.privateKeyToAddress(this._priv) : obj.addr;
+    this._addr = obj.priv ? EthAccount.privateKeyToAddress(this._priv) : obj.addr;
     this.label = obj.label;
     this.archived = obj.archived || false;
     this._wei = null;
@@ -106,7 +106,7 @@ class EthAccount {
   }
 
   isCorrectPrivateKey (privateKey) {
-    return keythereum.privateKeyToAddress(privateKey) === this.address;
+    return EthAccount.privateKeyToAddress(privateKey) === this.address;
   }
 
   getAvailableBalance (gasLimit = EthTxBuilder.GAS_LIMIT, gasPrice = EthTxBuilder.GAS_PRICE) {
@@ -117,13 +117,17 @@ class EthAccount {
     });
   }
 
+  static privateKeyToAddress (privateKey) {
+    return '0x' + ethUtil.privateToAddress(privateKey).toString('hex');
+  }
+
   static defaultLabel (accountIdx) {
     let label = 'My Ether Wallet';
     return accountIdx > 0 ? `${label} ${accountIdx + 1}` : label;
   }
 
   static fromWallet (wallet) {
-    let addr = keythereum.privateKeyToAddress(wallet.getPrivateKey());
+    let addr = EthAccount.privateKeyToAddress(wallet.getPrivateKey());
     let account = new EthAccount({ addr });
     account.setData({ balance: '0', nonce: 0 });
     return account;

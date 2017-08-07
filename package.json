@@ -58,7 +58,6 @@
     "ethereumjs-util": "^5.1.2",
     "ethereumjs-wallet": "^0.6.0",
     "isomorphic-fetch": "^2.2.1",
-    "keythereum": "^0.5.2",
     "pbkdf2": "^3.0.12",
     "ramda": "^0.22.1",
     "randombytes": "^2.0.1",
