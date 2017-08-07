@@ -67,20 +67,25 @@ class ShapeShift {
   }
 
   watchTradeForCompletion (trade, { pollTime = 1000 } = {}) {
-    return this.updateTradeStatus(trade).then(() => {
+    return this.updateTradeDetails(trade).then(() => {
       return trade.isWaitingForDeposit || trade.isProcessing
         ? delay(pollTime).then(() => this.watchTradeForCompletion(trade))
         : Promise.resolve(trade)
     })
   }
 
-  updateTradeStatus (trade) {
+  updateTradeDetails (trade) {
     return this._api.getTradeStatus(trade.depositAddress).then(status => {
       let shouldSync = status.status !== trade.status
       trade.setStatus(status)
       if (shouldSync) this.sync()
       return trade
     })
+  }
+
+  fetchFullTrades () {
+    let requests = this.trades.map(t => this.updateTradeDetails(t))
+    return Promise.all(requests);
   }
 
   nextAddressForCurrency (currency) {

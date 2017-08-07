@@ -56,15 +56,28 @@ class Quote {
     return this.pair.split('_')[1]
   }
 
+  setFieldsFromTxStat (response) {
+    this._pair = [response.incomingType, response.outgoingType].join('_')
+    this._depositAmount = response.incomingCoin
+    this._withdrawal = response.withdraw
+    this._withdrawalAmount = response.outgoingCoin
+    return this
+  }
+
   toJSON () {
-    return {
-      orderId: this._orderId,
+    return Object.assign(this.toPartialJSON(), {
       pair: this._pair,
-      quotedRate: this._quotedRate,
-      deposit: this._deposit,
       depositAmount: this._depositAmount,
       withdrawal: this._withdrawal,
-      withdrawalAmount: this._withdrawalAmount,
+      withdrawalAmount: this._withdrawalAmount
+    })
+  }
+
+  toPartialJSON () {
+    return {
+      orderId: this._orderId,
+      quotedRate: this._quotedRate,
+      deposit: this._deposit,
       minerFee: this._minerFee
     }
   }

@@ -51,6 +51,10 @@ class Trade {
     return this._status
   }
 
+  get isPending () {
+    return this.isWaitingForDeposit || this.isProcessing
+  }
+
   get isWaitingForDeposit () {
     return this._status === Trade.NO_DEPOSITS
   }
@@ -91,6 +95,7 @@ class Trade {
     if (this.isFailed) {
       this._error = status.error
     }
+    this.quote.setFieldsFromTxStat(status)
     return this
   }
 
@@ -101,12 +106,9 @@ class Trade {
 
   toJSON () {
     return {
-      status: this._status,
-      error: this._error,
       hashIn: this._hashIn,
-      hashOut: this._hashOut,
       time: this._time && this._time.toString(),
-      quote: this._quote
+      quote: this.isComplete ? this._quote.toPartialJSON() : this._quote.toJSON()
     }
   }
 
