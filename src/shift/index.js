@@ -1,5 +1,5 @@
 /* eslint-disable semi */
-const { delay } = require('../helpers')
+const { delay, asyncOnce } = require('../helpers')
 const Api = require('./api')
 const Trade = require('./trade')
 const Quote = require('./quote')
@@ -14,6 +14,7 @@ class ShapeShift {
     this._metadata = metadata
     this._api = new Api();
     this._trades = []
+    this.sync = asyncOnce(this.sync.bind(this), 500)
   }
 
   get trades () {
