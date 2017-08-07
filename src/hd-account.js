@@ -5,6 +5,8 @@ var assert = require('assert');
 var Helpers = require('./helpers');
 var KeyRing = require('./keyring');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
+var TxList = require('./transaction-list');
+var API = require('./api');
 var constants = require('./constants');
 
 // HDAccount Class
@@ -27,6 +29,7 @@ function HDAccount (object) {
   this._lastUsedReceiveIndex = null;
   this._changeIndex = 0;
   this._n_tx = 0;
+  this._txList = new TxList();
   this._balance = null;
   this._index = Helpers.isPositiveInteger(obj.index) ? obj.index : null;
 }
@@ -56,6 +59,10 @@ Object.defineProperties(HDAccount.prototype, {
         throw new Error('account.balance must be a positive number');
       }
     }
+  },
+  'txList': {
+    configurable: false,
+    get: function () { return this._txList; }
   },
   'n_tx': {
     get: function () { return this._n_tx; },
@@ -251,8 +258,24 @@ HDAccount.prototype.persist = function () {
   return this;
 };
 
-// Address labels:
+HDAccount.prototype.fetchTransactions = function () {
+  var _updateAccount = function (o) {
+    this.balance = o.addresses[0].final_balance;
+    this.n_tx = o.addresses[0].n_tx;
+    this.lastUsedReceiveIndex = o.addresses[0].account_index;
+    this.receiveIndex = Math.max(this.lastUsedReceiveIndex, this.maxLabeledReceiveIndex);
+    this.changeIndex = o.addresses[0].change_index;
+    if (this.getLabelForReceivingAddress(this.receiveIndex)) {
+      this.incrementReceiveIndex();
+    }
+    this.txList.pushTxs(o.txs);
+    return o.txs.length;
+  };
+  return API.getHistory(MyWallet.wallet.context, 0, this.txList.fetched, this.txList.loadNumber, false, [this._xpub])
+    .then(_updateAccount.bind(this));
+};
 
+// Address labels:
 HDAccount.prototype._orderedAddressLabels = function () {
   return this._address_labels.sort((a, b) => a.index - b.index);
 };

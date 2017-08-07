@@ -86,6 +86,7 @@ function Wallet (object) {
   this._finalBalance = 0;
   this._numberTxTotal = 0;
   this._txList = new TxList();
+  this._txListLegacy = new TxList();
   this._latestBlock = null;
   this._accountInfo = null;
   this._external = null;
@@ -174,6 +175,10 @@ Object.defineProperties(Wallet.prototype, {
   'txList': {
     configurable: false,
     get: function () { return this._txList; }
+  },
+  'txListLegacy': {
+    configurable: false,
+    get: function () { return this._txListLegacy; }
   },
   'numberTxTotal': {
     configurable: false,
@@ -397,6 +402,25 @@ Wallet.prototype.getHistory = function () {
 Wallet.prototype.fetchTransactions = function () {
   return API.getHistory(this.context, 0, this.txList.fetched, this.txList.loadNumber)
     .then(this._updateWalletInfo.bind(this));
+};
+
+Wallet.prototype.fetchTransactionsForLegacy = function () {
+  var _updateAllLegacy = function (o) {
+    var updateAddress = function (e) {
+      var address = this.activeKey(e.address);
+      if (address) {
+        address.balance = e.final_balance;
+        address.totalReceived = e.total_received;
+        address.totalSent = e.total_sent;
+      }
+    };
+    o.addresses.forEach(updateAddress.bind(this));
+    this.txListLegacy.pushTxs(o.txs);
+    return o.txs.length;
+  };
+  return API.getHistory(this.context, 0, this.txListLegacy.fetched,
+                        this.txListLegacy.loadNumber, false, this.activeAddresses)
+    .then(_updateAllLegacy.bind(this));
 };
 
 Wallet.prototype.getBalancesForArchived = function () {
