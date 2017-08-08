@@ -1,6 +1,8 @@
 /* eslint-disable semi */
 const Quote = require('./quote')
 
+const trace = (...args) => console.info('>> shift trade:', ...args)
+
 class Trade {
   constructor (obj) {
     this._status = obj.status
@@ -92,6 +94,7 @@ class Trade {
   }
 
   setStatus (status) {
+    trace('setting trade status', this, status)
     this._status = status.status
     if (this.isComplete) {
       this._hashOut = status.transaction
@@ -104,12 +107,14 @@ class Trade {
   }
 
   setDepositHash (hash) {
+    trace('setting deposit hash', this, hash)
     this._hashIn = hash
     return this
   }
 
   toJSON () {
     return {
+      status: this._status,
       hashIn: this._hashIn,
       time: this._time && this._time.toString(),
       quote: this.isComplete ? this._quote.toPartialJSON() : this._quote.toJSON()

@@ -57,10 +57,10 @@ class Quote {
   }
 
   setFieldsFromTxStat (response) {
-    this._pair = [response.incomingType, response.outgoingType].join('_')
-    this._depositAmount = response.incomingCoin
-    this._withdrawal = response.withdraw
-    this._withdrawalAmount = response.outgoingCoin
+    this._pair = this._pair || [response.incomingType, response.outgoingType].join('_')
+    this._depositAmount = this._depositAmount || response.incomingCoin
+    this._withdrawal = this._withdrawal || response.withdraw
+    this._withdrawalAmount = this._withdrawalAmount || response.outgoingCoin
     return this
   }
 

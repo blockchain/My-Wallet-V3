@@ -8,6 +8,8 @@ const EthPayment = require('./eth-payment')
 
 const METADATA_TYPE_SHAPE_SHIFT = 6;
 
+const trace = (...args) => console.info('>> shift:', ...args)
+
 class ShapeShift {
   constructor (wallet, metadata) {
     this._wallet = wallet
@@ -22,10 +24,12 @@ class ShapeShift {
   }
 
   getRate (coinPair) {
+    trace('getting rate')
     return this._api.getRate(coinPair)
   }
 
   getQuote (coinPair, amount) {
+    trace('getting quote')
     let [from, to] = coinPair.split('_')
 
     let withdrawalAddress = this.nextAddressForCurrency(to)
@@ -36,11 +40,13 @@ class ShapeShift {
   }
 
   getApproximateQuote (coinPair, amount) {
+    trace('getting approximate quote')
     return this._api.getQuote(coinPair, amount)
       .then(Quote.fromApiResponse)
   }
 
   buildPayment (quote) {
+    trace('building payment')
     let payment
     if (quote.depositAddress == null) {
       throw new Error('Quote is missing deposit address')
@@ -58,22 +64,27 @@ class ShapeShift {
   }
 
   shift (payment, secPass) {
+    trace('starting shift')
     return payment.publish(secPass).then(({ hash }) => {
+      trace('finished shift')
       payment.saveWithdrawalLabel()
       let trade = Trade.fromQuote(payment.quote)
       trade.setDepositHash(hash)
       this._trades.unshift(trade)
-      return this.sync().then(() => trade)
+      this.sync()
+      return trade
     })
   }
 
   checkForCompletedTrades (onCompleted, { pollTime = 1000 } = {}) {
+    trace('checking for completed');
     let watchers = this.trades.filter(t => t.isPending).map(t =>
       this.watchTradeForCompletion(t, pollTime).then(onCompleted))
     return Promise.all(watchers).then(() => this.trades)
   }
 
   watchTradeForCompletion (trade, { pollTime = 1000 } = {}) {
+    trace('watching trade for completion', trade)
     return this.updateTradeDetails(trade).then(() => {
       return trade.isPending
         ? delay(pollTime).then(() => this.watchTradeForCompletion(trade))
@@ -91,6 +102,7 @@ class ShapeShift {
   }
 
   fetchFullTrades () {
+    trace('fetching full trades')
     let requests = this.trades.map(t => this.updateTradeDetails(t))
     return Promise.all(requests);
   }
@@ -122,6 +134,7 @@ class ShapeShift {
   }
 
   sync () {
+    trace('syncing')
     return this._metadata.update(this)
   }
 
