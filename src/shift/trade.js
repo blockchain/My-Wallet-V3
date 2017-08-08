@@ -71,6 +71,10 @@ class Trade {
     return this._status === Trade.FAILED
   }
 
+  get isResolved () {
+    return this._status === Trade.RESOLVED
+  }
+
   get failedReason () {
     return this._error
   }
@@ -92,7 +96,7 @@ class Trade {
     if (this.isComplete) {
       this._hashOut = status.transaction
     }
-    if (this.isFailed) {
+    if (this.isFailed || this.isResolved) {
       this._error = status.error
     }
     this.quote.setFieldsFromTxStat(status)
@@ -126,6 +130,10 @@ class Trade {
 
   static get FAILED () {
     return 'failed'
+  }
+
+  static get RESOLVED () {
+    return 'resolved'
   }
 
   static fromMetadata (data) {

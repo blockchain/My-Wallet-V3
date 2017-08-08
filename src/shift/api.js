@@ -7,14 +7,15 @@ class Api {
 
   getRate (pair) {
     return this.request('/marketinfo/' + pair, 'GET')
+      .then(res => res.error != null ? Promise.reject(res.error) : (res.success || res))
   }
 
   getQuote (pair, amount, withdrawal, returnAddress) {
     let apiKey = this._apiKey
     let depositAmount = amount.toString()
-    return this.request('/sendamount', 'POST', {
-      pair, depositAmount, withdrawal, returnAddress, apiKey
-    })
+    return this.request('/sendamount', 'POST',
+      { pair, depositAmount, withdrawal, returnAddress, apiKey })
+      .then(res => res.error != null ? Promise.reject(res.error) : (res.success || res))
   }
 
   getTradeStatus (address) {
@@ -32,7 +33,6 @@ class Api {
 
     return fetch(this._ssUrl + endpoint, { method, headers, body })
       .then(res => res.status === 200 ? res.json() : res.json().then(e => Promise.reject(e)))
-      .then(res => res.error != null ? Promise.reject(res.error) : (res.success || res))
   }
 }
 
