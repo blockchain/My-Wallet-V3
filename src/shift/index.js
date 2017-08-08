@@ -67,7 +67,7 @@ class ShapeShift {
     })
   }
 
-  checkForCompletedTrades (onCompleted, { pollTime = 1000 }) {
+  checkForCompletedTrades (onCompleted, { pollTime = 1000 } = {}) {
     let watchers = this.trades.filter(t => t.isPending).map(t =>
       this.watchTradeForCompletion(t, pollTime).then(onCompleted))
     return Promise.all(watchers).then(() => this.trades)
