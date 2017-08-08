@@ -1,7 +1,6 @@
 /* eslint-disable semi */
 const Quote = require('./quote')
-
-const trace = (...args) => console.info('>> shift trade:', ...args)
+const { trace } = require('../helpers')
 
 class Trade {
   constructor (obj) {

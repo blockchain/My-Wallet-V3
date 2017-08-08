@@ -1,5 +1,5 @@
 /* eslint-disable semi */
-const { delay, asyncOnce } = require('../helpers')
+const { delay, asyncOnce, trace } = require('../helpers')
 const Api = require('./api')
 const Trade = require('./trade')
 const Quote = require('./quote')
@@ -7,8 +7,6 @@ const BtcPayment = require('./btc-payment')
 const EthPayment = require('./eth-payment')
 
 const METADATA_TYPE_SHAPE_SHIFT = 6;
-
-const trace = (...args) => console.info('>> shift:', ...args)
 
 class ShapeShift {
   constructor (wallet, metadata) {

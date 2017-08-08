@@ -43,7 +43,8 @@ let config = {
     fs: 'empty'
   },
   plugins: [
-    new StringReplacePlugin()
+    new StringReplacePlugin(),
+    new webpack.EnvironmentPlugin(['NODE_ENV'])
   ]
 };
 
