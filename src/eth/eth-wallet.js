@@ -13,6 +13,7 @@ class EthWallet {
   constructor (wallet, metadata) {
     this._wallet = wallet;
     this._metadata = metadata;
+    this._hasSeen = false;
     this._defaultAccountIdx = 0;
     this._accounts = [];
     this._txNotes = {};
@@ -25,6 +26,10 @@ class EthWallet {
 
   get balance () {
     return this.defaultAccount ? this.defaultAccount.balance : null;
+  }
+
+  get hasSeen () {
+    return this._hasSeen;
   }
 
   get defaultAccountIdx () {
@@ -109,6 +114,11 @@ class EthWallet {
     this.sync();
   }
 
+  setHasSeen (hasSeen) {
+    this._hasSeen = hasSeen;
+    this.sync();
+  }
+
   setDefaultAccountIndex (i) {
     if (!isPositiveNumber(i)) {
       throw new Error('Account index must be a number >= 0');
@@ -126,6 +136,7 @@ class EthWallet {
     return this._metadata.fetch().then((data) => {
       if (data) {
         let { ethereum } = data;
+        this._hasSeen = ethereum.has_seen;
         this._defaultAccountIdx = ethereum.default_account_idx;
         this._accounts = ethereum.accounts.map(construct(EthAccount));
         this._txNotes = ethereum.tx_notes || {};
@@ -141,6 +152,7 @@ class EthWallet {
 
   toJSON () {
     return {
+      has_seen: this._hasSeen,
       default_account_idx: this._defaultAccountIdx,
       accounts: this._accounts,
       tx_notes: this._txNotes
