@@ -48,6 +48,10 @@ class Trade {
     return this._quote.withdrawalAmount
   }
 
+  get error () {
+    return this._error
+  }
+
   get status () {
     return this._status
   }
