@@ -93,6 +93,17 @@ class EthTxBuilder {
     return 21000;
   }
 
+  static fetchFees () {
+    return fetch(`${API.API_ROOT_URL}eth/fees`).then(r =>
+      r.status === 200 ? r.json() : Promise.reject()
+    ).catch(() => ({
+      gasLimit: EthTxBuilder.GAS_LIMIT,
+      regular: EthTxBuilder.GAS_PRICE,
+      priority: EthTxBuilder.GAS_PRICE,
+      limits: {}
+    }));
+  }
+
   static pushTx (rawTx) {
     return fetch(`${API.API_ROOT_URL}eth/pushtx`, {
       method: 'POST',

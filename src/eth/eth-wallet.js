@@ -174,6 +174,10 @@ class EthWallet {
       .then(() => this.updateTxs());
   }
 
+  fetchFees () {
+    return EthTxBuilder.fetchFees();
+  }
+
   isContractAddress (address) {
     return fetch(`${API.API_ROOT_URL}eth/account/${address}/isContract`)
       .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
