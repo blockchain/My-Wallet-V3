@@ -4,7 +4,7 @@ class ShiftPayment {
     return this._quote
   }
 
-  setFromQuote (quote) {
+  setFromQuote (quote, _fee) {
     this._quote = quote
   }
 

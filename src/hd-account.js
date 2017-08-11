@@ -305,6 +305,7 @@ HDAccount.prototype.getAvailableBalance = function (feeType) {
   return Promise.all([feesP, coinsP]).then(([fees, coins]) => {
     let fee = Helpers.toFeePerKb(fees[feeType]);
     let usableCoins = Transaction.filterUsableCoins(coins, fee);
-    return Transaction.maxAvailableAmount(usableCoins, fee).amount;
+    let amount = Transaction.maxAvailableAmount(usableCoins, fee).amount;
+    return { amount, fee: fees[feeType] };
   });
 };

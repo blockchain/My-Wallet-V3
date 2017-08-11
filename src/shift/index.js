@@ -43,7 +43,7 @@ class ShapeShift {
       .then(Quote.fromApiResponse)
   }
 
-  buildPayment (quote) {
+  buildPayment (quote, fee) {
     trace('building payment')
     let payment
     if (quote.depositAddress == null) {
@@ -58,7 +58,7 @@ class ShapeShift {
     if (payment == null) {
       throw new Error(`Tried to build for unsupported currency ${quote.fromCurrency}`)
     }
-    return payment.setFromQuote(quote)
+    return payment.setFromQuote(quote, fee)
   }
 
   shift (payment, secPass) {

@@ -113,7 +113,8 @@ class EthAccount {
     return new Promise(resolve => {
       let fee = toBigNumber(gasLimit).mul(toWei(gasPrice, 'gwei'));
       let available = Math.max(parseFloat(this.wei.sub(fee)), 0);
-      resolve(parseFloat(fromWei(available, 'ether')));
+      let amount = parseFloat(fromWei(available, 'ether'));
+      resolve({ amount, fee: gasPrice });
     });
   }
 

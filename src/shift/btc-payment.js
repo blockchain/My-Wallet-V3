@@ -8,11 +8,11 @@ class BtcPayment extends ShiftPayment {
     this._payment.from(wallet.hdwallet.defaultAccountIndex)
   }
 
-  setFromQuote (quote) {
+  setFromQuote (quote, fee = 'priority') {
     super.setFromQuote(quote)
     this._payment.to(quote.depositAddress)
     this._payment.amount(Math.round(parseFloat(quote.depositAmount) * 1e8))
-    this._payment.updateFeePerKb('priority')
+    this._payment.updateFeePerKb(fee)
     this._payment.build()
     return this
   }
