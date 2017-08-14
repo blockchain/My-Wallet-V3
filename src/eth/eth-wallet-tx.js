@@ -68,11 +68,11 @@ class EthWalletTx {
   }
 
   isToAccount (account) {
-    return this._to === account.address;
+    return this._to.toLowerCase() === account.address.toLowerCase();
   }
 
   isFromAccount (account) {
-    return this._from === account.address;
+    return this._from.toLowerCase() === account.address.toLowerCase();
   }
 
   update (ethWallet) {
