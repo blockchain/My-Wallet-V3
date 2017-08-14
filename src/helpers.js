@@ -580,11 +580,17 @@ Helpers.toBigNumber = function (x) {
 };
 
 Helpers.isEtherAddress = function (address) {
-  return ethUtil.isValidAddress(address);
-};
-
-Helpers.isChecksumEtherAddress = function (address) {
-  return ethUtil.isValidChecksumAddress(address);
+  return (
+    ethUtil.isValidChecksumAddress(address) ||
+    (
+      ethUtil.isValidAddress(address) &&
+      ethUtil.stripHexPrefix(address).toLowerCase() === ethUtil.stripHexPrefix(address)
+    ) ||
+    (
+      ethUtil.isValidAddress(address) &&
+      ethUtil.stripHexPrefix(address).toUpperCase() === ethUtil.stripHexPrefix(address)
+    )
+  );
 };
 
 Helpers.trace = (...args) => {
