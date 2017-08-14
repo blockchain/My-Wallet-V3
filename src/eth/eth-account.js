@@ -7,7 +7,7 @@ const { toBigNumber, toWei, fromWei } = require('../helpers');
 class EthAccount {
   constructor (obj) {
     this._priv = obj.priv && Buffer.from(obj.priv, 'hex');
-    this._addr = obj.priv ? EthAccount.privateKeyToAddress(this._priv) : obj.addr;
+    this._addr = ethUtil.toChecksumAddress(obj.priv ? EthAccount.privateKeyToAddress(this._priv) : obj.addr);
     this.label = obj.label;
     this.archived = obj.archived || false;
     this._wei = null;
@@ -119,7 +119,7 @@ class EthAccount {
   }
 
   static privateKeyToAddress (privateKey) {
-    return '0x' + ethUtil.privateToAddress(privateKey).toString('hex');
+    return ethUtil.toChecksumAddress(ethUtil.privateToAddress(privateKey).toString('hex'));
   }
 
   static defaultLabel (accountIdx) {

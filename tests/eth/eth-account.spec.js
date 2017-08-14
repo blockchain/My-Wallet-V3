@@ -19,7 +19,7 @@ describe('EthAccount', () => {
 
     describe('getters', () => {
       it('should have: address', () => {
-        expect(account.address).toEqual('0xd70073f72621fb90060ac257f38cf2ff566ea6bb')
+        expect(account.address).toEqual('0xD70073f72621FB90060Ac257f38cF2FF566Ea6bB')
       })
 
       it('should have: privateKey', () => {
@@ -98,7 +98,7 @@ describe('EthAccount', () => {
 
     describe('.toJSON()', () => {
       it('should serialize to json', () => {
-        let expected = '{"label":"Test Account","archived":false,"addr":"0xd70073f72621fb90060ac257f38cf2ff566ea6bb"}'
+        let expected = '{"label":"Test Account","archived":false,"addr":"0xD70073f72621FB90060Ac257f38cF2FF566Ea6bB"}'
         expect(JSON.stringify(account)).toEqual(expected)
       })
     })
@@ -133,7 +133,7 @@ describe('EthAccount', () => {
         expect(account.constructor).toEqual(EthAccount)
         expect(account.balance).toEqual('0')
         expect(account.nonce).toEqual(0)
-        expect(account.address).toEqual('0xd70073f72621fb90060ac257f38cf2ff566ea6bb')
+        expect(account.address).toEqual('0xD70073f72621FB90060Ac257f38cF2FF566Ea6bB')
       })
     })
   })

@@ -583,6 +583,10 @@ Helpers.isEtherAddress = function (address) {
   return ethUtil.isValidAddress(address);
 };
 
+Helpers.isChecksumEtherAddress = function (address) {
+  return ethUtil.isValidChecksumAddress(address);
+};
+
 Helpers.trace = (...args) => {
   if (process.env.NODE_ENV === 'dev') {
     console.log(...args);
