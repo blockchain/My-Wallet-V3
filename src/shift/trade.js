@@ -119,6 +119,7 @@ class Trade {
     return {
       status: this._status,
       hashIn: this._hashIn,
+      hashOut: this._hashOut,
       time: this._time && this._time.toString(),
       quote: this.isComplete ? this._quote.toPartialJSON() : this._quote.toJSON()
     }
