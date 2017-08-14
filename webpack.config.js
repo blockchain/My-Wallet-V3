@@ -44,7 +44,9 @@ let config = {
   },
   plugins: [
     new StringReplacePlugin(),
-    new webpack.EnvironmentPlugin(['NODE_ENV'])
+    new webpack.EnvironmentPlugin({
+      NODE_ENV: 'prod'
+    })
   ]
 };
 
