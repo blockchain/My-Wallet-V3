@@ -9,10 +9,10 @@ const EthPayment = require('./eth-payment')
 const METADATA_TYPE_SHAPE_SHIFT = 6;
 
 class ShapeShift {
-  constructor (wallet, metadata) {
+  constructor (wallet, metadata, apiKey) {
     this._wallet = wallet
     this._metadata = metadata
-    this._api = new Api();
+    this._api = new Api(apiKey);
     this._trades = []
     this.sync = asyncOnce(this.sync.bind(this), 500)
   }
@@ -142,9 +142,9 @@ class ShapeShift {
     }
   }
 
-  static fromBlockchainWallet (wallet) {
+  static fromBlockchainWallet (wallet, apiKey) {
     let metadata = wallet.metadata(METADATA_TYPE_SHAPE_SHIFT);
-    return new ShapeShift(wallet, metadata)
+    return new ShapeShift(wallet, metadata, apiKey)
   }
 }
 

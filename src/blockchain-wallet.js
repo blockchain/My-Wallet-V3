@@ -889,7 +889,7 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
   };
 
   var fetchShapeShift = function () {
-    this._shapeshift = ShapeShift.fromBlockchainWallet(this);
+    this._shapeshift = ShapeShift.fromBlockchainWallet(this, constants.SHAPE_SHIFT_KEY);
     return this._shapeshift.fetch();
   };
 
