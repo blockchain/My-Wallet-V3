@@ -29,10 +29,12 @@ class StableSocket extends EventEmitter {
     this._socket.on('open', () => {
       this._messageQueue.forEach(d => { this._socket.send(d); });
       this._messageQueue = [];
+      this.emit('open', {});
     });
 
     this._socket.on('close', () => {
       this.connect();
+      this.emit('close', {});
     });
 
     return this;
