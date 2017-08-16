@@ -310,10 +310,16 @@ API.prototype.incrementLoginViaQrStats = function () {
 
 API.prototype.incrementBtcEthUsageStats = function (btcBalance, ethBalance) {
   let base = this.ROOT_URL + 'event?name=wallet_login_balance_';
-  let makeEventUrl = (curr, cond) => base + curr + '_' + (cond ? 1 : 0);
-  fetch(makeEventUrl('btc', btcBalance > 0));
-  fetch(makeEventUrl('eth', ethBalance > 0));
-  fetch(makeEventUrl('btceth', btcBalance > 0 && ethBalance > 0));
+  let mapper = { 'btc': 'btc_0', 'eth': 'btc_1', 'btc_eth': 'eth_0', '0': 'eth_1' };
+  let makeEventUrl = (val) => base + mapper[val];
+
+  let url;
+  if (btcBalance > 0 && ethBalance > 0) url = makeEventUrl('btc_eth');
+  else if (btcBalance > 0) url = makeEventUrl('btc');
+  else if (ethBalance > 0) url = makeEventUrl('eth');
+  else url = makeEventUrl('0');
+
+  fetch(url);
 };
 
 API.prototype.getBlockchainAddress = function () {
