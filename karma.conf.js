@@ -3,7 +3,7 @@ module.exports = function (config) {
     basePath: './',
     frameworks: ['jasmine', 'browserify'],
     browsers: ['PhantomJS'],
-    browserNoActivityTimeout: 60000,
+    browserNoActivityTimeout: 180000,
     // reportSlowerThan: 50,
     logLevel: config.LOG_WARN,
     client: {
