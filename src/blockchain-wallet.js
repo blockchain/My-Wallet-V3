@@ -727,6 +727,7 @@ Wallet.prototype.upgradeToV3 = function (firstAccountLabel, pw, success, error) 
   this._hd_wallets.push(hd);
   var label = firstAccountLabel || 'My Bitcoin Wallet';
   this.newAccount(label, pw, this._hd_wallets.length - 1, true);
+  this.cacheMetadataKey(pw);
   this.loadMetadata();
   MyWallet.syncWallet(function (res) {
     success();
