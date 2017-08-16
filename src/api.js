@@ -309,11 +309,9 @@ API.prototype.incrementLoginViaQrStats = function () {
 };
 
 API.prototype.incrementBtcEthUsageStats = function (btcBalance, ethBalance) {
-  let base = this.ROOT_URL + 'event?name=wallet_login_balance_';
-  let makeEventUrl = (curr, cond) => base + curr + '_' + (cond ? 1 : 0);
-  fetch(makeEventUrl('btc', btcBalance > 0));
-  fetch(makeEventUrl('eth', ethBalance > 0));
-  fetch(makeEventUrl('btceth', btcBalance > 0 && ethBalance > 0));
+  let base = this.ROOT_URL + 'event?name=wallet_login_balance';
+  let makeEventUrl = (btc, eth) => `${base}_btc_${btc ? 1 : 0}_eth_${eth ? 1 : 0}`;
+  fetch(makeEventUrl(btcBalance > 0, ethBalance > 0));
 };
 
 API.prototype.getBlockchainAddress = function () {
