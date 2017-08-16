@@ -20,7 +20,7 @@ describe('API', () => {
   });
 
   describe('.incrementBtcEthUsageStats', () => {
-    let eventUrl = (event) => `https://blockchain.info/event?wallet_login_balance_${event}`
+    let eventUrl = (event) => `https://blockchain.info/event?name=wallet_login_balance_${event}`
 
     beforeEach(() => {
       spyOn(window, 'fetch')
