@@ -26,29 +26,37 @@ describe('API', () => {
       spyOn(window, 'fetch')
     })
 
-    it('should make a single request', () => {
+    it('should make three requests, one for each stat', () => {
       API.incrementBtcEthUsageStats(0, 0)
-      expect(window.fetch).toHaveBeenCalledTimes(1)
+      expect(window.fetch).toHaveBeenCalledTimes(3)
     })
 
     it('should record correctly for btc=0, eth=0', () => {
       API.incrementBtcEthUsageStats(0, 0)
-      expect(window.fetch).toHaveBeenCalledWith(eventUrl('eth_1'))
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('btc_0'))
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('eth_0'))
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('btceth_0'))
     })
 
     it('should record correctly for btc>0, eth=0', () => {
       API.incrementBtcEthUsageStats(1, 0)
-      expect(window.fetch).toHaveBeenCalledWith(eventUrl('btc_0'))
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('btc_1'))
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('eth_0'))
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('btceth_0'))
     })
 
     it('should record correctly for btc=0, eth>0', () => {
       API.incrementBtcEthUsageStats(0, 1)
-      expect(window.fetch).toHaveBeenCalledWith(eventUrl('btc_1'))
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('btc_0'))
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('eth_1'))
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('btceth_0'))
     })
 
     it('should record correctly for btc>0, eth>0', () => {
       API.incrementBtcEthUsageStats(1, 1)
-      expect(window.fetch).toHaveBeenCalledWith(eventUrl('eth_0'))
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('btc_1'))
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('eth_1'))
+      expect(window.fetch).toHaveBeenCalledWith(eventUrl('btceth_1'))
     })
   })
 });
