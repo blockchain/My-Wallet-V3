@@ -1,4 +1,5 @@
 const { pipe } = require('ramda');
+const EventEmitter = require('events');
 const StableSocket = require('../stable-socket');
 
 const OP_ACCOUNT_SUB = 'account_sub';
@@ -7,7 +8,16 @@ const OP_BLOCK_SUB = 'block_sub';
 class EthSocket extends StableSocket {
   constructor (wsUrl) {
     super(wsUrl);
-    this.connect();
+    this._events = new EventEmitter();
+    this.connect(
+      () => this._events.emit('open'),
+      (data) => this._events.emit('message', data),
+      () => this._events.emit('close')
+    );
+  }
+
+  on (eventName, callback) {
+    this._events.on(eventName, callback);
   }
 
   subscribeToAccount (account) {
@@ -38,11 +48,11 @@ class EthSocket extends StableSocket {
   }
 
   static accountSub (account) {
-    return JSON.stringify({ op: OP_ACCOUNT_SUB, account: account.address });
+    return this.op(OP_ACCOUNT_SUB, { account: account.address });
   }
 
   static blocksSub () {
-    return JSON.stringify({ op: OP_BLOCK_SUB });
+    return this.op(OP_BLOCK_SUB);
   }
 }
 

@@ -241,7 +241,7 @@ class EthWallet {
   }
 
   setLatestBlock (blockNumber) {
-    this._latestBlock = blockNumber;
+    this._latestBlock = Math.max(this._latestBlock, blockNumber);
     this.updateTxs();
   }
 

@@ -6,6 +6,8 @@ describe('Websocket', () => {
     send (message) {},
     close () {},
     readyState: 1,
+    OPEN: 1,
+    CLOSED: 3,
     url
   });
 
@@ -32,8 +34,8 @@ describe('Websocket', () => {
     describe('connect()', () => {
       it('should open a socket', () => {
         ws.connect();
-        expect(ws.socket).toBeDefined();
-        expect(ws.socket.url.indexOf('wss://')).toEqual(0);
+        expect(ws._socket).toBeDefined();
+        expect(ws._socket.url.indexOf('wss://')).toEqual(0);
       });
 
       describe('on TOR', () => {
@@ -43,7 +45,7 @@ describe('Websocket', () => {
 
         it('should not open a socket', () => {
           ws.connect();
-          expect(ws.socket).not.toBeDefined();
+          expect(ws._socket).not.toBeDefined();
         });
       });
     });
@@ -55,23 +57,23 @@ describe('Websocket', () => {
 
       it('should pass the message on', () => {
         let message = '{"op":"addr_sub", "addr": "1btc"}';
-        spyOn(ws.socket, 'send');
+        spyOn(ws._socket, 'send');
         ws.send(message);
-        expect(ws.socket.send).toHaveBeenCalledWith(message);
+        expect(ws._socket.send).toHaveBeenCalledWith(message);
       });
 
       describe('on TOR', () => {
         let message = '{"op":"addr_sub", "addr": "1btc"}';
 
         beforeEach(() => {
-          ws.socket = void 0;
+          ws._socket = void 0;
           spyOn(Helpers, 'tor').and.returnValue(true);
           ws.connect();
         });
 
         it('should not reconnect', () => {
           ws.send(message);
-          expect(ws.socket).not.toBeDefined();
+          expect(ws._socket).not.toBeDefined();
         });
 
         it('should do nothing', () =>
@@ -87,8 +89,8 @@ describe('Websocket', () => {
 
       it('should clear interval and timeout', () => {
         ws.close();
-        expect(ws.pingTimeoutPID).toEqual(null);
-        expect(ws.socket).toEqual(null);
+        expect(ws._pingTimeoutPID).toEqual(null);
+        expect(ws._socket).toEqual(null);
       });
     });
 
@@ -184,14 +186,6 @@ describe('Websocket', () => {
         expect(res).toEqual(expected);
       });
     });
-
-    describe('msgPing()', () =>
-      it('should ping', () => {
-        let res = ws.msgPing();
-        let expected = JSON.stringify({ op: 'ping' });
-        expect(res).toEqual(expected);
-      })
-    );
 
     describe('msgOnOpen()', () => it('should subscribe to blocks, guid, addresses and xpubs', () => {
       let guid = '1234';

@@ -55,6 +55,7 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
   if (!(typeof window === 'undefined') && message.data) {
     message = message.data;
   }
+
   try {
     obj = JSON.parse(message);
   } catch (e) {
@@ -91,7 +92,7 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
     }
     WalletStore.sendEvent('on_block');
   } else if (obj.op === 'pong') {
-    clearTimeout(MyWallet.ws.pingTimeoutPID);
+    MyWallet.ws.clearPingTimeout();
   } else if (obj.op === 'email_verified') {
     MyWallet.wallet.accountInfo.isEmailVerified = Boolean(obj.x);
     WalletStore.sendEvent('on_email_verified', obj.x);
