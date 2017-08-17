@@ -101,7 +101,7 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
 // called by native websocket in iOS
 MyWallet.getSocketOnOpenMessage = function () {
   var accounts = MyWallet.wallet.hdwallet ? MyWallet.wallet.hdwallet.activeXpubs : [];
-  return MyWallet.ws.msgOnOpen(MyWallet.wallet.guid, MyWallet.wallet.activeAddresses, accounts);
+  return BlockchainSocket.onOpenSub(MyWallet.wallet.guid, MyWallet.wallet.activeAddresses, accounts);
 };
 
 // Fetch a new wallet from the server

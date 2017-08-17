@@ -11,24 +11,12 @@ class BlockchainSocket extends StableSocket {
     super('wss://ws.blockchain.info/inv');
   }
 
-  msgWalletSub (guid) {
-    return BlockchainSocket.walletSub(guid);
+  subscribeToAddresses (addrs) {
+    return this.send(BlockchainSocket.addrSub(addrs));
   }
 
-  msgBlockSub () {
-    return BlockchainSocket.blocksSub();
-  }
-
-  msgAddrSub (addrs) {
-    return BlockchainSocket.addrSub(addrs);
-  }
-
-  msgXPUBSub (xpubs) {
-    return BlockchainSocket.xpubSub(xpubs);
-  }
-
-  msgOnOpen (guid, addrs, xpubs) {
-    return BlockchainSocket.onOpenSub(guid, addrs, xpubs);
+  subscribeToXpubs (xpubs) {
+    return this.send(BlockchainSocket.xpubSub(xpubs));
   }
 
   static walletSub (guid) {
