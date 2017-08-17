@@ -35,15 +35,15 @@ class StableSocket extends EventEmitter {
     return !this._socket || this._socket.readyState === this._socket.CLOSED;
   }
 
-  createSocket () {
-    return new WebSocket(this.url, [], { headers: this._headers });
+  createSocket (url) {
+    return new WebSocket(url, [], { headers: this._headers });
   }
 
   connect () {
     if (!Helpers.tor() && this.isClosed) {
       try {
         this._pingIntervalPID = setInterval(this.ping.bind(this), PING_INTERVAL);
-        this._socket = this.createSocket();
+        this._socket = this.createSocket(this.url);
         this._socket.on('open', () => this.emit('open'));
         this._socket.on('message', (message) => this.emit('message', message.data));
         this._socket.on('close', () => this.emit('close'));

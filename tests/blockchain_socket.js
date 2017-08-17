@@ -1,36 +1,32 @@
-let proxyquire = require('proxyquireify')(require);
-
 describe('Websocket', () => {
-  let ws = (url, array, options) => ({
+  let BlockchainSocket = require('../src/blockchain-socket');
+  let Helpers = require('../src/helpers');
+
+  let ws;
+  let createSocket = (url) => ({
     on (event, callback) {},
     send (message) {},
     close () {},
     readyState: 1,
+    CONNECTING: 0,
     OPEN: 1,
+    CLOSING: 2,
     CLOSED: 3,
     url
   });
 
-  let Helpers = {
-    tor () { return false; }
-  };
-
-  let BlockchainSocket = proxyquire('../src/blockchain-socket', {
-    'ws': ws,
-    './helpers': Helpers
+  beforeEach(() => {
+    ws = new BlockchainSocket();
+    spyOn(Helpers, 'tor').and.returnValue(false);
+    spyOn(ws, 'createSocket').and.callFake(createSocket);
   });
 
   describe('new', () => it('should have a URL', () => {
-    ws = new BlockchainSocket();
     expect(ws.wsUrl).toBeDefined();
     expect(ws.wsUrl.indexOf('wss://')).toEqual(0);
   }));
 
   describe('instance', () => {
-    beforeEach(() => {
-      ws = new BlockchainSocket();
-    });
-
     describe('connect()', () => {
       it('should open a socket', () => {
         ws.connect();
@@ -40,7 +36,7 @@ describe('Websocket', () => {
 
       describe('on TOR', () => {
         beforeEach(() =>
-          spyOn(Helpers, 'tor').and.returnValue(true)
+          Helpers.tor.and.returnValue(true)
         );
 
         it('should not open a socket', () => {
@@ -67,7 +63,7 @@ describe('Websocket', () => {
 
         beforeEach(() => {
           ws._socket = void 0;
-          spyOn(Helpers, 'tor').and.returnValue(true);
+          Helpers.tor.and.returnValue(true);
           ws.connect();
         });
 
