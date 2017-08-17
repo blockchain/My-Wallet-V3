@@ -249,11 +249,6 @@ class EthWallet {
     if (this._socket) return;
     this._socket = new EthSocket(wsUrl);
     this._socket.subscribeToBlocks(this);
-
-    this._socket.on('close', () => {
-      this._socket.subscribeToBlocks(this);
-      this.activeAccounts.forEach(a => this._socket.subscribeToAccount(a));
-    });
   }
 
   updateTxs () {

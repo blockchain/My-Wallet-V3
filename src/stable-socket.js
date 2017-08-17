@@ -1,15 +1,17 @@
 const WebSocket = require('ws');
+const EventEmitter = require('events');
 const Helpers = require('./helpers');
 
-class StableSocket {
+const PING_INTERVAL = 15000;
+const PING_TIMEOUT = 5000;
+
+class StableSocket extends EventEmitter {
   constructor (url) {
+    super();
     this.wsUrl = url;
     this._headers = { 'Origin': 'https://blockchain.info' };
     this._socket;
-    this._reconnect = null;
-    this._pingInterval = 15000;
     this._pingIntervalPID = null;
-    this._pingTimeout = 5000;
     this._pingTimeoutPID = null;
   }
 
@@ -17,47 +19,50 @@ class StableSocket {
     return this.wsUrl;
   }
 
+  get isConnecting () {
+    return this._socket && this._socket.readyState === this._socket.CONNECTING;
+  }
+
   get isOpen () {
     return this._socket && this._socket.readyState === this._socket.OPEN;
+  }
+
+  get isClosing () {
+    return this._socket && this._socket.readyState === this._socket.CLOSING;
   }
 
   get isClosed () {
     return !this._socket || this._socket.readyState === this._socket.CLOSED;
   }
 
-  _initialize (onOpen, onMessage, onClose) {
-    if (this.isClosed) {
+  createSocket () {
+    return new WebSocket(this.url, [], { headers: this._headers });
+  }
+
+  connect () {
+    if (!Helpers.tor() && this.isClosed) {
       try {
-        this._pingIntervalPID = setInterval(this.ping.bind(this), this._pingInterval);
-        this._socket = new WebSocket(this.url, [], { headers: this._headers });
-        this._socket.on('open', onOpen);
-        this._socket.on('message', onMessage);
-        this._socket.on('close', onClose);
+        this._pingIntervalPID = setInterval(this.ping.bind(this), PING_INTERVAL);
+        this._socket = this.createSocket();
+        this._socket.on('open', () => this.emit('open'));
+        this._socket.on('message', (message) => this.emit('message', message.data));
+        this._socket.on('close', () => this.emit('close'));
       } catch (e) {
         console.error('Failed to connect to websocket', e);
       }
     }
   }
 
-  connect (onOpen, onMessage, onClose) {
-    if (Helpers.tor()) return;
-    this._reconnect = function () {
-      let connect = this._initialize.bind(this, onOpen, onMessage, onClose);
-      connect();
-    }.bind(this);
-    this._reconnect();
-  }
-
   send (data) {
     if (!Helpers.tor() && this.isOpen) this._socket.send(data);
-    else if (this._socket) this._socket.on('open', () => this.send(data));
+    else if (this.isConnecting) this.on('open', () => this.send(data));
     return this;
   }
 
   close () {
     if (this.isOpen) this._socket.close();
     this._socket = null;
-    clearInterval(this._pingIntervalPID);
+    this.clearPingInterval();
     this.clearPingTimeout();
     return this;
   }
@@ -66,8 +71,12 @@ class StableSocket {
     this.send(StableSocket.pingMessage());
     this._pingTimeoutPID = setTimeout(() => {
       this.close();
-      this._reconnect();
-    }, this._pingTimeout);
+      this.connect();
+    }, PING_TIMEOUT);
+  }
+
+  clearPingInterval () {
+    clearInterval(this._pingIntervalPID);
   }
 
   clearPingTimeout () {
