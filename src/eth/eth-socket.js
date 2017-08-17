@@ -8,9 +8,6 @@ class EthSocket extends StableSocket {
   constructor (wsUrl) {
     super(wsUrl);
     this.connect();
-    this.on('message', pipe(JSON.parse, (data) => {
-      if (data.op === 'pong') this.clearPingTimeout();
-    }));
   }
 
   subscribeToAccount (account) {

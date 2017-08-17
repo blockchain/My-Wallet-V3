@@ -13,6 +13,7 @@ class StableSocket extends EventEmitter {
     this._socket;
     this._pingIntervalPID = null;
     this._pingTimeoutPID = null;
+    this.setPongHandler();
   }
 
   get url () {
@@ -73,6 +74,12 @@ class StableSocket extends EventEmitter {
       this.close();
       this.connect();
     }, PING_TIMEOUT);
+  }
+
+  setPongHandler () {
+    this.on('message', (data) => {
+      JSON.parse(data).op === 'pong' && this.clearPingTimeout();
+    });
   }
 
   clearPingInterval () {

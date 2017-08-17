@@ -90,8 +90,6 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
       MyWallet.wallet.txList._transactions.forEach(up);
     }
     WalletStore.sendEvent('on_block');
-  } else if (obj.op === 'pong') {
-    MyWallet.ws.clearPingTimeout();
   } else if (obj.op === 'email_verified') {
     MyWallet.wallet.accountInfo.isEmailVerified = Boolean(obj.x);
     WalletStore.sendEvent('on_email_verified', obj.x);
