@@ -1,7 +1,7 @@
 
 let proxyquire = require('proxyquireify')(require);
-let unspent = require('./data/unspent-outputs');
-let fees = require('./data/fee-data');
+let unspent = require('./__data__/unspent-outputs');
+let fees = require('./__data__/fee-data');
 let exchangeMock = require('./__mocks__/bitcoin-exchange-client.mock');
 
 let MyWallet = {
