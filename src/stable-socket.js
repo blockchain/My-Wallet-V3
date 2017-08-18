@@ -21,19 +21,19 @@ class StableSocket extends EventEmitter {
   }
 
   get isConnecting () {
-    return this._socket && this._socket.readyState === this._socket.CONNECTING;
+    return this._socket != null && this._socket.readyState === this._socket.CONNECTING;
   }
 
   get isOpen () {
-    return this._socket && this._socket.readyState === this._socket.OPEN;
+    return this._socket != null && this._socket.readyState === this._socket.OPEN;
   }
 
   get isClosing () {
-    return this._socket && this._socket.readyState === this._socket.CLOSING;
+    return this._socket != null && this._socket.readyState === this._socket.CLOSING;
   }
 
   get isClosed () {
-    return !this._socket || this._socket.readyState === this._socket.CLOSED;
+    return this._socket == null || this._socket.readyState === this._socket.CLOSED;
   }
 
   createSocket (url) {
