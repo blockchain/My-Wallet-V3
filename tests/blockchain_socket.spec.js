@@ -1,5 +1,5 @@
 describe('Websocket', () => {
-  let WebSocket = require('./mocks/ws.mock');
+  let WebSocket = require('./__mocks__/ws.mock');
   let BlockchainSocket = require('../src/blockchain-socket');
   let Helpers = require('../src/helpers');
 

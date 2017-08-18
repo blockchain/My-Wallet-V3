@@ -1,5 +1,5 @@
 let Bitcoin = require('bitcoinjs-lib');
-let exchangeMock = require('./mocks/bitcoin-exchange-client.mock');
+let exchangeMock = require('./__mocks__/bitcoin-exchange-client.mock');
 
 let proxyquire = require('proxyquireify')(require);
 

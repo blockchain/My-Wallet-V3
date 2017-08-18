@@ -48,7 +48,6 @@ module.exports = function (config) {
     files: [
       'node_modules/babel-polyfill/dist/polyfill.js',
       'node_modules/jasmine-es6-promise-matchers/jasmine-es6-promise-matchers.js',
-      'tests/mocks/*.js',
       'tests/**/*.spec.js'
     ]
   };
