@@ -1,20 +1,11 @@
 describe('Websocket', () => {
+  let WebSocket = require('./mocks/ws.mock');
   let BlockchainSocket = require('../src/blockchain-socket');
   let Helpers = require('../src/helpers');
 
   describe('instance', () => {
     let ws;
-    let createSocket = (url) => ({
-      on (event, callback) {},
-      send (message) {},
-      close () {},
-      readyState: 1,
-      CONNECTING: 0,
-      OPEN: 1,
-      CLOSING: 2,
-      CLOSED: 3,
-      url
-    });
+    let createSocket = (url) => new WebSocket(url);
 
     beforeEach(() => {
       ws = new BlockchainSocket();
