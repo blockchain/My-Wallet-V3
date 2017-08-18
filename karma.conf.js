@@ -76,6 +76,7 @@ module.exports = function (config) {
       'tests/exchange_delegate_spec.js',
       'tests/labels_spec.js',
       'tests/address_hd_spec.js',
+      'tests/stable_socket.spec.js',
       'tests/eth/*.spec.js',
       'tests/shift/*.spec.js'
     ]
