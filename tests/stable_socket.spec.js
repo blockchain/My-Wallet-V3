@@ -110,7 +110,7 @@ describe('StableSocket', () => {
         ws.connect()
         spyOn(ws._socket, 'send')
         ws._socket.readyState = 0
-        spyOn(ws, 'on').and.callFake((_, cb) => { ws._socket.readyState = 1; cb() })
+        ws._socket.on.and.callFake((_, cb) => { ws._socket.readyState = 1; cb() })
         ws.send(message)
         expect(ws._socket.send).toHaveBeenCalledWith(message)
       })

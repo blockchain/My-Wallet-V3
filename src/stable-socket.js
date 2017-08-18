@@ -56,7 +56,7 @@ class StableSocket extends EventEmitter {
 
   send (data) {
     if (!Helpers.tor() && this.isOpen) this._socket.send(data);
-    else if (this.isConnecting) this.on('open', () => this.send(data));
+    else if (this.isConnecting) this._socket.on('open', () => this.send(data));
     return this;
   }
 

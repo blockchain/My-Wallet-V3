@@ -178,7 +178,6 @@ class EthWallet {
         this._accounts = ethereum.accounts.map(constructAccount);
         this._txNotes = ethereum.tx_notes || {};
         this._lastTx = ethereum.last_tx;
-        this.activeAccounts.forEach(a => this._socket.subscribeToAccount(a));
         if (ethereum.legacy_account) {
           this._legacyAccount = constructAccount(ethereum.legacy_account);
         }
@@ -248,7 +247,10 @@ class EthWallet {
   connect (wsUrl) {
     if (this._socket) return;
     this._socket = new EthSocket(wsUrl);
-    this._socket.subscribeToBlocks(this);
+    this._socket.on('open', () => {
+      this._socket.subscribeToBlocks(this);
+      this.activeAccounts.forEach(a => this._socket.subscribeToAccount(a));
+    });
   }
 
   updateTxs () {
