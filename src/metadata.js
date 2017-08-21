@@ -85,7 +85,6 @@ Metadata.message = curry(
   }
 );
 
-// Metadata.magic :: Buffer -> Buffer -> Buffer
 Metadata.magic = curry(
   function (payload, prevMagic) {
     const msg = this.message(payload, prevMagic);

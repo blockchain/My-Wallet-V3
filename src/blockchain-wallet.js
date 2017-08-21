@@ -21,6 +21,8 @@ var AccountInfo = require('./account-info');
 var Metadata = require('./metadata');
 var constants = require('./constants');
 var Payment = require('./payment');
+var SharedMetadata = require('./sharedMetadata');
+var Contacts = require('./contacts');
 var Labels = require('./labels');
 var EthWallet = require('./eth/eth-wallet');
 var ShapeShift = require('./shift');
@@ -91,6 +93,7 @@ function Wallet (object) {
   this._latestBlock = null;
   this._accountInfo = null;
   this._external = null;
+  this._contacts = null;
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -240,6 +243,10 @@ Object.defineProperties(Wallet.prototype, {
   'external': {
     configurable: false,
     get: function () { return this._external; }
+  },
+  'contacts': {
+    configurable: false,
+    get: function () { return this._contacts; }
   },
   'isEncryptionConsistent': {
     configurable: false,
@@ -848,6 +855,18 @@ Wallet.prototype.fetchAccountInfo = function () {
   });
 };
 
+Wallet.prototype.loadContacts = function () {
+  if (this.isDoubleEncrypted === true || !this.isUpgradedToHD) {
+    return Promise.resolve();
+  } else {
+    var masterhdnode = this.hdwallet.getMasterHDNode();
+    this._contacts = new Contacts(masterhdnode);
+    const signature = this._contacts._sharedMetadata.signWithMDID(this._guid);
+    this.MDIDregistration('register-mdid', signature.toString('base64'));
+    return this._contacts.fetch();
+  }
+};
+
 Wallet.prototype.metadata = function (typeId) {
   return Metadata.fromMetadataHDNode(this._metadataHDNode, typeId);
 };
@@ -939,6 +958,18 @@ Wallet.prototype.saveGUIDtoMetadata = function () {
 
 Wallet.prototype.createPayment = function (initialState) {
   return new Payment(this, initialState);
+};
+
+Wallet.prototype.MDIDregistration = function (method, signedMDID) {
+  // method: register-mdid / unregister-mdid
+  var data = {
+    guid: this._guid,
+    sharedKey: this._sharedKey,
+    method: method,
+    payload: signedMDID,
+    length: signedMDID.length
+  };
+  return API.request('POST', 'wallet', data);
 };
 
 Wallet.prototype.cacheMetadataKey = function (secondPassword) {
