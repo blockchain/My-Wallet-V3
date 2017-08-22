@@ -18,6 +18,7 @@ class EthWallet {
     this._accounts = [];
     this._txNotes = {};
     this._latestBlock = null;
+    this._lastTx = null;
   }
 
   get wei () {
@@ -50,6 +51,10 @@ class EthWallet {
 
   get latestBlock () {
     return this._latestBlock;
+  }
+
+  get lastTx () {
+    return this._lastTx;
   }
 
   get defaults () {
@@ -114,6 +119,11 @@ class EthWallet {
     this.sync();
   }
 
+  setLastTx (tx) {
+    this._lastTx = tx;
+    this.sync();
+  }
+
   setHasSeen (hasSeen) {
     this._hasSeen = hasSeen;
     this.sync();
@@ -140,6 +150,7 @@ class EthWallet {
         this._defaultAccountIdx = ethereum.default_account_idx;
         this._accounts = ethereum.accounts.map(construct(EthAccount));
         this._txNotes = ethereum.tx_notes || {};
+        this._lastTx = ethereum.last_tx;
         this.activeAccounts.forEach(a => this._socket.subscribeToAccount(a));
       }
     });
@@ -155,7 +166,8 @@ class EthWallet {
       has_seen: this._hasSeen,
       default_account_idx: this._defaultAccountIdx,
       accounts: this._accounts,
-      tx_notes: this._txNotes
+      tx_notes: this._txNotes,
+      last_tx: this._lastTx
     };
   }
 
