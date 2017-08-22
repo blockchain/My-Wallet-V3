@@ -5,6 +5,8 @@ var assert = require('assert');
 var Helpers = require('./helpers');
 var KeyRing = require('./keyring');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
+var API = require('./api');
+var Transaction = require('./transaction');
 var constants = require('./constants');
 
 // HDAccount Class
@@ -287,10 +289,23 @@ HDAccount.prototype.setLabel = function (receiveIndex, label) {
   }
 
   labelEntry.label = label;
+  MyWallet.syncWallet();
 };
 
 HDAccount.prototype.removeLabel = function (receiveIndex) {
   let labels = this._address_labels;
   let labelEntry = labels.find((label) => label.index === receiveIndex);
   labels.splice(labels.indexOf(labelEntry), 1);
+};
+
+HDAccount.prototype.getAvailableBalance = function (feeType) {
+  feeType = (feeType === 'regular' || feeType === 'priority') ? feeType : 'regular';
+  let feesP = API.getFees();
+  let coinsP = API.getUnspent([this.extendedPublicKey]).then(Helpers.pluck('unspent_outputs'));
+  return Promise.all([feesP, coinsP]).then(([fees, coins]) => {
+    let fee = Helpers.toFeePerKb(fees[feeType]);
+    let usableCoins = Transaction.filterUsableCoins(coins, fee);
+    let amount = Transaction.maxAvailableAmount(usableCoins, fee).amount;
+    return { amount, fee: fees[feeType] };
+  });
 };

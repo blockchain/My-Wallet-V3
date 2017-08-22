@@ -132,7 +132,7 @@ let WalletCrypto = {
 let stubs = {
   'bitcoin-exchange-client': exchangeMock,
   './wallet': MyWallet,
-  './rng': RNG,
+  './rng.js': RNG,
   './api': API,
   './import-export': ImportExport,
   './wallet-crypto': WalletCrypto,

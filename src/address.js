@@ -3,7 +3,7 @@
 module.exports = Address;
 
 var Base58 = require('bs58');
-var RNG = require('./rng');
+var RNG = require('./rng.js');
 var API = require('./api');
 var Bitcoin = require('bitcoinjs-lib');
 var Helpers = require('./helpers');

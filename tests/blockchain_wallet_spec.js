@@ -175,13 +175,13 @@ describe('Blockchain-Wallet', () => {
       './wallet': MyWallet,
       './labels': Labels,
       './external': External,
-      './address': Address,
+      './address.js': Address,
       './helpers': Helpers,
       './hd-wallet': HDWallet,
       './wallet-store': WalletStore,
       './blockchain-settings-api': BlockchainSettingsAPI,
       'bip39': BIP39,
-      './rng': RNG
+      './rng.js': RNG
     };
 
     Wallet = proxyquire('../src/blockchain-wallet', stubs);

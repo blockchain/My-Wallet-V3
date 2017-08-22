@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.33.9",
+  "version": "3.34.4",
   "description": "Blockchain.info JavaScript Wallet",
   "homepage": "https://github.com/blockchain/my-wallet-v3",
   "bugs": {
@@ -39,7 +39,12 @@
     "ws": "./src/ws-browser.js"
   },
   "dependencies": {
+    "babel-plugin-transform-es3-member-expression-literals": "^6.22.0",
+    "babel-plugin-transform-es3-property-literals": "^6.22.0",
+    "babel-plugin-transform-object-rest-spread": "^6.23.0",
+    "babel-preset-stage-0": "^6.24.1",
     "bigi": "1.4.*",
+    "bignumber.js": "^4.0.2",
     "bip39": "2.1.*",
     "bitcoin-coinify-client": "^0.6.4",
     "bitcoin-exchange-client": "^0.4.3",
@@ -49,6 +54,9 @@
     "bs58": "2.0.*",
     "core-js": "^2.4.1",
     "es6-promise": "^3.0.2",
+    "ethereumjs-tx": "^1.3.1",
+    "ethereumjs-util": "^5.1.2",
+    "ethereumjs-wallet": "^0.6.0",
     "isomorphic-fetch": "^2.2.1",
     "pbkdf2": "^3.0.12",
     "ramda": "^0.22.1",
