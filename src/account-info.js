@@ -10,6 +10,7 @@ function AccountInfo (object) {
 
   this.mobile = object.sms_number;
 
+  this._stateCodeGuess = object.state;
   this._countryCodeGuess = object.country_code; // Country guess by the backend
   this._dialCode = object.dial_code; // Dialcode guess by the backend
 
