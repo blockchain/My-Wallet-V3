@@ -230,18 +230,18 @@ HDAccount.prototype.receiveAddressAtIndex = function (index) {
 
 HDAccount.prototype.encrypt = function (cipher) {
   if (!this._xpriv) return this;
-  var xpriv = cipher ? cipher(this._xpriv) : this._xpriv;
-  if (!xpriv) { throw new Error('Error Encoding account extended private key'); }
-  this._temporal_xpriv = xpriv;
-  return this;
+  cipher(this._xpriv).then((xpriv) => {
+    if (!xpriv) { throw new Error('Error Encoding account extended private key'); }
+    this._temporal_xpriv = xpriv;
+  });
 };
 
 HDAccount.prototype.decrypt = function (cipher) {
   if (!this._xpriv) return this;
-  var xpriv = cipher ? cipher(this._xpriv) : this._xpriv;
-  if (!xpriv) { throw new Error('Error Decoding account extended private key'); }
-  this._temporal_xpriv = xpriv;
-  return this;
+  cipher(this._xpriv).then((xpriv) => {
+    if (!xpriv) { throw new Error('Error Decoding account extended private key'); }
+    this._temporal_xpriv = xpriv;
+  });
 };
 
 HDAccount.prototype.persist = function () {

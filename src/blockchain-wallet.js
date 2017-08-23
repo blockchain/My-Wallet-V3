@@ -563,68 +563,64 @@ Wallet.prototype.validateSecondPassword = function (inputString) {
   return passwordHash === this._dpasswordhash;
 };
 
-Wallet.prototype.encrypt = function (pw, success, error, encrypting, syncing) {
+Wallet.prototype.encrypt = function (pw, success, error, encrypting, syncing, progress) {
   encrypting && encrypting();
-  try {
-    if (!this.isDoubleEncrypted) {
-      var g = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, 'enc');
-      var f = function (element) { element.encrypt(g); };
-      this.keys.forEach(f);
-      this._hd_wallets.forEach(f);
+  if (this.isDoubleEncrypted) {
+    // already encrypted
+    return this;
+  }
+
+  var cipher = WalletCrypto.cipherFunctionAsync(pw, this._sharedKey, this._pbkdf2_iterations, 'enc');
+  var f = function (element) { element.encrypt(cipher.cipher); };
+  this.keys.forEach(f);
+  this._hd_wallets.forEach(f);
+
+  cipher.start((data) => progress && progress(data)).then(() => {
+    // if encryption finished well, then save
+    this._dpasswordhash = WalletCrypto.hashNTimes(this._sharedKey + pw, this._pbkdf2_iterations);
+    this._double_encryption = true;
+    var p = function (element) { element.persist(); };
+    this.keys.forEach(p);
+    this._hd_wallets.forEach(p);
+    syncing && syncing();
+    if (success) {
+      MyWallet.syncWallet(success.bind(undefined, this));
     } else {
-      // already encrypted
-      return this;
+      MyWallet.syncWallet();
     }
-  } catch (e) {
-    console.log('wallet encryption failure');
-    error && error(e);
-    return false;
-  }
-  // if encryption finished well, then save
-  this._dpasswordhash = WalletCrypto.hashNTimes(this._sharedKey + pw, this._pbkdf2_iterations);
-  this._double_encryption = true;
-  var p = function (element) { element.persist(); };
-  this.keys.forEach(p);
-  this._hd_wallets.forEach(p);
-  syncing && syncing();
-  if (success) {
-    MyWallet.syncWallet(success.bind(undefined, this));
-  } else {
-    MyWallet.syncWallet();
-  }
-  return this;
+  }).catch((err) => {
+    error && error(err);
+  });
 };
 
-Wallet.prototype.decrypt = function (pw, success, error, decrypting, syncing) {
+Wallet.prototype.decrypt = function (pw, success, error, decrypting, syncing, progress) {
   decrypting && decrypting();
-  try {
-    if (this.isDoubleEncrypted) {
-      var g = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, 'dec');
-      var f = function (element) { element.decrypt(g); };
-      this.keys.forEach(f);
-      this._hd_wallets.forEach(f);
+  if (!this.isDoubleEncrypted) {
+    // already decrypted
+    return this;
+  }
+
+  var cipher = WalletCrypto.cipherFunctionAsync(pw, this._sharedKey, this._pbkdf2_iterations, 'dec');
+  var f = function (element) { element.decrypt(cipher.cipher); };
+  this.keys.forEach(f);
+  this._hd_wallets.forEach(f);
+
+  cipher.start((data) => progress && progress(data)).then(() => {
+    // if encryption finished well, then save
+    this._dpasswordhash = undefined;
+    this._double_encryption = false;
+    var p = function (element) { element.persist(); };
+    this.keys.forEach(p);
+    this._hd_wallets.forEach(p);
+    syncing && syncing();
+    if (success) {
+      MyWallet.syncWallet(success.bind(undefined, this));
     } else {
-      // already decrypted
-      return this;
+      MyWallet.syncWallet();
     }
-  } catch (e) {
-    console.log('wallet decryption failure');
-    error && error(e);
-    return false;
-  }
-  // if encryption finished well, then save
-  this._dpasswordhash = undefined;
-  this._double_encryption = false;
-  var p = function (element) { element.persist(); };
-  this.keys.forEach(p);
-  this._hd_wallets.forEach(p);
-  syncing && syncing();
-  if (success) {
-    MyWallet.syncWallet(success.bind(undefined, this));
-  } else {
-    MyWallet.syncWallet();
-  }
-  return this;
+  }).catch((err) => {
+    error && error(err);
+  });
 };
 
 Wallet.reviver = function (k, v) {

@@ -274,18 +274,18 @@ Address.prototype.signMessage = function (message, secondPassword) {
 
 Address.prototype.encrypt = function (cipher) {
   if (!this._priv) return this;
-  var priv = cipher ? cipher(this._priv) : this._priv;
-  if (!priv) { throw new Error('Error Encoding key'); }
-  this._temporal_priv = priv;
-  return this;
+  cipher(this._priv).then((priv) => {
+    if (!priv) { throw new Error('Error Encoding key'); }
+    this._temporal_priv = priv;
+  });
 };
 
 Address.prototype.decrypt = function (cipher) {
   if (!this._priv) return this;
-  var priv = cipher ? cipher(this._priv) : this._priv;
-  if (!priv) { throw new Error('Error Decoding key'); }
-  this._temporal_priv = priv;
-  return this;
+  cipher(this._priv).then((priv) => {
+    if (!priv) { throw new Error('Error Decoding key'); }
+    this._temporal_priv = priv;
+  });
 };
 
 Address.prototype.persist = function () {

@@ -246,21 +246,31 @@ HDWallet.prototype.activeAccount = function (xpub) {
 HDWallet.prototype.encrypt = function (cipher) {
   function f (acc) { acc.encrypt(cipher); }
   this._accounts.forEach(f);
-  this._temporal_seedHex = cipher(this._seedHex);
-  this._temporal_bip39Password = this._bip39Password === ''
-   ? this._bip39Password
-   : cipher(this._bip39Password);
-  return this;
+  cipher(this._seedHex).then((seedHex) => {
+    this._temporal_seedHex = seedHex;
+  });
+  if (this._bip39Password !== '') {
+    cipher(this._bip39Password).then((bip39Password) => {
+      this._temporal_bip39Password = bip39Password;
+    });
+  } else {
+    this._temporal_bip39Password = '';
+  }
 };
 
 HDWallet.prototype.decrypt = function (cipher) {
   function f (acc) { acc.decrypt(cipher); }
   this._accounts.forEach(f);
-  this._temporal_seedHex = cipher(this._seedHex);
-  this._temporal_bip39Password = this._bip39Password === ''
-   ? this._bip39Password
-   : cipher(this._bip39Password);
-  return this;
+  cipher(this._seedHex).then((seedHex) => {
+    this._temporal_seedHex = seedHex;
+  });
+  if (this._bip39Password !== '') {
+    cipher(this._bip39Password).then((bip39Password) => {
+      this._temporal_bip39Password = bip39Password;
+    });
+  } else {
+    this._temporal_bip39Password = '';
+  }
 };
 
 HDWallet.prototype.persist = function () {
