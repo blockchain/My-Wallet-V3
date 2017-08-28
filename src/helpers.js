@@ -138,11 +138,22 @@ Helpers.isEmptyObject = function (x) {
 Helpers.isEmptyArray = function (x) {
   return Array.isArray(x) && x.length === 0;
 };
+
+Helpers.defer = function () {
+  let deferred = {};
+  deferred.promise = new Promise((resolve, reject) => {
+    deferred.resolve = resolve;
+    deferred.reject = reject;
+  });
+  return deferred;
+};
+
 // Return an async version of f that it will run after miliseconds
 // no matter how many times you call the new function, it will run only once
 Helpers.asyncOnce = function (f, milliseconds, before) {
   var timer = null;
   var oldArguments = [];
+  var deferred = null;
 
   trigger.cancel = function () {
     clearTimeout(timer);
@@ -151,15 +162,25 @@ Helpers.asyncOnce = function (f, milliseconds, before) {
   function trigger () {
     trigger.cancel();
     before && before();
+    deferred = deferred || Helpers.defer();
     var myArgs = [];
+    var promise = deferred.promise;
     // this is needed because arguments is not an 'Array' instance
     for (var i = 0; i < arguments.length; i++) { myArgs[i] = arguments[i]; }
     myArgs = Helpers.zipLong(Helpers.maybeCompose, myArgs, oldArguments);
     oldArguments = myArgs;
     timer = setTimeout(function () {
-      f.apply(this, myArgs);
-      oldArguments = [];
+      try {
+        let result = f.apply(this, myArgs);
+        deferred.resolve(result);
+      } catch (e) {
+        deferred.reject(e);
+      } finally {
+        oldArguments = [];
+        deferred = null;
+      }
     }, milliseconds);
+    return promise;
   }
 
   return trigger;
