@@ -21,12 +21,12 @@ var AccountInfo = require('./account-info');
 var Metadata = require('./metadata');
 var constants = require('./constants');
 var Payment = require('./payment');
-var SharedMetadata = require('./sharedMetadata');
 var Contacts = require('./contacts');
 var Labels = require('./labels');
 var EthWallet = require('./eth/eth-wallet');
 var ShapeShift = require('./shift');
 var Bitcoin = require('bitcoinjs-lib');
+var EthSocket = require('./eth/eth-socket');
 
 // Wallet
 
@@ -904,7 +904,6 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
 
   var fetchEthWallet = function () {
     this._eth = EthWallet.fromBlockchainWallet(this);
-    this._eth.connect(MyWallet.ws.wsUrl.replace('/inv', '/eth/inv'));
     return this._eth.fetch();
   };
 
@@ -929,6 +928,11 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
   }
 
   return Promise.all(promises);
+};
+
+Wallet.prototype.useEthSocket = function (socket) {
+  socket = socket || new EthSocket(MyWallet.ws.wsUrl.replace('/inv', '/eth/inv'));
+  this._eth.connect(socket);
 };
 
 Wallet.prototype.incStats = function () {
