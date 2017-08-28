@@ -10,6 +10,7 @@ class EthAccount {
     this._addr = ethUtil.toChecksumAddress(obj.priv ? EthAccount.privateKeyToAddress(this._priv) : obj.addr);
     this.label = obj.label;
     this.archived = obj.archived || false;
+    this._correct = Boolean(obj.correct);
     this._wei = null;
     this._balance = null;
     this._approximateBalance = null;
@@ -23,6 +24,10 @@ class EthAccount {
 
   get privateKey () {
     return this._priv;
+  }
+
+  get isCorrect () {
+    return this._correct;
   }
 
   get wei () {
@@ -39,6 +44,10 @@ class EthAccount {
 
   get nonce () {
     return this._nonce;
+  }
+
+  markAsCorrect () {
+    this._correct = true;
   }
 
   getApproximateBalance () {
@@ -101,6 +110,7 @@ class EthAccount {
     return {
       label: this.label,
       archived: this.archived,
+      correct: this.isCorrect,
       addr: this.address
     };
   }

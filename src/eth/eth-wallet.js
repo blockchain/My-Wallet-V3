@@ -46,6 +46,10 @@ class EthWallet {
     return this._accounts;
   }
 
+  get legacyAccount () {
+    return this._legacyAccount;
+  }
+
   get activeAccounts () {
     return this.accounts.filter(a => !a.archived);
   }
@@ -98,6 +102,7 @@ class EthWallet {
     let accountNode = this.deriveChild(this.accounts.length, secPass);
     let account = EthAccount.fromWallet(accountNode.getWallet());
     account.label = label || EthAccount.defaultLabel(this.accounts.length);
+    account.markAsCorrect();
     this._accounts.push(account);
     this._socket.subscribeToAccount(account);
     this.sync();
@@ -280,10 +285,66 @@ class EthWallet {
     return EthHd.fromMasterSeed(seed).derivePath(DERIVATION_PATH).deriveChild(index);
   }
 
+  needsTransitionFromLegacy () {
+    let shouldSweepAccount = (account) => (
+      account.fetchBalance()
+        .then(() => account.getAvailableBalance())
+        .then(({ amount }) => amount > 0)
+    );
+
+    if (this.defaultAccount && !this.defaultAccount.isCorrect) {
+      /*
+        If user has an eth account and the account is not marked as
+        correct, check if they should transition from legacy and if
+        they should sweep.
+      */
+      return shouldSweepAccount(this.defaultAccount)
+        .then(shouldSweep => ({ needsTransition: true, shouldSweep }));
+    } else if (this.legacyAccount) {
+      /*
+        If user has a legacy eth account saved, they do not need to
+        transition, but should still check if the account needs to be
+        swept in case funds were received after previous transition.
+      */
+      return shouldSweepAccount(this.legacyAccount)
+        .then(shouldSweep => ({ needsTransition: false, shouldSweep }));
+    } else {
+      /*
+        Default account is up to date and there is no legacy account,
+        do nothing.
+      */
+      return Promise.resolve({ needsTransition: false, shouldSweep: false });
+    }
+  }
+
   transitionFromLegacy (secPass) {
     this._legacyAccount = this.getAccount(0);
     this._accounts = [];
     this.createAccount(void 0, secPass);
+    return this.sync();
+  }
+
+  sweepLegacyAccount (secPass, { gasPrice = EthTxBuilder.GAS_PRICE, gasLimit = EthTxBuilder.GAS_LIMIT } = {}) {
+    if (!this.defaultAccount) {
+      return Promise.reject(new Error('No receiving account to sweep to'));
+    }
+    if (!this.legacyAccount) {
+      return Promise.reject(new Error('Must transition from Beta account first'));
+    }
+    return this.legacyAccount.getAvailableBalance().then(({ amount }) => {
+      if (amount > 0) {
+        let payment = this.legacyAccount.createPayment();
+        let privateKey = this.getPrivateKeyForLegacyAccount(secPass);
+        payment.setGasPrice(gasPrice);
+        payment.setGasLimit(gasLimit);
+        payment.setTo(this.defaultAccount.address);
+        payment.setSweep();
+        payment.sign(privateKey);
+        return payment.publish();
+      } else {
+        throw new Error('No funds in account to sweep');
+      }
+    });
   }
 
   /* end legacy */
