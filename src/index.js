@@ -51,5 +51,6 @@ module.exports = {
   SharedMetadata: require('./sharedMetadata'),
   Contacts: require('./contacts'),
   SharedMetadataAPI: require('./sharedMetadataAPI'),
+  EthSocket: require('./eth/eth-socket'),
   R: require('ramda')
 };
