@@ -1,6 +1,6 @@
 const EthHd = require('ethereumjs-wallet/hdkey');
 const { construct } = require('ramda');
-const { isPositiveNumber } = require('../helpers');
+const { isPositiveNumber, asyncOnce } = require('../helpers');
 const API = require('../api');
 const EthTxBuilder = require('./eth-tx-builder');
 const EthAccount = require('./eth-account');
@@ -19,6 +19,7 @@ class EthWallet {
     this._txNotes = {};
     this._latestBlock = null;
     this._lastTx = null;
+    this.sync = asyncOnce(this.sync.bind(this), 250);
   }
 
   get wei () {
