@@ -1,3 +1,5 @@
+const BIP39 = require('bip39');
+const Bitcoin = require('bitcoinjs-lib');
 const EthWallet = require('../../src/eth/eth-wallet');
 const EthAccount = require('../../src/eth/eth-account');
 const EthSocket = require('../../src/eth/eth-socket');
@@ -11,10 +13,24 @@ class MetadataMock {
   }
 }
 
+// cache constants for test performance
+const seedHex = '17eb336a2a3bc73dd4d8bd304830fe32';
+const mnemonic = BIP39.entropyToMnemonic(seedHex);
+const masterhex = BIP39.mnemonicToSeed(mnemonic);
+const masterHdNode = Bitcoin.HDNode.fromSeedBuffer(masterhex);
+
 class BlockchainWalletMock {
   constructor () {
     this.hdwallet = {
-      seedHex: 'b90ea8ac99ff3d3368eca05d061f068cc66d42636d6558940a6d4275000c89b6d44a83b43c9798fc06f6213f424438a086ed14e3a7ce9d2841c2f06f5297da51'
+      // mnemonic: 'blood flower surround federal round page fat bless core dose display govern',
+      // masterSeedHex: '265c86692394fab95d0efc4385b89679d8daef5c9975e1f2b1f1eb4300bc10ad81d4d117c323591d543f6e54aa9d4560cad424bc66bb2bb61dc14285a508dad7',
+      seedHex,
+      getMasterHex (seedHex, cipher = x => x) {
+        return cipher(masterhex);
+      },
+      getMasterHDNode (cipher = x => x) {
+        return cipher(masterHdNode);
+      }
     };
     this.isDoubleEncrypted = false;
   }
@@ -324,7 +340,7 @@ describe('EthWallet', () => {
     });
 
     describe('.getPrivateKeyForAccount', () => {
-      const correctKey = '6c7a48436661d678c17dc4ef39862767c3d5cb54b3d22dd065c4b963e1e28924';
+      const correctKey = '19ee4f0ce2f780022b4bb14f489e5c9feb281d24d26a68d576851437b941a596';
 
       it('should get the correct private key', () => {
         let priv = eth.getPrivateKeyForAccount(eth.defaultAccount);
@@ -344,6 +360,32 @@ describe('EthWallet', () => {
       });
     });
 
+    describe('.getPrivateKeyForLegacyAccount', () => {
+      const legacyKey = '5f72fb06a622711c6480e4fea91993eed4bb7b5834da35033a0400261528185e';
+
+      beforeEach(() => {
+        let addr = EthAccount.privateKeyToAddress('0x' + legacyKey);
+        eth._legacyAccount = new EthAccount({ addr });
+      });
+
+      it('should get the correct private key', () => {
+        let priv = eth.getPrivateKeyForLegacyAccount();
+        expect(priv.toString('hex')).toEqual(legacyKey);
+      });
+
+      it('should get the correct private key when encrypted', () => {
+        wallet.isDoubleEncrypted = true;
+        let priv = eth.getPrivateKeyForLegacyAccount('correct');
+        expect(priv.toString('hex')).toEqual(legacyKey);
+      });
+
+      it('should fail when encrypted and passed the wrong secpass', () => {
+        wallet.isDoubleEncrypted = true;
+        let get = () => eth.getPrivateKeyForLegacyAccount('wrong');
+        expect(get).toThrow();
+      });
+    });
+
     describe('.deriveChild', () => {
       it('should fail if wallet is encrypted and pw is missing', () => {
         wallet.isDoubleEncrypted = true;
@@ -358,7 +400,7 @@ describe('EthWallet', () => {
         eth.setDefaultAccountIndex(1);
         eth.setTxNote('<hash>', 'my note');
         let json = JSON.stringify(eth.toJSON());
-        expect(json).toEqual('{"has_seen":false,"default_account_idx":1,"accounts":[{"label":"My Ether Wallet","archived":false,"addr":"0xd9Ab226e437c19cf0B6b3B34D5F592C50D41C391"},{"label":"New","archived":false,"addr":"0x47ad7b2D7E194292CB53ba431aCf09D21220b955"}],"tx_notes":{"<hash>":"my note"},"last_tx":null}');
+        expect(json).toEqual('{"has_seen":false,"default_account_idx":1,"accounts":[{"label":"My Ether Wallet","archived":false,"addr":"0x5532f8B7d3f80b9a0892a6f5F665a77358544acD"},{"label":"New","archived":false,"addr":"0x91C29C839c8d2B01f249e64DAB3B70DDdE896277"}],"tx_notes":{"<hash>":"my note"},"last_tx":null}');
       });
     });
   });

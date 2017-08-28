@@ -145,13 +145,17 @@ class EthWallet {
   fetch () {
     return this._metadata.fetch().then((data) => {
       if (data) {
+        let constructAccount = construct(EthAccount);
         let { ethereum } = data;
         this._hasSeen = ethereum.has_seen;
         this._defaultAccountIdx = ethereum.default_account_idx;
-        this._accounts = ethereum.accounts.map(construct(EthAccount));
+        this._accounts = ethereum.accounts.map(constructAccount);
         this._txNotes = ethereum.tx_notes || {};
         this._lastTx = ethereum.last_tx;
         this.activeAccounts.forEach(a => this._socket.subscribeToAccount(a));
+        if (ethereum.legacy_account) {
+          this._legacyAccount = constructAccount(ethereum.legacy_account);
+        }
       }
     });
   }
@@ -166,6 +170,7 @@ class EthWallet {
       has_seen: this._hasSeen,
       default_account_idx: this._defaultAccountIdx,
       accounts: this._accounts,
+      legacy_account: this._legacyAccount,
       tx_notes: this._txNotes,
       last_tx: this._lastTx
     };
@@ -234,6 +239,38 @@ class EthWallet {
 
   deriveChild (index, secPass) {
     let w = this._wallet;
+    let cipher;
+    if (w.isDoubleEncrypted) {
+      if (!secPass) throw new Error('Second password required to derive ethereum wallet');
+      else cipher = w.createCipher(secPass);
+    }
+    let masterHdNode = w.hdwallet.getMasterHDNode(cipher);
+    let accountNode = masterHdNode
+      .deriveHardened(44)
+      .deriveHardened(60)
+      .deriveHardened(0)
+      .derive(0)
+      .derive(index);
+    return EthHd.fromExtendedKey(accountNode.toBase58());
+  }
+
+  /* start legacy */
+
+  getPrivateKeyForLegacyAccount (secPass) {
+    let account = this._legacyAccount;
+    if (!account) {
+      throw new Error('Wallet does not contain a beta account');
+    }
+    let wallet = this.deriveChildLegacy(0, secPass).getWallet();
+    let privateKey = wallet.getPrivateKey();
+    if (!account.isCorrectPrivateKey(privateKey)) {
+      throw new Error('Failed to derive correct private key');
+    }
+    return privateKey;
+  }
+
+  deriveChildLegacy (index, secPass) {
+    let w = this._wallet;
     if (w.isDoubleEncrypted && !secPass) {
       throw new Error('Second password required to derive ethereum wallet');
     }
@@ -241,6 +278,14 @@ class EthWallet {
     let seed = getSeedHex(w.hdwallet.seedHex);
     return EthHd.fromMasterSeed(seed).derivePath(DERIVATION_PATH).deriveChild(index);
   }
+
+  transitionFromLegacy (secPass) {
+    this._legacyAccount = this.getAccount(0);
+    this._accounts = [];
+    this.createAccount(void 0, secPass);
+  }
+
+  /* end legacy */
 
   static fromBlockchainWallet (wallet) {
     let metadata = wallet.metadata(METADATA_TYPE_ETH);
