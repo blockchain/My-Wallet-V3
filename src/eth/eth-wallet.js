@@ -368,7 +368,7 @@ class EthWallet {
     }
 
     let defaultAccountP = this.defaultAccount == null
-      ? new Promise(() => this.createAccount(void 0, secPass))
+      ? Promise.resolve().then(() => this.createAccount(void 0, secPass))
       : Promise.resolve();
 
     return defaultAccountP
