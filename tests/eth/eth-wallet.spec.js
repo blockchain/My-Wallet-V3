@@ -189,17 +189,20 @@ describe('EthWallet', () => {
 
     describe('.createAccount', () => {
       it('should create a new account', () => {
-        let account = eth.createAccount();
+        eth.createAccount();
+        let account = eth.getAccount(1);
         expect(account.label).toEqual('My Ether Wallet 2');
       });
 
       it('should create with a custom label', () => {
-        let account = eth.createAccount('Custom');
+        eth.createAccount('Custom');
+        let account = eth.getAccount(1);
         expect(account.label).toEqual('Custom');
       });
 
       it('should add the account to the wallet', () => {
-        let account = eth.createAccount();
+        eth.createAccount();
+        let account = eth.getAccount(1);
         expect(account).toEqual(eth.getAccount(1));
       });
 
