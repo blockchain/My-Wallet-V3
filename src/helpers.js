@@ -563,6 +563,14 @@ Helpers.delay = (time) => new Promise((resolve) => {
   setTimeout(resolve, time);
 });
 
+Helpers.dedup = (nested, prop) => (
+  nested.reduce(({ seen, result }, next) => {
+    let unseen = next.filter(x => !seen[x[prop]]);
+    unseen.forEach(x => { seen[x[prop]] = true; });
+    return { seen, result: result.concat(unseen) };
+  }, { seen: {}, result: [] }).result
+);
+
 const etherUnits = {
   kwei: new BigNumber(1e3),
   mwei: new BigNumber(1e6),

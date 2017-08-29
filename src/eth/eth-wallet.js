@@ -1,10 +1,11 @@
 const EthHd = require('ethereumjs-wallet/hdkey');
 const { construct } = require('ramda');
-const { isPositiveNumber, asyncOnce } = require('../helpers');
+const { isPositiveNumber, asyncOnce, dedup } = require('../helpers');
 const API = require('../api');
 const EthTxBuilder = require('./eth-tx-builder');
 const EthAccount = require('./eth-account');
 const EthSocket = require('./eth-socket');
+const EthWalletTx = require('./eth-wallet-tx');
 
 const METADATA_TYPE_ETH = 5;
 const DERIVATION_PATH = "m/44'/60'/0'/0";
@@ -54,6 +55,12 @@ class EthWallet {
     return this.accounts.filter(a => !a.archived);
   }
 
+  get activeAccountsWithLegacy () {
+    return this.legacyAccount
+      ? this.activeAccounts.concat(this.legacyAccount)
+      : this.activeAccounts;
+  }
+
   get latestBlock () {
     return this._latestBlock;
   }
@@ -67,6 +74,11 @@ class EthWallet {
       GAS_PRICE: EthTxBuilder.GAS_PRICE,
       GAS_LIMIT: EthTxBuilder.GAS_LIMIT
     };
+  }
+
+  get txs () {
+    let accounts = this.activeAccountsWithLegacy;
+    return dedup(accounts.map(a => a.txs), 'hash').sort(EthWalletTx.txTimeSort);
   }
 
   getApproximateBalance () {
@@ -183,17 +195,17 @@ class EthWallet {
   }
 
   fetchHistory () {
-    return Promise.all(this.activeAccounts.map(a => a.fetchHistory()))
+    return Promise.all(this.activeAccountsWithLegacy.map(a => a.fetchHistory()))
       .then(() => this.updateTxs())
       .then(() => this.getLatestBlock());
   }
 
   fetchBalance () {
-    return Promise.all(this.activeAccounts.map(a => a.fetchBalance()));
+    return Promise.all(this.activeAccountsWithLegacy.map(a => a.fetchBalance()));
   }
 
   fetchTransactions () {
-    return Promise.all(this.activeAccounts.map(a => a.fetchTransactions()))
+    return Promise.all(this.activeAccountsWithLegacy.map(a => a.fetchTransactions()))
       .then(() => this.updateTxs());
   }
 
@@ -230,7 +242,7 @@ class EthWallet {
   }
 
   updateTxs () {
-    this.activeAccounts.forEach(a => a.updateTxs(this));
+    this.activeAccountsWithLegacy.forEach(a => a.updateTxs(this));
   }
 
   getPrivateKeyForAccount (account, secPass) {
