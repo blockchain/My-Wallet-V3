@@ -337,10 +337,14 @@ class EthWallet {
   }
 
   transitionFromLegacy (secPass) {
-    this._legacyAccount = this.getAccount(0);
-    this._accounts = [];
-    this.createAccount(void 0, secPass);
-    return this.sync();
+    if (this.defaultAccount.isCorrect) {
+      return Promise.resolve();
+    } else {
+      this._legacyAccount = this.getAccount(0);
+      this._accounts = [];
+      this.createAccount(void 0, secPass);
+      return this.sync();
+    }
   }
 
   sweepLegacyAccount (secPass, { gasPrice = EthTxBuilder.GAS_PRICE, gasLimit = EthTxBuilder.GAS_LIMIT } = {}) {
