@@ -400,7 +400,7 @@ describe('EthWallet', () => {
         eth.setDefaultAccountIndex(1);
         eth.setTxNote('<hash>', 'my note');
         let json = JSON.stringify(eth.toJSON());
-        expect(json).toEqual('{"has_seen":false,"default_account_idx":1,"accounts":[{"label":"My Ether Wallet","archived":false,"addr":"0x5532f8B7d3f80b9a0892a6f5F665a77358544acD"},{"label":"New","archived":false,"addr":"0x91C29C839c8d2B01f249e64DAB3B70DDdE896277"}],"tx_notes":{"<hash>":"my note"},"last_tx":null}');
+        expect(json).toEqual('{"has_seen":false,"default_account_idx":1,"accounts":[{"label":"My Ether Wallet","archived":false,"correct":true,"addr":"0x5532f8B7d3f80b9a0892a6f5F665a77358544acD"},{"label":"New","archived":false,"correct":true,"addr":"0x91C29C839c8d2B01f249e64DAB3B70DDdE896277"}],"tx_notes":{"<hash>":"my note"},"last_tx":null}');
       });
     });
   });
