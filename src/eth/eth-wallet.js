@@ -82,7 +82,15 @@ class EthWallet {
   }
 
   getApproximateBalance () {
-    return this.defaultAccount ? this.defaultAccount.getApproximateBalance() : null;
+    if (!this.defaultAccount && !this.legacyAccount) return null;
+    let balance = 0;
+    if (this.defaultAccount) {
+      balance += parseFloat(this.defaultAccount.getApproximateBalance());
+    }
+    if (this.legacyAccount) {
+      balance += parseFloat(this.legacyAccount.getApproximateBalance());
+    }
+    return balance.toFixed(8);
   }
 
   getAccount (index) {
@@ -117,8 +125,7 @@ class EthWallet {
     account.markAsCorrect();
     this._accounts.push(account);
     this._socket.subscribeToAccount(account);
-    this.sync();
-    return account;
+    return this.sync();
   }
 
   getTxNote (hash) {
@@ -326,60 +333,60 @@ class EthWallet {
     if (this.defaultAccount && !this.defaultAccount.isCorrect) {
       /*
         If user has an eth account and the account is not marked as
-        correct, check if they should transition from legacy and if
-        they should sweep.
+        correct, check if they should sweep.
       */
-      return shouldSweepAccount(this.defaultAccount)
-        .then(shouldSweep => ({ needsTransition: true, shouldSweep }));
+      return shouldSweepAccount(this.defaultAccount);
     } else if (this.legacyAccount) {
       /*
-        If user has a legacy eth account saved, they do not need to
-        transition, but should still check if the account needs to be
-        swept in case funds were received after previous transition.
+        If user has a legacy eth account saved, we should still check
+        if the account needs to be swept in case funds were received after
+        the previous transition.
       */
-      return shouldSweepAccount(this.legacyAccount)
-        .then(shouldSweep => ({ needsTransition: false, shouldSweep }));
+      return shouldSweepAccount(this.legacyAccount);
     } else {
       /*
         Default account is up to date and there is no legacy account,
         do nothing.
       */
-      return Promise.resolve({ needsTransition: false, shouldSweep: false });
+      return Promise.resolve(false);
     }
   }
 
-  transitionFromLegacy (secPass) {
-    if (this.defaultAccount.isCorrect) {
-      return Promise.resolve();
-    } else {
+  transitionFromLegacy () {
+    if (this.defaultAccount && !this.defaultAccount.isCorrect) {
       this._legacyAccount = this.getAccount(0);
       this._accounts = [];
-      this.createAccount(void 0, secPass);
       return this.sync();
+    } else {
+      return Promise.resolve();
     }
   }
 
   sweepLegacyAccount (secPass, { gasPrice = EthTxBuilder.GAS_PRICE, gasLimit = EthTxBuilder.GAS_LIMIT } = {}) {
-    if (!this.defaultAccount) {
-      return Promise.reject(new Error('No receiving account to sweep to'));
-    }
     if (!this.legacyAccount) {
       return Promise.reject(new Error('Must transition from Beta account first'));
     }
-    return this.legacyAccount.getAvailableBalance().then(({ amount }) => {
-      if (amount > 0) {
-        let payment = this.legacyAccount.createPayment();
-        let privateKey = this.getPrivateKeyForLegacyAccount(secPass);
-        payment.setGasPrice(gasPrice);
-        payment.setGasLimit(gasLimit);
-        payment.setTo(this.defaultAccount.address);
-        payment.setSweep();
-        payment.sign(privateKey);
-        return payment.publish();
-      } else {
-        throw new Error('No funds in account to sweep');
-      }
-    });
+
+    let defaultAccountP = this.defaultAccount == null
+      ? new Promise(() => this.createAccount(void 0, secPass))
+      : Promise.resolve();
+
+    return defaultAccountP
+      .then(() => this.legacyAccount.getAvailableBalance())
+      .then(({ amount }) => {
+        if (amount > 0) {
+          let payment = this.legacyAccount.createPayment();
+          let privateKey = this.getPrivateKeyForLegacyAccount(secPass);
+          payment.setGasPrice(gasPrice);
+          payment.setGasLimit(gasLimit);
+          payment.setTo(this.defaultAccount.address);
+          payment.setSweep();
+          payment.sign(privateKey);
+          return payment.publish();
+        } else {
+          throw new Error('No funds in account to sweep');
+        }
+      });
   }
 
   /* end legacy */
