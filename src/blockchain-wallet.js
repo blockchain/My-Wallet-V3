@@ -3,12 +3,12 @@ module.exports = Wallet;
 // dependencies
 var assert = require('assert');
 var BIP39 = require('bip39');
-var RNG = require('./rng');
+var RNG = require('./rng.js');
 
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var HDWallet = require('./hd-wallet');
-var Address = require('./address');
+var Address = require('./address.js');
 var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 var API = require('./api');
@@ -22,6 +22,8 @@ var Metadata = require('./metadata');
 var constants = require('./constants');
 var Payment = require('./payment');
 var Labels = require('./labels');
+var EthWallet = require('./eth/eth-wallet');
+var ShapeShift = require('./shift');
 var Bitcoin = require('bitcoinjs-lib');
 
 // Wallet
@@ -340,6 +342,18 @@ Object.defineProperties(Wallet.prototype, {
     get: function () {
       return this._labels;
     }
+  },
+  'eth': {
+    configurable: false,
+    get: function () {
+      return this._eth;
+    }
+  },
+  'shapeshift': {
+    configurable: false,
+    get: function () {
+      return this._shapeshift;
+    }
   }
 });
 
@@ -462,7 +476,7 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
     if (this.isDoubleEncrypted) {
       if (!secPass) { throw new Error('second password needed'); }
       if (!this.validateSecondPassword(secPass)) { throw new Error('wrong second password'); }
-      var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, 'enc');
+      var cipher = this.createCipher(secPass, 'enc');
       watchOnlyKey.encrypt(cipher).persist();
     }
     MyWallet.syncWallet();
@@ -490,7 +504,7 @@ Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) 
     if (this.isDoubleEncrypted) {
       if (!secPass) { throw new Error('second password needed'); }
       if (!this.validateSecondPassword(secPass)) { throw new Error('wrong second password'); }
-      var cipher = WalletCrypto.cipherFunction(secPass, this._sharedKey, this._pbkdf2_iterations, 'enc');
+      var cipher = this.createCipher(secPass, 'enc');
       ad.encrypt(cipher).persist();
     }
     this._addresses[ad.address] = ad;
@@ -518,7 +532,7 @@ Wallet.prototype.newLegacyAddress = function (label, pw, success, error) {
   }
   if (this.isDoubleEncrypted) {
     assert(pw, 'Error: second password needed');
-    var cipher = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, 'enc');
+    var cipher = this.createCipher(pw, 'enc');
     ad.encrypt(cipher).persist();
   }
   this._addresses[ad.address] = ad;
@@ -563,11 +577,16 @@ Wallet.prototype.validateSecondPassword = function (inputString) {
   return passwordHash === this._dpasswordhash;
 };
 
+Wallet.prototype.createCipher = function (secPass, type) {
+  let cipher = WalletCrypto.cipherFunction.bind(void 0, secPass, this._sharedKey, this._pbkdf2_iterations);
+  return type ? cipher(type) : cipher;
+};
+
 Wallet.prototype.encrypt = function (pw, success, error, encrypting, syncing) {
   encrypting && encrypting();
   try {
     if (!this.isDoubleEncrypted) {
-      var g = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, 'enc');
+      var g = this.createCipher(pw, 'enc');
       var f = function (element) { element.encrypt(g); };
       this.keys.forEach(f);
       this._hd_wallets.forEach(f);
@@ -599,7 +618,7 @@ Wallet.prototype.decrypt = function (pw, success, error, decrypting, syncing) {
   decrypting && decrypting();
   try {
     if (this.isDoubleEncrypted) {
-      var g = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, 'dec');
+      var g = this.createCipher(pw, 'dec');
       var f = function (element) { element.decrypt(g); };
       this.keys.forEach(f);
       this._hd_wallets.forEach(f);
@@ -700,7 +719,7 @@ Wallet.new = function (guid, sharedKey, mnemonic, bip39Password, firstAccountLab
 
 // Adds an HD wallet to an existing wallet, used by frontend and iOs
 Wallet.prototype.upgradeToV3 = function (firstAccountLabel, pw, success, error) {
-  var encoder = WalletCrypto.cipherFunction(pw, this._sharedKey, this._pbkdf2_iterations, 'enc');
+  var encoder = this.createCipher(pw, 'enc');
   try {
     var mnemonic = BIP39.generateMnemonic(undefined, RNG.run.bind(RNG));
     var hd = HDWallet.new(mnemonic, undefined, encoder);
@@ -708,6 +727,7 @@ Wallet.prototype.upgradeToV3 = function (firstAccountLabel, pw, success, error) 
   this._hd_wallets.push(hd);
   var label = firstAccountLabel || 'My Bitcoin Wallet';
   this.newAccount(label, pw, this._hd_wallets.length - 1, true);
+  this.cacheMetadataKey(pw);
   this.loadMetadata();
   MyWallet.syncWallet(function (res) {
     success();
@@ -721,7 +741,7 @@ Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosav
   var index = Helpers.isPositiveInteger(hdwalletIndex) ? hdwalletIndex : 0;
   var cipher;
   if (this.isDoubleEncrypted) {
-    cipher = WalletCrypto.cipherFunction.bind(undefined, pw, this._sharedKey, this._pbkdf2_iterations);
+    cipher = this.createCipher(pw);
   }
   var newAccount = this._hd_wallets[index].newAccount(label, cipher).lastAccount;
   try { // MyWallet.ws.send can fail when restoring from mnemonic because it is not initialized.
@@ -829,8 +849,7 @@ Wallet.prototype.fetchAccountInfo = function () {
 };
 
 Wallet.prototype.metadata = function (typeId) {
-  var masterhdnode = this.hdwallet.getMasterHDNode();
-  return Metadata.fromMasterHDNode(masterhdnode, typeId);
+  return Metadata.fromMetadataHDNode(this._metadataHDNode, typeId);
 };
 
 // This sets:
@@ -864,11 +883,24 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     return Promise.resolve();
   };
 
+  var fetchEthWallet = function () {
+    this._eth = EthWallet.fromBlockchainWallet(this);
+    this._eth.connect(MyWallet.ws.wsUrl.replace('/inv', '/eth/inv'));
+    return this._eth.fetch();
+  };
+
+  var fetchShapeShift = function () {
+    this._shapeshift = ShapeShift.fromBlockchainWallet(this, constants.SHAPE_SHIFT_KEY);
+    return this._shapeshift.fetch();
+  };
+
   let promises = [];
 
   if (this.isMetadataReady) {
     // No fallback is metadata is disabled
     promises.push(fetchExternal.call(this));
+    promises.push(fetchEthWallet.call(this));
+    promises.push(fetchShapeShift.call(this));
   }
 
   // Labels only works for v3 wallets
@@ -910,9 +942,12 @@ Wallet.prototype.createPayment = function (initialState) {
 };
 
 Wallet.prototype.cacheMetadataKey = function (secondPassword) {
-  if (!secondPassword) { return Promise.reject('second password needed'); }
-  if (!this.validateSecondPassword(secondPassword)) { return Promise.reject('wrong second password'); }
-  var cipher = WalletCrypto.cipherFunction.bind(undefined, secondPassword, this._sharedKey, this._pbkdf2_iterations);
+  var cipher;
+  if (this.isDoubleEncrypted) {
+    if (!secondPassword) return Promise.reject('second password needed');
+    if (!this.validateSecondPassword(secondPassword)) return Promise.reject('wrong second password');
+    cipher = this.createCipher(secondPassword);
+  }
   this._metadataHDNode = Metadata.deriveMetadataNode(this.hdwallet.getMasterHDNode(cipher));
   MyWallet.syncWallet();
   return Promise.resolve();

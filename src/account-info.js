@@ -11,6 +11,7 @@ function AccountInfo (object) {
   this.mobile = object.sms_number;
 
   this._countryCodeGuess = object.country_code; // Country guess by the backend
+  this._stateCodeGuess = object.state; // State guess by the backend
   this._dialCode = object.dial_code; // Dialcode guess by the backend
 
   this._isEmailVerified = Boolean(object.email_verified);
@@ -66,6 +67,10 @@ Object.defineProperties(AccountInfo.prototype, {
   'countryCodeGuess': {
     configurable: false,
     get: function () { return this._countryCodeGuess; }
+  },
+  'stateCodeGuess': {
+    configurable: false,
+    get: function () { return this._stateCodeGuess; }
   },
   'dialCode': {
     configurable: false,

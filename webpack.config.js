@@ -39,8 +39,14 @@ let config = {
       }
     ]
   },
+  node: {
+    fs: 'empty'
+  },
   plugins: [
-    new StringReplacePlugin()
+    new StringReplacePlugin(),
+    new webpack.EnvironmentPlugin({
+      NODE_ENV: 'prod'
+    })
   ]
 };
 

@@ -3,7 +3,7 @@ module.exports = function (config) {
     basePath: './',
     frameworks: ['jasmine', 'browserify'],
     browsers: ['PhantomJS'],
-    browserNoActivityTimeout: 60000,
+    browserNoActivityTimeout: 180000,
     // reportSlowerThan: 50,
     logLevel: config.LOG_WARN,
     client: {
@@ -75,7 +75,9 @@ module.exports = function (config) {
       'tests/metadata_spec.js',
       'tests/exchange_delegate_spec.js',
       'tests/labels_spec.js',
-      'tests/address_hd_spec.js'
+      'tests/address_hd_spec.js',
+      'tests/eth/*.spec.js',
+      'tests/shift/*.spec.js'
     ]
   };
 

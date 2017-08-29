@@ -124,7 +124,7 @@ let stubs = {
   './api': API,
   './wallet-network': WalletNetwork,
   'bip39': BIP39,
-  './rng': RNG,
+  './rng.js': RNG,
   './blockchain-settings-api': BlockchainSettingsAPI
 };
 

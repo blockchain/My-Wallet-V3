@@ -100,7 +100,7 @@ External.prototype.shouldDisplaySellTab = function (email, options, partner) {
   let re = /(@blockchain.com(?!.)|@coinify.com(?!.))/;
   let isClearedEmail = re.test(email);
   let fraction = options.partners[partner].showSellFraction;
-  return isClearedEmail || Helpers.isEmailInvited(email, fraction);
+  return isClearedEmail || Helpers.isStringHashInFraction(email, fraction);
 };
 
 External.prototype.toJSON = function () {

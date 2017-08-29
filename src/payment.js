@@ -356,6 +356,9 @@ Payment.updateFees = function () {
 
 Payment.updateFeePerKb = function (fee) {
   return function (payment) {
+    if (['regular', 'priority'].indexOf(fee) > -1) {
+      fee = payment.fees[fee];
+    }
     payment.feePerKb = Helpers.toFeePerKb(fee);
     return Promise.resolve(payment);
   };
