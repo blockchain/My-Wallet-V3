@@ -124,7 +124,7 @@ class EthAccount {
       let fee = toBigNumber(gasLimit).mul(toWei(gasPrice, 'gwei'));
       let available = Math.max(parseFloat(this.wei.sub(fee)), 0);
       let amount = parseFloat(fromWei(available, 'ether'));
-      resolve({ amount, fee: gasPrice });
+      resolve({ amount, fee: fromWei(fee, 'ether') });
     });
   }
 

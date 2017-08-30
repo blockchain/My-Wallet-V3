@@ -9,11 +9,11 @@ class EthPayment extends ShiftPayment {
     this._payment = this._eth.defaultAccount.createPayment()
   }
 
-  setFromQuote (quote, gasPrice = this._eth.defaults.GAS_PRICE) {
+  setFromQuote (quote) {
     super.setFromQuote(quote)
     this._payment.setTo(quote.depositAddress)
     this._payment.setValue(quote.depositAmount)
-    this._payment.setGasPrice(gasPrice)
+    this._payment.setGasPrice(this._eth.defaults.GAS_PRICE)
     this._payment.setGasLimit(this._eth.defaults.GAS_LIMIT)
     return this
   }
