@@ -81,6 +81,19 @@ class EthWalletTx {
     this._note = ethWallet.getTxNote(this.hash);
   }
 
+  toJSON () {
+    return {
+      amount: this.amount,
+      fee: this.fee,
+      to: this.to,
+      from: this.from,
+      hash: this.hash,
+      time: this.time,
+      confirmations: this.confirmations,
+      note: this.note
+    };
+  }
+
   static txTimeSort (txA, txB) {
     return txB.time - txA.time;
   }
