@@ -24,10 +24,10 @@ MyWallet.ws = new BlockchainSocket();
 // used locally and overridden in iOS
 MyWallet.socketConnect = function () {
   let socket = MyWallet.ws;
-  socket.connect();
   socket.on('open', onOpen);
   socket.on('message', onMessage);
   socket.on('close', onClose);
+  socket.connect();
 
   var lastOnChange = { checksum: null };
 
