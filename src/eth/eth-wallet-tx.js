@@ -1,4 +1,4 @@
-const { toBigNumber, fromWei } = require('../helpers');
+const { toBigNumber, fromWei, toArrayFormat } = require('../helpers');
 
 class EthWalletTx {
   constructor (obj) {
@@ -58,13 +58,14 @@ class EthWalletTx {
     return this._note;
   }
 
-  getTxType (account) {
-    if (this.isToAccount(account)) {
-      return 'received';
-    } else if (this.isFromAccount(account)) {
-      return 'sent';
-    }
-    return null;
+  getTxType (accounts) {
+    accounts = toArrayFormat(accounts);
+    let incoming = accounts.some(a => this.isToAccount(a));
+    let outgoing = accounts.some(a => this.isFromAccount(a));
+    if (incoming && outgoing) return 'transfer';
+    else if (incoming) return 'received';
+    else if (outgoing) return 'sent';
+    else return null;
   }
 
   isToAccount (account) {
