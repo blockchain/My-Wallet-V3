@@ -12,13 +12,17 @@ class ShapeShift {
   constructor (wallet, metadata, apiKey) {
     this._wallet = wallet
     this._metadata = metadata
-    this._api = new Api(apiKey);
+    this._api = new Api(apiKey)
     this._trades = []
     this.sync = asyncOnce(this.sync.bind(this), 500)
   }
 
   get trades () {
     return this._trades
+  }
+
+  get USAState () {
+    return this._USAState
   }
 
   getRate (coinPair) {
@@ -115,6 +119,11 @@ class ShapeShift {
     throw new Error(`Currency '${currency}' is not supported`)
   }
 
+  setUSAState (state) {
+    this._USAState = state
+    this.sync()
+  }
+
   isDepositTx (hash) {
     return this.trades.some(t => t.depositHash === hash)
   }
@@ -126,6 +135,7 @@ class ShapeShift {
   fetch () {
     return this._metadata.fetch().then(data => {
       if (data) {
+        this._USAState = data.USAState;
         this._trades = data.trades.map(Trade.fromMetadata)
       }
     })
@@ -138,7 +148,8 @@ class ShapeShift {
 
   toJSON () {
     return {
-      trades: this._trades
+      trades: this._trades,
+      USAState: this._USAState
     }
   }
 

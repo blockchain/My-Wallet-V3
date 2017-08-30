@@ -98,7 +98,7 @@ describe('EthAccount', () => {
 
     describe('.toJSON()', () => {
       it('should serialize to json', () => {
-        let expected = '{"label":"Test Account","archived":false,"addr":"0xD70073f72621FB90060Ac257f38cF2FF566Ea6bB"}'
+        let expected = '{"label":"Test Account","archived":false,"correct":false,"addr":"0xD70073f72621FB90060Ac257f38cF2FF566Ea6bB"}'
         expect(JSON.stringify(account)).toEqual(expected)
       })
     })

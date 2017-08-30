@@ -22,7 +22,7 @@ class EthSocket extends StableSocket {
 
   static accountMessageHandler (account) {
     return pipe(JSON.parse, (data) => {
-      if (data.op === OP_ACCOUNT_SUB && data.address === account.address) {
+      if (data.op === OP_ACCOUNT_SUB && data.account === account.address) {
         account.setData(data);
         account.fetchTransaction(data.txHash);
       }

@@ -10,6 +10,7 @@ class EthAccount {
     this._addr = ethUtil.toChecksumAddress(obj.priv ? EthAccount.privateKeyToAddress(this._priv) : obj.addr);
     this.label = obj.label;
     this.archived = obj.archived || false;
+    this._correct = Boolean(obj.correct);
     this._wei = null;
     this._balance = null;
     this._approximateBalance = null;
@@ -23,6 +24,10 @@ class EthAccount {
 
   get privateKey () {
     return this._priv;
+  }
+
+  get isCorrect () {
+    return this._correct;
   }
 
   get wei () {
@@ -39,6 +44,10 @@ class EthAccount {
 
   get nonce () {
     return this._nonce;
+  }
+
+  markAsCorrect () {
+    this._correct = true;
   }
 
   getApproximateBalance () {
@@ -61,13 +70,13 @@ class EthAccount {
   fetchBalance () {
     return fetch(`${API.API_ROOT_URL}eth/account/${this.address}/balance`)
       .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
-      .then(data => this.setData(data));
+      .then(data => this.setData(data[this.address]));
   }
 
   fetchTransactions () {
     return fetch(`${API.API_ROOT_URL}eth/account/${this.address}`)
       .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
-      .then(data => this.setTransactions(data));
+      .then(data => this.setTransactions(data[this.address]));
   }
 
   fetchTransaction (hash) {
@@ -101,6 +110,7 @@ class EthAccount {
     return {
       label: this.label,
       archived: this.archived,
+      correct: this.isCorrect,
       addr: this.address
     };
   }
@@ -114,7 +124,7 @@ class EthAccount {
       let fee = toBigNumber(gasLimit).mul(toWei(gasPrice, 'gwei'));
       let available = Math.max(parseFloat(this.wei.sub(fee)), 0);
       let amount = parseFloat(fromWei(available, 'ether'));
-      resolve({ amount, fee: gasPrice });
+      resolve({ amount, fee: fromWei(fee, 'ether') });
     });
   }
 

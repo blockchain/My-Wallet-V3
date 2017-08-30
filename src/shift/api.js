@@ -12,9 +12,10 @@ class Api {
 
   getQuote (pair, amount, withdrawal, returnAddress) {
     let apiKey = this._apiKey
-    let depositAmount = amount.toString()
+    let depositAmount = amount > 0 ? amount.toString() : undefined
+    let withdrawalAmount = amount < 0 ? -amount.toString() : undefined
     return this.request('/sendamount', 'POST',
-      { pair, depositAmount, withdrawal, returnAddress, apiKey })
+      { pair, withdrawalAmount, depositAmount, withdrawal, returnAddress, apiKey })
       .then(res => res.error != null ? Promise.reject(res.error) : (res.success || res))
   }
 
