@@ -70,13 +70,13 @@ class EthAccount {
   fetchBalance () {
     return fetch(`${API.API_ROOT_URL}eth/account/${this.address}/balance`)
       .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
-      .then(data => this.setData(data));
+      .then(data => this.setData(data[this.address]));
   }
 
   fetchTransactions () {
     return fetch(`${API.API_ROOT_URL}eth/account/${this.address}`)
       .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
-      .then(data => this.setTransactions(data));
+      .then(data => this.setTransactions(data[this.address]));
   }
 
   fetchTransaction (hash) {

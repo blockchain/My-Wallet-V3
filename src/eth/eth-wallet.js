@@ -212,13 +212,7 @@ class EthWallet {
     let addresses = accounts.map(a => a.address);
     return fetch(`${API.API_ROOT_URL}eth/account/${addresses.join()}/balance`)
       .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
-      .then(data => {
-        if (accounts.length > 1) {
-          accounts.forEach(a => a.setData(data[a.address]));
-        } else {
-          accounts[0].setData(data);
-        }
-      });
+      .then(data => accounts.forEach(a => a.setData(data[a.address])));
   }
 
   fetchTransactions () {
@@ -226,13 +220,7 @@ class EthWallet {
     let addresses = accounts.map(a => a.address);
     return fetch(`${API.API_ROOT_URL}eth/account/${addresses.join()}`)
       .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
-      .then(data => {
-        if (accounts.length > 1) {
-          accounts.forEach(a => a.setTransactions(data[a.address]));
-        } else {
-          accounts[0].setTransactions(data);
-        }
-      });
+      .then(data => accounts.forEach(a => a.setTransactions(data[a.address])));
   }
 
   fetchFees () {
