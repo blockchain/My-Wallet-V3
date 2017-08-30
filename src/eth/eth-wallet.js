@@ -83,14 +83,15 @@ class EthWallet {
 
   getApproximateBalance () {
     if (!this.defaultAccount && !this.legacyAccount) return null;
-    let balance = 0;
     if (this.defaultAccount) {
-      balance += parseFloat(this.defaultAccount.getApproximateBalance());
+      let defaultBalance = this.defaultAccount.getApproximateBalance();
+      if (defaultBalance !== null) return defaultBalance;
     }
     if (this.legacyAccount) {
-      balance += parseFloat(this.legacyAccount.getApproximateBalance());
+      let legacyBalance = this.legacyAccount.getApproximateBalance();
+      if (legacyBalance !== null) return legacyBalance;
     }
-    return balance.toFixed(8);
+    return null;
   }
 
   getAccount (index) {
