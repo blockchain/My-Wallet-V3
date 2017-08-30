@@ -377,6 +377,16 @@ class EthWallet {
       });
   }
 
+  __transitionToLegacy (secPass) {
+    delete this._legacyAccount;
+    let accountNode = this.deriveChildLegacy(0, secPass);
+    let account = EthAccount.fromWallet(accountNode.getWallet());
+    account.label = EthAccount.defaultLabel(0);
+    this._accounts = [account];
+    this._socket.subscribeToAccount(account);
+    return this.sync();
+  }
+
   /* end legacy */
 
   static fromBlockchainWallet (wallet) {
