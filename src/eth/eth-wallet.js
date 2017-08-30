@@ -210,6 +210,7 @@ class EthWallet {
 
   fetchBalance () {
     let accounts = this.activeAccountsWithLegacy;
+    if (!accounts.length) return Promise.resolve();
     let addresses = accounts.map(a => a.address);
     return fetch(`${API.API_ROOT_URL}eth/account/${addresses.join()}/balance`)
       .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
@@ -218,6 +219,7 @@ class EthWallet {
 
   fetchTransactions () {
     let accounts = this.activeAccountsWithLegacy;
+    if (!accounts.length) return Promise.resolve();
     let addresses = accounts.map(a => a.address);
     return fetch(`${API.API_ROOT_URL}eth/account/${addresses.join()}`)
       .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
