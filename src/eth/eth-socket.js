@@ -24,9 +24,10 @@ class EthSocket extends StableSocket {
     return pipe(JSON.parse, (data) => {
       if (data.op === OP_ACCOUNT_SUB && data.account === account.address) {
         account.setData(data);
-        account.fetchTransaction(data.txHash);
+        account.appendTransaction(data.tx);
         if (legacyAccount && legacyAccount.isCorrectAddress(data.tx.from)) {
           legacyAccount.setData({ balance: '0' });
+          legacyAccount.appendTransaction(data.tx);
         }
       }
     });

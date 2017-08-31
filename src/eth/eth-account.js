@@ -82,11 +82,7 @@ class EthAccount {
   fetchTransaction (hash) {
     return fetch(`${API.API_ROOT_URL}eth/tx/${hash}`)
       .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
-      .then(EthWalletTx.fromJSON)
-      .then(tx => {
-        let txExists = this._txs.find(({ hash }) => hash === tx.hash) != null;
-        if (!txExists) this._txs.unshift(tx);
-      });
+      .then(tx => this.appendTransaction(tx));
   }
 
   setData ({ balance, nonce } = {}) {
@@ -95,6 +91,12 @@ class EthAccount {
     this._approximateBalance = fromWei(this.wei, 'ether').round(8).toString();
     this._nonce = nonce;
     return { balance, nonce };
+  }
+
+  appendTransaction (txJson) {
+    let tx = EthWalletTx.fromJSON(txJson);
+    let txExists = this._txs.find(({ hash }) => hash === tx.hash) != null;
+    if (!txExists) this._txs.unshift(tx);
   }
 
   setTransactions ({ txns = [] }) {
