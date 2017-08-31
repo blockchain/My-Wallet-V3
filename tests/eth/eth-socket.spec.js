@@ -84,6 +84,13 @@ describe('EthSocket', () => {
         handler(JSON.stringify({ op: 'account_sub', account: '0xfdsa' }))
         expect(account.setData).not.toHaveBeenCalled()
       })
+
+      it('should reset the balance of a legacy address', () => {
+        let legacyAccount = { address: '0xabcd', setData: jasmine.createSpy('setData') }
+        let handler = EthSocket.accountMessageHandler(account, legacyAccount)
+        handler(JSON.stringify({ op: 'account_sub', account: '0xasdf', tx: { from: '0xabcd' } }))
+        expect(legacyAccount.setData).toHaveBeenCalledWith({ balance: '0' })
+      })
     })
 
     describe('.blockMessageHandler()', () => {
