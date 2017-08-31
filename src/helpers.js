@@ -606,6 +606,16 @@ Helpers.toBigNumber = function (x) {
   return Helpers.isBigNumber(x) ? x : new BigNumber((x || 0).toString());
 };
 
+Helpers.bnMax = function (a, b) {
+  return BigNumber.max(a, b);
+};
+
+Helpers.bnToBuffer = function (bn) {
+  let hex = bn.toString(16);
+  if (hex.length % 2 !== 0) hex = '0' + hex;
+  return Buffer.from(hex, 'hex');
+};
+
 Helpers.isEtherAddress = function (address) {
   return (
     ethUtil.isValidChecksumAddress(address) ||

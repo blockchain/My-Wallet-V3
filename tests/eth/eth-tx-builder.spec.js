@@ -1,6 +1,7 @@
 /* eslint-disable semi */
 const EthTxBuilder = require('../../src/eth/eth-tx-builder')
 const EthAccount = require('../../src/eth/eth-account')
+const util = require('ethereumjs-util');
 
 describe('EthTxBuilder', () => {
   const wallet = {
@@ -78,6 +79,14 @@ describe('EthTxBuilder', () => {
       it('should set a sweep transaction', () => {
         payment.setSweep()
         expect(payment.amount).toEqual(0.099559)
+        expect(payment.fee).toEqual(0.000441)
+      })
+
+      it('should sweep with a very large value', () => {
+        account.setData({ balance: '19991027158563527', nonce: 3 })
+        payment.setSweep()
+        expect(new util.BN(payment._tx.value).toString()).toEqual('19550027158563527')
+        expect(payment.amount).toEqual(0.019550027158563528)
         expect(payment.fee).toEqual(0.000441)
       })
     })
