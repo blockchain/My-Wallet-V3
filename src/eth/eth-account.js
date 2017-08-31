@@ -115,6 +115,10 @@ class EthAccount {
     };
   }
 
+  isCorrectAddress (address) {
+    return address.toLowerCase() === this.address.toLowerCase();
+  }
+
   isCorrectPrivateKey (privateKey) {
     return EthAccount.privateKeyToAddress(privateKey) === this.address;
   }

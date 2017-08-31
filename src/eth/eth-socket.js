@@ -25,7 +25,7 @@ class EthSocket extends StableSocket {
       if (data.op === OP_ACCOUNT_SUB && data.account === account.address) {
         account.setData(data);
         account.fetchTransaction(data.txHash);
-        if (legacyAccount && legacyAccount.address === data.tx.from) {
+        if (legacyAccount && legacyAccount.isCorrectAddress(data.tx.from)) {
           legacyAccount.setData({ balance: '0' });
         }
       }
