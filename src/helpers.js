@@ -585,7 +585,7 @@ Helpers.toWei = function (x, unit) {
   if (!etherUnits[unit]) {
     throw new Error(`Unsupported ether unit in toWei: ${unit}`);
   }
-  let result = Helpers.toBigNumber(x).mul(etherUnits[unit]);
+  let result = Helpers.toBigNumber(x).mul(etherUnits[unit]).floor();
   return Helpers.isBigNumber(x) ? result : result.toString();
 };
 
