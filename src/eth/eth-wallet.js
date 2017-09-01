@@ -114,7 +114,7 @@ class EthWallet {
 
   unarchiveAccount (account) {
     account.archived = false;
-    this._socket.subscribeToAccount(account);
+    this._socket.subscribeToAccount(this, account);
     this.sync();
   }
 
@@ -124,7 +124,7 @@ class EthWallet {
     account.label = label || EthAccount.defaultLabel(this.accounts.length);
     account.markAsCorrect();
     this._accounts.push(account);
-    this._socket.subscribeToAccount(account, this.legacyAccount);
+    this._socket.subscribeToAccount(this, account, this.legacyAccount);
     return this.sync();
   }
 
@@ -254,7 +254,7 @@ class EthWallet {
 
   setSocketHandlers () {
     this._socket.subscribeToBlocks(this);
-    this.activeAccounts.forEach(a => this._socket.subscribeToAccount(a, this.legacyAccount));
+    this.activeAccounts.forEach(a => this._socket.subscribeToAccount(this, a, this.legacyAccount));
   }
 
   updateTxs () {
@@ -385,7 +385,7 @@ class EthWallet {
     let account = EthAccount.fromWallet(accountNode.getWallet());
     account.label = EthAccount.defaultLabel(0);
     this._accounts = [account];
-    this._socket.subscribeToAccount(account);
+    this._socket.subscribeToAccount(this, account);
     return this.sync();
   }
 

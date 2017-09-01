@@ -97,6 +97,7 @@ class EthAccount {
     let tx = EthWalletTx.fromJSON(txJson);
     let txExists = this._txs.find(({ hash }) => hash === tx.hash) != null;
     if (!txExists) this._txs.unshift(tx);
+    return tx;
   }
 
   setTransactions ({ txns = [] }) {
