@@ -202,7 +202,6 @@ class EthWallet {
 
   fetchHistory () {
     return Promise.all([this.fetchBalance(), this.fetchTransactions()])
-      .then(() => this.updateTxs())
       .then(() => this.getLatestBlock());
   }
 
@@ -221,7 +220,10 @@ class EthWallet {
     let addresses = accounts.map(a => a.address);
     return fetch(`${API.API_ROOT_URL}eth/account/${addresses.join()}`)
       .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
-      .then(data => accounts.forEach(a => a.setTransactions(data[a.address])));
+      .then(data => {
+        accounts.forEach(a => a.setTransactions(data[a.address]));
+        this.updateTxs();
+      });
   }
 
   fetchFees () {
