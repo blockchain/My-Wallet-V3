@@ -1,4 +1,6 @@
 /* eslint-disable semi */
+const Helpers = require('../helpers')
+
 class Quote {
   constructor (obj) {
     this._orderId = obj.orderId
@@ -8,8 +10,8 @@ class Quote {
     this._withdrawal = obj.withdrawal
     this._withdrawalAmount = obj.withdrawalAmount
     this._minerFee = obj.minerFee
-    this._expiration = new Date(obj.expiration)
     this._quotedRate = obj.quotedRate
+    this._expiration = new Date(obj.expiration - Helpers.toMilliseconds(5, 'minutes'));
   }
 
   get orderId () {
