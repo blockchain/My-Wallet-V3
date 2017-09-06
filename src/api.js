@@ -314,6 +314,10 @@ API.prototype.incrementBtcEthUsageStats = function (btcBalance, ethBalance) {
   fetch(makeEventUrl(btcBalance > 0, ethBalance > 0));
 };
 
+API.prototype.getPriceChartData = function (params) {
+  return this.requestApi(`priceSeries?base=${params.base}&quote=${params.quote}&start=${params.start}&scale=${params.scale}&scalen=${params.scalen}`);
+};
+
 API.prototype.getBlockchainAddress = function () {
   return this.request('GET', 'charge_address');
 };
