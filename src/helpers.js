@@ -138,11 +138,22 @@ Helpers.isEmptyObject = function (x) {
 Helpers.isEmptyArray = function (x) {
   return Array.isArray(x) && x.length === 0;
 };
+
+Helpers.defer = function () {
+  let deferred = {};
+  deferred.promise = new Promise((resolve, reject) => {
+    deferred.resolve = resolve;
+    deferred.reject = reject;
+  });
+  return deferred;
+};
+
 // Return an async version of f that it will run after miliseconds
 // no matter how many times you call the new function, it will run only once
 Helpers.asyncOnce = function (f, milliseconds, before) {
   var timer = null;
   var oldArguments = [];
+  var deferred = null;
 
   trigger.cancel = function () {
     clearTimeout(timer);
@@ -151,15 +162,25 @@ Helpers.asyncOnce = function (f, milliseconds, before) {
   function trigger () {
     trigger.cancel();
     before && before();
+    deferred = deferred || Helpers.defer();
     var myArgs = [];
+    var promise = deferred.promise;
     // this is needed because arguments is not an 'Array' instance
     for (var i = 0; i < arguments.length; i++) { myArgs[i] = arguments[i]; }
     myArgs = Helpers.zipLong(Helpers.maybeCompose, myArgs, oldArguments);
     oldArguments = myArgs;
     timer = setTimeout(function () {
-      f.apply(this, myArgs);
-      oldArguments = [];
+      try {
+        let result = f.apply(this, myArgs);
+        deferred.resolve(result);
+      } catch (e) {
+        deferred.reject(e);
+      } finally {
+        oldArguments = [];
+        deferred = null;
+      }
     }, milliseconds);
+    return promise;
   }
 
   return trigger;
@@ -542,6 +563,14 @@ Helpers.delay = (time) => new Promise((resolve) => {
   setTimeout(resolve, time);
 });
 
+Helpers.dedup = (nested, prop) => (
+  nested.reduce(({ seen, result }, next) => {
+    let unseen = next.filter(x => !seen[x[prop]]);
+    unseen.forEach(x => { seen[x[prop]] = true; });
+    return { seen, result: result.concat(unseen) };
+  }, { seen: {}, result: [] }).result
+);
+
 const etherUnits = {
   kwei: new BigNumber(1e3),
   mwei: new BigNumber(1e6),
@@ -556,7 +585,7 @@ Helpers.toWei = function (x, unit) {
   if (!etherUnits[unit]) {
     throw new Error(`Unsupported ether unit in toWei: ${unit}`);
   }
-  let result = Helpers.toBigNumber(x).mul(etherUnits[unit]);
+  let result = Helpers.toBigNumber(x).mul(etherUnits[unit]).floor();
   return Helpers.isBigNumber(x) ? result : result.toString();
 };
 
@@ -575,6 +604,16 @@ Helpers.isBigNumber = function (x) {
 
 Helpers.toBigNumber = function (x) {
   return Helpers.isBigNumber(x) ? x : new BigNumber((x || 0).toString());
+};
+
+Helpers.bnMax = function (a, b) {
+  return BigNumber.max(a, b);
+};
+
+Helpers.bnToBuffer = function (bn) {
+  let hex = bn.toString(16);
+  if (hex.length % 2 !== 0) hex = '0' + hex;
+  return Buffer.from(hex, 'hex');
 };
 
 Helpers.isEtherAddress = function (address) {

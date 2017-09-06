@@ -1,7 +1,7 @@
 const EthereumTx = require('ethereumjs-tx');
 const util = require('ethereumjs-util');
 const API = require('../api');
-const { toWei, fromWei } = require('../helpers');
+const { toWei, fromWei, toBigNumber, bnMax, bnToBuffer } = require('../helpers');
 
 const MAINNET = 1;
 
@@ -34,13 +34,13 @@ class EthTxBuilder {
   }
 
   setValue (amount) {
-    this._tx.value = parseInt(toWei(amount, 'ether'));
+    this._tx.value = bnToBuffer(toWei(toBigNumber(amount), 'ether'));
     this.update();
     return this;
   }
 
   setGasPrice (gasPrice) {
-    this._tx.gasPrice = parseInt(toWei(gasPrice, 'gwei'));
+    this._tx.gasPrice = bnToBuffer(toWei(toBigNumber(gasPrice), 'gwei'));
     this.update();
     return this;
   }
@@ -54,7 +54,7 @@ class EthTxBuilder {
   setSweep () {
     this.setValue(0);
     let balance = this._account.wei;
-    let amount = Math.max(balance.sub(this._tx.getUpfrontCost()), 0);
+    let amount = bnMax(balance.sub(this._tx.getUpfrontCost()), 0);
     this.setValue(fromWei(amount, 'ether'));
     return this;
   }

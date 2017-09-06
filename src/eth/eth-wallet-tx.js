@@ -1,4 +1,4 @@
-const { toBigNumber, fromWei } = require('../helpers');
+const { toBigNumber, fromWei, toArrayFormat } = require('../helpers');
 
 class EthWalletTx {
   constructor (obj) {
@@ -58,26 +58,40 @@ class EthWalletTx {
     return this._note;
   }
 
-  getTxType (account) {
-    if (this.isToAccount(account)) {
-      return 'received';
-    } else if (this.isFromAccount(account)) {
-      return 'sent';
-    }
-    return null;
+  getTxType (accounts) {
+    accounts = toArrayFormat(accounts);
+    let incoming = accounts.some(a => this.isToAccount(a));
+    let outgoing = accounts.some(a => this.isFromAccount(a));
+    if (incoming && outgoing) return 'transfer';
+    else if (incoming) return 'received';
+    else if (outgoing) return 'sent';
+    else return null;
   }
 
   isToAccount (account) {
-    return this._to.toLowerCase() === account.address.toLowerCase();
+    return account.isCorrectAddress(this.to);
   }
 
   isFromAccount (account) {
-    return this._from.toLowerCase() === account.address.toLowerCase();
+    return account.isCorrectAddress(this.from);
   }
 
   update (ethWallet) {
     this._confirmations = Math.max(ethWallet.latestBlock - this._blockNumber + 1, 0);
     this._note = ethWallet.getTxNote(this.hash);
+  }
+
+  toJSON () {
+    return {
+      amount: this.amount,
+      fee: this.fee,
+      to: this.to,
+      from: this.from,
+      hash: this.hash,
+      time: this.time,
+      confirmations: this.confirmations,
+      note: this.note
+    };
   }
 
   static txTimeSort (txA, txB) {

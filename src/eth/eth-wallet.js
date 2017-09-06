@@ -1,10 +1,11 @@
 const EthHd = require('ethereumjs-wallet/hdkey');
 const { construct } = require('ramda');
-const { isPositiveNumber } = require('../helpers');
+const { isPositiveNumber, asyncOnce, dedup } = require('../helpers');
 const API = require('../api');
 const EthTxBuilder = require('./eth-tx-builder');
 const EthAccount = require('./eth-account');
 const EthSocket = require('./eth-socket');
+const EthWalletTx = require('./eth-wallet-tx');
 
 const METADATA_TYPE_ETH = 5;
 const DERIVATION_PATH = "m/44'/60'/0'/0";
@@ -19,6 +20,7 @@ class EthWallet {
     this._txNotes = {};
     this._latestBlock = null;
     this._lastTx = null;
+    this.sync = asyncOnce(this.sync.bind(this), 250);
   }
 
   get wei () {
@@ -45,8 +47,18 @@ class EthWallet {
     return this._accounts;
   }
 
+  get legacyAccount () {
+    return this._legacyAccount;
+  }
+
   get activeAccounts () {
     return this.accounts.filter(a => !a.archived);
+  }
+
+  get activeAccountsWithLegacy () {
+    return this.legacyAccount
+      ? this.activeAccounts.concat(this.legacyAccount)
+      : this.activeAccounts;
   }
 
   get latestBlock () {
@@ -64,8 +76,21 @@ class EthWallet {
     };
   }
 
+  get txs () {
+    let accounts = this.activeAccountsWithLegacy;
+    return dedup(accounts.map(a => a.txs), 'hash').sort(EthWalletTx.txTimeSort);
+  }
+
   getApproximateBalance () {
-    return this.defaultAccount ? this.defaultAccount.getApproximateBalance() : null;
+    if (!this.defaultAccount && !this.legacyAccount) return null;
+    let balance = 0;
+    if (this.defaultAccount) {
+      balance += parseFloat(this.defaultAccount.getApproximateBalance());
+    }
+    if (this.legacyAccount) {
+      balance += parseFloat(this.legacyAccount.getApproximateBalance());
+    }
+    return balance.toFixed(8);
   }
 
   getAccount (index) {
@@ -89,7 +114,7 @@ class EthWallet {
 
   unarchiveAccount (account) {
     account.archived = false;
-    this._socket.subscribeToAccount(account);
+    this._socket.subscribeToAccount(this, account);
     this.sync();
   }
 
@@ -97,10 +122,10 @@ class EthWallet {
     let accountNode = this.deriveChild(this.accounts.length, secPass);
     let account = EthAccount.fromWallet(accountNode.getWallet());
     account.label = label || EthAccount.defaultLabel(this.accounts.length);
+    account.markAsCorrect();
     this._accounts.push(account);
-    this._socket.subscribeToAccount(account);
-    this.sync();
-    return account;
+    this._socket.subscribeToAccount(this, account, this.legacyAccount);
+    return this.sync();
   }
 
   getTxNote (hash) {
@@ -145,13 +170,16 @@ class EthWallet {
   fetch () {
     return this._metadata.fetch().then((data) => {
       if (data) {
+        let constructAccount = construct(EthAccount);
         let { ethereum } = data;
         this._hasSeen = ethereum.has_seen;
         this._defaultAccountIdx = ethereum.default_account_idx;
-        this._accounts = ethereum.accounts.map(construct(EthAccount));
+        this._accounts = ethereum.accounts.map(constructAccount);
         this._txNotes = ethereum.tx_notes || {};
         this._lastTx = ethereum.last_tx;
-        this.activeAccounts.forEach(a => this._socket.subscribeToAccount(a));
+        if (ethereum.legacy_account) {
+          this._legacyAccount = constructAccount(ethereum.legacy_account);
+        }
       }
     });
   }
@@ -166,24 +194,36 @@ class EthWallet {
       has_seen: this._hasSeen,
       default_account_idx: this._defaultAccountIdx,
       accounts: this._accounts,
+      legacy_account: this._legacyAccount,
       tx_notes: this._txNotes,
       last_tx: this._lastTx
     };
   }
 
   fetchHistory () {
-    return Promise.all(this.activeAccounts.map(a => a.fetchHistory()))
-      .then(() => this.updateTxs())
+    return Promise.all([this.fetchBalance(), this.fetchTransactions()])
       .then(() => this.getLatestBlock());
   }
 
   fetchBalance () {
-    return Promise.all(this.activeAccounts.map(a => a.fetchBalance()));
+    let accounts = this.activeAccountsWithLegacy;
+    if (!accounts.length) return Promise.resolve();
+    let addresses = accounts.map(a => a.address);
+    return fetch(`${API.API_ROOT_URL}eth/account/${addresses.join()}/balance`)
+      .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
+      .then(data => accounts.forEach(a => a.setData(data[a.address])));
   }
 
   fetchTransactions () {
-    return Promise.all(this.activeAccounts.map(a => a.fetchTransactions()))
-      .then(() => this.updateTxs());
+    let accounts = this.activeAccountsWithLegacy;
+    if (!accounts.length) return Promise.resolve();
+    let addresses = accounts.map(a => a.address);
+    return fetch(`${API.API_ROOT_URL}eth/account/${addresses.join()}`)
+      .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
+      .then(data => {
+        accounts.forEach(a => a.setTransactions(data[a.address]));
+        this.updateTxs();
+      });
   }
 
   fetchFees () {
@@ -210,16 +250,17 @@ class EthWallet {
   connect (wsUrl) {
     if (this._socket) return;
     this._socket = new EthSocket(wsUrl);
-    this._socket.subscribeToBlocks(this);
+    this.setSocketHandlers();
+    this._socket.on('close', () => this.setSocketHandlers());
+  }
 
-    this._socket.on('close', () => {
-      this._socket.subscribeToBlocks(this);
-      this.activeAccounts.forEach(a => this._socket.subscribeToAccount(a));
-    });
+  setSocketHandlers () {
+    this._socket.subscribeToBlocks(this);
+    this.activeAccounts.forEach(a => this._socket.subscribeToAccount(this, a, this.legacyAccount));
   }
 
   updateTxs () {
-    this.activeAccounts.forEach(a => a.updateTxs(this));
+    this.activeAccountsWithLegacy.forEach(a => a.updateTxs(this));
   }
 
   getPrivateKeyForAccount (account, secPass) {
@@ -234,6 +275,38 @@ class EthWallet {
 
   deriveChild (index, secPass) {
     let w = this._wallet;
+    let cipher;
+    if (w.isDoubleEncrypted) {
+      if (!secPass) throw new Error('Second password required to derive ethereum wallet');
+      else cipher = w.createCipher(secPass);
+    }
+    let masterHdNode = w.hdwallet.getMasterHDNode(cipher);
+    let accountNode = masterHdNode
+      .deriveHardened(44)
+      .deriveHardened(60)
+      .deriveHardened(0)
+      .derive(0)
+      .derive(index);
+    return EthHd.fromExtendedKey(accountNode.toBase58());
+  }
+
+  /* start legacy */
+
+  getPrivateKeyForLegacyAccount (secPass) {
+    let account = this._legacyAccount;
+    if (!account) {
+      throw new Error('Wallet does not contain a beta account');
+    }
+    let wallet = this.deriveChildLegacy(0, secPass).getWallet();
+    let privateKey = wallet.getPrivateKey();
+    if (!account.isCorrectPrivateKey(privateKey)) {
+      throw new Error('Failed to derive correct private key');
+    }
+    return privateKey;
+  }
+
+  deriveChildLegacy (index, secPass) {
+    let w = this._wallet;
     if (w.isDoubleEncrypted && !secPass) {
       throw new Error('Second password required to derive ethereum wallet');
     }
@@ -241,6 +314,84 @@ class EthWallet {
     let seed = getSeedHex(w.hdwallet.seedHex);
     return EthHd.fromMasterSeed(seed).derivePath(DERIVATION_PATH).deriveChild(index);
   }
+
+  needsTransitionFromLegacy () {
+    let shouldSweepAccount = (account) => (
+      account.fetchBalance()
+        .then(() => account.getAvailableBalance())
+        .then(({ amount }) => amount > 0)
+    );
+
+    if (this.defaultAccount && !this.defaultAccount.isCorrect) {
+      /*
+        If user has an eth account and the account is not marked as
+        correct, check if they should sweep.
+      */
+      return shouldSweepAccount(this.defaultAccount);
+    } else if (this.legacyAccount) {
+      /*
+        If user has a legacy eth account saved, we should still check
+        if the account needs to be swept in case funds were received after
+        the previous transition.
+      */
+      return shouldSweepAccount(this.legacyAccount);
+    } else {
+      /*
+        Default account is up to date and there is no legacy account,
+        do nothing.
+      */
+      return Promise.resolve(false);
+    }
+  }
+
+  transitionFromLegacy () {
+    if (this.defaultAccount && !this.defaultAccount.isCorrect) {
+      this._legacyAccount = this.getAccount(0);
+      this._accounts = [];
+      return this.sync();
+    } else {
+      return Promise.resolve();
+    }
+  }
+
+  sweepLegacyAccount (secPass, { gasPrice = EthTxBuilder.GAS_PRICE, gasLimit = EthTxBuilder.GAS_LIMIT } = {}) {
+    if (!this.legacyAccount) {
+      return Promise.reject(new Error('Must transition from Beta account first'));
+    }
+
+    let defaultAccountP = this.defaultAccount == null
+      ? Promise.resolve().then(() => this.createAccount(void 0, secPass))
+      : Promise.resolve();
+
+    return defaultAccountP
+      .then(() => this.legacyAccount.getAvailableBalance())
+      .then(({ amount }) => {
+        if (amount > 0) {
+          let payment = this.legacyAccount.createPayment();
+          let privateKey = this.getPrivateKeyForLegacyAccount(secPass);
+          payment.setGasPrice(gasPrice);
+          payment.setGasLimit(gasLimit);
+          payment.setTo(this.defaultAccount.address);
+          payment.setSweep();
+          payment.sign(privateKey);
+          return payment.publish();
+        } else {
+          throw new Error('No funds in account to sweep');
+        }
+      });
+  }
+
+  __transitionToLegacy (secPass) {
+    delete this._legacyAccount;
+    let accountNode = this.deriveChildLegacy(0, secPass);
+    let account = EthAccount.fromWallet(accountNode.getWallet());
+    account.label = EthAccount.defaultLabel(0);
+    this._accounts = [account];
+    this._socket.subscribeToAccount(this, account);
+    return this.sync();
+  }
+
+  /* end legacy */
 
   static fromBlockchainWallet (wallet) {
     let metadata = wallet.metadata(METADATA_TYPE_ETH);
