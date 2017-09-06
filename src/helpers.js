@@ -260,6 +260,14 @@ Helpers.guessFee = function (nInputs, nOutputs, feePerKb) {
   return Math.ceil(feePerKb * (sizeBytes / 1000));
 };
 
+Helpers.toMilliseconds = function (n, unit) {
+  var units = {
+    seconds: 1000,
+    minutes: 60000
+  };
+  return n * units[unit];
+};
+
 // password scorer
 Helpers.scorePassword = function (password) {
   if (!Helpers.isString(password)) { return 0; }
