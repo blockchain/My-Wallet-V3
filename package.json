@@ -46,7 +46,7 @@
     "bigi": "1.4.*",
     "bignumber.js": "^4.0.2",
     "bip39": "2.1.*",
-    "bitcoin-coinify-client": "^0.6.4",
+    "bitcoin-coinify-client": "^0.6.5",
     "bitcoin-exchange-client": "^0.4.3",
     "bitcoin-sfox-client": "^0.1.11",
     "bitcoin-unocoin-client": "^0.3.4",
