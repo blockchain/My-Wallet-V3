@@ -315,7 +315,7 @@ API.prototype.incrementBtcEthUsageStats = function (btcBalance, ethBalance) {
 };
 
 API.prototype.getPriceChartData = function (params) {
-  return this.requestApi(`priceSeries?base=${params.base}&quote=${params.quote}&start=${params.start}&scale=${params.scale}&scalen=${params.scalen}`);
+  return this.requestApi(`historicalprices?base=${params.base}&quote=${params.quote}&start=${params.start}&scale=${params.scale}`);
 };
 
 API.prototype.getBlockchainAddress = function () {
