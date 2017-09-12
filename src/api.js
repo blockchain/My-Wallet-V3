@@ -318,6 +318,14 @@ API.prototype.getPriceChartData = function (params) {
   return this.requestApi(`historicalprices?base=${params.base}&quote=${params.quote}&start=${params.start}&scale=${params.scale}`);
 };
 
+API.prototype.incrementBuyLimitCounter = function (amount) {
+  return fetch(`${this.ROOT_URL}event?name=wallet_buy_${amount === 'over' ? 'over' : 'under'}_limit`);
+};
+
+API.prototype.incrementBuyDropoff = function (step) {
+  return fetch(`${this.ROOT_URL}event?name=wallet_buy_dropoff_${step}`);
+};
+
 API.prototype.getBlockchainAddress = function () {
   return this.request('GET', 'charge_address');
 };

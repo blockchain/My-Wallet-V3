@@ -13,7 +13,7 @@ describe('EthSocket', () => {
     address,
     setData () {},
     fetchTransaction () {},
-    appendTransaction () {},
+    appendTransaction () { return { update () {} } },
     isCorrectAddress (a) { return a === address }
   })
 
@@ -40,12 +40,12 @@ describe('EthSocket', () => {
 
     describe('.subscribeToAccount()', () => {
       it('should send an account sub message', () => {
-        socket.subscribeToAccount(account)
+        socket.subscribeToAccount(ethWallet, account)
         expect(socket.send).toHaveBeenCalledWith(EthSocket.accountSub(account))
       })
 
       it('should add a message handler', () => {
-        socket.subscribeToAccount(account)
+        socket.subscribeToAccount(ethWallet, account)
         expect(socket.on).toHaveBeenCalledWith('message', jasmine.any(Function))
       })
     })
@@ -66,28 +66,28 @@ describe('EthSocket', () => {
   describe('static', () => {
     describe('.accountMessageHandler()', () => {
       it('should call .setData on message', () => {
-        let handler = EthSocket.accountMessageHandler(account)
+        let handler = EthSocket.accountMessageHandler(ethWallet, account)
         spyOn(account, 'setData')
         handler(balanceResponse)
         expect(account.setData).toHaveBeenCalledWith(jasmine.objectContaining({ balance: '1000', nonce: 1 }))
       })
 
       it('should call .appendTransaction with the tx object', () => {
-        let handler = EthSocket.accountMessageHandler(account)
-        spyOn(account, 'appendTransaction')
+        let handler = EthSocket.accountMessageHandler(ethWallet, account)
+        spyOn(account, 'appendTransaction').and.callThrough()
         handler(balanceResponse)
         expect(account.appendTransaction).toHaveBeenCalledWith({ hash: 'xyz' })
       })
 
       it('should do nothing for non-balance message', () => {
-        let handler = EthSocket.accountMessageHandler(account)
+        let handler = EthSocket.accountMessageHandler(ethWallet, account)
         spyOn(account, 'setData')
         handler(blockResponse)
         expect(account.setData).not.toHaveBeenCalled()
       })
 
       it('should do nothing when the message address does not match', () => {
-        let handler = EthSocket.accountMessageHandler(account)
+        let handler = EthSocket.accountMessageHandler(ethWallet, account)
         spyOn(account, 'setData')
         handler(JSON.stringify({ op: 'account_sub', account: '0xfdsa' }))
         expect(account.setData).not.toHaveBeenCalled()
@@ -95,7 +95,7 @@ describe('EthSocket', () => {
 
       it('should reset the balance of a legacy address', () => {
         let legacyAccount = mockAccount('0xabcd')
-        let handler = EthSocket.accountMessageHandler(account, legacyAccount)
+        let handler = EthSocket.accountMessageHandler(ethWallet, account, legacyAccount)
         spyOn(legacyAccount, 'setData')
         handler(JSON.stringify({ op: 'account_sub', account: '0xasdf', tx: { from: '0xabcd' } }))
         expect(legacyAccount.setData).toHaveBeenCalledWith({ balance: '0' })

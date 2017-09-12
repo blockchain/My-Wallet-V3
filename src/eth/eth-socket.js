@@ -10,9 +10,9 @@ class EthSocket extends StableSocket {
     this.connect();
   }
 
-  subscribeToAccount (account, legacyAccount) {
+  subscribeToAccount (ethWallet, account, legacyAccount) {
     this.send(EthSocket.accountSub(account));
-    this.on('message', EthSocket.accountMessageHandler(account, legacyAccount));
+    this.on('message', EthSocket.accountMessageHandler(ethWallet, account, legacyAccount));
   }
 
   subscribeToBlocks (ethWallet) {
@@ -20,14 +20,14 @@ class EthSocket extends StableSocket {
     this.on('message', EthSocket.blockMessageHandler(ethWallet));
   }
 
-  static accountMessageHandler (account, legacyAccount) {
+  static accountMessageHandler (ethWallet, account, legacyAccount) {
     return pipe(JSON.parse, (data) => {
       if (data.op === OP_ACCOUNT_SUB && data.account === account.address) {
         account.setData(data);
-        account.appendTransaction(data.tx);
+        account.appendTransaction(data.tx).update(ethWallet);
         if (legacyAccount && legacyAccount.isCorrectAddress(data.tx.from)) {
           legacyAccount.setData({ balance: '0' });
-          legacyAccount.appendTransaction(data.tx);
+          legacyAccount.appendTransaction(data.tx).update(ethWallet);
         }
       }
     });
