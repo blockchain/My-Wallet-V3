@@ -314,6 +314,10 @@ API.prototype.incrementBtcEthUsageStats = function (btcBalance, ethBalance) {
   fetch(makeEventUrl(btcBalance > 0, ethBalance > 0));
 };
 
+API.prototype.getPriceChartData = function (params) {
+  return this.requestApi(`historicalprices?base=${params.base}&quote=${params.quote}&start=${params.start}&scale=${params.scale}`);
+};
+
 API.prototype.incrementBuyLimitCounter = function (amount) {
   return fetch(`${this.ROOT_URL}event?name=wallet_buy_${amount === 'over' ? 'over' : 'under'}_limit`);
 };
