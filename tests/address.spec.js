@@ -1,5 +1,5 @@
 let Bitcoin = require('bitcoinjs-lib');
-let exchangeMock = require('./mocks/bitcoin-exchange-client.mock');
+let exchangeMock = require('./__mocks__/bitcoin-exchange-client.mock');
 
 let proxyquire = require('proxyquireify')(require);
 
@@ -222,7 +222,6 @@ describe('Address', () => {
 
   describe('instance', () => {
     let a;
-    let SETTER_TYPE_ERROR = new TypeError('setting a property that has only a getter');
 
     beforeEach(() => {
       a = new Address(object);
@@ -306,12 +305,12 @@ describe('Address', () => {
       });
 
       it('private key is read only', () => {
-        expect(() => { a.priv = 'not allowed'; }).toThrow(SETTER_TYPE_ERROR);
+        expect(() => { a.priv = 'not allowed'; }).toThrow();
         expect(a.priv).toEqual('GFZrKdb4tGWBWrvkjwRymnhGX8rfrWAGYadfHSJz36dF');
       });
 
       it('address is read only', () => {
-        expect(() => { a.address = 'not allowed'; }).toThrow(SETTER_TYPE_ERROR);
+        expect(() => { a.address = 'not allowed'; }).toThrow();
         expect(a.address).toEqual('1HaxXWGa5cZBUKNLzSWWtyDyRiYLWff8FN');
       });
     });

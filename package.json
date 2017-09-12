@@ -33,7 +33,8 @@
     "build": "./node_modules/.bin/webpack --progress",
     "build:watch": "./node_modules/.bin/webpack -w",
     "clean": "rm -rf dist/ coverage/ coverage-lcov/",
-    "test": "./node_modules/karma/bin/karma start karma.conf.js"
+    "test": "./node_modules/.bin/karma start karma.conf.js",
+    "test:chrome": "./node_modules/.bin/karma start karma.conf.js --browsers ChromeHeadless"
   },
   "browser": {
     "ws": "./src/ws-browser.js"
@@ -83,6 +84,7 @@
     "jasmine-es6-promise-matchers": "^2.0.1",
     "karma": "1.7.*",
     "karma-browserify": "5.1.*",
+    "karma-chrome-launcher": "^2.2.0",
     "karma-coverage": "1.1.*",
     "karma-jasmine": "1.1.*",
     "karma-osx-reporter": "0.2.*",

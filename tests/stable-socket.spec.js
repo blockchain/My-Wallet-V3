@@ -1,6 +1,6 @@
 /* eslint-disable semi */
 describe('StableSocket', () => {
-  let WebSocket = require('./mocks/ws.mock')
+  let WebSocket = require('./__mocks__/ws.mock')
   let StableSocket = require('../src/stable-socket')
   let Helpers = require('../src/helpers')
 

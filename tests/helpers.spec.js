@@ -135,15 +135,12 @@ describe('Helpers', () => {
     let observer;
 
     beforeEach(() => {
+      jasmine.clock().uninstall();
       jasmine.clock().install();
       observer = {
         func: jasmine.createSpy('func'),
         before: jasmine.createSpy('before')
       };
-    });
-
-    afterEach(() => {
-      jasmine.clock().uninstall();
     });
 
     it('should only execute once', () => {

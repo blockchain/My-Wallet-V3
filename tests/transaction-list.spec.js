@@ -1,7 +1,7 @@
 
 let proxyquire = require('proxyquireify')(require);
 
-let tx = require('./data/transactions')['default'];
+let tx = require('./__data__/transactions')['default'];
 
 let TransactionList = proxyquire('../src/transaction-list', {
   './wallet-transaction': {
