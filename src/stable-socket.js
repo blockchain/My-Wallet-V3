@@ -1,4 +1,3 @@
-const WebSocket = require('ws');
 const EventEmitter = require('events');
 const Helpers = require('./helpers');
 
@@ -6,9 +5,10 @@ const PING_INTERVAL = 15000;
 const PING_TIMEOUT = 5000;
 
 class StableSocket extends EventEmitter {
-  constructor (url) {
+  constructor (url, SocketClass) {
     super();
     this.wsUrl = url;
+    this.SocketClass = SocketClass;
     this._headers = { 'Origin': 'https://blockchain.info' };
     this._socket;
     this._pingIntervalPID = null;
@@ -37,7 +37,7 @@ class StableSocket extends EventEmitter {
   }
 
   createSocket (url) {
-    return new WebSocket(url, [], { headers: this._headers });
+    return new this.SocketClass(url, [], { headers: this._headers });
   }
 
   connect () {

@@ -1,3 +1,4 @@
+const WebSocket = require('ws');
 const EthHd = require('ethereumjs-wallet/hdkey');
 const { construct } = require('ramda');
 const { isPositiveNumber, asyncOnce, dedup } = require('../helpers');
@@ -249,7 +250,7 @@ class EthWallet {
 
   connect (wsUrl) {
     if (this._socket) return;
-    this._socket = new EthSocket(wsUrl);
+    this._socket = new EthSocket(wsUrl, WebSocket);
     this._socket.on('open', () => this.setSocketHandlers());
     this._socket.on('close', () => this.setSocketHandlers());
   }

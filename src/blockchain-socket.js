@@ -7,8 +7,8 @@ const OP_ADDR_SUB = 'addr_sub';
 const OP_XPUB_SUB = 'xpub_sub';
 
 class BlockchainSocket extends StableSocket {
-  constructor () {
-    super('wss://ws.blockchain.info/inv');
+  constructor (wsUrl, SocketClass) {
+    super(wsUrl || 'wss://ws.blockchain.info/inv', SocketClass);
   }
 
   subscribeToAddresses (addrs) {

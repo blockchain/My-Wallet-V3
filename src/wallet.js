@@ -1,5 +1,6 @@
 var MyWallet = module.exports = {};
 
+var WebSocket = require('ws');
 var assert = require('assert');
 var Buffer = require('buffer').Buffer;
 var WalletStore = require('./wallet-store');
@@ -19,7 +20,7 @@ var range = require('ramda/src/range');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
-MyWallet.ws = new BlockchainSocket();
+MyWallet.ws = new BlockchainSocket(null, WebSocket);
 
 // used locally and overridden in iOS
 MyWallet.socketConnect = function () {

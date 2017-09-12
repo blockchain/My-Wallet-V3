@@ -5,12 +5,10 @@ describe('Websocket', () => {
 
   describe('instance', () => {
     let ws;
-    let createSocket = (url) => new WebSocket(url);
 
     beforeEach(() => {
-      ws = new BlockchainSocket();
+      ws = new BlockchainSocket(null, WebSocket);
       spyOn(Helpers, 'tor').and.returnValue(false);
-      spyOn(ws, 'createSocket').and.callFake(createSocket);
     });
 
     describe('subscribeToAddresses()', () => {

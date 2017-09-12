@@ -5,8 +5,8 @@ const OP_ACCOUNT_SUB = 'account_sub';
 const OP_BLOCK_SUB = 'block_sub';
 
 class EthSocket extends StableSocket {
-  constructor (wsUrl) {
-    super(wsUrl);
+  constructor (wsUrl, SocketClass) {
+    super(wsUrl, SocketClass);
     this.connect();
   }
 
