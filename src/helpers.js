@@ -585,7 +585,7 @@ Helpers.toWei = function (x, unit) {
   if (!etherUnits[unit]) {
     throw new Error(`Unsupported ether unit in toWei: ${unit}`);
   }
-  let result = Helpers.toBigNumber(x).mul(etherUnits[unit]);
+  let result = Helpers.toBigNumber(x).mul(etherUnits[unit]).floor();
   return Helpers.isBigNumber(x) ? result : result.toString();
 };
 
@@ -604,6 +604,16 @@ Helpers.isBigNumber = function (x) {
 
 Helpers.toBigNumber = function (x) {
   return Helpers.isBigNumber(x) ? x : new BigNumber((x || 0).toString());
+};
+
+Helpers.bnMax = function (a, b) {
+  return BigNumber.max(a, b);
+};
+
+Helpers.bnToBuffer = function (bn) {
+  let hex = bn.toString(16);
+  if (hex.length % 2 !== 0) hex = '0' + hex;
+  return Buffer.from(hex, 'hex');
 };
 
 Helpers.isEtherAddress = function (address) {

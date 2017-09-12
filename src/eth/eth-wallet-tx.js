@@ -69,16 +69,29 @@ class EthWalletTx {
   }
 
   isToAccount (account) {
-    return this._to.toLowerCase() === account.address.toLowerCase();
+    return account.isCorrectAddress(this.to);
   }
 
   isFromAccount (account) {
-    return this._from.toLowerCase() === account.address.toLowerCase();
+    return account.isCorrectAddress(this.from);
   }
 
   update (ethWallet) {
     this._confirmations = Math.max(ethWallet.latestBlock - this._blockNumber + 1, 0);
     this._note = ethWallet.getTxNote(this.hash);
+  }
+
+  toJSON () {
+    return {
+      amount: this.amount,
+      fee: this.fee,
+      to: this.to,
+      from: this.from,
+      hash: this.hash,
+      time: this.time,
+      confirmations: this.confirmations,
+      note: this.note
+    };
   }
 
   static txTimeSort (txA, txB) {
