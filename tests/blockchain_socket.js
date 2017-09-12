@@ -1,147 +1,87 @@
-let proxyquire = require('proxyquireify')(require);
-
 describe('Websocket', () => {
-  let ws = (url, array, options) => ({
-    on (event, callback) {},
-    send (message) {},
-    close () {},
-    readyState: 1,
-    url
-  });
-
-  let Helpers = {
-    tor () { return false; }
-  };
-
-  let BlockchainSocket = proxyquire('../src/blockchain-socket', {
-    'ws': ws,
-    './helpers': Helpers
-  });
-
-  describe('new', () => it('should have a URL', () => {
-    ws = new BlockchainSocket();
-    expect(ws.wsUrl).toBeDefined();
-    expect(ws.wsUrl.indexOf('wss://')).toEqual(0);
-  }));
+  let WebSocket = require('./mocks/ws.mock');
+  let BlockchainSocket = require('../src/blockchain-socket');
+  let Helpers = require('../src/helpers');
 
   describe('instance', () => {
+    let ws;
+
     beforeEach(() => {
-      ws = new BlockchainSocket();
+      ws = new BlockchainSocket(null, WebSocket);
+      spyOn(Helpers, 'tor').and.returnValue(false);
     });
 
-    describe('connect()', () => {
-      it('should open a socket', () => {
-        ws.connect();
-        expect(ws.socket).toBeDefined();
-        expect(ws.socket.url.indexOf('wss://')).toEqual(0);
-      });
-
-      describe('on TOR', () => {
-        beforeEach(() =>
-          spyOn(Helpers, 'tor').and.returnValue(true)
-        );
-
-        it('should not open a socket', () => {
-          ws.connect();
-          expect(ws.socket).not.toBeDefined();
-        });
-      });
-    });
-
-    describe('send()', () => {
-      beforeEach(() =>
-        ws.connect()
-      );
-
-      it('should pass the message on', () => {
-        let message = '{"op":"addr_sub", "addr": "1btc"}';
-        spyOn(ws.socket, 'send');
-        ws.send(message);
-        expect(ws.socket.send).toHaveBeenCalledWith(message);
-      });
-
-      describe('on TOR', () => {
-        let message = '{"op":"addr_sub", "addr": "1btc"}';
-
-        beforeEach(() => {
-          ws.socket = void 0;
-          spyOn(Helpers, 'tor').and.returnValue(true);
-          ws.connect();
-        });
-
-        it('should not reconnect', () => {
-          ws.send(message);
-          expect(ws.socket).not.toBeDefined();
-        });
-
-        it('should do nothing', () =>
-          expect(() => ws.send(message)).not.toThrow()
-        );
-      });
-    });
-
-    describe('close()', () => {
-      beforeEach(() =>
-        ws.connect()
-      );
-
-      it('should clear interval and timeout', () => {
-        ws.close();
-        expect(ws.pingTimeoutPID).toEqual(null);
-        expect(ws.socket).toEqual(null);
-      });
-    });
-
-    describe('ping()', () => {
-      beforeEach(() =>
-        ws.connect()
-      );
-
-      it('should clear interval and timeout', () => {
+    describe('subscribeToAddresses()', () => {
+      it('should subscribe to a single address', () => {
         spyOn(ws, 'send');
-        ws.ping();
-        let expected = JSON.stringify({ op: 'ping' });
+        ws.subscribeToAddresses('asdf');
+        let expected = JSON.stringify({ op: 'addr_sub', addr: 'asdf' });
+        expect(ws.send).toHaveBeenCalledWith(expected);
+      });
+
+      it('should subscribe to multiple addresses', () => {
+        spyOn(ws, 'send');
+        ws.subscribeToAddresses(['asdf', 'qwer']);
+        let expected = JSON.stringify({ op: 'addr_sub', addr: 'asdf' }) + JSON.stringify({ op: 'addr_sub', addr: 'qwer' });
         expect(ws.send).toHaveBeenCalledWith(expected);
       });
     });
 
-    describe('msgWalletSub()', () => {
+    describe('subscribeToXpubs()', () => {
+      it('should subscribe to a single xpub', () => {
+        spyOn(ws, 'send');
+        ws.subscribeToXpubs('xpub1');
+        let expected = JSON.stringify({ op: 'xpub_sub', xpub: 'xpub1' });
+        expect(ws.send).toHaveBeenCalledWith(expected);
+      });
+
+      it('should subscribe to multiple xpubs', () => {
+        spyOn(ws, 'send');
+        ws.subscribeToXpubs(['xpub1', 'xpub2']);
+        let expected = JSON.stringify({ op: 'xpub_sub', xpub: 'xpub1' }) + JSON.stringify({ op: 'xpub_sub', xpub: 'xpub2' });
+        expect(ws.send).toHaveBeenCalledWith(expected);
+      });
+    });
+  });
+
+  describe('static', () => {
+    describe('walletSub()', () => {
       it('should subscribe to a guid', () => {
-        let res = ws.msgWalletSub('1234');
+        let res = BlockchainSocket.walletSub('1234');
         let expected = JSON.stringify({ op: 'wallet_sub', guid: '1234' });
         expect(res).toEqual(expected);
       });
 
       it('should return an empty string if guid is missing', () => {
-        let res = ws.msgWalletSub(null);
+        let res = BlockchainSocket.walletSub(null);
         let expected = '';
         expect(res).toEqual(expected);
       });
     });
 
-    describe('msgBlockSub()', () =>
+    describe('blocksSub()', () =>
       it('should subscribe to new blocks', () => {
-        let res = ws.msgBlockSub();
+        let res = BlockchainSocket.blocksSub();
         let expected = JSON.stringify({ op: 'blocks_sub' });
         expect(res).toEqual(expected);
       })
     );
 
-    describe('msgAddrSub()', () => {
+    describe('addrSub()', () => {
       it('should return an empty string if addresses are missing', () => {
-        let res = ws.msgAddrSub(null);
+        let res = BlockchainSocket.addrSub(null);
         let expected = '';
         expect(res).toEqual(expected);
       });
 
       it('should subscribe to one adddress', () => {
-        let res = ws.msgAddrSub('1abc');
+        let res = BlockchainSocket.addrSub('1abc');
         let expected = JSON.stringify({ op: 'addr_sub', addr: '1abc' });
         expect(res).toEqual(expected);
       });
 
       it('should subscribe to array of adddresses', () => {
-        let res = ws.msgAddrSub(['1abc', '1def']);
+        let res = BlockchainSocket.addrSub(['1abc', '1def']);
         let expected = JSON.stringify({
           op: 'addr_sub',
           addr: '1abc'
@@ -153,27 +93,27 @@ describe('Websocket', () => {
       });
     });
 
-    describe('msgXPUBSub()', () => {
+    describe('xpubSub()', () => {
       it('should return an empty string if xpub is missing', () => {
-        let res = ws.msgXPUBSub(null);
+        let res = BlockchainSocket.xpubSub(null);
         let expected = '';
         expect(res).toEqual(expected);
       });
 
       it('should return an empty string if xpub is []', () => {
-        let res = ws.msgXPUBSub([]);
+        let res = BlockchainSocket.xpubSub([]);
         let expected = '';
         expect(res).toEqual(expected);
       });
 
       it('should subscribe to one xpub', () => {
-        let res = ws.msgXPUBSub('1abc');
+        let res = BlockchainSocket.xpubSub('1abc');
         let expected = JSON.stringify({ op: 'xpub_sub', xpub: '1abc' });
         expect(res).toEqual(expected);
       });
 
       it('should subscribe to array of adddresses', () => {
-        let res = ws.msgXPUBSub(['1abc', '1def']);
+        let res = BlockchainSocket.xpubSub(['1abc', '1def']);
         let expected = JSON.stringify({
           op: 'xpub_sub',
           xpub: '1abc'
@@ -185,35 +125,29 @@ describe('Websocket', () => {
       });
     });
 
-    describe('msgPing()', () =>
-      it('should ping', () => {
-        let res = ws.msgPing();
-        let expected = JSON.stringify({ op: 'ping' });
+    describe('onOpenSub()', () => {
+      it('should subscribe to blocks, guid, addresses and xpubs', () => {
+        let guid = '1234';
+        let addresses = ['123a', '1bcd'];
+        let xpubs = '1eff';
+        let res = BlockchainSocket.onOpenSub(guid, addresses, xpubs);
+        let expected = JSON.stringify({
+          op: 'blocks_sub'
+        }) + JSON.stringify({
+          op: 'wallet_sub',
+          guid: '1234'
+        }) + JSON.stringify({
+          op: 'addr_sub',
+          addr: '123a'
+        }) + JSON.stringify({
+          op: 'addr_sub',
+          addr: '1bcd'
+        }) + JSON.stringify({
+          op: 'xpub_sub',
+          xpub: '1eff'
+        });
         expect(res).toEqual(expected);
-      })
-    );
-
-    describe('msgOnOpen()', () => it('should subscribe to blocks, guid, addresses and xpubs', () => {
-      let guid = '1234';
-      let addresses = ['123a', '1bcd'];
-      let xpubs = '1eff';
-      let res = ws.msgOnOpen(guid, addresses, xpubs);
-      let expected = JSON.stringify({
-        op: 'blocks_sub'
-      }) + JSON.stringify({
-        op: 'wallet_sub',
-        guid: '1234'
-      }) + JSON.stringify({
-        op: 'addr_sub',
-        addr: '123a'
-      }) + JSON.stringify({
-        op: 'addr_sub',
-        addr: '1bcd'
-      }) + JSON.stringify({
-        op: 'xpub_sub',
-        xpub: '1eff'
       });
-      expect(res).toEqual(expected);
-    }));
+    });
   });
 });
