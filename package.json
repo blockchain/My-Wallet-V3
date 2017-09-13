@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.36.2",
+  "version": "3.36.3",
   "description": "Blockchain.info JavaScript Wallet",
   "homepage": "https://github.com/blockchain/my-wallet-v3",
   "bugs": {
@@ -62,6 +62,7 @@
     "pbkdf2": "^3.0.12",
     "ramda": "^0.22.1",
     "randombytes": "^2.0.1",
+    "synk": "^0.0.2",
     "unorm": "^1.4.1",
     "ws": "2.0.*"
   },
