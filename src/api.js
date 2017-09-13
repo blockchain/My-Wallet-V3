@@ -248,15 +248,22 @@ API.prototype.requestApi = function (endpoint, data) {
   };
 
   var checkStatus = function (response) {
+    if (response.status === 500) return Promise.reject('REQUEST_FAILED');
+
     return response.status >= 200 && response.status < 300
       ? response.json()
       : response.text().then(Promise.reject.bind(Promise));
   };
 
+  var handleResponseError = function (err) {
+    return err;
+  };
+
   var url = data ? `${endpoint}?${this.encodeFormData(data)}` : endpoint;
 
   return fetch(this.API_ROOT_URL + url)
-    .then(checkStatus, handleNetworkError);
+    .then(checkStatus, handleNetworkError)
+    .catch(handleResponseError);
 };
 
 API.prototype.getFees = function () {
