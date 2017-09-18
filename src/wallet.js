@@ -392,8 +392,8 @@ MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
   var loadMetadata = function () {
     return MyWallet.wallet.loadMetadata();
   };
-  p.then(incStats).catch(() => { /* ignore failure */ });
-  p.then(saveGUID).catch(() => { /* ignore failure */ });
+  p.then(incStats);
+  p.then(saveGUID);
   return p.then(loadMetadata);
 };
 
