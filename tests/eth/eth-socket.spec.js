@@ -1,4 +1,5 @@
 /* eslint-disable semi */
+const WebSocket = require('ws')
 const EthSocket = require('../../src/eth/eth-socket');
 
 describe('EthSocket', () => {
@@ -24,7 +25,7 @@ describe('EthSocket', () => {
 
   describe('constructor', () => {
     it('should pass the url', () => {
-      let socket = new EthSocket(url)
+      let socket = new EthSocket(url, WebSocket)
       expect(socket.url).toEqual(url)
     })
   })
@@ -33,7 +34,7 @@ describe('EthSocket', () => {
     let socket
 
     beforeEach(() => {
-      socket = new EthSocket(url)
+      socket = new EthSocket(url, WebSocket)
       spyOn(socket, 'send')
       spyOn(socket, 'on')
     })

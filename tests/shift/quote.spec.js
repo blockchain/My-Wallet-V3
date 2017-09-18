@@ -1,5 +1,5 @@
 /* eslint-disable semi */
-const mock = require('./_mock')
+const mockTxStatResponse = require('../__mocks__/tx-stat-response.mock')
 const Quote = require('../../src/shift/quote')
 
 describe('ShapeShift.Quote', () => {
@@ -83,7 +83,7 @@ describe('ShapeShift.Quote', () => {
     describe('.setFieldsFromTxStat', () => {
       it('should set the proper fields', () => {
         quote = new Quote({});
-        let response = mock.txStatResponse('success')
+        let response = mockTxStatResponse('success')
         quote.setFieldsFromTxStat(response)
         expect(quote.pair).toEqual('ETH_BTC')
         expect(quote.depositAmount).toEqual(response.incomingCoin)
@@ -92,7 +92,7 @@ describe('ShapeShift.Quote', () => {
       })
 
       it('should should not override existing fields', () => {
-        let response = mock.txStatResponse('success')
+        let response = mockTxStatResponse('success')
         quote.setFieldsFromTxStat(response)
         expect(quote.pair).toEqual(quote.pair)
         expect(quote.depositAmount).toEqual(quote.depositAmount)

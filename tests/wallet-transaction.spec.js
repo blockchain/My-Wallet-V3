@@ -24,7 +24,7 @@ let MyWallet = {
   }
 };
 
-let transactions = require('./data/transactions');
+let transactions = require('./__data__/transactions');
 
 let Tx = proxyquire('../src/wallet-transaction', {
   './wallet': MyWallet

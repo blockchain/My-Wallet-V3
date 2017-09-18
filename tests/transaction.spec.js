@@ -215,7 +215,7 @@ describe('Transaction', () => {
       let getIn;
       let getOut;
 
-      let testVectors = require('./data/bip69-test-vectors');
+      let testVectors = require('./__data__/bip69-test-vectors');
 
       beforeEach(() => {
         getIn = ({hash}) => [].reverse.call(hash).toString('hex');

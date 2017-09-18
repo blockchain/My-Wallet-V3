@@ -508,7 +508,7 @@ Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) 
       ad.encrypt(cipher).persist();
     }
     this._addresses[ad.address] = ad;
-    MyWallet.ws.send(MyWallet.ws.msgAddrSub(ad.address));
+    MyWallet.ws.subscribeToAddresses(ad.address);
     MyWallet.syncWallet();
     this.getHistory();
     return ad;
@@ -745,7 +745,7 @@ Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosav
   }
   var newAccount = this._hd_wallets[index].newAccount(label, cipher).lastAccount;
   try { // MyWallet.ws.send can fail when restoring from mnemonic because it is not initialized.
-    MyWallet.ws.send(MyWallet.ws.msgXPUBSub(newAccount.extendedPublicKey));
+    MyWallet.ws.subscribeToXpubs(newAccount.extendedPublicKey);
   } catch (e) {}
   if (!(nosave === true)) MyWallet.syncWallet();
   typeof (success) === 'function' && success();
