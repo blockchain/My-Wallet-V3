@@ -1,6 +1,5 @@
 var MyWallet = module.exports = {};
 
-var WebSocket = require('ws');
 var assert = require('assert');
 var Buffer = require('buffer').Buffer;
 var WalletStore = require('./wallet-store');
@@ -20,15 +19,11 @@ var range = require('ramda/src/range');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
-MyWallet.ws = new BlockchainSocket(null, WebSocket);
+MyWallet.ws = new BlockchainSocket();
 
 // used locally and overridden in iOS
 MyWallet.socketConnect = function () {
-  let socket = MyWallet.ws;
-  socket.on('open', onOpen);
-  socket.on('message', onMessage);
-  socket.on('close', onClose);
-  socket.connect();
+  MyWallet.ws.connect(onOpen, onMessage, onClose);
 
   var lastOnChange = { checksum: null };
 
@@ -38,7 +33,7 @@ MyWallet.socketConnect = function () {
 
   function onOpen () {
     WalletStore.sendEvent('ws_on_open');
-    socket.send(MyWallet.getSocketOnOpenMessage());
+    MyWallet.ws.send(MyWallet.getSocketOnOpenMessage());
   }
 
   function onClose () {
@@ -56,6 +51,10 @@ function didDecryptWallet (success) {
 // called by native websocket in iOS
 MyWallet.getSocketOnMessage = function (message, lastOnChange) {
   var obj = null;
+
+  if (!(typeof window === 'undefined') && message.data) {
+    message = message.data;
+  }
   try {
     obj = JSON.parse(message);
   } catch (e) {
@@ -91,6 +90,8 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
       MyWallet.wallet.txList._transactions.forEach(up);
     }
     WalletStore.sendEvent('on_block');
+  } else if (obj.op === 'pong') {
+    clearTimeout(MyWallet.ws.pingTimeoutPID);
   } else if (obj.op === 'email_verified') {
     MyWallet.wallet.accountInfo.isEmailVerified = Boolean(obj.x);
     WalletStore.sendEvent('on_email_verified', obj.x);
@@ -102,7 +103,7 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
 // called by native websocket in iOS
 MyWallet.getSocketOnOpenMessage = function () {
   var accounts = MyWallet.wallet.hdwallet ? MyWallet.wallet.hdwallet.activeXpubs : [];
-  return BlockchainSocket.onOpenSub(MyWallet.wallet.guid, MyWallet.wallet.activeAddresses, accounts);
+  return MyWallet.ws.msgOnOpen(MyWallet.wallet.guid, MyWallet.wallet.activeAddresses, accounts);
 };
 
 // Fetch a new wallet from the server

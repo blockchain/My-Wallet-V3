@@ -1,5 +1,5 @@
 let proxyquire = require('proxyquireify')(require);
-let exchangeMock = require('./__mocks__/bitcoin-exchange-client.mock');
+let exchangeMock = require('./mocks/bitcoin-exchange-client.mock');
 
 let walletStoreGuid;
 let walletStoreEncryptedWalletData;

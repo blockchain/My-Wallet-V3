@@ -5,8 +5,8 @@ const OP_ACCOUNT_SUB = 'account_sub';
 const OP_BLOCK_SUB = 'block_sub';
 
 class EthSocket extends StableSocket {
-  constructor (wsUrl, SocketClass) {
-    super(wsUrl, SocketClass);
+  constructor (wsUrl) {
+    super(wsUrl);
     this.connect();
   }
 
@@ -42,11 +42,11 @@ class EthSocket extends StableSocket {
   }
 
   static accountSub (account) {
-    return this.op(OP_ACCOUNT_SUB, { account: account.address });
+    return JSON.stringify({ op: OP_ACCOUNT_SUB, account: account.address });
   }
 
   static blocksSub () {
-    return this.op(OP_BLOCK_SUB);
+    return JSON.stringify({ op: OP_BLOCK_SUB });
   }
 }
 
