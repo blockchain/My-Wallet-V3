@@ -10,7 +10,7 @@ let stubs = {
 let WalletCrypto = proxyquire('../src/wallet-crypto', stubs);
 
 describe('WalletCrypto', () => {
-  let walletData = require('./__data__/wallet-data');
+  let walletData = require('./data/wallet-data');
 
   describe('stretchPassword()', () =>
     it('should stretch a password', () => {
@@ -329,7 +329,7 @@ describe('WalletCrypto', () => {
   });
 
   describe('aes-256', () => {
-    let vectors = require('./__data__/aes-256-vectors');
+    let vectors = require('./data/aes-256-vectors');
 
     ['cbc', 'ofb', 'ecb'].forEach(mode =>
 

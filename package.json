@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.36.5",
+  "version": "3.35.5",
   "description": "Blockchain.info JavaScript Wallet",
   "homepage": "https://github.com/blockchain/my-wallet-v3",
   "bugs": {
@@ -33,8 +33,7 @@
     "build": "./node_modules/.bin/webpack --progress",
     "build:watch": "./node_modules/.bin/webpack -w",
     "clean": "rm -rf dist/ coverage/ coverage-lcov/",
-    "test": "./node_modules/.bin/karma start karma.conf.js",
-    "test:chrome": "./node_modules/.bin/karma start karma.conf.js --browsers ChromeHeadless"
+    "test": "./node_modules/karma/bin/karma start karma.conf.js"
   },
   "browser": {
     "ws": "./src/ws-browser.js"
@@ -47,7 +46,7 @@
     "bigi": "1.4.*",
     "bignumber.js": "^4.0.2",
     "bip39": "2.1.*",
-    "bitcoin-coinify-client": "^0.6.5",
+    "bitcoin-coinify-client": "^0.6.4",
     "bitcoin-exchange-client": "^0.4.3",
     "bitcoin-sfox-client": "^0.1.11",
     "bitcoin-unocoin-client": "^0.3.4",
@@ -62,7 +61,6 @@
     "pbkdf2": "^3.0.12",
     "ramda": "^0.22.1",
     "randombytes": "^2.0.1",
-    "synk": "^0.0.2",
     "unorm": "^1.4.1",
     "ws": "2.0.*"
   },
@@ -85,7 +83,6 @@
     "jasmine-es6-promise-matchers": "^2.0.1",
     "karma": "1.7.*",
     "karma-browserify": "5.1.*",
-    "karma-chrome-launcher": "^2.2.0",
     "karma-coverage": "1.1.*",
     "karma-jasmine": "1.1.*",
     "karma-osx-reporter": "0.2.*",

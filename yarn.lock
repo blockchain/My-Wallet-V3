@@ -1015,9 +1015,9 @@ bip66@^1.1.0, bip66@^1.1.3:
   dependencies:
     safe-buffer "^5.0.1"
 
-bitcoin-coinify-client@^0.6.5:
-  version "0.6.5"
-  resolved "https://registry.npmjs.org/bitcoin-coinify-client/-/bitcoin-coinify-client-0.6.5.tgz#06e977a1cbc68dcd659198f8a21c7827b0f0c8d7"
+bitcoin-coinify-client@^0.6.4:
+  version "0.6.4"
+  resolved "https://registry.yarnpkg.com/bitcoin-coinify-client/-/bitcoin-coinify-client-0.6.4.tgz#9ef2ee2b154804c1a3d8fd5622fe21f399be7a4b"
   dependencies:
     babel-polyfill "6.16.*"
     babel-preset-es2015 "6.16.*"
@@ -2696,12 +2696,6 @@ fresh@0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/fresh/-/fresh-0.1.0.tgz#03e4b0178424e4c2d5d19a54d8814cdc97934850"
 
-fs-access@^1.0.0:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/fs-access/-/fs-access-1.0.1.tgz#d6a87f262271cefebec30c553407fb995da8777a"
-  dependencies:
-    null-check "^1.0.0"
-
 fs-extra@^0.18.4:
   version "0.18.4"
   resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-0.18.4.tgz#7f205752d6d3959c967533e34540161a7b38dc36"
@@ -3469,13 +3463,6 @@ karma-browserify@5.1.*:
     minimatch "^3.0.0"
     os-shim "^0.1.3"
 
-karma-chrome-launcher@^2.2.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/karma-chrome-launcher/-/karma-chrome-launcher-2.2.0.tgz#cf1b9d07136cc18fe239327d24654c3dbc368acf"
-  dependencies:
-    fs-access "^1.0.0"
-    which "^1.2.1"
-
 karma-coverage@1.1.*:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/karma-coverage/-/karma-coverage-1.1.1.tgz#5aff8b39cf6994dc22de4c84362c76001b637cf6"
@@ -4001,10 +3988,6 @@ npmlog@^4.0.1, npmlog@^4.0.2:
     console-control-strings "~1.1.0"
     gauge "~2.7.3"
     set-blocking "~2.0.0"
-
-null-check@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/null-check/-/null-check-1.0.0.tgz#977dffd7176012b9ec30d2a39db5cf72a0439edd"
 
 number-is-nan@^1.0.0:
   version "1.0.1"
@@ -5266,10 +5249,6 @@ sync-exec@^0.5.0:
   version "0.5.0"
   resolved "https://registry.yarnpkg.com/sync-exec/-/sync-exec-0.5.0.tgz#3f7258e4a5ba17245381909fa6a6f6cf506e1661"
 
-synk@^0.0.2:
-  version "0.0.2"
-  resolved "https://registry.npmjs.org/synk/-/synk-0.0.02.tgz#615c923a5877400d3928a944f18dbd2c7c506bdc"
-
 syntax-error@^1.1.1:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/syntax-error/-/syntax-error-1.3.0.tgz#1ed9266c4d40be75dc55bf9bb1cb77062bb96ca1"
@@ -5630,12 +5609,6 @@ which-module@^1.0.0:
 which@^1.0.5, which@^1.1.1, which@^1.2.4, which@~1.2.10:
   version "1.2.14"
   resolved "https://registry.yarnpkg.com/which/-/which-1.2.14.tgz#9a87c4378f03e827cecaf1acdf56c736c01c14e5"
-  dependencies:
-    isexe "^2.0.0"
-
-which@^1.2.1:
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/which/-/which-1.3.0.tgz#ff04bdfc010ee547d780bec38e1ac1c2777d253a"
   dependencies:
     isexe "^2.0.0"
 

@@ -330,7 +330,6 @@ describe('EthWallet', () => {
       it('should start listening for new blocks', () => {
         spyOn(EthSocket, 'blockMessageHandler').and.callThrough();
         eth.connect(wsUrl);
-        eth._socket.emit('open');
         expect(EthSocket.blockMessageHandler).toHaveBeenCalledWith(eth);
       });
     });

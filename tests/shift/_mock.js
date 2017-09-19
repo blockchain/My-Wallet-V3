@@ -1,5 +1,6 @@
 /* eslint-disable semi */
-module.exports = (type) => {
+
+exports.txStatResponse = (type) => {
   let o = {
     success: {
       'status': 'complete',
