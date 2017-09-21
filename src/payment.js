@@ -11,6 +11,10 @@ var util = require('util');
 var constants = require('./constants');
 var mapObjIndexed = require('ramda/src/mapObjIndexed');
 
+let BitcoinCashJS = require('bitcoincashjs-lib')
+
+console.log(BitcoinCashJS)
+
 // Payment Class
 
 function Payment (wallet, payment) {
