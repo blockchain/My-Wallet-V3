@@ -1,19 +1,22 @@
 const { curry, unfold, reduce, last, filter, head, map, isNil, isEmpty, tail, clamp, sort } = require('ramda');
 const Coin = require('./coin.js');
 
+const fold = curry((empty, xs) => reduce((acc, x) => acc.concat(x), empty, xs));
+const foldCoins = fold(Coin.empty);
+
 const dustThreshold = (feeRate) => (Coin.inputBytes({}) + Coin.outputBytes({})) * feeRate;
 
 const transactionBytes = (inputs, outputs) =>
   Coin.TX_EMPTY_SIZE + inputs.reduce((a, c) => a + Coin.inputBytes(c), 0) + outputs.reduce((a, c) => a + Coin.outputBytes(c), 0);
 
 const effectiveBalance = curry((feePerByte, inputs, outputs = [{}]) =>
-  reduce((coin, c) => coin.concat(c), Coin.empty, inputs)
-    .map(v => clamp(0, Infinity, v - transactionBytes(inputs, outputs) * feePerByte))
+  foldCoins(inputs).map(v =>
+    clamp(0, Infinity, v - transactionBytes(inputs, outputs) * feePerByte))
 );
 
 // findTarget :: [Coin(x), ..., Coin(y)] -> Number -> [Coin(a), ..., Coin(b)] -> Selection
 const findTarget = (targets, feePerByte, coins, changeAddress) => {
-  let target = reduce((coin, c) => coin.concat(c), targets, Coin.empty).value;
+  let target = foldCoins(targets).value;
   let _findTarget = seed => {
     let acc = seed[0];
     let newCoin = head(seed[2]);
@@ -50,12 +53,11 @@ const findTarget = (targets, feePerByte, coins, changeAddress) => {
   }
 };
 
-// singleRandomDraw :: Number -> [Coin(a), ..., Coin(b)] -> String -> Selection
 const selectAll = (feePerByte, coins, outAddress) => {
   let effectiveCoins = filter(c => Coin.effectiveValue(feePerByte, c) > 0, coins);
   let effBalance = effectiveBalance(feePerByte, effectiveCoins).value;
-  let Balance = reduce((coin, c) => coin.concat(c), Coin.empty, effectiveCoins).value;
-  let fee = Balance - effBalance;
+  let balance = foldCoins(effectiveCoins).value;
+  let fee = balance - effBalance;
   return {
     fee,
     inputs: effectiveCoins,
@@ -65,16 +67,17 @@ const selectAll = (feePerByte, coins, outAddress) => {
 
 // descentDraw :: [Coin(x), ..., Coin(y)] -> Number -> [Coin(a), ..., Coin(b)] -> Selection
 const descentDraw = (targets, feePerByte, coins, changeAddress) =>
-  findTarget(targets, feePerByte, sort((a, b) => a.lte(b), coins), changeAddress);
+  findTarget(targets, feePerByte, sort(Coin.descentSort, coins), changeAddress);
 
 // ascentDraw :: [Coin(x), ..., Coin(y)] -> Number -> [Coin(a), ..., Coin(b)] -> Selection
 const ascentDraw = (targets, feePerByte, coins, changeAddress) =>
-  findTarget(targets, feePerByte, sort((a, b) => b.lte(a), coins), changeAddress);
+  findTarget(targets, feePerByte, sort(Coin.ascentSort, coins), changeAddress);
 
 module.exports = {
   dustThreshold,
   transactionBytes,
   effectiveBalance,
+  findTarget,
   selectAll,
   descentDraw,
   ascentDraw

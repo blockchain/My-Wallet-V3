@@ -43,6 +43,14 @@ class Coin {
     return !this.isFromAccount();
   }
 
+  static descentSort (coinA, coinB) {
+    return coinB.value - coinA.value;
+  }
+
+  static ascentSort (coinA, coinB) {
+    return coinA.value - coinB.value;
+  }
+
   static fromJS (o) {
     return new Coin({
       value: o.value,
