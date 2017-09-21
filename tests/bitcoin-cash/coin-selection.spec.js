@@ -1,6 +1,6 @@
 /* eslint-disable semi */
 let { map } = require('ramda')
-let cs = require('../../src/bitcoin-cash/select')
+let cs = require('../../src/bitcoin-cash/coin-selection')
 let Coin = require('../../src/bitcoin-cash/coin')
 
 describe('Coin Selection', () => {
