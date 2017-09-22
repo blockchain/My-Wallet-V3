@@ -14,7 +14,7 @@ const effectiveBalance = curry((feePerByte, inputs, outputs = [{}]) =>
     clamp(0, Infinity, v - transactionBytes(inputs, outputs) * feePerByte))
 );
 
-// findTarget :: [Coin(x), ..., Coin(y)] -> Number -> [Coin(a), ..., Coin(b)] -> Selection
+// findTarget :: [Coin] -> Number -> [Coin] -> String -> Selection
 const findTarget = (targets, feePerByte, coins, changeAddress) => {
   let target = foldCoins(targets).value;
   let _findTarget = seed => {
@@ -53,6 +53,7 @@ const findTarget = (targets, feePerByte, coins, changeAddress) => {
   }
 };
 
+// selectAll :: Number -> [Coin] -> String -> Selection
 const selectAll = (feePerByte, coins, outAddress) => {
   let effectiveCoins = filter(c => Coin.effectiveValue(feePerByte, c) > 0, coins);
   let effBalance = effectiveBalance(feePerByte, effectiveCoins).value;
@@ -65,11 +66,11 @@ const selectAll = (feePerByte, coins, outAddress) => {
   };
 };
 
-// descentDraw :: [Coin(x), ..., Coin(y)] -> Number -> [Coin(a), ..., Coin(b)] -> Selection
+// descentDraw :: [Coin] -> Number -> [Coin] -> String -> Selection
 const descentDraw = (targets, feePerByte, coins, changeAddress) =>
   findTarget(targets, feePerByte, sort(Coin.descentSort, coins), changeAddress);
 
-// ascentDraw :: [Coin(x), ..., Coin(y)] -> Number -> [Coin(a), ..., Coin(b)] -> Selection
+// ascentDraw :: [Coin] -> Number -> [Coin] -> String -> Selection
 const ascentDraw = (targets, feePerByte, coins, changeAddress) =>
   findTarget(targets, feePerByte, sort(Coin.ascentSort, coins), changeAddress);
 
