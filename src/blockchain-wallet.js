@@ -25,6 +25,7 @@ var Labels = require('./labels');
 var EthWallet = require('./eth/eth-wallet');
 var ShapeShift = require('./shift');
 var Bitcoin = require('bitcoinjs-lib');
+var BitcoinCash = require('./bcash');
 
 // Wallet
 
@@ -91,6 +92,8 @@ function Wallet (object) {
   this._latestBlock = null;
   this._accountInfo = null;
   this._external = null;
+
+  window.bcash = BitcoinCash.fromBlockchainWallet(this);
 }
 
 Object.defineProperties(Wallet.prototype, {
