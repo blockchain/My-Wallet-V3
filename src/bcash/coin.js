@@ -58,7 +58,7 @@ class Coin {
       txHash: o.tx_hash_big_endian,
       index: o.tx_output_n,
       change: o.change || false,
-      priv: o.priv || (o.xpub ? `${o.xpub.index}${drop(1, o.xpub.path)}` : undefined),
+      priv: o.priv || (o.xpub ? `${o.xpub.index}-${o.xpub.path}` : undefined),
       address: o.address
     });
   }
