@@ -1,11 +1,10 @@
 /* eslint-disable semi */
-const Bitcoin = require('bitcoincashjs-lib');
 const { compose, map, reduce, add } = require('ramda')
 const Api = require('../api')
 const Coin = require('./coin')
 const { isBitcoinAddress, isPositiveInteger } = require('../helpers')
 const { selectAll, descentDraw } = require('./coin-selection')
-const { signSelection } = require('./signer')
+const { sign } = require('./signer')
 
 const sumCoinValues = compose(reduce(add, 0), map(c => c.value))
 
@@ -96,8 +95,7 @@ class CashPayment {
     if (this._selection == null) {
       throw new Error('cannot sign an unbuilt transaction')
     }
-    let network = Bitcoin.networks.bitcoin
-    this._rawTx = signSelection(network, secPass, this._wallet, this._selection)
+    this._rawTx = sign(secPass, this._wallet, this._selection)
     return this
   }
 

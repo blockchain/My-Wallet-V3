@@ -6,9 +6,8 @@ const Coin = require('./coin.js');
 const Bitcoin = require('bitcoinjs-lib');
 const constants = require('../constants');
 
-
 const scriptToAddress = coin => {
-  const scriptBuffer = Buffer(coin.script, 'hex');
+  const scriptBuffer = Buffer.from(coin.script, 'hex');
   const address = Bitcoin.address.fromOutputScript(scriptBuffer, constants.getNetwork()).toString();
   return assoc('priv', address, coin)
 }
