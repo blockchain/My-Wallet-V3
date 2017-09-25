@@ -93,7 +93,8 @@ function Wallet (object) {
   this._accountInfo = null;
   this._external = null;
 
-  window.bcash = BitcoinCash.fromBlockchainWallet(this);
+  this._bch = BitcoinCash.fromBlockchainWallet(this);
+  window.bch = this._bch;
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -356,6 +357,12 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () {
       return this._shapeshift;
+    }
+  },
+  'bch': {
+    configurable: false,
+    get: function () {
+      return this._bch;
     }
   }
 });

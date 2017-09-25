@@ -5,6 +5,7 @@ const Trade = require('./trade')
 const Quote = require('./quote')
 const BtcPayment = require('./btc-payment')
 const EthPayment = require('./eth-payment')
+const BchPayment = require('./bch-payment')
 
 const METADATA_TYPE_SHAPE_SHIFT = 6;
 
@@ -58,6 +59,9 @@ class ShapeShift {
     }
     if (quote.fromCurrency === 'eth') {
       payment = EthPayment.fromWallet(this._wallet)
+    }
+    if (quote.fromCurrency === 'bch') {
+      payment = BchPayment.fromWallet(this._wallet)
     }
     if (payment == null) {
       throw new Error(`Tried to build for unsupported currency ${quote.fromCurrency}`)
@@ -115,6 +119,9 @@ class ShapeShift {
     }
     if (currency === 'eth') {
       return this._wallet.eth.defaultAccount.address
+    }
+    if (currency === 'bch') {
+      return this._wallet.hdwallet.defaultAccount.receiveAddress
     }
     throw new Error(`Currency '${currency}' is not supported`)
   }
