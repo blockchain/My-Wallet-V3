@@ -7,15 +7,17 @@ const CashPayment = require('./cash-payment')
 class BitcoinCashWallet {
   constructor (wallet) {
     this._wallet = wallet
+    this.balance = null
+    this.accountBalances = []
   }
 
   getBalances () {
     let xpubs = this._wallet.hdwallet.accounts.map(a => a.extendedPublicKey)
     let calcTotal = compose(reduce(add, 0), map(x => x.final_balance), values)
-    return Api.getBalances(xpubs).then(result => ({
-      walletBalance: calcTotal(result),
-      accountBalances: map(xpub => result[xpub].final_balance, xpubs)
-    }))
+    return Api.getBalances(xpubs).then(result => {
+      this.balance = calcTotal(result)
+      this.accountBalances = map(xpub => result[xpub].final_balance, xpubs)
+    })
   }
 
   createPayment (source) {
