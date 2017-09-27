@@ -2,10 +2,10 @@
 const ShiftPayment = require('./shift-payment')
 
 class BtcPayment extends ShiftPayment {
-  constructor (wallet) {
+  constructor (wallet, account) {
     super()
     this._payment = wallet.createPayment()
-    this._payment.from(wallet.hdwallet.defaultAccountIndex)
+    this._payment.from(account.index)
   }
 
   setFromQuote (quote, fee = 'priority') {
