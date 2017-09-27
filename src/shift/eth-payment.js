@@ -2,11 +2,11 @@
 const ShiftPayment = require('./shift-payment')
 
 class EthPayment extends ShiftPayment {
-  constructor (wallet) {
+  constructor (wallet, account) {
     super()
     this._wallet = wallet
     this._eth = wallet.eth
-    this._payment = this._eth.defaultAccount.createPayment()
+    this._payment = account.createPayment()
   }
 
   setFromQuote (quote) {

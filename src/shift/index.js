@@ -48,17 +48,19 @@ class ShapeShift {
       .then(Quote.fromApiResponse)
   }
 
-  buildPayment (quote, fee) {
+  buildPayment (quote, fee, fromAccount) {
     trace('building payment')
     let payment
     if (quote.depositAddress == null) {
       throw new Error('Quote is missing deposit address')
     }
     if (quote.fromCurrency === 'btc') {
-      payment = BtcPayment.fromWallet(this._wallet)
+      let account = fromAccount || this._wallet.hdwallet.defaultAccount
+      payment = BtcPayment.fromWallet(this._wallet, account)
     }
     if (quote.fromCurrency === 'eth') {
-      payment = EthPayment.fromWallet(this._wallet)
+      let account = fromAccount || this._wallet.eth.defaultAccount
+      payment = EthPayment.fromWallet(this._wallet, account)
     }
     if (quote.fromCurrency === 'bch') {
       payment = BchPayment.fromWallet(this._wallet)
