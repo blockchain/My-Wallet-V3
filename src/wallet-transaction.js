@@ -26,7 +26,7 @@ function Tx (object) {
   this.rbf = obj.rbf;
   this.publicNote = obj.note;
   this.note = MyWallet.wallet.getNote(this.hash);
-  this.confirmations = Tx.setConfirmations(this.block_height);
+  this.confirmations = Tx.setConfirmations(this.block_height, MyWallet.wallet.latestBlock);
 
   // computed properties
   var initialIn = {
@@ -310,8 +310,7 @@ Tx.IOSfactory = function (tx) {
   };
 };
 
-Tx.setConfirmations = function (txBlockHeight) {
-  var lastBlock = MyWallet.wallet.latestBlock;
+Tx.setConfirmations = function (txBlockHeight, lastBlock) {
   var conf = 0;
   if (lastBlock && txBlockHeight != null && txBlockHeight > 0) {
     conf = lastBlock.height - txBlockHeight + 1;
