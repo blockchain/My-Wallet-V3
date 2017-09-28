@@ -47,5 +47,8 @@ module.exports = {
   BigInteger: require('bigi/lib'),
   BIP39: require('bip39'),
   Networks: require('bitcoinjs-lib/src/networks'),
-  ECDSA: require('bitcoinjs-lib/src/ecdsa')
+  ECDSA: require('bitcoinjs-lib/src/ecdsa'),
+  getUnspents: require('./bcash/api').getUnspents,
+  cs: require('./bcash/coin-selection'),
+  sign: require('./bcash/signer').sign
 };

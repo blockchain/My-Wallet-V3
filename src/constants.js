@@ -1,13 +1,18 @@
 
 var Bitcoin = require('bitcoinjs-lib');
+// var BitcoinCash = require('bitcoincashjs-lib');
 
 module.exports = {
   NETWORK: 'bitcoin',
   APP_NAME: 'javascript_web',
   APP_VERSION: '3.0',
   SHAPE_SHIFT_KEY: void 0,
-  getNetwork: function () {
-    return Bitcoin.networks[this.NETWORK];
+  getNetwork: function (bitcoinjs) {
+    if (bitcoinjs) {
+      return bitcoinjs.networks[this.NETWORK];
+    } else {
+      return Bitcoin.networks[this.NETWORK];
+    }
   },
   getDefaultWalletOptions: function () {
     return {
