@@ -8,7 +8,7 @@ const KeyRing = require('../keyring');
 
 const getKey = (priv, addr) => {
   let format = Helpers.detectPrivateKeyFormat(priv);
-  let key = Helpers.privateKeyStringToKey(priv, format);
+  let key = Helpers.privateKeyStringToKey(priv, format, Bitcoin);
   let network = constants.getNetwork(Bitcoin);
   let ckey = new Bitcoin.ECPair(key.d, null, { compressed: true, network: network });
   let ukey = new Bitcoin.ECPair(key.d, null, { compressed: false, network: network });

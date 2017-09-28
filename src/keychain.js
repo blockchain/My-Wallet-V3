@@ -45,7 +45,7 @@ KeyChain.prototype.init = function (extendedKey, index, cache) {
     this._chainRoot = this._Bitcoin.HDNode.fromBase58(cache, constants.getNetwork(this._Bitcoin));
   } else {
     this._chainRoot = extendedKey && Helpers.isPositiveInteger(index) && index >= 0
-      ? Bitcoin.HDNode.fromBase58(extendedKey, constants.getNetwork(this._Bitcoin)).derive(index) : undefined;
+      ? this._Bitcoin.HDNode.fromBase58(extendedKey, constants.getNetwork(this._Bitcoin)).derive(index) : undefined;
   }
   return this;
 };

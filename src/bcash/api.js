@@ -14,6 +14,17 @@ const scriptToAddress = coin => {
   return assoc('priv', address, coin)
 }
 
+const pushTx = (tx) => {
+  const format = 'plain'
+  return fetch(`${API.API_ROOT_URL}bch/pushtx`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: API.encodeFormData({ tx, format })
+  }).then(r =>
+    r.status === 200 ? r.text() : r.text().then(e => Promise.reject(e))
+  );
+};
+
 const apiGetUnspents = (as, conf) => {
   const active = as.join('|');
   const confirmations = Helpers.isPositiveNumber(conf) ? conf : -1
@@ -47,5 +58,6 @@ const getUnspents = curry((wallet, source) => {
 })
 
 module.exports = {
-  getUnspents
+  getUnspents,
+  pushTx
 };
