@@ -22,7 +22,9 @@ const pushTx = (tx) => {
     body: API.encodeFormData({ tx, format })
   }).then(r =>
     r.status === 200 ? r.text() : r.text().then(e => Promise.reject(e))
-  );
+  ).then(r =>
+    r.indexOf('Transaction Submitted') > -1 ? true : Promise.reject(r)
+  )
 };
 
 const apiGetUnspents = (as, conf) => {
@@ -37,6 +39,11 @@ const apiGetUnspents = (as, conf) => {
     r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e))
   );
 }
+
+const getChangeIndex = xpub => API.getHistory([xpub],undefined, 0, 1)
+                                    .then(prop('addresses'))
+                                    .then(prop('0'))
+                                    .then(prop('change_index'))
 
 // source can be a list of legacy addresses or a single integer for account index
 const getUnspents = curry((wallet, source) => {
@@ -59,5 +66,6 @@ const getUnspents = curry((wallet, source) => {
 
 module.exports = {
   getUnspents,
-  pushTx
+  pushTx,
+  getChangeAddress
 };
