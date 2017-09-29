@@ -40,10 +40,20 @@ const apiGetUnspents = (as, conf) => {
   );
 }
 
-const getChangeIndex = xpub => API.getHistory([xpub],undefined, 0, 1)
-                                    .then(prop('addresses'))
-                                    .then(prop('0'))
-                                    .then(prop('change_index'))
+// i think multiaddr endpoint is missing for bch
+const multiaddr = xpub => {
+  const data = { active: xpub, format: 'json', offset: 0, no_compact: true, n: 1, language: 'en', no_buttons: true };
+  return fetch(`${API.API_ROOT_URL}bch/multiaddr`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: API.encodeFormData(data)
+  }).then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)));
+};
+
+const getChangeIndex = xpub => multiaddr(xpub)
+                               .then(prop('addresses'))
+                               .then(prop('0'))
+                               .then(prop('change_index'))
 
 // source can be a list of legacy addresses or a single integer for account index
 const getUnspents = curry((wallet, source) => {
@@ -67,5 +77,5 @@ const getUnspents = curry((wallet, source) => {
 module.exports = {
   getUnspents,
   pushTx,
-  getChangeAddress
+  getChangeIndex
 };
