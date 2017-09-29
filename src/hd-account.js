@@ -135,11 +135,11 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'receiveAddress': {
     configurable: false,
-    get: function () { return this._keyRing.receive.getAddress(this.receiveIndex); }
+    get: function () { return this.receiveAddressAtIndex(this.receiveIndex); }
   },
   'changeAddress': {
     configurable: false,
-    get: function () { return this._keyRing.change.getAddress(this._changeIndex); }
+    get: function () { return this.changeAddressAtIndex(this.changeIndex); }
   },
   'isEncrypted': {
     configurable: false,
@@ -228,6 +228,11 @@ HDAccount.reviver = function (k, v) {
 HDAccount.prototype.receiveAddressAtIndex = function (index) {
   assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
   return this._keyRing.receive.getAddress(index);
+};
+
+HDAccount.prototype.changeAddressAtIndex = function (index) {
+  assert(Helpers.isPositiveInteger(index), 'Error: change index must be a positive integer');
+  return this._keyRing.change.getAddress(index);
 };
 
 HDAccount.prototype.encrypt = function (cipher) {

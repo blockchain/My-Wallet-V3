@@ -1,4 +1,4 @@
-const { curry, drop, clamp, split, length } = require('ramda');
+const { curry, clamp, split, length } = require('ramda');
 
 class Coin {
   constructor (obj) {

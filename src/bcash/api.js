@@ -40,9 +40,9 @@ const apiGetUnspents = (as, conf) => {
   );
 }
 
-// i think multiaddr endpoint is missing for bch
-const multiaddr = xpub => {
-  const data = { active: xpub, format: 'json', offset: 0, no_compact: true, n: 1, language: 'en', no_buttons: true };
+const multiaddr = (addresses, n = 1) => {
+  const active = Helpers.toArrayFormat(addresses).join('|')
+  const data = { active, format: 'json', offset: 0, no_compact: true, n, language: 'en', no_buttons: true };
   return fetch(`${API.API_ROOT_URL}bch/multiaddr`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -54,6 +54,22 @@ const getChangeIndex = xpub => multiaddr(xpub)
                                .then(prop('addresses'))
                                .then(prop('0'))
                                .then(prop('change_index'))
+
+// getChangeOutput :: Wallet -> Int | [String] -> Promise String
+const getChangeOutput = curry((wallet, source) => {
+  switch (true) {
+    case is(Number, source):
+      const account = wallet.hdwallet.accounts[source]
+      return getChangeIndex(account.extendedPublicKey)
+        .then(index => account.changeAddressAtIndex(index))
+    case is(Array, source):
+      return source.every(Helpers.isBitcoinAddress)
+        ? Promise.resolve(source[0])
+        : Promise.reject('INVALID_SOURCE')
+    default:
+      return Promise.reject('INVALID_SOURCE');
+  }
+})
 
 // source can be a list of legacy addresses or a single integer for account index
 const getUnspents = curry((wallet, source) => {
@@ -77,5 +93,6 @@ const getUnspents = curry((wallet, source) => {
 module.exports = {
   getUnspents,
   pushTx,
-  getChangeIndex
+  getChangeOutput,
+  multiaddr
 };

@@ -48,18 +48,18 @@ const isFromAccount = (selection) => {
 const signSelection = selection => {
   let network = constants.getNetwork(Bitcoin);
   const hashType = Bitcoin.Transaction.SIGHASH_ALL | Bitcoin.Transaction.SIGHASH_BITCOINCASHBIP143;
-  
+
   let tx = new Bitcoin.TransactionBuilder(network);
   tx.enableBitcoinCash(true);
 
   let addInput = coin => tx.addInput(coin.txHash, coin.index, Bitcoin.Transaction.DEFAULT_SEQUENCE, new Buffer(coin.script, 'hex'));
   let addOutput = coin => tx.addOutput(coin.address, coin.value);
   let sign = (coin, i) => tx.sign(i, coin.priv, null, hashType, coin.value);
-  
+
   forEach(addInput, selection.inputs);
   forEach(addOutput, selection.outputs);
   addIndex(forEach)(sign, selection.inputs);
-  
+
   return tx.build().toHex();
 };
 

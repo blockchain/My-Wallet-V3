@@ -4,31 +4,29 @@ const ShiftPayment = require('./shift-payment')
 class BchPayment extends ShiftPayment {
   constructor (wallet) {
     super()
-    this._payment = wallet.bch.createPayment(wallet.hdwallet.defaultAccountIndex)
+    this._wallet = wallet
+    this._payment = wallet.bch.createPayment()
   }
 
-  setFromQuote (quote, fee = 'priority') {
+  setFromQuote (quote, feePerByte) {
     super.setFromQuote(quote)
-    this._payment = this._payment.then(payment => {
-      payment.setTo(quote.depositAddress)
-      payment.setAmount(Math.round(parseFloat(quote.depositAmount) * 1e8))
-      payment.setFeePerByte(fee)
-      return payment.build()
-    })
+    this._payment.from(this._wallet.hdwallet.defaultAccountIndex)
+    this._payment.to(quote.depositAddress)
+    this._payment.amount(Math.round(parseFloat(quote.depositAmount) * 1e8))
+    this._payment.feePerByte(feePerByte)
+    this._payment.build()
     return this
   }
 
   getFee () {
-    return this._payment.then(payment => {
-      return payment.fee
+    return new Promise(resolve => {
+      this._payment.sideEffect(payment => resolve(payment.selection.fee))
     })
   }
 
   publish (secPass) {
-    return this._payment.then(payment => {
-      payment.sign(secPass)
-      return payment.publish()
-    })
+    this._payment.sign(secPass)
+    return this._payment.publish()
   }
 }
 
