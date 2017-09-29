@@ -121,7 +121,7 @@ class ShapeShift {
       return this._wallet.eth.defaultAccount.address
     }
     if (currency === 'bch') {
-      return this._wallet.hdwallet.defaultAccount.receiveAddress
+      return this._wallet.bch.defaultAccount.receiveAddress
     }
     throw new Error(`Currency '${currency}' is not supported`)
   }
