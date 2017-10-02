@@ -14,7 +14,11 @@ class BitcoinCashWallet {
     this._balance = null
     this._addressInfo = {}
     this._txs = []
-    this._imported = new BchImported(this, this._wallet)
+
+    this.importedAddresses = this._wallet.keys.length > 0
+      ? new BchImported(this, this._wallet)
+      : null
+
     this.accounts = wallet.hdwallet.accounts.map(account =>
       new BchAccount(this, this._wallet, account)
     )
@@ -30,10 +34,6 @@ class BitcoinCashWallet {
 
   get defaultAccount () {
     return this.accounts[this._wallet.hdwallet.defaultAccountIndex]
-  }
-
-  get importedAddresses () {
-    return this._imported
   }
 
   getAddressBalance (xpubOrAddress) {
