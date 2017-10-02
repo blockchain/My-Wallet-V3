@@ -42,6 +42,12 @@ class BitcoinCashWallet {
     return balance == null ? null : balance
   }
 
+  getAccountIndexes (xpub) {
+    let defaults = { account_index: 0, change_index: 0 }
+    let info = this._addressInfo[xpub] || defaults
+    return { receive: info.account_index, change: info.change_index }
+  }
+
   getHistory () {
     let addrs = this._wallet.addresses
     let xpubs = this._wallet.hdwallet.xpubs
@@ -52,9 +58,6 @@ class BitcoinCashWallet {
       this._txs = txs.filter(tx => tx.block_height >= BCH_FORK_HEIGHT).map(Tx.factory)
       this._txs.forEach(tx => {
         tx.confirmations = Tx.setConfirmations(tx.block_height, info.latest_block.height)
-      })
-      this.accounts.forEach(account => {
-        account.setInfo(this._addressInfo[account.xpub])
       })
     })
   }

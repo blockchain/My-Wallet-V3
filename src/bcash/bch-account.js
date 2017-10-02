@@ -5,9 +5,6 @@ class BchAccount extends BchSpendable {
   constructor (bchWallet, wallet, btcAccount) {
     super(bchWallet, wallet)
     this._btcAccount = btcAccount
-    this.balance = null
-    this.receiveIndex = 0
-    this.changeIndex = 0
   }
 
   get index () {
@@ -28,11 +25,13 @@ class BchAccount extends BchSpendable {
   }
 
   get receiveAddress () {
-    return this._btcAccount.receiveAddressAtIndex(this.receiveIndex)
+    let { receive } = this._bchWallet.getAccountIndexes(this.xpub)
+    return this._btcAccount.receiveAddressAtIndex(receive)
   }
 
   get changeAddress () {
-    return this._btcAccount.changeAddressAtIndex(this.changeIndex)
+    let { change } = this._bchWallet.getAccountIndexes(this.xpub)
+    return this._btcAccount.changeAddressAtIndex(change)
   }
 
   getAvailableBalance (feePerByte) {
@@ -41,11 +40,6 @@ class BchAccount extends BchSpendable {
 
   createPayment () {
     return super.createPayment().from(this.index)
-  }
-
-  setInfo (info = {}) {
-    this.receiveIndex = info.account_index || 0
-    this.changeIndex = info.change_index || 0
   }
 }
 
