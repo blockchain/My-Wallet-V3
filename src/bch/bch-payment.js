@@ -9,32 +9,27 @@ const { sign } = require('./signer')
 class PaymentError extends Error {
   constructor (message, state) {
     super(message)
-    this._state = state
-  }
-
-  recover () {
-    return Promise.resolve(this._state)
+    this.recover = () => Promise.resolve(state)
   }
 }
 
 class BchPayment {
   constructor (wallet) {
     this._wallet = wallet
-    this._payment = Promise.resolve(BchPayment.defaultState())
+    this._payment = BchPayment.defaultStateP()
   }
 
-  then (f) {
+  map (f) {
     this._payment = this._payment.then(f)
     return this
   }
 
-  catch (f) {
-    // this needs to be thought through more
-    this._payment.catch(paymentError => {
-      this._payment = is(Function, paymentError.recover)
-        ? paymentError.recover()
-        : Promise.resolve(BchPayment.defaultState())
+  handleError (f) {
+    this._payment = this._payment.catch(paymentError => {
       f(paymentError)
+      return is(Function, paymentError.recover)
+        ? paymentError.recover()
+        : BchPayment.defaultStateP()
     })
     return this
   }
@@ -45,7 +40,7 @@ class BchPayment {
   }
 
   from (from) {
-    return this.then(payment =>
+    return this.map(payment =>
       Promise.all([
         BchApi.getUnspents(this._wallet, from),
         BchApi.getChangeOutput(this._wallet, from)
@@ -60,32 +55,32 @@ class BchPayment {
     if (!isBitcoinAddress(to)) {
       throw new Error('must provide a valid destination address')
     }
-    return this.clean().then(assoc('to', to))
+    return this.clean().map(assoc('to', to))
   }
 
   amount (amount) {
     if (!isPositiveInteger(amount)) {
       throw new Error('must provide a valid amount')
     }
-    return this.clean().then(assoc('amount', amount))
+    return this.clean().map(assoc('amount', amount))
   }
 
   feePerByte (feePerByte) {
     if (!isPositiveInteger(feePerByte)) {
       throw new Error('must provide a valid fee-per-byte value')
     }
-    return this.clean().then(assoc('feePerByte', feePerByte))
+    return this.clean().map(assoc('feePerByte', feePerByte))
   }
 
   clean () {
-    return this.then(compose(
+    return this.map(compose(
       assoc('selection', null),
       assoc('rawTx', null)
     ))
   }
 
   build () {
-    return this.then(payment => {
+    return this.map(payment => {
       if (payment.to == null) {
         throw new PaymentError('must set a destination address', payment)
       }
@@ -102,7 +97,7 @@ class BchPayment {
   }
 
   buildSweep () {
-    return this.then(payment => {
+    return this.map(payment => {
       if (payment.to == null) {
         throw new PaymentError('must set a destination address', payment)
       }
@@ -115,7 +110,7 @@ class BchPayment {
   }
 
   sign (secPass) {
-    return this.then(payment => {
+    return this.map(payment => {
       if (payment.selection == null) {
         throw new PaymentError('cannot sign an unbuilt transaction', payment)
       }
@@ -132,6 +127,10 @@ class BchPayment {
       }
       return BchApi.pushTx(payment.rawTx)
     })
+  }
+
+  static defaultStateP () {
+    return Promise.resolve(BchPayment.defaultState())
   }
 
   static defaultState () {
