@@ -53,9 +53,14 @@ class BitcoinCashWallet {
     let xpubs = this._wallet.hdwallet.xpubs
     return BchApi.multiaddr(addrs.concat(xpubs), 50).then(result => {
       let { wallet, addresses, txs, info } = result
+
       this._balance = wallet.final_balance
       this._addressInfo = fromPairs(map(a => [a.address, a], addresses))
-      this._txs = txs.filter(tx => tx.block_height >= BCH_FORK_HEIGHT).map(Tx.factory)
+
+      this._txs = txs
+        .filter(tx => tx.block_height >= BCH_FORK_HEIGHT)
+        .map(tx => Tx.factory(tx, 'bch'))
+
       this._txs.forEach(tx => {
         tx.confirmations = Tx.setConfirmations(tx.block_height, info.latest_block.height)
       })

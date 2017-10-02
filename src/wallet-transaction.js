@@ -4,7 +4,7 @@ module.exports = Tx;
 
 var MyWallet = require('./wallet');
 
-function Tx (object) {
+function Tx (object, coinCode) {
   var obj = object || {};
   // original properties
   this.balance = obj.balance;
@@ -27,6 +27,7 @@ function Tx (object) {
   this.publicNote = obj.note;
   this.note = MyWallet.wallet.getNote(this.hash);
   this.confirmations = Tx.setConfirmations(this.block_height, MyWallet.wallet.latestBlock);
+  this.coinCode = coinCode === 'bch' ? 'bch' : 'btc';
 
   // computed properties
   var initialIn = {
