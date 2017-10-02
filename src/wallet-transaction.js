@@ -28,7 +28,7 @@ function Tx (object) {
   this.publicNote = obj.note;
   this.note = MyWallet.wallet.getNote(this.hash);
   this.confirmations = Tx.setConfirmations(this.block_height, MyWallet.wallet.latestBlock);
-  this.coinCode = object.coinCode || 'btc';
+  this.coinCode = obj.coinCode || 'btc';
 
   // computed properties
   var initialIn = {
