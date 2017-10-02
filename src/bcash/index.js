@@ -4,6 +4,7 @@ const CashApi = require('./api')
 const CashPayment = require('./cash-payment')
 const Tx = require('../wallet-transaction')
 const BchAccount = require('./bch-account')
+const BchImported = require('./bch-imported')
 
 const BCH_FORK_HEIGHT = 478558
 
@@ -13,6 +14,7 @@ class BitcoinCashWallet {
     this._balance = null
     this._addressInfo = {}
     this._txs = []
+    this._imported = new BchImported(this, this._wallet)
     this.accounts = wallet.hdwallet.accounts.map(account =>
       new BchAccount(this, this._wallet, account)
     )
@@ -28,6 +30,10 @@ class BitcoinCashWallet {
 
   get defaultAccount () {
     return this.accounts[this._wallet.hdwallet.defaultAccountIndex]
+  }
+
+  get importedAddresses () {
+    return this._imported
   }
 
   getAddressBalance (xpubOrAddress) {

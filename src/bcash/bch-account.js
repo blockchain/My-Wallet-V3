@@ -1,11 +1,9 @@
 /* eslint-disable semi */
-const Api = require('./api')
-const { selectAll } = require('./coin-selection')
+const BchSpendable = require('./bch-spendable')
 
-class BchAccount {
+class BchAccount extends BchSpendable {
   constructor (bchWallet, wallet, btcAccount) {
-    this._bchWallet = bchWallet
-    this._wallet = wallet
+    super(bchWallet, wallet)
     this._btcAccount = btcAccount
     this.balance = null
     this.receiveIndex = 0
@@ -26,7 +24,7 @@ class BchAccount {
   }
 
   get balance () {
-    return this._bchWallet.getAddressBalance(this.xpub)
+    return super.getAddressBalance(this.xpub)
   }
 
   get receiveAddress () {
@@ -38,10 +36,11 @@ class BchAccount {
   }
 
   getAvailableBalance (feePerByte) {
-    return Api.getUnspents(this._wallet, this.index).then(coins => {
-      let { fee, outputs } = selectAll(feePerByte, coins, null)
-      return { fee, amount: outputs[0].value }
-    });
+    return super.getAvailableBalance(this.index, feePerByte)
+  }
+
+  createPayment () {
+    return super.createPayment().from(this.index)
   }
 
   setInfo (info = {}) {
