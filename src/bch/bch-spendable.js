@@ -3,7 +3,7 @@ const BchApi = require('./bch-api')
 const { selectAll } = require('./coin-selection')
 
 class BchSpendable {
-  constructor (bchWallet, wallet, btcAccount) {
+  constructor (bchWallet, wallet) {
     this._bchWallet = bchWallet
     this._wallet = wallet
   }
