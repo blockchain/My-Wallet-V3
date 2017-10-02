@@ -1,7 +1,7 @@
 /* eslint-disable semi */
 const { map, fromPairs } = require('ramda')
 const CashApi = require('./api')
-const CashPayment = require('./cash-payment')
+const BchPayment = require('./bch-payment')
 const Tx = require('../wallet-transaction')
 const BchAccount = require('./bch-account')
 const BchImported = require('./bch-imported')
@@ -63,7 +63,7 @@ class BitcoinCashWallet {
   }
 
   createPayment () {
-    return new CashPayment(this._wallet)
+    return new BchPayment(this._wallet)
   }
 
   static fromBlockchainWallet (wallet) {

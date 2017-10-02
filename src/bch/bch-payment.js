@@ -17,10 +17,10 @@ class PaymentError extends Error {
   }
 }
 
-class CashPayment {
+class BchPayment {
   constructor (wallet) {
     this._wallet = wallet
-    this._payment = Promise.resolve(CashPayment.defaultState())
+    this._payment = Promise.resolve(BchPayment.defaultState())
   }
 
   then (f) {
@@ -33,7 +33,7 @@ class CashPayment {
     this._payment.catch(paymentError => {
       this._payment = is(Function, paymentError.recover)
         ? paymentError.recover()
-        : Promise.resolve(CashPayment.defaultState())
+        : Promise.resolve(BchPayment.defaultState())
       f(paymentError)
     })
     return this
@@ -125,7 +125,7 @@ class CashPayment {
   }
 
   publish () {
-    /* return Promise, not CashPayment instance */
+    /* return Promise, not BchPayment instance */
     return this._payment.then(payment => {
       if (payment.rawTx == null) {
         throw new PaymentError('cannot publish an unsigned transaction', payment)
@@ -146,4 +146,4 @@ class CashPayment {
   }
 }
 
-module.exports = CashPayment
+module.exports = BchPayment
