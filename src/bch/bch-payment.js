@@ -1,7 +1,7 @@
 /* eslint-disable semi */
 const { compose, clone, assoc, is } = require('ramda')
 const Coin = require('./coin')
-const CashApi = require('./api')
+const BchApi = require('./bch-api')
 const { isBitcoinAddress, isPositiveInteger } = require('../helpers')
 const { selectAll, descentDraw } = require('./coin-selection')
 const { sign } = require('./signer')
@@ -47,8 +47,8 @@ class BchPayment {
   from (from) {
     return this.then(payment =>
       Promise.all([
-        CashApi.getUnspents(this._wallet, from),
-        CashApi.getChangeOutput(this._wallet, from)
+        BchApi.getUnspents(this._wallet, from),
+        BchApi.getChangeOutput(this._wallet, from)
       ]).then(([coins, change]) => compose(
         assoc('coins', coins),
         assoc('change', change)
@@ -130,7 +130,7 @@ class BchPayment {
       if (payment.rawTx == null) {
         throw new PaymentError('cannot publish an unsigned transaction', payment)
       }
-      return CashApi.pushTx(payment.rawTx)
+      return BchApi.pushTx(payment.rawTx)
     })
   }
 

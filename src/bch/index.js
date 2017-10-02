@@ -1,6 +1,6 @@
 /* eslint-disable semi */
 const { map, fromPairs } = require('ramda')
-const CashApi = require('./api')
+const BchApi = require('./bch-api')
 const BchPayment = require('./bch-payment')
 const Tx = require('../wallet-transaction')
 const BchAccount = require('./bch-account')
@@ -51,7 +51,7 @@ class BitcoinCashWallet {
   getHistory () {
     let addrs = this._wallet.addresses
     let xpubs = this._wallet.hdwallet.xpubs
-    return CashApi.multiaddr(addrs.concat(xpubs), 50).then(result => {
+    return BchApi.multiaddr(addrs.concat(xpubs), 50).then(result => {
       let { wallet, addresses, txs, info } = result
       this._balance = wallet.final_balance
       this._addressInfo = fromPairs(map(a => [a.address, a], addresses))

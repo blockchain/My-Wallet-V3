@@ -1,5 +1,5 @@
 /* eslint-disable semi */
-const Api = require('./api')
+const BchApi = require('./bch-api')
 const { selectAll } = require('./coin-selection')
 
 class BchSpendable {
@@ -13,7 +13,7 @@ class BchSpendable {
   }
 
   getAvailableBalance (source, feePerByte) {
-    return Api.getUnspents(this._wallet, source).then(coins => {
+    return BchApi.getUnspents(this._wallet, source).then(coins => {
       let { fee, outputs } = selectAll(feePerByte, coins, null)
       return { fee, amount: outputs[0].value }
     });
