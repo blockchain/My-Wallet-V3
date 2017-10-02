@@ -15,7 +15,7 @@ class BchImported extends BchSpendable {
 
   get balance () {
     let balances = this.addresses.map(a => super.getAddressBalance(a))
-    return sumNonNull(balances)
+    return balances.every(x => x == null) ? null : sumNonNull(balances)
   }
 
   getAvailableBalance (feePerByte) {
