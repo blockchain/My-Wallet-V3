@@ -50,27 +50,6 @@ const multiaddr = (addresses, n = 1) => {
   }).then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)));
 };
 
-const getChangeIndex = xpub => multiaddr(xpub)
-                               .then(prop('addresses'))
-                               .then(prop('0'))
-                               .then(prop('change_index'))
-
-// getChangeOutput :: Wallet -> Int | [String] -> Promise String
-const getChangeOutput = curry((wallet, source) => {
-  switch (true) {
-    case is(Number, source):
-      const account = wallet.hdwallet.accounts[source]
-      return getChangeIndex(account.extendedPublicKey)
-        .then(index => account.changeAddressAtIndex(index))
-    case is(Array, source):
-      return source.every(Helpers.isBitcoinAddress)
-        ? Promise.resolve(source[0])
-        : Promise.reject('INVALID_SOURCE')
-    default:
-      return Promise.reject('INVALID_SOURCE');
-  }
-})
-
 // source can be a list of legacy addresses or a single integer for account index
 const getUnspents = curry((wallet, source) => {
   switch (true) {
@@ -93,6 +72,5 @@ const getUnspents = curry((wallet, source) => {
 module.exports = {
   getUnspents,
   pushTx,
-  getChangeOutput,
   multiaddr
 };

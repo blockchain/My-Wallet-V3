@@ -23,7 +23,7 @@ class BchImported extends BchSpendable {
   }
 
   createPayment () {
-    return super.createPayment().from(this.addresses)
+    return super.createPayment().from(this.addresses, this.addresses[0])
   }
 }
 

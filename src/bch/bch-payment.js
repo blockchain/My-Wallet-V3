@@ -1,10 +1,15 @@
 /* eslint-disable semi */
-const { compose, clone, assoc, is } = require('ramda')
+const { compose, clone, assoc, is, every } = require('ramda')
 const Coin = require('./coin')
 const BchApi = require('./bch-api')
 const { isBitcoinAddress, isPositiveInteger } = require('../helpers')
 const { selectAll, descentDraw } = require('./coin-selection')
 const { sign } = require('./signer')
+
+const isValidFrom = (from) => (
+  is(Number, from) ||
+  (is(Array, from) && every(isBitcoinAddress, from))
+)
 
 class PaymentError extends Error {
   constructor (message, state) {
@@ -39,15 +44,18 @@ class BchPayment {
     return this
   }
 
-  from (from) {
+  from (from, change) {
+    if (!isValidFrom(from)) {
+      throw new Error('must provide a valid payment source')
+    }
+    if (!isBitcoinAddress(change)) {
+      throw new Error('must provide a valid change address')
+    }
     return this.map(payment =>
-      Promise.all([
-        BchApi.getUnspents(this._wallet, from),
-        BchApi.getChangeOutput(this._wallet, from)
-      ]).then(([coins, change]) => compose(
-        assoc('coins', coins),
-        assoc('change', change)
-      )(payment))
+      BchApi.getUnspents(this._wallet, from).then(coins => {
+        let setData = compose(assoc('coins', coins), assoc('change', change))
+        return setData(payment)
+      })
     )
   }
 

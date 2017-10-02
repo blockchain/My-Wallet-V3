@@ -39,7 +39,7 @@ class BchAccount extends BchSpendable {
   }
 
   createPayment () {
-    return super.createPayment().from(this.index)
+    return super.createPayment().from(this.index, this.changeAddress)
   }
 }
 
