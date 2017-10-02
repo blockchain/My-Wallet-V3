@@ -2,9 +2,10 @@
 
 module.exports = Tx;
 
+var { assoc } = require('ramda');
 var MyWallet = require('./wallet');
 
-function Tx (object, coinCode) {
+function Tx (object) {
   var obj = object || {};
   // original properties
   this.balance = obj.balance;
@@ -27,7 +28,7 @@ function Tx (object, coinCode) {
   this.publicNote = obj.note;
   this.note = MyWallet.wallet.getNote(this.hash);
   this.confirmations = Tx.setConfirmations(this.block_height, MyWallet.wallet.latestBlock);
-  this.coinCode = coinCode === 'bch' ? 'bch' : 'btc';
+  this.coinCode = object.coinCode || 'btc';
 
   // computed properties
   var initialIn = {
@@ -285,9 +286,10 @@ function isCoinBase (input) {
   return (input == null || input.prev_out == null || input.prev_out.addr == null);
 }
 
-Tx.factory = function (o) {
+Tx.factory = function (o, coinCode) {
   if (o instanceof Object && !(o instanceof Tx)) {
-    return new Tx(o);
+    let setCoinCode = assoc('coinCode', coinCode === 'bch' ? 'bch' : 'btc');
+    return new Tx(setCoinCode(o));
   } else { return o; }
 };
 
