@@ -92,9 +92,6 @@ function Wallet (object) {
   this._latestBlock = null;
   this._accountInfo = null;
   this._external = null;
-
-  this._bch = BitcoinCash.fromBlockchainWallet(this);
-  window.bch = this._bch;
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -906,6 +903,11 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     return this._shapeshift.fetch();
   };
 
+  var loadBch = function () {
+    this._bch = BitcoinCash.fromBlockchainWallet(this);
+    window.bch = this._bch;
+  };
+
   let promises = [];
 
   if (this.isMetadataReady) {
@@ -919,6 +921,7 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
   if (this.isUpgradedToHD) {
     // Labels currently don't use the KV Store, so this should never fail.
     promises.push(fetchLabels.call(this));
+    promises.push(loadBch.call(this));
   }
 
   return Promise.all(promises);
