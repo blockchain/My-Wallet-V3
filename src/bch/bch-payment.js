@@ -75,6 +75,7 @@ class BchPayment {
   clean () {
     return this.map(compose(
       assoc('selection', null),
+      assoc('hash', null),
       assoc('rawTx', null)
     ))
   }
@@ -114,8 +115,9 @@ class BchPayment {
       if (payment.selection == null) {
         throw new PaymentError('cannot sign an unbuilt transaction', payment)
       }
-      let rawTx = sign(secPass, this._wallet, payment.selection)
-      return assoc('rawTx', rawTx, payment)
+      let tx = sign(secPass, this._wallet, payment.selection)
+      let setData = compose(assoc('hash', tx.getId()), assoc('rawTx', tx.toHex()))
+      return setData(payment)
     })
   }
 
@@ -126,6 +128,7 @@ class BchPayment {
         throw new PaymentError('cannot publish an unsigned transaction', payment)
       }
       return BchApi.pushTx(payment.rawTx)
+        .then(() => ({ hash: payment.hash }))
     })
   }
 
@@ -140,6 +143,7 @@ class BchPayment {
       amount: null,
       feePerByte: null,
       selection: null,
+      hash: null,
       rawTx: null
     }
   }

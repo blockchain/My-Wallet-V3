@@ -60,7 +60,7 @@ const signSelection = selection => {
   forEach(addOutput, selection.outputs);
   addIndex(forEach)(sign, selection.inputs);
 
-  return tx.build().toHex();
+  return tx.build();
 };
 
 const sign = curry((password, wallet, selection) => {
