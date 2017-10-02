@@ -63,7 +63,8 @@ class ShapeShift {
       payment = EthPayment.fromWallet(this._wallet, account)
     }
     if (quote.fromCurrency === 'bch') {
-      payment = BchPayment.fromWallet(this._wallet)
+      let account = fromAccount || this._wallet.bch.defaultAccount
+      payment = BchPayment.fromWallet(this._wallet, account)
     }
     if (payment == null) {
       throw new Error(`Tried to build for unsupported currency ${quote.fromCurrency}`)

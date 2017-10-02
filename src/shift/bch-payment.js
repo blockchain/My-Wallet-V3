@@ -2,15 +2,14 @@
 const ShiftPayment = require('./shift-payment')
 
 class BchPayment extends ShiftPayment {
-  constructor (wallet) {
+  constructor (wallet, account) {
     super()
     this._wallet = wallet
-    this._payment = wallet.bch.createPayment()
+    this._payment = account.createPayment()
   }
 
   setFromQuote (quote, feePerByte) {
     super.setFromQuote(quote)
-    this._payment.from(this._wallet.hdwallet.defaultAccountIndex)
     this._payment.to(quote.depositAddress)
     this._payment.amount(Math.round(parseFloat(quote.depositAmount) * 1e8))
     this._payment.feePerByte(feePerByte)
