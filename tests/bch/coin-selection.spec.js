@@ -1,7 +1,7 @@
 /* eslint-disable semi */
 let { map } = require('ramda')
-let cs = require('../../src/bcash/coin-selection')
-let Coin = require('../../src/bcash/coin')
+let cs = require('../../src/bch/coin-selection')
+let Coin = require('../../src/bch/coin')
 
 describe('Coin Selection', () => {
   describe('byte sizes', () => {

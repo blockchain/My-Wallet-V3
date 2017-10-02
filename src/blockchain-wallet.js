@@ -25,7 +25,7 @@ var Labels = require('./labels');
 var EthWallet = require('./eth/eth-wallet');
 var ShapeShift = require('./shift');
 var Bitcoin = require('bitcoinjs-lib');
-var BitcoinCash = require('./bcash');
+var BitcoinCash = require('./bch');
 
 // Wallet
 
