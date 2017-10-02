@@ -76,7 +76,9 @@ class ShapeShift {
     trace('starting shift')
     return payment.publish(secPass).then(({ hash }) => {
       trace('finished shift')
-      payment.saveWithdrawalLabel()
+      if (payment.quote.toCurrency === 'btc') {
+        this.saveBtcWithdrawalLabel(payment.quote)
+      }
       let trade = Trade.fromQuote(payment.quote)
       trade.setDepositHash(hash)
       this._trades.unshift(trade)
@@ -127,6 +129,12 @@ class ShapeShift {
       return this._wallet.bch.defaultAccount.receiveAddress
     }
     throw new Error(`Currency '${currency}' is not supported`)
+  }
+
+  saveBtcWithdrawalLabel (quote) {
+    let label = `ShapeShift order #${quote.orderId}`
+    let account = this._wallet.hdwallet.defaultAccount
+    account.setLabel(account.receiveIndex, label)
   }
 
   setUSAState (state) {
