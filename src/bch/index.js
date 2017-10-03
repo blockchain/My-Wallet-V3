@@ -58,7 +58,7 @@ class BitcoinCashWallet {
       this._addressInfo = fromPairs(map(a => [a.address, a], addresses))
 
       this._txs = txs
-        .filter(tx => tx.block_height >= BCH_FORK_HEIGHT)
+        .filter(tx => !tx.block_height || tx.block_height >= BCH_FORK_HEIGHT)
         .map(tx => Tx.factory(tx, 'bch'))
 
       this._txs.forEach(tx => {
