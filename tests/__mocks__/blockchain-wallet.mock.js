@@ -9,10 +9,35 @@ const masterHdNode = Bitcoin.HDNode.fromSeedBuffer(masterhex);
 
 class BlockchainWalletMock {
   constructor () {
+    this.addresses = [
+      '1asdf'
+    ];
+    this.keys = [
+      { addr: '1asdf' }
+    ];
     this.hdwallet = {
       // mnemonic: 'blood flower surround federal round page fat bless core dose display govern',
       // masterSeedHex: '265c86692394fab95d0efc4385b89679d8daef5c9975e1f2b1f1eb4300bc10ad81d4d117c323591d543f6e54aa9d4560cad424bc66bb2bb61dc14285a508dad7',
       seedHex,
+      defaultAccountIndex: 0,
+      xpubs: [
+        'xpub1',
+        'xpub2'
+      ],
+      accounts: [
+        {
+          index: 0,
+          extendedPublicKey: 'xpub1',
+          receiveAddressAtIndex () {},
+          changeAddressAtIndex () {}
+        },
+        {
+          index: 1,
+          extendedPublicKey: 'xpub2',
+          receiveAddressAtIndex () {},
+          changeAddressAtIndex () {}
+        }
+      ],
       getMasterHex (seedHex, cipher = x => x) {
         return cipher(masterhex);
       },
