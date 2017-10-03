@@ -164,6 +164,15 @@ API.prototype.getUnspent = function (fromAddresses, confirmations) {
   return this.retry(this.request.bind(this, 'POST', 'unspent', data));
 };
 
+API.prototype.getUnspentBCH = function (fromAddresses, confirmations) {
+  var data = {
+    active: fromAddresses.join('|'),
+    confirmations: Helpers.isPositiveNumber(confirmations) ? confirmations : -1,
+    format: 'json'
+  };
+  return this.retry(this.request.bind(this, 'POST', 'bch/unspent', data));
+};
+
 API.prototype.getHistory = function (addresses, txFilter, offset, n, syncBool) {
   var clientTime = (new Date()).getTime();
   offset = offset || 0;

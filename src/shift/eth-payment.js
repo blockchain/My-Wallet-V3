@@ -24,12 +24,6 @@ class EthPayment extends ShiftPayment {
     })
   }
 
-  saveWithdrawalLabel () {
-    let label = `ShapeShift order #${this.quote.orderId}`
-    let account = this._wallet.hdwallet.defaultAccount
-    account.setLabel(account.receiveIndex, label)
-  }
-
   publish (secPass) {
     let privateKey = this._eth.getPrivateKeyForAccount(this._eth.defaultAccount, secPass)
     this._payment.sign(privateKey)

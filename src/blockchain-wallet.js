@@ -25,6 +25,7 @@ var Labels = require('./labels');
 var EthWallet = require('./eth/eth-wallet');
 var ShapeShift = require('./shift');
 var Bitcoin = require('bitcoinjs-lib');
+var BitcoinCash = require('./bch');
 
 // Wallet
 
@@ -353,6 +354,12 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () {
       return this._shapeshift;
+    }
+  },
+  'bch': {
+    configurable: false,
+    get: function () {
+      return this._bch;
     }
   }
 });
@@ -896,6 +903,11 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     return this._shapeshift.fetch();
   };
 
+  var loadBch = function () {
+    this._bch = BitcoinCash.fromBlockchainWallet(this);
+    window.bch = this._bch;
+  };
+
   let promises = [];
 
   if (this.isMetadataReady) {
@@ -909,6 +921,7 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
   if (this.isUpgradedToHD) {
     // Labels currently don't use the KV Store, so this should never fail.
     promises.push(fetchLabels.call(this));
+    promises.push(loadBch.call(this));
   }
 
   return Promise.all(promises);
