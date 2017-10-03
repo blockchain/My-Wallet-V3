@@ -1015,14 +1015,14 @@ bip66@^1.1.0, bip66@^1.1.3:
   dependencies:
     safe-buffer "^5.0.1"
 
-bitcoin-coinify-client@^0.6.5:
-  version "0.6.5"
-  resolved "https://registry.npmjs.org/bitcoin-coinify-client/-/bitcoin-coinify-client-0.6.5.tgz#06e977a1cbc68dcd659198f8a21c7827b0f0c8d7"
+bitcoin-coinify-client@^0.6.9:
+  version "0.6.9"
+  resolved "https://registry.npmjs.org/bitcoin-coinify-client/-/bitcoin-coinify-client-0.6.9.tgz#933458ce5161262112cea4e29cdc94cb2f66c8de"
   dependencies:
     babel-polyfill "6.16.*"
     babel-preset-es2015 "6.16.*"
     babelify "7.3.*"
-    bitcoin-exchange-client "~0.4.0"
+    bitcoin-exchange-client "^0.4.6"
 
 bitcoin-exchange-client@0.2.*:
   version "0.2.2"
@@ -1030,7 +1030,13 @@ bitcoin-exchange-client@0.2.*:
   dependencies:
     isomorphic-fetch "^2.2.0"
 
-bitcoin-exchange-client@^0.4.3, bitcoin-exchange-client@~0.4.0, bitcoin-exchange-client@~0.4.1:
+bitcoin-exchange-client@^0.4.6:
+  version "0.4.6"
+  resolved "https://registry.npmjs.org/bitcoin-exchange-client/-/bitcoin-exchange-client-0.4.6.tgz#46ae8eff5275fe49df4b6c6ee01252e8b6e0e224"
+  dependencies:
+    isomorphic-fetch "^2.2.0"
+
+bitcoin-exchange-client@~0.4.1:
   version "0.4.3"
   resolved "https://registry.yarnpkg.com/bitcoin-exchange-client/-/bitcoin-exchange-client-0.4.3.tgz#f2d2121a36eb9d1d18a504c1397987bfa39d7ddb"
   dependencies:
