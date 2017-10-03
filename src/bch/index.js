@@ -62,7 +62,7 @@ class BitcoinCashWallet {
         .map(tx => Tx.factory(tx, 'bch'))
 
       this._txs.forEach(tx => {
-        tx.confirmations = Tx.setConfirmations(tx.block_height, info.latest_block.height)
+        tx.confirmations = Tx.setConfirmations(tx.block_height, info.latest_block)
       })
     })
   }
