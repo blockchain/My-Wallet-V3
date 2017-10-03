@@ -9,7 +9,7 @@ var constants = require('./constants');
 
 // keychain
 function KeyChain (extendedKey, index, cache, bitcoinjs) {
-  this._Bitcoin = bitcoinjs || Bitcoin
+  this._Bitcoin = bitcoinjs || Bitcoin;
   this._chainRoot = null;
   this.init(extendedKey, index, cache);
 
