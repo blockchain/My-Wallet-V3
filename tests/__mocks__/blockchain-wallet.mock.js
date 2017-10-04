@@ -27,6 +27,7 @@ class BlockchainWalletMock {
       accounts: [
         {
           index: 0,
+          label: 'My Wallet',
           extendedPublicKey: 'xpub1',
           receiveAddressAtIndex () {},
           changeAddressAtIndex () {}

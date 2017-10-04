@@ -16,8 +16,7 @@ class BchAccount extends BchSpendable {
   }
 
   get label () {
-    let walletIndex = this.index > 0 ? ' ' + (this.index + 1) : ''
-    return 'My Bitcoin Cash Wallet' + walletIndex
+    return this._btcAccount.label
   }
 
   get balance () {
