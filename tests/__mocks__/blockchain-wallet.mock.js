@@ -26,8 +26,7 @@ class BlockchainWalletMock {
       defaultAccountIndex: 0,
       xpubs: [
         'xpub1',
-        'xpub2',
-        'xpub3'
+        'xpub2'
       ],
       accounts: [
         {
@@ -40,13 +39,6 @@ class BlockchainWalletMock {
         {
           index: 1,
           extendedPublicKey: 'xpub2',
-          receiveAddressAtIndex () {},
-          changeAddressAtIndex () {}
-        },
-        {
-          index: 2,
-          extendedPublicKey: 'xpub3',
-          archived: true,
           receiveAddressAtIndex () {},
           changeAddressAtIndex () {}
         }
