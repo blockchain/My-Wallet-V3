@@ -31,8 +31,8 @@ describe('bch', () => {
     expect(bch.importedAddresses).not.toEqual(null)
   })
 
-  it('should note have importedAddresses if there are no imported addresses', () => {
-    wallet.keys = []
+  it('should not have importedAddresses if there are no spendable active addresses', () => {
+    wallet.spendableActiveAddresses = []
     bch = BitcoinCashWallet.fromBlockchainWallet(wallet)
     expect(bch.importedAddresses).toEqual(null)
   })

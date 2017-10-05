@@ -1,6 +1,8 @@
 /* eslint-disable semi */
 const BchSpendable = require('./bch-spendable')
 
+const ACCOUNT_LABEL_PREFIX = 'Bitcoin Cash - '
+
 class BchAccount extends BchSpendable {
   constructor (bchWallet, wallet, btcAccount) {
     super(bchWallet, wallet)
@@ -15,8 +17,12 @@ class BchAccount extends BchSpendable {
     return this._btcAccount.extendedPublicKey
   }
 
+  get archived () {
+    return this._btcAccount.archived
+  }
+
   get label () {
-    return this._btcAccount.label
+    return ACCOUNT_LABEL_PREFIX + this._btcAccount.label
   }
 
   get balance () {

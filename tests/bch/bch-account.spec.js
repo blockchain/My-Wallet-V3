@@ -26,7 +26,7 @@ describe('BchAccount', () => {
   })
 
   it('should have: label', () => {
-    expect(account.label).toEqual('My Wallet')
+    expect(account.label).toEqual('Bitcoin Cash - My Wallet')
   })
 
   it('should have: balance', () => {

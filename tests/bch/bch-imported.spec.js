@@ -16,7 +16,7 @@ describe('BchImported', () => {
   })
 
   it('should have: addresses', () => {
-    expect(imported.addresses).toEqual(wallet.addresses)
+    expect(imported.addresses).toEqual(['1asdf'])
   })
 
   it('should have: label', () => {

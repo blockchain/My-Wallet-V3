@@ -15,9 +15,8 @@ class BitcoinCashWallet {
     this._addressInfo = {}
     this._txs = []
 
-    this.importedAddresses = this._wallet.keys.length > 0
-      ? new BchImported(this, this._wallet)
-      : null
+    let imported = new BchImported(this, this._wallet)
+    this.importedAddresses = imported.addresses.length > 0 ? imported : null
 
     this.accounts = wallet.hdwallet.accounts.map(account =>
       new BchAccount(this, this._wallet, account)
@@ -49,8 +48,8 @@ class BitcoinCashWallet {
   }
 
   getHistory () {
-    let addrs = this._wallet.addresses
-    let xpubs = this._wallet.hdwallet.xpubs
+    let addrs = this.importedAddresses == null ? [] : this.importedAddresses.addresses
+    let xpubs = this.accounts.map(a => a.xpub)
     return BchApi.multiaddr(addrs.concat(xpubs), 50).then(result => {
       let { wallet, addresses, txs, info } = result
 
