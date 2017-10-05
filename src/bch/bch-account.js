@@ -17,6 +17,10 @@ class BchAccount extends BchSpendable {
     return this._btcAccount.extendedPublicKey
   }
 
+  get archived () {
+    return this._btcAccount.archived
+  }
+
   get label () {
     return ACCOUNT_LABEL_PREFIX + this._btcAccount.label
   }
