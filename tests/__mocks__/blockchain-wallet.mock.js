@@ -1,7 +1,6 @@
 const BIP39 = require('bip39');
 const Bitcoin = require('bitcoinjs-lib');
 const MetadataMock = require('./metadata.mock');
-
 const seedHex = '17eb336a2a3bc73dd4d8bd304830fe32';
 const mnemonic = BIP39.entropyToMnemonic(seedHex);
 const masterhex = BIP39.mnemonicToSeed(mnemonic);
@@ -10,10 +9,12 @@ const masterHdNode = Bitcoin.HDNode.fromSeedBuffer(masterhex);
 class BlockchainWalletMock {
   constructor () {
     this.addresses = [
-      '1asdf'
+      '1asdf',
+      '1watch'
     ];
     this.keys = [
-      { addr: '1asdf' }
+      { address: '1asdf' },
+      { address: '1watch', isWatchOnly: true }
     ];
     this.hdwallet = {
       // mnemonic: 'blood flower surround federal round page fat bless core dose display govern',
