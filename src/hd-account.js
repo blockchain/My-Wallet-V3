@@ -152,6 +152,10 @@ Object.defineProperties(HDAccount.prototype, {
   'index': {
     configurable: false,
     get: function () { return this._index; }
+  },
+  'coinCode': {
+    configurable: false,
+    get: function () { return 'btc'; }
   }
 });
 

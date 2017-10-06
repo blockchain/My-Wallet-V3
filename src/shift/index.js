@@ -54,6 +54,9 @@ class ShapeShift {
     if (quote.depositAddress == null) {
       throw new Error('Quote is missing deposit address')
     }
+    if (fromAccount != null && fromAccount.coinCode !== quote.fromCurrency) {
+      throw new Error('Sending account currency does not match quote deposit currency')
+    }
     if (quote.fromCurrency === 'btc') {
       let account = fromAccount || this._wallet.hdwallet.defaultAccount
       payment = BtcPayment.fromWallet(this._wallet, account)

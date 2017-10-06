@@ -39,6 +39,10 @@ class BchAccount extends BchSpendable {
     return this._btcAccount.changeAddressAtIndex(change)
   }
 
+  get coinCode () {
+    return 'bch'
+  }
+
   getAvailableBalance (feePerByte) {
     return super.getAvailableBalance(this.index, feePerByte)
   }
