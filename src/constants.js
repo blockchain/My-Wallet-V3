@@ -1,6 +1,4 @@
-
 var Bitcoin = require('bitcoinjs-lib');
-// var BitcoinCash = require('bitcoincashjs-lib');
 
 module.exports = {
   NETWORK: 'bitcoin',
