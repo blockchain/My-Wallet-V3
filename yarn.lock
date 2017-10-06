@@ -5328,10 +5328,6 @@ sync-exec@^0.5.0:
   version "0.5.0"
   resolved "https://registry.yarnpkg.com/sync-exec/-/sync-exec-0.5.0.tgz#3f7258e4a5ba17245381909fa6a6f6cf506e1661"
 
-synk@^0.0.2:
-  version "0.0.2"
-  resolved "https://registry.npmjs.org/synk/-/synk-0.0.02.tgz#615c923a5877400d3928a944f18dbd2c7c506bdc"
-
 syntax-error@^1.1.1:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/syntax-error/-/syntax-error-1.3.0.tgz#1ed9266c4d40be75dc55bf9bb1cb77062bb96ca1"
