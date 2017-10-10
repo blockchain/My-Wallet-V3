@@ -29,6 +29,10 @@ describe('BchAccount', () => {
     expect(account.label).toEqual('Bitcoin Cash - My Wallet')
   })
 
+  it('should have: coinCode=bch', () => {
+    expect(account.coinCode).toEqual('bch')
+  })
+
   it('should have: balance', () => {
     spyOn(BchSpendable.prototype, 'getAddressBalance').and.callThrough()
     expect(account.balance).toEqual(null)

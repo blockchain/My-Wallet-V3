@@ -23,6 +23,10 @@ describe('BchImported', () => {
     expect(imported.label).toEqual('Imported Addresses')
   })
 
+  it('should have: coinCode=bch', () => {
+    expect(imported.coinCode).toEqual('bch')
+  })
+
   it('should have: balance (null)', () => {
     spyOn(BchSpendable.prototype, 'getAddressBalance').and.returnValue(null)
     expect(imported.balance).toEqual(null)

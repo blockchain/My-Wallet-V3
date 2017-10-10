@@ -18,6 +18,10 @@ class BchImported extends BchSpendable {
     return balances.every(x => x == null) ? null : sumNonNull(balances)
   }
 
+  get coinCode () {
+    return 'bch'
+  }
+
   getAvailableBalance (feePerByte) {
     return super.getAvailableBalance(this.addresses, feePerByte)
   }
