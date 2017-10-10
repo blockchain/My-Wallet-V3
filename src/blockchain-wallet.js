@@ -905,7 +905,6 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
 
   var loadBch = function () {
     this._bch = BitcoinCash.fromBlockchainWallet(this);
-    window.bch = this._bch;
   };
 
   let promises = [];
