@@ -46,6 +46,10 @@ class EthAccount {
     return this._nonce;
   }
 
+  get coinCode () {
+    return 'eth';
+  }
+
   markAsCorrect () {
     this._correct = true;
   }

@@ -5,6 +5,7 @@ const Trade = require('./trade')
 const Quote = require('./quote')
 const BtcPayment = require('./btc-payment')
 const EthPayment = require('./eth-payment')
+const BchPayment = require('./bch-payment')
 
 const METADATA_TYPE_SHAPE_SHIFT = 6;
 
@@ -47,17 +48,26 @@ class ShapeShift {
       .then(Quote.fromApiResponse)
   }
 
-  buildPayment (quote, fee) {
+  buildPayment (quote, fee, fromAccount) {
     trace('building payment')
     let payment
     if (quote.depositAddress == null) {
       throw new Error('Quote is missing deposit address')
     }
+    if (fromAccount != null && fromAccount.coinCode !== quote.fromCurrency) {
+      throw new Error('Sending account currency does not match quote deposit currency')
+    }
     if (quote.fromCurrency === 'btc') {
-      payment = BtcPayment.fromWallet(this._wallet)
+      let account = fromAccount || this._wallet.hdwallet.defaultAccount
+      payment = BtcPayment.fromWallet(this._wallet, account)
     }
     if (quote.fromCurrency === 'eth') {
-      payment = EthPayment.fromWallet(this._wallet)
+      let account = fromAccount || this._wallet.eth.defaultAccount
+      payment = EthPayment.fromWallet(this._wallet, account)
+    }
+    if (quote.fromCurrency === 'bch') {
+      let account = fromAccount || this._wallet.bch.defaultAccount
+      payment = BchPayment.fromWallet(this._wallet, account)
     }
     if (payment == null) {
       throw new Error(`Tried to build for unsupported currency ${quote.fromCurrency}`)
@@ -69,7 +79,9 @@ class ShapeShift {
     trace('starting shift')
     return payment.publish(secPass).then(({ hash }) => {
       trace('finished shift')
-      payment.saveWithdrawalLabel()
+      if (payment.quote.toCurrency === 'btc') {
+        this.saveBtcWithdrawalLabel(payment.quote)
+      }
       let trade = Trade.fromQuote(payment.quote)
       trade.setDepositHash(hash)
       this._trades.unshift(trade)
@@ -116,7 +128,16 @@ class ShapeShift {
     if (currency === 'eth') {
       return this._wallet.eth.defaultAccount.address
     }
+    if (currency === 'bch') {
+      return this._wallet.bch.defaultAccount.receiveAddress
+    }
     throw new Error(`Currency '${currency}' is not supported`)
+  }
+
+  saveBtcWithdrawalLabel (quote) {
+    let label = `ShapeShift order #${quote.orderId}`
+    let account = this._wallet.hdwallet.defaultAccount
+    account.setLabel(account.receiveIndex, label)
   }
 
   setUSAState (state) {

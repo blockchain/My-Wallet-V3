@@ -58,6 +58,10 @@ class EthWalletTx {
     return this._note;
   }
 
+  get coinCode () {
+    return 'eth';
+  }
+
   getTxType (accounts) {
     accounts = toArrayFormat(accounts);
     let incoming = accounts.some(a => this.isToAccount(a));

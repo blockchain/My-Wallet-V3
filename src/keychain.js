@@ -8,7 +8,8 @@ var Helpers = require('./helpers');
 var constants = require('./constants');
 
 // keychain
-function KeyChain (extendedKey, index, cache) {
+function KeyChain (extendedKey, index, cache, bitcoinjs) {
+  this._Bitcoin = bitcoinjs || Bitcoin;
   this._chainRoot = null;
   this.init(extendedKey, index, cache);
 
@@ -41,10 +42,10 @@ KeyChain.prototype.init = function (extendedKey, index, cache) {
   // if cache is defined we use it to recreate the chain
   // otherwise we generate it using extendedKey and index
   if (cache) {
-    this._chainRoot = Bitcoin.HDNode.fromBase58(cache, constants.getNetwork());
+    this._chainRoot = this._Bitcoin.HDNode.fromBase58(cache, constants.getNetwork(this._Bitcoin));
   } else {
     this._chainRoot = extendedKey && Helpers.isPositiveInteger(index) && index >= 0
-      ? Bitcoin.HDNode.fromBase58(extendedKey, constants.getNetwork()).derive(index) : undefined;
+      ? this._Bitcoin.HDNode.fromBase58(extendedKey, constants.getNetwork(this._Bitcoin)).derive(index) : undefined;
   }
   return this;
 };

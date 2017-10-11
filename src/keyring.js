@@ -3,11 +3,13 @@
 module.exports = KeyRing;
 
 var assert = require('assert');
+var Bitcoin = require('bitcoinjs-lib');
 var KeyChain = require('./keychain');
 
 // keyring: A collection of keychains
 
-function KeyRing (extendedKey, cache) {
+function KeyRing (extendedKey, cache, bitcoinjs) {
+  this._bitcoinjs = bitcoinjs || Bitcoin;
   this._receiveChain = null;
   this._changeChain = null;
   this.init(extendedKey, cache);
@@ -29,9 +31,9 @@ KeyRing.prototype.init = function (extendedKey, cache) {
   if (this._receiveChain && this._changeChain) return this;
   if (extendedKey || cache.receiveAccount && cache.changeAccount) {
     this._receiveChain = cache.receiveAccount
-      ? new KeyChain(null, null, cache.receiveAccount) : new KeyChain(extendedKey, 0);
+      ? new KeyChain(null, null, cache.receiveAccount, this._bitcoinjs) : new KeyChain(extendedKey, 0, undefined, this._bitcoinjs);
     this._changeChain = cache.changeAccount
-      ? new KeyChain(null, null, cache.changeAccount) : new KeyChain(extendedKey, 1);
+      ? new KeyChain(null, null, cache.changeAccount, this._bitcoinjs) : new KeyChain(extendedKey, 1, undefined, this._bitcoinjs);
   }
   return this;
 };
