@@ -189,6 +189,13 @@ describe('ShapeShift.Trade', () => {
       it('should get: time', () => {
         expect(trade.time.constructor).toEqual(Date)
       })
+
+      it('should use .timestamp over .time', () => {
+        let time = new Date('Thu Oct 12 2017 16:56:12 GMT-0400 (EDT)')
+        let timestamp = new Date(1507841784426)
+        trade = new Trade({ time, timestamp })
+        expect(trade.time.getTime()).toEqual(timestamp.getTime())
+      })
     })
 
     describe('.setStatus', () => {
@@ -218,7 +225,7 @@ describe('ShapeShift.Trade', () => {
       it('should return the full json', () => {
         let json = JSON.stringify({
           'status': 'no_deposits',
-          'time': now.toString(),
+          'timestamp': now.getTime(),
           'quote': {
             'orderId': '18408bc9-a592-4d15-9409-fe0b8f56c408',
             'quotedRate': '11.40005229',
