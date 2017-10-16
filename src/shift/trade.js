@@ -126,6 +126,7 @@ class Trade {
       status: this._status,
       hashIn: this._hashIn,
       hashOut: this._hashOut,
+      time: this._time && this._time.toString(),
       // save `timestamp` as UNIX timestamp integer
       timestamp: this._time && this._time.getTime(),
       quote: this.isComplete ? this._quote.toPartialJSON() : this._quote.toJSON()

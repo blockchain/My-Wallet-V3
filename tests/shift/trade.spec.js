@@ -225,6 +225,7 @@ describe('ShapeShift.Trade', () => {
       it('should return the full json', () => {
         let json = JSON.stringify({
           'status': 'no_deposits',
+          'time': now.toString(),
           'timestamp': now.getTime(),
           'quote': {
             'orderId': '18408bc9-a592-4d15-9409-fe0b8f56c408',
