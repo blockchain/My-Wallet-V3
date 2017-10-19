@@ -1,11 +1,11 @@
 /* eslint-disable semi */
 let { compose, map } = require('ramda')
-let Wallet = require('../../src/blockchain-wallet')
-let { addIndexToOutput } = require('../../src/bch/bch-api')
-let signer = require('../../src/bch/signer')
-let Coin = require('../../src/bch/coin')
-let cs = require('../../src/bch/coin-selection')
-let signingData = require('../__data__/signing-data.json')
+let Wallet = require('../src/blockchain-wallet')
+let { addIndexToOutput } = require('../src/bch/bch-api')
+let signer = require('../src/signer')
+let Coin = require('../src/coin')
+let cs = require('../src/coin-selection')
+let signingData = require('./__data__/signing-data.json')
 
 describe('Signer', () => {
   let wallet = new Wallet(signingData.wallet)
