@@ -50,6 +50,11 @@ const multiaddr = (addresses, n = 1) => {
   }).then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)));
 };
 
+const addIndexToOutput = curry((hdwallet, output) => {
+  let addIndex = (xpub) => assoc('index', hdwallet.account(xpub.m).index, xpub)
+  return over(lensProp('xpub'), addIndex, output)
+})
+
 // source can be a list of legacy addresses or a single integer for account index
 const getUnspents = curry((wallet, source) => {
   switch (true) {
@@ -57,7 +62,7 @@ const getUnspents = curry((wallet, source) => {
       const accIdx = wallet.hdwallet.accounts[source].extendedPublicKey
       return apiGetUnspents([accIdx])
                 .then(prop('unspent_outputs'))
-                .then(over(compose(mapped, lensProp('xpub')), assoc('index', source)))
+                .then(map(addIndexToOutput(wallet.hdwallet)))
                 .then(map(Coin.fromJS));
     case is(Array, source):
       return apiGetUnspents(source)
@@ -70,6 +75,7 @@ const getUnspents = curry((wallet, source) => {
 })
 
 module.exports = {
+  addIndexToOutput,
   getUnspents,
   pushTx,
   multiaddr
