@@ -3,6 +3,8 @@ const EthHd = require('ethereumjs-wallet/hdkey');
 const { construct } = require('ramda');
 const { isPositiveNumber, asyncOnce, dedup } = require('../helpers');
 const API = require('../api');
+const conditions = require('../conditions');
+const Condition = require('../conditions/Condition');
 const EthTxBuilder = require('./eth-tx-builder');
 const EthAccount = require('./eth-account');
 const EthSocket = require('./eth-socket');
@@ -10,6 +12,10 @@ const EthWalletTx = require('./eth-wallet-tx');
 
 const METADATA_TYPE_ETH = 5;
 const DERIVATION_PATH = "m/44'/60'/0'/0";
+
+const ethCond = Condition.empty()
+  .andNot(conditions.isUsingTestnet)
+  .and(conditions.isInRolloutGroup('eth'));
 
 class EthWallet {
   constructor (wallet, metadata) {
@@ -22,6 +28,10 @@ class EthWallet {
     this._latestBlock = null;
     this._lastTx = null;
     this.sync = asyncOnce(this.sync.bind(this), 250);
+  }
+
+  userHasAccess () {
+    return ethCond.test(/* where to get env from? */);
   }
 
   get wei () {
