@@ -102,6 +102,22 @@ describe('conditions', () => {
     })
   })
 
+  describe('.isUsingTestnet', () => {
+    it('should pass when the user is using testnet', () => {
+      let env = makeEnv(null, { network: 'testnet' }, null)
+      let result = conditions.isUsingTestnet.test(env)
+      expect(result.passed).toEqual(true)
+      expect(result.reason).toEqual(['using_testnet'])
+    })
+
+    it('should fail when the user is using mainnet', () => {
+      let env = makeEnv(null, { network: 'bitcoin' }, null)
+      let result = conditions.isUsingTestnet.test(env)
+      expect(result.passed).toEqual(false)
+      expect(result.reason).toEqual(['not_using_testnet'])
+    })
+  })
+
   describe('composite', () => {
     let makeAccountInfo = (countryCodeGuess, stateCodeGuess) =>
       ({ countryCodeGuess, stateCodeGuess })

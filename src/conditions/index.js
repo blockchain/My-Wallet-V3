@@ -55,3 +55,8 @@ exports.isInCountryBlacklist = (feature) => Condition.of((env) => {
 
   return passedWithReason(passed, 'in_country_blacklist')
 })
+
+exports.isUsingTestnet = Condition.of((env) => {
+  let options = env.get(Env.WALLET_OPTIONS)
+  return passedWithReason(options.network === 'testnet', 'using_testnet')
+})
