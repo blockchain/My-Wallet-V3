@@ -2,11 +2,11 @@
 const ShiftPayment = require('./shift-payment')
 
 class EthPayment extends ShiftPayment {
-  constructor (wallet) {
+  constructor (wallet, account) {
     super()
     this._wallet = wallet
     this._eth = wallet.eth
-    this._payment = this._eth.defaultAccount.createPayment()
+    this._payment = account.createPayment()
   }
 
   setFromQuote (quote) {
@@ -22,12 +22,6 @@ class EthPayment extends ShiftPayment {
     return new Promise(resolve => {
       resolve(parseFloat(this._payment.fee))
     })
-  }
-
-  saveWithdrawalLabel () {
-    let label = `ShapeShift order #${this.quote.orderId}`
-    let account = this._wallet.hdwallet.defaultAccount
-    account.setLabel(account.receiveIndex, label)
   }
 
   publish (secPass) {

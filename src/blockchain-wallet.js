@@ -27,6 +27,7 @@ var EthWallet = require('./eth/eth-wallet');
 var ShapeShift = require('./shift');
 var Bitcoin = require('bitcoinjs-lib');
 var EthSocket = require('./eth/eth-socket');
+var BitcoinCash = require('./bch');
 
 // Wallet
 
@@ -361,6 +362,12 @@ Object.defineProperties(Wallet.prototype, {
     get: function () {
       return this._shapeshift;
     }
+  },
+  'bch': {
+    configurable: false,
+    get: function () {
+      return this._bch;
+    }
   }
 });
 
@@ -515,7 +522,7 @@ Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) 
       ad.encrypt(cipher).persist();
     }
     this._addresses[ad.address] = ad;
-    MyWallet.ws.send(MyWallet.ws.msgAddrSub(ad.address));
+    MyWallet.ws.subscribeToAddresses(ad.address);
     MyWallet.syncWallet();
     this.getHistory();
     return ad;
@@ -752,7 +759,7 @@ Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosav
   }
   var newAccount = this._hd_wallets[index].newAccount(label, cipher).lastAccount;
   try { // MyWallet.ws.send can fail when restoring from mnemonic because it is not initialized.
-    MyWallet.ws.send(MyWallet.ws.msgXPUBSub(newAccount.extendedPublicKey));
+    MyWallet.ws.subscribeToXpubs(newAccount.extendedPublicKey);
   } catch (e) {}
   if (!(nosave === true)) MyWallet.syncWallet();
   typeof (success) === 'function' && success();
@@ -914,6 +921,10 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     return this._shapeshift.fetch();
   };
 
+  var loadBch = function () {
+    this._bch = BitcoinCash.fromBlockchainWallet(this);
+  };
+
   let promises = [];
 
   if (this.isMetadataReady) {
@@ -927,6 +938,7 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
   if (this.isUpgradedToHD) {
     // Labels currently don't use the KV Store, so this should never fail.
     promises.push(fetchLabels.call(this));
+    promises.push(loadBch.call(this));
   }
 
   return Promise.all(promises);

@@ -127,7 +127,7 @@ describe('Metadata', () => {
     it('should verify and compute the new magic hash', () => {
       let verified = Metadata.verifyResponse(response.address, response);
       let expectedMagicHash = Buffer.from('sS4b2JTeq53jyrAVYX8WQeIU/wDezNiFX34jNYSmfKQ=', 'base64');
-      return expect(verified).toEqual(jasmine.objectContaining({compute_new_magic_hash: expectedMagicHash}));
+      expect(expectedMagicHash.compare(verified.compute_new_magic_hash)).toEqual(0);
     });
 
     return it('should fail and launch an exception', () => {

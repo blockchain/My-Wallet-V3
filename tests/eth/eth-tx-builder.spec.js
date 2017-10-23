@@ -59,6 +59,11 @@ describe('EthTxBuilder', () => {
         payment.setValue(0.5)
         expect(payment.amount).toEqual(0.5)
       })
+
+      it('should set a value that is more precise than is possible for wei', () => {
+        payment.setValue(0.0025460841226194113)
+        expect(payment.amount).toEqual(0.002546084122619411)
+      })
     })
 
     describe('.setGasPrice()', () => {

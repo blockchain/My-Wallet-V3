@@ -1,3 +1,4 @@
+const WebSocket = require('ws');
 const EthHd = require('ethereumjs-wallet/hdkey');
 const { construct } = require('ramda');
 const { isPositiveNumber, asyncOnce, dedup } = require('../helpers');
@@ -82,15 +83,14 @@ class EthWallet {
 
   getApproximateBalance () {
     if (!this.defaultAccount && !this.legacyAccount) return null;
+    let balance = 0;
     if (this.defaultAccount) {
-      let defaultBalance = this.defaultAccount.getApproximateBalance();
-      if (defaultBalance !== null) return defaultBalance;
+      balance += parseFloat(this.defaultAccount.getApproximateBalance());
     }
     if (this.legacyAccount) {
-      let legacyBalance = this.legacyAccount.getApproximateBalance();
-      if (legacyBalance !== null) return legacyBalance;
+      balance += parseFloat(this.legacyAccount.getApproximateBalance());
     }
-    return null;
+    return balance.toFixed(8);
   }
 
   getAccount (index) {
@@ -114,7 +114,7 @@ class EthWallet {
 
   unarchiveAccount (account) {
     account.archived = false;
-    this._socket.subscribeToAccount(account);
+    this._socket.subscribeToAccount(this, account);
     this.sync();
   }
 
@@ -124,7 +124,7 @@ class EthWallet {
     account.label = label || EthAccount.defaultLabel(this.accounts.length);
     account.markAsCorrect();
     this._accounts.push(account);
-    this._socket.subscribeToAccount(account);
+    this._socket.subscribeToAccount(this, account, this.legacyAccount);
     return this.sync();
   }
 
@@ -202,7 +202,6 @@ class EthWallet {
 
   fetchHistory () {
     return Promise.all([this.fetchBalance(), this.fetchTransactions()])
-      .then(() => this.updateTxs())
       .then(() => this.getLatestBlock());
   }
 
@@ -221,7 +220,10 @@ class EthWallet {
     let addresses = accounts.map(a => a.address);
     return fetch(`${API.API_ROOT_URL}eth/account/${addresses.join()}`)
       .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
-      .then(data => accounts.forEach(a => a.setTransactions(data[a.address])));
+      .then(data => {
+        accounts.forEach(a => a.setTransactions(data[a.address]));
+        this.updateTxs();
+      });
   }
 
   fetchFees () {
@@ -250,11 +252,11 @@ class EthWallet {
     this._socket = socket;
     this._socket.subscribeToBlocks(this);
     this.activeAccounts.forEach(a => this._socket.subscribeToAccount(a));
+}
 
-    this._socket.on('close', () => {
-      this._socket.subscribeToBlocks(this);
-      this.activeAccounts.forEach(a => this._socket.subscribeToAccount(a));
-    });
+  setSocketHandlers () {
+    this._socket.subscribeToBlocks(this);
+    this.activeAccounts.forEach(a => this._socket.subscribeToAccount(this, a, this.legacyAccount));
   }
 
   updateTxs () {
@@ -385,7 +387,7 @@ class EthWallet {
     let account = EthAccount.fromWallet(accountNode.getWallet());
     account.label = EthAccount.defaultLabel(0);
     this._accounts = [account];
-    this._socket.subscribeToAccount(account);
+    this._socket.subscribeToAccount(this, account);
     return this.sync();
   }
 

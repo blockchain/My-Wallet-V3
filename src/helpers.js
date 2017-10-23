@@ -348,9 +348,10 @@ function parseMiniKey (miniKey) {
   return Bitcoin.crypto.sha256(miniKey);
 }
 
-Helpers.privateKeyStringToKey = function (value, format) {
+Helpers.privateKeyStringToKey = function (value, format, bitcoinjs) {
+  var bitcoinLib = bitcoinjs || Bitcoin;
   if (format === 'sipa' || format === 'compsipa') {
-    return Bitcoin.ECPair.fromWIF(value, constants.getNetwork());
+    return bitcoinLib.ECPair.fromWIF(value, constants.getNetwork(bitcoinLib));
   } else {
     var keyBuffer = null;
 
@@ -372,7 +373,7 @@ Helpers.privateKeyStringToKey = function (value, format) {
     }
 
     var d = BigInteger.fromBuffer(keyBuffer);
-    return new Bitcoin.ECPair(d, null, { network: constants.getNetwork() });
+    return new bitcoinLib.ECPair(d, null, { network: constants.getNetwork(bitcoinLib) });
   }
 };
 
@@ -585,7 +586,7 @@ Helpers.toWei = function (x, unit) {
   if (!etherUnits[unit]) {
     throw new Error(`Unsupported ether unit in toWei: ${unit}`);
   }
-  let result = Helpers.toBigNumber(x).mul(etherUnits[unit]);
+  let result = Helpers.toBigNumber(x).mul(etherUnits[unit]).floor();
   return Helpers.isBigNumber(x) ? result : result.toString();
 };
 

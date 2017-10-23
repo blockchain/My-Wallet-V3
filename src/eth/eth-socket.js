@@ -5,14 +5,14 @@ const OP_ACCOUNT_SUB = 'account_sub';
 const OP_BLOCK_SUB = 'block_sub';
 
 class EthSocket extends StableSocket {
-  constructor (wsUrl) {
-    super(wsUrl);
+  constructor (wsUrl, SocketClass) {
+    super(wsUrl, SocketClass);
     this.connect();
   }
 
-  subscribeToAccount (account) {
+  subscribeToAccount (ethWallet, account, legacyAccount) {
     this.send(EthSocket.accountSub(account));
-    this.on('message', EthSocket.accountMessageHandler(account));
+    this.on('message', EthSocket.accountMessageHandler(ethWallet, account, legacyAccount));
   }
 
   subscribeToBlocks (ethWallet) {
@@ -20,11 +20,15 @@ class EthSocket extends StableSocket {
     this.on('message', EthSocket.blockMessageHandler(ethWallet));
   }
 
-  static accountMessageHandler (account) {
+  static accountMessageHandler (ethWallet, account, legacyAccount) {
     return pipe(JSON.parse, (data) => {
       if (data.op === OP_ACCOUNT_SUB && data.account === account.address) {
         account.setData(data);
-        account.fetchTransaction(data.txHash);
+        account.appendTransaction(data.tx).update(ethWallet);
+        if (legacyAccount && legacyAccount.isCorrectAddress(data.tx.from)) {
+          legacyAccount.setData({ balance: '0' });
+          legacyAccount.appendTransaction(data.tx).update(ethWallet);
+        }
       }
     });
   }
@@ -38,11 +42,11 @@ class EthSocket extends StableSocket {
   }
 
   static accountSub (account) {
-    return JSON.stringify({ op: OP_ACCOUNT_SUB, account: account.address });
+    return this.op(OP_ACCOUNT_SUB, { account: account.address });
   }
 
   static blocksSub () {
-    return JSON.stringify({ op: OP_BLOCK_SUB });
+    return this.op(OP_BLOCK_SUB);
   }
 }
 

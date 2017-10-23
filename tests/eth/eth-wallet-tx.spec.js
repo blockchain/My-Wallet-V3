@@ -14,6 +14,12 @@ describe('EthWalletTx', () => {
     'gasUsed': 21000
   }
 
+  const mockAccount = (addr) => ({
+    isCorrectAddress (a) {
+      return a === addr
+    }
+  })
+
   describe('instance', () => {
     let tx
     beforeEach(() => {
@@ -56,41 +62,41 @@ describe('EthWalletTx', () => {
 
     describe('.getTxType()', () => {
       it('should identify a received tx', () => {
-        let account = { address: '0xasdf2' }
+        let account = mockAccount('0xasdf2')
         expect(tx.getTxType(account)).toEqual('received')
       })
 
       it('should identify a sent tx', () => {
-        let account = { address: '0xasdf1' }
+        let account = mockAccount('0xasdf1')
         expect(tx.getTxType(account)).toEqual('sent')
       })
 
       it('should return null if neither sent or received', () => {
-        let account = { address: '0xasdf3' }
+        let account = mockAccount('0xasdf3')
         expect(tx.getTxType(account)).toEqual(null)
       })
     })
 
     describe('.isToAccount()', () => {
       it('should be true if tx is to account', () => {
-        let account = { address: '0xasdf2' }
+        let account = mockAccount('0xasdf2')
         expect(tx.isToAccount(account)).toEqual(true)
       })
 
       it('should be false if tx is not to account', () => {
-        let account = { address: '0xasdf1' }
+        let account = mockAccount('0xasdf1')
         expect(tx.isToAccount(account)).toEqual(false)
       })
     })
 
     describe('.isFromAccount()', () => {
       it('should be true if tx is from account', () => {
-        let account = { address: '0xasdf1' }
+        let account = mockAccount('0xasdf1')
         expect(tx.isFromAccount(account)).toEqual(true)
       })
 
       it('should be false if tx is not from account', () => {
-        let account = { address: '0xasdf2' }
+        let account = mockAccount('0xasdf2')
         expect(tx.isFromAccount(account)).toEqual(false)
       })
     })

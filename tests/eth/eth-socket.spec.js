@@ -1,22 +1,31 @@
 /* eslint-disable semi */
+const WebSocket = require('ws')
 const EthSocket = require('../../src/eth/eth-socket');
 
 describe('EthSocket', () => {
   const url = 'wss://ws.blockchain.info/eth/inv'
-  const balanceResponse = JSON.stringify({ op: 'account_sub', account: '0xasdf', balance: '1000', nonce: 1, txHash: 'xyz' })
+  const balanceResponse = JSON.stringify({ op: 'account_sub', account: '0xasdf', balance: '1000', nonce: 1, txHash: 'xyz', tx: { hash: 'xyz' } })
   const blockResponse = JSON.stringify({ op: 'block_sub', height: 123 })
 
   let account
   let ethWallet
 
+  let mockAccount = (address) => ({
+    address,
+    setData () {},
+    fetchTransaction () {},
+    appendTransaction () { return { update () {} } },
+    isCorrectAddress (a) { return a === address }
+  })
+
   beforeEach(() => {
-    account = { address: '0xasdf', setData () {}, fetchTransaction () {} }
+    account = mockAccount('0xasdf')
     ethWallet = { setLatestBlock () {} }
   })
 
   describe('constructor', () => {
     it('should pass the url', () => {
-      let socket = new EthSocket(url)
+      let socket = new EthSocket(url, WebSocket)
       expect(socket.url).toEqual(url)
     })
   })
@@ -25,19 +34,19 @@ describe('EthSocket', () => {
     let socket
 
     beforeEach(() => {
-      socket = new EthSocket(url)
+      socket = new EthSocket(url, WebSocket)
       spyOn(socket, 'send')
       spyOn(socket, 'on')
     })
 
     describe('.subscribeToAccount()', () => {
       it('should send an account sub message', () => {
-        socket.subscribeToAccount(account)
+        socket.subscribeToAccount(ethWallet, account)
         expect(socket.send).toHaveBeenCalledWith(EthSocket.accountSub(account))
       })
 
       it('should add a message handler', () => {
-        socket.subscribeToAccount(account)
+        socket.subscribeToAccount(ethWallet, account)
         expect(socket.on).toHaveBeenCalledWith('message', jasmine.any(Function))
       })
     })
@@ -58,31 +67,39 @@ describe('EthSocket', () => {
   describe('static', () => {
     describe('.accountMessageHandler()', () => {
       it('should call .setData on message', () => {
-        let handler = EthSocket.accountMessageHandler(account)
+        let handler = EthSocket.accountMessageHandler(ethWallet, account)
         spyOn(account, 'setData')
         handler(balanceResponse)
         expect(account.setData).toHaveBeenCalledWith(jasmine.objectContaining({ balance: '1000', nonce: 1 }))
       })
 
-      it('should call .fetchTransaction on message', () => {
-        let handler = EthSocket.accountMessageHandler(account)
-        spyOn(account, 'fetchTransaction')
+      it('should call .appendTransaction with the tx object', () => {
+        let handler = EthSocket.accountMessageHandler(ethWallet, account)
+        spyOn(account, 'appendTransaction').and.callThrough()
         handler(balanceResponse)
-        expect(account.fetchTransaction).toHaveBeenCalledWith('xyz')
+        expect(account.appendTransaction).toHaveBeenCalledWith({ hash: 'xyz' })
       })
 
       it('should do nothing for non-balance message', () => {
-        let handler = EthSocket.accountMessageHandler(account)
+        let handler = EthSocket.accountMessageHandler(ethWallet, account)
         spyOn(account, 'setData')
         handler(blockResponse)
         expect(account.setData).not.toHaveBeenCalled()
       })
 
       it('should do nothing when the message address does not match', () => {
-        let handler = EthSocket.accountMessageHandler(account)
+        let handler = EthSocket.accountMessageHandler(ethWallet, account)
         spyOn(account, 'setData')
         handler(JSON.stringify({ op: 'account_sub', account: '0xfdsa' }))
         expect(account.setData).not.toHaveBeenCalled()
+      })
+
+      it('should reset the balance of a legacy address', () => {
+        let legacyAccount = mockAccount('0xabcd')
+        let handler = EthSocket.accountMessageHandler(ethWallet, account, legacyAccount)
+        spyOn(legacyAccount, 'setData')
+        handler(JSON.stringify({ op: 'account_sub', account: '0xasdf', tx: { from: '0xabcd' } }))
+        expect(legacyAccount.setData).toHaveBeenCalledWith({ balance: '0' })
       })
     })
 
