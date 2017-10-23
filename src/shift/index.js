@@ -31,19 +31,22 @@ class ShapeShift {
     return this._api.getRate(coinPair)
   }
 
-  getQuote (coinPair, amount, index) {
+  getQuote (from, to, amount) {
     trace('getting quote')
-    let [from, to] = coinPair.split('_')
 
-    let withdrawalAddress = this.nextAddressForCurrency(to, index)
-    let returnAddress = this.nextAddressForCurrency(from, index)
+    let returnAddress = from.receiveAddress;
+    let withdrawalAddress = to.receiveAddress;
+    let coinPair = from.coinCode + '_' + to.coinCode;
 
     return this._api.getQuote(coinPair, amount, withdrawalAddress, returnAddress)
       .then(Quote.fromApiResponse)
   }
 
-  getApproximateQuote (coinPair, amount) {
+  getApproximateQuote (from, to, amount) {
     trace('getting approximate quote')
+
+    let coinPair = from.coinCode + '_' + to.coinCode;
+
     return this._api.getQuote(coinPair, amount)
       .then(Quote.fromApiResponse)
   }
@@ -119,19 +122,6 @@ class ShapeShift {
     trace('fetching full trades')
     let requests = this.trades.map(t => this.updateTradeDetails(t))
     return Promise.all(requests);
-  }
-
-  nextAddressForCurrency (currency, index) {
-    if (currency === 'btc') {
-      return this._wallet.hdwallet.accounts[index].receiveAddress
-    }
-    if (currency === 'eth') {
-      return this._wallet.eth.defaultAccount.address
-    }
-    if (currency === 'bch') {
-      return this._wallet.bch.defaultAccount.receiveAddress
-    }
-    throw new Error(`Currency '${currency}' is not supported`)
   }
 
   saveBtcWithdrawalLabel (quote) {
