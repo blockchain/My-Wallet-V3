@@ -22,6 +22,10 @@ class EthAccount {
     return this._addr;
   }
 
+  get receiveAddress () {
+    return this.address;
+  }
+
   get privateKey () {
     return this._priv;
   }
