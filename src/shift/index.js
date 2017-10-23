@@ -31,12 +31,12 @@ class ShapeShift {
     return this._api.getRate(coinPair)
   }
 
-  getQuote (coinPair, amount) {
+  getQuote (coinPair, amount, index) {
     trace('getting quote')
     let [from, to] = coinPair.split('_')
 
-    let withdrawalAddress = this.nextAddressForCurrency(to)
-    let returnAddress = this.nextAddressForCurrency(from)
+    let withdrawalAddress = this.nextAddressForCurrency(to, index)
+    let returnAddress = this.nextAddressForCurrency(from, index)
 
     return this._api.getQuote(coinPair, amount, withdrawalAddress, returnAddress)
       .then(Quote.fromApiResponse)
@@ -121,9 +121,9 @@ class ShapeShift {
     return Promise.all(requests);
   }
 
-  nextAddressForCurrency (currency) {
+  nextAddressForCurrency (currency, index) {
     if (currency === 'btc') {
-      return this._wallet.hdwallet.defaultAccount.receiveAddress
+      return this._wallet.hdwallet.accounts[index].receiveAddress
     }
     if (currency === 'eth') {
       return this._wallet.eth.defaultAccount.address
