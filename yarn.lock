@@ -980,6 +980,10 @@ bcrypt-pbkdf@^1.0.0:
   dependencies:
     tweetnacl "^0.14.3"
 
+bech32@0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/bech32/-/bech32-0.0.3.tgz#736747c4a6531c5d8937d0400498de30e93b2f9c"
+
 better-assert@~1.0.0:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/better-assert/-/better-assert-1.0.2.tgz#40866b9e1b9e0b55b481894311e68faffaebc522"
@@ -1036,15 +1040,9 @@ bitcoin-exchange-client@0.2.*:
   dependencies:
     isomorphic-fetch "^2.2.0"
 
-bitcoin-exchange-client@^0.4.6:
+bitcoin-exchange-client@^0.4.6, bitcoin-exchange-client@~0.4.1:
   version "0.4.6"
   resolved "https://registry.npmjs.org/bitcoin-exchange-client/-/bitcoin-exchange-client-0.4.6.tgz#46ae8eff5275fe49df4b6c6ee01252e8b6e0e224"
-  dependencies:
-    isomorphic-fetch "^2.2.0"
-
-bitcoin-exchange-client@~0.4.1:
-  version "0.4.3"
-  resolved "https://registry.yarnpkg.com/bitcoin-exchange-client/-/bitcoin-exchange-client-0.4.3.tgz#f2d2121a36eb9d1d18a504c1397987bfa39d7ddb"
   dependencies:
     isomorphic-fetch "^2.2.0"
 
@@ -1087,21 +1085,35 @@ bitcoin-unocoin-client@^0.3.4:
     varuint-bitcoin "^1.0.4"
     wif "^2.0.1"
 
-bitcoinjs-lib@2.1.*:
-  version "2.1.4"
-  resolved "https://registry.yarnpkg.com/bitcoinjs-lib/-/bitcoinjs-lib-2.1.4.tgz#d4fc235b065aa19c48e11d9136eeab07b38c1534"
+bitcoinjs-lib@^3.3.0:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/bitcoinjs-lib/-/bitcoinjs-lib-3.3.0.tgz#f9ba0b82d09e1532993c1cff8e26529e2bd32a80"
   dependencies:
+    bech32 "0.0.3"
     bigi "^1.4.0"
     bip66 "^1.1.0"
-    bs58check "^1.0.5"
-    buffer-equals "^1.0.3"
-    buffer-reverse "^1.0.0"
+    bitcoin-ops "^1.3.0"
+    bs58check "^2.0.0"
     create-hash "^1.1.0"
     create-hmac "^1.1.3"
     ecurve "^1.0.0"
+    merkle-lib "^2.0.10"
+    pushdata-bitcoin "^1.0.1"
     randombytes "^2.0.1"
-    typeforce "^1.5.5"
-    wif "^1.1.0"
+    safe-buffer "^5.0.1"
+    typeforce "^1.11.3"
+    varuint-bitcoin "^1.0.4"
+    wif "^2.0.1"
+
+bitcoinjs-message@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/bitcoinjs-message/-/bitcoinjs-message-2.0.0.tgz#e285d223607dabf2b33a6ee486a223b59d1b1548"
+  dependencies:
+    bs58check "^2.0.2"
+    buffer-equals "^1.0.3"
+    create-hash "^1.1.2"
+    secp256k1 "^3.0.1"
+    varuint-bitcoin "^1.0.1"
 
 bl@^1.0.0:
   version "1.2.1"
@@ -1373,14 +1385,14 @@ bs58@^4.0.0:
   dependencies:
     base-x "^3.0.2"
 
-bs58check@<3.0.0, bs58check@^2.0.0:
+bs58check@<3.0.0, bs58check@^2.0.0, bs58check@^2.0.2:
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/bs58check/-/bs58check-2.0.2.tgz#06f63b01c2fa6173033c90eb87f1fe3d2e13d89a"
   dependencies:
     bs58 "^4.0.0"
     create-hash "^1.1.0"
 
-bs58check@^1.0.5, bs58check@^1.0.6, bs58check@^1.0.8:
+bs58check@^1.0.5, bs58check@^1.0.8:
   version "1.3.4"
   resolved "https://registry.yarnpkg.com/bs58check/-/bs58check-1.3.4.tgz#c52540073749117714fa042c3047eb8f9151cbf8"
   dependencies:
@@ -1394,10 +1406,6 @@ buffer-crc32@0.1.1:
 buffer-equals@^1.0.3:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/buffer-equals/-/buffer-equals-1.0.4.tgz#0353b54fd07fd9564170671ae6f66b9cf10d27f5"
-
-buffer-reverse@^1.0.0:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/buffer-reverse/-/buffer-reverse-1.0.1.tgz#49283c8efa6f901bc01fa3304d06027971ae2f60"
 
 buffer-shims@~1.0.0:
   version "1.0.0"
@@ -5500,7 +5508,11 @@ typedarray@~0.0.5:
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
 
-typeforce@^1.5.5, typeforce@^1.8.7:
+typeforce@^1.11.3:
+  version "1.11.5"
+  resolved "https://registry.yarnpkg.com/typeforce/-/typeforce-1.11.5.tgz#ddbbf322e5022014cd7b8f4facb63ead3c80da09"
+
+typeforce@^1.8.7:
   version "1.11.1"
   resolved "https://registry.yarnpkg.com/typeforce/-/typeforce-1.11.1.tgz#ab66f3b094856d00ed0c8913b0742d3dabfafe62"
   dependencies:
@@ -5614,7 +5626,7 @@ validate-npm-package-license@^3.0.1:
     spdx-correct "~1.0.0"
     spdx-expression-parse "~1.0.0"
 
-varuint-bitcoin@^1.0.4:
+varuint-bitcoin@^1.0.1, varuint-bitcoin@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/varuint-bitcoin/-/varuint-bitcoin-1.0.4.tgz#d812c5dae16e32f60544b6adee1d4be1307d0283"
 
@@ -5706,12 +5718,6 @@ wide-align@^1.1.0:
   resolved "https://registry.yarnpkg.com/wide-align/-/wide-align-1.1.2.tgz#571e0f1b0604636ebc0dfc21b0339bbe31341710"
   dependencies:
     string-width "^1.0.2"
-
-wif@^1.1.0:
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/wif/-/wif-1.2.1.tgz#aa81a57dc1fec86b484fbe74f4ab5f65fb51e043"
-  dependencies:
-    bs58check "^1.0.6"
 
 wif@^2.0.1:
   version "2.0.6"

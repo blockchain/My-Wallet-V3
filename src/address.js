@@ -11,6 +11,7 @@ var MyWallet = require('./wallet'); // This cyclic import should be avoided once
 var ImportExport = require('./import-export');
 var WalletCrypto = require('./wallet-crypto');
 var constants = require('./constants');
+var BitcoinMessage = require('bitcoinjs-message')
 
 // Address class
 function Address (object) {
@@ -269,7 +270,7 @@ Address.prototype.signMessage = function (message, secondPassword) {
   var keyPair = Helpers.privateKeyStringToKey(priv, 'base58');
 
   if (keyPair.getAddress() !== this.address) keyPair.compressed = false;
-  return Bitcoin.message.sign(keyPair, message, constants.getNetwork()).toString('base64');
+  return BitcoinMessage.sign(message, keyPair.d.toBuffer(32), keyPair.compressed).toString('base64');
 };
 
 Address.prototype.encrypt = function (cipher) {

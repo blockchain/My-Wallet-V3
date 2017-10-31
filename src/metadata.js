@@ -11,6 +11,7 @@ var assoc = require('ramda/src/assoc');
 var curry = require('ramda/src/curry');
 var compose = require('ramda/src/compose');
 var prop = require('ramda/src/prop');
+var BitcoinMessage = require('bitcoinjs-message')
 
 class Metadata {
   constructor (ecPair, encKeyBuffer, typeId) {
@@ -89,15 +90,15 @@ Metadata.message = curry(
 Metadata.magic = curry(
   function (payload, prevMagic) {
     const msg = this.message(payload, prevMagic);
-    return Bitcoin.message.magicHash(msg, constants.getNetwork());
+    return BitcoinMessage.magicHash(msg, Bitcoin.networks.bitcoin.messagePrefix);
   }
 );
 
 Metadata.verify = (address, signature, hash) =>
-  Bitcoin.message.verify(address, signature, hash, constants.getNetwork());
+  BitcoinMessage.verify(hash, address, signature);
 
 // Metadata.sign :: keyPair -> msg -> Buffer
-Metadata.sign = (keyPair, msg) => Bitcoin.message.sign(keyPair, msg, constants.getNetwork());
+Metadata.sign = (keyPair, msg) => BitcoinMessage.sign(msg, keyPair.d.toBuffer(32), keyPair.compressed);
 
 // Metadata.computeSignature :: keypair -> buffer -> buffer -> base64
 Metadata.computeSignature = (key, payloadBuff, magicHash) =>
