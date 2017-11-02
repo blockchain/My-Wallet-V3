@@ -11,7 +11,7 @@ var MyWallet = require('./wallet'); // This cyclic import should be avoided once
 var ImportExport = require('./import-export');
 var WalletCrypto = require('./wallet-crypto');
 var constants = require('./constants');
-var BitcoinMessage = require('bitcoinjs-message')
+var BitcoinMessage = require('bitcoinjs-message');
 
 // Address class
 function Address (object) {

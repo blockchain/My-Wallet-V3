@@ -1,18 +1,18 @@
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
-var WalletCrypto = require('./wallet-crypto');
-var Transaction = require('./transaction');
+// var WalletCrypto = require('./wallet-crypto');
+// var Transaction = require('./transaction');
 var API = require('./api');
 var Helpers = require('./helpers');
-var KeyRing = require('./keyring');
+// var KeyRing = require('./keyring');
 var EventEmitter = require('events');
 var util = require('util');
 var constants = require('./constants');
-var mapObjIndexed = require('ramda/src/mapObjIndexed');
+// var mapObjIndexed = require('ramda/src/mapObjIndexed');
 const Coin = require('./bch/coin.js');
-const { selectAll, descentDraw, ascentDraw, effectiveBalance, filteredEffectiveBalance } = require('./bch/coin-selection')
-const { curry, is, prop, lensProp, compose, assoc, over, map, zipWith } = require('ramda');
+const { descentDraw } = require('./bch/coin-selection');
+const { is, prop, lensProp, compose, assoc, over, map, zipWith } = require('ramda');
 const { mapped } = require('ramda-lens');
 const { sign } = require('./btc/signer');
 // Payment Class
@@ -366,11 +366,11 @@ Payment.updateFeePerKb = function (fee) {
 
 Payment.prebuild = function () {
   return function (payment) {
-    let toCoin = (to, amount) => new Coin({ address: to, value: amount })
-    let targets = zipWith(toCoin, payment.to || [], payment.amounts || [])
+    let toCoin = (to, amount) => new Coin({ address: to, value: amount });
+    let targets = zipWith(toCoin, payment.to || [], payment.amounts || []);
     // console.log('effectiveBalance: ', effectiveBalance(payment.feePerByte, payment.coins).value)
     // console.log('realEffectiveBalance: ', filteredEffectiveBalance(payment.feePerByte, payment.coins))
-    payment.selection = descentDraw(targets, payment.feePerByte, payment.coins, payment.change)
+    payment.selection = descentDraw(targets, payment.feePerByte, payment.coins, payment.change);
     // payment.selection = ascentDraw(targets, payment.feePerByte, payment.coins, payment.change)
     return Promise.resolve(payment);
   };
@@ -391,9 +391,9 @@ Payment.prebuild = function () {
 Payment.sign = function (password) {
   var wallet = this._wallet;
   return function (payment) {
-    payment.transaction = sign(password, wallet, payment.selection)    
-    console.log(payment.transaction.getId())
-    console.log(payment.transaction.toHex())
+    payment.transaction = sign(password, wallet, payment.selection);
+    console.log(payment.transaction.getId());
+    console.log(payment.transaction.toHex());
     // var importWIF = function (WIF) {
     //   wallet.importLegacyAddress(WIF, 'Redeemed code.', password)
     //     .then(function (A) { A.archived = true; });
@@ -487,21 +487,19 @@ module.exports = Payment;
 //   return privateKeys;
 // }
 
-////////////////////////////////////////////////////////////////////////////////
 // new functions
 
 const scriptToAddress = coin => {
   const scriptBuffer = Buffer.from(coin.script, 'hex');
   let network = constants.getNetwork(Bitcoin);
   const address = Bitcoin.address.fromOutputScript(scriptBuffer, network).toString();
-  return assoc('priv', address, coin)
-}
-
+  return assoc('priv', address, coin);
+};
 
 const getUnspents = (wallet, source, notify) => {
   switch (true) {
     case Helpers.isXpubKey(prop(0, source)):
-      const index = prop('index', wallet.hdwallet.account(source[0]))
+      const index = prop('index', wallet.hdwallet.account(source[0]));
       return API.getUnspent(source, -1)
                 .then(prop('unspent_outputs'))
                 .then(over(compose(mapped, lensProp('xpub')), assoc('index', index)))
@@ -514,4 +512,4 @@ const getUnspents = (wallet, source, notify) => {
     default:
       return Promise.reject('WRONG_SOURCE_FOR_UNSPENTS');
   }
-}
+};

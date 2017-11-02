@@ -13,7 +13,7 @@ var WalletCrypo = require('./wallet-crypto');
 var has = require('ramda/src/has');
 var allPass = require('ramda/src/allPass');
 var map = require('ramda/src/map');
-var BitcoinMessage = require('bitcoinjs-message')
+var BitcoinMessage = require('bitcoinjs-message');
 
 var Helpers = {};
 Math.log2 = function (x) { return Math.log(x) / Math.LN2; };
@@ -470,7 +470,7 @@ Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
 };
 
 Helpers.verifyMessage = function (address, signature, message) {
-  return BitcoinMessage.verify(message, address, signature)
+  return BitcoinMessage.verify(message, address, signature);
 };
 
 Helpers.getMobileOperatingSystem = function () {

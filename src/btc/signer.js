@@ -47,17 +47,17 @@ const isFromAccount = (selection) => {
 };
 
 const addressToOutputScript = (coin) => {
-  console.log('addresstooutput', coin)
+  console.log('addresstooutput', coin);
   if (coin.address) {
-    console.log('inside')
+    console.log('inside');
     const scriptPubKey = Bitcoin.address.toOutputScript(coin.address);
-    console.log(scriptPubKey)
-    console.log(assoc('script', scriptPubKey, coin))
-    console.log(Coin.fromCoin(assoc('script', scriptPubKey, coin)))
+    console.log(scriptPubKey);
+    console.log(assoc('script', scriptPubKey, coin));
+    console.log(Coin.fromCoin(assoc('script', scriptPubKey, coin)));
     return Coin.fromCoin(assoc('script', scriptPubKey, coin));
   } else {
     return coin;
-  };
+  }
 };
 
 const sortBIP69 = txBuilder => {
@@ -81,8 +81,8 @@ const signSelection = selection => {
   const sign = (coin, i) => txBuilder.sign(i, coin.priv);
   forEach(addInput, selection.inputs);
   forEach(addOutput, selection.outputs);
-  sortBIP69(txBuilder)
-  addIndex(forEach)(sign, selection.inputs);  
+  sortBIP69(txBuilder);
+  addIndex(forEach)(sign, selection.inputs);
   return txBuilder.build();
 };
 
@@ -93,10 +93,9 @@ const sign = curry((password, wallet, selection) => {
   const selectionWithKeys = over(compose(lensProp('inputs'), mapped, lensProp('priv')), getKeys, selection);
   const finalSelection = over(lensProp('outputs'), addressToOutputScript, selectionWithKeys);
   console.log(finalSelection);
-  console.log('--------------------------------------')
+  console.log('--------------------------------------');
   return signSelection(finalSelection);
 });
-
 
 module.exports = {
   sign

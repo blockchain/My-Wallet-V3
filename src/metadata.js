@@ -4,14 +4,14 @@ var WalletCrypto = require('./wallet-crypto');
 var Bitcoin = require('bitcoinjs-lib');
 var API = require('./api');
 var Helpers = require('./helpers');
-var constants = require('./constants');
+// var constants = require('./constants');
 
 // individual imports to reduce bundle size
 var assoc = require('ramda/src/assoc');
 var curry = require('ramda/src/curry');
 var compose = require('ramda/src/compose');
 var prop = require('ramda/src/prop');
-var BitcoinMessage = require('bitcoinjs-message')
+var BitcoinMessage = require('bitcoinjs-message');
 
 class Metadata {
   constructor (ecPair, encKeyBuffer, typeId) {

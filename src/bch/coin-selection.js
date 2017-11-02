@@ -14,9 +14,9 @@ const effectiveBalance = (feePerByte, inputs, outputs = [{}]) =>
     clamp(0, Infinity, v - transactionBytes(inputs, outputs) * feePerByte));
 
 const filteredEffectiveBalance = (feePerByte, inputs, outputs = [{}]) => {
-  const coins = filter(c => Coin.effectiveValue(feePerByte, c) > 0, inputs)
+  const coins = filter(c => Coin.effectiveValue(feePerByte, c) > 0, inputs);
   return effectiveBalance(feePerByte, coins, outputs).value;
-}
+};
 // findTarget :: [Coin] -> Number -> [Coin] -> String -> Selection
 const findTarget = (targets, feePerByte, coins, changeAddress) => {
   let target = foldCoins(targets).value;

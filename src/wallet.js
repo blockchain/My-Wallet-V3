@@ -667,7 +667,7 @@ MyWallet.browserCheckFast = function () {
 
   // master node -> xpriv (1 ms)
   var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed, network);
-  var priv = masterkey.toBase58()
+  var priv = masterkey.toBase58();
 
   if (priv !== vectors.priv) {
     return false;
