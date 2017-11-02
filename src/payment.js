@@ -10,7 +10,11 @@ var EventEmitter = require('events');
 var util = require('util');
 var constants = require('./constants');
 var mapObjIndexed = require('ramda/src/mapObjIndexed');
-
+const Coin = require('./bch/coin.js');
+const { selectAll, descentDraw, ascentDraw, effectiveBalance, filteredEffectiveBalance } = require('./bch/coin-selection')
+const { curry, is, prop, lensProp, compose, assoc, over, map, zipWith } = require('ramda');
+const { mapped } = require('ramda-lens');
+const { sign } = require('./btc/signer');
 // Payment Class
 
 function Payment (wallet, payment) {
@@ -33,7 +37,8 @@ function Payment (wallet, payment) {
     from: null, // origin
     amounts: [], // list of amounts to spend entered in the form
     to: [], // list of destinations entered in the form
-    feePerKb: Helpers.toFeePerKb(serverFeeFallback.regular), // default fee-per-kb used
+    // feePerKb: Helpers.toFeePerKb(serverFeeFallback.regular), // default fee-per-kb used
+    feePerByte: serverFeeFallback.regular, // default fee-per-kb used
     extraFeeConsumption: 0, // if there is change consumption to fee will be reflected here
     sweepFee: 0,  // computed fee to sweep an account in basic send (depends on fee-per-kb)
     sweepAmount: 0, // computed max spendable amount depending on fee-per-kb
@@ -43,9 +48,8 @@ function Payment (wallet, payment) {
     maxFees: {limits: { 'min': 0, 'max': 0 }, regular: 0, priority: 0}, // each fee-per-kb (regular, priority)
     maxSpendableAmounts: {limits: { 'min': 0, 'max': 0 }, regular: 0, priority: 0},  // max amount for each fee-per-kb
     txSize: 0, // transaction size
-    blockchainFee: 0,
-    blockchainAddress: null,
-    serviceChargeOptions: {}
+
+    selection: { fee: 0, inputs: [], outputs: [] }
   };
 
   var p = payment || initialState;
@@ -75,11 +79,11 @@ Payment.prototype.from = function (origin, absoluteFee) {
   return this;
 };
 
-Payment.prototype.fee = function (absoluteFee) {
-  this.then(Payment.prebuild(absoluteFee));
-  this.sideEffect(this.emit.bind(this, 'update'));
-  return this;
-};
+// Payment.prototype.fee = function (absoluteFee) {
+//   this.then(Payment.prebuild(absoluteFee));
+//   this.sideEffect(this.emit.bind(this, 'update'));
+//   return this;
+// };
 
 Payment.prototype.amount = function (amounts, absoluteFee, bFeeParams) {
   this.payment = this.payment.then(Payment.amount(amounts, absoluteFee, bFeeParams));
@@ -103,9 +107,9 @@ Payment.prototype.sideEffect = function (myFunction) {
   return this;
 };
 
-Payment.prototype.useAll = function (absoluteFee) {
-  this.payment = this.payment.then(Payment.useAll(absoluteFee));
-  this.then(Payment.prebuild(absoluteFee));
+Payment.prototype.useAll = function () {
+  this.payment = this.payment.then(Payment.useAll());
+  this.then(Payment.prebuild());
   // this.sideEffect(this.emit.bind(this, 'update'));
   return this;
 };
@@ -122,14 +126,14 @@ Payment.prototype.updateFeePerKb = function (fee) {
   return this;
 };
 
-Payment.prototype.prebuild = function (absoluteFee) {
-  this.payment = this.payment.then(Payment.prebuild(absoluteFee));
+Payment.prototype.prebuild = function () {
+  this.payment = this.payment.then(Payment.prebuild());
   this.sideEffect(this.emit.bind(this, 'update'));
   return this;
 };
 
-Payment.prototype.build = function (feeToMiners) {
-  this.payment = this.payment.then(Payment.build.call(this, feeToMiners));
+Payment.prototype.build = function () {
+  this.payment = this.payment.then(Payment.build());
   this.sideEffect(this.emit.bind(this, 'update'));
   return this;
 };
@@ -202,19 +206,19 @@ Payment.to = function (destinations) {
   };
 };
 
-Payment.useAll = function (absoluteFee) {
+Payment.useAll = function () {
   return function (payment) {
-    if (Helpers.isPositiveNumber(absoluteFee)) {
-      var balance = payment.balance ? payment.balance : 0;
-      payment.amounts = (balance - absoluteFee) > 0 ? [balance - absoluteFee] : [];
-    } else {
-      payment.amounts = payment.sweepAmount ? [payment.sweepAmount] : [];
-    }
+    // if (Helpers.isPositiveNumber(absoluteFee)) {
+    //   var balance = payment.balance ? payment.balance : 0;
+    //   payment.amounts = (balance - absoluteFee) > 0 ? [balance - absoluteFee] : [];
+    // } else {
+    //   payment.amounts = payment.sweepAmount ? [payment.sweepAmount] : [];
+    // }
     return Promise.resolve(payment);
   };
 };
 
-Payment.amount = function (amounts, absoluteFee, feeOptions) {
+Payment.amount = function (amounts) {
   var formatAmo = null;
   switch (true) {
     // single output
@@ -231,10 +235,6 @@ Payment.amount = function (amounts, absoluteFee, feeOptions) {
       console.log('No amounts set.');
   } // fi switch
   return function (payment) {
-    payment.serviceChargeOptions = feeOptions || {};
-    payment.blockchainFee = feeOptions
-      ? Helpers.blockchainFee(formatAmo.reduce(Helpers.add, 0), feeOptions)
-      : 0;
     payment.amounts = formatAmo;
     return Promise.resolve(payment);
   };
@@ -315,7 +315,7 @@ Payment.from = function (origin) {
     payment.fromAccountIdx = fromAccId;
     payment.fromWatchOnly = watchOnly;
 
-    return getUnspentCoins(addresses, function onNotice (notice) {
+    return getUnspents(wallet, addresses, function onNotice (notice) {
       that.emit('message', { text: notice });
     }).then(
       function (coins) {
@@ -341,7 +341,7 @@ Payment.updateFees = function () {
     return API.getFees().then(
       function (fees) {
         payment.fees = fees;
-        payment.feePerKb = Helpers.toFeePerKb(fees.regular);
+        payment.feePerByte = fees.regular;
         return payment;
       }
     ).catch(
@@ -359,97 +359,52 @@ Payment.updateFeePerKb = function (fee) {
     if (['regular', 'priority'].indexOf(fee) > -1) {
       fee = payment.fees[fee];
     }
-    payment.feePerKb = Helpers.toFeePerKb(fee);
+    payment.feePerByte = fee;
     return Promise.resolve(payment);
   };
 };
 
-Payment.prebuild = function (absoluteFee) {
+Payment.prebuild = function () {
   return function (payment) {
-    var dust = constants.getNetwork().dustThreshold;
-
-    var usableCoins = Transaction.filterUsableCoins(payment.coins, payment.feePerKb);
-    var max = Transaction.maxAvailableAmount(usableCoins, payment.feePerKb);
-    payment.sweepAmount = Helpers.balanceMinusFee(max.amount, payment.serviceChargeOptions);
-    payment.sweepFee = max.fee;
-    payment.balance = Transaction.sumOfCoins(payment.coins);
-
-    // compute max spendable limits per each fee-per-kb
-    var maxSpendablesPerFeePerKb = function (fee, key) {
-      var c = Transaction.filterUsableCoins(payment.coins, Helpers.toFeePerKb(fee));
-      var s = Transaction.maxAvailableAmount(c, Helpers.toFeePerKb(fee));
-      return s.amount;
-    };
-
-    var maxFees = function (fee, key) { return payment.balance - fee; };
-
-    payment.maxSpendableAmounts = mapObjIndexed(maxSpendablesPerFeePerKb, payment.fees);
-    payment.maxFees = mapObjIndexed(maxFees, payment.maxSpendableAmounts);
-
-    // coin selection
-    var amounts = payment.blockchainFee > 0
-      ? payment.amounts.concat(payment.blockchainFee)
-      : payment.amounts;
-    var s = Helpers.isPositiveNumber(absoluteFee)
-      ? Transaction.selectCoins(payment.coins, amounts, absoluteFee, true)
-      : Transaction.selectCoins(usableCoins, amounts, payment.feePerKb, false);
-    payment.finalFee = s.fee;
-    payment.selectedCoins = s.coins;
-    payment.txSize = Transaction.guessSize(payment.selectedCoins.length, (amounts.length || 1) + 1);
-    var c = Transaction.sumOfCoins(payment.selectedCoins) - amounts.reduce(Helpers.add, 0) - payment.finalFee;
-    payment.changeAmount = c > 0 ? c : 0;
-
-    // change consumption
-    if (payment.changeAmount > 0 && payment.changeAmount < dust) {
-      payment.extraFeeConsumption = payment.changeAmount;
-      payment.changeAmount = 0;
-    } else {
-      payment.extraFeeConsumption = 0;
-    }
-
+    let toCoin = (to, amount) => new Coin({ address: to, value: amount })
+    let targets = zipWith(toCoin, payment.to || [], payment.amounts || [])
+    // console.log('effectiveBalance: ', effectiveBalance(payment.feePerByte, payment.coins).value)
+    // console.log('realEffectiveBalance: ', filteredEffectiveBalance(payment.feePerByte, payment.coins))
+    payment.selection = descentDraw(targets, payment.feePerByte, payment.coins, payment.change)
+    // payment.selection = ascentDraw(targets, payment.feePerByte, payment.coins, payment.change)
     return Promise.resolve(payment);
   };
 };
 
-Payment.build = function (feeToMiners) {
-  // feeToMiners :: boolean (if true blockchain fee is given to the miners)
-  return function (payment) {
-    try {
-      if (payment.blockchainFee > 0) {
-        if (feeToMiners === true) {
-          payment.finalFee += payment.blockchainFee;
-        } else {
-          return API.getBlockchainAddress().then(function (object) {
-            payment.blockchainAddress = object.address;
-            payment.transaction = new Transaction(payment, this);
-            return payment;
-          }.bind(this)).catch(function (e) {
-            return Promise.reject({ error: e, payment: payment });
-          });
-        }
-      }
-      payment.transaction = new Transaction(payment, this);
-      return Promise.resolve(payment);
-    } catch (e) {
-      return Promise.reject({ error: e, payment: payment });
-    }
-  }.bind(this);
-};
+// Payment.build = function (feeToMiners) {
+//   // feeToMiners :: boolean (if true blockchain fee is given to the miners)
+//   return function (payment) {
+//     try {
+//       // payment.transaction = new Transaction(payment, this);
+//       return Promise.resolve(payment);
+//     } catch (e) {
+//       return Promise.reject({ error: e, payment: payment });
+//     }
+//   }.bind(this);
+// };
 
 Payment.sign = function (password) {
   var wallet = this._wallet;
   return function (payment) {
-    var importWIF = function (WIF) {
-      wallet.importLegacyAddress(WIF, 'Redeemed code.', password)
-        .then(function (A) { A.archived = true; });
-    };
+    payment.transaction = sign(password, wallet, payment.selection)    
+    console.log(payment.transaction.getId())
+    console.log(payment.transaction.toHex())
+    // var importWIF = function (WIF) {
+    //   wallet.importLegacyAddress(WIF, 'Redeemed code.', password)
+    //     .then(function (A) { A.archived = true; });
+    // };
 
-    if (!payment.transaction) throw new Error('This transaction hasn\'t been built yet');
-    if (Array.isArray(payment.wifKeys) && !payment.fromWatchOnly) payment.wifKeys.forEach(importWIF);
+    // if (!payment.transaction) throw new Error('This transaction hasn\'t been built yet');
+    // if (Array.isArray(payment.wifKeys) && !payment.fromWatchOnly) payment.wifKeys.forEach(importWIF);
 
-    payment.transaction.addPrivateKeys(getPrivateKeys(wallet, password, payment));
-    payment.transaction.sortBIP69();
-    payment.transaction = payment.transaction.sign();
+    // payment.transaction.addPrivateKeys(getPrivateKeys(wallet, password, payment));
+    // payment.transaction.sortBIP69();
+    // payment.transaction = payment.transaction.sign();
     return Promise.resolve(payment);
   };
 };
@@ -465,8 +420,6 @@ Payment.publish = function () {
       throw e.message || e.responseText || e;
     };
 
-    payment.transaction = payment.transaction.build();
-
     return API.pushTx(payment.transaction.toHex())
       .then(success).catch(handleError);
   };
@@ -475,79 +428,90 @@ Payment.publish = function () {
 module.exports = Payment;
 
 // Helper functions
-
-// getUnspentCoins :: [address] -> Promise [coins]
-function getUnspentCoins (addressList, notify) {
-  var processCoins = function (obj) {
-    var processCoin = function (utxo) {
-      var txBuffer = new Buffer(utxo.tx_hash, 'hex');
-      Array.prototype.reverse.call(txBuffer);
-      utxo.hash = txBuffer.toString('hex');
-      utxo.index = utxo.tx_output_n;
-    };
-    if (obj.notice) notify(obj.notice);
-    obj.unspent_outputs.forEach(processCoin);
-    return obj.unspent_outputs;
-  };
-
-  return API.getUnspent(addressList, -1).then(processCoins);
-}
-
-function getKey (priv, addr) {
-  var format = Helpers.detectPrivateKeyFormat(priv);
-  var key = Helpers.privateKeyStringToKey(priv, format);
-  var network = constants.getNetwork();
-  var ckey = new Bitcoin.ECPair(key.d, null, {compressed: true, network: network});
-  var ukey = new Bitcoin.ECPair(key.d, null, {compressed: false, network: network});
-  if (ckey.getAddress() === addr) {
-    return ckey;
-  } else if (ukey.getAddress() === addr) {
-    return ukey;
-  }
-  return key;
-}
+// function getKey (priv, addr) {
+//   var format = Helpers.detectPrivateKeyFormat(priv);
+//   var key = Helpers.privateKeyStringToKey(priv, format);
+//   var network = constants.getNetwork();
+//   var ckey = new Bitcoin.ECPair(key.d, null, {compressed: true, network: network});
+//   var ukey = new Bitcoin.ECPair(key.d, null, {compressed: false, network: network});
+//   if (ckey.getAddress() === addr) {
+//     return ckey;
+//   } else if (ukey.getAddress() === addr) {
+//     return ukey;
+//   }
+//   return key;
+// }
 
 // obtain private key for an address
 // from Address
-function getKeyForAddress (wallet, password, addr) {
-  var k = wallet.key(addr).priv;
-  var privateKeyBase58 = password == null ? k
-      : WalletCrypto.decryptSecretWithSecondPassword(k, password, wallet.sharedKey, wallet.pbkdf2_iterations);
-  return getKey(privateKeyBase58, addr);
-}
+// function getKeyForAddress (wallet, password, addr) {
+//   var k = wallet.key(addr).priv;
+//   var privateKeyBase58 = password == null ? k
+//       : WalletCrypto.decryptSecretWithSecondPassword(k, password, wallet.sharedKey, wallet.pbkdf2_iterations);
+//   return getKey(privateKeyBase58, addr);
+// }
 
 // getXPRIV :: wallet -> password -> index -> xpriv
-function getXPRIV (wallet, password, accountIndex) {
-  var fromAccount = wallet.hdwallet.accounts[accountIndex];
-  return fromAccount.extendedPrivateKey == null || password == null
-    ? fromAccount.extendedPrivateKey
-    : WalletCrypto.decryptSecretWithSecondPassword(fromAccount.extendedPrivateKey, password, wallet.sharedKey, wallet.pbkdf2_iterations);
-}
+// function getXPRIV (wallet, password, accountIndex) {
+//   var fromAccount = wallet.hdwallet.accounts[accountIndex];
+//   return fromAccount.extendedPrivateKey == null || password == null
+//     ? fromAccount.extendedPrivateKey
+//     : WalletCrypto.decryptSecretWithSecondPassword(fromAccount.extendedPrivateKey, password, wallet.sharedKey, wallet.pbkdf2_iterations);
+// }
 
 // getKeyForPath :: xpriv -> path -> ECPair
-function getKeyForPath (extendedPrivateKey, neededPrivateKeyPath) {
-  var keyring = new KeyRing(extendedPrivateKey);
-  return keyring.privateKeyFromPath(neededPrivateKeyPath).keyPair;
-}
+// function getKeyForPath (extendedPrivateKey, neededPrivateKeyPath) {
+//   var keyring = new KeyRing(extendedPrivateKey);
+//   return keyring.privateKeyFromPath(neededPrivateKeyPath).keyPair;
+// }
 
 // getPrivateKeys :: wallet -> password -> payment -> [private key]
-function getPrivateKeys (wallet, password, payment) {
-  var transaction = payment.transaction;
-  var privateKeys = [];
-  // if from Account
-  if (Helpers.isPositiveInteger(payment.fromAccountIdx)) {
-    var xpriv = getXPRIV(wallet, password, payment.fromAccountIdx);
-    privateKeys = transaction.pathsOfNeededPrivateKeys.map(getKeyForPath.bind(this, xpriv));
+// function getPrivateKeys (wallet, password, payment) {
+//   var transaction = payment.transaction;
+//   var privateKeys = [];
+//   // if from Account
+//   if (Helpers.isPositiveInteger(payment.fromAccountIdx)) {
+//     var xpriv = getXPRIV(wallet, password, payment.fromAccountIdx);
+//     privateKeys = transaction.pathsOfNeededPrivateKeys.map(getKeyForPath.bind(this, xpriv));
+//   }
+//   // if from Addresses or redeem code (private key)
+//   if (payment.from && payment.from.every(Helpers.isBitcoinAddress) && !payment.fromWatchOnly) {
+//     privateKeys = payment.wifKeys.length
+//       ? transaction.addressesOfNeededPrivateKeys.map(function (a, i) { return getKey(payment.wifKeys[i], a); })
+//       : transaction.addressesOfNeededPrivateKeys.map(getKeyForAddress.bind(null, wallet, password));
+//   }
+//   // if from Watch Only
+//   if (payment.from && Helpers.isBitcoinAddress(payment.from[0]) && payment.fromWatchOnly) {
+//     privateKeys = transaction.addressesOfNeededPrivateKeys.map(getKey.bind(null, payment.wifKeys[0]));
+//   }
+//   return privateKeys;
+// }
+
+////////////////////////////////////////////////////////////////////////////////
+// new functions
+
+const scriptToAddress = coin => {
+  const scriptBuffer = Buffer.from(coin.script, 'hex');
+  let network = constants.getNetwork(Bitcoin);
+  const address = Bitcoin.address.fromOutputScript(scriptBuffer, network).toString();
+  return assoc('priv', address, coin)
+}
+
+
+const getUnspents = (wallet, source, notify) => {
+  switch (true) {
+    case Helpers.isXpubKey(prop(0, source)):
+      const index = prop('index', wallet.hdwallet.account(source[0]))
+      return API.getUnspent(source, -1)
+                .then(prop('unspent_outputs'))
+                .then(over(compose(mapped, lensProp('xpub')), assoc('index', index)))
+                .then(map(Coin.fromJS));
+    case is(Array, source):
+      return API.getUnspent(source, -1)
+                .then(prop('unspent_outputs'))
+                .then(over(mapped, scriptToAddress))
+                .then(map(Coin.fromJS));
+    default:
+      return Promise.reject('WRONG_SOURCE_FOR_UNSPENTS');
   }
-  // if from Addresses or redeem code (private key)
-  if (payment.from && payment.from.every(Helpers.isBitcoinAddress) && !payment.fromWatchOnly) {
-    privateKeys = payment.wifKeys.length
-      ? transaction.addressesOfNeededPrivateKeys.map(function (a, i) { return getKey(payment.wifKeys[i], a); })
-      : transaction.addressesOfNeededPrivateKeys.map(getKeyForAddress.bind(null, wallet, password));
-  }
-  // if from Watch Only
-  if (payment.from && Helpers.isBitcoinAddress(payment.from[0]) && payment.fromWatchOnly) {
-    privateKeys = transaction.addressesOfNeededPrivateKeys.map(getKey.bind(null, payment.wifKeys[0]));
-  }
-  return privateKeys;
 }

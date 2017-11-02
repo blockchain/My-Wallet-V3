@@ -9,11 +9,14 @@ const dustThreshold = (feeRate) => (Coin.inputBytes({}) + Coin.outputBytes({})) 
 const transactionBytes = (inputs, outputs) =>
   Coin.TX_EMPTY_SIZE + inputs.reduce((a, c) => a + Coin.inputBytes(c), 0) + outputs.reduce((a, c) => a + Coin.outputBytes(c), 0);
 
-const effectiveBalance = curry((feePerByte, inputs, outputs = [{}]) =>
+const effectiveBalance = (feePerByte, inputs, outputs = [{}]) =>
   foldCoins(inputs).map(v =>
-    clamp(0, Infinity, v - transactionBytes(inputs, outputs) * feePerByte))
-);
+    clamp(0, Infinity, v - transactionBytes(inputs, outputs) * feePerByte));
 
+const filteredEffectiveBalance = (feePerByte, inputs, outputs = [{}]) => {
+  const coins = filter(c => Coin.effectiveValue(feePerByte, c) > 0, inputs)
+  return effectiveBalance(feePerByte, coins, outputs).value;
+}
 // findTarget :: [Coin] -> Number -> [Coin] -> String -> Selection
 const findTarget = (targets, feePerByte, coins, changeAddress) => {
   let target = foldCoins(targets).value;
@@ -78,6 +81,7 @@ module.exports = {
   dustThreshold,
   transactionBytes,
   effectiveBalance,
+  filteredEffectiveBalance,
   findTarget,
   selectAll,
   descentDraw,
