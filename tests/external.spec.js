@@ -293,10 +293,10 @@ describe('External', () => {
       it('hasExchangeAccount', () => {
         expect(e.hasExchangeAccount).toEqual(false);
         e._coinify.hasAccount = true;
-        expect(e.hasExchangeAccount).toEqual(true);
+        expect(e.hasExchangeAccount).toEqual('coinify');
         e._coinify.hasAccount = false;
         e._sfox.hasAccount = true;
-        expect(e.hasExchangeAccount).toEqual(true);
+        expect(e.hasExchangeAccount).toEqual('sfox');
       });
     });
   });
