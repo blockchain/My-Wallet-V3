@@ -11,11 +11,12 @@ var util = require('util');
 var constants = require('./constants');
 // var mapObjIndexed = require('ramda/src/mapObjIndexed');
 const Coin = require('./bch/coin.js');
-const { descentDraw } = require('./bch/coin-selection');
-const { is, prop, lensProp, compose, assoc, over, map, zipWith } = require('ramda');
+const { descentDraw, selectAll } = require('./bch/coin-selection');
+const { is, prop, lensProp, compose, assoc, over, map, zipWith, sum } = require('ramda');
 const { mapped } = require('ramda-lens');
 const { sign } = require('./btc/signer');
-// Payment Class
+
+let sumCoins = compose(sum, map(c => c.value));
 
 function Payment (wallet, payment) {
   EventEmitter.call(this);
@@ -33,23 +34,36 @@ function Payment (wallet, payment) {
   var initialState = {
     fees: serverFeeFallback,  // fallback for fee-service
     coins: [],  // original set of unspents (set by .from)
-    selectedCoins: [], // set of coins that are going to be passed to new Transaction
+
     from: null, // origin
     amounts: [], // list of amounts to spend entered in the form
     to: [], // list of destinations entered in the form
-    // feePerKb: Helpers.toFeePerKb(serverFeeFallback.regular), // default fee-per-kb used
     feePerByte: serverFeeFallback.regular, // default fee-per-kb used
     extraFeeConsumption: 0, // if there is change consumption to fee will be reflected here
-    sweepFee: 0,  // computed fee to sweep an account in basic send (depends on fee-per-kb)
-    sweepAmount: 0, // computed max spendable amount depending on fee-per-kb
-    balance: 0, // sum of all unspents values with any filtering     [ payment.sumOfCoins ]
-    finalFee: 0, // final absolute fee that it is going to be used no matter how was obtained (advanced or regular send)
     changeAmount: 0, // final change
     maxFees: {limits: { 'min': 0, 'max': 0 }, regular: 0, priority: 0}, // each fee-per-kb (regular, priority)
     maxSpendableAmounts: {limits: { 'min': 0, 'max': 0 }, regular: 0, priority: 0},  // max amount for each fee-per-kb
-    txSize: 0, // transaction size
+    selection: { fee: 0, inputs: [], outputs: [] },
 
-    selection: { fee: 0, inputs: [], outputs: [] }
+    get sweepSelection () {
+      return selectAll(this.feePerByte, this.coins, this.to);
+    },
+    get sweepFee () { // computed fee to sweep an account in basic send (depends on fee-per-kb)
+      return this.sweepSelection.fee;
+    },
+    get sweepAmount () { // computed max spendable amount depending on fee-per-kb
+      return sumCoins(this.sweepSelection.outputs);
+    },
+    get balance () { // sum of all unspents values with any filtering     [ payment.sumOfCoins ]
+      return sumCoins(this.coins);
+    },
+    get finalFee () { // final absolute fee that it is going to be used no matter how was obtained (advanced or regular send)
+      return this.selection.fee;
+    },
+    get txSize () { // transaction size
+      let s = this.selection;
+      return Helpers.guessSize(s.inputs.length, s.outputs.length);
+    }
   };
 
   var p = payment || initialState;
