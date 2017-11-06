@@ -1,4 +1,6 @@
-const { curry, unfold, reduce, last, filter, head, map, isNil, isEmpty, tail, clamp, sort } = require('ramda');
+const { curry, unfold, reduce, last, filter, head, map, isNil, isEmpty, tail, clamp,
+        sort, sortWith, descend, prop, dropLast, prepend, not, all, any, compose, lensProp } = require('ramda');
+const { set } = require('ramda-lens')
 const Coin = require('./coin.js');
 
 const fold = curry((empty, xs) => reduce((acc, x) => acc.concat(x), empty, xs));
@@ -9,14 +11,13 @@ const dustThreshold = (feeRate) => (Coin.inputBytes({}) + Coin.outputBytes({})) 
 const transactionBytes = (inputs, outputs) =>
   Coin.TX_EMPTY_SIZE + inputs.reduce((a, c) => a + Coin.inputBytes(c), 0) + outputs.reduce((a, c) => a + Coin.outputBytes(c), 0);
 
-const effectiveBalance = (feePerByte, inputs, outputs = [{}]) =>
-  foldCoins(inputs).map(v =>
+const effectiveBalance = (feePerByte, inputs, outputs = [{}]) => {
+  // console.log('effectiveBalance')
+  // console.log(inputs)
+  return foldCoins(inputs).map(v =>
     clamp(0, Infinity, v - transactionBytes(inputs, outputs) * feePerByte));
+}
 
-const filteredEffectiveBalance = (feePerByte, inputs, outputs = [{}]) => {
-  const coins = filter(c => Coin.effectiveValue(feePerByte, c) > 0, inputs);
-  return effectiveBalance(feePerByte, coins, outputs).value;
-};
 // findTarget :: [Coin] -> Number -> [Coin] -> String -> Selection
 const findTarget = (targets, feePerByte, coins, changeAddress) => {
   let target = foldCoins(targets).value;
@@ -30,7 +31,7 @@ const findTarget = (targets, feePerByte, coins, changeAddress) => {
     return acc > target + partialFee ? false : [[nextAcc, partialFee, newCoin], [nextAcc, partialFee, restCoins]];
   };
   let partialFee = transactionBytes([], targets) * feePerByte;
-  let effectiveCoins = filter(c => Coin.effectiveValue(feePerByte, c) > 0, coins);
+  let effectiveCoins = filter(c => c.forceInclude || Coin.effectiveValue(feePerByte, c) > 0, coins);
   let selection = unfold(_findTarget, [0, partialFee, effectiveCoins]);
   if (isEmpty(selection)) {
     // no coins to select
@@ -58,7 +59,8 @@ const findTarget = (targets, feePerByte, coins, changeAddress) => {
 
 // selectAll :: Number -> [Coin] -> String -> Selection
 const selectAll = (feePerByte, coins, outAddress) => {
-  let effectiveCoins = filter(c => Coin.effectiveValue(feePerByte, c) > 0, coins);
+  let splitCoins = prepareForSplit(coins)
+  let effectiveCoins = filter(c => c.forceInclude || Coin.effectiveValue(feePerByte, c) > 0, splitCoins);
   let effBalance = effectiveBalance(feePerByte, effectiveCoins).value;
   let balance = foldCoins(effectiveCoins).value;
   let fee = balance - effBalance;
@@ -70,20 +72,39 @@ const selectAll = (feePerByte, coins, outAddress) => {
 };
 
 // descentDraw :: [Coin] -> Number -> [Coin] -> String -> Selection
-const descentDraw = (targets, feePerByte, coins, changeAddress) =>
-  findTarget(targets, feePerByte, sort(Coin.descentSort, coins), changeAddress);
+const descentDraw = (targets, feePerByte, coins, changeAddress) => {
+  let splitCoins = prepareForSplit(coins)
+  return findTarget(targets, feePerByte, splitCoins, changeAddress);
+}
+// selection for coin split
+const prepareForSplit = coins => {
+  let l = sortWith([Coin.replayableFirst, Coin.descentSort], coins);
+  let coin = last(l)
+  if(!coin.replayable) {
+    let forcedCoin = Coin.newCoin(set(lensProp('forceInclude'), true, coin));
+    return prepend(forcedCoin, dropLast(1, l));
+  } else {
+    return l
+  }
+}
+
+const addDustIfNecessary = coins => all(prop('replayable'), coins) ? prepend(Coin.dust(), coins) : coins
+
+// isDustSelection :: selection => boolean
+const isDustSelection = compose(any(prop('dust')), prop('inputs'))
+
 
 // ascentDraw :: [Coin] -> Number -> [Coin] -> String -> Selection
-const ascentDraw = (targets, feePerByte, coins, changeAddress) =>
-  findTarget(targets, feePerByte, sort(Coin.ascentSort, coins), changeAddress);
+// const ascentDraw = (targets, feePerByte, coins, changeAddress) =>
+//   findTarget(targets, feePerByte, sort(Coin.ascentSort, coins), changeAddress);
 
 module.exports = {
   dustThreshold,
   transactionBytes,
   effectiveBalance,
-  filteredEffectiveBalance,
   findTarget,
   selectAll,
   descentDraw,
-  ascentDraw
+  addDustIfNecessary,
+  isDustSelection
 };

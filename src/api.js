@@ -263,6 +263,10 @@ API.prototype.getFees = function () {
   return this.requestApi('mempool/fees');
 };
 
+API.prototype.getDust = function () {
+  return this.requestApi('dust')
+}
+
 API.prototype.getExchangeRate = function (currency, base) {
   return this.requestApi('ticker', { currency, base });
 };

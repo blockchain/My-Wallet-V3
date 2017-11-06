@@ -11,10 +11,11 @@ var util = require('util');
 var constants = require('./constants');
 // var mapObjIndexed = require('ramda/src/mapObjIndexed');
 const Coin = require('./bch/coin.js');
-const { descentDraw, selectAll } = require('./bch/coin-selection');
-const { is, prop, lensProp, compose, assoc, over, map, zipWith, sum } = require('ramda');
+const { descentDraw, selectAll, addDustIfNecessary, isDustSelection } = require('./bch/coin-selection');
+const { is, prop, lensProp, compose, assoc, over, map, zipWith, sum, lensIndex, not, forEach } = require('ramda');
 const { mapped } = require('ramda-lens');
-const { sign } = require('./btc/signer');
+const { sign, signDust } = require('./btc/signer');
+const BigInteger = require('bigi');
 
 let sumCoins = compose(sum, map(c => c.value));
 
@@ -32,6 +33,7 @@ function Payment (wallet, payment) {
   };
 
   var initialState = {
+    lockSecret: undefined,
     fees: serverFeeFallback,  // fallback for fee-service
     coins: [],  // original set of unspents (set by .from)
 
@@ -382,8 +384,6 @@ Payment.prebuild = function () {
   return function (payment) {
     let toCoin = (to, amount) => new Coin({ address: to, value: amount });
     let targets = zipWith(toCoin, payment.to || [], payment.amounts || []);
-    // console.log('effectiveBalance: ', effectiveBalance(payment.feePerByte, payment.coins).value)
-    // console.log('realEffectiveBalance: ', filteredEffectiveBalance(payment.feePerByte, payment.coins))
     payment.selection = descentDraw(targets, payment.feePerByte, payment.coins, payment.change);
     // payment.selection = ascentDraw(targets, payment.feePerByte, payment.coins, payment.change)
     return Promise.resolve(payment);
@@ -405,21 +405,33 @@ Payment.prebuild = function () {
 Payment.sign = function (password) {
   var wallet = this._wallet;
   return function (payment) {
-    payment.transaction = sign(password, wallet, payment.selection);
-    console.log(payment.transaction.getId());
-    console.log(payment.transaction.toHex());
-    // var importWIF = function (WIF) {
-    //   wallet.importLegacyAddress(WIF, 'Redeemed code.', password)
-    //     .then(function (A) { A.archived = true; });
-    // };
-
-    // if (!payment.transaction) throw new Error('This transaction hasn\'t been built yet');
-    // if (Array.isArray(payment.wifKeys) && !payment.fromWatchOnly) payment.wifKeys.forEach(importWIF);
-
-    // payment.transaction.addPrivateKeys(getPrivateKeys(wallet, password, payment));
-    // payment.transaction.sortBIP69();
-    // payment.transaction = payment.transaction.sign();
-    return Promise.resolve(payment);
+    const getDustData = () => {
+      if (isDustSelection(payment.selection)) {
+        return API.getDust().then(
+          (dust) => {
+            payment.selection.outputs.push(Coin.dust())
+            const f = (c) => { if(c.dust) { c.index = dust.tx_output_n; c.txHash = dust.tx_hash_big_endian; }; };
+            const g = (c) => { if(c.dust) { c.index = dust.tx_index; c.script = new Buffer(dust.output_script, 'hex'); }; };
+            forEach(f, payment.selection.inputs)
+            forEach(g, payment.selection.outputs)
+            payment.lockSecret = dust.lock_secret
+            return payment
+          }
+        )
+      } else {
+        return Promise.resolve(payment)
+      }
+    }
+    const asyncSign = () => {
+      if (payment.lockSecret) {
+        payment.transaction = signDust(password, wallet, payment.selection);
+        return payment;
+      } else {
+        payment.transaction = sign(password, wallet, payment.selection);
+        return payment; 
+      }
+    }
+    return getDustData().then(asyncSign);
   };
 };
 
@@ -439,69 +451,9 @@ Payment.publish = function () {
   };
 };
 
+
 module.exports = Payment;
 
-// Helper functions
-// function getKey (priv, addr) {
-//   var format = Helpers.detectPrivateKeyFormat(priv);
-//   var key = Helpers.privateKeyStringToKey(priv, format);
-//   var network = constants.getNetwork();
-//   var ckey = new Bitcoin.ECPair(key.d, null, {compressed: true, network: network});
-//   var ukey = new Bitcoin.ECPair(key.d, null, {compressed: false, network: network});
-//   if (ckey.getAddress() === addr) {
-//     return ckey;
-//   } else if (ukey.getAddress() === addr) {
-//     return ukey;
-//   }
-//   return key;
-// }
-
-// obtain private key for an address
-// from Address
-// function getKeyForAddress (wallet, password, addr) {
-//   var k = wallet.key(addr).priv;
-//   var privateKeyBase58 = password == null ? k
-//       : WalletCrypto.decryptSecretWithSecondPassword(k, password, wallet.sharedKey, wallet.pbkdf2_iterations);
-//   return getKey(privateKeyBase58, addr);
-// }
-
-// getXPRIV :: wallet -> password -> index -> xpriv
-// function getXPRIV (wallet, password, accountIndex) {
-//   var fromAccount = wallet.hdwallet.accounts[accountIndex];
-//   return fromAccount.extendedPrivateKey == null || password == null
-//     ? fromAccount.extendedPrivateKey
-//     : WalletCrypto.decryptSecretWithSecondPassword(fromAccount.extendedPrivateKey, password, wallet.sharedKey, wallet.pbkdf2_iterations);
-// }
-
-// getKeyForPath :: xpriv -> path -> ECPair
-// function getKeyForPath (extendedPrivateKey, neededPrivateKeyPath) {
-//   var keyring = new KeyRing(extendedPrivateKey);
-//   return keyring.privateKeyFromPath(neededPrivateKeyPath).keyPair;
-// }
-
-// getPrivateKeys :: wallet -> password -> payment -> [private key]
-// function getPrivateKeys (wallet, password, payment) {
-//   var transaction = payment.transaction;
-//   var privateKeys = [];
-//   // if from Account
-//   if (Helpers.isPositiveInteger(payment.fromAccountIdx)) {
-//     var xpriv = getXPRIV(wallet, password, payment.fromAccountIdx);
-//     privateKeys = transaction.pathsOfNeededPrivateKeys.map(getKeyForPath.bind(this, xpriv));
-//   }
-//   // if from Addresses or redeem code (private key)
-//   if (payment.from && payment.from.every(Helpers.isBitcoinAddress) && !payment.fromWatchOnly) {
-//     privateKeys = payment.wifKeys.length
-//       ? transaction.addressesOfNeededPrivateKeys.map(function (a, i) { return getKey(payment.wifKeys[i], a); })
-//       : transaction.addressesOfNeededPrivateKeys.map(getKeyForAddress.bind(null, wallet, password));
-//   }
-//   // if from Watch Only
-//   if (payment.from && Helpers.isBitcoinAddress(payment.from[0]) && payment.fromWatchOnly) {
-//     privateKeys = transaction.addressesOfNeededPrivateKeys.map(getKey.bind(null, payment.wifKeys[0]));
-//   }
-//   return privateKeys;
-// }
-
-// new functions
 
 const scriptToAddress = coin => {
   const scriptBuffer = Buffer.from(coin.script, 'hex');
@@ -516,13 +468,20 @@ const getUnspents = (wallet, source, notify) => {
       const index = prop('index', wallet.hdwallet.account(source[0]));
       return API.getUnspent(source, -1)
                 .then(prop('unspent_outputs'))
-                .then(over(compose(mapped, lensProp('xpub')), assoc('index', index)))
-                .then(map(Coin.fromJS));
+                .then(over(compose(mapped, lensProp('xpub')), assoc('index', index))) 
+                // uncomment for some coins replayable and some non replayable
+                // .then(over(compose(lensIndex(0), lensProp('replayable')), not))
+                // .then(over(compose(lensIndex(2), lensProp('replayable')), not))
+                // .then(over(compose(lensIndex(4), lensProp('replayable')), not))
+                // .then(over(compose(lensIndex(8), lensProp('replayable')), not))
+                // uncomment for all coins replayable
+                // .then(over(compose(mapped, lensProp('replayable')), not))  // REMOVE THAT (FOR TEST)
+                .then(map(Coin.fromJS)).then(addDustIfNecessary)
     case is(Array, source):
       return API.getUnspent(source, -1)
                 .then(prop('unspent_outputs'))
                 .then(over(mapped, scriptToAddress))
-                .then(map(Coin.fromJS));
+                .then(map(Coin.fromJS)).then(addDustIfNecessary)
     default:
       return Promise.reject('WRONG_SOURCE_FOR_UNSPENTS');
   }
