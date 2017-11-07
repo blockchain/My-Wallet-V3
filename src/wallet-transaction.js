@@ -2,7 +2,7 @@
 
 module.exports = Tx;
 
-var { assoc } = require('ramda');
+var { assoc, not, filter, prop, has, propEq, compose, over, lensProp } = require('ramda');
 var MyWallet = require('./wallet');
 
 function Tx (object) {
@@ -286,10 +286,20 @@ function isCoinBase (input) {
   return (input == null || input.prev_out == null || input.prev_out.addr == null);
 }
 
+function isNotDust (i) {
+  return has('addr', i) && !propEq('value', 546, i)
+}
+function removeDust (tx) {
+  console.log(tx)
+  let fi = over(lensProp('inputs'), filter(compose(isNotDust, prop('prev_out'))))
+  let fo = over(lensProp('out'), filter(isNotDust))
+  return compose(fo, fi)(tx)
+}
+
 Tx.factory = function (o, coinCode) {
   if (o instanceof Object && !(o instanceof Tx)) {
     let setCoinCode = assoc('coinCode', coinCode === 'bch' ? 'bch' : 'btc');
-    return new Tx(setCoinCode(o));
+    return new Tx(removeDust(setCoinCode(o)));
   } else { return o; }
 };
 
