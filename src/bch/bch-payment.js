@@ -1,10 +1,10 @@
 /* eslint-disable semi */
 const { compose, clone, assoc, is, all } = require('ramda')
-const Coin = require('./coin')
+const Coin = require('../coin')
 const BchApi = require('./bch-api')
 const { isBitcoinAddress, isPositiveInteger } = require('../helpers')
-const { selectAll, descentDraw } = require('./coin-selection')
-const { sign } = require('./signer')
+const { selectAll, descentDraw } = require('../coin-selection')
+const signer = require('../signer')
 
 const isValidFrom = (from) => (
   is(Number, from) ||
@@ -123,7 +123,7 @@ class BchPayment {
       if (payment.selection == null) {
         throw new PaymentError('cannot sign an unbuilt transaction', payment)
       }
-      let tx = sign(secPass, this._wallet, payment.selection)
+      let tx = signer.signBitcoinCash(secPass, this._wallet, payment.selection)
       let setData = compose(assoc('hash', tx.getId()), assoc('rawTx', tx.toHex()))
       return setData(payment)
     })

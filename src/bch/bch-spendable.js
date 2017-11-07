@@ -1,6 +1,6 @@
 /* eslint-disable semi */
 const BchApi = require('./bch-api')
-const { selectAll } = require('./coin-selection')
+const { selectAll } = require('../coin-selection')
 
 class BchSpendable {
   constructor (bchWallet, wallet) {

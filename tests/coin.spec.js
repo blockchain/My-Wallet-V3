@@ -1,6 +1,6 @@
 /* eslint-disable semi */
 const { map, reduce, curry } = require('ramda')
-const Coin = require('../../src/bch/coin')
+const Coin = require('../src/coin')
 
 const fold = curry((empty, xs) => reduce((acc, x) => acc.concat(x), empty, xs))
 

@@ -2,7 +2,7 @@
 const BitcoinCashWallet = require('../../src/bch')
 const BchSpendable = require('../../src/bch/bch-spendable')
 const BchApi = require('../../src/bch/bch-api')
-const Coin = require('../../src/bch/coin')
+const Coin = require('../../src/coin')
 const BlockchainWalletMock = require('../__mocks__/blockchain-wallet.mock')
 
 describe('BchSpendable', () => {

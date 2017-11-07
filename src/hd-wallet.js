@@ -4,10 +4,16 @@ module.exports = HDWallet;
 
 var Bitcoin = require('bitcoinjs-lib');
 var assert = require('assert');
+var R = require('ramda');
 var Helpers = require('./helpers');
 var HDAccount = require('./hd-account');
 var BIP39 = require('bip39');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
+var API = require('./api');
+var { addIndexToOutput } = require('./bch/bch-api');
+var { selectAll } = require('./coin-selection');
+var signer = require('./signer');
+var Coin = require('./coin');
 var constants = require('./constants');
 
 function HDWallet (object) {
@@ -279,4 +285,23 @@ HDWallet.prototype.persist = function () {
 // checkers
 HDWallet.prototype.isValidAccountIndex = function (index) {
   return Helpers.isPositiveInteger(index) && index < this._accounts.length;
+};
+
+HDWallet.prototype.createConsolidationPayment = function (toAccount, feePerByte, secPass) {
+  let outputToCoin = R.compose(Coin.fromJS, addIndexToOutput(this));
+
+  let createPayment = (selection, tx) => ({
+    get fee () { return selection.fee; },
+    publish () { return API.pushTx(tx.toHex()).then(() => ({ hash: tx.getId() })); }
+  });
+
+  let paymentFromCoins = (coins) => {
+    let selection = selectAll(feePerByte, coins, toAccount.receiveAddress);
+    let tx = signer.signBitcoin(secPass, MyWallet.wallet, selection);
+    return createPayment(selection, tx);
+  };
+
+  return API.getUnspent(this.xpubs)
+    .then(result => R.map(outputToCoin, result.unspent_outputs))
+    .then(paymentFromCoins);
 };
