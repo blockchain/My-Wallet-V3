@@ -385,40 +385,29 @@ Payment.prebuild = function () {
     let toCoin = (to, amount) => new Coin({ address: to, value: amount });
     let targets = zipWith(toCoin, payment.to || [], payment.amounts || []);
     payment.selection = descentDraw(targets, payment.feePerByte, payment.coins, payment.change);
-    // payment.selection = ascentDraw(targets, payment.feePerByte, payment.coins, payment.change)
     return Promise.resolve(payment);
   };
 };
 
-// Payment.build = function (feeToMiners) {
-//   // feeToMiners :: boolean (if true blockchain fee is given to the miners)
-//   return function (payment) {
-//     try {
-//       // payment.transaction = new Transaction(payment, this);
-//       return Promise.resolve(payment);
-//     } catch (e) {
-//       return Promise.reject({ error: e, payment: payment });
-//     }
-//   }.bind(this);
-// };
-
 Payment.sign = function (password) {
   var wallet = this._wallet;
   return function (payment) {
+    console.log('going to sign')    
     const getDustData = () => {
       if (isDustSelection(payment.selection)) {
         return API.getDust().then(
           (dust) => {
-            payment.selection.outputs.push(Coin.dust())
+            payment.selection.outputs.push(Coin.dust());
             const f = (c) => { if(c.dust) { c.index = dust.tx_output_n; c.txHash = dust.tx_hash_big_endian; }; };
             const g = (c) => { if(c.dust) { c.index = dust.tx_index; c.script = new Buffer(dust.output_script, 'hex'); }; };
-            forEach(f, payment.selection.inputs)
-            forEach(g, payment.selection.outputs)
-            payment.lockSecret = dust.lock_secret
-            return payment
+            forEach(f, payment.selection.inputs);
+            forEach(g, payment.selection.outputs);
+            payment.lockSecret = dust.lock_secret;
+            return payment;
           }
         )
       } else {
+        payment.lockSecret = undefined;
         return Promise.resolve(payment)
       }
     }
@@ -428,7 +417,7 @@ Payment.sign = function (password) {
         return payment;
       } else {
         payment.transaction = sign(password, wallet, payment.selection);
-        return payment; 
+        return payment;
       }
     }
     return getDustData().then(asyncSign);
@@ -437,6 +426,7 @@ Payment.sign = function (password) {
 
 Payment.publish = function () {
   return function (payment) {
+    console.log('going to publish')
     var success = function () {
       payment.txid = payment.transaction.getId();
       return payment;
@@ -446,7 +436,7 @@ Payment.publish = function () {
       throw e.message || e.responseText || e;
     };
 
-    return API.pushTx(payment.transaction.toHex())
+    return API.pushTx(payment.transaction.toHex(), payment.lockSecret)
       .then(success).catch(handleError);
   };
 };
@@ -475,7 +465,7 @@ const getUnspents = (wallet, source, notify) => {
                 // .then(over(compose(lensIndex(4), lensProp('replayable')), not))
                 // .then(over(compose(lensIndex(8), lensProp('replayable')), not))
                 // uncomment for all coins replayable
-                // .then(over(compose(mapped, lensProp('replayable')), not))  // REMOVE THAT (FOR TEST)
+                .then(over(compose(mapped, lensProp('replayable')), not))  // REMOVE THAT (FOR TEST)
                 .then(map(Coin.fromJS)).then(addDustIfNecessary)
     case is(Array, source):
       return API.getUnspent(source, -1)
