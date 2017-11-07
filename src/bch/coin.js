@@ -9,7 +9,7 @@ class Coin {
     this.address = obj.address;
     this.priv = obj.priv;
     this.change = obj.change;
-    this.replayable = obj.replayable;
+    this.replayable = obj.replayable == null ? true : obj.replayable;
     this.dust = obj.dust;
     this.forceInclude = obj.forceInclude;
   }
@@ -57,11 +57,11 @@ class Coin {
   static nonReplayableFirst (coinA, coinB) {
     return coinA.replayable - coinB.replayable;
   }
-  
+
   static replayableFirst (coinA, coinB) {
     return coinB.replayable - coinA.replayable;
   }
-  
+
   static fromJS (o) {
     return new Coin({
       value: o.value,

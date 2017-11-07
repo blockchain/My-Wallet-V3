@@ -109,6 +109,7 @@ module.exports = {
   findTarget,
   selectAll,
   descentDraw,
+  prepareForSplit,
   addDustIfNecessary,
   isDustSelection
 };
