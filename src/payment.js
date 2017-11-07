@@ -126,7 +126,7 @@ Payment.prototype.sideEffect = function (myFunction) {
 Payment.prototype.useAll = function () {
   this.payment = this.payment.then(Payment.useAll());
   this.then(Payment.prebuild());
-  // this.sideEffect(this.emit.bind(this, 'update'));
+  this.sideEffect(this.emit.bind(this, 'update'));
   return this;
 };
 
@@ -224,12 +224,8 @@ Payment.to = function (destinations) {
 
 Payment.useAll = function () {
   return function (payment) {
-    // if (Helpers.isPositiveNumber(absoluteFee)) {
-    //   var balance = payment.balance ? payment.balance : 0;
-    //   payment.amounts = (balance - absoluteFee) > 0 ? [balance - absoluteFee] : [];
-    // } else {
-    //   payment.amounts = payment.sweepAmount ? [payment.sweepAmount] : [];
-    // }
+    let sweepAmount = payment.sweepAmount;
+    payment.amounts = sweepAmount ? [sweepAmount] : [];
     return Promise.resolve(payment);
   };
 };
@@ -392,7 +388,7 @@ Payment.prebuild = function () {
 Payment.sign = function (password) {
   var wallet = this._wallet;
   return function (payment) {
-    console.log('going to sign')    
+    console.log('going to sign')
     const getDustData = () => {
       if (isDustSelection(payment.selection)) {
         return API.getDust().then(
@@ -458,7 +454,7 @@ const getUnspents = (wallet, source, notify) => {
       const index = prop('index', wallet.hdwallet.account(source[0]));
       return API.getUnspent(source, -1)
                 .then(prop('unspent_outputs'))
-                .then(over(compose(mapped, lensProp('xpub')), assoc('index', index))) 
+                .then(over(compose(mapped, lensProp('xpub')), assoc('index', index)))
                 // uncomment for some coins replayable and some non replayable
                 // .then(over(compose(lensIndex(0), lensProp('replayable')), not))
                 // .then(over(compose(lensIndex(2), lensProp('replayable')), not))
