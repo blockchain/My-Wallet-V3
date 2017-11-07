@@ -1,5 +1,5 @@
 const { curry, unfold, reduce, last, filter, head, map, isNil, isEmpty, tail, clamp,
-        sort, sortWith, descend, prop, dropLast, prepend, not, all, any, compose, lensProp } = require('ramda');
+        sort, sortWith, descend, prop, dropLast, prepend, not, all, any, compose, lensProp, lensIndex } = require('ramda');
 const { set } = require('ramda-lens')
 const Coin = require('./coin.js');
 
@@ -76,17 +76,21 @@ const descentDraw = (targets, feePerByte, coins, changeAddress) => {
   let splitCoins = prepareForSplit(coins)
   return findTarget(targets, feePerByte, splitCoins, changeAddress);
 }
-// selection for coin split
-const prepareForSplit = coins => {
-  let l = sortWith([Coin.replayableFirst, Coin.descentSort], coins);
-  let coin = last(l)
-  if(!coin.replayable) {
-    let forcedCoin = Coin.newCoin(set(lensProp('forceInclude'), true, coin));
-    return prepend(forcedCoin, dropLast(1, l));
+
+// prepareForSplit :: [Coin] -> [Coin]
+const prepareForSplit = (coins) => {
+  if (coins.length > 0) {
+    let sorted = sortWith([Coin.replayableFirst, Coin.descentSort], coins);
+    if (last(sorted).replayable) {
+      return sorted;
+    } else {
+      let forceIncludeLast = compose(lensIndex(-1), lensProp('forceInclude'));
+      return set(forceIncludeLast, true, sorted);
+    }
   } else {
-    return l
+    return coins;
   }
-}
+};
 
 const addDustIfNecessary = coins => all(prop('replayable'), coins) ? prepend(Coin.dust(), coins) : coins
 
