@@ -292,9 +292,9 @@ function isNotDust (i) {
 }
 
 function removeDust (tx) {
-  let fi = over(lensProp('inputs'), filter(compose(isNotDust, prop('prev_out'))))
-  let fo = over(lensProp('out'), filter(isNotDust))
-  return compose(fo, fi)(tx)
+  let fi = over(lensProp('inputs'), filter(compose(isNotDust, prop('prev_out'))));
+  let fo = over(lensProp('out'), filter(isNotDust));
+  return compose(fo, fi)(tx);
 }
 
 Tx.factory = function (o, coinCode) {

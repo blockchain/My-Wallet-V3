@@ -1,6 +1,6 @@
 const { curry, unfold, reduce, last, filter, head, map, isNil, isEmpty, tail, clamp,
-        sort, sortWith, descend, prop, init, prepend, not, all, any, compose, lensProp, lensIndex } = require('ramda');
-const { set } = require('ramda-lens')
+        sort, sortWith, prop, init, prepend, all, any, compose, lensProp } = require('ramda');
+const { set } = require('ramda-lens');
 const Coin = require('./coin.js');
 
 const fold = curry((empty, xs) => reduce((acc, x) => acc.concat(x), empty, xs));
@@ -16,7 +16,7 @@ const effectiveBalance = (feePerByte, inputs, outputs = [{}]) => {
   // console.log(inputs)
   return foldCoins(inputs).map(v =>
     clamp(0, Infinity, v - transactionBytes(inputs, outputs) * feePerByte));
-}
+};
 
 // findTarget :: [Coin] -> Number -> [Coin] -> String -> Selection
 const findTarget = (targets, feePerByte, coins, changeAddress) => {
@@ -75,7 +75,7 @@ const selectAll = (feePerByte, coins, outAddress) => {
 const descentDraw = (targets, feePerByte, coins, changeAddress) => {
   let splitCoins = sort(Coin.descentSort, coins); // prepareForSplit(coins)
   return findTarget(targets, feePerByte, splitCoins, changeAddress);
-}
+};
 
 // prepareForSplit :: [Coin] -> [Coin]
 const prepareForSplit = (coins) => {
@@ -92,11 +92,10 @@ const prepareForSplit = (coins) => {
   }
 };
 
-const addDustIfNecessary = coins => all(prop('replayable'), coins) ? prepend(Coin.dust(), coins) : coins
+const addDustIfNecessary = coins => all(prop('replayable'), coins) ? prepend(Coin.dust(), coins) : coins;
 
 // isDustSelection :: selection => boolean
-const isDustSelection = compose(any(prop('dust')), prop('inputs'))
-
+const isDustSelection = compose(any(prop('dust')), prop('inputs'));
 
 // ascentDraw :: [Coin] -> Number -> [Coin] -> String -> Selection
 // const ascentDraw = (targets, feePerByte, coins, changeAddress) =>

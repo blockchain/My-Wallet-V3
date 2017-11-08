@@ -230,7 +230,7 @@ API.prototype.pushTx = function (txHex, lockSecret) {
   };
 
   if (lockSecret) data.lock_secret = lockSecret;
-  
+
   var responseTXHASH = function (responseText) {
     if (responseText.indexOf('Transaction Submitted') > -1) {
       return true;
@@ -264,8 +264,8 @@ API.prototype.getFees = function () {
 };
 
 API.prototype.getDust = function () {
-  return this.requestApi('dust')
-}
+  return this.requestApi('dust');
+};
 
 API.prototype.getExchangeRate = function (currency, base) {
   return this.requestApi('ticker', { currency, base });

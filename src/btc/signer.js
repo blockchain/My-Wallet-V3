@@ -1,11 +1,10 @@
-const { curry, forEach, addIndex, lensProp, compose, over, assoc } = require('ramda');
+const { curry, forEach, addIndex, lensProp, compose, over } = require('ramda');
 const { mapped } = require('ramda-lens');
 const Bitcoin = require('bitcoinjs-lib');
 const constants = require('../constants');
 const WalletCrypto = require('../wallet-crypto');
 const Helpers = require('../helpers');
 const KeyRing = require('../keyring');
-const Coin = require('../bch/coin.js');
 
 const getKey = (priv, addr, bitcoin) => {
   let format = Helpers.detectPrivateKeyFormat(priv);
@@ -22,7 +21,7 @@ const getKey = (priv, addr, bitcoin) => {
 };
 
 const getKeyForAddress = (wallet, password, addr) => {
-  console.log('getKeyForAddress', addr)
+  console.log('getKeyForAddress', addr);
   if (addr != null) {
     const k = wallet.key(addr).priv;
     const privateKeyBase58 = password == null ? k
@@ -31,7 +30,7 @@ const getKeyForAddress = (wallet, password, addr) => {
   }
 };
 
-const getXPRIV = (wallet, password, accountIndex) => {  
+const getXPRIV = (wallet, password, accountIndex) => {
   const account = wallet.hdwallet.accounts[accountIndex];
   return account.extendedPrivateKey == null || password == null
     ? account.extendedPrivateKey
@@ -52,7 +51,7 @@ const signSelection = selection => {
   const txBuilder = new Bitcoin.TransactionBuilder(network);
   const addInput = coin => txBuilder.addInput(coin.txHash, coin.index);
   const addOutput = coin => txBuilder.addOutput(coin.address || coin.script, coin.value);
-  const sign = (coin, i) => { if (!coin.dust) { txBuilder.sign(i, coin.priv); }; }
+  const sign = (coin, i) => { if (!coin.dust) { txBuilder.sign(i, coin.priv); } };
   forEach(addInput, selection.inputs);
   forEach(addOutput, selection.outputs);
   addIndex(forEach)(sign, selection.inputs);
