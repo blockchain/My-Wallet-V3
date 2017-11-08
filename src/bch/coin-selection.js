@@ -59,7 +59,7 @@ const findTarget = (targets, feePerByte, coins, changeAddress) => {
 
 // selectAll :: Number -> [Coin] -> String -> Selection
 const selectAll = (feePerByte, coins, outAddress) => {
-  let splitCoins = prepareForSplit(coins)
+  let splitCoins = coins; // prepareForSplit(coins)
   let effectiveCoins = filter(c => c.forceInclude || Coin.effectiveValue(feePerByte, c) > 0, splitCoins);
   let effBalance = effectiveBalance(feePerByte, effectiveCoins).value;
   let balance = foldCoins(effectiveCoins).value;
@@ -73,7 +73,7 @@ const selectAll = (feePerByte, coins, outAddress) => {
 
 // descentDraw :: [Coin] -> Number -> [Coin] -> String -> Selection
 const descentDraw = (targets, feePerByte, coins, changeAddress) => {
-  let splitCoins = prepareForSplit(coins)
+  let splitCoins = sort(Coin.descentSort, coins); // prepareForSplit(coins)
   return findTarget(targets, feePerByte, splitCoins, changeAddress);
 }
 

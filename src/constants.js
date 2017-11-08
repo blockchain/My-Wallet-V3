@@ -5,6 +5,7 @@ module.exports = {
   APP_NAME: 'javascript_web',
   APP_VERSION: '3.0',
   SHAPE_SHIFT_KEY: void 0,
+  BITCOIN_DUST: 546,
   getNetwork: function (bitcoinjs) {
     if (bitcoinjs) {
       return bitcoinjs.networks[this.NETWORK];

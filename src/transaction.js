@@ -16,7 +16,7 @@ var Transaction = function (payment, emitter) {
   var amounts = payment.amounts;
   var fee = payment.finalFee;
   var changeAddress = payment.change;
-  var BITCOIN_DUST = constants.getNetwork().dustThreshold;
+  var BITCOIN_DUST = constants.BITCOIN_DUST;
 
   if (!Array.isArray(toAddresses) && toAddresses != null) { toAddresses = [toAddresses]; }
   if (!Array.isArray(amounts) && amounts != null) { amounts = [amounts]; }
@@ -130,7 +130,7 @@ Transaction.prototype.sign = function () {
     this.emitter.emit('on_sign_progress', ii + 1);
     var key = this.privateKeys[ii];
     transaction.sign(ii, key);
-    assert(transaction.inputs[ii].scriptType === 'pubkeyhash', 'Error creating input script');
+    assert(transaction.inputs[ii].signType === 'pubkeyhash', 'Error creating input script');
   }
 
   this.emitter.emit('on_finish_signing');

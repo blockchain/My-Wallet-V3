@@ -30,7 +30,7 @@ let Tx = proxyquire('../src/wallet-transaction', {
   './wallet': MyWallet
 });
 
-describe('Transaction', () => {
+describe('WalletTransaction', () => {
   describe('new', () =>
     it('should create an empty transaction given no argument', () => {
       let tx = new Tx();

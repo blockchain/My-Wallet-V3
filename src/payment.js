@@ -437,9 +437,7 @@ Payment.publish = function () {
   };
 };
 
-
 module.exports = Payment;
-
 
 const scriptToAddress = coin => {
   const scriptBuffer = Buffer.from(coin.script, 'hex');
@@ -461,13 +459,13 @@ const getUnspents = (wallet, source, notify) => {
                 // .then(over(compose(lensIndex(4), lensProp('replayable')), not))
                 // .then(over(compose(lensIndex(8), lensProp('replayable')), not))
                 // uncomment for all coins replayable
-                .then(over(compose(mapped, lensProp('replayable')), not))  // REMOVE THAT (FOR TEST)
-                .then(map(Coin.fromJS)).then(addDustIfNecessary)
+                // .then(over(compose(mapped, lensProp('replayable')), not))  // REMOVE THAT (FOR TEST)
+                .then(map(Coin.fromJS)); // .then(addDustIfNecessary)
     case is(Array, source):
       return API.getUnspent(source, -1)
                 .then(prop('unspent_outputs'))
                 .then(over(mapped, scriptToAddress))
-                .then(map(Coin.fromJS)).then(addDustIfNecessary)
+                .then(map(Coin.fromJS)); // .then(addDustIfNecessary)
     default:
       return Promise.reject('WRONG_SOURCE_FOR_UNSPENTS');
   }
