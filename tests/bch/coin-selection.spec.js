@@ -1,5 +1,5 @@
 /* eslint-disable semi */
-let { map, last } = require('ramda')
+let { map } = require('ramda')
 let cs = require('../../src/bch/coin-selection')
 let Coin = require('../../src/bch/coin')
 
@@ -93,20 +93,20 @@ describe('Coin Selection', () => {
     it('should leave an empty array unchanged', () => {
       expect(cs.prepareForSplit([])).toEqual([])
     })
-    it('should sort by replayable first, then by value descending', () => {
-      let coins = [replayable(5000), nonreplayable(10000), replayable(20000), nonreplayable(30000)]
+    it('should sort like [smallest_nonreplayable, ...replayable_descending, ...nonreplayable_descending]', () => {
+      let coins = [replayable(5000), nonreplayable(10000), nonreplayable(15000), replayable(20000), nonreplayable(30000)]
       let splitCoins = cs.prepareForSplit(coins)
-      expect(splitCoins.map(c => c.value)).toEqual([20000, 5000, 30000, 10000])
+      expect(splitCoins.map(c => c.value)).toEqual([10000, 20000, 5000, 30000, 15000])
     })
-    it('should force include the last coin if not all are replayable', () => {
+    it('should force include the first coin if not all are replayable', () => {
       let coins = [replayable(5000), nonreplayable(10000)]
       let splitCoins = cs.prepareForSplit(coins)
-      expect(last(splitCoins).forceInclude).toEqual(true)
+      expect(splitCoins[0].forceInclude).toEqual(true)
     })
-    it('should not force include the last coin if all are replayable', () => {
+    it('should not force include the first coin if all are replayable', () => {
       let coins = [replayable(5000), replayable(10000)]
       let splitCoins = cs.prepareForSplit(coins)
-      expect(last(splitCoins).forceInclude).not.toEqual(true)
+      expect(splitCoins[0].forceInclude).not.toEqual(true)
     })
   })
 })

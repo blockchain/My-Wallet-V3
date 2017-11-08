@@ -1,5 +1,5 @@
 const { curry, unfold, reduce, last, filter, head, map, isNil, isEmpty, tail, clamp,
-        sort, sortWith, descend, prop, dropLast, prepend, not, all, any, compose, lensProp, lensIndex } = require('ramda');
+        sort, sortWith, descend, prop, init, prepend, not, all, any, compose, lensProp, lensIndex } = require('ramda');
 const { set } = require('ramda-lens')
 const Coin = require('./coin.js');
 
@@ -84,8 +84,8 @@ const prepareForSplit = (coins) => {
     if (last(sorted).replayable) {
       return sorted;
     } else {
-      let forceIncludeLast = compose(lensIndex(-1), lensProp('forceInclude'));
-      return set(forceIncludeLast, true, sorted);
+      let forceInclude = set(lensProp('forceInclude'), true);
+      return prepend(forceInclude(last(sorted)), init(sorted));
     }
   } else {
     return coins;
