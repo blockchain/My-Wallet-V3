@@ -2,8 +2,9 @@
 
 module.exports = Tx;
 
-var { assoc, not, filter, prop, has, propEq, compose, over, lensProp } = require('ramda');
+var { assoc, filter, prop, propEq, compose, over, lensProp } = require('ramda');
 var MyWallet = require('./wallet');
+var { BITCOIN_DUST } = require('./constants');
 
 function Tx (object) {
   var obj = object || {};
@@ -287,13 +288,13 @@ function isCoinBase (input) {
 }
 
 function isNotDust (i) {
-  return has('addr', i) && !propEq('value', 546, i)
+  return /* has('addr', i) && */ !propEq('value', BITCOIN_DUST, i);
 }
+
 function removeDust (tx) {
-  console.log(tx)
-  let fi = over(lensProp('inputs'), filter(compose(isNotDust, prop('prev_out'))))
-  let fo = over(lensProp('out'), filter(isNotDust))
-  return compose(fo, fi)(tx)
+  let fi = over(lensProp('inputs'), filter(compose(isNotDust, prop('prev_out'))));
+  let fo = over(lensProp('out'), filter(isNotDust));
+  return compose(fo, fi)(tx);
 }
 
 Tx.factory = function (o, coinCode) {

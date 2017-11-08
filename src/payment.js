@@ -11,11 +11,10 @@ var util = require('util');
 var constants = require('./constants');
 // var mapObjIndexed = require('ramda/src/mapObjIndexed');
 const Coin = require('./bch/coin.js');
-const { descentDraw, selectAll, addDustIfNecessary, isDustSelection } = require('./bch/coin-selection');
-const { is, prop, lensProp, compose, assoc, over, map, zipWith, sum, lensIndex, not, forEach } = require('ramda');
+const { descentDraw, selectAll, isDustSelection } = require('./bch/coin-selection');
+const { is, prop, lensProp, compose, assoc, over, map, zipWith, sum, forEach } = require('ramda');
 const { mapped } = require('ramda-lens');
 const { sign, signDust } = require('./btc/signer');
-const BigInteger = require('bigi');
 
 let sumCoins = compose(sum, map(c => c.value));
 
@@ -388,25 +387,25 @@ Payment.prebuild = function () {
 Payment.sign = function (password) {
   var wallet = this._wallet;
   return function (payment) {
-    console.log('going to sign')
+    console.log('going to sign');
     const getDustData = () => {
       if (isDustSelection(payment.selection)) {
         return API.getDust().then(
           (dust) => {
             payment.selection.outputs.push(Coin.dust());
-            const f = (c) => { if(c.dust) { c.index = dust.tx_output_n; c.txHash = dust.tx_hash_big_endian; }; };
-            const g = (c) => { if(c.dust) { c.index = dust.tx_index; c.script = new Buffer(dust.output_script, 'hex'); }; };
+            const f = (c) => { if (c.dust) { c.index = dust.tx_output_n; c.txHash = dust.tx_hash_big_endian; } };
+            const g = (c) => { if (c.dust) { c.index = dust.tx_index; c.script = new Buffer(dust.output_script, 'hex'); } };
             forEach(f, payment.selection.inputs);
             forEach(g, payment.selection.outputs);
             payment.lockSecret = dust.lock_secret;
             return payment;
           }
-        )
+        );
       } else {
         payment.lockSecret = undefined;
-        return Promise.resolve(payment)
+        return Promise.resolve(payment);
       }
-    }
+    };
     const asyncSign = () => {
       if (payment.lockSecret) {
         payment.transaction = signDust(password, wallet, payment.selection);
@@ -415,14 +414,14 @@ Payment.sign = function (password) {
         payment.transaction = sign(password, wallet, payment.selection);
         return payment;
       }
-    }
+    };
     return getDustData().then(asyncSign);
   };
 };
 
 Payment.publish = function () {
   return function (payment) {
-    console.log('going to publish')
+    console.log('going to publish');
     var success = function () {
       payment.txid = payment.transaction.getId();
       return payment;
@@ -437,9 +436,7 @@ Payment.publish = function () {
   };
 };
 
-
 module.exports = Payment;
-
 
 const scriptToAddress = coin => {
   const scriptBuffer = Buffer.from(coin.script, 'hex');
@@ -461,13 +458,13 @@ const getUnspents = (wallet, source, notify) => {
                 // .then(over(compose(lensIndex(4), lensProp('replayable')), not))
                 // .then(over(compose(lensIndex(8), lensProp('replayable')), not))
                 // uncomment for all coins replayable
-                .then(over(compose(mapped, lensProp('replayable')), not))  // REMOVE THAT (FOR TEST)
-                .then(map(Coin.fromJS)).then(addDustIfNecessary)
+                // .then(over(compose(mapped, lensProp('replayable')), not))  // REMOVE THAT (FOR TEST)
+                .then(map(Coin.fromJS)); // .then(addDustIfNecessary)
     case is(Array, source):
       return API.getUnspent(source, -1)
                 .then(prop('unspent_outputs'))
                 .then(over(mapped, scriptToAddress))
-                .then(map(Coin.fromJS)).then(addDustIfNecessary)
+                .then(map(Coin.fromJS)); // .then(addDustIfNecessary)
     default:
       return Promise.reject('WRONG_SOURCE_FOR_UNSPENTS');
   }

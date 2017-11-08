@@ -1,5 +1,4 @@
 let Bitcoin = require('bitcoinjs-lib');
-let BitcoinMessage = require('bitcoinjs-message');
 let exchangeMock = require('./__mocks__/bitcoin-exchange-client.mock');
 
 let proxyquire = require('proxyquireify')(require);
@@ -16,8 +15,7 @@ let MyWallet = {
 Bitcoin = {
   ECPair: {
     makeRandom: function (options) {
-      let pk;
-      pk = options.rng(32);
+      let pk = options.rng(32);
       return {
         getAddress: function () {
           return 'random_address';
@@ -42,11 +40,12 @@ Bitcoin = {
         }
       };
     }
-  },
-  message: {
-    sign: function (keyPair, message) {
-      return `${message}_signed`;
-    }
+  }
+};
+
+let BitcoinMessage = {
+  sign: function (message) {
+    return `${message}_signed`;
   }
 };
 
@@ -139,6 +138,7 @@ let stubs = {
   './wallet-crypto': WalletCrypto,
   './helpers': Helpers,
   'bitcoinjs-lib': Bitcoin,
+  'bitcoinjs-message': BitcoinMessage,
   'bs58': Base58
 };
 
@@ -318,11 +318,13 @@ describe('Address', () => {
 
     describe('.signMessage', () => {
       it('should sign a message', () => {
+        spyOn(Helpers, 'privateKeyStringToKey').and.callFake(Bitcoin.ECPair.fromWIF);
         expect(a.signMessage('message')).toEqual('message_signed');
       });
 
       it('should sign a message with the second password', () => {
         a._priv = 'encpriv';
+        spyOn(Helpers, 'privateKeyStringToKey').and.callFake(Bitcoin.ECPair.fromWIF);
         spyOn(WalletCrypto, 'decryptSecretWithSecondPassword');
         expect(a.signMessage('message', 'secpass')).toEqual('message_signed');
         expect(WalletCrypto.decryptSecretWithSecondPassword).toHaveBeenCalledWith('encpriv', 'secpass', 'shared_key', 5000);
@@ -344,20 +346,14 @@ describe('Address', () => {
 
       it('should convert to base64', () => {
         let spy = jasmine.createSpy('toString');
-        spyOn(BitcoinMessage, 'sign').and.returnValue({
-          toString: spy
-        });
+        spyOn(Helpers, 'privateKeyStringToKey').and.callFake(Bitcoin.ECPair.fromWIF);
+        spyOn(BitcoinMessage, 'sign').and.returnValue({ toString: spy });
         a.signMessage('message');
         expect(spy).toHaveBeenCalledWith('base64');
       });
 
       it('should try compressed format if the address does not match', () => {
-        let keyPair = {
-          getAddress () {
-            return 'uncomp_address';
-          },
-          compressed: true
-        };
+        let keyPair = Bitcoin.ECPair.makeRandom({ rng: () => '' });
         spyOn(Helpers, 'privateKeyStringToKey').and.returnValue(keyPair);
         a.signMessage('message');
         expect(keyPair.compressed).toEqual(false);

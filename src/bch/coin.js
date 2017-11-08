@@ -1,4 +1,5 @@
 const { curry, clamp, split, length } = require('ramda');
+const { BITCOIN_DUST } = require('../constants');
 
 class Coin {
   constructor (obj) {
@@ -79,7 +80,7 @@ class Coin {
 
   static dust () {
     return new Coin({
-      value: 546,
+      value: BITCOIN_DUST,
       change: false,
       replayable: false,
       forceInclude: true,
@@ -102,8 +103,8 @@ Coin.TX_INPUT_PUBKEYHASH = 106;
 Coin.TX_OUTPUT_BASE = 8 + 1;
 Coin.TX_OUTPUT_PUBKEYHASH = 25;
 
-Coin.TX_INPUT_SEGWIT_DUST_SERVICE = 130
-Coin.TX_OUTPUT_SEGWIT_DUST_SERVICE = 0
+Coin.TX_INPUT_SEGWIT_DUST_SERVICE = 130;
+Coin.TX_OUTPUT_SEGWIT_DUST_SERVICE = 0;
 
 Coin.empty = Coin.of(0);
 
@@ -111,6 +112,8 @@ Coin.inputBytes = (_input) => _input.dust ? Coin.TX_INPUT_SEGWIT_DUST_SERVICE : 
 
 Coin.outputBytes = (_output) => _output.dust ? Coin.TX_OUTPUT_SEGWIT_DUST_SERVICE : Coin.TX_OUTPUT_BASE + Coin.TX_OUTPUT_PUBKEYHASH;
 
-Coin.effectiveValue = curry((feePerByte, coin) => coin.value - feePerByte * Coin.inputBytes(coin));
+Coin.effectiveValue = curry((feePerByte, coin) =>
+  clamp(0, Infinity, coin.value - feePerByte * Coin.inputBytes(coin))
+);
 
 module.exports = Coin;
