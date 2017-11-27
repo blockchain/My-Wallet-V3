@@ -200,6 +200,14 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () { return this.activeKeys.map(function (k) { return k.address; }); }
   },
+  'spendableAddresses': {
+    configurable: false,
+    get: function () {
+      return this.keys
+          .filter(function (k) { return !k.isWatchOnly; })
+          .map(function (k) { return k.address; });
+    }
+  },
   'spendableActiveAddresses': {
     configurable: false,
     get: function () {

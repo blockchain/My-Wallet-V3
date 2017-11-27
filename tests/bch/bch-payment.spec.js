@@ -2,7 +2,7 @@
 const { add, reduce, map, compose } = require('ramda')
 const BchApi = require('../../src/bch/bch-api')
 const BchPayment = require('../../src/bch/bch-payment')
-const Coin = require('../../src/bch/coin')
+const Coin = require('../../src/coin')
 const BlockchainWalletMock = require('../__mocks__/blockchain-wallet.mock')
 
 const addr = '19kqHHBoYbyY2bAr1SN2GuGcdSZ6fM2Qqz'

@@ -1021,24 +1021,18 @@ bip66@^1.1.0, bip66@^1.1.3:
   dependencies:
     safe-buffer "^5.0.1"
 
-bitcoin-coinify-client@^0.6.9:
-  version "0.6.9"
-  resolved "https://registry.npmjs.org/bitcoin-coinify-client/-/bitcoin-coinify-client-0.6.9.tgz#933458ce5161262112cea4e29cdc94cb2f66c8de"
+bitcoin-coinify-client@^0.7.3:
+  version "0.7.3"
+  resolved "https://registry.npmjs.org/bitcoin-coinify-client/-/bitcoin-coinify-client-0.7.3.tgz#1f44dbee601b1a487096d6d653ef18f0238fdb8e"
   dependencies:
     babel-polyfill "6.16.*"
     babel-preset-es2015 "6.16.*"
     babelify "7.3.*"
-    bitcoin-exchange-client "^0.4.6"
+    bitcoin-exchange-client "^0.5.0"
 
-bitcoin-exchange-client@0.2.*:
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/bitcoin-exchange-client/-/bitcoin-exchange-client-0.2.2.tgz#8d5370a3ac20a0d3fc75e8a3d76bbc285a35f7ec"
-  dependencies:
-    isomorphic-fetch "^2.2.0"
-
-bitcoin-exchange-client@^0.4.6:
-  version "0.4.6"
-  resolved "https://registry.npmjs.org/bitcoin-exchange-client/-/bitcoin-exchange-client-0.4.6.tgz#46ae8eff5275fe49df4b6c6ee01252e8b6e0e224"
+bitcoin-exchange-client@^0.5.0:
+  version "0.5.0"
+  resolved "https://registry.npmjs.org/bitcoin-exchange-client/-/bitcoin-exchange-client-0.5.0.tgz#e9d70ca7cd17909fbae86d79c43c4367fcda02f9"
   dependencies:
     isomorphic-fetch "^2.2.0"
 
@@ -1052,11 +1046,14 @@ bitcoin-ops@^1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/bitcoin-ops/-/bitcoin-ops-1.3.0.tgz#6b126b585537bc679b02ed499f14450cffc37e13"
 
-bitcoin-sfox-client@^0.1.11:
-  version "0.1.12"
-  resolved "https://registry.yarnpkg.com/bitcoin-sfox-client/-/bitcoin-sfox-client-0.1.12.tgz#8340b4d91585976179c1922b40b8c89a66c7ec8f"
+bitcoin-sfox-client@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.npmjs.org/bitcoin-sfox-client/-/bitcoin-sfox-client-0.2.1.tgz#e534b8bf10cdf6e754dc919c166f7e5930c3b3ef"
   dependencies:
-    bitcoin-exchange-client "0.2.*"
+    babel-polyfill "6.16.*"
+    babel-preset-es2015 "6.16.*"
+    babelify "7.3.*"
+    bitcoin-exchange-client "^0.5.0"
 
 bitcoin-unocoin-client@^0.3.4:
   version "0.3.4"

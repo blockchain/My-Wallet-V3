@@ -8,8 +8,14 @@ class Trade {
     this._error = obj.error
     this._hashIn = obj.hashIn
     this._hashOut = obj.hashOut
-    this._time = obj.time ? new Date(obj.time) : void 0
     this._quote = obj.quote
+
+    /* prefer `timestamp` if exists */
+    if (obj.timestamp) {
+      this._time = new Date(obj.timestamp)
+    } else if (obj.time) {
+      this._time = new Date(obj.time)
+    }
   }
 
   get quote () {
@@ -121,6 +127,8 @@ class Trade {
       hashIn: this._hashIn,
       hashOut: this._hashOut,
       time: this._time && this._time.toString(),
+      // save `timestamp` as UNIX timestamp integer
+      timestamp: this._time && this._time.getTime(),
       quote: this.isComplete ? this._quote.toPartialJSON() : this._quote.toJSON()
     }
   }

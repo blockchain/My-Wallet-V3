@@ -433,6 +433,8 @@ describe('Blockchain-Wallet', () => {
 
       it('defaultPbkdf2Iterations', () => expect(wallet.defaultPbkdf2Iterations).toEqual(5000));
 
+      it('spendableAddresses', () => expect(wallet.spendableAddresses.length).toEqual(2));
+
       it('spendableActiveAddresses', () => expect(wallet.spendableActiveAddresses.length).toEqual(1));
     });
 
