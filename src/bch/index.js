@@ -35,6 +35,10 @@ class BitcoinCashWallet {
     return this.accounts[this._wallet.hdwallet.defaultAccountIndex]
   }
 
+  get activeAccounts () {
+    return this.accounts.filter(a => !a.archived)
+  }
+
   getAddressBalance (xpubOrAddress) {
     let info = this._addressInfo[xpubOrAddress]
     let balance = info && info.final_balance
@@ -49,7 +53,7 @@ class BitcoinCashWallet {
 
   getHistory () {
     let addrs = this.importedAddresses == null ? [] : this.importedAddresses.addresses
-    let xpubs = this.accounts.map(a => a.xpub)
+    let xpubs = this.activeAccounts.map(a => a.xpub)
     return BchApi.multiaddr(addrs.concat(xpubs), 50).then(result => {
       let { wallet, addresses, txs, info } = result
 
