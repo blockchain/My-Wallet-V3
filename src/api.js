@@ -308,10 +308,10 @@ API.prototype.incrementLoginViaQrStats = function () {
   return fetch(this.ROOT_URL + 'event?name=wallet_web_login_via_qr');
 };
 
-API.prototype.incrementBtcEthUsageStats = function (btcBalance, ethBalance) {
+API.prototype.incrementCurrencyUsageStats = function (btcBalance, ethBalance, bchBalance) {
   let base = this.ROOT_URL + 'event?name=wallet_login_balance';
-  let makeEventUrl = (btc, eth) => `${base}_btc_${btc ? 1 : 0}_eth_${eth ? 1 : 0}`;
-  fetch(makeEventUrl(btcBalance > 0, ethBalance > 0));
+  let makeEventUrl = (btc, eth, bch) => `${base}_btc_${btc ? 1 : 0}_eth_${eth ? 1 : 0}_bch_${bch ? 1 : 0}`;
+  fetch(makeEventUrl(btcBalance > 0, ethBalance > 0, bchBalance > 0));
 };
 
 API.prototype.getPriceChartData = function (params) {
