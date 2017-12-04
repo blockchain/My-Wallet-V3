@@ -156,7 +156,9 @@ ExchangeDelegate.prototype.reserveReceiveAddress = function () {
       }
       trade._account_index = account.index;
       trade._receive_index = reservation.receiveIndex;
-      reservation.commit(`${self.labelBase} #${trade.id}`);
+      let id = trade.tradeSubscriptionId || trade.id;
+      let label = trade.tradeSubscriptionId ? 'Recurring Order' : self.labelBase;
+      reservation.commit(`${label} #${id}`);
     }
   };
 };

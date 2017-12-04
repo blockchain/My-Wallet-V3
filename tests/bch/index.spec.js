@@ -31,8 +31,8 @@ describe('bch', () => {
     expect(bch.importedAddresses).not.toEqual(null)
   })
 
-  it('should not have importedAddresses if there are no spendable addresses', () => {
-    wallet.spendableAddresses = []
+  it('should not have importedAddresses if there are no spendable active addresses', () => {
+    wallet.spendableActiveAddresses = []
     bch = BitcoinCashWallet.fromBlockchainWallet(wallet)
     expect(bch.importedAddresses).toEqual(null)
   })
@@ -81,7 +81,7 @@ describe('bch', () => {
 
     it('should call multiaddr with all addresses and xpubs', (done) => {
       bch.getHistory().then(() => {
-        expect(BchApi.multiaddr).toHaveBeenCalledWith(['1asdf', '1arch', 'xpub1', 'xpub2'], 50)
+        expect(BchApi.multiaddr).toHaveBeenCalledWith(['1asdf', 'xpub1', 'xpub2'], 50)
         done()
       })
     })
