@@ -267,7 +267,7 @@ API.prototype.getExchangeRate = function (currency, base) {
   return this.requestApi('ticker', { currency, base });
 };
 
-API.prototype.exportHistory = function (active, currency, options) {
+API.prototype.exportHistory = function (active, currency, options, coinCode) {
   options = options || {};
   var data = {
     active: Array.isArray(active) ? active.join('|') : active,
@@ -275,7 +275,11 @@ API.prototype.exportHistory = function (active, currency, options) {
   };
   if (options.start) data.start = options.start;
   if (options.end) data.end = options.end;
-  return this.request('POST', 'v2/export-history', data);
+  if (coinCode === 'btc') {
+    return this.request('POST', 'v2/export-history', data);
+  } else {
+    return this.requestApi(coinCode + '/export-history', data);
+  }
 };
 
 // id :: 0 | 1 | 2
