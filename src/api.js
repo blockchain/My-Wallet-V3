@@ -275,7 +275,11 @@ API.prototype.exportHistory = function (active, currency, options) {
   };
   if (options.start) data.start = options.start;
   if (options.end) data.end = options.end;
-  return this.request('POST', 'v2/export-history', data);
+  if (options.coinCode === 'btc') {
+    return this.request('POST', 'v2/export-history', data);
+  } else {
+    return this.requestApi(options.coinCode + '/export-history', data);
+  }
 };
 
 // id :: 0 | 1 | 2
