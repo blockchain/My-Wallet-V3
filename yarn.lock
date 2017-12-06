@@ -1063,9 +1063,9 @@ bip66@^1.1.0, bip66@^1.1.3:
   dependencies:
     safe-buffer "^5.0.1"
 
-bitcoin-coinify-client@^0.7.5:
-  version "0.7.5"
-  resolved "https://registry.npmjs.org/bitcoin-coinify-client/-/bitcoin-coinify-client-0.7.5.tgz#5e6e25923dcf870f698273543649e1869ba53d2f"
+bitcoin-coinify-client@^0.7.6:
+  version "0.7.6"
+  resolved "https://registry.npmjs.org/bitcoin-coinify-client/-/bitcoin-coinify-client-0.7.6.tgz#b5579ed7c80c72b92d63e5d5f4de74b05f4efb37"
   dependencies:
     babel-polyfill "6.16.*"
     babel-preset-es2015 "6.16.*"
