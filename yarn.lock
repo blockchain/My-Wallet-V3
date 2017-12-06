@@ -1105,9 +1105,9 @@ bitcoin-unocoin-client@^0.3.6:
     babelify "7.3.*"
     bitcoin-exchange-client "^0.5.0"
 
-"bitcoincashjs-lib@https://github.com/bitcoinjs/bitcoinjs-lib#70127e736cea5535ffdc4b9324a4765b2f8e87fe":
+"bitcoincashjs-lib@https://github.com/bitcoinjs/bitcoinjs-lib#d0b716fe0660d7db0e53a616f02312dfaab2b761":
   version "3.3.1"
-  resolved "https://github.com/bitcoinjs/bitcoinjs-lib#70127e736cea5535ffdc4b9324a4765b2f8e87fe"
+  resolved "https://github.com/bitcoinjs/bitcoinjs-lib#d0b716fe0660d7db0e53a616f02312dfaab2b761"
   dependencies:
     bech32 "0.0.3"
     bigi "^1.4.0"
