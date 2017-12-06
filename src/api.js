@@ -278,7 +278,7 @@ API.prototype.exportHistory = function (active, currency, options) {
   if (options.coinCode === 'btc') {
     return this.request('POST', 'v2/export-history', data);
   } else {
-    return this.requestApi(options.coinCode + '/export-history', data);
+    return this.requestApi(options.coinCode + '/v2/export-history', data);
   }
 };
 
