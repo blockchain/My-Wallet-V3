@@ -114,6 +114,19 @@ class EthAccount {
     return txns;
   }
 
+  updateFromIncomingTx (tx) {
+    if (tx.type === 'confirmed') {
+      this.fetchBalance();
+    } else if (tx.type === 'pending') {
+      let isSent = EthWalletTx.fromJSON(tx).isFromAccount(this);
+      let adjustBalance = (bal, val) => isSent ? bal.sub(val) : bal.add(val);
+      this.setData({
+        balance: adjustBalance(this.wei, toBigNumber(tx.value)).toString(),
+        nonce: isSent ? this.nonce + 1 : this.nonce
+      });
+    }
+  }
+
   updateTxs (ethWallet) {
     this.txs.forEach(tx => tx.update(ethWallet));
   }
