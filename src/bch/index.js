@@ -5,6 +5,7 @@ const BchPayment = require('./bch-payment')
 const Tx = require('../wallet-transaction')
 const BchAccount = require('./bch-account')
 const BchImported = require('./bch-imported')
+const Helpers = require('../helpers');
 
 const BCH_FORK_HEIGHT = 478558
 const METADATA_TYPE_BCH = 7;
@@ -38,12 +39,25 @@ class BitcoinCashWallet {
     return this._defaultAccountIdx
   }
 
+  set defaultAccountIdx (val) {
+    if (this.isValidAccountIndex(val)) {
+      this._defaultAccountIdx = val;
+      this.sync();
+    } else {
+      throw new Error('invalid default index account');
+    }
+  }
+
   get defaultAccount () {
     return this.accounts[this.defaultAccountIdx]
   }
 
   get activeAccounts () {
     return this.accounts.filter(a => !a.archived)
+  }
+
+  isValidAccountIndex (index) {
+    return Helpers.isPositiveInteger(index) && index < this._accounts.length;
   }
 
   getAddressBalance (xpubOrAddress) {
