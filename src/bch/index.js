@@ -44,7 +44,7 @@ class BitcoinCashWallet {
       this._defaultAccountIdx = val;
       this.sync();
     } else {
-      throw new Error('unvalid default index account');
+      throw new Error('invalid default index account');
     }
   }
 
