@@ -16,6 +16,7 @@ class BitcoinCashWallet {
     this._metadata = metadata
     this._balance = null
     this._addressInfo = {}
+    this._hasSeen = false
     this._txs = []
   }
 
@@ -54,6 +55,15 @@ class BitcoinCashWallet {
 
   get activeAccounts () {
     return this.accounts.filter(a => !a.archived)
+  }
+
+  get hasSeen () {
+    return this._hasSeen;
+  }
+
+  setHasSeen (hasSeen) {
+    this._hasSeen = hasSeen;
+    this.sync();
   }
 
   isValidAccountIndex (index) {
@@ -107,6 +117,8 @@ class BitcoinCashWallet {
         let accountData = accountsData[i] || {}
         return new BchAccount(this, this._wallet, account, accountData);
       })
+
+      this._hasSeen = data && data.has_seen;
     });
   }
 
@@ -117,7 +129,8 @@ class BitcoinCashWallet {
   toJSON () {
     return {
       default_account_idx: this.defaultAccountIdx,
-      accounts: this.accounts
+      accounts: this.accounts,
+      has_seen: this.hasSeen
     }
   }
 
