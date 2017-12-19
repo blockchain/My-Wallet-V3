@@ -17,14 +17,7 @@ function Payment (wallet, payment) {
   EventEmitter.call(this);
   this._wallet = wallet;
 
-  var serverFeeFallback = {
-    'limits': {
-      'min': 50,
-      'max': 450
-    },
-    'regular': 240,
-    'priority': 300
-  };
+  var serverFeeFallback = constants.SERVER_FEE_FALLBACK;
 
   var initialState = {
     fees: serverFeeFallback,  // fallback for fee-service

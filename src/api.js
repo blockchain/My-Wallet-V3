@@ -7,6 +7,7 @@ var Helpers = require('./helpers');
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var MyWallet = require('./wallet');
+var constants = require('./constants');
 
 // API class
 function API () {
@@ -260,7 +261,8 @@ API.prototype.requestApi = function (endpoint, data) {
 };
 
 API.prototype.getFees = function () {
-  return this.requestApi('mempool/fees');
+  const { NETWORK, SERVER_FEE_FALLBACK } = constants;
+  return NETWORK === 'testnet' ? Promise.resolve(SERVER_FEE_FALLBACK) : this.requestApi('mempool/fees');
 };
 
 API.prototype.getExchangeRate = function (currency, base) {
@@ -278,7 +280,7 @@ API.prototype.exportHistory = function (active, currency, options) {
   if (options.coinCode === 'btc') {
     return this.request('POST', 'v2/export-history', data);
   } else {
-    return this.requestApi(options.coinCode + '/export-history', data);
+    return this.requestApi(options.coinCode + '/v2/export-history', data);
   }
 };
 
