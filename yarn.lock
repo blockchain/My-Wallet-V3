@@ -1086,9 +1086,9 @@ bitcoin-ops@^1.3.0:
   version "1.4.0"
   resolved "https://registry.npmjs.org/bitcoin-ops/-/bitcoin-ops-1.4.0.tgz#90d9c95c067e9a34a6ccaa3dd324ffa84e31e3d8"
 
-bitcoin-sfox-client@^0.2.4:
-  version "0.2.4"
-  resolved "https://registry.npmjs.org/bitcoin-sfox-client/-/bitcoin-sfox-client-0.2.4.tgz#bab0937b67ee2d206d23f455e280c4a9f93dcd99"
+bitcoin-sfox-client@^0.2.5:
+  version "0.2.5"
+  resolved "https://registry.npmjs.org/bitcoin-sfox-client/-/bitcoin-sfox-client-0.2.5.tgz#87ed72b35dcf25a993e7d0bc504542f209dd167a"
   dependencies:
     babel-polyfill "6.16.*"
     babel-preset-es2015 "6.16.*"
