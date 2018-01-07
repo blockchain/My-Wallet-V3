@@ -7,6 +7,7 @@ require('core-js/modules/es6.symbol');
 require('core-js/modules/web.dom.iterable');
 
 var Buffer = require('buffer').Buffer;
+global.crypto = {getRandomValues: function(intArray) {var result = objc_getRandomValues(intArray);intArray.set(new Buffer(result, 'hex'));}};
 
 // This fixes a bug with Safari < 8 and the Browserify Buffer shim used in Crypto-browserify/randombytes
 // See: https://github.com/feross/buffer/issues/63
@@ -47,5 +48,10 @@ module.exports = {
   BigInteger: require('bigi/lib'),
   BIP39: require('bip39'),
   Networks: require('bitcoinjs-lib/src/networks'),
-  ECDSA: require('bitcoinjs-lib/src/ecdsa')
+  ECDSA: require('bitcoinjs-lib/src/ecdsa'),
+  SharedMetadata: require('./sharedMetadata'),
+  Contacts: require('./contacts'),
+  SharedMetadataAPI: require('./sharedMetadataAPI'),
+  EthSocket: require('./eth/eth-socket'),
+  R: require('ramda')
 };

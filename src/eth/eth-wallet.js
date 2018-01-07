@@ -5,7 +5,6 @@ const { isPositiveNumber, asyncOnce, dedup } = require('../helpers');
 const API = require('../api');
 const EthTxBuilder = require('./eth-tx-builder');
 const EthAccount = require('./eth-account');
-const EthSocket = require('./eth-socket');
 const EthWalletTx = require('./eth-wallet-tx');
 
 const METADATA_TYPE_ETH = 5;
@@ -248,12 +247,12 @@ class EthWallet {
     this.updateTxs();
   }
 
-  connect (wsUrl) {
+  connect (socket) {
     if (this._socket) return;
-    this._socket = new EthSocket(wsUrl, WebSocket);
-    this._socket.on('open', () => this.setSocketHandlers());
-    this._socket.on('close', () => this.setSocketHandlers());
-  }
+    this._socket = socket;
+    this._socket.subscribeToBlocks(this);
+    this.activeAccounts.forEach(a => this._socket.subscribeToAccount(a));
+}
 
   setSocketHandlers () {
     this._socket.subscribeToBlocks(this);
