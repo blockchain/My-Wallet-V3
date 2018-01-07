@@ -8,16 +8,9 @@ describe('bch', () => {
   let bch
   let wallet
 
-  const bchMetadataEmpty = {
-    default_account_idx: 0,
-    accounts: []
-  }
-
-  beforeEach((done) => {
+  beforeEach(() => {
     wallet = new BlockchainWalletMock();
     bch = BitcoinCashWallet.fromBlockchainWallet(wallet)
-    spyOn(bch._metadata, 'fetch').and.returnValue(Promise.resolve(bchMetadataEmpty))
-    bch.fetch().then(() => done())
   });
 
   it('should have balance = null', () => {
@@ -28,18 +21,20 @@ describe('bch', () => {
     expect(bch.txs).toEqual([])
   })
 
+  it('should have a defaultAccount matching the hdwallet default', () => {
+    expect(bch.defaultAccount).toEqual(bch.accounts[0])
+    wallet.hdwallet.defaultAccountIndex = 1
+    expect(bch.defaultAccount).toEqual(bch.accounts[1])
+  })
+
   it('should have importedAddresses if there are imported addresses', () => {
     expect(bch.importedAddresses).not.toEqual(null)
   })
 
-  it('should not have importedAddresses if there are no spendable active addresses', (done) => {
+  it('should not have importedAddresses if there are no spendable active addresses', () => {
     wallet.spendableActiveAddresses = []
     bch = BitcoinCashWallet.fromBlockchainWallet(wallet)
-    spyOn(bch._metadata, 'fetch').and.returnValue(Promise.resolve(bchMetadataEmpty))
-    bch.fetch().then(() => {
-      expect(bch.importedAddresses).toEqual(null)
-      done()
-    })
+    expect(bch.importedAddresses).toEqual(null)
   })
 
   it('should have accounts matching the number of hd accounts', () => {

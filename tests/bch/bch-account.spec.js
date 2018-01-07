@@ -10,18 +10,11 @@ describe('BchAccount', () => {
   let btcAcc
   let account
 
-  const bchMetadataEmpty = {
-    default_account_idx: 0,
-    accounts: []
-  }
-
-  beforeEach((done) => {
+  beforeEach(() => {
     wallet = new BlockchainWalletMock()
     bch = BitcoinCashWallet.fromBlockchainWallet(wallet)
     btcAcc = wallet.hdwallet.accounts[0]
-    account = new BchAccount(bch, wallet, btcAcc, {})
-    spyOn(bch._metadata, 'fetch').and.returnValue(Promise.resolve(bchMetadataEmpty))
-    bch.fetch().then(() => done())
+    account = new BchAccount(bch, wallet, btcAcc)
   })
 
   it('should have: index', () => {
@@ -33,7 +26,7 @@ describe('BchAccount', () => {
   })
 
   it('should have: label', () => {
-    expect(account.label).toEqual('My Bitcoin Cash Wallet')
+    expect(account.label).toEqual('Bitcoin Cash - My Wallet')
   })
 
   it('should have: coinCode=bch', () => {
