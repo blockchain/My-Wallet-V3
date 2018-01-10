@@ -337,6 +337,27 @@ API.prototype.incrementShapeshiftStat = function (options = {}) {
   return fetch(base + (options.maxLimitError ? '_max_limit_error' : ''));
 };
 
+API.prototype.incrementPartnerAccountCreation = function (partner) {
+  return fetch(`${this.ROOT_URL}event?name=${partner}_account_creation`);
+};
+
+API.prototype.incrementPartnerQuote = function (partner, type, baseCurrency, quoteCurrency) {
+  type = type.toLowerCase();
+  partner = partner.toLowerCase();
+  baseCurrency = baseCurrency.toLowerCase();
+  quoteCurrency = quoteCurrency.toLowerCase();
+  return fetch(`${this.ROOT_URL}event?name=${partner}_quote_${type}_${baseCurrency}_${quoteCurrency}`);
+};
+
+API.prototype.incrementPartnerTrade = function (partner, type, baseCurrency, quoteCurrency, confirmed) {
+  type = type.toLowerCase();
+  partner = partner.toLowerCase();
+  baseCurrency = baseCurrency.toLowerCase();
+  quoteCurrency = quoteCurrency.toLowerCase();
+  let status = confirmed ? 'confirmed' : 'created';
+  return fetch(`${this.ROOT_URL}event?name=${partner}_trade_${type}_${baseCurrency}_${quoteCurrency}_${status}`);
+};
+
 API.prototype.getBlockchainAddress = function () {
   return this.request('GET', 'charge_address');
 };
