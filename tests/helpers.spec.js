@@ -556,7 +556,7 @@ describe('Helpers', () => {
     });
   });
 
-  fdescribe('Bitcoin cash address format', () => {
+  describe('Bitcoin cash address format', () => {
     it('spec tests', () => {
       const tests = [
         ['1BpEi6DfDAUFd7GtittLSdBeYJvcoaVggu', 'bitcoincash:qpm2qsznhks23z7629mms6s4cwef74vcwvy22gdx6a'],

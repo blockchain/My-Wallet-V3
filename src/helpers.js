@@ -652,7 +652,7 @@ Helpers.bitcoincash = {
   pubKeyHash: 0,
   scriptHash: 5,
   wif: 128
-}
+};
 
 Helpers.toBitcoinCash = (address) => {
   const { version, hash } = Bitcoin.address.fromBase58Check(address);
@@ -664,7 +664,7 @@ Helpers.toBitcoinCash = (address) => {
     default:
       throw new Error('toBitcoinCash: Address type not supported');
   }
-}
+};
 
 Helpers.fromBitcoinCash = (address) => {
   const { hash, version } = cashaddress.decode(address);
@@ -676,7 +676,7 @@ Helpers.fromBitcoinCash = (address) => {
     default:
       throw new Error('fromBitcoinCash: Address type not supported');
   }
-}
+};
 
 // Helpers.bitcoincashtestnet = {
 //   messagePrefix: '\u0018Bitcoin Signed Message:\n',
