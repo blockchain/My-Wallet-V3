@@ -63,8 +63,17 @@ class BitcoinCashWallet {
     return this._hasSeen;
   }
 
+  get hasSeenAddressChangeNotice () {
+    return this._hasSeenAddressChangeNotice;
+  }
+
   setHasSeen (hasSeen) {
     this._hasSeen = hasSeen;
+    this.sync();
+  }
+
+  setHasSeenAddressChangeNotice (hasSeen) {
+    this._hasSeenAddressChangeNotice = hasSeen;
     this.sync();
   }
 
