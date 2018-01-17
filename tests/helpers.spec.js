@@ -555,4 +555,30 @@ describe('Helpers', () => {
       expect(Helpers.balanceMinusFee(10000, opt)).toBe(9999);
     });
   });
+
+  fdescribe('Bitcoin cash address format', () => {
+    it('spec tests', () => {
+      const tests = [
+        ['1BpEi6DfDAUFd7GtittLSdBeYJvcoaVggu', 'bitcoincash:qpm2qsznhks23z7629mms6s4cwef74vcwvy22gdx6a'],
+        ['1KXrWXciRDZUpQwQmuM1DbwsKDLYAYsVLR', 'bitcoincash:qr95sy3j9xwd2ap32xkykttr4cvcu7as4y0qverfuy'],
+        ['16w1D5WRVKJuZUsSRzdLp9w3YGcgoxDXb', 'bitcoincash:qqq3728yw0y47sqn6l2na30mcw6zm78dzqre909m2r'],
+        ['3CWFddi6m4ndiGyKqzYvsFYagqDLPVMTzC', 'bitcoincash:ppm2qsznhks23z7629mms6s4cwef74vcwvn0h829pq'],
+        ['3LDsS579y7sruadqu11beEJoTjdFiFCdX4', 'bitcoincash:pr95sy3j9xwd2ap32xkykttr4cvcu7as4yc93ky28e'],
+        ['31nwvkZwyPdgzjBJZXfDmSWsC4ZLKpYyUw', 'bitcoincash:pqq3728yw0y47sqn6l2na30mcw6zm78dzq5ucqzc37']
+      ];
+      expect(Helpers.fromBitcoinCash(tests[0][1])).toBe(tests[0][0]);
+      expect(Helpers.fromBitcoinCash(tests[1][1])).toBe(tests[1][0]);
+      expect(Helpers.fromBitcoinCash(tests[2][1])).toBe(tests[2][0]);
+      expect(Helpers.fromBitcoinCash(tests[3][1])).toBe(tests[3][0]);
+      expect(Helpers.fromBitcoinCash(tests[4][1])).toBe(tests[4][0]);
+      expect(Helpers.fromBitcoinCash(tests[5][1])).toBe(tests[5][0]);
+
+      expect(Helpers.toBitcoinCash(tests[0][0])).toBe(tests[0][1]);
+      expect(Helpers.toBitcoinCash(tests[1][0])).toBe(tests[1][1]);
+      expect(Helpers.toBitcoinCash(tests[2][0])).toBe(tests[2][1]);
+      expect(Helpers.toBitcoinCash(tests[3][0])).toBe(tests[3][1]);
+      expect(Helpers.toBitcoinCash(tests[4][0])).toBe(tests[4][1]);
+      expect(Helpers.toBitcoinCash(tests[5][0])).toBe(tests[5][1]);
+    });
+  });
 });
