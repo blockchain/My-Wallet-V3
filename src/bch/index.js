@@ -1,11 +1,13 @@
 /* eslint-disable semi */
-const { map, fromPairs } = require('ramda')
+const { map, fromPairs, pipe } = require('ramda')
+const WebSocket = require('ws');
 const BchApi = require('./bch-api')
 const BchPayment = require('./bch-payment')
 const Tx = require('../wallet-transaction')
 const BchAccount = require('./bch-account')
 const BchImported = require('./bch-imported')
 const Helpers = require('../helpers');
+const BlockchainSocket = require('../blockchain-socket');
 
 const BCH_FORK_HEIGHT = 478558
 const METADATA_TYPE_BCH = 7;
@@ -16,6 +18,7 @@ class BitcoinCashWallet {
     this._metadata = metadata
     this._balance = null
     this._addressInfo = {}
+    this._hasSeen = false
     this._txs = []
   }
 
@@ -54,6 +57,15 @@ class BitcoinCashWallet {
 
   get activeAccounts () {
     return this.accounts.filter(a => !a.archived)
+  }
+
+  get hasSeen () {
+    return this._hasSeen;
+  }
+
+  setHasSeen (hasSeen) {
+    this._hasSeen = hasSeen;
+    this.sync();
   }
 
   isValidAccountIndex (index) {
@@ -95,6 +107,19 @@ class BitcoinCashWallet {
     return new BchPayment(this._wallet)
   }
 
+  connect (wsUrl) {
+    if (this._socket) return;
+    this._socket = new BlockchainSocket(wsUrl, WebSocket);
+    this._socket.on('open', () => {
+      this._socket.subscribeToAddresses(this.importedAddresses == null ? [] : this.importedAddresses.addresses)
+      this._socket.subscribeToXpubs(this.activeAccounts.map(a => a.xpub))
+    });
+    this._socket.on('message', pipe(JSON.parse, (data) => {
+      if (data.op === 'utx') this.getHistory()
+    }))
+    this._socket.connect();
+  }
+
   fetch () {
     return this._metadata.fetch().then((data) => {
       let accountsData = data ? data.accounts : [];
@@ -107,6 +132,8 @@ class BitcoinCashWallet {
         let accountData = accountsData[i] || {}
         return new BchAccount(this, this._wallet, account, accountData);
       })
+
+      this._hasSeen = data && data.has_seen;
     });
   }
 
@@ -117,7 +144,8 @@ class BitcoinCashWallet {
   toJSON () {
     return {
       default_account_idx: this.defaultAccountIdx,
-      accounts: this.accounts
+      accounts: this.accounts,
+      has_seen: this.hasSeen
     }
   }
 

@@ -31,7 +31,7 @@ module.exports = function (config) {
         bundle.once('prebundle', function () {
           bundle.transform('browserify-istanbul'); // Must go first
           bundle.transform('babelify', {
-            presets: ['es2015'],
+            presets: ['env'],
             ignore: [
               'src/ws-browser.js', // undefined is not an object (evaluating 'global.WebSocket')
               /\/node_modules\/(?!bitcoin-(coinify|exchange|sfox)-client\/)/

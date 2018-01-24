@@ -900,7 +900,9 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
 
   var fetchBchWallet = function () {
     this._bch = BitcoinCash.fromBlockchainWallet(this);
-    return this._bch.fetch();
+    let wsUrl = MyWallet.ws.wsUrl.replace('/inv', '/bch/inv');
+    return this._bch.fetch()
+      .then(() => this._bch.connect(wsUrl));
   };
 
   var fetchShapeShift = function () {
