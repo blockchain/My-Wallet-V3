@@ -124,7 +124,7 @@ class EthWallet {
     account.label = label || EthAccount.defaultLabel(this.accounts.length);
     account.markAsCorrect();
     this._accounts.push(account);
-    this._socket.subscribeToAccount(this, account, this.legacyAccount);
+    // this._socket.subscribeToAccount(this, account, this.legacyAccount);
     return this.sync();
   }
 
