@@ -114,6 +114,14 @@ class EthAccount {
     return txns;
   }
 
+  updateFromIncomingTx (tx) {
+    if (tx.type === 'confirmed') {
+      this.fetchBalance();
+    } else if (tx.type === 'pending') {
+      EthWalletTx.fromJSON(tx);
+    }
+  }
+
   updateTxs (ethWallet) {
     this.txs.forEach(tx => tx.update(ethWallet));
   }
