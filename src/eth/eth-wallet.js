@@ -21,6 +21,7 @@ class EthWallet {
     this._txNotes = {};
     this._latestBlock = null;
     this._lastTx = null;
+    this._lastTxTimestamp = null;
     this.sync = asyncOnce(this.sync.bind(this), 250);
   }
 
@@ -68,6 +69,10 @@ class EthWallet {
 
   get lastTx () {
     return this._lastTx;
+  }
+
+  get lastTxTimestamp () {
+    return this._lastTxTimestamp;
   }
 
   get defaults () {
@@ -147,6 +152,7 @@ class EthWallet {
 
   setLastTx (tx) {
     this._lastTx = tx;
+    this._lastTxTimestamp = new Date().getTime();
     this.sync();
   }
 
@@ -178,6 +184,7 @@ class EthWallet {
         this._accounts = ethereum.accounts.map(constructAccount);
         this._txNotes = ethereum.tx_notes || {};
         this._lastTx = ethereum.last_tx;
+        this._lastTxTimestamp = ethereum.last_tx_timestamp;
         if (ethereum.legacy_account) {
           this._legacyAccount = constructAccount(ethereum.legacy_account);
         }
@@ -197,7 +204,8 @@ class EthWallet {
       accounts: this._accounts,
       legacy_account: this._legacyAccount,
       tx_notes: this._txNotes,
-      last_tx: this._lastTx
+      last_tx: this._lastTx,
+      last_tx_timestamp: this._lastTxTimestamp
     };
   }
 
