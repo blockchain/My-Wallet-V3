@@ -1,4 +1,6 @@
+const crypto = require('crypto');
 const WebSocket = require('ws');
+const ethUtil = require('ethereumjs-util');
 const EthHd = require('ethereumjs-wallet/hdkey');
 const { construct } = require('ramda');
 const { isPositiveNumber, asyncOnce, dedup } = require('../helpers');
@@ -7,6 +9,7 @@ const EthTxBuilder = require('./eth-tx-builder');
 const EthAccount = require('./eth-account');
 const EthSocket = require('./eth-socket');
 const EthWalletTx = require('./eth-wallet-tx');
+ethUtil.scrypt = require('scryptsy');
 
 const METADATA_TYPE_ETH = 5;
 const DERIVATION_PATH = "m/44'/60'/0'/0";
@@ -401,6 +404,48 @@ class EthWallet {
   }
 
   /* end legacy */
+
+  /* start mew */
+
+  decipherBuffer (decipher, data) {
+    return Buffer.concat([decipher.update(data), decipher.final()]);
+  }
+
+  fromMew (input, password, nonStrict) {
+    var json = (typeof input === 'object') ? input : JSON.parse(nonStrict ? input.toLowerCase() : input);
+    if (json.version !== 3) {
+      throw new Error('Not a v3 wallet');
+    }
+    var derivedKey;
+    var kdfparams;
+    if (json.crypto.kdf === 'scrypt') {
+      kdfparams = json.crypto.kdfparams;
+      derivedKey = ethUtil.scrypt(new Buffer(password), new Buffer(kdfparams.salt, 'hex'), kdfparams.n, kdfparams.r, kdfparams.p, kdfparams.dklen);
+    } else if (json.crypto.kdf === 'pbkdf2') {
+      kdfparams = json.crypto.kdfparams;
+      if (kdfparams.prf !== 'hmac-sha256') {
+        throw new Error('Unsupported parameters to PBKDF2');
+      }
+      derivedKey = crypto.pbkdf2Sync(new Buffer(password), new Buffer(kdfparams.salt, 'hex'), kdfparams.c, kdfparams.dklen, 'sha256');
+    } else {
+      throw new Error('Unsupported key derivation scheme');
+    }
+
+    var ciphertext = new Buffer(json.crypto.ciphertext, 'hex');
+    var mac = ethUtil.sha3(Buffer.concat([derivedKey.slice(16, 32), ciphertext]));
+    if (mac.toString('hex') !== json.crypto.mac) {
+      throw new Error('Key derivation failed - possibly wrong passphrase');
+    }
+    var decipher = crypto.createDecipheriv(json.crypto.cipher, derivedKey.slice(0, 16), new Buffer(json.crypto.cipherparams.iv, 'hex'));
+    var seed = this.decipherBuffer(decipher, ciphertext, 'hex');
+    while (seed.length < 32) {
+      var nullBuff = new Buffer([0x00]);
+      seed = Buffer.concat([nullBuff, seed]);
+    }
+    return EthAccount.fromMew(seed);
+  }
+
+  /* end mew */
 
   static fromBlockchainWallet (wallet) {
     let metadata = wallet.metadata(METADATA_TYPE_ETH);
