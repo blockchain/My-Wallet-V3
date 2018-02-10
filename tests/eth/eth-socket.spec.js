@@ -15,6 +15,7 @@ describe('EthSocket', () => {
     setData () {},
     fetchTransaction () {},
     appendTransaction () { return { update () {} } },
+    updateFromIncomingTx () {},
     isCorrectAddress (a) { return a === address }
   })
 
@@ -68,9 +69,9 @@ describe('EthSocket', () => {
     describe('.accountMessageHandler()', () => {
       it('should call .setData on message', () => {
         let handler = EthSocket.accountMessageHandler(ethWallet, account)
-        spyOn(account, 'setData')
+        spyOn(account, 'updateFromIncomingTx')
         handler(balanceResponse)
-        expect(account.setData).toHaveBeenCalledWith(jasmine.objectContaining({ balance: '1000', nonce: 1 }))
+        expect(account.updateFromIncomingTx).toHaveBeenCalledWith(jasmine.objectContaining(JSON.parse(balanceResponse).tx))
       })
 
       it('should call .appendTransaction with the tx object', () => {
