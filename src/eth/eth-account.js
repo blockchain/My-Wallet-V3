@@ -171,6 +171,13 @@ class EthAccount {
     account.setData({ balance: '0', nonce: 0 });
     return account;
   }
+
+  static fromMew (seed) {
+    let addr = ethUtil.privateToAddress(seed).toString('hex');
+    let priv = seed;
+    let account = new EthAccount({ priv, addr });
+    return account;
+  }
 }
 
 module.exports = EthAccount;
