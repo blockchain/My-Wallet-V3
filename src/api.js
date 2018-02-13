@@ -295,6 +295,10 @@ API.prototype.recordExperimentResult = function (experiment, ab) {
   return fetch(`${this.ROOT_URL}event?name=wallet_experiment_${experiment}_${ab}`);
 };
 
+API.prototype.incrementEventStat = function (event) {
+  return fetch(this.ROOT_URL + 'event?name=' + event);
+};
+
 API.prototype.incrementSecPassStats = function (activeBool) {
   var active = activeBool ? 1 : 0;
   return fetch(this.ROOT_URL + 'event?name=wallet_login_second_password_' + active);
