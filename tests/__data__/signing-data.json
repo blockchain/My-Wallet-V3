@@ -1,0 +1,71 @@
+{
+  "wallet": {
+    "guid": "35184925-09c3-4153-946b-e604d597b672",
+    "sharedKey": "6a794227-1278-448c-9c91-47a743164ec1",
+    "double_encryption": false,
+    "metadataHDNode": "xprv9vUdSmQHAzqKd9ZArrJXqEzDhkmfQ7zp6TJ1C27cETXcgdfP3W54i1Umdv6hhGTGRVtAGKTAp98CQr893VaksWu77diviTMn4r6JKE9CvK7",
+    "options": {
+      "pbkdf2_iterations": 5000,
+      "fee_per_kb": 10000,
+      "html5_notifications": false,
+      "logout_time": 600000
+    },
+    "address_book": [],
+    "tx_notes": {},
+    "tx_names": [],
+    "keys": [],
+    "hd_wallets": [
+      {
+        "seed_hex": "59e33544d97a041b6c74ada06469c163",
+        "passphrase": "",
+        "mnemonic_verified": false,
+        "default_account_idx": 0,
+        "accounts": [
+          {
+            "label": "My Bitcoin Wallet",
+            "archived": false,
+            "xpriv": "xprv9xrdr5KSDuFjMRZsFtYo7kzBLqX5wabxLkrVZab6iLEN2fmwRFuTyBYXrz93QaxXAivmseXpaxLWX1nnTwCao93MARAGMA8kvNwRaWvmEcn",
+            "xpub": "xpub6BqzFarL4Gp2ZueLMv5oUtvutsMaM3Kohyn6MxziGfmLuU75xoDiWys1iGnrQwqQT3PJRAkE2ZPyoPSLq8GVVStSi8DnCAxDKXUttnfH2Wu",
+            "address_labels": [],
+            "cache": {
+              "receiveAccount": "xpub6EvRwUVEmxMkYReJ2d1korWa9R2AriQhXeyJB55ns4G6mmF7JoBPABuSS9FLti5B3Ddk6XJ4HU2sXW5AGDYZLPVMEXLaM4pNLhZ8DFVgEnN",
+              "changeAccount": "xpub6EvRwUVEmxMka4otnrSt8ssFxNWcNb5pDc479E9H1zKxwMTFz9BRxkHdiFYG4EmLafU4bzj6w713haUibQ5qF4atDYYEnLXa44CCWE6KAg3"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "tx_hex_btc": "01000000026c1b0fee717838e4d7c0b0fe88aa4929cc775f8b2d25f42e6783198aea1447db000000006a473044022039390ec412328a1dc93175c965b4cc2bcb7f960ae94db5f8aa5a31257602efeb022066bbfa62b33aae433e0d229b7d60c8074a064a76920b738f896ba0429c9bdebb0121031c77d382badb52767699c14366d3ef47d9538b0bd12bf75ced6b1aa37a9d1a29ffffffffa3a9c77436956511fa7da5c458e23dc1e9af53f1f48a59411e3f168c1e41e568010000006a4730440220569e70977bd2e1b452f81672fca0d1fd53a639143d6d0f1b15778aa5c1213a02022020dd2ef066eed5af684d72ae2f32601ec7bafaa5f58a1636a9ea29503790fa140121026a622460994a92deae67834775fe54ee652f77fe65c9f279443e277348698d14ffffffff01ca140100000000001976a914b4d4b04597645ccb38465c2983b9e83804d8381488ac00000000",
+  "tx_hex_bch": "01000000026c1b0fee717838e4d7c0b0fe88aa4929cc775f8b2d25f42e6783198aea1447db000000006a473044022046623d6d62db125fe4281c7888a995c572377223b50acd11eb06a095f3d5e3c80220221359d419f2241c0c7bef5530e0a2c3438364fd9fe825e914ad44f0bc6498154121031c77d382badb52767699c14366d3ef47d9538b0bd12bf75ced6b1aa37a9d1a29ffffffffa3a9c77436956511fa7da5c458e23dc1e9af53f1f48a59411e3f168c1e41e568010000006b483045022100dd869488f239422164bc1049ec2c434049b4706cc74f38daf4402f41aebf42df022066376640c814cd7a7d1ab02e35bd4246c6ee4640aa999a1ebf604d737f270c844121026a622460994a92deae67834775fe54ee652f77fe65c9f279443e277348698d14ffffffff01ca140100000000001976a914b4d4b04597645ccb38465c2983b9e83804d8381488ac00000000",
+  "unspent_outputs": [
+    {
+      "tx_hash": "6c1b0fee717838e4d7c0b0fe88aa4929cc775f8b2d25f42e6783198aea1447db",
+      "tx_hash_big_endian": "db4714ea8a1983672ef4252d8b5f77cc2949aa88feb0c0d7e4387871ee0f1b6c",
+      "tx_index": 293191941,
+      "tx_output_n": 0,
+      "script": "76a9142066179ca1e77a26d09447e1543508436cab5e0088ac",
+      "xpub": {
+        "m": "xpub6BqzFarL4Gp2ZueLMv5oUtvutsMaM3Kohyn6MxziGfmLuU75xoDiWys1iGnrQwqQT3PJRAkE2ZPyoPSLq8GVVStSi8DnCAxDKXUttnfH2Wu",
+        "path": "M/0/1"
+      },
+      "value": 39448,
+      "value_hex": "009a18",
+      "confirmations": 0
+    },
+    {
+      "tx_hash": "a3a9c77436956511fa7da5c458e23dc1e9af53f1f48a59411e3f168c1e41e568",
+      "tx_hash_big_endian": "68e5411e8c163f1e41598af4f153afe9c13de258c4a57dfa1165953674c7a9a3",
+      "tx_index": 293191876,
+      "tx_output_n": 1,
+      "script": "76a914d91dae4825e52351f12b81d7e500a11cd719187088ac",
+      "xpub": {
+        "m": "xpub6BqzFarL4Gp2ZueLMv5oUtvutsMaM3Kohyn6MxziGfmLuU75xoDiWys1iGnrQwqQT3PJRAkE2ZPyoPSLq8GVVStSi8DnCAxDKXUttnfH2Wu",
+        "path": "M/0/0"
+      },
+      "value": 50000,
+      "value_hex": "00c350",
+      "confirmations": 0
+    }
+  ]
+}

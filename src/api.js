@@ -7,11 +7,13 @@ var Helpers = require('./helpers');
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var MyWallet = require('./wallet');
+var constants = require('./constants');
 
 // API class
 function API () {
   // private members
   this.ROOT_URL = 'https://blockchain.info/';
+  this.API_ROOT_URL = 'https://api.blockchain.info/';
   this.AJAX_RETRY_DEFAULT = 2;
   this.API_CODE = '1770d5d9-bcea-4d28-ad21-6cbd5be018a8';
   this.SERVER_TIME_OFFSET = null;
@@ -241,22 +243,30 @@ API.prototype.pushTx = function (txHex, note) {
   return this.request('POST', 'pushtx', data).then(responseTXHASH);
 };
 
-API.prototype.getFees = function () {
+API.prototype.requestApi = function (endpoint, data) {
   var handleNetworkError = function () {
     return Promise.reject({ initial_error: 'Connectivity error, failed to send network request' });
   };
 
   var checkStatus = function (response) {
-    if (response.status >= 200 && response.status < 300) {
-      return response.json();
-    } else {
-      return response.text().then(Promise.reject.bind(Promise));
-    }
+    return response.status >= 200 && response.status < 300
+      ? response.json()
+      : response.text().then(Promise.reject.bind(Promise));
   };
 
-  return fetch(this.API_ROOT_URL + 'fees')
-            .then(checkStatus)
-            .catch(handleNetworkError);
+  var url = data ? `${endpoint}?${this.encodeFormData(data)}` : endpoint;
+
+  return fetch(this.API_ROOT_URL + url)
+    .then(checkStatus, handleNetworkError);
+};
+
+API.prototype.getFees = function () {
+  const { NETWORK, SERVER_FEE_FALLBACK } = constants;
+  return NETWORK === 'testnet' ? Promise.resolve(SERVER_FEE_FALLBACK) : this.requestApi('mempool/fees');
+};
+
+API.prototype.getExchangeRate = function (currency, base) {
+  return this.requestApi('ticker', { currency, base });
 };
 
 API.prototype.exportHistory = function (active, currency, options) {
@@ -267,7 +277,26 @@ API.prototype.exportHistory = function (active, currency, options) {
   };
   if (options.start) data.start = options.start;
   if (options.end) data.end = options.end;
-  return this.request('POST', 'v2/export-history', data);
+  if (options.coinCode === 'btc') {
+    return this.request('POST', 'v2/export-history', data);
+  } else {
+    return this.requestApi(options.coinCode + '/v2/export-history', data);
+  }
+};
+
+// id :: 0 | 1 | 2
+API.prototype.createExperiment = function (id) {
+  let recordA = this.recordExperimentResult.bind(this, id, 'a');
+  let recordB = this.recordExperimentResult.bind(this, id, 'b');
+  return { recordA, recordB };
+};
+
+API.prototype.recordExperimentResult = function (experiment, ab) {
+  return fetch(`${this.ROOT_URL}event?name=wallet_experiment_${experiment}_${ab}`);
+};
+
+API.prototype.incrementEventStat = function (event) {
+  return fetch(this.ROOT_URL + 'event?name=' + event);
 };
 
 API.prototype.incrementSecPassStats = function (activeBool) {
@@ -283,6 +312,54 @@ API.prototype.confirmationScreenStats = function (guid) {
 API.prototype.pushTxStats = function (guid, advanced) {
   var group = Helpers.guidToGroup(guid);
   return fetch(this.ROOT_URL + 'event?name=wallet_fee_experiment_' + group + '_pushed_tx' + (advanced ? '_advanced' : ''));
+};
+
+API.prototype.incrementLoginViaQrStats = function () {
+  return fetch(this.ROOT_URL + 'event?name=wallet_web_login_via_qr');
+};
+
+API.prototype.incrementCurrencyUsageStats = function (btcBalance, ethBalance, bchBalance) {
+  let base = this.ROOT_URL + 'event?name=wallet_login_balance';
+  let makeEventUrl = (btc, eth, bch) => `${base}_btc_${btc ? 1 : 0}_eth_${eth ? 1 : 0}_bch_${bch ? 1 : 0}`;
+  fetch(makeEventUrl(btcBalance > 0, ethBalance > 0, bchBalance > 0));
+};
+
+API.prototype.getPriceChartData = function (params) {
+  return this.requestApi(`price/index-series?base=${params.base}&quote=${params.quote}&start=${params.start}&scale=${params.scale}`);
+};
+
+API.prototype.incrementBuyLimitCounter = function (amount) {
+  return fetch(`${this.ROOT_URL}event?name=wallet_buy_${amount === 'over' ? 'over' : 'under'}_limit`);
+};
+
+API.prototype.incrementBuyDropoff = function (step) {
+  return fetch(`${this.ROOT_URL}event?name=wallet_buy_dropoff_${step}`);
+};
+
+API.prototype.incrementShapeshiftStat = function (options = {}) {
+  let base = `${this.ROOT_URL}event?name=wallet_shapeshift_viewed`;
+  return fetch(base + (options.maxLimitError ? '_max_limit_error' : ''));
+};
+
+API.prototype.incrementPartnerAccountCreation = function (partner) {
+  return fetch(`${this.ROOT_URL}event?name=${partner}_account_creation`);
+};
+
+API.prototype.incrementPartnerQuote = function (partner, type, baseCurrency, quoteCurrency) {
+  type = type.toLowerCase();
+  partner = partner.toLowerCase();
+  baseCurrency = baseCurrency.toLowerCase();
+  quoteCurrency = quoteCurrency.toLowerCase();
+  return fetch(`${this.ROOT_URL}event?name=${partner}_quote_${type}_${baseCurrency}_${quoteCurrency}`);
+};
+
+API.prototype.incrementPartnerTrade = function (partner, type, baseCurrency, quoteCurrency, confirmed) {
+  type = type.toLowerCase();
+  partner = partner.toLowerCase();
+  baseCurrency = baseCurrency.toLowerCase();
+  quoteCurrency = quoteCurrency.toLowerCase();
+  let status = confirmed ? 'confirmed' : 'created';
+  return fetch(`${this.ROOT_URL}event?name=${partner}_trade_${type}_${baseCurrency}_${quoteCurrency}_${status}`);
 };
 
 API.prototype.getBlockchainAddress = function () {

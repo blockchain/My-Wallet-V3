@@ -1,5 +1,3 @@
-'use strict';
-
 module.exports = HDAccount;
 
 var Bitcoin = require('bitcoinjs-lib');
@@ -7,7 +5,10 @@ var assert = require('assert');
 var Helpers = require('./helpers');
 var KeyRing = require('./keyring');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
+var API = require('./api');
+var Transaction = require('./transaction');
 var constants = require('./constants');
+var BtcShiftPayment = require('./shift/btc-payment');
 
 // HDAccount Class
 
@@ -21,10 +22,7 @@ function HDAccount (object) {
   this._xpub = obj.xpub;
   this._network = obj.network || Bitcoin.networks.bitcoin;
 
-  // Prevent deleting address_labels field when saving wallet:
-  // * backwards compatibility with mobile (we'll keep one entry for the highest label)
-  // * if user has 2nd password enabled and doesn't enter it during migration step
-  this._address_labels_backup = obj.address_labels;
+  this._address_labels = obj.address_labels || [];
 
   // computed properties
   this._keyRing = new KeyRing(obj.xpub, obj.cache);
@@ -94,10 +92,10 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function () {
       let maxLabeledReceiveIndex = null;
-      if (MyWallet.wallet.labels) {
+      if (MyWallet.wallet.labels) { // May not be set yet
         maxLabeledReceiveIndex = MyWallet.wallet.labels.maxLabeledReceiveIndex(this.index);
-      } else if (this._address_labels_backup && this._address_labels_backup.length) {
-        maxLabeledReceiveIndex = this._address_labels_backup[this._address_labels_backup.length - 1].index;
+      } else if (this._address_labels && this._address_labels.length) {
+        maxLabeledReceiveIndex = this._address_labels[this._address_labels.length - 1].index;
       }
       return Math.max(
         this.lastUsedReceiveIndex === null ? -1 : this.lastUsedReceiveIndex,
@@ -138,11 +136,11 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'receiveAddress': {
     configurable: false,
-    get: function () { return this._keyRing.receive.getAddress(this.receiveIndex); }
+    get: function () { return this.receiveAddressAtIndex(this.receiveIndex); }
   },
   'changeAddress': {
     configurable: false,
-    get: function () { return this._keyRing.change.getAddress(this._changeIndex); }
+    get: function () { return this.changeAddressAtIndex(this.changeIndex); }
   },
   'isEncrypted': {
     configurable: false,
@@ -155,6 +153,10 @@ Object.defineProperties(HDAccount.prototype, {
   'index': {
     configurable: false,
     get: function () { return this._index; }
+  },
+  'coinCode': {
+    configurable: false,
+    get: function () { return 'btc'; }
   }
 });
 
@@ -211,24 +213,12 @@ HDAccount.factory = function (o) {
 // JSON SERIALIZER
 
 HDAccount.prototype.toJSON = function () {
-  let labelsJSON = this._address_labels_backup;
-
-  // Hold on to the backup until labels are saved in KV store.
-  if (MyWallet.wallet.labels && !MyWallet.wallet.labels.readOnly && !MyWallet.wallet.labels.dirty) {
-    // Use placeholder entry to prevent address reuse:
-    labelsJSON = [];
-    let max = MyWallet.wallet.labels.maxLabeledReceiveIndex(this._index);
-    if (max > -1) {
-      labelsJSON.push({index: max, label: ''});
-    }
-  }
-
   var hdaccount = {
     label: this._label,
     archived: this._archived,
     xpriv: this._xpriv,
     xpub: this._xpub,
-    address_labels: labelsJSON,
+    address_labels: this._orderedAddressLabels(),
     cache: this._keyRing
   };
 
@@ -243,6 +233,11 @@ HDAccount.reviver = function (k, v) {
 HDAccount.prototype.receiveAddressAtIndex = function (index) {
   assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
   return this._keyRing.receive.getAddress(index);
+};
+
+HDAccount.prototype.changeAddressAtIndex = function (index) {
+  assert(Helpers.isPositiveInteger(index), 'Error: change index must be a positive integer');
+  return this._keyRing.change.getAddress(index);
 };
 
 HDAccount.prototype.encrypt = function (cipher) {
@@ -266,4 +261,65 @@ HDAccount.prototype.persist = function () {
   this._xpriv = this._temporal_xpriv;
   delete this._temporal_xpriv;
   return this;
+};
+
+// Address labels:
+
+HDAccount.prototype._orderedAddressLabels = function () {
+  return this._address_labels.sort((a, b) => a.index - b.index);
+};
+
+HDAccount.prototype.addLabel = function (receiveIndex, label) {
+  assert(Helpers.isPositiveInteger(receiveIndex));
+
+  let labels = this._address_labels;
+
+  let labelEntry = {
+    index: receiveIndex,
+    label: label
+  };
+
+  labels.push(labelEntry);
+};
+
+HDAccount.prototype.getLabels = function () {
+  return this._address_labels
+          .sort((a, b) => a.index - b.index)
+          .map(o => ({index: o.index, label: o.label}));
+};
+
+HDAccount.prototype.setLabel = function (receiveIndex, label) {
+  let labels = this._address_labels;
+
+  let labelEntry = labels.find((label) => label.index === receiveIndex);
+
+  if (!labelEntry) {
+    labelEntry = {index: receiveIndex};
+    labels.push(labelEntry);
+  }
+
+  labelEntry.label = label;
+  MyWallet.syncWallet();
+};
+
+HDAccount.prototype.removeLabel = function (receiveIndex) {
+  let labels = this._address_labels;
+  let labelEntry = labels.find((label) => label.index === receiveIndex);
+  labels.splice(labels.indexOf(labelEntry), 1);
+};
+
+HDAccount.prototype.getAvailableBalance = function (feeType) {
+  feeType = (feeType === 'regular' || feeType === 'priority') ? feeType : 'regular';
+  let feesP = API.getFees();
+  let coinsP = API.getUnspent([this.extendedPublicKey]).then(Helpers.pluck('unspent_outputs'));
+  return Promise.all([feesP, coinsP]).then(([fees, coins]) => {
+    let fee = Helpers.toFeePerKb(fees[feeType]);
+    let usableCoins = Transaction.filterUsableCoins(coins, fee);
+    let amount = Transaction.maxAvailableAmount(usableCoins, fee).amount;
+    return { amount, fee: fees[feeType] };
+  });
+};
+
+HDAccount.prototype.createShiftPayment = function (wallet) {
+  return BtcShiftPayment.fromWallet(wallet, this);
 };

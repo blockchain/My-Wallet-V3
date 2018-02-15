@@ -5,9 +5,15 @@ var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
 var BIP39 = require('bip39');
+var BigNumber = require('bignumber.js');
+var ethUtil = require('ethereumjs-util');
 var ImportExport = require('./import-export');
 var constants = require('./constants');
 var WalletCrypo = require('./wallet-crypto');
+var has = require('ramda/src/has');
+var allPass = require('ramda/src/allPass');
+var map = require('ramda/src/map');
+var cashaddress = require('cashaddress');
 
 var Helpers = {};
 Math.log2 = function (x) { return Math.log(x) / Math.LN2; };
@@ -76,6 +82,9 @@ Helpers.isValidLabel = function (text) {
 Helpers.isInRange = function (val, min, max) {
   return min <= val && val < max;
 };
+Helpers.isNonNull = function (val) {
+  return val !== null;
+};
 Helpers.add = function (x, y) {
   return x + y;
 };
@@ -130,11 +139,22 @@ Helpers.isEmptyObject = function (x) {
 Helpers.isEmptyArray = function (x) {
   return Array.isArray(x) && x.length === 0;
 };
+
+Helpers.defer = function () {
+  let deferred = {};
+  deferred.promise = new Promise((resolve, reject) => {
+    deferred.resolve = resolve;
+    deferred.reject = reject;
+  });
+  return deferred;
+};
+
 // Return an async version of f that it will run after miliseconds
 // no matter how many times you call the new function, it will run only once
 Helpers.asyncOnce = function (f, milliseconds, before) {
   var timer = null;
   var oldArguments = [];
+  var deferred = null;
 
   trigger.cancel = function () {
     clearTimeout(timer);
@@ -143,15 +163,25 @@ Helpers.asyncOnce = function (f, milliseconds, before) {
   function trigger () {
     trigger.cancel();
     before && before();
+    deferred = deferred || Helpers.defer();
     var myArgs = [];
+    var promise = deferred.promise;
     // this is needed because arguments is not an 'Array' instance
     for (var i = 0; i < arguments.length; i++) { myArgs[i] = arguments[i]; }
     myArgs = Helpers.zipLong(Helpers.maybeCompose, myArgs, oldArguments);
     oldArguments = myArgs;
     timer = setTimeout(function () {
-      f.apply(this, myArgs);
-      oldArguments = [];
+      try {
+        let result = f.apply(this, myArgs);
+        deferred.resolve(result);
+      } catch (e) {
+        deferred.reject(e);
+      } finally {
+        oldArguments = [];
+        deferred = null;
+      }
     }, milliseconds);
+    return promise;
   }
 
   return trigger;
@@ -220,6 +250,10 @@ Function.prototype.compose = function (g) { // eslint-disable-line no-extend-nat
 
 Helpers.guessSize = function (nInputs, nOutputs) {
   return (nInputs * 148 + nOutputs * 34 + 10);
+};
+
+Helpers.toFeePerKb = function (fee) {
+  return fee * 1000;
 };
 
 Helpers.guessFee = function (nInputs, nOutputs, feePerKb) {
@@ -315,38 +349,33 @@ function parseMiniKey (miniKey) {
   return Bitcoin.crypto.sha256(miniKey);
 }
 
-Helpers.privateKeyStringToKey = function (value, format) {
-  var keyBytes = null;
-  var tbytes;
-
-  if (format === 'base58') {
-    keyBytes = Helpers.buffertoByteArray(Base58.decode(value));
-  } else if (format === 'base64') {
-    keyBytes = Helpers.buffertoByteArray(new Buffer(value, 'base64'));
-  } else if (format === 'hex') {
-    keyBytes = Helpers.buffertoByteArray(new Buffer(value, 'hex'));
-  } else if (format === 'mini') {
-    keyBytes = Helpers.buffertoByteArray(parseMiniKey(value));
-  } else if (format === 'sipa') {
-    tbytes = Helpers.buffertoByteArray(Base58.decode(value));
-    tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
-    tbytes.shift();
-    keyBytes = tbytes.slice(0, tbytes.length - 4);
-  } else if (format === 'compsipa') {
-    tbytes = Helpers.buffertoByteArray(Base58.decode(value));
-    tbytes.shift(); // extra shift cuz BigInteger.fromBuffer prefixed extra 0 byte to array
-    tbytes.shift();
-    tbytes.pop();
-    keyBytes = tbytes.slice(0, tbytes.length - 4);
+Helpers.privateKeyStringToKey = function (value, format, bitcoinjs) {
+  var bitcoinLib = bitcoinjs || Bitcoin;
+  if (format === 'sipa' || format === 'compsipa') {
+    return bitcoinLib.ECPair.fromWIF(value, constants.getNetwork(bitcoinLib));
   } else {
-    throw new Error('Unsupported Key Format');
-  }
+    var keyBuffer = null;
 
-  return new Bitcoin.ECPair(
-    new BigInteger.fromByteArrayUnsigned(keyBytes), // eslint-disable-line new-cap
-    null,
-    { compressed: format !== 'sipa', network: constants.getNetwork() }
-  );
+    switch (format) {
+      case 'base58':
+        keyBuffer = Base58.decode(value);
+        break;
+      case 'base64':
+        keyBuffer = new Buffer(value, 'base64');
+        break;
+      case 'hex':
+        keyBuffer = new Buffer(value, 'hex');
+        break;
+      case 'mini':
+        keyBuffer = parseMiniKey(value);
+        break;
+      default:
+        throw new Error('Unsupported Key Format');
+    }
+
+    var d = BigInteger.fromBuffer(keyBuffer);
+    return new bitcoinLib.ECPair(d, null, { network: constants.getNetwork(bitcoinLib) });
+  }
 };
 
 Helpers.detectPrivateKeyFormat = function (key) {
@@ -406,10 +435,8 @@ Helpers.isValidBIP39Mnemonic = function (mnemonic) {
 
 Helpers.isValidPrivateKey = function (candidate) {
   try {
-    var format = Helpers.detectPrivateKeyFormat(candidate);
-    if (format === 'bip38') { return true; }
-    var key = Helpers.privateKeyStringToKey(candidate, format);
-    return key.getAddress();
+    let format = Helpers.detectPrivateKeyFormat(candidate);
+    return format === 'bip38' || Helpers.privateKeyStringToKey(candidate, format) != null;
   } catch (e) {
     return false;
   }
@@ -458,8 +485,8 @@ Helpers.getMobileOperatingSystem = function () {
   }
 };
 
-Helpers.isEmailInvited = function (email, fraction) {
-  if (!email) {
+Helpers.isStringHashInFraction = function (str, fraction) {
+  if (!str) {
     return false;
   }
   if (!Helpers.isPositiveNumber(fraction)) {
@@ -468,40 +495,203 @@ Helpers.isEmailInvited = function (email, fraction) {
   if (fraction > 1) {
     return false;
   }
-  return WalletCrypo.sha256(email)[0] / 256 >= 1 - fraction;
+  return WalletCrypo.sha256(str)[0] / 256 >= 1 - fraction;
+};
+
+// Helpers.isFeeOptions :: object => Boolean
+Helpers.isFeeOptions = object => {
+  const props = ['min_tx_amount', 'percent', 'max_service_charge', 'send_to_miner'];
+  return object ? allPass(map(has, props))(object) : false;
 };
 
 Helpers.blockchainFee = (amount, options) =>
-  amount <= options.min_tx_amount
-    ? 0
-    : Math.min(Math.floor(amount * options.percent), options.max_service_charge);
+  Helpers.isFeeOptions(options) && Helpers.isPositiveNumber(amount) && amount > options.min_tx_amount
+    ? Math.min(Math.floor(amount * options.percent), options.max_service_charge)
+    : 0;
 
 Helpers.balanceMinusFee = (balance, options) => {
-  if (!options || options.max_service_charge === undefined ||
-                  options.percent === undefined ||
-                  options.min_tx_amount === undefined) {
-    return balance;
-  }
-  if (balance <= options.min_tx_amount) {
-    return balance;
-  }
-  const point = Math.floor(options.max_service_charge * ((1 / options.percent) + 1));
-  if (options.min_tx_amount < balance && balance <= point) {
-    const maxWithFee = Math.floor(balance / (1 + options.percent));
-    return Math.max(maxWithFee, options.min_tx_amount);
-  }
-  return point < balance
-    ? balance - options.max_service_charge
-    : balance;
+  const maxFeePoint = () => Math.floor(options.max_service_charge * ((1 / options.percent) + 1));
+  switch (true) {
+    // negative balance
+    case !Helpers.isPositiveNumber(balance):
+      return 0;
+    // no valid options
+    case !Helpers.isFeeOptions(options):
+      return balance;
+    // balance in [0, min_tx_amount] -> no fee
+    case balance <= options.min_tx_amount:
+      return balance;
+    // balance in (min_tx_amount, maxFeePoint] --> max(max with fee, max without fee)
+    case (options.min_tx_amount < balance) && (balance <= maxFeePoint()):
+      const maxWithFee = Math.floor(balance / (1 + options.percent));
+      return Math.max(maxWithFee, options.min_tx_amount);
+    // balance in (maxFeePoint, +inf) --> maximum fee
+    case maxFeePoint() < balance:
+      return balance - options.max_service_charge;
+    default:
+      return balance;
+  } // fi switch
 };
 
 Helpers.guidToGroup = (guid) => {
   let hashed = WalletCrypo.sha256(new Buffer(guid.replace(/-/g, ''), 'hex'));
   return hashed[0] & 1 ? 'b' : 'a';
-}
+};
 
 Helpers.deepClone = function (object) {
   return JSON.parse(JSON.stringify(object));
 };
+
+Helpers.addressesePerAccount = function (n) {
+  switch (true) {
+    case n > 0 && n < 4:
+      return 20;
+    case n > 3 && n < 7:
+      return 15;
+    case n > 6 && n < 11:
+      return 10;
+    case n > 10 && n < 21:
+      return 5;
+    case n > 20 && n < 31:
+      return 3;
+    case n > 30 && n < 51:
+      return 2;
+    default:
+      return 1;
+  }
+};
+
+Helpers.delay = (time) => new Promise((resolve) => {
+  setTimeout(resolve, time);
+});
+
+Helpers.dedup = (nested, prop) => (
+  nested.reduce(({ seen, result }, next) => {
+    let unseen = next.filter(x => !seen[x[prop]]);
+    unseen.forEach(x => { seen[x[prop]] = true; });
+    return { seen, result: result.concat(unseen) };
+  }, { seen: {}, result: [] }).result
+);
+
+const etherUnits = {
+  kwei: new BigNumber(1e3),
+  mwei: new BigNumber(1e6),
+  gwei: new BigNumber(1e9),
+  szabo: new BigNumber(1e12),
+  finney: new BigNumber(1e15),
+  ether: new BigNumber(1e18)
+};
+
+Helpers.toWei = function (x, unit) {
+  unit = unit || 'ether';
+  if (!etherUnits[unit]) {
+    throw new Error(`Unsupported ether unit in toWei: ${unit}`);
+  }
+  let result = Helpers.toBigNumber(x).mul(etherUnits[unit]).floor();
+  return Helpers.isBigNumber(x) ? result : result.toString();
+};
+
+Helpers.fromWei = function (x, unit) {
+  unit = unit || 'ether';
+  if (!etherUnits[unit]) {
+    throw new Error(`Unsupported ether unit in fromWei: ${unit}`);
+  }
+  let result = Helpers.toBigNumber(x).div(etherUnits[unit]);
+  return Helpers.isBigNumber(x) ? result : result.toString();
+};
+
+Helpers.isBigNumber = function (x) {
+  return x instanceof BigNumber;
+};
+
+Helpers.toBigNumber = function (x) {
+  return Helpers.isBigNumber(x) ? x : new BigNumber((x || 0).toString());
+};
+
+Helpers.bnMax = function (a, b) {
+  return BigNumber.max(a, b);
+};
+
+Helpers.bnToBuffer = function (bn) {
+  let hex = bn.toString(16);
+  if (hex.length % 2 !== 0) hex = '0' + hex;
+  return Buffer.from(hex, 'hex');
+};
+
+Helpers.isEtherAddress = function (address) {
+  return (
+    ethUtil.isValidChecksumAddress(address) ||
+    (
+      ethUtil.isValidAddress(address) &&
+      ethUtil.stripHexPrefix(address).toLowerCase() === ethUtil.stripHexPrefix(address)
+    ) ||
+    (
+      ethUtil.isValidAddress(address) &&
+      ethUtil.stripHexPrefix(address).toUpperCase() === ethUtil.stripHexPrefix(address)
+    )
+  );
+};
+
+Helpers.trace = (...args) => {
+  if (process.env.NODE_ENV === 'dev') {
+    console.log(...args);
+  }
+};
+
+Helpers.bitcoincash = {
+  messagePrefix: '\u0018Bitcoin Signed Message:\n',
+  bip32: {
+    public: 76067358,
+    private: 76066276
+  },
+  cashAddrPrefix: 'bitcoincash',
+  cashAddrTypes: {
+    pubkeyhash: 0,
+    scripthash: 1
+  },
+  pubKeyHash: 0,
+  scriptHash: 5,
+  wif: 128
+};
+
+Helpers.toBitcoinCash = (address) => {
+  const { version, hash } = Bitcoin.address.fromBase58Check(address);
+  switch (version) {
+    case Helpers.bitcoincash.pubKeyHash:
+      return cashaddress.encode(Helpers.bitcoincash.cashAddrPrefix, 'pubkeyhash', hash);
+    case Helpers.bitcoincash.scriptHash:
+      return cashaddress.encode(Helpers.bitcoincash.cashAddrPrefix, 'scripthash', hash);
+    default:
+      throw new Error('toBitcoinCash: Address type not supported');
+  }
+};
+
+Helpers.fromBitcoinCash = (address) => {
+  const { hash, version } = cashaddress.decode(address);
+  switch (version) {
+    case 'pubkeyhash':
+      return Bitcoin.address.toBase58Check(hash, Bitcoin.networks.bitcoin.pubKeyHash);
+    case 'scripthash':
+      return Bitcoin.address.toBase58Check(hash, Bitcoin.networks.bitcoin.scriptHash);
+    default:
+      throw new Error('fromBitcoinCash: Address type not supported');
+  }
+};
+
+// Helpers.bitcoincashtestnet = {
+//   messagePrefix: '\u0018Bitcoin Signed Message:\n',
+//   bip32: {
+//     public: 70617039,
+//     private: 70615956
+//   },
+//   cashAddrPrefix: 'bchtest',
+//   cashAddrTypes: {
+//     pubkeyhash: 0,
+//     scripthash: 1
+//   },
+//   pubKeyHash: 111,
+//   scriptHash: 196,
+//   wif: 239
+// }
 
 module.exports = Helpers;

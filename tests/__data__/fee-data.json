@@ -1,0 +1,8 @@
+{
+  "limits": {
+    "min": 50,
+    "max": 450
+  },
+  "regular": 240,
+  "priority": 300
+}
