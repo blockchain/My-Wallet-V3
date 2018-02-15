@@ -81,7 +81,7 @@ class EthWalletTx {
   }
 
   update (ethWallet) {
-    this._confirmations = Math.max(ethWallet.latestBlock - this._blockNumber + 1, 0);
+    this._confirmations = Math.max(ethWallet.latestBlock - this._blockNumber + 1, 0) || 0;
     this._note = ethWallet.getTxNote(this.hash);
   }
 
