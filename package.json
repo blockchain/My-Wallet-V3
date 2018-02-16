@@ -43,6 +43,7 @@
     "babel-plugin-transform-es3-member-expression-literals": "^6.22.0",
     "babel-plugin-transform-es3-property-literals": "^6.22.0",
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
+    "babel-preset-env": "^1.6.1",
     "babel-preset-latest": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
     "bigi": "1.4.*",
@@ -65,7 +66,6 @@
     "ramda": "^0.22.1",
     "ramda-lens": "^0.1.2",
     "randombytes": "^2.0.1",
-    "scryptsy": "^2.0.0",
     "unorm": "^1.4.1",
     "ws": "2.0.*"
   },

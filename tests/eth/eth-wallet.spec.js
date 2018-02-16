@@ -1,3 +1,4 @@
+const WalletCrypto = require('../../src/wallet-crypto');
 const EthWallet = require('../../src/eth/eth-wallet');
 const EthAccount = require('../../src/eth/eth-account');
 const EthSocket = require('../../src/eth/eth-socket');
@@ -355,13 +356,36 @@ describe('EthWallet', () => {
       });
     });
 
+    describe('.fromMew', () => {
+      let valid = '{"version":3,"id":"cb22a4b1-31cc-4c67-9982-588102d7b5d8","address":"5d6987a4992f02d014abc98603c19337fb88390c","crypto":{"ciphertext":"3d8131e34f5a613ed00ef4e4b8ebc4e46ddc04b45b31af97141e7cbd74ff7b1c","cipherparams":{"iv":"9b48c1d947065c4e755512294bef381b"},"cipher":"aes-128-ctr","kdf":"scrypt","kdfparams":{"dklen":32,"salt":"581e0240a516b7df92d6bf171fbe43a9a5849a29126743b9cf0c65f2d35afd66","n":8192,"r":8,"p":1},"mac":"dd9dc3cfc79d462a36a096e6d46960f47aa7c491cfd3f940678fb76d7a6aec0e"}}';
+
+      it('should check if json is an object', () => {
+        let fromMew = () => eth.fromMew('version: 3, kdf: scrypt');
+        expect(fromMew).toThrow(new Error('Not a supported file type'));
+      });
+      it('should check the wallet version', () => {
+        let fromMew = () => eth.fromMew({version: 2});
+        expect(fromMew).toThrow(new Error('Not a supported wallet. Please use a valid wallet version.'));
+      });
+      it('should check key derivation scheme', () => {
+        let fromMew = () => eth.fromMew({ version: 3, crypto: { kdf: 'bcrypt' } });
+        expect(fromMew).toThrow(new Error('Unsupported key derivation scheme'));
+      });
+      it('should call WalletCrypto.scrypt if kdf type is scrypt', () => {
+        spyOn(WalletCrypto, 'scrypt');
+        let fromMew = () => eth.fromMew(JSON.parse(valid), 'password123', () => {});
+        fromMew();
+        expect(WalletCrypto.scrypt).toHaveBeenCalled();
+      });
+    });
+
     describe('.toJSON', () => {
       it('should serialize to json', () => {
         eth.createAccount('New');
         eth.setDefaultAccountIndex(1);
         eth.setTxNote('<hash>', 'my note');
         let json = JSON.stringify(eth.toJSON());
-        expect(json).toEqual('{"has_seen":false,"default_account_idx":1,"accounts":[{"label":"My Ether Wallet","archived":false,"correct":true,"addr":"0x5532f8B7d3f80b9a0892a6f5F665a77358544acD"},{"label":"New","archived":false,"correct":true,"addr":"0x91C29C839c8d2B01f249e64DAB3B70DDdE896277"}],"tx_notes":{"<hash>":"my note"},"last_tx":null}');
+        expect(json).toEqual('{"has_seen":false,"default_account_idx":1,"accounts":[{"label":"My Ether Wallet","archived":false,"correct":true,"addr":"0x5532f8B7d3f80b9a0892a6f5F665a77358544acD"},{"label":"New","archived":false,"correct":true,"addr":"0x91C29C839c8d2B01f249e64DAB3B70DDdE896277"}],"tx_notes":{"<hash>":"my note"},"last_tx":null,"last_tx_timestamp":null}');
       });
     });
   });
