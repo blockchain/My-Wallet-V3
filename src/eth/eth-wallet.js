@@ -4,12 +4,13 @@ const ethUtil = require('ethereumjs-util');
 const WalletCrypto = require('../wallet-crypto');
 const EthHd = require('ethereumjs-wallet/hdkey');
 const { construct } = require('ramda');
-const { isPositiveNumber, asyncOnce, dedup } = require('../helpers');
+const { isEtherAddress, isPositiveNumber, asyncOnce, dedup } = require('../helpers');
 const API = require('../api');
 const EthTxBuilder = require('./eth-tx-builder');
 const EthAccount = require('./eth-account');
 const EthSocket = require('./eth-socket');
 const EthWalletTx = require('./eth-wallet-tx');
+const { equals } = require('ramda');
 
 const METADATA_TYPE_ETH = 5;
 const DERIVATION_PATH = "m/44'/60'/0'/0";
@@ -431,6 +432,9 @@ class EthWallet {
     let json = input;
     if (typeof json !== 'object') { throw new Error('Not a supported file type'); }
     if (json.version !== 3) { throw new Error('Not a supported wallet. Please use a valid wallet version.'); }
+    if (!isEtherAddress('0x' + json.address)) { throw new Error('Address is not a valid ether address.'); }
+    if (!equals(Object.keys(input).sort(), ['address', 'crypto', 'id', 'version'])) { throw new Error('File is malformatted'); }
+    if (!equals(Object.keys(input.crypto).sort(), ['cipher', 'cipherparams', 'ciphertext', 'kdf', 'kdfparams', 'mac'])) { throw new Error('Crypto is not valid'); }
 
     let kdfparams;
     if (json.crypto.kdf === 'scrypt') {

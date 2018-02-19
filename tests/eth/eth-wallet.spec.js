@@ -368,8 +368,12 @@ describe('EthWallet', () => {
         expect(fromMew).toThrow(new Error('Not a supported wallet. Please use a valid wallet version.'));
       });
       it('should check key derivation scheme', () => {
-        let fromMew = () => eth.fromMew({ version: 3, crypto: { kdf: 'bcrypt' } });
+        let fromMew = () => eth.fromMew({ version: 3, crypto: {'ciphertext': '3d8131e34f5a613ed00ef4e4b8ebc4e46ddc04b45b31af97141e7cbd74ff7b1c', 'cipherparams': {'iv': '9b48c1d947065c4e755512294bef381b'}, 'cipher': 'aes-128-ctr', 'kdf': 'bcrypt', 'kdfparams': {'dklen': 32, 'salt': '581e0240a516b7df92d6bf171fbe43a9a5849a29126743b9cf0c65f2d35afd66', 'n': 8192, 'r': 8, 'p': 1}, 'mac': 'dd9dc3cfc79d462a36a096e6d46960f47aa7c491cfd3f940678fb76d7a6aec0e'}, address: '5d6987a4992f02d014abc98603c19337fb88390c', id: '123' });
         expect(fromMew).toThrow(new Error('Unsupported key derivation scheme'));
+      });
+      it('should check object keys', () => {
+        let fromMew = () => eth.fromMew({ version: 3, crypto: {}, address: '5d6987a4992f02d014abc98603c19337fb88390c', 'ids': '123' });
+        expect(fromMew).toThrow(new Error('File is malformatted'));
       });
       it('should call WalletCrypto.scrypt if kdf type is scrypt', () => {
         spyOn(WalletCrypto, 'scrypt');
