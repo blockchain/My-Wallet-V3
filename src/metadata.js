@@ -123,8 +123,8 @@ Metadata.extractResponse = curry((encKey, res) => {
       try {
         return JSON.parse(str);
       } catch (e) {
-        console.log(str);
-        throw new Error(e);
+        console.log('Unable to parse metadata contents: ' + str);
+        throw e;
       }
     };
     return encKey
