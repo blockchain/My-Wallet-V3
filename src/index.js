@@ -3,7 +3,8 @@
 require('isomorphic-fetch');
 require('es6-promise').polyfill();
 
-global.Symbol = require('core-js/es6/symbol');
+require('core-js/modules/es6.symbol');
+require('core-js/modules/web.dom.iterable');
 
 var Buffer = require('buffer').Buffer;
 
@@ -24,25 +25,25 @@ try {
 
 module.exports = {
   Buffer: Buffer,
-  MyWallet: require('./src/wallet'),
-  WalletStore: require('./src/wallet-store'),
-  WalletCrypto: require('./src/wallet-crypto'),
-  Payment: require('./src/payment'),
-  ImportExport: require('./src/import-export'),
-  BlockchainSettingsAPI: require('./src/blockchain-settings-api'),
-  Helpers: require('./src/helpers'),
-  API: require('./src/api'),
-  Tx: require('./src/wallet-transaction'),
-  WalletTokenEndpoints: require('./src/wallet-token-endpoints'),
-  WalletNetwork: require('./src/wallet-network'),
-  RNG: require('./src/rng'),
-  Transaction: require('./src/transaction'),
-  Address: require('./src/address'),
-  Metadata: require('./src/metadata'),
+  MyWallet: require('./wallet'),
+  WalletStore: require('./wallet-store'),
+  WalletCrypto: require('./wallet-crypto'),
+  Payment: require('./payment'),
+  ImportExport: require('./import-export'),
+  BlockchainSettingsAPI: require('./blockchain-settings-api'),
+  Helpers: require('./helpers'),
+  API: require('./api'),
+  Tx: require('./wallet-transaction'),
+  WalletTokenEndpoints: require('./wallet-token-endpoints'),
+  WalletNetwork: require('./wallet-network'),
+  RNG: require('./rng'),
+  Transaction: require('./transaction'),
+  Address: require('./address'),
+  Metadata: require('./metadata'),
   Bitcoin: require('bitcoinjs-lib'),
-  External: require('./src/external'),
-  BuySell: require('./src/buy-sell'),
-  constants: require('./src/constants'),
+  External: require('./external'),
+  BuySell: require('./buy-sell'),
+  constants: require('./constants'),
   BigInteger: require('bigi/lib'),
   BIP39: require('bip39'),
   Networks: require('bitcoinjs-lib/src/networks'),

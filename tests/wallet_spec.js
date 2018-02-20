@@ -1,4 +1,5 @@
 let proxyquire = require('proxyquireify')(require);
+let exchangeMock = require('./mocks/bitcoin-exchange-client.mock');
 
 let walletStoreGuid;
 let walletStoreEncryptedWalletData;
@@ -116,6 +117,7 @@ const RNG = {
 };
 
 let stubs = {
+  'bitcoin-exchange-client': exchangeMock,
   './wallet-store': WalletStore,
   './wallet-crypto': WalletCrypto,
   './wallet-signup': WalletSignup,
@@ -614,19 +616,22 @@ describe('Wallet', () => {
       expect(RNG.run).toHaveBeenCalled();
     });
 
-    it('should call errorCallback if RNG throws', done => {
+    it('should call errorCallback if RNG throws', () => {
       // E.g. because there was a network failure.
       // This assumes BIP39.generateMnemonic does not rescue a throw
       // inside the RNG
 
       let observers =
-        {error () { done(); }};
+        {
+          error (e) {}
+        };
 
       spyOn(observers, 'error').and.callThrough();
 
       RNG.shouldThrow = true;
       MyWallet.createNewWallet('a@b.com', '1234', 'My Wallet', 'en', 'usd', observers.success, observers.error);
-      expect(observers.error).toHaveBeenCalledWith('Connection failed');
+      expect(observers.error).toHaveBeenCalled();
+      expect(observers.error.calls.argsFor(0)[0].message).toEqual('Connection failed');
 
       RNG.shouldThrow = false;
     });
