@@ -4,7 +4,7 @@ const ethUtil = require('ethereumjs-util');
 const WalletCrypto = require('../wallet-crypto');
 const EthHd = require('ethereumjs-wallet/hdkey');
 const { construct } = require('ramda');
-const { isEtherAddress, isPositiveNumber, asyncOnce, dedup } = require('../helpers');
+const { isPositiveNumber, isHex, isNumber, asyncOnce, dedup } = require('../helpers');
 const API = require('../api');
 const EthTxBuilder = require('./eth-tx-builder');
 const EthAccount = require('./eth-account');
@@ -414,7 +414,7 @@ class EthWallet {
 
   extractSeed (derivedKey, json) {
     if (!Buffer.isBuffer(derivedKey)) { throw new Error('Expected key to be a Buffer'); }
-    if (typeof crypto !== 'object') { throw new Error('Expected crypto to be an object'); }
+    if (typeof json.crypto !== 'object') { throw new Error('Expected crypto to be an object'); }
     var ciphertext = new Buffer(json.crypto.ciphertext, 'hex');
     var mac = ethUtil.sha3(Buffer.concat([derivedKey.slice(16, 32), ciphertext]));
     if (mac.toString('hex') !== json.crypto.mac) { throw new Error('Key derivation failed - possibly wrong passphrase'); }
@@ -428,31 +428,32 @@ class EthWallet {
     return seed;
   }
 
-  fromMew (input, password, success) {
-    let json = input;
+  fromMew (json, password) {
     if (typeof json !== 'object') { throw new Error('Not a supported file type'); }
-    if (json.version !== 3) { throw new Error('Not a supported wallet. Please use a valid wallet version.'); }
-    if (!isEtherAddress('0x' + json.address)) { throw new Error('Address is not a valid ether address.'); }
-    if (!equals(Object.keys(input).sort(), ['address', 'crypto', 'id', 'version'])) { throw new Error('File is malformatted'); }
-    if (!equals(Object.keys(input.crypto).sort(), ['cipher', 'cipherparams', 'ciphertext', 'kdf', 'kdfparams', 'mac'])) { throw new Error('Crypto is not valid'); }
+    if (isNaN(json.version)) { throw new Error('Not a supported wallet. Please use a valid wallet version.'); }
+    if (!['crypto', 'id', 'version'].every(i => Object.keys(json).includes(i))) { throw new Error('File is malformatted'); }
+    if (!equals(Object.keys(json.crypto).sort(), ['cipher', 'cipherparams', 'ciphertext', 'kdf', 'kdfparams', 'mac'])) { throw new Error('Crypto is not valid'); }
+    if (!isHex(json.crypto.cipherparams.iv)) { throw new Error('Not a supported param: cipherparams.iv'); }
+    if (!isHex(json.crypto.ciphertext)) { throw new Error('Not a supported param: cipherparams.iv'); }
 
     let kdfparams;
     if (json.crypto.kdf === 'scrypt') {
       kdfparams = json.crypto.kdfparams;
+      if (!equals(Object.keys(kdfparams).sort(), ['dklen', 'n', 'p', 'r', 'salt'])) { throw new Error('File is malformatted'); }
+      if (!['dklen', 'n', 'p', 'r'].every(i => isNumber(kdfparams[i]))) { throw new Error('Not a supported param: kdfparams'); }
+      if (!isHex(kdfparams.salt)) { throw new Error('Not a supported param: kdfparams'); }
+
       let { salt, n, r, p, dklen } = kdfparams;
-      WalletCrypto.scrypt(new Buffer(password), new Buffer(salt, 'hex'), n, r, p, dklen, (derivedKey) => {
-        let seed = this.extractSeed(derivedKey, json);
-        if (!Buffer.isBuffer(seed)) { throw new Error('Expected seed to be a buffer'); }
-        return success(EthAccount.fromMew(seed));
-      });
+      let derivedKey = WalletCrypto.scrypt(new Buffer(password), new Buffer(salt, 'hex'), n, r, p, dklen);
+      let seed = this.extractSeed(derivedKey, json);
+      return EthAccount.fromMew(seed);
     } else if (json.crypto.kdf === 'pbkdf2') {
       if (kdfparams.prf !== 'hmac-sha256') { throw new Error('Unsupported parameters to PBKDF2'); }
       kdfparams = json.crypto.kdfparams;
       let { salt, c, dklen } = kdfparams;
       let derivedKey = WalletCrypto.pbkdf2Sync(new Buffer(password), new Buffer(salt, 'hex'), c, dklen, 'sha256');
       let seed = this.extractSeed(derivedKey, json);
-      if (!Buffer.isBuffer(seed)) { throw new Error('Expected seed to be a buffer'); }
-      return success(EthAccount.fromMew(seed));
+      return EthAccount.fromMew(seed);
     } else {
       throw new Error('Unsupported key derivation scheme');
     }

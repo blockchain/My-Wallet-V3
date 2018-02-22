@@ -48,7 +48,7 @@ module.exports = function (config) {
     files: [
       'node_modules/babel-polyfill/dist/polyfill.js',
       'node_modules/jasmine-es6-promise-matchers/jasmine-es6-promise-matchers.js',
-      'tests/**/*.spec.js'
+      'tests/eth/eth-wallet.spec.js'
     ]
   };
 
