@@ -1,4 +1,4 @@
-# MyWallet [![Build Status](https://travis-ci.org/blockchain/My-Wallet-V3.png?branch=master)](https://travis-ci.org/blockchain/My-Wallet-V3) [![Coverage Status](https://coveralls.io/repos/blockchain/My-Wallet-V3/badge.svg?branch=master&service=github)](https://coveralls.io/github/blockchain/My-Wallet-V3?branch=master)
+# MyWallet [![Build Status](https://travis-ci.org/blockchain/My-Wallet-V3.svg?branch=master)](https://travis-ci.org/blockchain/My-Wallet-V3) [![Coverage Status](https://coveralls.io/repos/github/blockchain/My-Wallet-V3/badge.svg?branch=master)](https://coveralls.io/github/blockchain/My-Wallet-V3?branch=master)
 
 JavaScript Model for Blockchain.info wallet.
 
@@ -106,4 +106,4 @@ MyWallet.get_history(_successFun, _errorFun);
 
 Security issues can be reported to us in the following venues:
  * Email: security@blockchain.info
- * Bug Bounty: https://www.crowdcurity.com/blockchain-info
+ * Bug Bounty: https://hackerone.com/blockchain
