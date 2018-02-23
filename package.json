@@ -83,7 +83,7 @@
     "eslint": "2.*",
     "fetch-mock": "^5.1.2",
     "git-changelog": "1.0.*",
-    "istanbul": "~0.4.5",
+    "istanbul": "^1.0.0-alpha.1",
     "jasmine-core": "^2.2.0",
     "jasmine-es6-promise-matchers": "^2.0.1",
     "karma": "1.7.*",
