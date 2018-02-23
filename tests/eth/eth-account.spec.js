@@ -108,13 +108,13 @@ describe('EthAccount', () => {
       it('should adjust the balance and nonce if the tx is sent / pending', () => {
         account.setData({ nonce: 0, balance: '10000000000000000' })
         account.updateFromIncomingTx({ type: 'pending', value: '10000000000000000', from: '0xD70073f72621FB90060Ac257f38cF2FF566Ea6bB' })
-        expect(account.balance).toEqual('0')
-        expect(account.nonce).toEqual(1)
+        expect(account.balance).toEqual('0.01')
+        expect(account.nonce).toEqual(0)
       })
 
       it('should adjust the balance and nonce if the tx is received / pending', () => {
         account.updateFromIncomingTx({ type: 'pending', value: '10000000000000000', to: '0xD70073f72621FB90060Ac257f38cF2FF566Ea6bB', from: '0xasdf' })
-        expect(account.balance).toEqual('0.01')
+        expect(account.balance).toEqual('0')
         expect(account.nonce).toEqual(0)
       })
 
