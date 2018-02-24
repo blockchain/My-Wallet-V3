@@ -33,6 +33,7 @@ module.exports = function (config) {
           bundle.transform('babelify', {
             presets: ['env'],
             ignore: [
+              'node_modules/',
               'src/ws-browser.js', // undefined is not an object (evaluating 'global.WebSocket')
               /\/node_modules\/(?!bitcoin-(coinify|exchange|sfox)-client\/)/
             ],
