@@ -1,3 +1,4 @@
+const WalletCrypto = require('../../src/wallet-crypto');
 const EthWallet = require('../../src/eth/eth-wallet');
 const EthAccount = require('../../src/eth/eth-account');
 const EthSocket = require('../../src/eth/eth-socket');
@@ -355,13 +356,101 @@ describe('EthWallet', () => {
       });
     });
 
+    // Test cases from https://github.com/ethereum/go-ethereum/blob/f8f428cc18c5f70814d7b3937128781bac14bffd/accounts/keystore/testdata/v3_test_vector.json
+
+    describe('.fromMew', () => {
+      let v3 = {
+        'crypto': {
+          'cipher': 'aes-128-ctr',
+          'cipherparams': {
+            'iv': '83dbcc02d8ccb40e466191a123791e0e'
+          },
+          'ciphertext': 'd172bf743a674da9cdad04534d56926ef8358534d458fffccd4e6ad2fbde479c',
+          'kdf': 'scrypt',
+          'kdfparams': {
+            'dklen': 32,
+            'n': 262144,
+            'r': 1,
+            'p': 8,
+            'salt': 'ab0c7876052600dd703518d6fc3fe8984592145b591fc8fb5c6d43190334ba19'
+          },
+          'mac': '2103ac29920d71da29f15d75b4a16dbe95cfd7ff8faea1056c33131d846e3097'
+        },
+        'id': '3198bc9c-6672-5ab3-d995-4942343ae5b6',
+        'version': 3
+      };
+
+      let v3Pbkdf2 = {
+        'crypto': {
+          'cipher': 'aes-128-ctr',
+          'cipherparams': {
+            'iv': '6087dab2f9fdbbfaddc31a909735c1e6'
+          },
+          'ciphertext': '5318b4d5bcd28de64ee5559e671353e16f075ecae9f99c7a79a38af5f869aa46',
+          'kdf': 'pbkdf2',
+          'kdfparams': {
+            'c': 262144,
+            'dklen': 32,
+            'prf': 'hmac-sha256',
+            'salt': 'ae3cd4e7013836a3df6bd7241b12db061dbe2c6785853cce422d148a624ce0bd'
+          },
+          'mac': '517ead924a9d0dc3124507e3393d175ce3ff7c1e96529c6c555ce9e51205e9b2'
+        },
+        'id': '3198bc9c-6672-5ab3-d995-4942343ae5b6',
+        'version': 3
+      };
+
+      let v330ByteKey = {
+        'crypto': {
+          'cipher': 'aes-128-ctr',
+          'cipherparams': {
+            'iv': '3ca92af36ad7c2cd92454c59cea5ef00'
+          },
+          'ciphertext': '108b7d34f3442fc26ab1ab90ca91476ba6bfa8c00975a49ef9051dc675aa',
+          'kdf': 'scrypt',
+          'kdfparams': {
+            'dklen': 32,
+            'n': 2,
+            'r': 8,
+            'p': 1,
+            'salt': 'd0769e608fb86cda848065642a9c6fa046845c928175662b8e356c77f914cd3b'
+          },
+          'mac': '75d0e6759f7b3cefa319c3be41680ab6beea7d8328653474bd06706d4cc67420'
+        },
+        'id': 'a37e1559-5955-450d-8075-7b8931b392b2',
+        'version': 3
+      };
+
+      var lightScrypt = {'version': 3, 'id': 'cb22a4b1-31cc-4c67-9982-588102d7b5d8', 'address': '5d6987a4992f02d014abc98603c19337fb88390c', 'crypto': {'ciphertext': '3d8131e34f5a613ed00ef4e4b8ebc4e46ddc04b45b31af97141e7cbd74ff7b1c', 'cipherparams': {'iv': '9b48c1d947065c4e755512294bef381b'}, 'cipher': 'aes-128-ctr', 'kdf': 'scrypt', 'kdfparams': {'dklen': 32, 'salt': '581e0240a516b7df92d6bf171fbe43a9a5849a29126743b9cf0c65f2d35afd66', 'n': 8192, 'r': 8, 'p': 1}, 'mac': 'dd9dc3cfc79d462a36a096e6d46960f47aa7c491cfd3f940678fb76d7a6aec0e'}};
+
+      it('should return the correct private key for v3', () => {
+        const account = eth.fromMew(v3, 'testpassword');
+        expect(account._priv.toString('hex')).toBe('7a28b5ba57c53603b0b07b56bba752f7784bf506fa95edc395f5cf6c7514fe9d');
+      });
+
+      it('should return the correct private key for v3Pbkdf2', () => {
+        const account = eth.fromMew(v3Pbkdf2, 'testpassword');
+        expect(account._priv.toString('hex')).toBe('7a28b5ba57c53603b0b07b56bba752f7784bf506fa95edc395f5cf6c7514fe9d');
+      });
+
+      it('should return the correct private key for v330ByteKey', () => {
+        const account = eth.fromMew(v330ByteKey, 'foo');
+        expect(account._priv.toString('hex').split('0000')[1]).toBe('81c29e8142bb6a81bef5a92bda7a8328a5c85bb2f9542e76f9b0f94fc018');
+      });
+
+      it('should return the correct address for lightScrypt', () => {
+        const account = eth.fromMew(lightScrypt, 'password123');
+        expect(account._priv.toString('hex')).toBe('d6190eff2ff74ab9939262fbe221162b9d5d6d8a7d2098bf08545245cd877e9c');
+      });
+    });
+
     describe('.toJSON', () => {
       it('should serialize to json', () => {
         eth.createAccount('New');
         eth.setDefaultAccountIndex(1);
         eth.setTxNote('<hash>', 'my note');
         let json = JSON.stringify(eth.toJSON());
-        expect(json).toEqual('{"has_seen":false,"default_account_idx":1,"accounts":[{"label":"My Ether Wallet","archived":false,"correct":true,"addr":"0x5532f8B7d3f80b9a0892a6f5F665a77358544acD"},{"label":"New","archived":false,"correct":true,"addr":"0x91C29C839c8d2B01f249e64DAB3B70DDdE896277"}],"tx_notes":{"<hash>":"my note"},"last_tx":null}');
+        expect(json).toEqual('{"has_seen":false,"default_account_idx":1,"accounts":[{"label":"My Ether Wallet","archived":false,"correct":true,"addr":"0x5532f8B7d3f80b9a0892a6f5F665a77358544acD"},{"label":"New","archived":false,"correct":true,"addr":"0x91C29C839c8d2B01f249e64DAB3B70DDdE896277"}],"tx_notes":{"<hash>":"my note"},"last_tx":null,"last_tx_timestamp":null}');
       });
     });
   });

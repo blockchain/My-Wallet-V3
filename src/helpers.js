@@ -638,6 +638,14 @@ Helpers.trace = (...args) => {
   }
 };
 
+Helpers.unsortedEquals = (arrA, arrB) => {
+  var arrAsorted = arrA.sort();
+  var arrBsorted = arrB.sort();
+  if (arrAsorted.length !== arrBsorted.length) { return false; }
+  for (var i = 0; i < arrAsorted.length; i++) { if (arrAsorted[i] !== arrBsorted[i]) { return false; } }
+  return true;
+};
+
 Helpers.bitcoincash = {
   messagePrefix: '\u0018Bitcoin Signed Message:\n',
   bip32: {
