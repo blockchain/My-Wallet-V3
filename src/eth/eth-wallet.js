@@ -3,13 +3,15 @@ const WebSocket = require('ws');
 const ethUtil = require('ethereumjs-util');
 const WalletCrypto = require('../wallet-crypto');
 const EthHd = require('ethereumjs-wallet/hdkey');
-const { construct } = require('ramda');
+const { construct, has } = require('ramda');
 const { isPositiveNumber, isHex, isNumber, asyncOnce, dedup, unsortedEquals } = require('../helpers');
 const API = require('../api');
 const EthTxBuilder = require('./eth-tx-builder');
 const EthAccount = require('./eth-account');
 const EthSocket = require('./eth-socket');
 const EthWalletTx = require('./eth-wallet-tx');
+
+const objHasKeys = (obj, keys) => keys.every(k => has(k, obj));
 
 const METADATA_TYPE_ETH = 5;
 const DERIVATION_PATH = "m/44'/60'/0'/0";
@@ -430,8 +432,8 @@ class EthWallet {
   fromMew (json, password) {
     if (typeof json !== 'object') { throw new Error('Not a supported file type'); }
     if (isNaN(json.version)) { throw new Error('Not a supported wallet. Please use a valid wallet version.'); }
-    if (!['crypto', 'id', 'version'].every(i => Object.keys(json).includes(i))) { throw new Error('File is malformatted'); }
-    if (!['cipher', 'cipherparams', 'ciphertext', 'kdf', 'kdfparams', 'mac'].every(i => Object.keys(json.crypto).includes(i))) { throw new Error('Crypto is not valid'); }
+    if (!objHasKeys(json, ['crypto', 'id', 'version'])) { throw new Error('File is malformatted'); }
+    if (!objHasKeys(json.crypto, ['cipher', 'cipherparams', 'ciphertext', 'kdf', 'kdfparams', 'mac'])) { throw new Error('Crypto is not valid'); }
     if (!isHex(json.crypto.cipherparams.iv)) { throw new Error('Not a supported param: cipherparams.iv'); }
     if (!isHex(json.crypto.ciphertext)) { throw new Error('Not a supported param: ciphertext'); }
 
@@ -439,11 +441,11 @@ class EthWallet {
     if (json.crypto.kdf === 'scrypt') {
       kdfparams = json.crypto.kdfparams;
       if (!unsortedEquals(Object.keys(kdfparams), ['dklen', 'n', 'p', 'r', 'salt'])) { throw new Error('File is malformatted'); }
-      if (!['dklen', 'n', 'p', 'r'].every(i => isNumber(kdfparams[i]))) { throw new Error('Not a supported param: kdfparams'); }
-      if (!isHex(kdfparams.salt)) { throw new Error('Not a supported param: kdfparams'); }
+      if (!objHasKeys(kdfparams, ['dklen', 'n', 'p', 'r'])) { throw new Error('Not a supported param: kdfparams'); }
+      if (!isHex(kdfparams.salt)) { throw new Error('Not a supported param: kdfparams.salt'); }
 
       let { salt, n, r, p, dklen } = kdfparams;
-      let derivedKey = WalletCrypto.scrypt(new Buffer(password), new Buffer(salt, 'hex'), n, r, p, dklen);
+      let derivedKey = WalletCrypto.scrypt(Buffer.from(password), Buffer.from(salt, 'hex'), n, r, p, dklen);
       let seed = this.extractSeed(derivedKey, json);
       return EthAccount.fromMew(seed);
     } else if (json.crypto.kdf === 'pbkdf2') {
@@ -451,10 +453,10 @@ class EthWallet {
       if (!unsortedEquals(Object.keys(kdfparams), ['c', 'dklen', 'prf', 'salt'])) { throw new Error('File is malformatted'); }
       if (!isHex(kdfparams.salt)) { throw new Error('Not a supported param: kdfparams.salt'); }
       if (kdfparams.prf !== 'hmac-sha256') { throw new Error('Unsupported parameters to PBKDF2'); }
-      if (!['c', 'dklen'].every(i => isNumber(kdfparams[i]))) { throw new Error('Not a supported param: kdfparams'); }
+      if (!objHasKeys(kdfparams, ['c', 'dklen'])) { throw new Error('Not a supported param: kdfparams'); }
 
       let { salt, c, dklen } = kdfparams;
-      let derivedKey = WalletCrypto.pbkdf2(new Buffer(password), new Buffer(salt, 'hex'), c, dklen, 'sha256');
+      let derivedKey = WalletCrypto.pbkdf2(Buffer.from(password), Buffer.from(salt, 'hex'), c, dklen, 'sha256');
       let seed = this.extractSeed(derivedKey, json);
       return EthAccount.fromMew(seed);
     } else {
