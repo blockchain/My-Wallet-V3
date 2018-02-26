@@ -1,4 +1,3 @@
-const WalletCrypto = require('../../src/wallet-crypto');
 const EthWallet = require('../../src/eth/eth-wallet');
 const EthAccount = require('../../src/eth/eth-account');
 const EthSocket = require('../../src/eth/eth-socket');
