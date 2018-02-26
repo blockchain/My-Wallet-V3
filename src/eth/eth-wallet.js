@@ -448,8 +448,10 @@ class EthWallet {
       return EthAccount.fromMew(seed);
     } else if (json.crypto.kdf === 'pbkdf2') {
       kdfparams = json.crypto.kdfparams;
-      if (kdfparams.prf !== 'hmac-sha256') { throw new Error('Unsupported parameters to PBKDF2'); }
       if (!unsortedEquals(Object.keys(kdfparams), ['c', 'dklen', 'prf', 'salt'])) { throw new Error('File is malformatted'); }
+      if (!isHex(kdfparams.salt)) { throw new Error('Not a supported param: kdfparams.salt'); }
+      if (kdfparams.prf !== 'hmac-sha256') { throw new Error('Unsupported parameters to PBKDF2'); }
+      if (!['c', 'dklen'].every(i => isNumber(kdfparams[i]))) { throw new Error('Not a supported param: kdfparams'); }
 
       let { salt, c, dklen } = kdfparams;
       let derivedKey = WalletCrypto.pbkdf2(new Buffer(password), new Buffer(salt, 'hex'), c, dklen, 'sha256');
