@@ -119,9 +119,17 @@ Metadata.extractResponse = curry((encKey, res) => {
   if (res === null) {
     return res;
   } else {
+    let parseOrLog = (str) => {
+      try {
+        return JSON.parse(str);
+      } catch (e) {
+        console.log('Unable to parse metadata contents: ' + str);
+        throw e;
+      }
+    };
     return encKey
-      ? compose(JSON.parse, M.decrypt(encKey), prop('payload'))(res)
-      : compose(JSON.parse, M.BufferToString, M.B64ToBuffer, prop('payload'))(res);
+      ? compose(parseOrLog, M.decrypt(encKey), prop('payload'))(res)
+      : compose(parseOrLog, M.BufferToString, M.B64ToBuffer, prop('payload'))(res);
   }
 });
 
