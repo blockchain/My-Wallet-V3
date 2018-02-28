@@ -13,6 +13,7 @@ var WalletCrypo = require('./wallet-crypto');
 var has = require('ramda/src/has');
 var allPass = require('ramda/src/allPass');
 var map = require('ramda/src/map');
+var cashaddress = require('cashaddress');
 
 var Helpers = {};
 Math.log2 = function (x) { return Math.log(x) / Math.LN2; };
@@ -636,5 +637,61 @@ Helpers.trace = (...args) => {
     console.log(...args);
   }
 };
+
+Helpers.bitcoincash = {
+  messagePrefix: '\u0018Bitcoin Signed Message:\n',
+  bip32: {
+    public: 76067358,
+    private: 76066276
+  },
+  cashAddrPrefix: 'bitcoincash',
+  cashAddrTypes: {
+    pubkeyhash: 0,
+    scripthash: 1
+  },
+  pubKeyHash: 0,
+  scriptHash: 5,
+  wif: 128
+};
+
+Helpers.toBitcoinCash = (address) => {
+  const { version, hash } = Bitcoin.address.fromBase58Check(address);
+  switch (version) {
+    case Helpers.bitcoincash.pubKeyHash:
+      return cashaddress.encode(Helpers.bitcoincash.cashAddrPrefix, 'pubkeyhash', hash);
+    case Helpers.bitcoincash.scriptHash:
+      return cashaddress.encode(Helpers.bitcoincash.cashAddrPrefix, 'scripthash', hash);
+    default:
+      throw new Error('toBitcoinCash: Address type not supported');
+  }
+};
+
+Helpers.fromBitcoinCash = (address) => {
+  const { hash, version } = cashaddress.decode(address);
+  switch (version) {
+    case 'pubkeyhash':
+      return Bitcoin.address.toBase58Check(hash, Bitcoin.networks.bitcoin.pubKeyHash);
+    case 'scripthash':
+      return Bitcoin.address.toBase58Check(hash, Bitcoin.networks.bitcoin.scriptHash);
+    default:
+      throw new Error('fromBitcoinCash: Address type not supported');
+  }
+};
+
+// Helpers.bitcoincashtestnet = {
+//   messagePrefix: '\u0018Bitcoin Signed Message:\n',
+//   bip32: {
+//     public: 70617039,
+//     private: 70615956
+//   },
+//   cashAddrPrefix: 'bchtest',
+//   cashAddrTypes: {
+//     pubkeyhash: 0,
+//     scripthash: 1
+//   },
+//   pubKeyHash: 111,
+//   scriptHash: 196,
+//   wif: 239
+// }
 
 module.exports = Helpers;

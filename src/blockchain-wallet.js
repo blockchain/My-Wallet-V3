@@ -200,14 +200,6 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () { return this.activeKeys.map(function (k) { return k.address; }); }
   },
-  'spendableAddresses': {
-    configurable: false,
-    get: function () {
-      return this.keys
-          .filter(function (k) { return !k.isWatchOnly; })
-          .map(function (k) { return k.address; });
-    }
-  },
   'spendableActiveAddresses': {
     configurable: false,
     get: function () {
@@ -924,13 +916,16 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     );
   };
 
+  var fetchBchWallet = function () {
+    this._bch = BitcoinCash.fromBlockchainWallet(this);
+    let wsUrl = MyWallet.ws.wsUrl.replace('/inv', '/bch/inv');
+    return this._bch.fetch()
+      .then(() => this._bch.connect(wsUrl));
+  };
+
   var fetchShapeShift = function () {
     this._shapeshift = ShapeShift.fromBlockchainWallet(this, constants.SHAPE_SHIFT_KEY);
     return this._shapeshift.fetch();
-  };
-
-  var loadBch = function () {
-    this._bch = BitcoinCash.fromBlockchainWallet(this);
   };
 
   let promises = [];
@@ -940,13 +935,13 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     promises.push(fetchExternal.call(this));
     promises.push(fetchEthWallet.call(this));
     promises.push(fetchShapeShift.call(this));
+    promises.push(fetchBchWallet.call(this));
   }
 
   // Labels only works for v3 wallets
   if (this.isUpgradedToHD) {
     // Labels currently don't use the KV Store, so this should never fail.
     promises.push(fetchLabels.call(this));
-    promises.push(loadBch.call(this));
   }
 
   return Promise.all(promises);

@@ -72,9 +72,9 @@ Object.defineProperties(External.prototype, {
   'hasExchangeAccount': {
     configurable: false,
     get: function () {
-      return (this._coinify && this._coinify.hasAccount) ||
-             (this._sfox && this._sfox.hasAccount) ||
-             (this._unocoin && this._unocoin.hasAccount) || false;
+      return (this._coinify && this._coinify.hasAccount && 'coinify') ||
+             (this._unocoin && this._unocoin.hasAccount && 'unocoin') ||
+             (this._sfox && this._sfox.hasAccount && 'sfox') || false;
     }
   }
 });
