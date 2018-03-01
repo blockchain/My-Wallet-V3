@@ -454,6 +454,7 @@ class EthWallet {
       if (!isHex(kdfparams.salt)) { throw new Error('Not a supported param: kdfparams.salt'); }
       if (kdfparams.prf !== 'hmac-sha256') { throw new Error('Unsupported parameters to PBKDF2'); }
       if (!objHasKeys(kdfparams, ['c', 'dklen'])) { throw new Error('Not a supported param: kdfparams'); }
+      if (!['c', 'dklen'].every(i => isNumber(kdfparams[i]))) { throw new Error('Not a supported param: c and dklen must be numbers'); }
 
       let { salt, c, dklen } = kdfparams;
       let derivedKey = WalletCrypto.pbkdf2(Buffer.from(password), Buffer.from(salt, 'hex'), c, dklen, 'sha256');
