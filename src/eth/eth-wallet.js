@@ -438,11 +438,13 @@ class EthWallet {
     if (!isHex(json.crypto.ciphertext)) { throw new Error('Not a supported param: ciphertext'); }
 
     let kdfparams;
+    // TODO: breakout format validation into separate function
     if (json.crypto.kdf === 'scrypt') {
       kdfparams = json.crypto.kdfparams;
       if (!unsortedEquals(Object.keys(kdfparams), ['dklen', 'n', 'p', 'r', 'salt'])) { throw new Error('File is malformatted'); }
       if (!objHasKeys(kdfparams, ['dklen', 'n', 'p', 'r'])) { throw new Error('Not a supported param: kdfparams'); }
       if (!isHex(kdfparams.salt)) { throw new Error('Not a supported param: kdfparams.salt'); }
+      if (!['dklen', 'n', 'p', 'r'].every(i => isNumber(kdfparams[i]))) { throw new Error('Not a supported param: dklen, n, p, r must be numbers'); }
 
       let { salt, n, r, p, dklen } = kdfparams;
       let derivedKey = WalletCrypto.scrypt(Buffer.from(password), Buffer.from(salt, 'hex'), n, r, p, dklen);
