@@ -1107,9 +1107,9 @@ bitcoin-ops@^1.3.0:
   version "1.4.0"
   resolved "https://registry.npmjs.org/bitcoin-ops/-/bitcoin-ops-1.4.0.tgz#90d9c95c067e9a34a6ccaa3dd324ffa84e31e3d8"
 
-bitcoin-sfox-client@^0.2.6:
-  version "0.2.6"
-  resolved "https://registry.npmjs.org/bitcoin-sfox-client/-/bitcoin-sfox-client-0.2.6.tgz#8ba7db9b98aed969c634e09e7c349d08a92e7da2"
+bitcoin-sfox-client@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.npmjs.org/bitcoin-sfox-client/-/bitcoin-sfox-client-0.3.0.tgz#7917021961ce8b87e71ae7df2c80680c33a36c5d"
   dependencies:
     babel-polyfill "6.16.*"
     babel-preset-es2015 "6.16.*"
@@ -5103,6 +5103,10 @@ scryptsy@^1.2.1:
   resolved "https://registry.npmjs.org/scryptsy/-/scryptsy-1.2.1.tgz#a3225fa4b2524f802700761e2855bdf3b2d92163"
   dependencies:
     pbkdf2 "^3.0.3"
+
+scryptsy@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.npmjs.org/scryptsy/-/scryptsy-2.0.0.tgz#262c36f0231cfa7654e2363fa394cd2dec66f378"
 
 secp256k1@^3.0.1:
   version "3.4.0"
