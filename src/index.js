@@ -53,5 +53,6 @@ module.exports = {
   Contacts: require('./contacts'),
   SharedMetadataAPI: require('./sharedMetadataAPI'),
   EthSocket: require('./eth/eth-socket'),
-  R: require('ramda')
+  R: require('ramda'),
+  BlockchainSocket: require('./blockchain-socket')
 };
