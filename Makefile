@@ -1,7 +1,7 @@
 all: clean node_modules semistandard test dist/my-wallet.js dist/my-wallet.min.js changelog
 
 node_modules:
-	yarn --ignore-engines
+	npm install
 
 build: node_modules
 	npm run build
