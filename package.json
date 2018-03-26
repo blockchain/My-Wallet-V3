@@ -51,7 +51,7 @@
     "bitcoin-coinify-client": "^0.7.6",
     "bitcoin-sfox-client": "^0.3.0",
     "bitcoin-unocoin-client": "^0.3.6",
-    "bitcoincashjs-lib": "https://github.com/bitcoinjs/bitcoinjs-lib#058fa24e094ce98e6709689210d6c344a16399e3",
+    "bitcoincashjs-lib": "https://github.com/bitcoinjs/bitcoinjs-lib#04c628e9f108fb26f13f10c64d2ac2590ba83cab",
     "bitcoinjs-lib": "2.1.*",
     "bs58": "2.0.*",
     "cashaddress": "^1.1.0",
