@@ -41,17 +41,17 @@ class StableSocket extends EventEmitter {
   }
 
   connect () {
-    if (!Helpers.tor() && this.isClosed) {
-      try {
-        this._pingIntervalPID = setInterval(this.ping.bind(this), PING_INTERVAL);
-        this._socket = this.createSocket(this.url);
-        this._socket.on('open', () => this.emit('open'));
-        this._socket.on('message', (message) => this.emit('message', message.data));
-        this._socket.on('close', () => this.emit('close'));
-      } catch (e) {
-        console.error('Failed to connect to websocket', e);
-      }
-    }
+    // if (!Helpers.tor() && this.isClosed) {
+    //   try {
+    //     this._pingIntervalPID = setInterval(this.ping.bind(this), PING_INTERVAL);
+    //     this._socket = this.createSocket(this.url);
+    //     this._socket.on('open', () => this.emit('open'));
+    //     this._socket.on('message', (message) => this.emit('message', message.data));
+    //     this._socket.on('close', () => this.emit('close'));
+    //   } catch (e) {
+    //     console.error('Failed to connect to websocket', e);
+    //   }
+    // }
   }
 
   send (data) {
