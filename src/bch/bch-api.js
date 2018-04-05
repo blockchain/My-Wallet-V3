@@ -36,7 +36,7 @@ const apiGetUnspents = (as, conf) => {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: API.encodeFormData({ active, confirmations, format })
   }).then(r =>
-    r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e))
+    r.status === 200 ? r.json() : r.text().then(e => Promise.reject(e))
   );
 }
 
