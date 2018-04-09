@@ -1,7 +1,7 @@
-all: clean node_modules semistandard test dist/my-wallet.js dist/my-wallet.min.js changelog
+all: clean node_modules test dist/my-wallet.js dist/my-wallet.min.js changelog
 
 node_modules:
-	yarn --ignore-engines
+	npm install
 
 build: node_modules
 	npm run build
@@ -14,8 +14,8 @@ dist/my-wallet.js: build
 dist/my-wallet.min.js: node_modules
 	npm run dist
 
-semistandard: node_modules
-	node_modules/.bin/semistandard --verbose | snazzy
+# semistandard: node_modules
+# 	node_modules/.bin/semistandard --verbose | snazzy
 
 # git-changelog uses the most recent tag, which is not what we want after we
 # just tagged a release. Use the previous tag instead.
