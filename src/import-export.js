@@ -85,63 +85,60 @@ var ImportExport = new function () {
     if (!isECMult) {
       var addresshash = Buffer(hex.slice(3, 7));
 
-      WalletCrypto.scrypt(passphrase, addresshash, 16384, 8, 8, 64, function (derivedBytes) {
-        var k = derivedBytes.slice(32, 32 + 32);
+      var derivedBytes = WalletCrypto.scrypt(passphrase, addresshash, 16384, 8, 8, 64);
+      let k = derivedBytes.slice(32, 32 + 32);
 
-        var decryptedBytes = WalletCrypto.AES.decrypt(Buffer(hex.slice(7, 7 + 32)), k, null, AESopts);
-        for (var x = 0; x < 32; x++) { decryptedBytes[x] ^= derivedBytes[x]; }
+      var decryptedBytes = WalletCrypto.AES.decrypt(Buffer(hex.slice(7, 7 + 32)), k, null, AESopts);
+      for (var x = 0; x < 32; x++) { decryptedBytes[x] ^= derivedBytes[x]; }
 
-        decrypted = BigInteger.fromBuffer(decryptedBytes);
+      decrypted = BigInteger.fromBuffer(decryptedBytes);
 
-        verifyHashAndReturn();
-      });
+      verifyHashAndReturn();
     } else {
       var ownerentropy = hex.slice(7, 7 + 8);
       var ownersalt = Buffer(!hasLotSeq ? ownerentropy : ownerentropy.slice(0, 4));
 
-      WalletCrypto.scrypt(passphrase, ownersalt, 16384, 8, 8, 32, function (prefactorA) {
-        var passfactor;
+      var prefactorA = WalletCrypto.scrypt(passphrase, ownersalt, 16384, 8, 8, 32);
+      var passfactor;
 
-        if (!hasLotSeq) {
-          passfactor = prefactorA;
-        } else {
-          var prefactorB = Buffer.concat([prefactorA, Buffer(ownerentropy)]);
-          passfactor = hash256(prefactorB);
-        }
+      if (!hasLotSeq) {
+        passfactor = prefactorA;
+      } else {
+        var prefactorB = Buffer.concat([prefactorA, Buffer(ownerentropy)]);
+        passfactor = hash256(prefactorB);
+      }
 
-        var kp = new Bitcoin.ECPair(BigInteger.fromBuffer(passfactor), null, {network: constants.getNetwork()});
+      var kp = new Bitcoin.ECPair(BigInteger.fromBuffer(passfactor), null, {network: constants.getNetwork()});
 
-        var passpoint = kp.getPublicKeyBuffer();
+      var passpoint = kp.getPublicKeyBuffer();
 
-        var encryptedpart2 = Buffer(hex.slice(23, 23 + 16));
+      var encryptedpart2 = Buffer(hex.slice(23, 23 + 16));
 
-        var addresshashplusownerentropy = Buffer(hex.slice(3, 3 + 12));
+      var addresshashplusownerentropy = Buffer(hex.slice(3, 3 + 12));
 
-        WalletCrypto.scrypt(passpoint, addresshashplusownerentropy, 1024, 1, 1, 64, function (derived) {
-          var k = derived.slice(32);
+      var derived = WalletCrypto.scrypt(passpoint, addresshashplusownerentropy, 1024, 1, 1, 64);
+      let k = derived.slice(32);
 
-          var unencryptedpart2Bytes = WalletCrypto.AES.decrypt(encryptedpart2, k, null, AESopts);
+      var unencryptedpart2Bytes = WalletCrypto.AES.decrypt(encryptedpart2, k, null, AESopts);
 
-          for (var i = 0; i < 16; i++) { unencryptedpart2Bytes[i] ^= derived[i + 16]; }
+      for (var i = 0; i < 16; i++) { unencryptedpart2Bytes[i] ^= derived[i + 16]; }
 
-          var encryptedpart1 = Buffer.concat([Buffer(hex.slice(15, 15 + 8)), Buffer(unencryptedpart2Bytes.slice(0, 0 + 8))]);
+      var encryptedpart1 = Buffer.concat([Buffer(hex.slice(15, 15 + 8)), Buffer(unencryptedpart2Bytes.slice(0, 0 + 8))]);
 
-          var unencryptedpart1Bytes = WalletCrypto.AES.decrypt(encryptedpart1, k, null, AESopts);
+      var unencryptedpart1Bytes = WalletCrypto.AES.decrypt(encryptedpart1, k, null, AESopts);
 
-          for (var ii = 0; ii < 16; ii++) { unencryptedpart1Bytes[ii] ^= derived[ii]; }
+      for (var ii = 0; ii < 16; ii++) { unencryptedpart1Bytes[ii] ^= derived[ii]; }
 
-          var seedb = Buffer.concat([Buffer(unencryptedpart1Bytes.slice(0, 0 + 16)), Buffer(unencryptedpart2Bytes.slice(8, 8 + 8))]);
+      var seedb = Buffer.concat([Buffer(unencryptedpart1Bytes.slice(0, 0 + 16)), Buffer(unencryptedpart2Bytes.slice(8, 8 + 8))]);
 
-          var factorb = hash256(seedb);
+      var factorb = hash256(seedb);
 
-          // secp256k1: N
-          var N = BigInteger.fromHex('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141');
+      // secp256k1: N
+      var N = BigInteger.fromHex('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141');
 
-          decrypted = BigInteger.fromBuffer(passfactor).multiply(BigInteger.fromBuffer(factorb)).remainder(N);
+      decrypted = BigInteger.fromBuffer(passfactor).multiply(BigInteger.fromBuffer(factorb)).remainder(N);
 
-          verifyHashAndReturn();
-        });
-      });
+      verifyHashAndReturn();
     }
   };
 };
