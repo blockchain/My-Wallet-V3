@@ -1108,8 +1108,8 @@ bitcoin-ops@^1.3.0:
   resolved "https://registry.npmjs.org/bitcoin-ops/-/bitcoin-ops-1.4.0.tgz#90d9c95c067e9a34a6ccaa3dd324ffa84e31e3d8"
 
 bitcoin-sfox-client@^0.3.0:
-  version "0.3.1"
-  resolved "https://registry.npmjs.org/bitcoin-sfox-client/-/bitcoin-sfox-client-0.3.1.tgz#096e77505fe0cb8845b410b58c6a9ee198146fbc"
+  version "0.3.2"
+  resolved "https://registry.npmjs.org/bitcoin-sfox-client/-/bitcoin-sfox-client-0.3.2.tgz#79c178de4c251c7ffbc3ed5bdbfcb5c1dcb7013d"
   dependencies:
     babel-polyfill "6.16.*"
     babel-preset-es2015 "6.16.*"
@@ -1801,9 +1801,13 @@ cookie@0.3.1:
   version "0.3.1"
   resolved "https://registry.npmjs.org/cookie/-/cookie-0.3.1.tgz#e7e0a1f9ef43b4c8ba925c5c5a96e806d16873bb"
 
-core-js@^2.2.0, core-js@^2.4.0, core-js@^2.4.1, core-js@^2.5.0:
+core-js@^2.2.0, core-js@^2.4.1, core-js@^2.5.0:
   version "2.5.3"
   resolved "https://registry.npmjs.org/core-js/-/core-js-2.5.3.tgz#8acc38345824f16d8365b7c9b4259168e8ed603e"
+
+core-js@^2.4.0:
+  version "2.5.5"
+  resolved "https://registry.npmjs.org/core-js/-/core-js-2.5.5.tgz#b14dde936c640c0579a6b50cabcc132dd6127e3b"
 
 core-util-is@1.0.2, core-util-is@~1.0.0:
   version "1.0.2"
@@ -3253,9 +3257,15 @@ https-browserify@~0.0.0:
   version "0.0.1"
   resolved "https://registry.npmjs.org/https-browserify/-/https-browserify-0.0.1.tgz#3f91365cabe60b77ed0ebba24b454e3e09d95a82"
 
-iconv-lite@0.4.19, iconv-lite@~0.4.13:
+iconv-lite@0.4.19:
   version "0.4.19"
   resolved "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.4.19.tgz#f7468f60135f5e5dad3399c0a81be9a1603a082b"
+
+iconv-lite@~0.4.13:
+  version "0.4.21"
+  resolved "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.4.21.tgz#c47f8733d02171189ebc4a400f3218d348094798"
+  dependencies:
+    safer-buffer "^2.1.0"
 
 ieee754@^1.1.4:
   version "1.1.8"
@@ -5089,6 +5099,10 @@ safe-buffer@^5.0.1, safe-buffer@^5.1.0, safe-buffer@^5.1.1, safe-buffer@~5.1.0, 
   version "5.1.1"
   resolved "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.1.tgz#893312af69b2123def71f57889001671eeb2c853"
 
+safer-buffer@^2.1.0:
+  version "2.1.2"
+  resolved "https://registry.npmjs.org/safer-buffer/-/safer-buffer-2.1.2.tgz#44fa161b0187b9549dd84bb91802f9bd8385cd6a"
+
 scrypt.js@^0.2.0:
   version "0.2.0"
   resolved "https://registry.npmjs.org/scrypt.js/-/scrypt.js-0.2.0.tgz#af8d1465b71e9990110bedfc593b9479e03a8ada"
@@ -5902,8 +5916,8 @@ webpack@2.5.*:
     yargs "^6.0.0"
 
 whatwg-fetch@>=0.10.0:
-  version "2.0.3"
-  resolved "https://registry.npmjs.org/whatwg-fetch/-/whatwg-fetch-2.0.3.tgz#9c84ec2dcf68187ff00bc64e1274b442176e1c84"
+  version "2.0.4"
+  resolved "https://registry.npmjs.org/whatwg-fetch/-/whatwg-fetch-2.0.4.tgz#dde6a5df315f9d39991aa17621853d720b85566f"
 
 which-module@^1.0.0:
   version "1.0.0"
