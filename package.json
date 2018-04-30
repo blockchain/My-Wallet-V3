@@ -1,6 +1,6 @@
 {
   "name": "blockchain-wallet-client",
-  "version": "3.43.8",
+  "version": "3.44.1",
   "description": "Blockchain.info JavaScript Wallet",
   "homepage": "https://github.com/blockchain/my-wallet-v3",
   "bugs": {
@@ -48,7 +48,7 @@
     "bigi": "1.4.*",
     "bignumber.js": "^4.0.2",
     "bip39": "2.1.*",
-    "bitcoin-coinify-client": "^0.7.6",
+    "bitcoin-coinify-client": "^0.8.0",
     "bitcoin-sfox-client": "^0.3.0",
     "bitcoin-unocoin-client": "^0.3.6",
     "bitcoincashjs-lib": "https://github.com/blockchain/bitcoinjs-lib#d0b716fe0660d7db0e53a616f02312dfaab2b761",
