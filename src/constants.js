@@ -5,6 +5,14 @@ module.exports = {
   APP_NAME: 'javascript_web',
   APP_VERSION: '3.0',
   SHAPE_SHIFT_KEY: void 0,
+  SERVER_FEE_FALLBACK: {
+    'limits': {
+      'min': 50,
+      'max': 450
+    },
+    'regular': 240,
+    'priority': 300
+  },
   getNetwork: function (bitcoinjs) {
     if (bitcoinjs) {
       return bitcoinjs.networks[this.NETWORK];

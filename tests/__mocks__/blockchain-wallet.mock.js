@@ -17,7 +17,6 @@ class BlockchainWalletMock {
     this.addresses = Object.keys(addrs);
     this.keys = this.addresses.map(a => addrs[a]);
     this.activeKeys = this.keys.filter(k => !k.archived);
-    this.spendableAddresses = this.keys.filter(k => !k.isWatchOnly).map(k => k.address);
     this.spendableActiveAddresses = this.activeKeys.filter(k => !k.isWatchOnly).map(k => k.address);
 
     this.hdwallet = {

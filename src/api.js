@@ -7,6 +7,7 @@ var Helpers = require('./helpers');
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var MyWallet = require('./wallet');
+var constants = require('./constants');
 
 // API class
 function API () {
@@ -260,7 +261,8 @@ API.prototype.requestApi = function (endpoint, data) {
 };
 
 API.prototype.getFees = function () {
-  return this.requestApi('mempool/fees');
+  const { NETWORK, SERVER_FEE_FALLBACK } = constants;
+  return NETWORK === 'testnet' ? Promise.resolve(SERVER_FEE_FALLBACK) : this.requestApi('mempool/fees');
 };
 
 API.prototype.getExchangeRate = function (currency, base) {
@@ -275,7 +277,11 @@ API.prototype.exportHistory = function (active, currency, options) {
   };
   if (options.start) data.start = options.start;
   if (options.end) data.end = options.end;
-  return this.request('POST', 'v2/export-history', data);
+  if (options.coinCode === 'btc') {
+    return this.request('POST', 'v2/export-history', data);
+  } else {
+    return this.requestApi(options.coinCode + '/v2/export-history', data);
+  }
 };
 
 // id :: 0 | 1 | 2
@@ -287,6 +293,10 @@ API.prototype.createExperiment = function (id) {
 
 API.prototype.recordExperimentResult = function (experiment, ab) {
   return fetch(`${this.ROOT_URL}event?name=wallet_experiment_${experiment}_${ab}`);
+};
+
+API.prototype.incrementEventStat = function (event) {
+  return fetch(this.ROOT_URL + 'event?name=' + event);
 };
 
 API.prototype.incrementSecPassStats = function (activeBool) {
@@ -329,6 +339,27 @@ API.prototype.incrementBuyDropoff = function (step) {
 API.prototype.incrementShapeshiftStat = function (options = {}) {
   let base = `${this.ROOT_URL}event?name=wallet_shapeshift_viewed`;
   return fetch(base + (options.maxLimitError ? '_max_limit_error' : ''));
+};
+
+API.prototype.incrementPartnerAccountCreation = function (partner) {
+  return fetch(`${this.ROOT_URL}event?name=${partner}_account_creation`);
+};
+
+API.prototype.incrementPartnerQuote = function (partner, type, baseCurrency, quoteCurrency) {
+  type = type.toLowerCase();
+  partner = partner.toLowerCase();
+  baseCurrency = baseCurrency.toLowerCase();
+  quoteCurrency = quoteCurrency.toLowerCase();
+  return fetch(`${this.ROOT_URL}event?name=${partner}_quote_${type}_${baseCurrency}_${quoteCurrency}`);
+};
+
+API.prototype.incrementPartnerTrade = function (partner, type, baseCurrency, quoteCurrency, confirmed) {
+  type = type.toLowerCase();
+  partner = partner.toLowerCase();
+  baseCurrency = baseCurrency.toLowerCase();
+  quoteCurrency = quoteCurrency.toLowerCase();
+  let status = confirmed ? 'confirmed' : 'created';
+  return fetch(`${this.ROOT_URL}event?name=${partner}_trade_${type}_${baseCurrency}_${quoteCurrency}_${status}`);
 };
 
 API.prototype.getBlockchainAddress = function () {
