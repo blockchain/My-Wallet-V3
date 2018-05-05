@@ -7,6 +7,7 @@ var Helpers = require('./helpers');
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var MyWallet = require('./wallet');
+var constants = require('./constants');
 
 // API class
 function API () {
@@ -260,7 +261,8 @@ API.prototype.requestApi = function (endpoint, data) {
 };
 
 API.prototype.getFees = function () {
-  return this.requestApi('mempool/fees');
+  const { NETWORK, SERVER_FEE_FALLBACK } = constants;
+  return NETWORK === 'testnet' ? Promise.resolve(SERVER_FEE_FALLBACK) : this.requestApi('mempool/fees');
 };
 
 API.prototype.getExchangeRate = function (currency, base) {
@@ -275,7 +277,11 @@ API.prototype.exportHistory = function (active, currency, options) {
   };
   if (options.start) data.start = options.start;
   if (options.end) data.end = options.end;
-  return this.request('POST', 'v2/export-history', data);
+  if (options.coinCode === 'btc') {
+    return this.request('POST', 'v2/export-history', data);
+  } else {
+    return this.requestApi(options.coinCode + '/v2/export-history', data);
+  }
 };
 
 // id :: 0 | 1 | 2
@@ -308,10 +314,10 @@ API.prototype.incrementLoginViaQrStats = function () {
   return fetch(this.ROOT_URL + 'event?name=wallet_web_login_via_qr');
 };
 
-API.prototype.incrementBtcEthUsageStats = function (btcBalance, ethBalance) {
+API.prototype.incrementCurrencyUsageStats = function (btcBalance, ethBalance, bchBalance) {
   let base = this.ROOT_URL + 'event?name=wallet_login_balance';
-  let makeEventUrl = (btc, eth) => `${base}_btc_${btc ? 1 : 0}_eth_${eth ? 1 : 0}`;
-  fetch(makeEventUrl(btcBalance > 0, ethBalance > 0));
+  let makeEventUrl = (btc, eth, bch) => `${base}_btc_${btc ? 1 : 0}_eth_${eth ? 1 : 0}_bch_${bch ? 1 : 0}`;
+  fetch(makeEventUrl(btcBalance > 0, ethBalance > 0, bchBalance > 0));
 };
 
 API.prototype.getPriceChartData = function (params) {
