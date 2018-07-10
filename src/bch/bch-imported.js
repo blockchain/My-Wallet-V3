@@ -7,7 +7,7 @@ const sumNonNull = compose(reduce(add, 0), filter(x => x != null))
 
 class BchImported extends BchSpendable {
   get addresses () {
-    return this._wallet.spendableAddresses
+    return this._wallet.spendableActiveAddresses
   }
 
   get label () {

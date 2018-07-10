@@ -1,12 +1,17 @@
+const crypto = require('crypto');
 const WebSocket = require('ws');
+const ethUtil = require('ethereumjs-util');
+const WalletCrypto = require('../wallet-crypto');
 const EthHd = require('ethereumjs-wallet/hdkey');
-const { construct } = require('ramda');
-const { isPositiveNumber, asyncOnce, dedup } = require('../helpers');
+const { construct, has } = require('ramda');
+const { isPositiveNumber, isHex, asyncOnce, dedup, unsortedEquals, isNumber } = require('../helpers');
 const API = require('../api');
 const EthTxBuilder = require('./eth-tx-builder');
 const EthAccount = require('./eth-account');
 const EthSocket = require('./eth-socket');
 const EthWalletTx = require('./eth-wallet-tx');
+
+const objHasKeys = (obj, keys) => keys.every(k => has(k, obj));
 
 const METADATA_TYPE_ETH = 5;
 const DERIVATION_PATH = "m/44'/60'/0'/0";
@@ -21,6 +26,7 @@ class EthWallet {
     this._txNotes = {};
     this._latestBlock = null;
     this._lastTx = null;
+    this._lastTxTimestamp = null;
     this.sync = asyncOnce(this.sync.bind(this), 250);
   }
 
@@ -68,6 +74,10 @@ class EthWallet {
 
   get lastTx () {
     return this._lastTx;
+  }
+
+  get lastTxTimestamp () {
+    return this._lastTxTimestamp;
   }
 
   get defaults () {
@@ -147,6 +157,7 @@ class EthWallet {
 
   setLastTx (tx) {
     this._lastTx = tx;
+    this._lastTxTimestamp = new Date().getTime();
     this.sync();
   }
 
@@ -178,6 +189,7 @@ class EthWallet {
         this._accounts = ethereum.accounts.map(constructAccount);
         this._txNotes = ethereum.tx_notes || {};
         this._lastTx = ethereum.last_tx;
+        this._lastTxTimestamp = ethereum.last_tx_timestamp;
         if (ethereum.legacy_account) {
           this._legacyAccount = constructAccount(ethereum.legacy_account);
         }
@@ -197,7 +209,8 @@ class EthWallet {
       accounts: this._accounts,
       legacy_account: this._legacyAccount,
       tx_notes: this._txNotes,
-      last_tx: this._lastTx
+      last_tx: this._lastTx,
+      last_tx_timestamp: this._lastTxTimestamp
     };
   }
 
@@ -393,6 +406,68 @@ class EthWallet {
   }
 
   /* end legacy */
+
+  /* start mew */
+
+  decipherBuffer (decipher, data) {
+    return Buffer.concat([decipher.update(data), decipher.final()]);
+  }
+
+  extractSeed (derivedKey, json) {
+    if (!Buffer.isBuffer(derivedKey)) { throw new Error('Expected key to be a Buffer'); }
+    if (typeof json.crypto !== 'object') { throw new Error('Expected crypto to be an object'); }
+    var ciphertext = new Buffer(json.crypto.ciphertext, 'hex');
+    var mac = ethUtil.sha3(Buffer.concat([derivedKey.slice(16, 32), ciphertext]));
+    if (mac.toString('hex') !== json.crypto.mac) { throw new Error('Key derivation failed - possibly wrong passphrase'); }
+
+    var decipher = crypto.createDecipheriv(json.crypto.cipher, derivedKey.slice(0, 16), new Buffer(json.crypto.cipherparams.iv, 'hex'));
+    var seed = this.decipherBuffer(decipher, ciphertext, 'hex');
+    while (seed.length < 32) {
+      var nullBuff = new Buffer([0x00]);
+      seed = Buffer.concat([nullBuff, seed]);
+    }
+    return seed;
+  }
+
+  fromMew (json, password) {
+    if (typeof json !== 'object') { throw new Error('Not a supported file type'); }
+    if (isNaN(json.version)) { throw new Error('Not a supported wallet. Please use a valid wallet version.'); }
+    if (!objHasKeys(json, ['crypto', 'id', 'version'])) { throw new Error('File is malformatted'); }
+    if (!objHasKeys(json.crypto, ['cipher', 'cipherparams', 'ciphertext', 'kdf', 'kdfparams', 'mac'])) { throw new Error('Crypto is not valid'); }
+    if (!isHex(json.crypto.cipherparams.iv)) { throw new Error('Not a supported param: cipherparams.iv'); }
+    if (!isHex(json.crypto.ciphertext)) { throw new Error('Not a supported param: ciphertext'); }
+
+    let kdfparams;
+    // TODO: breakout format validation into separate function
+    if (json.crypto.kdf === 'scrypt') {
+      kdfparams = json.crypto.kdfparams;
+      if (!unsortedEquals(Object.keys(kdfparams), ['dklen', 'n', 'p', 'r', 'salt'])) { throw new Error('File is malformatted'); }
+      if (!objHasKeys(kdfparams, ['dklen', 'n', 'p', 'r'])) { throw new Error('Not a supported param: kdfparams'); }
+      if (!isHex(kdfparams.salt)) { throw new Error('Not a supported param: kdfparams.salt'); }
+      if (!['dklen', 'n', 'p', 'r'].every(i => isNumber(kdfparams[i]))) { throw new Error('Not a supported param: dklen, n, p, r must be numbers'); }
+
+      let { salt, n, r, p, dklen } = kdfparams;
+      let derivedKey = WalletCrypto.scrypt(Buffer.from(password), Buffer.from(salt, 'hex'), n, r, p, dklen);
+      let seed = this.extractSeed(derivedKey, json);
+      return EthAccount.fromMew(seed);
+    } else if (json.crypto.kdf === 'pbkdf2') {
+      kdfparams = json.crypto.kdfparams;
+      if (!unsortedEquals(Object.keys(kdfparams), ['c', 'dklen', 'prf', 'salt'])) { throw new Error('File is malformatted'); }
+      if (!isHex(kdfparams.salt)) { throw new Error('Not a supported param: kdfparams.salt'); }
+      if (kdfparams.prf !== 'hmac-sha256') { throw new Error('Unsupported parameters to PBKDF2'); }
+      if (!objHasKeys(kdfparams, ['c', 'dklen'])) { throw new Error('Not a supported param: kdfparams'); }
+      if (!['c', 'dklen'].every(i => isNumber(kdfparams[i]))) { throw new Error('Not a supported param: c and dklen must be numbers'); }
+
+      let { salt, c, dklen } = kdfparams;
+      let derivedKey = WalletCrypto.pbkdf2(Buffer.from(password), Buffer.from(salt, 'hex'), c, dklen, 'sha256');
+      let seed = this.extractSeed(derivedKey, json);
+      return EthAccount.fromMew(seed);
+    } else {
+      throw new Error('Unsupported key derivation scheme');
+    }
+  }
+
+  /* end mew */
 
   static fromBlockchainWallet (wallet) {
     let metadata = wallet.metadata(METADATA_TYPE_ETH);

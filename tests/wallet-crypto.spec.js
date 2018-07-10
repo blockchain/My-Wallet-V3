@@ -480,9 +480,6 @@ describe('WalletCrypto', () => {
   });
 
   describe('scrypt', () => {
-    let observer =
-      {callback (hash) {}};
-
     beforeEach(() => {
       // overrride as a temporary solution
       window.setTimeout = myFunction => myFunction();
@@ -492,11 +489,8 @@ describe('WalletCrypto', () => {
     // # http://www.tarsnap.com/scrypt/scrypt.pdf
 
     it('Official test vector 1 should work', () => {
-      spyOn(observer, 'callback');
       let expected = '77d6576238657b203b19ca42c18a0497f16b4844e3074ae8dfdffa3fede21442fcd0069ded0948f8326a753a0fc81f17e8d3e0fb2e0d3628cf35e20c38d18906';
-      WalletCrypto.scrypt('', '', 16, 1, 1, 64, observer.callback);
-      expect(observer.callback).toHaveBeenCalled();
-      let computed = observer.callback.calls.argsFor(0)[0].toString('hex');
+      let computed = WalletCrypto.scrypt('', '', 16, 1, 1, 64).toString('hex');
       expect(expected).toEqual(computed);
     });
 
@@ -537,29 +531,20 @@ describe('WalletCrypto', () => {
     // # https://hackage.haskell.org/package/scrypt-0.3.2/docs/Crypto-Scrypt.html
 
     it('haskell generated test vector 1 should work', () => {
-      spyOn(observer, 'callback');
       let expected = '53019da47bc9fbdc4f719183e08d149bc1cd6b5bf3ab24df8a7c69daed193c692d0d56d4c2af3ce3f98a317671bdb40afb15aaf4f08146cffbc4ccdd66817402';
-      WalletCrypto.scrypt('suchCrypto', 'soSalty', 16, 8, 1, 64, observer.callback);
-      expect(observer.callback).toHaveBeenCalled();
-      let computed = observer.callback.calls.argsFor(0)[0].toString('hex');
+      let computed = WalletCrypto.scrypt('suchCrypto', 'soSalty', 16, 8, 1, 64).toString('hex');
       expect(expected).toEqual(computed);
     });
 
     it('haskell generated test vector 2 should work', () => {
-      spyOn(observer, 'callback');
       let expected = '56f5f2c4809f3ab95ecc334e64450392bf6f1f7187653b1ba920f39b4c44b2d6b47a243c70b2c3444bc31cfec9c57893dd39fa0688bd8a5d1cdcbe08b17b432b';
-      WalletCrypto.scrypt('ΜΟΛΩΝ', 'ΛΑΒΕ', 32, 4, 4, 64, observer.callback);
-      expect(observer.callback).toHaveBeenCalled();
-      let computed = observer.callback.calls.argsFor(0)[0].toString('hex');
+      let computed = WalletCrypto.scrypt('ΜΟΛΩΝ', 'ΛΑΒΕ', 32, 4, 4, 64).toString('hex');
       expect(expected).toEqual(computed);
     });
 
     it('haskell generated test vector 3 should work', () => {
-      spyOn(observer, 'callback');
       let expected = 'f890a6beae1dc3f627f9d9bcca8a96950b11758beb1edf1b072c8b8522d155629db68aba34619e1ae45b4b6b2917bcb8fd1698b536124df69d5c36d7f28fbe0e';
-      WalletCrypto.scrypt('ϓ␀𐐀💩', 'ϓ␀𐐀💩', 64, 2, 2, 64, observer.callback);
-      expect(observer.callback).toHaveBeenCalled();
-      let computed = observer.callback.calls.argsFor(0)[0].toString('hex');
+      let computed = WalletCrypto.scrypt('ϓ␀𐐀💩', 'ϓ␀𐐀💩', 64, 2, 2, 64).toString('hex');
       expect(expected).toEqual(computed);
     });
   });

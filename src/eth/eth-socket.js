@@ -23,7 +23,7 @@ class EthSocket extends StableSocket {
   static accountMessageHandler (ethWallet, account, legacyAccount) {
     return pipe(JSON.parse, (data) => {
       if (data.op === OP_ACCOUNT_SUB && data.account === account.address) {
-        account.setData(data);
+        account.updateFromIncomingTx(data.tx);
         account.appendTransaction(data.tx).update(ethWallet);
         if (legacyAccount && legacyAccount.isCorrectAddress(data.tx.from)) {
           legacyAccount.setData({ balance: '0' });

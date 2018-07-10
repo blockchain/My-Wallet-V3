@@ -16,7 +16,7 @@ describe('BchImported', () => {
   })
 
   it('should have: addresses', () => {
-    expect(imported.addresses).toEqual(['1asdf', '1arch'])
+    expect(imported.addresses).toEqual(['1asdf'])
   })
 
   it('should have: label', () => {
@@ -35,22 +35,21 @@ describe('BchImported', () => {
 
   it('should have: balance (with value)', () => {
     spyOn(BchSpendable.prototype, 'getAddressBalance').and.returnValue(100)
-    expect(imported.balance).toEqual(200)
+    expect(imported.balance).toEqual(100)
     expect(BchSpendable.prototype.getAddressBalance).toHaveBeenCalledWith('1asdf')
-    expect(BchSpendable.prototype.getAddressBalance).toHaveBeenCalledWith('1arch')
   })
 
   it('should be able to get the available balance', () => {
     spyOn(BchSpendable.prototype, 'getAvailableBalance')
     imported.getAvailableBalance(10)
-    expect(BchSpendable.prototype.getAvailableBalance).toHaveBeenCalledWith(['1asdf', '1arch'], 10)
+    expect(BchSpendable.prototype.getAvailableBalance).toHaveBeenCalledWith(['1asdf'], 10)
   })
 
   it('should be able to call createPayment()', () => {
     let from = jasmine.createSpy('from')
     spyOn(BchSpendable.prototype, 'createPayment').and.returnValue({ from })
     imported.createPayment()
-    expect(from).toHaveBeenCalledWith(['1asdf', '1arch'], '1asdf')
+    expect(from).toHaveBeenCalledWith(['1asdf'], '1asdf')
     expect(BchSpendable.prototype.createPayment).toHaveBeenCalledWith()
   })
 })

@@ -114,6 +114,14 @@ class EthAccount {
     return txns;
   }
 
+  updateFromIncomingTx (tx) {
+    if (tx.type === 'confirmed') {
+      this.fetchBalance();
+    } else if (tx.type === 'pending') {
+      EthWalletTx.fromJSON(tx);
+    }
+  }
+
   updateTxs (ethWallet) {
     this.txs.forEach(tx => tx.update(ethWallet));
   }
@@ -161,6 +169,13 @@ class EthAccount {
     let addr = EthAccount.privateKeyToAddress(wallet.getPrivateKey());
     let account = new EthAccount({ addr });
     account.setData({ balance: '0', nonce: 0 });
+    return account;
+  }
+
+  static fromMew (seed) {
+    let addr = ethUtil.privateToAddress(seed).toString('hex');
+    let priv = seed;
+    let account = new EthAccount({ priv, addr });
     return account;
   }
 }

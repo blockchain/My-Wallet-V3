@@ -14,7 +14,7 @@ describe('BIP38', () => {
   beforeEach(() => {
     window.setTimeout = myFunction => myFunction();
     localStorage.clear();
-    spyOn(WalletCrypto, 'scrypt').and.callFake((password, salt, N, r, p, dkLen, callback) => {
+    spyOn(WalletCrypto, 'scrypt').and.callFake((password, salt, N, r, p, dkLen) => {
       let wrongPassword = 'WRONG_PASSWORD' + 'e957a24a' + '16384' + '8' + '8' + '64';
       let testVector1 = 'TestingOneTwoThree' + 'e957a24a' + '16384' + '8' + '8' + '64';
       let testVector2 = 'Satoshi' + '572e117e' + '16384' + '8' + '8' + '64';
@@ -47,7 +47,7 @@ describe('BIP38', () => {
       let keyTest = password.toString('hex') + salt.toString('hex') + N.toString() + r.toString() + p.toString() + dkLen.toString();
       let Image = CryptoScryptCache[keyTest];
       if (Image != null) {
-        return callback(Image);
+        return Image;
       } else {
         throw new Error('Input not cached in crypto_scrypt mock function');
       }
