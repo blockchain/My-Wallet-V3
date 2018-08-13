@@ -26,7 +26,7 @@ class RetailCore {
 
   fetch () {
     return this._metadata.fetch().then((data) => {
-      this._userId = data ? data.userId : null;
+      this._userId = data ? data.user_id : null;
       this._token = data ? data.token : null;
     });
   }
@@ -38,7 +38,7 @@ class RetailCore {
   toJSON () {
     return {
       userId: this.userId,
-      has_seen: this.token
+      token: this.token
     }
   }
 
