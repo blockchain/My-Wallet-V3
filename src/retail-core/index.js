@@ -7,27 +7,27 @@ class RetailCore {
     this._wallet = wallet
     this._metadata = metadata
     this._userId = null
-    this._token = null
+    this._lifetimeToken = null
   }
 
   get userId () {
     return this._userId
   }
 
-  get token () {
-    return this._token
+  get lifetimeToken () {
+    return this._lifetimeToken
   }
 
   updateUserCredentials (credentials) {
     this._userId = credentials.userId;
-    this._token = credentials.token;
+    this._lifetimeToken = credentials.lifetimeToken;
     this.sync()
   }
 
   fetch () {
     return this._metadata.fetch().then((data) => {
       this._userId = data ? data.user_id : null;
-      this._token = data ? data.token : null;
+      this._lifetimeToken = data ? data.lifetime_token : null;
     });
   }
 
@@ -38,7 +38,7 @@ class RetailCore {
   toJSON () {
     return {
       userId: this.userId,
-      token: this.token
+      lifetimeToken: this.lifetimeToken
     }
   }
 
