@@ -37,8 +37,8 @@ class RetailCore {
 
   toJSON () {
     return {
-      userId: this.userId,
-      lifetimeToken: this.lifetimeToken
+      user_id: this.userId,
+      lifetime_token: this.lifetimeToken
     }
   }
 
