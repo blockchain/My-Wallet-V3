@@ -18,10 +18,10 @@ class RetailCore {
     return this._lifetimeToken
   }
 
-  updateUserCredentials (credentials) {
+  updateUserCredentials (credentials, success, error) {
     this._userId = credentials.userId;
     this._lifetimeToken = credentials.lifetimeToken;
-    this.sync()
+    this.sync(success, error)
   }
 
   fetch () {
@@ -31,8 +31,8 @@ class RetailCore {
     });
   }
 
-  sync () {
-    return this._metadata.update(this);
+  sync (success, error) {
+    return this._metadata.update(this).then(success).catch(error);
   }
 
   toJSON () {
