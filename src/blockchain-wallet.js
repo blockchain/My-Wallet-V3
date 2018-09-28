@@ -29,6 +29,7 @@ var Bitcoin = require('bitcoinjs-lib');
 var EthSocket = require('./eth/eth-socket');
 var BitcoinCash = require('./bch');
 var RetailCore = require('./retail-core');
+var Lockbox = require('./lockbox');
 
 // Wallet
 
@@ -374,6 +375,12 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () {
       return this._retailCore;
+    }
+  },
+  'lockbox': {
+    configurable: false,
+    get: function () {
+      return this._lockbox;
     }
   },
 });
@@ -933,11 +940,16 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
   var fetchRetailCore = function () {
     this._retailCore = RetailCore.fromBlockchainWallet(this);
     return this._retailCore.fetch();
-  }
+  };
 
   var fetchShapeShift = function () {
     this._shapeshift = ShapeShift.fromBlockchainWallet(this, constants.SHAPE_SHIFT_KEY);
     return this._shapeshift.fetch();
+  };
+
+  var fetchLockbox = function () {
+    this._lockbox = Lockbox.fromBlockchainWallet(this);
+    return this._lockbox.fetch();
   };
 
   let promises = [];
@@ -949,6 +961,7 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     promises.push(fetchShapeShift.call(this));
     promises.push(fetchBchWallet.call(this));
     promises.push(fetchRetailCore.call(this));
+    promises.push(fetchLockbox.call(this));
   }
 
   // Labels only works for v3 wallets
