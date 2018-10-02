@@ -5,7 +5,7 @@ class Lockbox {
   constructor (wallet, metadata) {
     this._wallet = wallet
     this._metadata = metadata
-    this._devices = null
+    this._devices = []
   }
 
   get devices () {
@@ -14,7 +14,7 @@ class Lockbox {
 
   fetch () {
     return this._metadata.fetch().then((data) => {
-      this._devices = data ? data.devices : null;
+      this._devices = data ? data.devices : [];
     });
   }
 
