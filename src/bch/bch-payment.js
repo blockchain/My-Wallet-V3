@@ -123,7 +123,7 @@ class BchPayment {
       if (payment.selection == null) {
         throw new PaymentError('cannot sign an unbuilt transaction', payment)
       }
-      BchApi.getBchDust().then((dust) => {
+      return BchApi.getBchDust().then((dust) => {
         const dustAddress = BchApi.scriptToAddress(dust.output_script)
         dust.address = dustAddress
         const coinDust = Coin.fromJS(dust)
