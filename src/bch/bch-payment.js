@@ -123,9 +123,13 @@ class BchPayment {
       if (payment.selection == null) {
         throw new PaymentError('cannot sign an unbuilt transaction', payment)
       }
-      let tx = signer.signBitcoinCash(secPass, this._wallet, payment.selection)
-      let setData = compose(assoc('hash', tx.getId()), assoc('rawTx', tx.toHex()))
-      return setData(payment)
+      BchApi.getBchDust().then((dust) => {
+        const dustAddress = BchApi.scriptToAddress(dust.output_script)
+        const coinDust = Coin.fromJS({ ...dust, dustAddress })
+        let tx = signer.signBitcoinCash(secPass, this._wallet, payment.selection, coinDust)
+        let setData = compose(assoc('hash', tx.getId()), assoc('rawTx', tx.toHex()))
+        return setData(payment)
+      })
     })
   }
 

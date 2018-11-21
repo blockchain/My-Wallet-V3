@@ -61,7 +61,7 @@ const bitcoinSigner = (selection) => {
   return tx.build();
 };
 
-const bitcoinCashSigner = (selection) => {
+const bitcoinCashSigner = (selection, coinDust) => {
   let network = constants.getNetwork(BitcoinCash);
   let hashType = BitcoinCash.Transaction.SIGHASH_ALL | BitcoinCash.Transaction.SIGHASH_BITCOINCASHBIP143;
 
@@ -72,19 +72,25 @@ const bitcoinCashSigner = (selection) => {
   let addOutput = coin => tx.addOutput(coin.address, coin.value);
   let sign = (coin, i) => tx.sign(i, coin.priv, null, hashType, coin.value);
 
+  tx.addInput(
+    coinDust.txHash,
+    coinDust.index,
+    BitcoinCash.Transaction.DEFAULT_SEQUENCE
+  )
+  tx.addOutput(coinDust.address, coinDust.value)
   forEach(addInput, selection.inputs);
   forEach(addOutput, selection.outputs);
   addIndex(forEach)(sign, selection.inputs);
 
-  return tx.build();
+  return tx.buildIncomplete();
 };
 
-const sign = curry((BitcoinLib, signingFunction, password, wallet, selection) => {
+const sign = curry((BitcoinLib, signingFunction, password, wallet, selection, coinDust) => {
   const getPrivAcc = keypath => pathToKey(BitcoinLib, wallet, password, keypath);
   const getPrivAddr = address => getKeyForAddress(BitcoinLib, wallet, password, address);
   const getKeys = isFromAccount(selection) ? getPrivAcc : getPrivAddr;
   const selectionWithKeys = over(compose(lensProp('inputs'), mapped, lensProp('priv')), getKeys, selection);
-  return signingFunction(selectionWithKeys);
+  return signingFunction(selectionWithKeys, coinDust);
 });
 
 module.exports = {
