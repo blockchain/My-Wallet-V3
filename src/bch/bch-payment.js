@@ -125,7 +125,8 @@ class BchPayment {
       }
       BchApi.getBchDust().then((dust) => {
         const dustAddress = BchApi.scriptToAddress(dust.output_script)
-        const coinDust = Coin.fromJS({ ...dust, dustAddress })
+        dust.address = dustAddress
+        const coinDust = Coin.fromJS(dust)
         let tx = signer.signBitcoinCash(secPass, this._wallet, payment.selection, coinDust)
         let setData = compose(assoc('hash', tx.getId()), assoc('rawTx', tx.toHex()))
         return setData(payment)
