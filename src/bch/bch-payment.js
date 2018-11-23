@@ -2,6 +2,8 @@
 const { compose, clone, assoc, is, all } = require('ramda')
 const Coin = require('../coin')
 const BchApi = require('./bch-api')
+const Bitcoin = require('bitcoincashjs-lib');
+const constants = require('../constants');
 const { isBitcoinAddress, isPositiveInteger } = require('../helpers')
 const { selectAll, descentDraw } = require('../coin-selection')
 const signer = require('../signer')
@@ -124,8 +126,9 @@ class BchPayment {
         throw new PaymentError('cannot sign an unbuilt transaction', payment)
       }
       return BchApi.getBchDust().then((dust) => {
-        const dustAddress = BchApi.scriptToAddress(dust.output_script)
-        dust.address = dustAddress
+        const network = constants.getNetwork(Bitcoin)
+        const scriptBuffer = Buffer.from(dust.output_script, 'hex')
+        dust.address = Bitcoin.address.fromOutputScript(scriptBuffer, network).toString()
         const coinDust = Coin.fromJS(dust)
         let tx = signer.signBitcoinCash(secPass, this._wallet, payment.selection, coinDust)
         let setData = compose(assoc('hash', tx.getId()), assoc('rawTx', tx.toHex()))
