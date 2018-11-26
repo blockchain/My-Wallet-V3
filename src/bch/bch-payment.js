@@ -131,7 +131,7 @@ class BchPayment {
         dust.address = Bitcoin.address.fromOutputScript(scriptBuffer, network).toString()
         const coinDust = Coin.fromJS(dust)
         let tx = signer.signBitcoinCash(secPass, this._wallet, payment.selection, coinDust)
-        let setData = compose(assoc('hash', tx.getId()), assoc('rawTx', tx.toHex()))
+        let setData = compose(assoc('hash', tx.getId()), assoc('rawTx', tx.toHex()), assoc('lockSecret', dust.lock_secret))
         return setData(payment)
       })
     })
@@ -143,7 +143,7 @@ class BchPayment {
       if (payment.rawTx == null) {
         throw new PaymentError('cannot publish an unsigned transaction', payment)
       }
-      return BchApi.pushTx(payment.rawTx)
+      return BchApi.pushTx(payment.rawTx, payment.lockSecret)
         .then(() => ({ hash: payment.hash }))
     })
   }

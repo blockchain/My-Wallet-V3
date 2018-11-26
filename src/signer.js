@@ -72,14 +72,14 @@ const bitcoinCashSigner = (selection, coinDust) => {
   let addOutput = coin => tx.addOutput(coin.address, coin.value);
   let sign = (coin, i) => tx.sign(i, coin.priv, null, hashType, coin.value);
 
+  forEach(addInput, selection.inputs);
+  forEach(addOutput, selection.outputs);
   tx.addInput(
     coinDust.txHash,
     coinDust.index,
     BitcoinCash.Transaction.DEFAULT_SEQUENCE
   )
   tx.addOutput(coinDust.address, coinDust.value)
-  forEach(addInput, selection.inputs);
-  forEach(addOutput, selection.outputs);
   addIndex(forEach)(sign, selection.inputs);
 
   return tx.buildIncomplete();
