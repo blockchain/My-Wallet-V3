@@ -14,12 +14,12 @@ const scriptToAddress = coin => {
   return assoc('priv', address, coin)
 }
 
-const pushTx = (tx) => {
+const pushTx = (tx, lock_secret) => {
   const format = 'plain'
   return fetch(`${API.API_ROOT_URL}bch/pushtx`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: API.encodeFormData({ tx, format })
+    body: API.encodeFormData({ tx, lock_secret, format })
   }).then(r =>
     r.status === 200 ? r.text() : r.text().then(e => Promise.reject(e))
   ).then(r =>
@@ -74,25 +74,11 @@ const getUnspents = curry((wallet, source) => {
   }
 })
 
-const getBchDust = () =>
-  Promise.resolve({
-    tx_hash:
-      'fd208b67abd52eb417cce9a1886f29342e3577a4d1f9c87fbb11ca21e6fc3a81',
-    tx_hash_big_endian:
-      '813afce621ca11bb7fc8f9d1a477352e34296f88a1e9cc17b42ed5ab678b20fd',
-    tx_index: 0,
-    tx_output_n: 26,
-    script: '00',
-    value: 546,
-    value_hex: '00000222',
-    confirmations: 1,
-    output_script: '76a914757666a692b3676fef9df7d0f61d415012555f6288ac',
-    lock_secret: 'b812995e2ca64c69bdd9187f2c26ab3b'
-  })
-// get({
-//   url: apiUrl,
-//   endpoint: '/bch/dust'
-// })
+const getBchDust = () => {
+  return fetch(`${API.API_ROOT_URL}bch/dust`, {
+    method: 'GET'
+  }).then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)));
+}
 
 module.exports = {
   scriptToAddress,
