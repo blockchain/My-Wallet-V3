@@ -281,7 +281,7 @@ function formatTransactionCoins (tx) {
   .filter(function (output) {
     return !output.change &&
     output.address !== input.address &&
-    (shouldRemoveDust ? input.amount != dust : true);
+    (shouldRemoveDust ? output.amount != dust : true);
   });
 
   var setLabel = function (inputOrOutput) {
