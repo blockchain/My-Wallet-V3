@@ -265,10 +265,24 @@ function computeTo (Tx) {
 }
 
 function formatTransactionCoins (tx) {
+  let dust = 546;
+  let hasDust = function(coin) { return coin.amount == dust };
+  let inputsHaveDust = tx.processedInputs.some(hasDust);
+  let outputsHaveDust = tx.processedOutputs.some(hasDust);
+  let shouldRemoveDust = inputsHaveDust && outputsHaveDust;
+
   var input = tx.processedInputs
-  .filter(function (input) { return !input.change; })[0] || tx.processedInputs[0];
+  .filter(function (input) {
+    return !input.change &&
+    (shouldRemoveDust ? input.amount != dust : true);
+  })[0] || tx.processedInputs[0];
+
   var outputs = tx.processedOutputs
-  .filter(function (output) { return !output.change && output.address !== input.address; });
+  .filter(function (output) {
+    return !output.change &&
+    output.address !== input.address &&
+    (shouldRemoveDust ? input.amount != dust : true);
+  });
 
   var setLabel = function (inputOrOutput) {
     if (inputOrOutput) {
