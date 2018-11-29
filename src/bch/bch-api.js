@@ -14,12 +14,12 @@ const scriptToAddress = coin => {
   return assoc('priv', address, coin)
 }
 
-const pushTx = (tx) => {
+const pushTx = (tx, lock_secret) => {
   const format = 'plain'
   return fetch(`${API.API_ROOT_URL}bch/pushtx`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: API.encodeFormData({ tx, format })
+    body: API.encodeFormData({ tx, lock_secret, format })
   }).then(r =>
     r.status === 200 ? r.text() : r.text().then(e => Promise.reject(e))
   ).then(r =>
@@ -74,9 +74,17 @@ const getUnspents = curry((wallet, source) => {
   }
 })
 
+const getBchDust = () => {
+  return fetch(`${API.API_ROOT_URL}bch/dust`, {
+    method: 'GET'
+  }).then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)));
+}
+
 module.exports = {
+  scriptToAddress,
   addIndexToOutput,
   getUnspents,
+  getBchDust,
   pushTx,
   multiaddr
 };

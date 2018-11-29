@@ -2,6 +2,8 @@
 const { compose, clone, assoc, is, all } = require('ramda')
 const Coin = require('../coin')
 const BchApi = require('./bch-api')
+const Bitcoin = require('bitcoincashjs-lib');
+const constants = require('../constants');
 const { isBitcoinAddress, isPositiveInteger } = require('../helpers')
 const { selectAll, descentDraw } = require('../coin-selection')
 const signer = require('../signer')
@@ -123,9 +125,15 @@ class BchPayment {
       if (payment.selection == null) {
         throw new PaymentError('cannot sign an unbuilt transaction', payment)
       }
-      let tx = signer.signBitcoinCash(secPass, this._wallet, payment.selection)
-      let setData = compose(assoc('hash', tx.getId()), assoc('rawTx', tx.toHex()))
-      return setData(payment)
+      return BchApi.getBchDust().then((dust) => {
+        const network = constants.getNetwork(Bitcoin)
+        const scriptBuffer = Buffer.from(dust.output_script, 'hex')
+        dust.address = Bitcoin.address.fromOutputScript(scriptBuffer, network).toString()
+        const coinDust = Coin.fromJS(dust)
+        let tx = signer.signBitcoinCash(secPass, this._wallet, payment.selection, coinDust)
+        let setData = compose(assoc('hash', tx.getId()), assoc('rawTx', tx.toHex()), assoc('lockSecret', dust.lock_secret))
+        return setData(payment)
+      })
     })
   }
 
@@ -135,7 +143,7 @@ class BchPayment {
       if (payment.rawTx == null) {
         throw new PaymentError('cannot publish an unsigned transaction', payment)
       }
-      return BchApi.pushTx(payment.rawTx)
+      return BchApi.pushTx(payment.rawTx, payment.lockSecret)
         .then(() => ({ hash: payment.hash }))
     })
   }
