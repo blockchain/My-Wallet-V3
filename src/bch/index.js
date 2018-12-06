@@ -87,7 +87,7 @@ class BitcoinCashWallet {
   getHistory () {
     let addrs = this.importedAddresses == null ? [] : this.importedAddresses.addresses
     let xpubs = this.activeAccounts.map(a => a.xpub)
-    return BchApi.multiaddr(addrs.concat(xpubs), 50).then(this.updateWalletInfo)
+    return BchApi.multiaddr(addrs.concat(xpubs), 50).then(this.updateWalletInfo.bind(this))
   }
 
   updateWalletInfo (result) {
