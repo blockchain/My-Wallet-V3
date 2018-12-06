@@ -87,19 +87,21 @@ class BitcoinCashWallet {
   getHistory () {
     let addrs = this.importedAddresses == null ? [] : this.importedAddresses.addresses
     let xpubs = this.activeAccounts.map(a => a.xpub)
-    return BchApi.multiaddr(addrs.concat(xpubs), 50).then(result => {
-      let { wallet, addresses, txs, info } = result
+    return BchApi.multiaddr(addrs.concat(xpubs), 50).then(this.updateWalletInfo)
+  }
 
-      this._balance = wallet.final_balance
-      this._addressInfo = fromPairs(map(a => [a.address, a], addresses))
+  updateWalletInfo (result) {
+    let { wallet, addresses, txs, info } = result
 
-      this._txs = txs
-        .filter(tx => !tx.block_height || tx.block_height >= BCH_FORK_HEIGHT)
-        .map(tx => Tx.factory(tx, 'bch'))
+    this._balance = wallet.final_balance
+    this._addressInfo = fromPairs(map(a => [a.address, a], addresses))
 
-      this._txs.forEach(tx => {
-        tx.confirmations = Tx.setConfirmations(tx.block_height, info.latest_block)
-      })
+    this._txs = txs
+      .filter(tx => !tx.block_height || tx.block_height >= BCH_FORK_HEIGHT)
+      .map(tx => Tx.factory(tx, 'bch'))
+
+    this._txs.forEach(tx => {
+      tx.confirmations = Tx.setConfirmations(tx.block_height, info.latest_block)
     })
   }
 
