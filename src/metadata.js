@@ -210,7 +210,7 @@ Metadata.fromMetadataHDNode = function (metadataHDNode, typeId) {
   // 3: buy-sell
   // 4: contacts
   const payloadTypeNode = metadataHDNode.deriveHardened(typeId);
-  // purpose' / type' / 0' : https://meta.blockchain.info/{address}
+  // purpose' / type' / 0' : https://meta.blockchain.com/{address}
   //                       signature used to authenticate
   // purpose' / type' / 1' : sha256(private key) used as 256 bit AES key
   const node = payloadTypeNode.deriveHardened(0);

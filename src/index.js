@@ -8,6 +8,7 @@ require('core-js/modules/web.dom.iterable');
 
 var Buffer = require('buffer').Buffer;
 global.crypto = {getRandomValues: function(intArray) {var result = objc_getRandomValues(intArray);intArray.set(new Buffer(result, 'hex'));}};
+global.crypto = {getRandomValues: function(intArray) {var result = objc_getRandomValues(intArray);intArray.set(new Buffer(result, 'hex'));}};
 
 // This fixes a bug with Safari < 8 and the Browserify Buffer shim used in Crypto-browserify/randombytes
 // See: https://github.com/feross/buffer/issues/63
