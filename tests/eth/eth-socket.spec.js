@@ -3,7 +3,7 @@ const WebSocket = require('ws')
 const EthSocket = require('../../src/eth/eth-socket');
 
 describe('EthSocket', () => {
-  const url = 'wss://ws.blockchain.info/eth/inv'
+  const url = 'wss://ws.blockchain.com/eth/inv'
   const balanceResponse = JSON.stringify({ op: 'account_sub', account: '0xasdf', balance: '1000', nonce: 1, txHash: 'xyz', tx: { hash: 'xyz' } })
   const blockResponse = JSON.stringify({ op: 'block_sub', height: 123 })
 
