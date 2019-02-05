@@ -9,7 +9,7 @@ class StableSocket extends EventEmitter {
     super();
     this.wsUrl = url;
     this.SocketClass = SocketClass;
-    this._headers = { 'Origin': 'https://blockchain.info' };
+    this._headers = { 'Origin': 'https://blockchain.com' };
     this._socket;
     this._pingIntervalPID = null;
     this._pingTimeoutPID = null;
