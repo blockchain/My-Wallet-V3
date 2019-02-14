@@ -26,7 +26,7 @@ describe('AccountInfo', () => {
       notifications_confirmations: 0,
       auto_email_backup: 0,
       never_save_auth_type: 0,
-      email: 'support@blockchain.com',
+      email: 'support@blockchain.info',
       sms_verified: 1,
       is_api_access_enabled: 0,
       auth_type: 0,
@@ -58,7 +58,7 @@ describe('AccountInfo', () => {
 
     it('should get email', () => {
       let i = new AccountInfo(o);
-      expect(i.email).toEqual('support@blockchain.com');
+      expect(i.email).toEqual('support@blockchain.info');
     });
 
     it('should remove space and leading zero from mobile', () => {
