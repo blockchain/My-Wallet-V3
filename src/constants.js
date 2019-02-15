@@ -7,11 +7,11 @@ module.exports = {
   SHAPE_SHIFT_KEY: void 0,
   SERVER_FEE_FALLBACK: {
     'limits': {
-      'min': 50,
-      'max': 450
+      'min': 2,
+      'max': 16
     },
-    'regular': 240,
-    'priority': 300
+    'regular': 5,
+    'priority': 11
   },
   getNetwork: function (bitcoinjs) {
     if (bitcoinjs) {
