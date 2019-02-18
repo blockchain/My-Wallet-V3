@@ -85,12 +85,20 @@ class EthTxBuilder {
     this._available = parseFloat(fromWei(availableBN, 'ether'));
   }
 
-  static get GAS_PRICE () {
-    return 21; // gwei
+  static get GAS_PRICE_REGULAR () {
+    return 23; // gwei
+  }
+
+  static get GAS_PRICE_PRIORITY () {
+    return 23; // gwei
   }
 
   static get GAS_LIMIT () {
     return 21000;
+  }
+
+  static get LIMITS () {
+    return { "min": 23,"max": 23 };
   }
 
   static fetchFees () {
@@ -98,9 +106,9 @@ class EthTxBuilder {
       r.status === 200 ? r.json() : Promise.reject()
     ).catch(() => ({
       gasLimit: EthTxBuilder.GAS_LIMIT,
-      regular: EthTxBuilder.GAS_PRICE,
-      priority: EthTxBuilder.GAS_PRICE,
-      limits: {}
+      regular: EthTxBuilder.GAS_PRICE_REGULAR,
+      priority: EthTxBuilder.GAS_PRICE_PRIORITY,
+      limits: EthTxBuilder.LIMITS
     }));
   }
 
