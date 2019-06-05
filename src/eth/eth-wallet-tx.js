@@ -13,6 +13,7 @@ class EthWalletTx {
     this._gasUsed = obj.gasUsed;
     this._confirmations = 0;
     this._note = null;
+    this._meta = null;
 
     this._amount = null;
     if (this._value) {
@@ -58,6 +59,10 @@ class EthWalletTx {
     return this._note;
   }
 
+  get meta () {
+    return this._meta;
+  }
+
   get coinCode () {
     return 'eth';
   }
@@ -83,6 +88,7 @@ class EthWalletTx {
   update (ethWallet) {
     this._confirmations = Math.max(ethWallet.latestBlock - this._blockNumber + 1, 0);
     this._note = ethWallet.getTxNote(this.hash);
+    this._meta = ethWallet.getTxMeta(this.hash);
   }
 
   toJSON () {
@@ -94,7 +100,8 @@ class EthWalletTx {
       hash: this.hash,
       time: this.time,
       confirmations: this.confirmations,
-      note: this.note
+      note: this.note,
+      meta: this.meta
     };
   }
 

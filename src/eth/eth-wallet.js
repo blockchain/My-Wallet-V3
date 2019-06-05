@@ -18,9 +18,11 @@ class EthWallet {
     this._defaultAccountIdx = 0;
     this._accounts = [];
     this._txNotes = {};
+    this._txMeta = {};
     this._latestBlock = null;
     this._lastTx = null;
     this._lastTxTimestamp = null;
+    this._erc20 = {};
     this.sync = asyncOnce(this.sync.bind(this), 250);
   }
 
@@ -72,6 +74,10 @@ class EthWallet {
 
   get lastTxTimestamp () {
     return this._lastTxTimestamp;
+  }
+
+  get erc20 () {
+    return this._erc20;
   }
 
   get defaults () {
@@ -133,6 +139,15 @@ class EthWallet {
     return this.sync();
   }
 
+  createAccountFromPrivateKey (privateKey, label) {
+    let wallet = Wallet.fromPrivateKey(privateKey);
+    let account = EthAccount.fromWallet(wallet);
+    account.label = label || EthAccount.defaultLabel(this.accounts.length);
+    account.markAsCorrect();
+    this._accounts.push(account);
+    return this.sync();
+  }
+
   getTxNote (hash) {
     return this._txNotes[hash] || null;
   }
@@ -149,10 +164,54 @@ class EthWallet {
     this.sync();
   }
 
+  getTxMeta (hash) {
+    return this._txMeta[hash] || null;
+  }
+
+  setTxMeta (hash, meta) {
+    if (meta === null || meta === {}) {
+      delete this._txMeta[hash];
+    } else if (typeof meta !== 'object') {
+      throw new Error('setTxMeta meta must be a meta object or null');
+    } else {
+      this._txMeta[hash] = meta;
+    }
+    this.updateTxs();
+    return this.sync();
+  }
+
   setLastTx (tx) {
     this._lastTx = tx;
     this._lastTxTimestamp = new Date().getTime();
     this.sync();
+  }
+
+  setLastTxAndSync (tx) {
+    this._lastTx = tx;
+    this._lastTxTimestamp = new Date().getTime();
+    return this.sync();
+  }
+
+  setLastTxPromise (txHash) {
+    return this.setTxAndSync(tx).then(() => {
+      if (this.lastTx === txHash) {
+        return Promise.resolve();
+      }
+      return Promise.reject('Failed to update lastTx');
+    });
+  }
+
+  getERC20TxNotes (contractAddress) {
+    return this._erc20[contractAddress] || null;
+  }
+  
+  getERC20Tokens () {
+    return this._erc20;
+  }
+
+  setERC20Tokens (erc20Tokens) {
+    this._erc20 = erc20Tokens;
+    return this.sync();
   }
 
   setHasSeen (hasSeen) {
@@ -182,11 +241,13 @@ class EthWallet {
         this._defaultAccountIdx = ethereum.default_account_idx;
         this._accounts = ethereum.accounts.map(constructAccount);
         this._txNotes = ethereum.tx_notes || {};
+        this._txMeta = ethereum.tx_meta || {};
         this._lastTx = ethereum.last_tx;
         this._lastTxTimestamp = ethereum.last_tx_timestamp;
         if (ethereum.legacy_account) {
           this._legacyAccount = constructAccount(ethereum.legacy_account);
-        }
+        };
+        this._erc20 = ethereum.erc20 || {};
       }
     });
   }
@@ -203,8 +264,10 @@ class EthWallet {
       accounts: this._accounts,
       legacy_account: this._legacyAccount,
       tx_notes: this._txNotes,
+      tx_meta: this._txMeta.toJSON(),
       last_tx: this._lastTx,
-      last_tx_timestamp: this._lastTxTimestamp
+      last_tx_timestamp: this._lastTxTimestamp,
+      erc20: this._erc20.toJSON()
     };
   }
 

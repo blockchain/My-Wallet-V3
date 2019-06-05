@@ -170,6 +170,143 @@ describe('EthWallet', () => {
       });
     });
 
+    describe('.createAccountFromPrivateKey', () => {
+      const privKey = '19ee4f0ce2f780022b4bb14f489e5c9feb281d24d26a68d576851437b941a596';
+
+      it('should create a new account', () => {
+        eth.createAccountFromPrivateKey(privKey);
+        let account = eth.getAccount(1);
+        expect(account.label).toEqual('My Ether Wallet 2');
+      });
+
+      it('should create with a custom label', () => {
+        eth.createAccountFromPrivateKey(privKey, 'Custom');
+        let account = eth.getAccount(1);
+        expect(account.label).toEqual('Custom');
+      });
+
+      it('should add the account to the wallet', () => {
+        eth.createAccountFromPrivateKey(privKey);
+        let account = eth.getAccount(1);
+        expect(account).toEqual(eth.getAccount(1));
+      });
+
+      it('should sync after', () => {
+        spyOn(eth, 'sync');
+        eth.createAccountFromPrivateKey(privKey);
+        expect(eth.sync).toHaveBeenCalled();
+      });
+    });
+
+    describe('.getTxMeta', () => {
+      beforeEach(() => {
+        var fee = '';
+        var tradeId = '';
+        var meta = {
+          fee: fee,
+          tradeId: tradeId
+        };
+        eth.setTxMeta('<hash>', meta);
+      });
+
+      it('should return tx meta', () => {
+        expect(eth.getTxMeta('<hash>')).toEqual({
+          fee: 'fee',
+          tradeId: 'tradeId'
+        });
+      });
+
+      it('should return null if hash not found', () => {
+        expect(eth.getTxMeta('unknown')).toEqual(null);
+      });
+    });
+
+    describe('.setTxMeta', () => {
+      const exampleMeta = {
+        fee: 'fee',
+        tradeId: 'tradeId'
+      };
+      it('should set a tx meta', () => {
+        eth.setTxMeta('<hash>', exampleMeta);
+        expect(eth.getTxMeta('<hash>')).toEqual(exampleMeta);
+      });
+
+      it('should fail if the meta is not a hash', () => {
+        let setTxMeta = () => eth.setTxMeta('<hash>', 7);
+        expect(setTxMeta).toThrow();
+      });
+
+      it('should fail if the meta is undefined', () => {
+        let setTxMeta = () => eth.setTxMeta('<hash>');
+        expect(setTxMeta).toThrow();
+      });
+      
+      it('should remove meta when passed null', () => {
+        eth.setTxMeta('<hash>', exampleMeta);
+        expect(eth.getTxMeta('<hash>')).toEqual(exampleMeta);
+        eth.setTxMeta('<hash>', null);
+        expect(eth.getTxMeta('<hash>')).toEqual(null);
+      });
+
+      it('should update account txs', () => {
+        spyOn(eth.defaultAccount, 'updateTxs');
+        eth.setTxMeta('<hash>', exampleMeta);
+        expect(eth.defaultAccount.updateTxs).toHaveBeenCalledWith(eth);
+      });
+
+      it('should sync after', () => {
+        spyOn(eth, 'sync');
+        eth.setTxMeta('<hash>', exampleMeta);
+        expect(eth.sync).toHaveBeenCalled();
+      });
+    });
+
+    describe('.getERC20Tokens', () => {
+      beforeEach(() => {
+        const erc20Tokens = {
+          "0x8E870D67F660D95d5be530380D0eC0bd388289E1": {
+            "label": "My PAX Wallet",
+            "contract": "0x8E870D67F660D95d5be530380D0eC0bd388289E1",
+            "has_seen": "false",
+            "tx_notes": {}
+          }
+        };
+        eth.setERC20Tokens(erc20Tokens);
+      });
+
+      it('should return erc20 contracts', () => {
+        expect(eth.getERC20Tokens()).toEqual({
+          "0x8E870D67F660D95d5be530380D0eC0bd388289E1": {
+            "label": "My PAX Wallet",
+            "contract": "0x8E870D67F660D95d5be530380D0eC0bd388289E1",
+            "has_seen": "false",
+            "tx_notes": {}
+          }
+        });
+      });
+    });
+    
+    describe('.setERC20Tokens', () => {
+      const erc20Tokens = {
+        "0x8E870D67F660D95d5be530380D0eC0bd388289E1": {
+          "label": "My PAX Wallet",
+          "contract": "0x8E870D67F660D95d5be530380D0eC0bd388289E1",
+          "has_seen": "false",
+          "tx_notes": {}
+        }
+      };
+      it('should set ERC20 tokens', () => {
+        eth.setERC20Tokens(erc20Tokens);
+        expect(eth.getERC20Tokens()).toEqual(erc20Tokens);
+      });
+
+      it('should sync after', () => {
+        spyOn(eth, 'sync');
+        eth.setERC20Tokens(erc20Tokens);
+        expect(eth.sync).toHaveBeenCalled();
+      });
+    });
+
     describe('.getTxNote', () => {
       beforeEach(() => {
         eth.setTxNote('<hash>', 'my note');
