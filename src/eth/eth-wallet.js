@@ -192,15 +192,6 @@ class EthWallet {
     return this.sync();
   }
 
-  setLastTxPromise (txHash) {
-    return this.setTxAndSync(tx).then(() => {
-      if (this.lastTx === txHash) {
-        return Promise.resolve();
-      }
-      return Promise.reject('Failed to update lastTx');
-    });
-  }
-
   getERC20TxNotes (contractAddress) {
     return this._erc20[contractAddress] || null;
   }
@@ -264,10 +255,10 @@ class EthWallet {
       accounts: this._accounts,
       legacy_account: this._legacyAccount,
       tx_notes: this._txNotes,
-      tx_meta: this._txMeta.toJSON(),
+      tx_meta: this._txMeta,
       last_tx: this._lastTx,
       last_tx_timestamp: this._lastTxTimestamp,
-      erc20: this._erc20.toJSON()
+      erc20: this._erc20
     };
   }
 
