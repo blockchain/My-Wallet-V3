@@ -133,6 +133,18 @@ Payment.prototype.sign = function (password) {
   return this;
 };
 
+Payment.prototype.transactionHexAndSize = function () {
+  this.payment = this.payment.then(Payment.transactionHexAndSize());
+  this.sideEffect(this.emit.bind(this, 'update'));
+  return this;
+};
+
+Payment.prototype.transactionSize = function () {
+  this.payment = this.payment.then(Payment.transactionSize());
+  this.sideEffect(this.emit.bind(this, 'update'));
+  return this;
+};
+
 Payment.prototype.publish = function () {
   this.payment = this.payment.then(Payment.publish());
   this.sideEffect(this.emit.bind(this, 'update'));
@@ -444,6 +456,21 @@ Payment.sign = function (password) {
     payment.transaction.sortBIP69();
     payment.transaction = payment.transaction.sign();
     return Promise.resolve(payment);
+  };
+};
+
+Payment.transactionSize = function () {
+  return function (payment) {
+    return Promise.resolve(payment.txSize)
+  };
+};
+
+Payment.transactionHexAndSize = function () {
+  return function (payment) {
+    payment.transaction = payment.transaction.build()
+    var size = payment.txSize
+    var hex = payment.transaction.toHex() + "," + size.toString()
+    return Promise.resolve(hex)
   };
 };
 
