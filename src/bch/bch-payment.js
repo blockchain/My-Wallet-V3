@@ -25,6 +25,15 @@ class BchPayment {
     this._wallet = wallet
     this._payment = BchPayment.defaultStateP()
   }
+  
+  signedTransactionHex () {
+    return this._payment.then(payment => {
+      if (payment.rawTx == null) {
+        throw new PaymentError('transaction has not been signed', payment)
+      }
+      return payment.rawTx
+    })
+  } 
 
   map (f) {
     this._payment = this._payment.then(f)
