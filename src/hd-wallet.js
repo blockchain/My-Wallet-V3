@@ -79,13 +79,17 @@ Object.defineProperties(HDWallet.prototype, {
   'xpubs': {
     configurable: false,
     get: function () {
-      return this._accounts.map(function (a) { return (a.extendedPublicKey); });
+      return this._accounts.map(function (a) {
+        return a.derivations.map((d) => d.xpub);
+      }).flat();
     }
   },
   'activeXpubs': {
     configurable: false,
     get: function () {
-      return this.activeAccounts.map(function (a) { return (a.extendedPublicKey); });
+      return this.activeAccounts.map(function (a) {
+        return a.derivations.map((d) => d.xpub);
+      }).flat();
     }
   },
   'balanceActiveAccounts': {

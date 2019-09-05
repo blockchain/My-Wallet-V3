@@ -20,6 +20,10 @@ Object.defineProperties(Derivation.prototype, {
   'type': {
     configurable: false,
     get: function () { return this._type }
+  },
+  'xpub': {
+    configurable: false,
+    get: function () { return this._xpub }
   }
 })
 
