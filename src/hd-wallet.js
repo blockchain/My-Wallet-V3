@@ -250,7 +250,7 @@ HDWallet.prototype.verifyMnemonic = function () {
 
 HDWallet.prototype.account = function (xpub) {
   var f = this._accounts
-            .filter(function (a) { return a.extendedPublicKey === xpub; });
+            .filter(function (a) { return a.derivations.find(d => d.xpub === xpub); });
   var r = f.length === 0 ? null : f[0];
   return r;
 };
