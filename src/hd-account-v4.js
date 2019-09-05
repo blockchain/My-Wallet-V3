@@ -4,7 +4,6 @@ var Bitcoin = require('bitcoinjs-lib');
 var assert = require('assert');
 var Helpers = require('./helpers');
 var Derivation = require('./derivation');
-var KeyRing = require('./keyring');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 var API = require('./api');
 var Transaction = require('./transaction');
@@ -26,7 +25,6 @@ function HDAccount (object) {
   // this._address_labels = obj.address_labels || [];
 
   // computed properties
-  this._keyRing = new KeyRing(obj.xpub, obj.cache);
   // The highest receive index with transactions, as returned by the server:
   this._lastUsedReceiveIndex = null;
   this._changeIndex = 0;
@@ -55,7 +53,11 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'defaultDerivation': {
     configurable: false,
-    gete: function () { return this._default_derivation; }
+    get: function () { return this._default_derivation; }
+  },
+  'derivations': {
+    configurable: false,
+    get: function () { return this._derivations; }
   },
   'balance': {
     configurable: false,
@@ -138,10 +140,6 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function () { return this._xpriv; }
   },
-  'keyRing': {
-    configurable: false,
-    get: function () { return this._keyRing; }
-  },
   'receiveAddress': {
     configurable: false,
     get: function () { return this.receiveAddressAtIndex(this.receiveIndex); }
@@ -177,6 +175,7 @@ Object.defineProperties(HDAccount.prototype, {
  * Purpose is a constant set to 44' following the BIP43 recommendation
  * Registered coin types: 0' for Bitcoin
  */
+// TODO Segwit: new accounts
 HDAccount.fromAccountMasterKey = function (accountZero, index, label) {
   assert(accountZero, 'Account MasterKey must be given to create an account.');
   var account = new HDAccount();
@@ -220,6 +219,7 @@ HDAccount.factory = function (o) {
 
 // JSON SERIALIZER
 
+// TODO Segwit: new structure
 HDAccount.prototype.toJSON = function () {
   var hdaccount = {
     label: this._label,
@@ -238,9 +238,12 @@ HDAccount.reviver = function (k, v) {
   return v;
 };
 
-HDAccount.prototype.receiveAddressAtIndex = function (index) {
+HDAccount.prototype.receiveAddressAtIndex = function (index, type) {
   assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
-  return this._keyRing.receive.getAddress(index);
+  var defaultDerivation = type || this.defaultDerivation
+  var derivations = this.derivations
+  var keyRing = derivations.find((d) => d.type === defaultDerivation).keyRing
+  return keyRing.receive.getAddress(index);
 };
 
 HDAccount.prototype.changeAddressAtIndex = function (index) {

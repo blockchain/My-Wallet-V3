@@ -2,7 +2,7 @@
 const { compose, clone, assoc, is, all } = require('ramda')
 const Coin = require('../coin')
 const BchApi = require('./bch-api')
-const Bitcoin = require('bitcoincashjs-lib');
+const Bitcoin = require('bitcoinforksjs-lib');
 const constants = require('../constants');
 const { isBitcoinAddress, isPositiveInteger } = require('../helpers')
 const { selectAll, descentDraw } = require('../coin-selection')

@@ -1,6 +1,7 @@
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
+var BitcoinMessage = require('bitcoinjs-message');
 var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
@@ -470,7 +471,7 @@ Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
 };
 
 Helpers.verifyMessage = function (address, signature, message) {
-  return Bitcoin.message.verify(address, signature, message, constants.getNetwork());
+  return BitcoinMessage.verify(address, signature, message, constants.getNetwork().messagePrefix);
 };
 
 Helpers.getMobileOperatingSystem = function () {

@@ -6,6 +6,7 @@ var Base58 = require('bs58');
 var RNG = require('./rng.js');
 var API = require('./api');
 var Bitcoin = require('bitcoinjs-lib');
+var BitcoinMessage = require('bitcoinjs-message');
 var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 var ImportExport = require('./import-export');
@@ -269,7 +270,7 @@ Address.prototype.signMessage = function (message, secondPassword) {
   var keyPair = Helpers.privateKeyStringToKey(priv, 'base58');
 
   if (keyPair.getAddress() !== this.address) keyPair.compressed = false;
-  return Bitcoin.message.sign(keyPair, message, constants.getNetwork()).toString('base64');
+  return BitcoinMessage.sign(keyPair, message, constants.getNetwork().messagePrefix).toString('base64');
 };
 
 Address.prototype.encrypt = function (cipher) {

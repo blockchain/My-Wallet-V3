@@ -2,6 +2,7 @@
 
 var WalletCrypto = require('./wallet-crypto');
 var Bitcoin = require('bitcoinjs-lib');
+var BitcoinMessage = require('bitcoinjs-message');
 var API = require('./api');
 var Helpers = require('./helpers');
 var constants = require('./constants');
@@ -88,15 +89,15 @@ Metadata.message = curry(
 Metadata.magic = curry(
   function (payload, prevMagic) {
     const msg = this.message(payload, prevMagic);
-    return Bitcoin.message.magicHash(msg, constants.getNetwork());
+    return BitcoinMessage.magicHash(msg, constants.getNetwork().messagePrefix);
   }
 );
 
 Metadata.verify = (address, signature, hash) =>
-  Bitcoin.message.verify(address, signature, hash, constants.getNetwork());
+  BitcoinMessage.verify(hash, address, signature, constants.getNetwork().messagePrefix);
 
 // Metadata.sign :: keyPair -> msg -> Buffer
-Metadata.sign = (keyPair, msg) => Bitcoin.message.sign(keyPair, msg, constants.getNetwork());
+Metadata.sign = (keyPair, msg) => BitcoinMessage.sign(keyPair, msg, constants.getNetwork().messagePrefix);
 
 // Metadata.computeSignature :: keypair -> buffer -> buffer -> base64
 Metadata.computeSignature = (key, payloadBuff, magicHash) =>

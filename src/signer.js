@@ -1,7 +1,7 @@
 const { curry, forEach, addIndex, lensProp, compose, over } = require('ramda');
 const { mapped } = require('ramda-lens');
 const Bitcoin = require('bitcoinjs-lib');
-const BitcoinCash = require('bitcoincashjs-lib');
+const BitcoinCash = require('bitcoinforksjs-lib');
 const constants = require('./constants');
 const WalletCrypto = require('./wallet-crypto');
 const Helpers = require('./helpers');

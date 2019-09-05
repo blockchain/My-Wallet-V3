@@ -1,4 +1,5 @@
 let Bitcoin = require('bitcoinjs-lib');
+var BitcoinMessage = require('bitcoinjs-message');
 let exchangeMock = require('./__mocks__/bitcoin-exchange-client.mock');
 
 let proxyquire = require('proxyquireify')(require);
@@ -343,7 +344,7 @@ describe('Address', () => {
 
       it('should convert to base64', () => {
         let spy = jasmine.createSpy('toString');
-        spyOn(Bitcoin.message, 'sign').and.returnValue({
+        spyOn(BitcoinMessage, 'sign').and.returnValue({
           toString: spy
         });
         a.signMessage('message');

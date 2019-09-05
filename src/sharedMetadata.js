@@ -3,6 +3,7 @@
 const Metadata = require('./metadata');
 const WalletCrypto = require('./wallet-crypto');
 const Bitcoin = require('bitcoinjs-lib');
+var BitcoinMessage = require('bitcoinjs-message');
 const jwtDecode = require('jwt-decode');
 const API = require('./sharedMetadataAPI');
 const R = require('ramda');
@@ -23,8 +24,8 @@ class SharedMetadata {
 };
 
 // should be overwritten by iOS
-SharedMetadata.sign = Bitcoin.message.sign;
-SharedMetadata.verify = Bitcoin.message.verify;
+SharedMetadata.sign = BitcoinMessage.sign;
+SharedMetadata.verify = BitcoinMessage.verify;
 SharedMetadata.signChallenge = R.curry((key, r) => (
   {
     nonce: r.nonce,

@@ -3,7 +3,7 @@ const { curry, is, prop, lensProp, assoc, over, map } = require('ramda');
 const { mapped } = require('ramda-lens');
 const API = require('../api');
 const Coin = require('../coin');
-const Bitcoin = require('bitcoincashjs-lib');
+const Bitcoin = require('bitcoinforksjs-lib');
 const constants = require('../constants');
 const Helpers = require('../helpers');
 
