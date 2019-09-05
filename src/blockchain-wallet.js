@@ -247,6 +247,12 @@ Object.defineProperties(Wallet.prototype, {
       return !(this._hd_wallets == null || this._hd_wallets.length === 0);
     }
   },
+  'isUpgradedToV4': {
+    configurable: false,
+    get: function () {
+      return this.isUpgradedToHD && this._hd_wallets[0].defaultAccount.derivations && this._hd_wallets[0].defaultAccount.derivations.length > 0;
+    }
+  },
   'external': {
     configurable: false,
     get: function () { return this._external; }
@@ -417,20 +423,29 @@ Wallet.prototype._updateWalletInfo = function (obj) {
   this.numberTxTotal = obj.wallet.n_tx;
 
   var updateAccountAndAddressesInfo = function (e) {
-    if (this.isUpgradedToHD) {
-      var account = this.hdwallet.activeAccount(e.address);
-      if (account) {
-        account.balance = e.final_balance;
-        account.n_tx = e.n_tx;
-        account.lastUsedReceiveIndex = e.account_index === 0 ? null : e.account_index - 1;
-        account.changeIndex = e.change_index;
+    try {
+      if (this.isUpgradedToHD) {
+        var account = this.hdwallet.activeAccount(e.address);
+        if (account) {
+          if (this.isUpgradedToV4) {
+            var derivation = account.derivations.find((d) => d.xpub === e.address);
+            derivation.balance = e.final_balance;
+          } else {
+            account.balance = e.final_balance;
+          }
+          account.n_tx = e.n_tx;
+          account.lastUsedReceiveIndex = e.account_index === 0 ? null : e.account_index - 1;
+          account.changeIndex = e.change_index;
+        }
       }
-    }
-    var address = this.activeKey(e.address);
-    if (address) {
-      address.balance = e.final_balance;
-      address.totalReceived = e.total_received;
-      address.totalSent = e.total_sent;
+      var address = this.activeKey(e.address);
+      if (address) {
+        address.balance = e.final_balance;
+        address.totalReceived = e.total_received;
+        address.totalSent = e.total_sent;
+      }
+    } catch (e) {
+      console.log(e)
     }
   };
   this.latestBlock = obj.info.latest_block;

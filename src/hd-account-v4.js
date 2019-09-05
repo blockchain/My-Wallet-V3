@@ -61,14 +61,13 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'balance': {
     configurable: false,
-    get: function () { return this._balance; },
-    set: function (num) {
-      if (Helpers.isPositiveNumber(num)) {
-        this._balance = num;
-      } else {
-        throw new Error('account.balance must be a positive number');
-      }
-    }
+    get: function () { 
+      var balance = 0;
+      this.derivations.forEach(function (d) {
+        balance += d.balance
+      })
+      return balance;
+    },
   },
   'n_tx': {
     get: function () { return this._n_tx; },
