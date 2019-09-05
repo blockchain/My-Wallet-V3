@@ -7,6 +7,7 @@ var assert = require('assert');
 var R = require('ramda');
 var Helpers = require('./helpers');
 var HDAccount = require('./hd-account');
+var HDAccountV4 = require('./hd-account-v4');
 var BIP39 = require('bip39');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 var API = require('./api');
@@ -19,7 +20,7 @@ var constants = require('./constants');
 function HDWallet (object) {
   function addAccount (o, index) {
     o.index = index;
-    return HDAccount.factory(o);
+    return o.derivations ? HDAccountV4.factory(o) : HDAccount.factory(o);
   }
 
   // private members

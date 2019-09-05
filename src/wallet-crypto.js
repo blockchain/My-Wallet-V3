@@ -4,7 +4,7 @@ var crypto = require('crypto');
 var assert = require('assert');
 var { pbkdf2Sync } = require('pbkdf2');
 
-var SUPPORTED_ENCRYPTION_VERSION = 3;
+var SUPPORTED_ENCRYPTION_VERSION = 4;
 var SALT_BYTES = 16;
 var KEY_BIT_LEN = 256;
 var BLOCK_BIT_LEN = 128;
