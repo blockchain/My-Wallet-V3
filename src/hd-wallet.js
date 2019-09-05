@@ -88,8 +88,16 @@ Object.defineProperties(HDWallet.prototype, {
     configurable: false,
     get: function () {
       return this.activeAccounts.map(function (a) {
-        return a.derivations.map((d) => d.xpub);
-      }).flat();
+        return a.derivations.filter(d => d.type === 'legacy').map((d) => d.xpub);
+      });
+    }
+  },
+  'activeP2SHXpubs': {
+    configurable: false,
+    get: function () {
+      return this.activeAccounts.map(function (a) {
+        return a.derivations.filter(d => d.type === 'segwitP2SH').map((d) => d.xpub);
+      });
     }
   },
   'balanceActiveAccounts': {

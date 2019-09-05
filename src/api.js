@@ -165,13 +165,14 @@ API.prototype.getUnspent = function (fromAddresses, confirmations) {
   return this.retry(this.request.bind(this, 'POST', 'unspent', data));
 };
 
-API.prototype.getHistory = function (addresses, txFilter, offset, n, syncBool) {
+API.prototype.getHistory = function (context, txFilter, offset, n, syncBool) {
   var clientTime = (new Date()).getTime();
   offset = offset || 0;
   n = n || 0;
 
   var data = {
-    active: addresses.join('|'),
+    active: context.addresses.concat(context.active).join('|'),
+    activeP2SH: context.activeP2SH.join('|'),
     format: 'json',
     offset: offset,
     no_compact: true,
