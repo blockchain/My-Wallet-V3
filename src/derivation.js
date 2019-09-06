@@ -47,3 +47,17 @@ Derivation.factory = function (o) {
     return o;
   }
 };
+
+// JSON SERIALIZER
+Derivation.prototype.toJSON = function () {
+  var derivation = {
+    type: this._type,
+    purpose: this._purpose,
+    xpriv: this._xpriv,
+    xpub: this._xpub,
+    cache: this._keyRing,
+    address_labels: this._address_labels
+  };
+
+  return derivation;
+};

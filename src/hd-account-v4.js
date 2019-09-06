@@ -8,22 +8,14 @@ var MyWallet = require('./wallet'); // This cyclic import should be avoided once
 var API = require('./api');
 var Transaction = require('./transaction');
 var constants = require('./constants');
-var BtcShiftPayment = require('./shift/btc-payment');
 
 // HDAccount Class
 
 function HDAccount (object) {
   var obj = object || {};
-  obj.cache = obj.cache || {};
-  // serializable data
   this._label = obj.label;
   this._archived = obj.archived || false;
-  // this._xpriv = obj.xpriv;
-  // this._xpub = obj.xpub;
   this._network = obj.network || Bitcoin.networks.bitcoin;
-
-  // this._address_labels = obj.address_labels || [];
-
   // computed properties
   // The highest receive index with transactions, as returned by the server:
   this._lastUsedReceiveIndex = null;
@@ -217,16 +209,12 @@ HDAccount.factory = function (o) {
 };
 
 // JSON SERIALIZER
-
-// TODO Segwit: new structure
 HDAccount.prototype.toJSON = function () {
   var hdaccount = {
     label: this._label,
     archived: this._archived,
-    xpriv: this._xpriv,
-    xpub: this._xpub,
-    address_labels: this._orderedAddressLabels(),
-    cache: this._keyRing
+    derivations: this._derivations,
+    default_derivation: this._default_derivation
   };
 
   return hdaccount;
@@ -235,6 +223,13 @@ HDAccount.prototype.toJSON = function () {
 HDAccount.reviver = function (k, v) {
   if (k === '') return new HDAccount(v);
   return v;
+};
+
+HDAccount.prototype.getLabels = function () {
+  console.log(this._derivations)
+  return this._derivations.find(x => x.type === this._default_derivation)._address_labels
+          .sort((a, b) => a.index - b.index)
+          .map(o => ({index: o.index, label: o.label}));
 };
 
 HDAccount.prototype.receiveAddressAtIndex = function (index, type) {
@@ -273,51 +268,6 @@ HDAccount.prototype.persist = function () {
   return this;
 };
 
-// Address labels:
-
-HDAccount.prototype._orderedAddressLabels = function () {
-  return this._address_labels.sort((a, b) => a.index - b.index);
-};
-
-HDAccount.prototype.addLabel = function (receiveIndex, label) {
-  assert(Helpers.isPositiveInteger(receiveIndex));
-
-  let labels = this._address_labels;
-
-  let labelEntry = {
-    index: receiveIndex,
-    label: label
-  };
-
-  labels.push(labelEntry);
-};
-
-HDAccount.prototype.getLabels = function () {
-  return this._derivations.find(x => x.type === this._default_derivation)._address_labels
-          .sort((a, b) => a.index - b.index)
-          .map(o => ({index: o.index, label: o.label}));
-};
-
-HDAccount.prototype.setLabel = function (receiveIndex, label) {
-  let labels = this._address_labels;
-
-  let labelEntry = labels.find((label) => label.index === receiveIndex);
-
-  if (!labelEntry) {
-    labelEntry = {index: receiveIndex};
-    labels.push(labelEntry);
-  }
-
-  labelEntry.label = label;
-  MyWallet.syncWallet();
-};
-
-HDAccount.prototype.removeLabel = function (receiveIndex) {
-  let labels = this._address_labels;
-  let labelEntry = labels.find((label) => label.index === receiveIndex);
-  labels.splice(labels.indexOf(labelEntry), 1);
-};
-
 HDAccount.prototype.getAvailableBalance = function (feeType) {
   feeType = (feeType === 'regular' || feeType === 'priority') ? feeType : 'regular';
   let feesP = API.getFees();
@@ -330,6 +280,20 @@ HDAccount.prototype.getAvailableBalance = function (feeType) {
   });
 };
 
+// Address labels:
+HDAccount.prototype.addLabel = function (receiveIndex, label) {
+  console.log('Not supported')
+};
+
+HDAccount.prototype.setLabel = function (receiveIndex, label) {
+  console.log('Not supported')
+};
+
+HDAccount.prototype.removeLabel = function (receiveIndex) {
+  console.log('Not supported')
+};
+
+// Shapeshift
 HDAccount.prototype.createShiftPayment = function (wallet) {
-  return BtcShiftPayment.fromWallet(wallet, this);
+  console.log('Not supported')
 };
