@@ -446,7 +446,7 @@ function syncWallet (successcallback, errorcallback) {
       data,
       WalletStore.getPassword(),
       WalletStore.getPbkdf2Iterations(),
-      MyWallet.wallet.isUpgradedToHD ? 3.0 : 2.0
+      MyWallet.wallet.isUpgradedToHD ? MyWallet.wallet.isUpgradedToV4 ? 4.0 : 3.0 : 2.0
     );
 
     if (crypted.length === 0) {
