@@ -80,6 +80,7 @@ Object.defineProperties(HDWallet.prototype, {
   'xpubs': {
     configurable: false,
     get: function () {
+      // v4 Check
       return this.isUpgradedToV4 ? this._accounts.map(function (a) {
         return a.derivations.map((d) => d.xpub);
       }).flat() : this._accounts.map(function (a) { return (a.extendedPublicKey); });;
@@ -88,6 +89,7 @@ Object.defineProperties(HDWallet.prototype, {
   'activeXpubs': {
     configurable: false,
     get: function () {
+      // v4 Check
       return this.isUpgradedToV4 ? this.activeAccounts.map(function (a) {
         return a.derivations.filter(d => d.type === 'legacy').map((d) => d.xpub);
       }) : this.activeAccounts.map(function (a) { return (a.extendedPublicKey); });
@@ -96,6 +98,7 @@ Object.defineProperties(HDWallet.prototype, {
   'activeP2SHXpubs': {
     configurable: false,
     get: function () {
+      // v4 Check
       return this.isUpgradedToV4 ? this.activeAccounts.map(function (a) {
         return a.derivations.filter(d => d.type === 'segwitP2SH').map((d) => d.xpub);
       }) : [];
@@ -125,10 +128,11 @@ Object.defineProperties(HDWallet.prototype, {
                              .reduce(Helpers.and, true);
     }
   },
+  // v4 Check
   'isUpgradedToV4': {
     configurable: false,
     get: function () {
-      return this._is_upgraded_to_v4
+      return this._is_upgraded_to_v4;
     }
   },
   'lastAccount': {
