@@ -226,7 +226,6 @@ HDAccount.reviver = function (k, v) {
 };
 
 HDAccount.prototype.getLabels = function () {
-  console.log(this._derivations)
   return this._derivations.find(x => x.type === this._default_derivation)._address_labels
           .sort((a, b) => a.index - b.index)
           .map(o => ({index: o.index, label: o.label}));
