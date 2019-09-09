@@ -17,7 +17,10 @@ class BchAccount extends BchSpendable {
   }
 
   get xpub () {
-    return this._btcAccount.extendedPublicKey
+    // v4 Check
+    return this._btcAccount.derivations ?
+      this._btcAccount.derivations.find((a) => a.type === 'legacy').xpub
+      : this._btcAccount.extendedPublicKey;
   }
 
   get archived () {
@@ -53,12 +56,12 @@ class BchAccount extends BchSpendable {
 
   get receiveAddress () {
     let { receive } = this._bchWallet.getAccountIndexes(this.xpub)
-    return this._btcAccount.receiveAddressAtIndex(receive)
+    return this._btcAccount.receiveAddressAtIndex(receive, 'legacy')
   }
 
   get changeAddress () {
     let { change } = this._bchWallet.getAccountIndexes(this.xpub)
-    return this._btcAccount.changeAddressAtIndex(change)
+    return this._btcAccount.changeAddressAtIndex(change, 'legacy')
   }
 
   get coinCode () {

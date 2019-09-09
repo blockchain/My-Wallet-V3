@@ -234,15 +234,18 @@ HDAccount.prototype.getLabels = function () {
 
 HDAccount.prototype.receiveAddressAtIndex = function (index, type) {
   assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
-  var defaultDerivation = type || this.defaultDerivation
+  var preferredDerivation = type || this.defaultDerivation
   var derivations = this.derivations
-  var keyRing = derivations.find((d) => d.type === defaultDerivation).keyRing
+  var keyRing = derivations.find((d) => d.type === preferredDerivation).keyRing
   return keyRing.receive.getAddress(index);
 };
 
-HDAccount.prototype.changeAddressAtIndex = function (index) {
+HDAccount.prototype.changeAddressAtIndex = function (index, type) {
   assert(Helpers.isPositiveInteger(index), 'Error: change index must be a positive integer');
-  return this._keyRing.change.getAddress(index);
+  var preferredDerivation = type || this.defaultDerivation
+  var derivations = this.derivations
+  var keyRing = derivations.find((d) => d.type === preferredDerivation).keyRing
+  return keyRing.change.getAddress(index);
 };
 
 HDAccount.prototype.encrypt = function (cipher) {

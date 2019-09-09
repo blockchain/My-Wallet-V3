@@ -20,7 +20,7 @@ var constants = require('./constants');
 function HDWallet (object) {
   function addAccount (o, index) {
     o.index = index;
-    // Do v4 or v3 check here
+    // v4 Check
     return o.derivations ? HDAccountV4.factory(o) : HDAccount.factory(o);
   }
 
