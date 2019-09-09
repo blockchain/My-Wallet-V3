@@ -33,6 +33,7 @@ function HDWallet (object) {
   this._mnemonic_verified = obj.mnemonic_verified;
   this._default_account_idx = obj.default_account_idx;
   this._accounts = obj.accounts.map(addAccount);
+  this._is_upgraded_to_v4 = obj.accounts.some((a) => a.derivations && a.derivations.length)
 }
 
 Object.defineProperties(HDWallet.prototype, {
@@ -79,25 +80,25 @@ Object.defineProperties(HDWallet.prototype, {
   'xpubs': {
     configurable: false,
     get: function () {
-      return this._accounts.map(function (a) {
+      return this.isUpgradedToV4 ? this._accounts.map(function (a) {
         return a.derivations.map((d) => d.xpub);
-      }).flat();
+      }).flat() : this._accounts.map(function (a) { return (a.extendedPublicKey); });;
     }
   },
   'activeXpubs': {
     configurable: false,
     get: function () {
-      return this.activeAccounts.map(function (a) {
+      return this.isUpgradedToV4 ? this.activeAccounts.map(function (a) {
         return a.derivations.filter(d => d.type === 'legacy').map((d) => d.xpub);
-      });
+      }) : this.activeAccounts.map(function (a) { return (a.extendedPublicKey); });
     }
   },
   'activeP2SHXpubs': {
     configurable: false,
     get: function () {
-      return this.activeAccounts.map(function (a) {
+      return this.isUpgradedToV4 ? this.activeAccounts.map(function (a) {
         return a.derivations.filter(d => d.type === 'segwitP2SH').map((d) => d.xpub);
-      });
+      }) : [];
     }
   },
   'balanceActiveAccounts': {
@@ -122,6 +123,12 @@ Object.defineProperties(HDWallet.prototype, {
       var isSeedUnEnc = Helpers.isSeedHex(this._seedHex);
       return isSeedUnEnc && this._accounts.map(function (a) { return a.isUnEncrypted; })
                              .reduce(Helpers.and, true);
+    }
+  },
+  'isUpgradedToV4': {
+    configurable: false,
+    get: function () {
+      return this._is_upgraded_to_v4
     }
   },
   'lastAccount': {
@@ -249,8 +256,14 @@ HDWallet.prototype.verifyMnemonic = function () {
 };
 
 HDWallet.prototype.account = function (xpub) {
-  var f = this._accounts
-            .filter(function (a) { return a.derivations.find(d => d.xpub === xpub); });
+  var f
+  if (this.isUpgradedToV4) {
+    f = this._accounts
+              .filter(function (a) { return a.derivations.find(d => d.xpub === xpub); });
+  } else {
+    f = this._accounts
+            .filter(function (a) { return a.extendedPublicKey === xpub; });
+  }
   var r = f.length === 0 ? null : f[0];
   return r;
 };
