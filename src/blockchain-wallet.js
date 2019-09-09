@@ -430,11 +430,13 @@ Wallet.prototype._updateWalletInfo = function (obj) {
           if (this.isUpgradedToV4) {
             var derivation = account.derivations.find((d) => d.xpub === e.address);
             derivation.balance = e.final_balance;
+            derivation.n_tx = e.n_tx;
+            derivation.lastUsedReceiveIndex = e.account_index === 0 ? null : e.account_index - 1;
           } else {
             account.balance = e.final_balance;
+            account.n_tx = e.n_tx;
+            account.lastUsedReceiveIndex = e.account_index === 0 ? null : e.account_index - 1;
           }
-          account.n_tx = e.n_tx;
-          account.lastUsedReceiveIndex = e.account_index === 0 ? null : e.account_index - 1;
           account.changeIndex = e.change_index;
         }
       }

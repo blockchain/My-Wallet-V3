@@ -62,13 +62,10 @@ Object.defineProperties(HDAccount.prototype, {
     },
   },
   'n_tx': {
-    get: function () { return this._n_tx; },
-    set: function (num) {
-      if (Helpers.isPositiveInteger(num)) {
-        this._n_tx = num;
-      } else {
-        throw new Error('account.n_tx must be a positive integer');
-      }
+    configurable: false,
+    get: function () {
+      var derivation = this.derivations.find(x => x.type === this.defaultDerivation);
+      return derivation.n_tx;
     }
   },
   'archived': {
@@ -92,24 +89,21 @@ Object.defineProperties(HDAccount.prototype, {
   'receiveIndex': {
     configurable: false,
     get: function () {
-      let maxLabeledReceiveIndex = null;
-      if (MyWallet.wallet.labels) { // May not be set yet
-        maxLabeledReceiveIndex = MyWallet.wallet.labels.maxLabeledReceiveIndex(this.index);
-      } else if (this._address_labels && this._address_labels.length) {
-        maxLabeledReceiveIndex = this._address_labels[this._address_labels.length - 1].index;
-      }
+      var derivation = this.derivations.find(x => x.type === this.defaultDerivation)
+      var maxLabeledReceiveIndex = derivation._address_labels.length > 0
+      ? derivation._address_labels[derivation._address_labels.length - 1].index
+      : null
       return Math.max(
-        this.lastUsedReceiveIndex === null ? -1 : this.lastUsedReceiveIndex,
+        this.lastUsedReceiveIndex === null || !this.lastUsedReceiveIndex ? -1 : this.lastUsedReceiveIndex,
         maxLabeledReceiveIndex === null ? -1 : maxLabeledReceiveIndex
       ) + 1;
     }
   },
   'lastUsedReceiveIndex': {
     configurable: false,
-    get: function () { return this._lastUsedReceiveIndex; },
-    set: function (value) {
-      assert(value === null || Helpers.isPositiveInteger(value), 'should be null or >= 0');
-      this._lastUsedReceiveIndex = value;
+    get: function () {
+      var derivation = this.derivations.find(x => x.type === this.defaultDerivation)
+      return derivation.lastUsedReceiveIndex;
     }
   },
   'changeIndex': {

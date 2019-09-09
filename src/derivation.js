@@ -30,6 +30,24 @@ Object.defineProperties(Derivation.prototype, {
     configurable: false,
     get: function () { return this._keyRing; }
   },
+  'n_tx': {
+    get: function () { return this._n_tx; },
+    set: function (num) {
+      if (Helpers.isPositiveInteger(num)) {
+        this._n_tx = num;
+      } else {
+        throw new Error('account.n_tx must be a positive integer');
+      }
+    }
+  },
+  'lastUsedReceiveIndex': {
+    configurable: false,
+    get: function () { return this._lastUsedReceiveIndex; },
+    set: function (value) {
+      assert(value === null || Helpers.isPositiveInteger(value), 'should be null or >= 0');
+      this._lastUsedReceiveIndex = value;
+    }
+  },
   'type': {
     configurable: false,
     get: function () { return this._type }
