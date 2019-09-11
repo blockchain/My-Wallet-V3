@@ -2,6 +2,7 @@ module.exports = Derivation
 
 var KeyRingV4 = require('./keyring-v4');
 var Helpers = require('./helpers');
+var assert = require('assert');
 
 function Derivation (obj) {
   this._type = obj.type;
