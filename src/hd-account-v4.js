@@ -94,7 +94,7 @@ Object.defineProperties(HDAccount.prototype, {
       ? derivation._address_labels[derivation._address_labels.length - 1].index
       : null
       return Math.max(
-        this.lastUsedReceiveIndex === null || !this.lastUsedReceiveIndex ? -1 : this.lastUsedReceiveIndex,
+        this.lastUsedReceiveIndex === null ? -1 : this.lastUsedReceiveIndex,
         maxLabeledReceiveIndex === null ? -1 : maxLabeledReceiveIndex
       ) + 1;
     }
@@ -102,7 +102,7 @@ Object.defineProperties(HDAccount.prototype, {
   'lastUsedReceiveIndex': {
     configurable: false,
     get: function () {
-      var derivation = this.derivations.find(x => x.type === this.defaultDerivation)
+      var derivation = this.derivations.find(x => x.type === this.defaultDerivation);
       return derivation.lastUsedReceiveIndex;
     }
   },

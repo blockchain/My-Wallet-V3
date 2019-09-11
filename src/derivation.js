@@ -12,6 +12,7 @@ function Derivation (obj) {
   this._cache = obj.cache || {};
   this._keyRing = new KeyRingV4(obj.xpub, obj.cache, null, obj.type);
   this._address_labels = obj.address_labels || [];
+  this._lastUsedReceiveIndex = null;
   this._balance = 0;
 }
 
