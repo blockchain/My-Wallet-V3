@@ -45,11 +45,17 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'defaultDerivation': {
     configurable: false,
-    get: function () { return this._default_derivation; }
+    get: function () { return this._default_derivation; },
+    set: function (derivation) {
+      return this._default_derivation = derivation;
+    }
   },
   'derivations': {
     configurable: false,
-    get: function () { return this._derivations; }
+    get: function () { return this._derivations; },
+    set: function (derivations) {
+      return this._derivations = derivations;
+    }
   },
   'balance': {
     configurable: false,
@@ -241,22 +247,6 @@ HDAccount.prototype.changeAddressAtIndex = function (index, type) {
   return keyRing.change.getAddress(index);
 };
 
-HDAccount.prototype.encrypt = function (cipher) {
-  if (!this._xpriv) return this;
-  var xpriv = cipher ? cipher(this._xpriv) : this._xpriv;
-  if (!xpriv) { throw new Error('Error Encoding account extended private key'); }
-  this._temporal_xpriv = xpriv;
-  return this;
-};
-
-HDAccount.prototype.decrypt = function (cipher) {
-  if (!this._xpriv) return this;
-  var xpriv = cipher ? cipher(this._xpriv) : this._xpriv;
-  if (!xpriv) { throw new Error('Error Decoding account extended private key'); }
-  this._temporal_xpriv = xpriv;
-  return this;
-};
-
 HDAccount.prototype.persist = function () {
   if (!this._temporal_xpriv) return this;
   this._xpriv = this._temporal_xpriv;
@@ -274,6 +264,24 @@ HDAccount.prototype.getAvailableBalance = function (feeType) {
     let amount = Transaction.maxAvailableAmount(usableCoins, fee).amount;
     return { amount, fee: fees[feeType] };
   });
+};
+
+// No longer supported by HDAccount class
+// 
+HDAccount.prototype.encrypt = function (cipher) {
+  if (!this._xpriv) return this;
+  var xpriv = cipher ? cipher(this._xpriv) : this._xpriv;
+  if (!xpriv) { throw new Error('Error Encoding account extended private key'); }
+  this._temporal_xpriv = xpriv;
+  return this;
+};
+
+HDAccount.prototype.decrypt = function (cipher) {
+  if (!this._xpriv) return this;
+  var xpriv = cipher ? cipher(this._xpriv) : this._xpriv;
+  if (!xpriv) { throw new Error('Error Decoding account extended private key'); }
+  this._temporal_xpriv = xpriv;
+  return this;
 };
 
 // Address labels:

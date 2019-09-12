@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = KeyChain;
+module.exports = KeyChainV4;
 
 var Bitcoin = require('bitcoinjs-lib');
 var assert = require('assert');
@@ -8,7 +8,7 @@ var Helpers = require('./helpers');
 var constants = require('./constants');
 
 // keychain
-function KeyChain (extendedKey, index, cache, bitcoinjs, type) {
+function KeyChainV4 (extendedKey, index, cache, bitcoinjs, type) {
   this._Bitcoin = bitcoinjs || Bitcoin;
   this._chainRoot = null;
   this._type = type;
@@ -17,7 +17,7 @@ function KeyChain (extendedKey, index, cache, bitcoinjs, type) {
   // this function should be part of the instance because it is memoized
   this._getKey = Helpers.memoize(function (index) {
     assert(Helpers.isPositiveInteger(index), 'Key index must be integer >= 0');
-    assert(this._chainRoot, 'KeyChain is not initialized.');
+    assert(this._chainRoot, 'KeyChainV4 is not initialized.');
     if (type === 'segwitP2SH') {
       var keyhash = this._Bitcoin.crypto.hash160(
         this._chainRoot.derive(index).getPublicKeyBuffer()
@@ -32,7 +32,7 @@ function KeyChain (extendedKey, index, cache, bitcoinjs, type) {
   });
 }
 
-Object.defineProperties(KeyChain.prototype, {
+Object.defineProperties(KeyChainV4.prototype, {
   'xpub': {
     configurable: false,
     get: function () {
@@ -49,7 +49,7 @@ Object.defineProperties(KeyChain.prototype, {
   }
 });
 
-KeyChain.prototype.init = function (extendedKey, index, cache) {
+KeyChainV4.prototype.init = function (extendedKey, index, cache) {
   // don't override the chain once initialized
   if (this._chainRoot) return this;
   // if cache is defined we use it to recreate the chain
@@ -63,12 +63,12 @@ KeyChain.prototype.init = function (extendedKey, index, cache) {
   return this;
 };
 
-KeyChain.prototype.getAddress = function (index) {
+KeyChainV4.prototype.getAddress = function (index) {
   assert(Helpers.isPositiveInteger(index), 'Address index must be integer >= 0');
   return this._type === 'legacy' ? this._getKey(index).getAddress() : this._getKey(index);
 };
 
-KeyChain.prototype.getPrivateKey = function (index) {
+KeyChainV4.prototype.getPrivateKey = function (index) {
   assert(Helpers.isPositiveInteger(index), 'private key index must be integer >= 0');
   var key = this._getKey(index);
   return key || null;

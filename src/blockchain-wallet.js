@@ -8,6 +8,9 @@ var RNG = require('./rng.js');
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var HDWallet = require('./hd-wallet');
+var HDAccountV4 = require('./hd-account-v4');
+var Derivation = require('./derivation');
+var KeyRingV4 = require('./keyring-v4');
 var Address = require('./address.js');
 var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
@@ -791,6 +794,48 @@ Wallet.prototype.upgradeToV3 = function (firstAccountLabel, pw, success, error) 
   return hd;
 };
 
+Wallet.prototype.upgradeToV4 = function (pw, success, error) {
+  // get seed
+  // loop over all accounts
+  // add new (encrypted) default derivation to account
+  var seedHex = this.getSeedHex(pw)
+  const newAccounts = []
+
+  this.hdwallet._accounts.forEach((account) => {
+    var legacyDerivation = new Derivation({
+      type: 'legacy',
+      purpose: 44,
+      xpriv: account._xpriv,
+      xpub: account._xpub,
+      address_labels: account._address_labels,
+      cache: account._keyRing.toJSON()
+    })
+    // get segwitP2SH xpub and xpriv
+    let seed = BIP39.mnemonicToSeed(BIP39.entropyToMnemonic(seedHex))
+    let masterNode = Bitcoin.HDNode.fromSeedBuffer(seed, constants.getNetwork())
+    let node = masterNode.deriveHardened(49).deriveHardened(0).deriveHardened(account.index)
+    var segwitP2SHDerivation = new Derivation({
+      type: 'segwitP2SH',
+      purpose: 49,
+      xpriv: node.toBase58(),
+      xpub: node.neutered().toBase58(),
+      address_labels: [],
+      cache: new KeyRingV4(node.neutered().toBase58(), null, null, 'segwitP2SH')
+    })
+
+    account.default_derivation = 'segwitP2SH'
+    account.derivations = [legacyDerivation, segwitP2SHDerivation]
+    let newAccount = new HDAccountV4(account)
+
+    newAccounts.push(newAccount)
+  })
+
+  this.hdwallet._accounts = newAccounts
+  MyWallet.syncWallet(function (res) {
+    success();
+  }, error);
+};
+
 Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosave) {
   if (!this.isUpgradedToHD) { return false; }
   var index = Helpers.isPositiveInteger(hdwalletIndex) ? hdwalletIndex : 0;
@@ -841,6 +886,13 @@ Wallet.prototype.getMnemonic = function (password) {
       ? WalletCrypto.decryptSecretWithSecondPassword(this.hdwallet.seedHex, password, this.sharedKey, this.pbkdf2_iterations)
       : this.hdwallet.seedHex;
   return BIP39.entropyToMnemonic(seedHex);
+};
+
+Wallet.prototype.getSeedHex = function (password) {
+  var seedHex = this.isDoubleEncrypted
+      ? WalletCrypto.decryptSecretWithSecondPassword(this.hdwallet.seedHex, password, this.sharedKey, this.pbkdf2_iterations)
+      : this.hdwallet.seedHex;
+  return seedHex;
 };
 
 Wallet.prototype.changePbkdf2Iterations = function (newIterations, password) {

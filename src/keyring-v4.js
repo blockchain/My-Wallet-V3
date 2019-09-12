@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = KeyRing;
+module.exports = KeyRingV4;
 
 var assert = require('assert');
 var Bitcoin = require('bitcoinjs-lib');
@@ -8,7 +8,7 @@ var KeyChainV4 = require('./keychain-v4');
 
 // keyring: A collection of keychains
 
-function KeyRing (extendedKey, cache, bitcoinjs, type) {
+function KeyRingV4 (extendedKey, cache, bitcoinjs, type) {
   this._bitcoinjs = bitcoinjs || Bitcoin;
   this._receiveChain = null;
   this._changeChain = null;
@@ -16,7 +16,7 @@ function KeyRing (extendedKey, cache, bitcoinjs, type) {
   this.init(extendedKey, cache, type);
 }
 
-Object.defineProperties(KeyRing.prototype, {
+Object.defineProperties(KeyRingV4.prototype, {
   'receive': {
     configurable: false,
     get: function () { return this._receiveChain; }
@@ -31,7 +31,7 @@ Object.defineProperties(KeyRing.prototype, {
   }
 });
 
-KeyRing.prototype.init = function (extendedKey, cache, type) {
+KeyRingV4.prototype.init = function (extendedKey, cache, type) {
   cache = cache || {};
   if (this._receiveChain && this._changeChain) return this;
   if (extendedKey || cache.receiveAccount && cache.changeAccount) {
@@ -44,7 +44,7 @@ KeyRing.prototype.init = function (extendedKey, cache, type) {
 };
 
 // "M/0/0" -> HDNode
-KeyRing.prototype.privateKeyFromPath = function (path) {
+KeyRingV4.prototype.privateKeyFromPath = function (path) {
   var components = path.split('/');
   assert(components[0] === 'M', 'Invalid Path prefix');
   assert(components[1] === '0' || components[1] === '1'
@@ -58,10 +58,10 @@ KeyRing.prototype.privateKeyFromPath = function (path) {
       : this._changeChain.getPrivateKey(index);
 };
 
-KeyRing.prototype.toJSON = function () {
+KeyRingV4.prototype.toJSON = function () {
   var cacheJSON = {
-    receiveAccount: this._receiveChain.xpub,
-    changeAccount: this._changeChain.xpub
+    receiveAccount: this._receiveChain && this._receiveChain.xpub,
+    changeAccount: this._changeChain && this._changeChain.xpub
   };
   return cacheJSON;
 };

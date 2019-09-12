@@ -22,6 +22,10 @@ var isInitialized = false;
 MyWallet.wallet = undefined;
 MyWallet.ws = new BlockchainSocket(null, WebSocket);
 
+// 🚨🚨🚨🚨🚨 v4 Check 🚨🚨🚨🚨🚨
+// V4 FLAG, THIS FLAG SHOULD BE SWITCHED AFTER iOS V. IS AT >= 80% ADOPTION
+var SHOULD_PERFORM_V4_UPGRADE = true
+
 // used locally and overridden in iOS
 MyWallet.socketConnect = function () {
   let socket = MyWallet.ws;
@@ -171,6 +175,9 @@ MyWallet.decryptAndInitializeWallet = function (success, error, decryptSuccess, 
       }
       if (MyWallet.wallet.isUpgradedToHD === false) {
         WalletStore.sendEvent('hd_wallets_does_not_exist');
+      }
+      if (SHOULD_PERFORM_V4_UPGRADE && !MyWallet.wallet.isUpgradedToV4)  {
+        WalletStore.sendEvent('perform_v4_payload_upgrade');
       }
       setIsInitialized();
       decryptSuccess && decryptSuccess();
