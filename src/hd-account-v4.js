@@ -247,13 +247,6 @@ HDAccount.prototype.changeAddressAtIndex = function (index, type) {
   return keyRing.change.getAddress(index);
 };
 
-HDAccount.prototype.persist = function () {
-  if (!this._temporal_xpriv) return this;
-  this._xpriv = this._temporal_xpriv;
-  delete this._temporal_xpriv;
-  return this;
-};
-
 HDAccount.prototype.getAvailableBalance = function (feeType) {
   feeType = (feeType === 'regular' || feeType === 'priority') ? feeType : 'regular';
   let feesP = API.getFees();
@@ -266,25 +259,23 @@ HDAccount.prototype.getAvailableBalance = function (feeType) {
   });
 };
 
-// No longer supported by HDAccount class
-// 
 HDAccount.prototype.encrypt = function (cipher) {
-  if (!this._xpriv) return this;
-  var xpriv = cipher ? cipher(this._xpriv) : this._xpriv;
-  if (!xpriv) { throw new Error('Error Encoding account extended private key'); }
-  this._temporal_xpriv = xpriv;
+  if (!this._derivations) return this;
+  this._derivations.forEach((d) => d.encrypt(cipher).persist());
   return this;
 };
 
 HDAccount.prototype.decrypt = function (cipher) {
-  if (!this._xpriv) return this;
-  var xpriv = cipher ? cipher(this._xpriv) : this._xpriv;
-  if (!xpriv) { throw new Error('Error Decoding account extended private key'); }
-  this._temporal_xpriv = xpriv;
+  if (!this._derivations) return this;
+  this._derivations.forEach((d) => d.decrypt(cipher));
   return this;
 };
 
+// No longer supported by HDAccount class
 // Address labels:
+HDAccount.prototype.persist = function () {
+  console.log('Not supported')
+};
 HDAccount.prototype.addLabel = function (receiveIndex, label) {
   console.log('Not supported')
 };

@@ -82,3 +82,26 @@ Derivation.prototype.toJSON = function () {
 
   return derivation;
 };
+
+Derivation.prototype.persist = function () {
+  if (!this._temporal_xpriv) return this;
+  this._xpriv = this._temporal_xpriv;
+  delete this._temporal_xpriv;
+  return this;
+};
+
+Derivation.prototype.encrypt = function (cipher) {
+  if (!this._xpriv) return this;
+  var xpriv = cipher ? cipher(this._xpriv) : this._xpriv;
+  if (!xpriv) { throw new Error('Error Encoding derivation extended private key'); }
+  this._temporal_xpriv = xpriv;
+  return this;
+};
+
+Derivation.prototype.decrypt = function (cipher) {
+  if (!this._xpriv) return this;
+  var xpriv = cipher ? cipher(this._xpriv) : this._xpriv;
+  if (!xpriv) { throw new Error('Error Decoding derivation extended private key'); }
+  this._temporal_xpriv = xpriv;
+  return this;
+};

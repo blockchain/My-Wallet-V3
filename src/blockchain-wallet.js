@@ -823,6 +823,11 @@ Wallet.prototype.upgradeToV4 = function (pw, success, error) {
       cache: new KeyRingV4(node.neutered().toBase58(), null, null, 'segwitP2SH')
     })
 
+    if (this.isDoubleEncrypted) {
+      cipher = this.createCipher(pw, 'enc');
+      segwitP2SHDerivation = segwitP2SHDerivation.encrypt(cipher).persist()
+    }
+
     account.default_derivation = 'segwitP2SH'
     account.derivations = [legacyDerivation, segwitP2SHDerivation]
     let newAccount = new HDAccountV4(account)
