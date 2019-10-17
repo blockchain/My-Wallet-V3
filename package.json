@@ -81,7 +81,7 @@
     "browserify-istanbul": "2.0.*",
     "bs58check": "^1.0.5",
     "coveralls": "^2.11.16",
-    "eslint": "2.*",
+    "eslint": "4.*",
     "fetch-mock": "^5.1.2",
     "git-changelog": "1.0.*",
     "istanbul": "~0.4.5",
