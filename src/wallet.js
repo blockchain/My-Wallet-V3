@@ -321,7 +321,6 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
     // If a new browser is used, wait for user to click verification link.
     let authorizationRequired = (token) => () => {
       cb('authorizationRequired')(() => {});
-      return WalletNetwork.pollForSessionGUID(token);
     };
 
     // Estabish a session to enable 2FA and browser verification:
