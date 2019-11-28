@@ -350,6 +350,20 @@ MyWallet.didFetchWallet = function (obj) {
   }
 };
 
+MyWallet.setSyncPubKeys = function(syncPubKeys) {
+  WalletStore.setSyncPubKeys(syncPubKeys);
+};
+
+MyWallet.setLanguage = function(language) {
+  WalletStore.setLanguage(language);
+};
+
+MyWallet.setEncryptedWalletData = function(payload) {
+  if (payload && payload.length > 0 && payload !== 'Not modified') {
+    WalletStore.setEncryptedWalletData(payload);
+  }
+};
+
 MyWallet.initializeWallet = function (pw, decryptSuccess, buildHdSuccess) {
   var doInitialize = function () {
     if (isInitialized || WalletStore.isRestoringWallet()) {
