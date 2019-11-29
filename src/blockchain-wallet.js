@@ -709,13 +709,30 @@ Wallet.reviver = function (k, v) {
   return v;
 };
 
-function isAccountNonUsed (account, progress) {
+function isAccountNonUsed(account, progress) {
+  var accountLegacy = account.derivations
+    ? account.derivations.find((x) => x.type === 'legacy').xpub
+    : account.extendedPublicKey
+  var accountP2SH = account.derivations
+    ? account.derivations.find((x) => x.type === 'segwitP2SH').xpub
+    : null
   var isNonUsed = function (obj) {
-    var result = obj[account.extendedPublicKey];
-    progress && progress(result);
-    return result.total_received === 0;
+    // v4 check
+    var resultLegacy = account.derivations
+      ? obj[accountLegacy]
+      : obj[account.extendedPublicKey];
+    var resultP2SH = account.derivations
+      ? obj[accountP2SH]
+      : { total_received: 0, final_balance: 0 };
+    var total_received = resultLegacy.total_received + resultP2SH.total_received
+    var final_balance = resultLegacy.final_balance + resultP2SH.final_balance
+    progress && progress({
+      'total_received': total_received,
+      'final_balance': final_balance
+    });
+    return total_received === 0;
   };
-  return API.getBalances([account.extendedPublicKey]).then(isNonUsed);
+  return API.getBalances([accountLegacy], accountP2SH ? [accountP2SH] : []).then(isNonUsed);
 }
 
 Wallet.prototype.scanBip44 = function (secondPassword, progress) {

@@ -122,9 +122,10 @@ API.prototype.handleNTPResponse = function (obj, clientTime) {
 };
 
 // Definition of API
-API.prototype.getBalances = function (addresses) {
+API.prototype.getBalances = function (addresses, addressesP2SH) {
   var data = {
     active: addresses.join('|'),
+    activeP2SH: addressesP2SH.join('|'),
     format: 'json'
   };
   return this.retry(this.request.bind(this, 'POST', 'balance', data));
