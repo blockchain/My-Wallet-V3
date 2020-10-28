@@ -9,6 +9,7 @@ var WalletSignup = require('./wallet-signup');
 var WalletNetwork = require('./wallet-network');
 var API = require('./api');
 var Wallet = require('./blockchain-wallet');
+var WalletCredentials = require('./walletcredentials/index');
 var Helpers = require('./helpers');
 var BlockchainSocket = require('./blockchain-socket');
 var RNG = require('./rng.js');
@@ -612,8 +613,29 @@ MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic
     wallet.scanBip44(undefined, accountProgress).then(saveWallet).catch(error);
   };
 
-  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, bip39Password, null, walletGenerated, error, generateUUIDProgress, decryptWalletProgress);
-};
+  WalletCredentials.fromMnemonic(
+    mnemonic,
+    (metadata) => {
+      WalletStore.unsafeSetPassword(metadata.password);
+      console.info("RECOVER CALLBACK ! " + JSON.stringify(metadata))
+
+      WalletNetwork.establishSession(null).then(function (sessionToken) {
+        Wallet.new(metadata.guid, metadata.sharedKey, mnemonic, bip39Password, null, (wallet) => {
+          startedRestoreHDWallet && startedRestoreHDWallet();
+          wallet.scanBip44(undefined, accountProgress).then(() => {
+            successCallback({
+              guid: metadata.guid,
+              sharedKey: metadata.sharedKey,
+              password: metadata.password,
+              sessionToken: sessionToken
+            });
+          }).catch(error);
+        }, error);
+      });
+    }, (error) => {
+      WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, bip39Password, null, walletGenerated, error, generateUUIDProgress, decryptWalletProgress);
+    });
+}
 
 // used frontend and mywallet
 MyWallet.logout = function (force) {

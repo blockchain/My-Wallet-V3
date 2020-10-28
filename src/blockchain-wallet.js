@@ -31,6 +31,7 @@ var BitcoinCash = require('./bch');
 var RetailCore = require('./retail-core');
 var Lockbox = require('./lockbox');
 var StellarLumensWallet = require('./xlm');
+var WalletCredentials = require('./walletcredentials');
 
 // Wallet
 
@@ -964,6 +965,11 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
       return this._xlm.fetch();
   };
 
+  var fetchWalletCredentials = function () {
+    this._walletCredentials = WalletCredentials.fromBlockchainWallet(this, WalletStore);
+    return this._walletCredentials.fetchAndUpdate();
+  };
+
   let promises = [];
 
   if (this.isMetadataReady) {
@@ -975,6 +981,7 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     promises.push(fetchRetailCore.call(this));
     promises.push(fetchLockbox.call(this));
     promises.push(fetchStellarLumensWallet.call(this));
+    promises.push(fetchWalletCredentials.call(this));
   }
 
   // Labels only works for v3 wallets
