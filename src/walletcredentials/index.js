@@ -33,15 +33,13 @@ class WalletCredentialsMetadata {
     return new WalletCredentialsMetadata(wallet, walletStore, metadata);
   }
 
-  static fromMnemonic (mnemonic, success, error) {
+  static fromMnemonic (mnemonic) {
     let hd = HdWallet.new(mnemonic)
     let masterNode = hd.getMasterHDNode()
     let metadata = Metadata.fromMasterHDNode(masterNode, METADATA_TYPE_WALLET_CREDENTIALS)
     return metadata.fetch().then((data) => {
       return new WalletCredentials(data.guid, data.password, data.sharedKey)
     })
-      .then(success)
-      .catch(error)
   }
 }
 

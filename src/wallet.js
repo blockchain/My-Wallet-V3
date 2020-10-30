@@ -628,9 +628,8 @@ MyWallet.recoverFromMetadata = function (mnemonic, successCallback, error, start
   let errorNoRecovery = () => { error('NO_METADATA') }
 
   WalletNetwork.establishSession(null).then(sessionToken => {
-    WalletCredentials.fromMnemonic(
-      mnemonic,
-      (metadata) => {
+    WalletCredentials.fromMnemonic(mnemonic)
+      .then(metadata => {
         decryptWalletProgress && decryptWalletProgress()
         WalletStore.unsafeSetPassword(metadata.password);
         this.login(metadata.guid, metadata.password, {sharedKey: metadata.sharedKey, twoFactor: null}, {})
@@ -646,7 +645,7 @@ MyWallet.recoverFromMetadata = function (mnemonic, successCallback, error, start
                 });
               }).catch(errorNoRecovery);
           }).catch(errorNoRecovery)
-      }, errorNoRecovery);
+      }).catch(errorNoRecovery);
   }).catch(errorNoInternet)
 }
 
