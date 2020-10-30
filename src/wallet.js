@@ -637,7 +637,11 @@ MyWallet.recoverFromMetadata = function (mnemonic, successCallback, error, start
 
         decryptWalletProgress && decryptWalletProgress()
         WalletStore.unsafeSetPassword(metadata.password);
-        this.login(metadata.guid, metadata.password, {sharedKey: metadata.sharedKey, twoFactor: null}, {})
+        this.login(metadata.guid, metadata.password, {sharedKey: metadata.sharedKey, twoFactor: null}, {
+            needsTwoFactorCode: () => errorNoRecovery(),
+            wrongTwoFactorCode: () => errorNoRecovery(),
+            authorizationRequired: () => errorNoRecovery()
+          })
           .then(() => {
             MyWallet.wallet.scanBip44(undefined, accountProgress)
               .then(() => {
