@@ -28,13 +28,6 @@ class WalletCredentialsMetadata {
     });
   }
 
-  toJSON () {
-    return {
-      default_account_idx: this.defaultAccountIdx,
-      accounts: this.accounts
-    }
-  }
-
   static fromBlockchainWallet (wallet, walletStore) {
     let metadata = wallet.metadata(METADATA_TYPE_WALLET_CREDENTIALS);
     return new WalletCredentialsMetadata(wallet, walletStore, metadata);

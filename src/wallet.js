@@ -9,7 +9,7 @@ var WalletSignup = require('./wallet-signup');
 var WalletNetwork = require('./wallet-network');
 var API = require('./api');
 var Wallet = require('./blockchain-wallet');
-var WalletCredentials = require('./walletcredentials/index');
+var WalletCredentials = require('./walletcredentials');
 var Helpers = require('./helpers');
 var BlockchainSocket = require('./blockchain-socket');
 var RNG = require('./rng.js');
@@ -613,28 +613,41 @@ MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic
     wallet.scanBip44(undefined, accountProgress).then(saveWallet).catch(error);
   };
 
-  WalletCredentials.fromMnemonic(
-    mnemonic,
-    (metadata) => {
-      WalletStore.unsafeSetPassword(metadata.password);
-      console.info("RECOVER CALLBACK ! " + JSON.stringify(metadata))
+  WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, bip39Password, null, walletGenerated, error, generateUUIDProgress, decryptWalletProgress);
+}
 
-      WalletNetwork.establishSession(null).then(function (sessionToken) {
-        Wallet.new(metadata.guid, metadata.sharedKey, mnemonic, bip39Password, null, (wallet) => {
-          startedRestoreHDWallet && startedRestoreHDWallet();
-          wallet.scanBip44(undefined, accountProgress).then(() => {
-            successCallback({
-              guid: metadata.guid,
-              sharedKey: metadata.sharedKey,
-              password: metadata.password,
-              sessionToken: sessionToken
-            });
-          }).catch(error);
-        }, error);
-      });
-    }, (error) => {
-      WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, bip39Password, null, walletGenerated, error, generateUUIDProgress, decryptWalletProgress);
-    });
+MyWallet.recoverFromMetadata = function (mnemonic, successCallback, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
+  generateUUIDProgress && generateUUIDProgress()
+
+  // There are two errors that we need to handle
+  // A bad internet connection
+  // Invalid/Missing metadata entry
+  // We check for bad internet with the sessionToken call, which should only fail if there are connectivity issue
+  // From then on, any error trying to load metadata/decrypt the wallet we consider a failure to restore from metadata
+  let errorNoInternet = () => { error('timeout request') }
+  let errorNoRecovery = () => { error('NO_METADATA') }
+
+  WalletNetwork.establishSession(null).then(sessionToken => {
+    WalletCredentials.fromMnemonic(
+      mnemonic,
+      (metadata) => {
+        decryptWalletProgress && decryptWalletProgress()
+        WalletStore.unsafeSetPassword(metadata.password);
+        this.login(metadata.guid, metadata.password, {sharedKey: metadata.sharedKey, twoFactor: null}, {})
+          .then(() => {
+            MyWallet.wallet.scanBip44(undefined, accountProgress)
+              .then(() => {
+                isInitialized = false
+                successCallback({
+                  guid: metadata.guid,
+                  sharedKey: metadata.sharedKey,
+                  password: metadata.password,
+                  sessionToken: sessionToken
+                });
+              }).catch(errorNoRecovery);
+          }).catch(errorNoRecovery)
+      }, errorNoRecovery);
+  }).catch(errorNoInternet)
 }
 
 // used frontend and mywallet
