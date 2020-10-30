@@ -630,6 +630,11 @@ MyWallet.recoverFromMetadata = function (mnemonic, successCallback, error, start
   WalletNetwork.establishSession(null).then(sessionToken => {
     WalletCredentials.fromMnemonic(mnemonic)
       .then(metadata => {
+        if(!metadata || !Helpers.isValidGUID(metadata.guid) || !metadata.password || !Helpers.isValidGUID(metadata.sharedKey)) {
+          console.info('Corrupted wallet credentials in metadata')
+          throw 'corrupted metadata entry'
+        }
+
         decryptWalletProgress && decryptWalletProgress()
         WalletStore.unsafeSetPassword(metadata.password);
         this.login(metadata.guid, metadata.password, {sharedKey: metadata.sharedKey, twoFactor: null}, {})
