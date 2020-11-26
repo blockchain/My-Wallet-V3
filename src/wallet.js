@@ -197,7 +197,7 @@ MyWallet.handleDecryptAndInitializeWalletSuccess = function (obj, success, decry
 };
 
 MyWallet.handleDecryptAndInitializeWalletError = function (error) {
-  error();
+  error('Error decrypting wallet, please check that your password is correct');
 };
 
 const PAIRING_CODE_PBKDF2_ITERATIONS = 10;
