@@ -122,10 +122,10 @@ API.prototype.handleNTPResponse = function (obj, clientTime) {
 };
 
 // Definition of API
-API.prototype.getBalances = function (addresses, addressesP2SH) {
+API.prototype.getBalances = function (addresses, addressesBech32) {
   var data = {
     active: addresses.join('|'),
-    activeP2SH: addressesP2SH.join('|'),
+    activeBech32: addressesBech32.join('|'),
     format: 'json'
   };
   return this.retry(this.request.bind(this, 'POST', 'balance', data));
@@ -173,7 +173,7 @@ API.prototype.getHistory = function (context, txFilter, offset, n, syncBool) {
 
   var data = {
     active: context.addresses.concat(context.active).join('|'),
-    activeP2SH: context.activeP2SH.join('|'),
+    activeBech32: context.activeBech32.join('|'),
     format: 'json',
     offset: offset,
     no_compact: true,

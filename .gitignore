@@ -21,3 +21,6 @@ lib
 # Generated coverage reports
 coverage
 coverage-lcov
+
+# IDEs
+.idea

@@ -122,7 +122,7 @@ Object.defineProperties(Wallet.prototype, {
       return {
         addresses: this.activeAddresses,
         active: this.hdwallet.activeXpubs,
-        activeP2SH: this.hdwallet.activeP2SHXpubs
+        activeBech32: this.hdwallet.activeBech32Xpubs
       }
     }
   },
@@ -713,26 +713,26 @@ function isAccountNonUsed(account, progress) {
   var accountLegacy = account.derivations
     ? account.derivations.find((x) => x.type === 'legacy').xpub
     : account.extendedPublicKey
-  var accountP2SH = account.derivations
-    ? account.derivations.find((x) => x.type === 'segwitP2SH').xpub
+  var accountBech32 = account.derivations
+    ? account.derivations.find((x) => x.type === 'bech32').xpub
     : null
   var isNonUsed = function (obj) {
     // v4 check
     var resultLegacy = account.derivations
       ? obj[accountLegacy]
       : obj[account.extendedPublicKey];
-    var resultP2SH = account.derivations
-      ? obj[accountP2SH]
+    var resultBech32 = account.derivations
+      ? obj[accountBech32]
       : { total_received: 0, final_balance: 0 };
-    var total_received = resultLegacy.total_received + resultP2SH.total_received
-    var final_balance = resultLegacy.final_balance + resultP2SH.final_balance
+    var total_received = resultLegacy.total_received + resultBech32.total_received
+    var final_balance = resultLegacy.final_balance + resultBech32.final_balance
     progress && progress({
       'total_received': total_received,
       'final_balance': final_balance
     });
     return total_received === 0;
   };
-  return API.getBalances([accountLegacy], accountP2SH ? [accountP2SH] : []).then(isNonUsed);
+  return API.getBalances([accountLegacy], accountBech32 ? [accountBech32] : []).then(isNonUsed);
 }
 
 Wallet.prototype.scanBip44 = function (secondPassword, progress) {
@@ -827,26 +827,26 @@ Wallet.prototype.upgradeToV4 = function (pw, success, error) {
       address_labels: account._address_labels,
       cache: account._keyRing.toJSON()
     })
-    // get segwitP2SH xpub and xpriv
+    // get bech32 xpub and xpriv
     let seed = BIP39.mnemonicToSeed(BIP39.entropyToMnemonic(seedHex))
     let masterNode = Bitcoin.HDNode.fromSeedBuffer(seed, constants.getNetwork())
-    let node = masterNode.deriveHardened(49).deriveHardened(0).deriveHardened(account.index)
-    var segwitP2SHDerivation = new Derivation({
-      type: 'segwitP2SH',
-      purpose: 49,
+    let node = masterNode.deriveHardened(84).deriveHardened(0).deriveHardened(account.index)
+    var bech32Derivation = new Derivation({
+      type: 'bech32',
+      purpose: 84,
       xpriv: node.toBase58(),
       xpub: node.neutered().toBase58(),
       address_labels: [],
-      cache: new KeyRingV4(node.neutered().toBase58(), null, null, 'segwitP2SH')
+      cache: new KeyRingV4(node.neutered().toBase58(), null, null, 'bech32')
     })
 
     if (this.isDoubleEncrypted) {
       cipher = this.createCipher(pw, 'enc');
-      segwitP2SHDerivation = segwitP2SHDerivation.encrypt(cipher).persist()
+      bech32Derivation = bech32Derivation.encrypt(cipher).persist()
     }
 
-    account.default_derivation = 'segwitP2SH'
-    account.derivations = [legacyDerivation, segwitP2SHDerivation]
+    account.default_derivation = 'bech32'
+    account.derivations = [legacyDerivation, bech32Derivation]
     let newAccount = new HDAccountV4(account)
 
     newAccounts.push(newAccount)

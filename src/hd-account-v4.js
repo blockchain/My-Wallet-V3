@@ -4,7 +4,7 @@ var Bitcoin = require('bitcoinjs-lib');
 var assert = require('assert');
 var Helpers = require('./helpers');
 var Derivation = require('./derivation');
-var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
+var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete?
 var API = require('./api');
 var Transaction = require('./transaction');
 var constants = require('./constants');
@@ -59,7 +59,7 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'balance': {
     configurable: false,
-    get: function () { 
+    get: function () {
       var balance = 0;
       this.derivations.forEach(function (d) {
         balance += d.balance

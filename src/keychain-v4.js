@@ -18,7 +18,7 @@ function KeyChainV4 (extendedKey, index, cache, bitcoinjs, type) {
   this._getKey = Helpers.memoize(function (index) {
     assert(Helpers.isPositiveInteger(index), 'Key index must be integer >= 0');
     assert(this._chainRoot, 'KeyChainV4 is not initialized.');
-    if (type === 'segwitP2SH') {
+    if (type === 'bech32') {
       var keyhash = this._Bitcoin.crypto.hash160(
         this._chainRoot.derive(index).getPublicKeyBuffer()
       )

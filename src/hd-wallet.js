@@ -95,12 +95,12 @@ Object.defineProperties(HDWallet.prototype, {
       }) : this.activeAccounts.map(function (a) { return (a.extendedPublicKey); });
     }
   },
-  'activeP2SHXpubs': {
+  'activeBech32Xpubs': {
     configurable: false,
     get: function () {
       // v4 Check
       return this.isUpgradedToV4 ? this.activeAccounts.map(function (a) {
-        return a.derivations.filter(d => d.type === 'segwitP2SH').map((d) => d.xpub);
+        return a.derivations.filter(d => d.type === 'bech32').map((d) => d.xpub);
       }) : [];
     }
   },
