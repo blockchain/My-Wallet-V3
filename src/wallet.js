@@ -179,12 +179,32 @@ MyWallet.decryptAndInitializeWallet = function (success, error, decryptSuccess, 
       if (SHOULD_PERFORM_V4_UPGRADE && !MyWallet.wallet.isUpgradedToV4)  {
         WalletStore.sendEvent('perform_v4_payload_upgrade');
       }
-      setIsInitialized();
+      MyWallet.setIsInitialized();
       decryptSuccess && decryptSuccess();
       success();
     },
     error
   );
+};
+
+MyWallet.handleDecryptAndInitializeWalletSuccess = function (obj, success, decryptSuccess) {
+  MyWallet.wallet = new Wallet(obj);
+
+  // If we don't have a checksum then the wallet is probably brand new - so we can generate our own
+  var checkSum = WalletStore.getPayloadChecksum();
+  if (checkSum === undefined || checkSum === null || checkSum.length === 0) {
+    WalletStore.setPayloadChecksum(WalletStore.generatePayloadChecksum());
+  }
+  if (MyWallet.wallet.isUpgradedToHD === false) {
+    WalletStore.sendEvent('hd_wallets_does_not_exist');
+  }
+  MyWallet.setIsInitialized();
+  decryptSuccess && decryptSuccess();
+  success();
+};
+
+MyWallet.handleDecryptAndInitializeWalletError = function (error, message) {
+  error(message);
 };
 
 const PAIRING_CODE_PBKDF2_ITERATIONS = 10;
@@ -252,7 +272,7 @@ MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHexExt
 
   MyWallet.wallet = new Wallet(walletJSON);
   WalletStore.unsafeSetPassword(password);
-  setIsInitialized();
+  MyWallet.setIsInitialized();
   return MyWallet.wallet.loadMetadata({
     external: externalJSON
   }, {
@@ -328,7 +348,6 @@ MyWallet.login = function (guid, password, credentials, callbacks) {
     // If a new browser is used, wait for user to click verification link.
     let authorizationRequired = (token) => () => {
       cb('authorizationRequired')(() => {});
-      return WalletNetwork.pollForSessionGUID(token);
     };
 
     // Estabish a session to enable 2FA and browser verification:
@@ -355,6 +374,20 @@ MyWallet.didFetchWallet = function (obj) {
   }
   if (obj.language && WalletStore.getLanguage() !== obj.language) {
     WalletStore.setLanguage(obj.language);
+  }
+};
+
+MyWallet.setSyncPubKeys = function(syncPubKeys) {
+  WalletStore.setSyncPubKeys(syncPubKeys);
+};
+
+MyWallet.setLanguage = function(language) {
+  WalletStore.setLanguage(language);
+};
+
+MyWallet.setEncryptedWalletData = function(payload) {
+  if (payload && payload.length > 0 && payload !== 'Not modified') {
+    WalletStore.setEncryptedWalletData(payload);
   }
 };
 
@@ -409,12 +442,9 @@ MyWallet.getIsInitialized = function () {
   return isInitialized;
 };
 
-// used once
-function setIsInitialized () {
-  if (isInitialized) return;
-  MyWallet.socketConnect();
+MyWallet.updateToInitialized = function () {
   isInitialized = true;
-}
+};
 
 // This should replace backup functions
 function syncWallet (successcallback, errorcallback) {

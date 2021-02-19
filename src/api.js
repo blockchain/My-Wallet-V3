@@ -15,7 +15,7 @@ function API () {
   this.ROOT_URL = 'https://blockchain.info/';
   this.API_ROOT_URL = 'https://api.blockchain.info/';
   this.AJAX_RETRY_DEFAULT = 2;
-  this.API_CODE = '1770d5d9-bcea-4d28-ad21-6cbd5be018a8';
+  this.API_CODE = '35e77459-723f-48b0-8c9e-6e9e8f54fbd3';
   this.SERVER_TIME_OFFSET = null;
   this.AJAX_TIMEOUT = 60000;
 }

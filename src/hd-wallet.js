@@ -253,9 +253,9 @@ HDWallet.reviver = function (k, v) {
 
 // methods
 
-HDWallet.prototype.verifyMnemonic = function () {
+HDWallet.prototype.verifyMnemonic = function (completionBlock, errorBlock) {
   this._mnemonic_verified = true;
-  MyWallet.syncWallet();
+  MyWallet.syncWallet(completionBlock, errorBlock);
   return this;
 };
 

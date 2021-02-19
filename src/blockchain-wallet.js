@@ -1076,8 +1076,8 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     // Labels currently don't use the KV Store, so this should never fail.
     promises.push(fetchLabels.call(this));
   }
-
-  return Promise.all(promises);
+  
+  return Promise.all(promises).then(objc_metadata_loaded());
 };
 
 Wallet.prototype.useEthSocket = function (socket) {

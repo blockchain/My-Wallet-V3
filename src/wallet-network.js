@@ -254,9 +254,7 @@ function fetchWallet (guid, token, needsTwoFactorCode, authorizationRequired) {
         return;
       }
       if (obj.authorization_required) {
-        authorizationRequired().then(function () {
-          callGetWalletEndpoint(guid, null, token).then(success).catch(error);
-        });
+        authorizationRequired();
       }
     };
 
