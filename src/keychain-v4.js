@@ -19,8 +19,13 @@ function KeyChainV4 (extendedKey, index, cache, bitcoinjs, type) {
     assert(Helpers.isPositiveInteger(index), 'Key index must be integer >= 0');
     assert(this._chainRoot, 'KeyChainV4 is not initialized.');
     if (type === 'bech32') {
-      var publicKey = this._chainRoot.derive(index).publicKey;
-      return this._Bitcoin.payments.p2wpkh({ pubkey: publicKey }).address;
+      var keyhash = this._Bitcoin.crypto.hash160(
+        this._chainRoot.derive(index).getPublicKeyBuffer()
+      )
+      var scriptsig = this._Bitcoin.script.witnessPubKeyHash.output.encode(keyhash)
+      var addressbytes = this._Bitcoin.crypto.hash160(scriptsig)
+      var scriptpubkey = this._Bitcoin.script.scriptHash.output.encode(addressbytes)
+      return this._Bitcoin.address.fromOutputScript(scriptpubkey, constants.getNetwork(this._Bitcoin));
     } else {
       return this._chainRoot.derive(index);
     }
