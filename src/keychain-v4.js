@@ -22,10 +22,8 @@ function KeyChainV4 (extendedKey, index, cache, bitcoinjs, type) {
       var keyhash = this._Bitcoin.crypto.hash160(
         this._chainRoot.derive(index).getPublicKeyBuffer()
       )
-      var scriptsig = this._Bitcoin.script.witnessPubKeyHash.output.encode(keyhash)
-      var addressbytes = this._Bitcoin.crypto.hash160(scriptsig)
-      var scriptpubkey = this._Bitcoin.script.scriptHash.output.encode(addressbytes)
-      return this._Bitcoin.address.fromOutputScript(scriptpubkey, constants.getNetwork(this._Bitcoin));
+      var scriptPubKey = this._Bitcoin.script.witnessPubKeyHash.output.encode(keyhash);
+      return this._Bitcoin.address.fromOutputScript(scriptPubKey, constants.getNetwork(this._Bitcoin));
     } else {
       return this._chainRoot.derive(index);
     }
