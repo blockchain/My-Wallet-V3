@@ -33,7 +33,15 @@ Helpers.isBitcoinAddress = function (candidate) {
     var d = Bitcoin.address.fromBase58Check(candidate);
     var n = constants.getNetwork();
     return d.version === n.pubKeyHash || d.version === n.scriptHash;
-  } catch (e) { return false; }
+  } catch (e) {
+    try {
+      var d = Bitcoin.address.fromBech32(candidate);
+      var n = constants.getNetwork();
+      return d.version === n.pubKeyHash;
+    } catch (e) {
+      return false;
+    }
+  }
 };
 Helpers.isBitcoinPrivateKey = function (candidate) {
   try {
