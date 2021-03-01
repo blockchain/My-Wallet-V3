@@ -50,6 +50,12 @@ Object.defineProperties(HDAccount.prototype, {
       return this._default_derivation = derivation;
     }
   },
+  'defaultDerivationAccount': {
+    configurable: false,
+    get: function () {
+      return this.derivations.find(x => x.type === this.defaultDerivation);
+    }
+  },
   'derivations': {
     configurable: false,
     get: function () { return this._derivations; },
@@ -70,8 +76,7 @@ Object.defineProperties(HDAccount.prototype, {
   'n_tx': {
     configurable: false,
     get: function () {
-      var derivation = this.derivations.find(x => x.type === this.defaultDerivation);
-      return derivation.n_tx;
+      return this.defaultDerivationAccount.n_tx;
     }
   },
   'archived': {
@@ -108,8 +113,7 @@ Object.defineProperties(HDAccount.prototype, {
   'lastUsedReceiveIndex': {
     configurable: false,
     get: function () {
-      var derivation = this.derivations.find(x => x.type === this.defaultDerivation);
-      return derivation.lastUsedReceiveIndex;
+      return this.defaultDerivationAccount.lastUsedReceiveIndex;
     }
   },
   'changeIndex': {
@@ -125,11 +129,11 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'extendedPublicKey': {
     configurable: false,
-    get: function () { return this._xpub; }
+    get: function () { return this.defaultDerivationAccount._xpub; }
   },
   'extendedPrivateKey': {
     configurable: false,
-    get: function () { return this._xpriv; }
+    get: function () { return this.defaultDerivationAccount._xpriv; }
   },
   'receiveAddress': {
     configurable: false,
@@ -141,11 +145,11 @@ Object.defineProperties(HDAccount.prototype, {
   },
   'isEncrypted': {
     configurable: false,
-    get: function () { return Helpers.isBase64(this._derivations[0]._xpriv) && !Helpers.isXprivKey(this._derivations[0]._xpriv); }
+    get: function () { return Helpers.isBase64(this.defaultDerivationAccount._xpriv) && !Helpers.isXprivKey(this.defaultDerivationAccount._xpriv); }
   },
   'isUnEncrypted': {
     configurable: false,
-    get: function () { return Helpers.isXprivKey(this._derivations[0]._xpriv); }
+    get: function () { return Helpers.isXprivKey(this.defaultDerivationAccount._xpriv); }
   },
   'index': {
     configurable: false,
