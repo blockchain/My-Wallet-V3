@@ -16,7 +16,7 @@ var Transaction = function (payment, emitter) {
   var amounts = payment.amounts;
   var fee = payment.finalFee;
   var changeAddress = payment.change;
-  var BITCOIN_DUST = constants.getNetwork().dustThreshold;
+  var BITCOIN_DUST = constants.BITCOIN_DUST;
 
   if (!Array.isArray(toAddresses) && toAddresses != null) { toAddresses = [toAddresses]; }
   if (!Array.isArray(amounts) && amounts != null) { amounts = [amounts]; }

@@ -371,7 +371,7 @@ Payment.updateFeePerKb = function (fee) {
 
 Payment.prebuild = function (absoluteFee) {
   return function (payment) {
-    var dust = constants.getNetwork().dustThreshold;
+    var dust = constants.BITCOIN_DUST;
 
     var usableCoins = Transaction.filterUsableCoins(payment.coins, payment.feePerKb);
     var max = Transaction.maxAvailableAmount(usableCoins, payment.feePerKb);
