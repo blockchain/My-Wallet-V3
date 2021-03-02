@@ -28,6 +28,10 @@ let WalletCrypto = {
   decryptWallet () {}
 };
 
+let WalletCredentials = {
+  fromMnemonic () {}
+};
+
 let hdwallet = {
   guid: '1234',
   sharedKey: 'shared',
@@ -120,6 +124,7 @@ let stubs = {
   'bitcoin-exchange-client': exchangeMock,
   './wallet-store': WalletStore,
   './wallet-crypto': WalletCrypto,
+  './walletcredentials': WalletCredentials,
   './wallet-signup': WalletSignup,
   './api': API,
   './wallet-network': WalletNetwork,
@@ -600,6 +605,96 @@ describe('Wallet', () => {
       MyWallet.recoverFromMnemonic('a@b.com', 'secret', 'nuclear bunker sphaghetti monster dim sum sauce', undefined, () => {
         expect(hdwallet.scanBip44).toHaveBeenCalled();
         done();
+      });
+    });
+  });
+
+  describe('recoverFromMetadata', () => {
+    let guid = 'a65eeeff-a714-418c-8408-2ee1901cab5c'
+    let password = 'password'
+    let sharedKey = 'a65eeeff-a714-418c-8408-2ee1901cab5c'
+    let session = 'session'
+    let metadataEntry = {guid: guid, password: password, sharedKey: sharedKey};
+
+    describe('success', () => {
+      beforeEach(() => {
+        spyOn(WalletCredentials, 'fromMnemonic').and.returnValue(Promise.resolve(metadataEntry));
+
+        MyWallet.wallet = hdwallet
+        spyOn(MyWallet, 'login').and.returnValue(Promise.resolve());
+        spyOn(WalletNetwork, 'establishSession').and.returnValue(Promise.resolve(session));
+        spyOn(hdwallet, 'scanBip44').and.returnValue(Promise.resolve());
+        spyOn(WalletStore, 'unsafeSetPassword')
+        spyOn(WalletSignup, 'generateNewWallet')
+      });
+
+      it('should recover successfully', (done) => {
+        MyWallet.recoverFromMetadata('nuclear bunker sphaghetti monster dim sum sauce', (result) => {
+          expect(WalletSignup.generateNewWallet).not.toHaveBeenCalled();
+
+          expect(WalletStore.unsafeSetPassword).toHaveBeenCalledWith(password);
+          expect(MyWallet.login.calls.argsFor(0)[0]).toEqual(guid);
+          expect(MyWallet.login.calls.argsFor(0)[1]).toEqual(password);
+          expect(MyWallet.login.calls.argsFor(0)[2]).toEqual({sharedKey: sharedKey, twoFactor: null});
+          expect(result.guid).toEqual(guid)
+          expect(result.password).toEqual(password)
+          expect(result.sharedKey).toEqual(sharedKey)
+          expect(result.sessionToken).toEqual(session)
+          done();
+        });
+      });
+    });
+
+    describe('no internet', () => {
+      it('return error for no internet', (done) => {
+        spyOn(WalletNetwork, 'establishSession').and.returnValue(Promise.reject());
+        MyWallet.recoverFromMetadata('any', (result) => {
+          expect(false)
+        }, (error) => {
+          expect(error).toEqual('timeout request')
+          done();
+        });
+      });
+    });
+
+    describe('other errors', () => {
+      beforeEach(() => {
+        MyWallet.wallet = hdwallet
+        spyOn(WalletNetwork, 'establishSession').and.returnValue(Promise.resolve(session));
+        spyOn(hdwallet, 'scanBip44').and.returnValue(Promise.resolve());
+        spyOn(WalletStore, 'unsafeSetPassword')
+        spyOn(WalletSignup, 'generateNewWallet')
+      });
+
+      it('return error for missing metadata entry', (done) => {
+        spyOn(WalletCredentials, 'fromMnemonic').and.returnValue(Promise.reject());
+        MyWallet.recoverFromMetadata('any', (result) => {
+          expect(false)
+        }, (error) => {
+          expect(error).toEqual('NO_METADATA')
+          done();
+        });
+      });
+
+      it('return error for empty metadata entry', (done) => {
+        spyOn(WalletCredentials, 'fromMnemonic').and.returnValue(Promise.resolve({}));
+        MyWallet.recoverFromMetadata('any', (result) => {
+          expect(false)
+        }, (error) => {
+          expect(error).toEqual('NO_METADATA')
+          done();
+        });
+      });
+
+      it('return error for invalid login', (done) => {
+        spyOn(WalletCredentials, 'fromMnemonic').and.returnValue(Promise.resolve(metadataEntry));
+        spyOn(MyWallet, 'login').and.returnValue(Promise.reject());
+        MyWallet.recoverFromMetadata('any', (result) => {
+          expect(false)
+        }, (error) => {
+          expect(error).toEqual('NO_METADATA')
+          done();
+        });
       });
     });
   });

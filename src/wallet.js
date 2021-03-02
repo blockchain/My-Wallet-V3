@@ -9,6 +9,7 @@ var WalletSignup = require('./wallet-signup');
 var WalletNetwork = require('./wallet-network');
 var API = require('./api');
 var Wallet = require('./blockchain-wallet');
+var WalletCredentials = require('./walletcredentials');
 var Helpers = require('./helpers');
 var BlockchainSocket = require('./blockchain-socket');
 var RNG = require('./rng.js');
@@ -630,7 +631,49 @@ MyWallet.recoverFromMnemonic = function (inputedEmail, inputedPassword, mnemonic
   };
 
   WalletSignup.generateNewWallet(inputedPassword, inputedEmail, mnemonic, bip39Password, null, walletGenerated, error, generateUUIDProgress, decryptWalletProgress);
-};
+}
+
+MyWallet.recoverFromMetadata = function (mnemonic, successCallback, error, startedRestoreHDWallet, accountProgress, generateUUIDProgress, decryptWalletProgress) {
+  generateUUIDProgress && generateUUIDProgress()
+
+  // There are two errors that we need to handle
+  // A bad internet connection
+  // Invalid/Missing metadata entry
+  // We check for bad internet with the sessionToken call, which should only fail if there are connectivity issue
+  // From then on, any error trying to load metadata/decrypt the wallet we consider a failure to restore from metadata
+  let errorNoInternet = () => { error('timeout request') }
+  let errorNoRecovery = () => { error('NO_METADATA') }
+
+  WalletNetwork.establishSession(null).then(sessionToken => {
+    WalletCredentials.fromMnemonic(mnemonic)
+      .then(metadata => {
+        if(!metadata || !Helpers.isValidGUID(metadata.guid) || !metadata.password || !Helpers.isValidGUID(metadata.sharedKey)) {
+          console.info('Corrupted wallet credentials in metadata')
+          throw 'corrupted metadata entry'
+        }
+
+        decryptWalletProgress && decryptWalletProgress()
+        WalletStore.unsafeSetPassword(metadata.password);
+        this.login(metadata.guid, metadata.password, {sharedKey: metadata.sharedKey, twoFactor: null}, {
+            needsTwoFactorCode: () => errorNoRecovery(),
+            wrongTwoFactorCode: () => errorNoRecovery(),
+            authorizationRequired: () => errorNoRecovery()
+          })
+          .then(() => {
+            MyWallet.wallet.scanBip44(undefined, accountProgress)
+              .then(() => {
+                isInitialized = false
+                successCallback({
+                  guid: metadata.guid,
+                  sharedKey: metadata.sharedKey,
+                  password: metadata.password,
+                  sessionToken: sessionToken
+                });
+              }).catch(errorNoRecovery);
+          }).catch(errorNoRecovery)
+      }).catch(errorNoRecovery);
+  }).catch(errorNoInternet)
+}
 
 // used frontend and mywallet
 MyWallet.logout = function (force) {
