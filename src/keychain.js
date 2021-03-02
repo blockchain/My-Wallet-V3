@@ -29,9 +29,7 @@ Object.defineProperties(KeyChain.prototype, {
   'isNeutered': {
     configurable: false,
     get: function () {
-      // isNeutered() is not yet in 2.1.4
-      // return this._chainRoot ? this._chainRoot.isNeutered() : null;
-      return this._chainRoot ? !this._chainRoot.keyPair.d : null;
+      return this._chainRoot ? this._chainRoot.isNeutered() : null;
     }
   }
 });
