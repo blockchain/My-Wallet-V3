@@ -254,7 +254,14 @@ HDAccount.prototype.changeAddressAtIndex = function (index, type) {
 HDAccount.prototype.getAvailableBalance = function (feeType) {
   feeType = (feeType === 'regular' || feeType === 'priority') ? feeType : 'regular';
   let feesP = API.getFees();
-  let coinsP = API.getUnspent([this.extendedPublicKey]).then(Helpers.pluck('unspent_outputs'));
+  let addresses = null;
+  let addressesBech32 = null;
+  if (defaultDerivation === 'bech32') {
+    addressesBech32 = [this.extendedPublicKey];
+  } else {
+    addresses = [this.extendedPublicKey];
+  }
+  let coinsP = API.getUnspent(addresses, addressesBech32).then(Helpers.pluck('unspent_outputs'));
   return Promise.all([feesP, coinsP]).then(([fees, coins]) => {
     let fee = Helpers.toFeePerKb(fees[feeType]);
     let usableCoins = Transaction.filterUsableCoins(coins, fee);

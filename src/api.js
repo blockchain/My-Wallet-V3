@@ -157,9 +157,12 @@ API.prototype.getTicker = function () {
   return this.retry(this.request.bind(this, 'GET', 'ticker', data));
 };
 
-API.prototype.getUnspent = function (fromAddresses, confirmations) {
+API.prototype.getUnspent = function (fromAddresses, fromAddressesBech32, confirmations) {
+  var legacy = fromAddresses || []
+  var bech32 = fromAddressesBech32 || []
   var data = {
-    active: fromAddresses.join('|'),
+    active: legacy.join('|'),
+    activeBech32: bech32.join('|'),
     confirmations: Helpers.isPositiveNumber(confirmations) ? confirmations : -1,
     format: 'json'
   };
