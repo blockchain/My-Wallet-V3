@@ -18,15 +18,7 @@ function KeyChainV4 (extendedKey, index, cache, bitcoinjs, type) {
   this._getKey = Helpers.memoize(function (index) {
     assert(Helpers.isPositiveInteger(index), 'Key index must be integer >= 0');
     assert(this._chainRoot, 'KeyChainV4 is not initialized.');
-    if (type === 'bech32') {
-      var keyhash = this._Bitcoin.crypto.hash160(
-        this._chainRoot.derive(index).getPublicKeyBuffer()
-      )
-      var scriptPubKey = this._Bitcoin.script.witnessPubKeyHash.output.encode(keyhash);
-      return this._Bitcoin.address.fromOutputScript(scriptPubKey, constants.getNetwork(this._Bitcoin));
-    } else {
-      return this._chainRoot.derive(index);
-    }
+    return this._chainRoot.derive(index);
   });
 }
 
@@ -63,7 +55,16 @@ KeyChainV4.prototype.init = function (extendedKey, index, cache) {
 
 KeyChainV4.prototype.getAddress = function (index) {
   assert(Helpers.isPositiveInteger(index), 'Address index must be integer >= 0');
-  return this._type === 'legacy' ? this._getKey(index).getAddress() : this._getKey(index);
+  var hdNode = this._getKey(index);
+  if (this._type === 'bech32') {
+    var keyhash = this._Bitcoin.crypto.hash160(hdNode.getPublicKeyBuffer())
+    var scriptPubKey = this._Bitcoin.script.witnessPubKeyHash.output.encode(keyhash);
+    return this._Bitcoin.address.fromOutputScript(scriptPubKey, constants.getNetwork(this._Bitcoin));
+  } else if (this._type === 'legacy') {
+    return hdNode.getAddress();
+  } else {
+    return null
+  }
 };
 
 KeyChainV4.prototype.getPrivateKey = function (index) {
