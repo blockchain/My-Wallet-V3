@@ -110,6 +110,20 @@ Object.defineProperties(HDAccount.prototype, {
       ) + 1;
     }
   },
+  'legacyDerivationReceiveIndex': {
+    configurable: false,
+    get: function () {
+      var derivation = this.derivations.find(x => x.type === 'legacy')
+      var maxLabeledReceiveIndex = derivation._address_labels.length > 0
+      ? derivation._address_labels[derivation._address_labels.length - 1].index
+      : null
+      var lastUsedReceiveIndex = derivation.lastUsedReceiveIndex
+      return Math.max(
+        lastUsedReceiveIndex === null ? -1 : lastUsedReceiveIndex,
+        maxLabeledReceiveIndex === null ? -1 : maxLabeledReceiveIndex
+      ) + 1;
+    }
+  },
   'lastUsedReceiveIndex': {
     configurable: false,
     get: function () {
@@ -134,6 +148,10 @@ Object.defineProperties(HDAccount.prototype, {
   'extendedPrivateKey': {
     configurable: false,
     get: function () { return this.defaultDerivationAccount._xpriv; }
+  },
+  'legacyDerivationReceiveAddress': {
+    configurable: false,
+    get: function () { return this.receiveAddressAtIndex(this.legacyDerivationReceiveIndex, 'legacy'); }
   },
   'receiveAddress': {
     configurable: false,
