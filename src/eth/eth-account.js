@@ -17,7 +17,6 @@ class EthAccount {
     this._approximateBalance = null;
     this._nonce = null;
     this._txs = [];
-    debugger;
     this._sync = () => ethWallet.sync()
   }
 
