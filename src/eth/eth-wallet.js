@@ -230,13 +230,13 @@ class EthWallet {
         let { ethereum } = data;
         this._hasSeen = ethereum.has_seen;
         this._defaultAccountIdx = ethereum.default_account_idx;
-        this._accounts = ethereum.accounts.map(constructAccount);
+        this._accounts = ethereum.accounts.map(it => constructAccount(it)(this));
         this._txNotes = ethereum.tx_notes || {};
         this._txMeta = ethereum.tx_meta || {};
         this._lastTx = ethereum.last_tx;
         this._lastTxTimestamp = ethereum.last_tx_timestamp;
         if (ethereum.legacy_account) {
-          this._legacyAccount = constructAccount(ethereum.legacy_account);
+          this._legacyAccount = constructAccount(ethereum.legacy_account)(this);
         };
         this._erc20 = ethereum.erc20 || {};
       }

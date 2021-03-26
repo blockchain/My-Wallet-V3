@@ -85,7 +85,7 @@ class BchAccount extends BchSpendable {
   }
 
   static defaultLabel (accountIdx) {
-    let label = 'My Bitcoin Cash Wallet';
+    let label = 'Private Key Wallet';
     return accountIdx > 0 ? `${label} ${accountIdx + 1}` : label;
   }
 }

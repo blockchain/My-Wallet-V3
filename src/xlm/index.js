@@ -33,12 +33,16 @@ class StellarLumensWallet {
     this._metadata.update(this).then(success).catch(error);
   }
 
+  sync () {
+    return this._metadata.update(this);
+  }
+
   fetch () {
     return this._metadata.fetch().then((data) => {
       this._defaultAccountIdx = data ? data.default_account_idx : 0;
       let accountsData = data ? data.accounts : [];
       this._accounts = accountsData.map(account => {
-        return new XlmAccount(account);
+        return new XlmAccount(account, this);
       });
     });
   }

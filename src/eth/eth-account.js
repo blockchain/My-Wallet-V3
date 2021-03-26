@@ -2,14 +2,14 @@ const ethUtil = require('ethereumjs-util');
 const EthTxBuilder = require('./eth-tx-builder');
 const EthWalletTx = require('./eth-wallet-tx');
 const API = require('../api');
-const { toBigNumber, toWei, fromWei } = require('../helpers');
+const { isValidLabel, toBigNumber, toWei, fromWei } = require('../helpers');
 const EthShiftPayment = require('../shift/eth-payment');
 
 class EthAccount {
-  constructor (obj) {
+  constructor (obj, ethWallet) {
     this._priv = obj.priv && Buffer.from(obj.priv, 'hex');
     this._addr = ethUtil.toChecksumAddress(obj.priv ? EthAccount.privateKeyToAddress(this._priv) : obj.addr);
-    this.label = obj.label;
+    this._label = obj.label;
     this.archived = obj.archived || false;
     this._correct = Boolean(obj.correct);
     this._wei = null;
@@ -17,6 +17,20 @@ class EthAccount {
     this._approximateBalance = null;
     this._nonce = null;
     this._txs = [];
+    debugger;
+    this._sync = () => ethWallet.sync()
+  }
+
+  get label () {
+    return this._label;
+  }
+
+  set label (value) {
+    if (!isValidLabel(value)) {
+      throw new Error('EthAccount.label must be an alphanumeric string');
+    }
+    this._label = value
+    this._sync()
   }
 
   get address () {
@@ -153,13 +167,13 @@ class EthAccount {
   }
 
   static defaultLabel (accountIdx) {
-    let label = 'My Ether Wallet';
+    let label = 'Private Key Wallet';
     return accountIdx > 0 ? `${label} ${accountIdx + 1}` : label;
   }
 
   static fromWallet (wallet) {
     let addr = EthAccount.privateKeyToAddress(wallet.getPrivateKey());
-    let account = new EthAccount({ addr });
+    let account = new EthAccount({ addr }, this);
     account.setData({ balance: '0', nonce: 0 });
     return account;
   }
