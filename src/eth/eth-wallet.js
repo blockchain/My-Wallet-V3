@@ -131,7 +131,7 @@ class EthWallet {
 
   createAccount (label, secPass) {
     let accountNode = this.deriveChild(this.accounts.length, secPass);
-    let account = EthAccount.fromWallet(accountNode.getWallet());
+    let account = EthAccount.fromWallet(accountNode.getWallet(), this);
     account.label = label || EthAccount.defaultLabel(this.accounts.length);
     account.markAsCorrect();
     this._accounts.push(account);
@@ -141,7 +141,7 @@ class EthWallet {
 
   createAccountFromPrivateKey (privateKey, label) {
     let wallet = Wallet.fromPrivateKey(privateKey);
-    let account = EthAccount.fromWallet(wallet);
+    let account = EthAccount.fromWallet(wallet, this);
     account.label = label || EthAccount.defaultLabel(this.accounts.length);
     account.markAsCorrect();
     this._accounts.push(account);
@@ -446,7 +446,7 @@ class EthWallet {
   __transitionToLegacy (secPass) {
     delete this._legacyAccount;
     let accountNode = this.deriveChildLegacy(0, secPass);
-    let account = EthAccount.fromWallet(accountNode.getWallet());
+    let account = EthAccount.fromWallet(accountNode.getWallet(), this);
     account.label = EthAccount.defaultLabel(0);
     this._accounts = [account];
     this._socket.subscribeToAccount(this, account);

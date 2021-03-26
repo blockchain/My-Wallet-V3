@@ -170,9 +170,9 @@ class EthAccount {
     return accountIdx > 0 ? `${label} ${accountIdx + 1}` : label;
   }
 
-  static fromWallet (wallet) {
+  static fromWallet (wallet, ethWallet) {
     let addr = EthAccount.privateKeyToAddress(wallet.getPrivateKey());
-    let account = new EthAccount({ addr }, this);
+    let account = new EthAccount({ addr }, ethWallet);
     account.setData({ balance: '0', nonce: 0 });
     return account;
   }
