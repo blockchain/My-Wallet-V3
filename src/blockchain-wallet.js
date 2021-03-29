@@ -711,7 +711,7 @@ Wallet.prototype.scanBip44 = function (secondPassword, progress) {
       return true;
     } else {
       accountIndex++;
-      var account = self.newAccount('My Bitcoin Wallet ' + accountIndex.toString(), secondPassword, 0, undefined, true);
+      var account = self.newAccount('Private Key Wallet ' + accountIndex.toString(), secondPassword, 0, undefined, true);
       return isAccountNonUsed(account, progress).then(go);
     }
   };
@@ -744,7 +744,7 @@ Wallet.new = function (guid, sharedKey, mnemonic, bip39Password, firstAccountLab
     options: constants.getDefaultWalletOptions()
   };
   MyWallet.wallet = new Wallet(object);
-  var label = firstAccountLabel || 'My Bitcoin Wallet';
+  var label = firstAccountLabel || 'Private Key Wallet';
   try {
     var hd = HDWallet.new(mnemonic, bip39Password);
     MyWallet.wallet._hd_wallets.push(hd);
@@ -761,7 +761,7 @@ Wallet.prototype.upgradeToV3 = function (firstAccountLabel, pw, success, error) 
     var hd = HDWallet.new(mnemonic, undefined, encoder);
   } catch (e) { error(e); return; }
   this._hd_wallets.push(hd);
-  var label = firstAccountLabel || 'My Bitcoin Wallet';
+  var label = firstAccountLabel || 'Private Key Wallet';
   this.newAccount(label, pw, this._hd_wallets.length - 1, true);
   this.cacheMetadataKey(pw);
   this.loadMetadata();

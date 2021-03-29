@@ -1,9 +1,13 @@
+const H = require('../helpers')
+
 class XlmAccount {
-  constructor (accountData) {
+  constructor (accountData, xlmWallet) {
+    this._sync = () => xlmWallet.sync()
     this._publicKey = accountData.publicKey;
     this._label = accountData.label;
     this._archived = accountData.archived === undefined ? false : accountData.archived;
   }
+
 
   get publicKey () {
     return this._publicKey;
@@ -11,6 +15,14 @@ class XlmAccount {
 
   get label () {
     return this._label;
+  }
+
+  set label (value) {
+    if (!H.isValidLabel(value)) {
+      throw new Error('XlmAccount.label must be an alphanumeric string');
+    }
+    this._label = value
+    this._sync()
   }
 
   get archived () {
