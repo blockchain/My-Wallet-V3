@@ -91,7 +91,6 @@ const bitcoinSigner = (selection) => {
     }
   }
 
-  // not really sure why I need to map to Coin again...
   forEach(addInput, selection.inputs)
   forEach(addOutput, selection.outputs)
   addIndex(forEach)(sign, selection.inputs)
