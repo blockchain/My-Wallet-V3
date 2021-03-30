@@ -28,6 +28,19 @@ Helpers.isKey = function (bitcoinKey) {
 Helpers.isInstanceOf = function (object, theClass) {
   return object instanceof theClass;
 };
+Helpers.scriptToAddress = function (script) {
+  try {
+    var scriptBuffer = Buffer.from(script, 'hex');
+    var network = constants.getNetwork(Bitcoin);
+    var address = Bitcoin.address.fromOutputScript(scriptBuffer, network).toString();
+    return address
+  } catch (e) {
+    return undefined
+  }
+}
+Helpers.keyPairToAddress = function (key) {
+  return Bitcoin.payments.p2pkh({ pubkey: key.publicKey }).address
+}
 Helpers.isBitcoinAddress = function (candidate) {
   try {
     var d = Bitcoin.address.fromBase58Check(candidate);

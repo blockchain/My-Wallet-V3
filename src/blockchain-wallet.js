@@ -74,7 +74,7 @@ function Wallet (object) {
   this._metadataHDNode = null;
 
   if (obj.metadataHDNode) {
-    this._metadataHDNode = Bitcoin.HDNode.fromBase58(obj.metadataHDNode, constants.getNetwork());
+    this._metadataHDNode = Bitcoin.bip32.fromBase58(obj.metadataHDNode, constants.getNetwork());
   } else if (!this.isUpgradedToHD) {
   } else if (!this.isDoubleEncrypted) {
     this._metadataHDNode = Metadata.deriveMetadataNode(this.hdwallet.getMasterHDNode());
@@ -830,7 +830,7 @@ Wallet.prototype.upgradeToV4 = function (pw, success, error) {
     })
     // get bech32 xpub and xpriv
     let seed = BIP39.mnemonicToSeed(BIP39.entropyToMnemonic(seedHex))
-    let masterNode = Bitcoin.HDNode.fromSeedBuffer(seed, constants.getNetwork())
+    let masterNode = Bitcoin.bip32.fromSeedBuffer(seed, constants.getNetwork())
     let node = masterNode.deriveHardened(84).deriveHardened(0).deriveHardened(account.index)
     var bech32Derivation = new Derivation({
       type: 'bech32',

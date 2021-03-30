@@ -21,7 +21,7 @@ class Metadata {
     this.VERSION = 1;
     this._typeId = typeId == null ? -1 : typeId;
     this._magicHash = null;
-    this._address = ecPair.getAddress();
+    this._address = Helpers.keyPairToAddress(ecPair);
     this._signKey = ecPair;
     this._encKeyBuffer = encKeyBuffer;
     this._sequence = Promise.resolve();
@@ -215,9 +215,11 @@ Metadata.fromMetadataHDNode = function (metadataHDNode, typeId) {
   //                       signature used to authenticate
   // purpose' / type' / 1' : sha256(private key) used as 256 bit AES key
   const node = payloadTypeNode.deriveHardened(0);
-  const privateKeyBuffer = payloadTypeNode.deriveHardened(1).keyPair.d.toBuffer();
-  const encryptionKey = WalletCrypto.sha256(privateKeyBuffer);
-  return new Metadata(node.keyPair, encryptionKey, typeId);
+  const privateKey = payloadTypeNode.deriveHardened(1).privateKey
+  const keypair = Bitcoin.ECPair.fromPrivateKey(node.privateKey)
+  const encryptionKey = WalletCrypto.sha256(privateKey);
+
+  return new Metadata(keypair, encryptionKey, typeId);
 };
 
 Metadata.deriveMetadataNode = function (masterHDNode) {

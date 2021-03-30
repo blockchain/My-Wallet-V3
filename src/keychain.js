@@ -40,10 +40,10 @@ KeyChain.prototype.init = function (extendedKey, index, cache) {
   // if cache is defined we use it to recreate the chain
   // otherwise we generate it using extendedKey and index
   if (cache) {
-    this._chainRoot = this._Bitcoin.HDNode.fromBase58(cache, constants.getNetwork(this._Bitcoin));
+    this._chainRoot = this._Bitcoin.bip32.fromBase58(cache, constants.getNetwork(this._Bitcoin));
   } else {
     this._chainRoot = extendedKey && Helpers.isPositiveInteger(index) && index >= 0
-      ? this._Bitcoin.HDNode.fromBase58(extendedKey, constants.getNetwork(this._Bitcoin)).derive(index) : undefined;
+      ? this._Bitcoin.bip32.fromBase58(extendedKey, constants.getNetwork(this._Bitcoin)).derive(index) : undefined;
   }
   return this;
 };

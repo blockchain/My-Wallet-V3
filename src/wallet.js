@@ -708,7 +708,7 @@ MyWallet.endSession = function (sessionToken) {
 MyWallet.browserCheck = function () {
   var mnemonic = 'daughter size twenty place alter glass small bid purse october faint beyond';
   var seed = BIP39.mnemonicToSeed(mnemonic, '');
-  var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed, constants.getNetwork());
+  var masterkey = Bitcoin.bip32.fromSeedBuffer(seed, constants.getNetwork());
 
   var account = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(0);
   var address = account.derive(0).derive(0).getAddress();
@@ -746,7 +746,7 @@ MyWallet.browserCheckFast = function () {
   }[constants.NETWORK];
 
   // master node -> xpriv (1 ms)
-  var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed, network);
+  var masterkey = Bitcoin.bip32.fromSeedBuffer(seed, network);
   var priv = masterkey.toBase58();
 
   if (priv !== vectors.priv) {
@@ -760,13 +760,13 @@ MyWallet.browserCheckFast = function () {
   // }
 
   // xpriv -> xpub, test .neutered() // 100 ms
-  // var xprivChild = Bitcoin.HDNode.fromBase58('xprv9u32fAyAZYdehCkX6YGKSuTd1PnEgrjjPbdUwZ9v1aP2v8Dbr4JCaG4teSc9YNScsXeKGRhSHkimo4W6qefVUnT9eAuiL7yDRMbwf6McJBY');
+  // var xprivChild = Bitcoin.bip32.fromBase58('xprv9u32fAyAZYdehCkX6YGKSuTd1PnEgrjjPbdUwZ9v1aP2v8Dbr4JCaG4teSc9YNScsXeKGRhSHkimo4W6qefVUnT9eAuiL7yDRMbwf6McJBY');
   // var xpub = xprivChild.neutered();
   // if (xpub.toString() !== 'xpub682P4gW4PvBwugpzCZoKp3QMZRcj6KTakpZ5jwZXZuv1nvYkPbcT84PNVk1vSKnf1XtLRfTzuwqRH6y7T2HYKRWohWHLDpEv2sfeqPCAFkH') {
   //   return false;
   // }
 
-  var pub = Bitcoin.HDNode.fromBase58(vectors.pub, network);
+  var pub = Bitcoin.bip32.fromBase58(vectors.pub, network);
 
   // xpub -> address // 2 ms
   if (pub.getAddress() !== vectors.address) {

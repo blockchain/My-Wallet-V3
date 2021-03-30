@@ -21,7 +21,7 @@ class Contact {
     this.facilitatedTxList = o.facilitatedTxList ? map(FacilitatedTx.factory, o.facilitatedTxList) : {};
   }
   get pubKey () {
-    return this.xpub ? Bitcoin.HDNode.fromBase58(this.xpub).keyPair : null;
+    return this.xpub ? Bitcoin.bip32.fromBase58(this.xpub).keyPair : null;
   }
 }
 

@@ -43,10 +43,10 @@ KeyChainV4.prototype.init = function (extendedKey, index, cache) {
   // if cache is defined we use it to recreate the chain
   // otherwise we generate it using extendedKey and index
   if (cache) {
-    this._chainRoot = this._Bitcoin.HDNode.fromBase58(cache, constants.getNetwork(this._Bitcoin));
+    this._chainRoot = this._Bitcoin.bip32.fromBase58(cache, constants.getNetwork(this._Bitcoin));
   } else {
     this._chainRoot = extendedKey && Helpers.isPositiveInteger(index) && index >= 0
-      ? this._Bitcoin.HDNode.fromBase58(extendedKey, constants.getNetwork(this._Bitcoin)).derive(index) : undefined;
+      ? this._Bitcoin.bip32.fromBase58(extendedKey, constants.getNetwork(this._Bitcoin)).derive(index) : undefined;
   }
   return this;
 };
@@ -55,11 +55,11 @@ KeyChainV4.prototype.getAddress = function (index) {
   assert(Helpers.isPositiveInteger(index), 'Address index must be integer >= 0');
   var hdNode = this._getKey(index);
   if (this._type === 'bech32') {
-    var keyhash = this._Bitcoin.crypto.hash160(hdNode.getPublicKeyBuffer())
-    var scriptPubKey = this._Bitcoin.script.witnessPubKeyHash.output.encode(keyhash);
-    return this._Bitcoin.address.fromOutputScript(scriptPubKey, constants.getNetwork(this._Bitcoin));
+    const { address } = Bitcoin.payments.p2wpkh({ pubkey: hdNode.publicKey })
+    return address
   } else if (this._type === 'legacy') {
-    return hdNode.getAddress();
+    const { address } = Bitcoin.payments.p2pkh({ pubkey: hdNode.publicKey })
+    return address
   } else {
     return null
   }
