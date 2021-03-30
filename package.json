@@ -28,7 +28,7 @@
     "url": "https://github.com/blockchain/my-wallet-v3.git"
   },
   "scripts": {
-    "prepublish": "node_modules/.bin/babel src --presets babel-preset-es2015 --out-dir lib",
+    "prepublish": "node_modules/.bin/babel src --presets babel-preset-es2015 --plugins=transform-object-rest-spread --out-dir lib",
     "dist": "NODE_ENV=\"prod\" ./node_modules/.bin/webpack",
     "build": "./node_modules/.bin/webpack --progress",
     "build:watch": "./node_modules/.bin/webpack -w",
