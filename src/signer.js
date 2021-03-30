@@ -1,11 +1,12 @@
-const { curry, forEach, addIndex, lensProp, compose, over } = require('ramda');
+const { curry, defaultTo, forEach, addIndex, lensProp, compose, over } = require('ramda');
 const { mapped } = require('ramda-lens');
 const Bitcoin = require('bitcoinjs-lib');
 const BitcoinCash = require('bitcoinforksjs-lib');
 const constants = require('./constants');
 const WalletCrypto = require('./wallet-crypto');
 const Helpers = require('./helpers');
-const KeyRing = require('./keyring');
+const KeyRingV4 = require('./keyring-v4');
+const Coin = require('./coin');
 
 const getKey = (BitcoinLib, priv, addr) => {
   let format = Helpers.detectPrivateKeyFormat(priv);
@@ -35,6 +36,13 @@ const getXPRIV = (wallet, password, accountIndex) => {
     : WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, password, wallet.sharedKey, wallet.pbkdf2_iterations);
 };
 
+const getXPRIVBtc = (wallet, password, accountIndex, derivationType) => {
+  const account = wallet.hdwallet.accounts[accountIndex].derivations.find((d) => d.type === derivationType);
+  return account.xpriv == null || password == null
+    ? account.xpriv
+    : WalletCrypto.decryptSecretWithSecondPassword(account.xpriv, password, wallet.sharedKey, wallet.pbkdf2_iterations);
+};
+
 const pathToKey = (BitcoinLib, wallet, password, fullpath) => {
   const [idx, path] = fullpath.split('-');
   const xpriv = getXPRIV(wallet, password, idx);
@@ -42,23 +50,53 @@ const pathToKey = (BitcoinLib, wallet, password, fullpath) => {
   return keyring.privateKeyFromPath(path).keyPair;
 };
 
+const pathToKeyBtc = (BitcoinLib, wallet, password, coin) => {
+  const coinType = coin.type()
+  const derivationType = coinType === 'P2PKH' ? 'legacy' : 'bech32'
+  const [idx, path] = coin.priv.split('-');
+  const xpriv = getXPRIVBtc(wallet, password, idx, derivationType);
+  const keyring = new KeyRingV4(xpriv, undefined, BitcoinLib, derivationType);
+  return keyring.privateKeyFromPath(path);
+};
+
 const isFromAccount = (selection) => {
   return selection.inputs[0] ? selection.inputs[0].isFromAccount() : false;
 };
 
 const bitcoinSigner = (selection) => {
-  let network = constants.getNetwork(Bitcoin);
-  let tx = new Bitcoin.TransactionBuilder(network);
+  const network = constants.getNetwork(Bitcoin);
+  const tx = new Bitcoin.TransactionBuilder(network)
 
-  let addInput = coin => tx.addInput(coin.txHash, coin.index);
-  let addOutput = coin => tx.addOutput(coin.address, coin.value);
-  let sign = (coin, i) => tx.sign(i, coin.priv);
+  const addOutput = coin =>
+    tx.addOutput(defaultTo(coin.address, coin.script), coin.value)
+  const addInput = coin => {
+    switch (coin.type()) {
+      case 'P2WPKH':
+        return tx.addInput(
+          coin.txHash,
+          coin.index,
+          0xffffffff,
+          Helpers.getOutputScript(coin.priv)
+        )
+      default:
+        return tx.addInput(coin.txHash, coin.index)
+    }
+  }
+  const sign = (coin, i) => {
+    switch (coin.type()) {
+      case 'P2WPKH':
+        return tx.sign(i, coin.priv, null, null, coin.value)
+      default:
+        return tx.sign(i, coin.priv)
+    }
+  }
 
-  forEach(addInput, selection.inputs);
-  forEach(addOutput, selection.outputs);
-  addIndex(forEach)(sign, selection.inputs);
-
-  return tx.build();
+  // not really sure why I need to map to Coin again...
+  forEach(addInput, selection.inputs)
+  forEach(addOutput, selection.outputs)
+  addIndex(forEach)(sign, selection.inputs)
+  const signedTx = tx.build()
+  return signedTx
 };
 
 const bitcoinCashSigner = (selection, coinDust) => {
@@ -85,6 +123,17 @@ const bitcoinCashSigner = (selection, coinDust) => {
   return tx.buildIncomplete();
 };
 
+const signBtc = curry((BitcoinLib, signingFunction, password, wallet, selection, coinDust) => {
+  const getPrivAccBtc = coin => pathToKeyBtc(BitcoinLib, wallet, password, coin);
+  const getPrivAddr = address => getKeyForAddress(BitcoinLib, wallet, password, address);
+  const getKeys = isFromAccount(selection) ? getPrivAccBtc : getPrivAddr;
+  const inputsWithKeys = selection.inputs.map((input) => new Coin({
+    ...input,
+    priv: getKeys(input)
+  }));
+  return signingFunction({ ...selection, inputs: inputsWithKeys });
+});
+
 const sign = curry((BitcoinLib, signingFunction, password, wallet, selection, coinDust) => {
   const getPrivAcc = keypath => pathToKey(BitcoinLib, wallet, password, keypath);
   const getPrivAddr = address => getKeyForAddress(BitcoinLib, wallet, password, address);
@@ -94,6 +143,6 @@ const sign = curry((BitcoinLib, signingFunction, password, wallet, selection, co
 });
 
 module.exports = {
-  signBitcoin: sign(Bitcoin, bitcoinSigner),
+  signBitcoin: signBtc(Bitcoin, bitcoinSigner),
   signBitcoinCash: sign(BitcoinCash, bitcoinCashSigner)
 };

@@ -17,6 +17,9 @@ let config = {
         use: {
           loader: 'babel-loader',
           options: {
+            plugins: [
+              ["transform-object-rest-spread", { "useBuiltIns": true }]
+            ],
             presets: [
               ['es2015', { modules: false }]
             ]

@@ -134,15 +134,10 @@ class BtcPayment {
       if (payment.selection == null) {
         throw new PaymentError('cannot sign an unbuilt transaction', payment)
       }
-      return BtcApi.getBtcDust().then((dust) => {
-        const network = constants.getNetwork(Bitcoin)
-        const scriptBuffer = Buffer.from(dust.output_script, 'hex')
-        dust.address = Bitcoin.address.fromOutputScript(scriptBuffer, network).toString()
-        const coinDust = Coin.fromJS(dust)
-        let tx = signer.signBitcoin(secPass, this._wallet, payment.selection, coinDust)
-        let setData = compose(assoc('hash', tx.getId()), assoc('rawTx', tx.toHex()), assoc('lockSecret', dust.lock_secret))
-        return setData(payment)
-      })
+
+      let tx = signer.signBitcoin(secPass, this._wallet, payment.selection, null)
+      let setData = compose(assoc('hash', tx.getId()), assoc('rawTx', tx.toHex()))
+      return setData(payment)
     })
   }
 
@@ -152,7 +147,7 @@ class BtcPayment {
       if (payment.rawTx == null) {
         throw new PaymentError('cannot publish an unsigned transaction', payment)
       }
-      return BtcApi.pushTx(payment.rawTx, payment.lockSecret)
+      return BtcApi.pushTx(payment.rawTx)
         .then(() => ({ hash: payment.hash }))
     })
   }

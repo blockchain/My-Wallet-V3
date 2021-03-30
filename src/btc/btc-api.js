@@ -16,7 +16,7 @@ const scriptToAddress = coin => {
 
 const pushTx = (tx, lock_secret) => {
   const format = 'plain'
-  return fetch(`${API.API_ROOT_URL}pushtx`, {
+  return fetch(`${API.ROOT_URL}pushtx`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: API.encodeFormData({ tx, lock_secret, format })
@@ -27,14 +27,15 @@ const pushTx = (tx, lock_secret) => {
   )
 };
 
-const apiGetUnspents = (as, conf) => {
+const apiGetUnspents = (as, asBech32, conf) => {
   const active = as.join('|');
+  const activeBech32 = asBech32.join('|')
   const confirmations = Helpers.isPositiveNumber(conf) ? conf : -1
   const format = 'json'
-  return fetch(`${API.API_ROOT_URL}unspent`, {
+  return fetch(`${API.ROOT_URL}unspent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: API.encodeFormData({ active, confirmations, format })
+    body: API.encodeFormData({ active, activeBech32, confirmations, format })
   }).then(r =>
     r.status === 200 ? r.json() : r.text().then(e => Promise.reject(e))
   );
@@ -43,7 +44,7 @@ const apiGetUnspents = (as, conf) => {
 const multiaddr = (addresses, n = 1) => {
   const active = Helpers.toArrayFormat(addresses).join('|')
   const data = { active, format: 'json', offset: 0, no_compact: true, n, language: 'en', no_buttons: true };
-  return fetch(`${API.API_ROOT_URL}bch/multiaddr`, {
+  return fetch(`${API.API_ROOT_URL}multiaddr`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: API.encodeFormData(data)
@@ -59,8 +60,10 @@ const addIndexToOutput = curry((hdwallet, output) => {
 const getUnspents = curry((wallet, source) => {
   switch (true) {
     case is(Number, source):
-      const accIdx = wallet.hdwallet.accounts[source].extendedPublicKey
-      return apiGetUnspents([accIdx])
+      const acc = wallet.hdwallet.accounts[source]
+      const active = acc.derivations.find((d) => d.type === 'legacy').xpub
+      const activeBech32 = acc.derivations.find((d) => d.type === 'bech32').xpub
+      return apiGetUnspents([active], [activeBech32])
                 .then(prop('unspent_outputs'))
                 .then(map(addIndexToOutput(wallet.hdwallet)))
                 .then(map(Coin.fromJS));

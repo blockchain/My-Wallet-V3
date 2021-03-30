@@ -58,6 +58,10 @@ Object.defineProperties(Derivation.prototype, {
   'xpub': {
     configurable: false,
     get: function () { return this._xpub }
+  },
+  'xpriv': {
+    configurable: false,
+    get: function () { return this._xpriv }
   }
 })
 

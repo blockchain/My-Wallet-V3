@@ -38,6 +38,11 @@ Helpers.scriptToAddress = function (script) {
     return undefined
   }
 }
+Helpers.getOutputScript = function (keyPair) {
+  var pubKey = keyPair.publicKey
+  var payment = Bitcoin.payments.p2wpkh({ pubkey: pubKey })
+  return payment.output
+}
 Helpers.keyPairToAddress = function (key) {
   return Bitcoin.payments.p2pkh({ pubkey: key.publicKey }).address
 }

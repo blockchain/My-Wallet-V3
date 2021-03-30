@@ -6,8 +6,21 @@ const foldCoins = fold(Coin.empty);
 
 const dustThreshold = (feeRate) => (Coin.inputBytes({}) + Coin.outputBytes({})) * feeRate;
 
-const transactionBytes = (inputs, outputs) =>
-  Coin.TX_EMPTY_SIZE + inputs.reduce((a, c) => a + Coin.inputBytes(c), 0) + outputs.reduce((a, c) => a + Coin.outputBytes(c), 0);
+// const transactionBytes = (inputs, outputs) =>
+//   Coin.TX_EMPTY_SIZE + inputs.reduce((a, c) => a + Coin.inputBytes(c), 0) + outputs.reduce((a, c) => a + Coin.outputBytes(c), 0);
+
+const transactionBytes = (inputs, outputs) => {
+  const coinTypeReducer = (acc, coin) => {
+    const type = coin.type ? coin.type() : 'P2PKH'
+    if (acc[type]) acc[type] += 1
+    else acc[type] = 1
+    return acc
+  }
+
+  const inputTypeCollection = reduce(coinTypeReducer, {}, inputs)
+  const outputTypeCollection = reduce(coinTypeReducer, {}, outputs)
+  return Coin.getByteCount(inputTypeCollection, outputTypeCollection)
+}
 
 const effectiveBalance = curry((feePerByte, inputs, outputs = [{}]) =>
   foldCoins(inputs).map(v =>

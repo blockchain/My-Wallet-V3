@@ -30,6 +30,7 @@ var EthWallet = require('./eth/eth-wallet');
 var ShapeShift = require('./shift');
 var Bitcoin = require('bitcoinjs-lib');
 var EthSocket = require('./eth/eth-socket');
+var BitcoinWallet = require('./btc');
 var BitcoinCash = require('./bch');
 var RetailCore = require('./retail-core');
 var Lockbox = require('./lockbox');
@@ -377,6 +378,12 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () {
       return this._shapeshift;
+    }
+  },
+  'btc': {
+    configurable: false,
+    get: function () {
+      return this._btc;
     }
   },
   'bch': {
@@ -1032,6 +1039,11 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     );
   };
 
+  var fetchBtcWallet = function () {
+    this._btc = BitcoinWallet.fromBlockchainWallet(this);
+    return this._btc.fetch()
+  };
+
   var fetchBchWallet = function () {
     this._bch = BitcoinCash.fromBlockchainWallet(this);
     let wsUrl = MyWallet.ws.wsUrl.replace('/inv', '/bch/inv');
@@ -1071,6 +1083,7 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     promises.push(fetchExternal.call(this));
     promises.push(fetchEthWallet.call(this));
     promises.push(fetchShapeShift.call(this));
+    promises.push(fetchBtcWallet.call(this));
     promises.push(fetchBchWallet.call(this));
     promises.push(fetchRetailCore.call(this));
     promises.push(fetchLockbox.call(this));
