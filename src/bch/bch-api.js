@@ -59,7 +59,7 @@ const addIndexToOutput = curry((hdwallet, output) => {
 const getUnspents = curry((wallet, source) => {
   switch (true) {
     case is(Number, source):
-      const accIdx = wallet.hdwallet.accounts[source].extendedPublicKey
+      const accIdx = wallet.bch.accounts[source].xpub
       return apiGetUnspents([accIdx])
                 .then(prop('unspent_outputs'))
                 .then(map(addIndexToOutput(wallet.hdwallet)))

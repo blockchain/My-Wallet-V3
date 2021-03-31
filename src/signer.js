@@ -5,6 +5,7 @@ const BitcoinCash = require('bitcoinforksjs-lib');
 const constants = require('./constants');
 const WalletCrypto = require('./wallet-crypto');
 const Helpers = require('./helpers');
+const KeyRing = require('./keyring');
 const KeyRingV4 = require('./keyring-v4');
 const Coin = require('./coin');
 
@@ -29,34 +30,27 @@ const getKeyForAddress = (BitcoinLib, wallet, password, addr) => {
   return getKey(BitcoinLib, privateKeyBase58, addr);
 };
 
-const getXPRIV = (wallet, password, accountIndex) => {
-  const account = wallet.hdwallet.accounts[accountIndex];
-  return account.extendedPrivateKey == null || password == null
-    ? account.extendedPrivateKey
-    : WalletCrypto.decryptSecretWithSecondPassword(account.extendedPrivateKey, password, wallet.sharedKey, wallet.pbkdf2_iterations);
-};
-
-const getXPRIVBtc = (wallet, password, accountIndex, derivationType) => {
+const getXPRIV = (wallet, password, accountIndex, derivationType) => {
   const account = wallet.hdwallet.accounts[accountIndex].derivations.find((d) => d.type === derivationType);
   return account.xpriv == null || password == null
     ? account.xpriv
     : WalletCrypto.decryptSecretWithSecondPassword(account.xpriv, password, wallet.sharedKey, wallet.pbkdf2_iterations);
 };
 
-const pathToKey = (BitcoinLib, wallet, password, fullpath) => {
-  const [idx, path] = fullpath.split('-');
-  const xpriv = getXPRIV(wallet, password, idx);
-  const keyring = new KeyRing(xpriv, undefined, BitcoinLib);
-  return keyring.privateKeyFromPath(path).keyPair;
-};
-
 const pathToKeyBtc = (BitcoinLib, wallet, password, coin) => {
   const coinType = coin.type()
   const derivationType = coinType === 'P2PKH' ? 'legacy' : 'bech32'
   const [idx, path] = coin.priv.split('-');
-  const xpriv = getXPRIVBtc(wallet, password, idx, derivationType);
+  const xpriv = getXPRIV(wallet, password, idx, derivationType);
   const keyring = new KeyRingV4(xpriv, undefined, BitcoinLib, derivationType);
   return keyring.privateKeyFromPath(path);
+};
+
+const pathToKeyBch = (BitcoinLib, wallet, password, fullpath) => {
+  const [idx, path] = fullpath.split('-');
+  const xpriv = getXPRIV(wallet, password, idx, 'legacy');
+  const keyring = new KeyRing(xpriv, undefined, BitcoinLib);
+  return keyring.privateKeyFromPath(path).keyPair;
 };
 
 const isFromAccount = (selection) => {
@@ -133,8 +127,8 @@ const signBtc = curry((BitcoinLib, signingFunction, password, wallet, selection,
   return signingFunction({ ...selection, inputs: inputsWithKeys });
 });
 
-const sign = curry((BitcoinLib, signingFunction, password, wallet, selection, coinDust) => {
-  const getPrivAcc = keypath => pathToKey(BitcoinLib, wallet, password, keypath);
+const signBch = curry((BitcoinLib, signingFunction, password, wallet, selection, coinDust) => {
+  const getPrivAcc = keypath => pathToKeyBch(BitcoinLib, wallet, password, keypath);
   const getPrivAddr = address => getKeyForAddress(BitcoinLib, wallet, password, address);
   const getKeys = isFromAccount(selection) ? getPrivAcc : getPrivAddr;
   const selectionWithKeys = over(compose(lensProp('inputs'), mapped, lensProp('priv')), getKeys, selection);
@@ -143,5 +137,5 @@ const sign = curry((BitcoinLib, signingFunction, password, wallet, selection, co
 
 module.exports = {
   signBitcoin: signBtc(Bitcoin, bitcoinSigner),
-  signBitcoinCash: sign(BitcoinCash, bitcoinCashSigner)
+  signBitcoinCash: signBch(BitcoinCash, bitcoinCashSigner)
 };
