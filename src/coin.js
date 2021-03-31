@@ -45,20 +45,31 @@ class Coin {
   }
 
   type() {
+    let type = 'P2PKH'
     try {
-      switch (true) {
-        case this.address[0] === '1':
-          return 'P2PKH'
-        case this.address[0] === '3':
-          return 'P2SH-P2WPKH'
-        case this.address.substring(0, 2) === 'bc':
-          return 'P2WPKH'
-        default:
-          return 'P2PKH'
-      }
-    } catch (e) {
-      return 'P2PKH'
-    }
+      const output = Bitcoin.address.toOutputScript(this.address)
+      // eslint-disable-next-line
+      let addr = null
+
+      try {
+        addr = Bitcoin.payments.p2pkh({ output }).address
+        type = 'P2PKH'
+      } catch (e) {}
+      try {
+        addr = Bitcoin.payments.p2sh({ output }).address
+        type = 'P2SH'
+      } catch (e) {}
+      try {
+        addr = Bitcoin.payments.p2wpkh({ output }).address
+        type = 'P2WPKH'
+      } catch (e) {}
+      try {
+        addr = Bitcoin.payments.p2wsh({ output }).address
+        type = 'P2WSH'
+      } catch (e) {}
+    } catch (e) {}
+
+    return type
   }
 
   static descentSort (coinA, coinB) {
@@ -97,15 +108,13 @@ Coin.empty = Coin.of(0);
 Coin.IO_TYPES = {
   inputs: {
     P2PKH: 148, // legacy
-    P2WPKH: 67.75, // native segwit
-    'P2SH-P2WPKH': 91 // wrapped segwit
+    P2WPKH: 67.75 // native segwit
   },
   outputs: {
     P2PKH: 34,
     P2SH: 32,
     P2WPKH: 31,
-    P2WSH: 43,
-    'P2SH-P2WPKH': 32
+    P2WSH: 43
   }
 }
 
