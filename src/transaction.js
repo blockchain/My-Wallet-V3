@@ -81,7 +81,6 @@ Transaction.prototype.addPrivateKeys = function (privateKeys) {
 
   for (var i = 0; i < privateKeys.length; i++) {
     let input = this.addressesOfInputs[i];
-    // TODO: (paulo) At this point we need not only the private key (an HDNode) but also the info if this is supposed to be an bech32 or legacy transaction.
     let pkAddress = privateKeys[i].getAddress();
     assert.equal(input, pkAddress, 'Private key does not match bitcoin address ' + input + '!=' + pkAddress + ' while adding private key for input ' + i);
   }
