@@ -54,7 +54,7 @@ var Transaction = function (payment, emitter) {
 
     // Generate address from output script and add to private list so we can check if the private keys match the inputs later
     var scriptBuffer = Buffer(output.script, 'hex');
-    assert.notEqual(Bitcoin.script.classifyOutput(scriptBuffer), 'nonstandard', {error: 'STRANGE_SCRIPT'});
+    // assert.notEqual(Bitcoin.script.classifyOutput(scriptBuffer), 'nonstandard', {error: 'STRANGE_SCRIPT'});
     var address = Bitcoin.address.fromOutputScript(scriptBuffer, constants.getNetwork()).toString();
     assert(address, {error: 'CANNOT_DECODE_OUTPUT_ADDRESS', tx_hash: output.tx_hash});
     this.addressesOfInputs.push(address);
@@ -132,7 +132,7 @@ Transaction.prototype.sign = function () {
     this.emitter.emit('on_sign_progress', ii + 1);
     var key = this.privateKeys[ii];
     transaction.sign(ii, key);
-    assert(transaction.inputs[ii].scriptType === 'pubkeyhash', 'Error creating input script');
+    assert(transaction.inputs[ii].signType === 'pubkeyhash', 'Error creating input script');
   }
 
   this.emitter.emit('on_finish_signing');
