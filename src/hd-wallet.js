@@ -215,7 +215,7 @@ HDWallet.prototype.getMasterHDNode = function (cipher) {
 
   var masterhex = HDWallet.getMasterHex(this._seedHex, this._bip39Password, dec);
   var network = constants.getNetwork();
-  return Bitcoin.bip32.fromSeedBuffer(masterhex, network);
+  return Bitcoin.bip32.fromSeed(masterhex, network);
 };
 
 HDWallet.prototype.newAccount = function (label, cipher) {

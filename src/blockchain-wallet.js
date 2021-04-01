@@ -837,7 +837,7 @@ Wallet.prototype.upgradeToV4 = function (pw, success, error) {
     })
     // get bech32 xpub and xpriv
     let seed = BIP39.mnemonicToSeed(BIP39.entropyToMnemonic(seedHex))
-    let masterNode = Bitcoin.bip32.fromSeedBuffer(seed, constants.getNetwork())
+    let masterNode = Bitcoin.bip32.fromSeed(seed, constants.getNetwork())
     let node = masterNode.deriveHardened(84).deriveHardened(0).deriveHardened(account.index)
     var bech32Derivation = new Derivation({
       type: 'bech32',

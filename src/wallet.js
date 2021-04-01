@@ -708,7 +708,7 @@ MyWallet.endSession = function (sessionToken) {
 MyWallet.browserCheck = function () {
   var mnemonic = 'daughter size twenty place alter glass small bid purse october faint beyond';
   var seed = BIP39.mnemonicToSeed(mnemonic, '');
-  var masterkey = Bitcoin.bip32.fromSeedBuffer(seed, constants.getNetwork());
+  var masterkey = Bitcoin.bip32.fromSeed(seed, constants.getNetwork());
 
   var account = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(0);
   var address = account.derive(0).derive(0).getAddress();
@@ -746,7 +746,7 @@ MyWallet.browserCheckFast = function () {
   }[constants.NETWORK];
 
   // master node -> xpriv (1 ms)
-  var masterkey = Bitcoin.bip32.fromSeedBuffer(seed, network);
+  var masterkey = Bitcoin.bip32.fromSeed(seed, network);
   var priv = masterkey.toBase58();
 
   if (priv !== vectors.priv) {

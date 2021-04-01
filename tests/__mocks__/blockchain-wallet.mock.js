@@ -4,7 +4,7 @@ const MetadataMock = require('./metadata.mock');
 const seedHex = '17eb336a2a3bc73dd4d8bd304830fe32';
 const mnemonic = BIP39.entropyToMnemonic(seedHex);
 const masterhex = BIP39.mnemonicToSeed(mnemonic);
-const masterHdNode = Bitcoin.bip32.fromSeedBuffer(masterhex);
+const masterHdNode = Bitcoin.bip32.fromSeed(masterhex);
 
 class BlockchainWalletMock {
   constructor () {
