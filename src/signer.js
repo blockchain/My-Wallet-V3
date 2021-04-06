@@ -54,7 +54,7 @@ const pathToKeyBch = (BitcoinLib, wallet, password, fullpath) => {
 };
 
 const isFromAccount = (selection) => {
-  return selection.inputs[0] ? selection.inputs[0].isFromAccount() : false;
+  return selection.inputs && selection.inputs[0] ? selection.inputs[0].isFromAccount() : false;
 };
 
 const bitcoinSigner = (selection) => {

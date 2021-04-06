@@ -13,12 +13,12 @@ describe('Signer', () => {
   let selection = cs.selectAll(55, map(inputToCoin, signingData.unspent_outputs), '1HV9RPcPAwcCEDmNET5BEWvVVgCY3Pbg7i')
 
   it('should sign a btc transaction', () => {
-    let tx = signer.signBitcoin(void 0, wallet, selection)
+    let tx = signer.signBitcoin(void 0, null, wallet, selection)
     expect(tx.toHex()).toEqual(signingData.tx_hex_btc)
   })
 
   it('should sign a bch transaction', () => {
-    let tx = signer.signBitcoinCash(void 0, wallet, selection)
+    let tx = signer.signBitcoinCash(void 0, null, wallet, selection)
     expect(tx.toHex()).toEqual(signingData.tx_hex_bch)
   })
 })
