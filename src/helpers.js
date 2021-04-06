@@ -400,8 +400,7 @@ Helpers.privateKeyStringToKey = function (value, format, bitcoinjs) {
         throw new Error('Unsupported Key Format');
     }
 
-    var d = BigInteger.fromBuffer(keyBuffer);
-    return new bitcoinLib.ECPair(d, null, { network: constants.getNetwork(bitcoinLib) });
+    return bitcoinLib.ECPair(keyBuffer, { network: constants.getNetwork(bitcoinLib) });
   }
 };
 

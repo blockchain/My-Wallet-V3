@@ -69,7 +69,7 @@ var ImportExport = new function () {
     var AESopts = { mode: WalletCrypto.AES.ECB, padding: WalletCrypto.pad.NoPadding };
 
     var verifyHashAndReturn = function () {
-      var tmpkey = new Bitcoin.ECPair(decrypted, null, {compressed: isCompPoint, network: constants.getNetwork()});
+      var tmpkey = Bitcoin.ECPair.fromPrivateKey(decrypted, {compressed: isCompPoint, network: constants.getNetwork()});
 
       var base58Address = tmpkey.getAddress();
 
@@ -109,7 +109,7 @@ var ImportExport = new function () {
           passfactor = hash256(prefactorB);
         }
 
-        var kp = new Bitcoin.ECPair(BigInteger.fromBuffer(passfactor), null, {network: constants.getNetwork()});
+        var kp = Bitcoin.ECPair.fromPrivateKey(BigInteger.fromBuffer(passfactor), {network: constants.getNetwork()});
 
         var passpoint = kp.getPublicKeyBuffer();
 

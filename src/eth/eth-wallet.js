@@ -312,11 +312,13 @@ class EthWallet {
   connect (socket) {
     if (this._socket) return;
     this._socket = socket;
+    if (!this._socket) return;
     this._socket.subscribeToBlocks(this);
     this.activeAccounts.forEach(a => this._socket.subscribeToAccount(a));
 }
 
   setSocketHandlers () {
+    if (!this._socket) return;
     this._socket.subscribeToBlocks(this);
     this.activeAccounts.forEach(a => this._socket.subscribeToAccount(this, a, this.legacyAccount));
   }

@@ -148,7 +148,7 @@ describe('EthWallet', () => {
       it('should create a new account', () => {
         eth.createAccount();
         let account = eth.getAccount(1);
-        expect(account.label).toEqual('My Ether Wallet 2');
+        expect(account.label).toEqual('Private Key Wallet 2');
       });
 
       it('should create with a custom label', () => {

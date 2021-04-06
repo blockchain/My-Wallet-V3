@@ -523,8 +523,8 @@ function getKey (priv, addr) {
   var format = Helpers.detectPrivateKeyFormat(priv);
   var key = Helpers.privateKeyStringToKey(priv, format);
   var network = constants.getNetwork();
-  var ckey = new Bitcoin.ECPair(key.d, null, {compressed: true, network: network});
-  var ukey = new Bitcoin.ECPair(key.d, null, {compressed: false, network: network});
+  var ckey = Bitcoin.ECPair.fromPrivateKey(priv, {compressed: true, network: network});
+  var ukey = Bitcoin.ECPair.fromPrivateKey(priv, {compressed: false, network: network});
   if (ckey.getAddress() === addr) {
     return ckey;
   } else if (ukey.getAddress() === addr) {

@@ -73,37 +73,37 @@ describe('BIP38', () => {
         return key;
       });
 
-      spyOn(Bitcoin, 'ECPair').and.callFake((d, Q, options = {}) => {
-        let key;
-        let cacheKey = `Bitcoin.ECPair ${d.toBuffer().toString('hex')} ${options.compressed}`;
-        let hex = localStorage.getItem(cacheKey);
-        if (hex) {
-          console.log('Cache hit: ', hex);
-          key = Bitcoin.OriginalECPair.fromPublicKeyBuffer(Buffer(hex));
-          key.d = d;
-        } else {
-          key = new Bitcoin.OriginalECPair(d, null, {
-            compressed: options.compressed
-          });
-          hex = key.getPublicKeyBuffer().toString('hex');
-          localStorage.setItem(cacheKey, hex);
-        }
-        let address = key.getAddress();
-        let wif = key.toWIF();
-        let pubKeyBuffer = key.getPublicKeyBuffer();
-        return {
-          d,
-          getPublicKeyBuffer: function () {
-            return pubKeyBuffer;
-          },
-          toWIF: function () {
-            return wif;
-          },
-          getAddress: function () {
-            return address;
-          }
-        };
-      });
+      // spyOn(Bitcoin, 'ECPair').and.callFake((d, Q, options = {}) => {
+      //   let key;
+      //   let cacheKey = `Bitcoin.ECPair ${d.toBuffer().toString('hex')} ${options.compressed}`;
+      //   let hex = localStorage.getItem(cacheKey);
+      //   if (hex) {
+      //     console.log('Cache hit: ', hex);
+      //     key = Bitcoin.OriginalECPair.fromPublicKeyBuffer(Buffer(hex));
+      //     key.d = d;
+      //   } else {
+      //     key = new Bitcoin.OriginalECPair(d, null, {
+      //       compressed: options.compressed
+      //     });
+      //     hex = key.getPublicKeyBuffer().toString('hex');
+      //     localStorage.setItem(cacheKey, hex);
+      //   }
+      //   let address = key.getAddress();
+      //   let wif = key.toWIF();
+      //   let pubKeyBuffer = key.getPublicKeyBuffer();
+      //   return {
+      //     d,
+      //     getPublicKeyBuffer: function () {
+      //       return pubKeyBuffer;
+      //     },
+      //     toWIF: function () {
+      //       return wif;
+      //     },
+      //     getAddress: function () {
+      //       return address;
+      //     }
+      //   };
+      // });
     });
 
     it('when called with correct password should fire success with the right params', () => {

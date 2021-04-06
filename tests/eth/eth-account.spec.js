@@ -119,11 +119,11 @@ describe('EthAccount', () => {
   describe('static', () => {
     describe('.defaultLabel()', () => {
       it('should create a label', () => {
-        expect(EthAccount.defaultLabel()).toEqual('My Ether Wallet')
+        expect(EthAccount.defaultLabel()).toEqual('Private Key Wallet')
       })
 
       it('should create a label for account at index 1', () => {
-        expect(EthAccount.defaultLabel(1)).toEqual('My Ether Wallet 2')
+        expect(EthAccount.defaultLabel(1)).toEqual('Private Key Wallet 2')
       })
     })
 

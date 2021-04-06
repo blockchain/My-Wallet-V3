@@ -121,10 +121,16 @@ const signBtc = curry((BitcoinLib, signingFunction, password, wallet, selection,
   const getPrivAddr = address => getKeyForAddress(BitcoinLib, wallet, password, address);
   const getKeys = isFromAccount(selection) ? getPrivAccBtc : getPrivAddr;
   const inputsWithKeys = selection.inputs.map((input) => new Coin({
-    ...input,
+    value: input.value,
+    script: input.script,
+    txHash: input.txHash,
+    index: input.index,
+    address: input.address,
+    change: input.change,
     priv: getKeys(input)
   }));
-  return signingFunction({ ...selection, inputs: inputsWithKeys });
+  selection.inputs = inputsWithKeys
+  return signingFunction(selection);
 });
 
 const signBch = curry((BitcoinLib, signingFunction, password, wallet, selection, coinDust) => {
