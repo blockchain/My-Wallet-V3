@@ -45,31 +45,7 @@ class Coin {
   }
 
   type() {
-    let type = 'P2PKH'
-    try {
-      const output = Bitcoin.address.toOutputScript(this.address)
-      // eslint-disable-next-line
-      let addr = null
-
-      try {
-        addr = Bitcoin.payments.p2pkh({ output }).address
-        type = 'P2PKH'
-      } catch (e) {}
-      try {
-        addr = Bitcoin.payments.p2sh({ output }).address
-        type = 'P2SH'
-      } catch (e) {}
-      try {
-        addr = Bitcoin.payments.p2wpkh({ output }).address
-        type = 'P2WPKH'
-      } catch (e) {}
-      try {
-        addr = Bitcoin.payments.p2wsh({ output }).address
-        type = 'P2WSH'
-      } catch (e) {}
-    } catch (e) {}
-
-    return type
+    return Helpers.getAddressType(this.address);
   }
 
   static descentSort (coinA, coinB) {
@@ -131,7 +107,7 @@ Coin.outputBytes = output => {
 }
 
 Coin.effectiveValue = curry((feePerByte, coin) =>
-  clamp(0, Infinity, coin.value - feePerByte * Coin.inputBytes(coin))
+  clamp(0, Infinity, Math.ceil(coin.value - feePerByte * Coin.inputBytes(coin)))
 );
 
 Coin.getByteCount = (inputs, outputs) => {
