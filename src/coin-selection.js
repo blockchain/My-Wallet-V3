@@ -5,6 +5,7 @@ const fold = curry((empty, xs) => reduce((acc, x) => acc.concat(x), empty, xs));
 const foldCoins = fold(Coin.empty);
 
 const dustThreshold = (feeRate) => (Coin.inputBytes({}) + Coin.outputBytes({})) * feeRate;
+const changeBytes = () => Coin.TX_OUTPUT_BASE + Coin.TX_OUTPUT_PUBKEYHASH
 
 // const transactionBytes = (inputs, outputs) =>
 //   Coin.TX_EMPTY_SIZE + inputs.reduce((a, c) => a + Coin.inputBytes(c), 0) + outputs.reduce((a, c) => a + Coin.outputBytes(c), 0);
@@ -53,11 +54,21 @@ const findTarget = (targets, feePerByte, coins, changeAddress) => {
       // not enough money to satisfy target
       return { fee: fee, inputs: [], outputs: targets };
     } else {
-      let extra = maxBalance - target - fee;
-      if (extra >= dustThreshold(feePerByte)) {
+      const extra = maxBalance - target - fee
+      const feeChange = changeBytes() * feePerByte
+      const extraWithChangeFee = extra - feeChange
+      if (extraWithChangeFee >= dustThreshold(feePerByte)) {
         // add change
-        let change = Coin.fromJS({ value: extra, address: changeAddress, change: true });
-        return { fee: fee, inputs: selectedCoins, outputs: [...targets, change] };
+        const change = Coin.fromJS({
+          value: extraWithChangeFee,
+          address: changeAddress,
+          change: true
+        })
+        return {
+          fee: fee + feeChange,
+          inputs: selectedCoins,
+          outputs: [...targets, change]
+        }
       } else {
         // burn change
         return { fee: fee + extra, inputs: selectedCoins, outputs: targets };
@@ -81,11 +92,21 @@ const selectAll = (feePerByte, coins, outAddress) => {
 
 // descentDraw :: [Coin] -> Number -> [Coin] -> String -> Selection
 const descentDraw = (targets, feePerByte, coins, changeAddress) =>
-  findTarget(targets, feePerByte, sort(Coin.descentSort, coins), changeAddress);
+  findTarget(
+    targets,
+    feePerByte,
+    sort((a, b) => a.lte(b), coins),
+    changeAddress
+  )
 
 // ascentDraw :: [Coin] -> Number -> [Coin] -> String -> Selection
 const ascentDraw = (targets, feePerByte, coins, changeAddress) =>
-  findTarget(targets, feePerByte, sort(Coin.ascentSort, coins), changeAddress);
+  findTarget(
+    targets,
+    feePerByte,
+    sort((a, b) => b.lte(a), coins),
+    changeAddress
+  )
 
 module.exports = {
   dustThreshold,
