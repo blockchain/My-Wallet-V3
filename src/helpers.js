@@ -38,6 +38,33 @@ Helpers.scriptToAddress = function (script) {
     return undefined
   }
 }
+Helpers.getAddressType = function (address) {
+  let type = 'P2PKH'
+  try {
+    const output = Bitcoin.address.toOutputScript(address)
+    // eslint-disable-next-line
+    let addr = null
+
+    try {
+      addr = Bitcoin.payments.p2pkh({ output }).address
+      type = 'P2PKH'
+    } catch (e) {}
+    try {
+      addr = Bitcoin.payments.p2sh({ output }).address
+      type = 'P2SH'
+    } catch (e) {}
+    try {
+      addr = Bitcoin.payments.p2wpkh({ output }).address
+      type = 'P2WPKH'
+    } catch (e) {}
+    try {
+      addr = Bitcoin.payments.p2wsh({ output }).address
+      type = 'P2WSH'
+    } catch (e) {}
+  } catch (e) {}
+
+  return type
+}
 Helpers.getOutputScript = function (keyPair) {
   var pubKey = keyPair.publicKey
   var payment = Bitcoin.payments.p2wpkh({ pubkey: pubKey })
