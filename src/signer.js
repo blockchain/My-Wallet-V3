@@ -12,9 +12,8 @@ const Coin = require('./coin');
 const getKey = (BitcoinLib, priv, addr) => {
   let format = Helpers.detectPrivateKeyFormat(priv);
   let key = Helpers.privateKeyStringToKey(priv, format, BitcoinLib);
-  let network = constants.getNetwork(BitcoinLib);
-  let ckey = new BitcoinLib.ECPair(key.d, null, { compressed: true, network: network });
-  let ukey = new BitcoinLib.ECPair(key.d, null, { compressed: false, network: network });
+  let ckey = BitcoinLib.ECPair.fromPrivateKey(key);
+  let ukey = BitcoinLib.ECPair.fromPrivateKey(key);
   if (ckey.getAddress() === addr) {
     return ckey;
   } else if (ukey.getAddress() === addr) {
@@ -116,7 +115,7 @@ const bitcoinCashSigner = (selection, coinDust) => {
   return tx.buildIncomplete();
 };
 
-const signBtc = curry((BitcoinLib, signingFunction, password, wallet, selection, coinDust) => {
+const signBtc = curry((BitcoinLib, signingFunction, password, wallet, selection) => {
   const getPrivAccBtc = coin => pathToKeyBtc(BitcoinLib, wallet, password, coin);
   const getPrivAddr = address => getKeyForAddress(BitcoinLib, wallet, password, address);
   const getKeys = isFromAccount(selection) ? getPrivAccBtc : getPrivAddr;
