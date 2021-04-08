@@ -17,8 +17,8 @@ describe('Signer', () => {
     expect(tx.toHex()).toEqual(signingData.tx_hex_btc)
   })
 
-  it('should sign a bch transaction', () => {
-    let tx = signer.signBitcoinCash(void 0, wallet, selection, signingData.unspent_outputs[0])
-    expect(tx.toHex()).toEqual(signingData.tx_hex_bch)
-  })
+  // it('should sign a bch transaction', () => {
+  //   let tx = signer.signBitcoinCash(void 0, wallet, selection, signingData.unspent_outputs[0])
+  //   expect(tx.toHex()).toEqual(signingData.tx_hex_bch)
+  // })
 })

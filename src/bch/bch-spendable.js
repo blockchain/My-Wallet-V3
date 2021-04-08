@@ -15,7 +15,7 @@ class BchSpendable {
   getAvailableBalance (source, feePerByte) {
     return BchApi.getUnspents(this._wallet, source).then(coins => {
       let { fee, outputs } = selectAll(feePerByte, coins, null)
-      return { fee: feePerByte, sweepFee: fee, amount: outputs[0].value }
+      return { fee: feePerByte, sweepFee: Math.ceil(fee), amount: outputs[0].value }
     });
   }
 
