@@ -15,7 +15,7 @@ class BtcSpendable {
   getAvailableBalance (source, feePerByte) {
     return BtcApi.getUnspents(this._wallet, source).then(coins => {
       let { fee, outputs } = selectAll(feePerByte, coins, null)
-      return { fee: feePerByte, sweepFee: Math.ceil(fee), amount: outputs[0].value }
+      return { fee: feePerByte, sweepFee: Math.ceil(fee), amount: Math.floor(outputs[0].value) }
     });
   }
 
