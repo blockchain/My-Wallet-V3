@@ -136,7 +136,7 @@ class BtcPayment {
       }
 
       let tx = signer.signBitcoin(secPass, this._wallet, payment.selection, null)
-      let setData = compose(assoc('hash', tx.getId()), assoc('rawTx', tx.toHex()))
+      let setData = compose(assoc('hash', tx.getId()), assoc('rawTx', tx.toHex()), assoc('vSize', tx.virtualSize()))
       return setData(payment)
     })
   }
