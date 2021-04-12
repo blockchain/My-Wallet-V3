@@ -4,7 +4,7 @@ const Coin = require('./coin.js');
 const fold = curry((empty, xs) => reduce((acc, x) => acc.concat(x), empty, xs));
 const foldCoins = fold(Coin.empty);
 
-const dustThreshold = (feeRate) => (Coin.inputBytes({}) + Coin.outputBytes({})) * feeRate;
+const dustThreshold = (feeRate) => Math.ceil((Coin.inputBytes({}) + Coin.outputBytes({})) * feeRate);
 const changeBytes = () => Coin.TX_OUTPUT_BASE + Coin.TX_OUTPUT_PUBKEYHASH
 
 // const transactionBytes = (inputs, outputs) =>
@@ -25,7 +25,7 @@ const transactionBytes = (inputs, outputs) => {
 
 const effectiveBalance = curry((feePerByte, inputs, outputs = [{}]) =>
   foldCoins(inputs).map(v =>
-    clamp(0, Infinity, v - transactionBytes(inputs, outputs) * feePerByte))
+    clamp(0, Infinity, v - Math.ceil(transactionBytes(inputs, outputs) * feePerByte)))
 );
 
 // findTarget :: [Coin] -> Number -> [Coin] -> String -> Selection
@@ -40,7 +40,7 @@ const findTarget = (targets, feePerByte, coins, changeAddress) => {
     let nextAcc = acc + newCoin.value;
     return acc > target + partialFee ? false : [[nextAcc, partialFee, newCoin], [nextAcc, partialFee, restCoins]];
   };
-  let partialFee = transactionBytes([], targets) * feePerByte;
+  let partialFee = Math.ceil(transactionBytes([], targets) * feePerByte);
   let effectiveCoins = filter(c => Coin.effectiveValue(feePerByte, c) > 0, coins);
   let selection = unfold(_findTarget, [0, partialFee, effectiveCoins]);
   if (isEmpty(selection)) {
