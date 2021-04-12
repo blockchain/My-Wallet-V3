@@ -25,7 +25,7 @@ const transactionBytes = (inputs, outputs) => {
 
 const effectiveBalance = curry((feePerByte, inputs, outputs = [{}]) =>
   foldCoins(inputs).map(v =>
-    clamp(0, Infinity, v - transactionBytes(inputs, outputs) * feePerByte))
+    clamp(0, Infinity, v - Math.ceil(transactionBytes(inputs, outputs) * feePerByte)))
 );
 
 // findTarget :: [Coin] -> Number -> [Coin] -> String -> Selection
@@ -40,7 +40,7 @@ const findTarget = (targets, feePerByte, coins, changeAddress) => {
     let nextAcc = acc + newCoin.value;
     return acc > target + partialFee ? false : [[nextAcc, partialFee, newCoin], [nextAcc, partialFee, restCoins]];
   };
-  let partialFee = transactionBytes([], targets) * feePerByte;
+  let partialFee = Math.ceil(transactionBytes([], targets) * feePerByte);
   let effectiveCoins = filter(c => Coin.effectiveValue(feePerByte, c) > 0, coins);
   let selection = unfold(_findTarget, [0, partialFee, effectiveCoins]);
   if (isEmpty(selection)) {
