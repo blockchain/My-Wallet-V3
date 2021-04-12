@@ -4,7 +4,7 @@ const Coin = require('./coin.js');
 const fold = curry((empty, xs) => reduce((acc, x) => acc.concat(x), empty, xs));
 const foldCoins = fold(Coin.empty);
 
-const dustThreshold = (feeRate) => (Coin.inputBytes({}) + Coin.outputBytes({})) * feeRate;
+const dustThreshold = (feeRate) => Math.ceil((Coin.inputBytes({}) + Coin.outputBytes({})) * feeRate);
 const changeBytes = () => Coin.TX_OUTPUT_BASE + Coin.TX_OUTPUT_PUBKEYHASH
 
 // const transactionBytes = (inputs, outputs) =>
@@ -35,7 +35,7 @@ const findTarget = (targets, feePerByte, coins, changeAddress) => {
     let acc = seed[0];
     let newCoin = head(seed[2]);
     if (isNil(newCoin) || acc > target + seed[1]) { return false; }
-    let partialFee = seed[1] + Coin.inputBytes(newCoin) * feePerByte;
+    let partialFee = seed[1] + Math.ceil(Coin.inputBytes(newCoin) * feePerByte);
     let restCoins = tail(seed[2]);
     let nextAcc = acc + newCoin.value;
     return acc > target + partialFee ? false : [[nextAcc, partialFee, newCoin], [nextAcc, partialFee, restCoins]];
