@@ -269,25 +269,6 @@ HDAccount.prototype.changeAddressAtIndex = function (index, type) {
   return keyRing.change.getAddress(index);
 };
 
-HDAccount.prototype.getAvailableBalance = function (feeType) {
-  feeType = (feeType === 'regular' || feeType === 'priority') ? feeType : 'regular';
-  let feesP = API.getFees();
-  let addresses = null;
-  let addressesBech32 = null;
-  if (defaultDerivation === 'bech32') {
-    addressesBech32 = [this.extendedPublicKey];
-  } else {
-    addresses = [this.extendedPublicKey];
-  }
-  let coinsP = API.getUnspent(addresses, addressesBech32).then(Helpers.pluck('unspent_outputs'));
-  return Promise.all([feesP, coinsP]).then(([fees, coins]) => {
-    let fee = Helpers.toFeePerKb(fees[feeType]);
-    let usableCoins = Transaction.filterUsableCoins(coins, fee);
-    let amount = Transaction.maxAvailableAmount(usableCoins, fee).amount;
-    return { amount, fee: fees[feeType] };
-  });
-};
-
 HDAccount.prototype.encrypt = function (cipher) {
   if (!this._derivations) return this;
   this._derivations.forEach((d) => d.encrypt(cipher).persist());
