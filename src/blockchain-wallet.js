@@ -24,7 +24,6 @@ var AccountInfo = require('./account-info');
 var Metadata = require('./metadata');
 var constants = require('./constants');
 var Payment = require('./payment');
-var Contacts = require('./contacts');
 var Labels = require('./labels');
 var EthWallet = require('./eth/eth-wallet');
 var Bitcoin = require('bitcoinjs-lib');
@@ -101,7 +100,6 @@ function Wallet (object) {
   this._latestBlock = null;
   this._accountInfo = null;
   this._external = null;
-  this._contacts = null;
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -260,10 +258,6 @@ Object.defineProperties(Wallet.prototype, {
   'external': {
     configurable: false,
     get: function () { return this._external; }
-  },
-  'contacts': {
-    configurable: false,
-    get: function () { return this._contacts; }
   },
   'isEncryptionConsistent': {
     configurable: false,
@@ -976,18 +970,6 @@ Wallet.prototype.fetchAccountInfo = function () {
     parentThis._accountInfo = new AccountInfo(info);
     return info; // TODO: handle more here instead of in the frontend / iOs
   });
-};
-
-Wallet.prototype.loadContacts = function () {
-  if (this.isDoubleEncrypted === true || !this.isUpgradedToHD) {
-    return Promise.resolve();
-  } else {
-    var masterhdnode = this.hdwallet.getMasterHDNode();
-    this._contacts = new Contacts(masterhdnode);
-    const signature = this._contacts._sharedMetadata.signWithMDID(this._guid);
-    this.MDIDregistration('register-mdid', signature.toString('base64'));
-    return this._contacts.fetch();
-  }
 };
 
 Wallet.prototype.metadata = function (typeId) {

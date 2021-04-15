@@ -48,9 +48,6 @@ module.exports = {
   BIP39: require('bip39'),
   Networks: require('bitcoinjs-lib/src/networks'),
   ECDSA: require('ecdsa'),
-  SharedMetadata: require('./sharedMetadata'),
-  Contacts: require('./contacts'),
-  SharedMetadataAPI: require('./sharedMetadataAPI'),
   EthSocket: require('./eth/eth-socket'),
   R: require('ramda'),
   BlockchainSocket: require('./blockchain-socket')
