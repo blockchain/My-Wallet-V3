@@ -297,8 +297,3 @@ HDAccount.prototype.setLabel = function (receiveIndex, label) {
 HDAccount.prototype.removeLabel = function (receiveIndex) {
   console.log('Not supported')
 };
-
-// Shapeshift
-HDAccount.prototype.createShiftPayment = function (wallet) {
-  console.log('Not supported')
-};

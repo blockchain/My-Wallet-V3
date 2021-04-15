@@ -94,10 +94,6 @@ Coin.IO_TYPES = {
   }
 }
 
-// Coin.inputBytes = (_input) => Coin.TX_INPUT_BASE + Coin.TX_INPUT_PUBKEYHASH;
-
-// Coin.outputBytes = (_output) => Coin.TX_OUTPUT_BASE + Coin.TX_OUTPUT_PUBKEYHASH;
-
 Coin.inputBytes = input => {
   return Coin.IO_TYPES.inputs[input.type ? input.type() : 'P2PKH']
 }

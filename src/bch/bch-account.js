@@ -1,6 +1,5 @@
 /* eslint-disable semi */
 const BchSpendable = require('./bch-spendable')
-const BchShiftPayment = require('../shift/bch-payment');
 const H = require('../helpers')
 
 class BchAccount extends BchSpendable {
@@ -74,10 +73,6 @@ class BchAccount extends BchSpendable {
 
   createPayment () {
     return super.createPayment().from(this.index, this.changeAddress)
-  }
-
-  createShiftPayment (wallet) {
-    return BchShiftPayment.fromWallet(wallet, this)
   }
 
   toJSON () {

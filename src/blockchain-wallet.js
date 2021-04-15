@@ -27,7 +27,6 @@ var Payment = require('./payment');
 var Contacts = require('./contacts');
 var Labels = require('./labels');
 var EthWallet = require('./eth/eth-wallet');
-var ShapeShift = require('./shift');
 var Bitcoin = require('bitcoinjs-lib');
 var EthSocket = require('./eth/eth-socket');
 var BitcoinWallet = require('./btc');
@@ -372,12 +371,6 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () {
       return this._eth;
-    }
-  },
-  'shapeshift': {
-    configurable: false,
-    get: function () {
-      return this._shapeshift;
     }
   },
   'btc': {
@@ -1056,11 +1049,6 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     return this._retailCore.fetch();
   };
 
-  var fetchShapeShift = function () {
-    this._shapeshift = ShapeShift.fromBlockchainWallet(this, constants.SHAPE_SHIFT_KEY);
-    return this._shapeshift.fetch();
-  };
-
   var fetchLockbox = function () {
     this._lockbox = Lockbox.fromBlockchainWallet(this);
     return this._lockbox.fetch();
@@ -1082,7 +1070,6 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     // No fallback is metadata is disabled
     promises.push(fetchExternal.call(this));
     promises.push(fetchEthWallet.call(this));
-    promises.push(fetchShapeShift.call(this));
     promises.push(fetchBtcWallet.call(this));
     promises.push(fetchBchWallet.call(this));
     promises.push(fetchRetailCore.call(this));

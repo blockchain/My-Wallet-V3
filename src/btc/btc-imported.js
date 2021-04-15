@@ -1,6 +1,5 @@
 /* eslint-disable semi */
 const BtcSpendable = require('./btc-spendable')
-// const BtcShiftPayment = require('../shift/bch-payment')
 const { compose, reduce, filter, add } = require('ramda')
 
 const sumNonNull = compose(reduce(add, 0), filter(x => x != null))
@@ -30,10 +29,6 @@ class BtcImported extends BtcSpendable {
   createPayment () {
     return super.createPayment().from(this.addresses, this.addresses[0])
   }
-
-  // createShiftPayment (wallet) {
-  //   return BtcShiftPayment.fromWallet(wallet, this)
-  // }
 }
 
 module.exports = BtcImported

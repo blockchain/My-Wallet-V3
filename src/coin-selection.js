@@ -7,9 +7,6 @@ const foldCoins = fold(Coin.empty);
 const dustThreshold = (feeRate) => Math.ceil((Coin.inputBytes({}) + Coin.outputBytes({})) * feeRate);
 const changeBytes = () => Coin.TX_OUTPUT_BASE + Coin.TX_OUTPUT_PUBKEYHASH
 
-// const transactionBytes = (inputs, outputs) =>
-//   Coin.TX_EMPTY_SIZE + inputs.reduce((a, c) => a + Coin.inputBytes(c), 0) + outputs.reduce((a, c) => a + Coin.outputBytes(c), 0);
-
 const transactionBytes = (inputs, outputs) => {
   const coinTypeReducer = (acc, coin) => {
     const type = coin.type ? coin.type() : 'P2PKH'

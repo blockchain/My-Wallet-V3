@@ -5,7 +5,6 @@ module.exports = {
   APP_NAME: 'javascript_web',
   APP_VERSION: '3.0',
   BITCOIN_DUST: 546,
-  SHAPE_SHIFT_KEY: void 0,
   SERVER_FEE_FALLBACK: {
     'limits': {
       'min': 2,

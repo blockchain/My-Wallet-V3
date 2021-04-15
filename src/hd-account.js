@@ -8,7 +8,6 @@ var MyWallet = require('./wallet'); // This cyclic import should be avoided once
 var API = require('./api');
 var Transaction = require('./transaction');
 var constants = require('./constants');
-var BtcShiftPayment = require('./shift/btc-payment');
 
 // HDAccount Class
 
@@ -318,8 +317,4 @@ HDAccount.prototype.getAvailableBalance = function (feeType) {
     let amount = Transaction.maxAvailableAmount(usableCoins, fee).amount;
     return { amount, fee: fees[feeType] };
   });
-};
-
-HDAccount.prototype.createShiftPayment = function (wallet) {
-  return BtcShiftPayment.fromWallet(wallet, this);
 };

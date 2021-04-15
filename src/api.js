@@ -337,11 +337,6 @@ API.prototype.incrementBuyDropoff = function (step) {
   return fetch(`${this.ROOT_URL}event?name=wallet_buy_dropoff_${step}`);
 };
 
-API.prototype.incrementShapeshiftStat = function (options = {}) {
-  let base = `${this.ROOT_URL}event?name=wallet_shapeshift_viewed`;
-  return fetch(base + (options.maxLimitError ? '_max_limit_error' : ''));
-};
-
 API.prototype.incrementPartnerAccountCreation = function (partner) {
   return fetch(`${this.ROOT_URL}event?name=${partner}_account_creation`);
 };

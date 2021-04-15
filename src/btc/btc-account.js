@@ -1,6 +1,5 @@
 /* eslint-disable semi */
 const BtcSpendable = require('./btc-spendable')
-// const BtcShiftPayment = require('../shift/btc-payment');
 const H = require('../helpers')
 
 class BtcAccount extends BtcSpendable {
@@ -75,22 +74,6 @@ class BtcAccount extends BtcSpendable {
   createPayment () {
     return super.createPayment().from(this.index, this.changeAddress)
   }
-
-  // createShiftPayment (wallet) {
-  //   return BtcShiftPayment.fromWallet(wallet, this)
-  // }
-
-  // toJSON () {
-  //   return {
-  //     label: this.label,
-  //     archived: this.archived
-  //   }
-  // }
-
-  // static defaultLabel (accountIdx) {
-  //   let label = 'My Bitcoin Cash Wallet';
-  //   return accountIdx > 0 ? `${label} ${accountIdx + 1}` : label;
-  // }
 }
 
 module.exports = BtcAccount
