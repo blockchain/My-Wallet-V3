@@ -8,6 +8,9 @@ var RNG = require('./rng.js');
 var WalletStore = require('./wallet-store');
 var WalletCrypto = require('./wallet-crypto');
 var HDWallet = require('./hd-wallet');
+var HDAccountV4 = require('./hd-account-v4');
+var Derivation = require('./derivation');
+var KeyRingV4 = require('./keyring-v4');
 var Address = require('./address.js');
 var Helpers = require('./helpers');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
@@ -21,12 +24,11 @@ var AccountInfo = require('./account-info');
 var Metadata = require('./metadata');
 var constants = require('./constants');
 var Payment = require('./payment');
-var Contacts = require('./contacts');
 var Labels = require('./labels');
 var EthWallet = require('./eth/eth-wallet');
-var ShapeShift = require('./shift');
 var Bitcoin = require('bitcoinjs-lib');
 var EthSocket = require('./eth/eth-socket');
+var BitcoinWallet = require('./btc');
 var BitcoinCash = require('./bch');
 var RetailCore = require('./retail-core');
 var Lockbox = require('./lockbox');
@@ -71,7 +73,7 @@ function Wallet (object) {
   this._metadataHDNode = null;
 
   if (obj.metadataHDNode) {
-    this._metadataHDNode = Bitcoin.HDNode.fromBase58(obj.metadataHDNode, constants.getNetwork());
+    this._metadataHDNode = Bitcoin.bip32.fromBase58(obj.metadataHDNode, constants.getNetwork());
   } else if (!this.isUpgradedToHD) {
   } else if (!this.isDoubleEncrypted) {
     this._metadataHDNode = Metadata.deriveMetadataNode(this.hdwallet.getMasterHDNode());
@@ -98,7 +100,6 @@ function Wallet (object) {
   this._latestBlock = null;
   this._accountInfo = null;
   this._external = null;
-  this._contacts = null;
 }
 
 Object.defineProperties(Wallet.prototype, {
@@ -117,8 +118,11 @@ Object.defineProperties(Wallet.prototype, {
   'context': {
     configurable: false,
     get: function () {
-      var xpubs = this.hdwallet && this.hdwallet.activeXpubs;
-      return this.activeAddresses.concat(xpubs || []);
+      return {
+        addresses: this.activeAddresses,
+        active: this.hdwallet.activeXpubs,
+        activeBech32: this.hdwallet.activeBech32Xpubs
+      }
     }
   },
   'isDoubleEncrypted': {
@@ -245,13 +249,15 @@ Object.defineProperties(Wallet.prototype, {
       return !(this._hd_wallets == null || this._hd_wallets.length === 0);
     }
   },
+  'isUpgradedToV4': {
+    configurable: false,
+    get: function () {
+      return this.isUpgradedToHD && this._hd_wallets[0].defaultAccount.derivations && this._hd_wallets[0].defaultAccount.derivations.length > 0;
+    }
+  },
   'external': {
     configurable: false,
     get: function () { return this._external; }
-  },
-  'contacts': {
-    configurable: false,
-    get: function () { return this._contacts; }
   },
   'isEncryptionConsistent': {
     configurable: false,
@@ -361,10 +367,10 @@ Object.defineProperties(Wallet.prototype, {
       return this._eth;
     }
   },
-  'shapeshift': {
+  'btc': {
     configurable: false,
     get: function () {
-      return this._shapeshift;
+      return this._btc;
     }
   },
   'bch': {
@@ -415,20 +421,31 @@ Wallet.prototype._updateWalletInfo = function (obj) {
   this.numberTxTotal = obj.wallet.n_tx;
 
   var updateAccountAndAddressesInfo = function (e) {
-    if (this.isUpgradedToHD) {
-      var account = this.hdwallet.activeAccount(e.address);
-      if (account) {
-        account.balance = e.final_balance;
-        account.n_tx = e.n_tx;
-        account.lastUsedReceiveIndex = e.account_index === 0 ? null : e.account_index - 1;
-        account.changeIndex = e.change_index;
+    try {
+      if (this.isUpgradedToHD) {
+        var account = this.hdwallet.activeAccount(e.address);
+        if (account) {
+          if (this.isUpgradedToV4) {
+            var derivation = account.derivations.find((d) => d.xpub === e.address);
+            derivation.balance = e.final_balance;
+            derivation.n_tx = e.n_tx;
+            derivation.lastUsedReceiveIndex = e.account_index === 0 ? null : e.account_index - 1;
+          } else {
+            account.balance = e.final_balance;
+            account.n_tx = e.n_tx;
+            account.lastUsedReceiveIndex = e.account_index === 0 ? null : e.account_index - 1;
+          }
+          account.changeIndex = e.change_index;
+        }
       }
-    }
-    var address = this.activeKey(e.address);
-    if (address) {
-      address.balance = e.final_balance;
-      address.totalReceived = e.total_received;
-      address.totalSent = e.total_sent;
+      var address = this.activeKey(e.address);
+      if (address) {
+        address.balance = e.final_balance;
+        address.totalReceived = e.total_received;
+        address.totalSent = e.total_sent;
+      }
+    } catch (e) {
+      console.log(e)
     }
   };
   this.latestBlock = obj.info.latest_block;
@@ -687,13 +704,30 @@ Wallet.reviver = function (k, v) {
   return v;
 };
 
-function isAccountNonUsed (account, progress) {
+function isAccountNonUsed(account, progress) {
+  var accountLegacy = account.derivations
+    ? account.derivations.find((x) => x.type === 'legacy').xpub
+    : account.extendedPublicKey
+  var accountBech32 = account.derivations
+    ? account.derivations.find((x) => x.type === 'bech32').xpub
+    : null
   var isNonUsed = function (obj) {
-    var result = obj[account.extendedPublicKey];
-    progress && progress(result);
-    return result.total_received === 0;
+    // v4 check
+    var resultLegacy = account.derivations
+      ? obj[accountLegacy]
+      : obj[account.extendedPublicKey];
+    var resultBech32 = account.derivations
+      ? obj[accountBech32]
+      : { total_received: 0, final_balance: 0 };
+    var total_received = resultLegacy.total_received + resultBech32.total_received
+    var final_balance = resultLegacy.final_balance + resultBech32.final_balance
+    progress && progress({
+      'total_received': total_received,
+      'final_balance': final_balance
+    });
+    return total_received === 0;
   };
-  return API.getBalances([account.extendedPublicKey]).then(isNonUsed);
+  return API.getBalances([accountLegacy], accountBech32 ? [accountBech32] : []).then(isNonUsed);
 }
 
 Wallet.prototype.scanBip44 = function (secondPassword, progress) {
@@ -772,6 +806,53 @@ Wallet.prototype.upgradeToV3 = function (firstAccountLabel, pw, success, error) 
   return hd;
 };
 
+Wallet.prototype.upgradeToV4 = function (pw, success, error) {
+  // get seed
+  // loop over all accounts
+  // add new (encrypted) default derivation to account
+  var seedHex = this.getSeedHex(pw)
+  const newAccounts = []
+
+  this.hdwallet._accounts.forEach((account) => {
+    var legacyDerivation = new Derivation({
+      type: 'legacy',
+      purpose: 44,
+      xpriv: account._xpriv,
+      xpub: account._xpub,
+      address_labels: account._address_labels,
+      cache: account._keyRing.toJSON()
+    })
+    // get bech32 xpub and xpriv
+    let seed = BIP39.mnemonicToSeed(BIP39.entropyToMnemonic(seedHex))
+    let masterNode = Bitcoin.bip32.fromSeed(seed, constants.getNetwork())
+    let node = masterNode.deriveHardened(84).deriveHardened(0).deriveHardened(account.index)
+    var bech32Derivation = new Derivation({
+      type: 'bech32',
+      purpose: 84,
+      xpriv: node.toBase58(),
+      xpub: node.neutered().toBase58(),
+      address_labels: [],
+      cache: new KeyRingV4(node.neutered().toBase58(), null, null, 'bech32')
+    })
+
+    if (this.isDoubleEncrypted) {
+      cipher = this.createCipher(pw, 'enc');
+      bech32Derivation = bech32Derivation.encrypt(cipher).persist()
+    }
+
+    account.default_derivation = 'bech32'
+    account.derivations = [legacyDerivation, bech32Derivation]
+    let newAccount = new HDAccountV4(account)
+
+    newAccounts.push(newAccount)
+  })
+
+  this.hdwallet._accounts = newAccounts
+  MyWallet.syncWallet(function (res) {
+    success();
+  }, error);
+};
+
 Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosave) {
   if (!this.isUpgradedToHD) { return false; }
   var index = Helpers.isPositiveInteger(hdwalletIndex) ? hdwalletIndex : 0;
@@ -822,6 +903,13 @@ Wallet.prototype.getMnemonic = function (password) {
       ? WalletCrypto.decryptSecretWithSecondPassword(this.hdwallet.seedHex, password, this.sharedKey, this.pbkdf2_iterations)
       : this.hdwallet.seedHex;
   return BIP39.entropyToMnemonic(seedHex);
+};
+
+Wallet.prototype.getSeedHex = function (password) {
+  var seedHex = this.isDoubleEncrypted
+      ? WalletCrypto.decryptSecretWithSecondPassword(this.hdwallet.seedHex, password, this.sharedKey, this.pbkdf2_iterations)
+      : this.hdwallet.seedHex;
+  return seedHex;
 };
 
 Wallet.prototype.changePbkdf2Iterations = function (newIterations, password) {
@@ -884,18 +972,6 @@ Wallet.prototype.fetchAccountInfo = function () {
   });
 };
 
-Wallet.prototype.loadContacts = function () {
-  if (this.isDoubleEncrypted === true || !this.isUpgradedToHD) {
-    return Promise.resolve();
-  } else {
-    var masterhdnode = this.hdwallet.getMasterHDNode();
-    this._contacts = new Contacts(masterhdnode);
-    const signature = this._contacts._sharedMetadata.signWithMDID(this._guid);
-    this.MDIDregistration('register-mdid', signature.toString('base64'));
-    return this._contacts.fetch();
-  }
-};
-
 Wallet.prototype.metadata = function (typeId) {
   return Metadata.fromMetadataHDNode(this._metadataHDNode, typeId);
 };
@@ -938,6 +1014,11 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     );
   };
 
+  var fetchBtcWallet = function () {
+    this._btc = BitcoinWallet.fromBlockchainWallet(this);
+    return this._btc.fetch()
+  };
+
   var fetchBchWallet = function () {
     this._bch = BitcoinCash.fromBlockchainWallet(this);
     let wsUrl = MyWallet.ws.wsUrl.replace('/inv', '/bch/inv');
@@ -948,11 +1029,6 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
   var fetchRetailCore = function () {
     this._retailCore = RetailCore.fromBlockchainWallet(this);
     return this._retailCore.fetch();
-  };
-
-  var fetchShapeShift = function () {
-    this._shapeshift = ShapeShift.fromBlockchainWallet(this, constants.SHAPE_SHIFT_KEY);
-    return this._shapeshift.fetch();
   };
 
   var fetchLockbox = function () {
@@ -976,7 +1052,7 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     // No fallback is metadata is disabled
     promises.push(fetchExternal.call(this));
     promises.push(fetchEthWallet.call(this));
-    promises.push(fetchShapeShift.call(this));
+    promises.push(fetchBtcWallet.call(this));
     promises.push(fetchBchWallet.call(this));
     promises.push(fetchRetailCore.call(this));
     promises.push(fetchLockbox.call(this));

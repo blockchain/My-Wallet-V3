@@ -4,14 +4,25 @@ const Coin = require('./coin.js');
 const fold = curry((empty, xs) => reduce((acc, x) => acc.concat(x), empty, xs));
 const foldCoins = fold(Coin.empty);
 
-const dustThreshold = (feeRate) => (Coin.inputBytes({}) + Coin.outputBytes({})) * feeRate;
+const dustThreshold = (feeRate) => Math.ceil((Coin.inputBytes({}) + Coin.outputBytes({})) * feeRate);
+const changeBytes = () => Coin.TX_OUTPUT_BASE + Coin.TX_OUTPUT_PUBKEYHASH
 
-const transactionBytes = (inputs, outputs) =>
-  Coin.TX_EMPTY_SIZE + inputs.reduce((a, c) => a + Coin.inputBytes(c), 0) + outputs.reduce((a, c) => a + Coin.outputBytes(c), 0);
+const transactionBytes = (inputs, outputs) => {
+  const coinTypeReducer = (acc, coin) => {
+    const type = coin.type ? coin.type() : 'P2PKH'
+    if (acc[type]) acc[type] += 1
+    else acc[type] = 1
+    return acc
+  }
+
+  const inputTypeCollection = reduce(coinTypeReducer, {}, inputs)
+  const outputTypeCollection = reduce(coinTypeReducer, {}, outputs)
+  return Coin.getByteCount(inputTypeCollection, outputTypeCollection)
+}
 
 const effectiveBalance = curry((feePerByte, inputs, outputs = [{}]) =>
   foldCoins(inputs).map(v =>
-    clamp(0, Infinity, v - transactionBytes(inputs, outputs) * feePerByte))
+    clamp(0, Infinity, v - Math.ceil(transactionBytes(inputs, outputs) * feePerByte)))
 );
 
 // findTarget :: [Coin] -> Number -> [Coin] -> String -> Selection
@@ -21,12 +32,12 @@ const findTarget = (targets, feePerByte, coins, changeAddress) => {
     let acc = seed[0];
     let newCoin = head(seed[2]);
     if (isNil(newCoin) || acc > target + seed[1]) { return false; }
-    let partialFee = seed[1] + Coin.inputBytes(newCoin) * feePerByte;
+    let partialFee = seed[1] + Math.ceil(Coin.inputBytes(newCoin) * feePerByte);
     let restCoins = tail(seed[2]);
     let nextAcc = acc + newCoin.value;
     return acc > target + partialFee ? false : [[nextAcc, partialFee, newCoin], [nextAcc, partialFee, restCoins]];
   };
-  let partialFee = transactionBytes([], targets) * feePerByte;
+  let partialFee = Math.ceil(transactionBytes([], targets) * feePerByte);
   let effectiveCoins = filter(c => Coin.effectiveValue(feePerByte, c) > 0, coins);
   let selection = unfold(_findTarget, [0, partialFee, effectiveCoins]);
   if (isEmpty(selection)) {
@@ -40,11 +51,21 @@ const findTarget = (targets, feePerByte, coins, changeAddress) => {
       // not enough money to satisfy target
       return { fee: fee, inputs: [], outputs: targets };
     } else {
-      let extra = maxBalance - target - fee;
-      if (extra >= dustThreshold(feePerByte)) {
+      const extra = maxBalance - target - fee
+      const feeChange = changeBytes() * feePerByte
+      const extraWithChangeFee = extra - feeChange
+      if (extraWithChangeFee >= dustThreshold(feePerByte)) {
         // add change
-        let change = Coin.fromJS({ value: extra, address: changeAddress, change: true });
-        return { fee: fee, inputs: selectedCoins, outputs: [...targets, change] };
+        const change = Coin.fromJS({
+          value: extraWithChangeFee,
+          address: changeAddress,
+          change: true
+        })
+        return {
+          fee: fee + feeChange,
+          inputs: selectedCoins,
+          outputs: [...targets, change]
+        }
       } else {
         // burn change
         return { fee: fee + extra, inputs: selectedCoins, outputs: targets };
@@ -68,11 +89,21 @@ const selectAll = (feePerByte, coins, outAddress) => {
 
 // descentDraw :: [Coin] -> Number -> [Coin] -> String -> Selection
 const descentDraw = (targets, feePerByte, coins, changeAddress) =>
-  findTarget(targets, feePerByte, sort(Coin.descentSort, coins), changeAddress);
+  findTarget(
+    targets,
+    feePerByte,
+    sort((a, b) => a.lte(b), coins),
+    changeAddress
+  )
 
 // ascentDraw :: [Coin] -> Number -> [Coin] -> String -> Selection
 const ascentDraw = (targets, feePerByte, coins, changeAddress) =>
-  findTarget(targets, feePerByte, sort(Coin.ascentSort, coins), changeAddress);
+  findTarget(
+    targets,
+    feePerByte,
+    sort((a, b) => b.lte(a), coins),
+    changeAddress
+  )
 
 module.exports = {
   dustThreshold,

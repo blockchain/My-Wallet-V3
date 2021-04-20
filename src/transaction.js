@@ -16,7 +16,7 @@ var Transaction = function (payment, emitter) {
   var amounts = payment.amounts;
   var fee = payment.finalFee;
   var changeAddress = payment.change;
-  var BITCOIN_DUST = constants.getNetwork().dustThreshold;
+  var BITCOIN_DUST = constants.BITCOIN_DUST;
 
   if (!Array.isArray(toAddresses) && toAddresses != null) { toAddresses = [toAddresses]; }
   if (!Array.isArray(amounts) && amounts != null) { amounts = [amounts]; }
@@ -54,7 +54,7 @@ var Transaction = function (payment, emitter) {
 
     // Generate address from output script and add to private list so we can check if the private keys match the inputs later
     var scriptBuffer = Buffer(output.script, 'hex');
-    assert.notEqual(Bitcoin.script.classifyOutput(scriptBuffer), 'nonstandard', {error: 'STRANGE_SCRIPT'});
+    // assert.notEqual(Bitcoin.script.classifyOutput(scriptBuffer), 'nonstandard', {error: 'STRANGE_SCRIPT'});
     var address = Bitcoin.address.fromOutputScript(scriptBuffer, constants.getNetwork()).toString();
     assert(address, {error: 'CANNOT_DECODE_OUTPUT_ADDRESS', tx_hash: output.tx_hash});
     this.addressesOfInputs.push(address);
@@ -80,7 +80,9 @@ Transaction.prototype.addPrivateKeys = function (privateKeys) {
   assert.equal(privateKeys.length, this.addressesOfInputs.length, 'Number of private keys needs to match inputs');
 
   for (var i = 0; i < privateKeys.length; i++) {
-    assert.equal(this.addressesOfInputs[i], privateKeys[i].getAddress(), 'Private key does not match bitcoin address ' + this.addressesOfInputs[i] + '!=' + privateKeys[i].getAddress() + ' while adding private key for input ' + i);
+    let input = this.addressesOfInputs[i];
+    let pkAddress = privateKeys[i].getAddress();
+    assert.equal(input, pkAddress, 'Private key does not match bitcoin address ' + input + '!=' + pkAddress + ' while adding private key for input ' + i);
   }
 
   this.privateKeys = privateKeys;
@@ -130,7 +132,7 @@ Transaction.prototype.sign = function () {
     this.emitter.emit('on_sign_progress', ii + 1);
     var key = this.privateKeys[ii];
     transaction.sign(ii, key);
-    assert(transaction.inputs[ii].scriptType === 'pubkeyhash', 'Error creating input script');
+    assert(transaction.inputs[ii].signType === 'pubkeyhash', 'Error creating input script');
   }
 
   this.emitter.emit('on_finish_signing');

@@ -23,6 +23,10 @@ var isInitialized = false;
 MyWallet.wallet = undefined;
 MyWallet.ws = new BlockchainSocket(null, WebSocket);
 
+// 🚨🚨🚨🚨🚨 v4 Check 🚨🚨🚨🚨🚨
+// V4 FLAG, THIS FLAG SHOULD BE SWITCHED AFTER iOS V. IS AT >= 80% ADOPTION
+var SHOULD_PERFORM_V4_UPGRADE = true
+
 // used locally and overridden in iOS
 MyWallet.socketConnect = function () {
   let socket = MyWallet.ws;
@@ -172,6 +176,9 @@ MyWallet.decryptAndInitializeWallet = function (success, error, decryptSuccess, 
       }
       if (MyWallet.wallet.isUpgradedToHD === false) {
         WalletStore.sendEvent('hd_wallets_does_not_exist');
+      }
+      if (SHOULD_PERFORM_V4_UPGRADE && !MyWallet.wallet.isUpgradedToV4)  {
+        WalletStore.sendEvent('perform_v4_payload_upgrade');
       }
       MyWallet.setIsInitialized();
       decryptSuccess && decryptSuccess();
@@ -477,7 +484,7 @@ function syncWallet (successcallback, errorcallback) {
       data,
       WalletStore.getPassword(),
       WalletStore.getPbkdf2Iterations(),
-      MyWallet.wallet.isUpgradedToHD ? 3.0 : 2.0
+      MyWallet.wallet.isUpgradedToHD ? MyWallet.wallet.isUpgradedToV4 ? 4.0 : 3.0 : 2.0
     );
 
     if (crypted.length === 0) {
@@ -701,7 +708,7 @@ MyWallet.endSession = function (sessionToken) {
 MyWallet.browserCheck = function () {
   var mnemonic = 'daughter size twenty place alter glass small bid purse october faint beyond';
   var seed = BIP39.mnemonicToSeed(mnemonic, '');
-  var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed, constants.getNetwork());
+  var masterkey = Bitcoin.bip32.fromSeed(seed, constants.getNetwork());
 
   var account = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(0);
   var address = account.derive(0).derive(0).getAddress();
@@ -739,8 +746,8 @@ MyWallet.browserCheckFast = function () {
   }[constants.NETWORK];
 
   // master node -> xpriv (1 ms)
-  var masterkey = Bitcoin.HDNode.fromSeedBuffer(seed, network);
-  var priv = masterkey.toString();
+  var masterkey = Bitcoin.bip32.fromSeed(seed, network);
+  var priv = masterkey.toBase58();
 
   if (priv !== vectors.priv) {
     return false;
@@ -753,13 +760,13 @@ MyWallet.browserCheckFast = function () {
   // }
 
   // xpriv -> xpub, test .neutered() // 100 ms
-  // var xprivChild = Bitcoin.HDNode.fromBase58('xprv9u32fAyAZYdehCkX6YGKSuTd1PnEgrjjPbdUwZ9v1aP2v8Dbr4JCaG4teSc9YNScsXeKGRhSHkimo4W6qefVUnT9eAuiL7yDRMbwf6McJBY');
+  // var xprivChild = Bitcoin.bip32.fromBase58('xprv9u32fAyAZYdehCkX6YGKSuTd1PnEgrjjPbdUwZ9v1aP2v8Dbr4JCaG4teSc9YNScsXeKGRhSHkimo4W6qefVUnT9eAuiL7yDRMbwf6McJBY');
   // var xpub = xprivChild.neutered();
   // if (xpub.toString() !== 'xpub682P4gW4PvBwugpzCZoKp3QMZRcj6KTakpZ5jwZXZuv1nvYkPbcT84PNVk1vSKnf1XtLRfTzuwqRH6y7T2HYKRWohWHLDpEv2sfeqPCAFkH') {
   //   return false;
   // }
 
-  var pub = Bitcoin.HDNode.fromBase58(vectors.pub, network);
+  var pub = Bitcoin.bip32.fromBase58(vectors.pub, network);
 
   // xpub -> address // 2 ms
   if (pub.getAddress() !== vectors.address) {
@@ -769,7 +776,7 @@ MyWallet.browserCheckFast = function () {
   // xpub -> xpub' // 100 ms
   var pubChild = pub.derive(0);
 
-  if (pubChild.toString() !== vectors.pubChild) {
+  if (pubChild.toBase58() !== vectors.pubChild) {
     return false;
   }
 

@@ -1,8 +1,8 @@
 /* eslint-disable semi */
 const { compose, clone, assoc, is, all } = require('ramda')
 const Coin = require('../coin')
-const BchApi = require('./bch-api')
-const Bitcoin = require('bitcoinforksjs-lib');
+const BtcApi = require('./btc-api')
+const Bitcoin = require('bitcoinjs-lib');
 const constants = require('../constants');
 const { isBitcoinAddress, isPositiveInteger } = require('../helpers')
 const { selectAll, descentDraw } = require('../coin-selection')
@@ -20,10 +20,10 @@ class PaymentError extends Error {
   }
 }
 
-class BchPayment {
+class BtcPayment {
   constructor (wallet) {
     this._wallet = wallet
-    this._payment = BchPayment.defaultStateP()
+    this._payment = BtcPayment.defaultStateP()
   }
   
   signedTransactionHex () {
@@ -45,7 +45,7 @@ class BchPayment {
       f(paymentError)
       return is(Function, paymentError.recover)
         ? paymentError.recover()
-        : BchPayment.defaultStateP()
+        : BtcPayment.defaultStateP()
     })
     return this
   }
@@ -63,7 +63,7 @@ class BchPayment {
       throw new Error('must provide a valid change address')
     }
     return this.map(payment =>
-      BchApi.getUnspents(this._wallet, from).then(coins => {
+      BtcApi.getUnspents(this._wallet, from).then(coins => {
         let setData = compose(assoc('coins', coins), assoc('change', change))
         return setData(payment)
       })
@@ -134,31 +134,26 @@ class BchPayment {
       if (payment.selection == null) {
         throw new PaymentError('cannot sign an unbuilt transaction', payment)
       }
-      return BchApi.getBchDust().then((dust) => {
-        const network = constants.getNetwork(Bitcoin)
-        const scriptBuffer = Buffer.from(dust.output_script, 'hex')
-        dust.address = Bitcoin.address.fromOutputScript(scriptBuffer, network).toString()
-        const coinDust = Coin.fromJS(dust)
-        let tx = signer.signBitcoinCash(secPass, this._wallet, payment.selection, coinDust)
-        let setData = compose(assoc('hash', tx.getId()), assoc('rawTx', tx.toHex()), assoc('lockSecret', dust.lock_secret))
-        return setData(payment)
-      })
+
+      let tx = signer.signBitcoin(secPass, this._wallet, payment.selection, null)
+      let setData = compose(assoc('hash', tx.getId()), assoc('rawTx', tx.toHex()), assoc('vSize', tx.virtualSize()))
+      return setData(payment)
     })
   }
 
   publish () {
-    /* return Promise, not BchPayment instance */
+    /* return Promise, not BtcPayment instance */
     return this._payment.then(payment => {
       if (payment.rawTx == null) {
         throw new PaymentError('cannot publish an unsigned transaction', payment)
       }
-      return BchApi.pushTx(payment.rawTx, payment.lockSecret)
+      return BtcApi.pushTx(payment.rawTx)
         .then(() => ({ hash: payment.hash }))
     })
   }
 
   static defaultStateP () {
-    return Promise.resolve(BchPayment.defaultState())
+    return Promise.resolve(BtcPayment.defaultState())
   }
 
   static defaultState () {
@@ -174,4 +169,4 @@ class BchPayment {
   }
 }
 
-module.exports = BchPayment
+module.exports = BtcPayment

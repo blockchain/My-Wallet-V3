@@ -1,6 +1,7 @@
 'use strict';
 
 var Bitcoin = require('bitcoinjs-lib');
+var BitcoinMessage = require('bitcoinjs-message');
 var BigInteger = require('bigi');
 var Buffer = require('buffer').Buffer;
 var Base58 = require('bs58');
@@ -27,12 +28,65 @@ Helpers.isKey = function (bitcoinKey) {
 Helpers.isInstanceOf = function (object, theClass) {
   return object instanceof theClass;
 };
+Helpers.scriptToAddress = function (script) {
+  try {
+    var scriptBuffer = Buffer.from(script, 'hex');
+    var network = constants.getNetwork(Bitcoin);
+    var address = Bitcoin.address.fromOutputScript(scriptBuffer, network).toString();
+    return address
+  } catch (e) {
+    return undefined
+  }
+}
+Helpers.getAddressType = function (address) {
+  let type = 'P2PKH'
+  try {
+    const output = Bitcoin.address.toOutputScript(address)
+    // eslint-disable-next-line
+    let addr = null
+
+    try {
+      addr = Bitcoin.payments.p2pkh({ output }).address
+      type = 'P2PKH'
+    } catch (e) {}
+    try {
+      addr = Bitcoin.payments.p2sh({ output }).address
+      type = 'P2SH'
+    } catch (e) {}
+    try {
+      addr = Bitcoin.payments.p2wpkh({ output }).address
+      type = 'P2WPKH'
+    } catch (e) {}
+    try {
+      addr = Bitcoin.payments.p2wsh({ output }).address
+      type = 'P2WSH'
+    } catch (e) {}
+  } catch (e) {}
+
+  return type
+}
+Helpers.getOutputScript = function (keyPair) {
+  var pubKey = keyPair.publicKey
+  var payment = Bitcoin.payments.p2wpkh({ pubkey: pubKey })
+  return payment.output
+}
+Helpers.keyPairToAddress = function (key) {
+  return Bitcoin.payments.p2pkh({ pubkey: key.publicKey }).address
+}
 Helpers.isBitcoinAddress = function (candidate) {
   try {
     var d = Bitcoin.address.fromBase58Check(candidate);
     var n = constants.getNetwork();
     return d.version === n.pubKeyHash || d.version === n.scriptHash;
-  } catch (e) { return false; }
+  } catch (e) {
+    try {
+      var d = Bitcoin.address.fromBech32(candidate);
+      var n = constants.getNetwork();
+      return d.version === n.pubKeyHash;
+    } catch (e) {
+      return false;
+    }
+  }
 };
 Helpers.isBitcoinPrivateKey = function (candidate) {
   try {
@@ -373,8 +427,7 @@ Helpers.privateKeyStringToKey = function (value, format, bitcoinjs) {
         throw new Error('Unsupported Key Format');
     }
 
-    var d = BigInteger.fromBuffer(keyBuffer);
-    return new bitcoinLib.ECPair(d, null, { network: constants.getNetwork(bitcoinLib) });
+    return bitcoinLib.ECPair(keyBuffer, { network: constants.getNetwork(bitcoinLib) });
   }
 };
 
@@ -470,7 +523,7 @@ Helpers.privateKeyCorrespondsToAddress = function (address, priv, bipPass) {
 };
 
 Helpers.verifyMessage = function (address, signature, message) {
-  return Bitcoin.message.verify(address, signature, message, constants.getNetwork());
+  return BitcoinMessage.verify(address, signature, message, constants.getNetwork().messagePrefix);
 };
 
 Helpers.getMobileOperatingSystem = function () {

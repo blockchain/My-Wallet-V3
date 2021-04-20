@@ -6,6 +6,7 @@ var Transaction = require('./transaction');
 var API = require('./api');
 var Helpers = require('./helpers');
 var KeyRing = require('./keyring');
+var KeyRingV4 = require('./keyring-v4');
 var EventEmitter = require('events');
 var util = require('util');
 var constants = require('./constants');
@@ -249,6 +250,7 @@ Payment.from = function (origin) {
   var that = this;
   var wallet = this._wallet;
   var addresses = null;
+  var addressesBech32 = null;
   var change = null;
   var pkFormat = Helpers.detectPrivateKeyFormat(origin);
   var wifs = []; // only used fromPrivateKey
@@ -270,7 +272,11 @@ Payment.from = function (origin) {
     case Helpers.isPositiveInteger(origin) &&
          (origin < wallet.hdwallet.accounts.length):
       var fromAccount = wallet.hdwallet.accounts[origin];
-      addresses = [fromAccount.extendedPublicKey];
+      if (fromAccount.defaultDerivation === 'bech32') {
+        addressesBech32 = [fromAccount.extendedPublicKey];
+      } else {
+        addresses = [fromAccount.extendedPublicKey];
+      }
       change = fromAccount.changeAddress;
       fromAccId = origin;
       break;
@@ -314,13 +320,13 @@ Payment.from = function (origin) {
       console.log('No origin set.');
   } // fi switch
   return function (payment) {
-    payment.from = addresses;
+    payment.from = addresses || addressesBech32;
     payment.change = change;
     payment.wifKeys = wifs;
     payment.fromAccountIdx = fromAccId;
     payment.fromWatchOnly = watchOnly;
 
-    return getUnspentCoins(addresses, function onNotice (notice) {
+    return getUnspentCoins(addresses, addressesBech32, function onNotice (notice) {
       that.emit('message', { text: notice });
     }).then(
       function (coins) {
@@ -371,7 +377,7 @@ Payment.updateFeePerKb = function (fee) {
 
 Payment.prebuild = function (absoluteFee) {
   return function (payment) {
-    var dust = constants.getNetwork().dustThreshold;
+    var dust = constants.BITCOIN_DUST;
 
     var usableCoins = Transaction.filterUsableCoins(payment.coins, payment.feePerKb);
     var max = Transaction.maxAvailableAmount(usableCoins, payment.feePerKb);
@@ -497,7 +503,7 @@ module.exports = Payment;
 // Helper functions
 
 // getUnspentCoins :: [address] -> Promise [coins]
-function getUnspentCoins (addressList, notify) {
+function getUnspentCoins (addressList, addressListBech32, notify) {
   var processCoins = function (obj) {
     var processCoin = function (utxo) {
       var txBuffer = new Buffer(utxo.tx_hash, 'hex');
@@ -510,15 +516,15 @@ function getUnspentCoins (addressList, notify) {
     return obj.unspent_outputs;
   };
 
-  return API.getUnspent(addressList, -1).then(processCoins);
+  return API.getUnspent(addressList, addressListBech32, -1).then(processCoins);
 }
 
 function getKey (priv, addr) {
   var format = Helpers.detectPrivateKeyFormat(priv);
   var key = Helpers.privateKeyStringToKey(priv, format);
   var network = constants.getNetwork();
-  var ckey = new Bitcoin.ECPair(key.d, null, {compressed: true, network: network});
-  var ukey = new Bitcoin.ECPair(key.d, null, {compressed: false, network: network});
+  var ckey = Bitcoin.ECPair.fromPrivateKey(priv, {compressed: true, network: network});
+  var ukey = Bitcoin.ECPair.fromPrivateKey(priv, {compressed: false, network: network});
   if (ckey.getAddress() === addr) {
     return ckey;
   } else if (ukey.getAddress() === addr) {
@@ -544,9 +550,17 @@ function getXPRIV (wallet, password, accountIndex) {
     : WalletCrypto.decryptSecretWithSecondPassword(fromAccount.extendedPrivateKey, password, wallet.sharedKey, wallet.pbkdf2_iterations);
 }
 
+// getXPRIV :: wallet -> password -> index -> xpriv
+function getDerivationType (wallet, accountIndex) {
+  if (!MyWallet.wallet.isUpgradedToV4) {
+    return null;
+  }
+  return wallet.hdwallet.accounts[accountIndex].defaultDerivation;
+}
+
 // getKeyForPath :: xpriv -> path -> ECPair
-function getKeyForPath (extendedPrivateKey, neededPrivateKeyPath) {
-  var keyring = new KeyRing(extendedPrivateKey);
+function getKeyForPath (extendedPrivateKey, derivationType, neededPrivateKeyPath) {
+  var keyring = MyWallet.wallet.isUpgradedToV4 ? new KeyRingV4(extendedPrivateKey, null, null, derivationType) : new KeyRing(extendedPrivateKey);
   return keyring.privateKeyFromPath(neededPrivateKeyPath).keyPair;
 }
 
@@ -557,7 +571,8 @@ function getPrivateKeys (wallet, password, payment) {
   // if from Account
   if (Helpers.isPositiveInteger(payment.fromAccountIdx)) {
     var xpriv = getXPRIV(wallet, password, payment.fromAccountIdx);
-    privateKeys = transaction.pathsOfNeededPrivateKeys.map(getKeyForPath.bind(this, xpriv));
+    var derivationType = getDerivationType(wallet, payment.fromAccountIdx);
+    privateKeys = transaction.pathsOfNeededPrivateKeys.map(getKeyForPath.bind(this, xpriv, derivationType));
   }
   // if from Addresses or redeem code (private key)
   if (payment.from && payment.from.every(Helpers.isBitcoinAddress) && !payment.fromWatchOnly) {

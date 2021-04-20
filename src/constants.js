@@ -4,7 +4,7 @@ module.exports = {
   NETWORK: 'bitcoin',
   APP_NAME: 'javascript_web',
   APP_VERSION: '3.0',
-  SHAPE_SHIFT_KEY: void 0,
+  BITCOIN_DUST: 546,
   SERVER_FEE_FALLBACK: {
     'limits': {
       'min': 2,

@@ -1,27 +1,27 @@
 /* eslint-disable semi */
-const BchApi = require('./bch-api')
+const BtcApi = require('./btc-api')
 const { selectAll } = require('../coin-selection')
 
-class BchSpendable {
-  constructor (bchWallet, wallet) {
-    this._bchWallet = bchWallet
+class BtcSpendable {
+  constructor (btcWallet, wallet) {
+    this._btcWallet = btcWallet
     this._wallet = wallet
   }
 
   getAddressBalance (source) {
-    return this._bchWallet.getAddressBalance(source)
+    return this._btcWallet.getAddressBalance(source)
   }
 
   getAvailableBalance (source, feePerByte) {
-    return BchApi.getUnspents(this._wallet, source).then(coins => {
+    return BtcApi.getUnspents(this._wallet, source).then(coins => {
       let { fee, outputs } = selectAll(feePerByte, coins, null)
       return { fee: feePerByte, sweepFee: Math.ceil(fee), amount: Math.floor(outputs[0].value) }
     });
   }
 
   createPayment () {
-    return this._bchWallet.createPayment()
+    return this._btcWallet.createPayment()
   }
 }
 
-module.exports = BchSpendable
+module.exports = BtcSpendable

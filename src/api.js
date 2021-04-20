@@ -122,9 +122,10 @@ API.prototype.handleNTPResponse = function (obj, clientTime) {
 };
 
 // Definition of API
-API.prototype.getBalances = function (addresses) {
+API.prototype.getBalances = function (addresses, addressesBech32) {
   var data = {
     active: addresses.join('|'),
+    activeBech32: addressesBech32.join('|'),
     format: 'json'
   };
   return this.retry(this.request.bind(this, 'POST', 'balance', data));
@@ -156,22 +157,26 @@ API.prototype.getTicker = function () {
   return this.retry(this.request.bind(this, 'GET', 'ticker', data));
 };
 
-API.prototype.getUnspent = function (fromAddresses, confirmations) {
+API.prototype.getUnspent = function (fromAddresses, fromAddressesBech32, confirmations) {
+  var legacy = fromAddresses || []
+  var bech32 = fromAddressesBech32 || []
   var data = {
-    active: fromAddresses.join('|'),
+    active: legacy.join('|'),
+    activeBech32: bech32.join('|'),
     confirmations: Helpers.isPositiveNumber(confirmations) ? confirmations : -1,
     format: 'json'
   };
   return this.retry(this.request.bind(this, 'POST', 'unspent', data));
 };
 
-API.prototype.getHistory = function (addresses, txFilter, offset, n, syncBool) {
+API.prototype.getHistory = function (context, txFilter, offset, n, syncBool) {
   var clientTime = (new Date()).getTime();
   offset = offset || 0;
   n = n || 0;
 
   var data = {
-    active: addresses.join('|'),
+    active: context.addresses.concat(context.active).join('|'),
+    activeBech32: context.activeBech32.join('|'),
     format: 'json',
     offset: offset,
     no_compact: true,
@@ -330,11 +335,6 @@ API.prototype.incrementBuyLimitCounter = function (amount) {
 
 API.prototype.incrementBuyDropoff = function (step) {
   return fetch(`${this.ROOT_URL}event?name=wallet_buy_dropoff_${step}`);
-};
-
-API.prototype.incrementShapeshiftStat = function (options = {}) {
-  let base = `${this.ROOT_URL}event?name=wallet_shapeshift_viewed`;
-  return fetch(base + (options.maxLimitError ? '_max_limit_error' : ''));
 };
 
 API.prototype.incrementPartnerAccountCreation = function (partner) {

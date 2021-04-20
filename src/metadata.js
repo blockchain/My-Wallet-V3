@@ -2,6 +2,7 @@
 
 var WalletCrypto = require('./wallet-crypto');
 var Bitcoin = require('bitcoinjs-lib');
+var BitcoinMessage = require('bitcoinjs-message');
 var API = require('./api');
 var Helpers = require('./helpers');
 var constants = require('./constants');
@@ -20,7 +21,7 @@ class Metadata {
     this.VERSION = 1;
     this._typeId = typeId == null ? -1 : typeId;
     this._magicHash = null;
-    this._address = ecPair.getAddress();
+    this._address = Helpers.keyPairToAddress(ecPair);
     this._signKey = ecPair;
     this._encKeyBuffer = encKeyBuffer;
     this._sequence = Promise.resolve();
@@ -88,15 +89,15 @@ Metadata.message = curry(
 Metadata.magic = curry(
   function (payload, prevMagic) {
     const msg = this.message(payload, prevMagic);
-    return Bitcoin.message.magicHash(msg, constants.getNetwork());
+    return BitcoinMessage.magicHash(msg, constants.getNetwork().messagePrefix);
   }
 );
 
 Metadata.verify = (address, signature, hash) =>
-  Bitcoin.message.verify(address, signature, hash, constants.getNetwork());
+  BitcoinMessage.verify(hash, address, signature, constants.getNetwork().messagePrefix);
 
 // Metadata.sign :: keyPair -> msg -> Buffer
-Metadata.sign = (keyPair, msg) => Bitcoin.message.sign(keyPair, msg, constants.getNetwork());
+Metadata.sign = (keyPair, msg) => BitcoinMessage.sign(keyPair, msg, constants.getNetwork().messagePrefix);
 
 // Metadata.computeSignature :: keypair -> buffer -> buffer -> base64
 Metadata.computeSignature = (key, payloadBuff, magicHash) =>
@@ -214,9 +215,11 @@ Metadata.fromMetadataHDNode = function (metadataHDNode, typeId) {
   //                       signature used to authenticate
   // purpose' / type' / 1' : sha256(private key) used as 256 bit AES key
   const node = payloadTypeNode.deriveHardened(0);
-  const privateKeyBuffer = payloadTypeNode.deriveHardened(1).keyPair.d.toBuffer();
-  const encryptionKey = WalletCrypto.sha256(privateKeyBuffer);
-  return new Metadata(node.keyPair, encryptionKey, typeId);
+  const privateKey = payloadTypeNode.deriveHardened(1).privateKey
+  const keypair = Bitcoin.ECPair.fromPrivateKey(node.privateKey)
+  const encryptionKey = WalletCrypto.sha256(privateKey);
+
+  return new Metadata(keypair, encryptionKey, typeId);
 };
 
 Metadata.deriveMetadataNode = function (masterHDNode) {

@@ -7,7 +7,7 @@ module.exports = function (config) {
     // reportSlowerThan: 50,
     logLevel: config.LOG_WARN,
     client: {
-      captureConsole: false
+      captureConsole: true
     },
     autoWatch: true,
     // logLevel: karma.LOG_DEBUG,
@@ -34,7 +34,6 @@ module.exports = function (config) {
             presets: ['env', 'es2015'],
             ignore: [
               'src/ws-browser.js', // undefined is not an object (evaluating 'global.WebSocket')
-              /\/node_modules\/(?!bitcoin-(coinify|exchange|sfox)-client|bech32\/)/
             ],
             global: true,
             sourceMap: 'inline'
@@ -48,7 +47,11 @@ module.exports = function (config) {
     files: [
       'node_modules/babel-polyfill/dist/polyfill.js',
       'node_modules/jasmine-es6-promise-matchers/jasmine-es6-promise-matchers.js',
-      'tests/**/*.spec.js'
+      // 'tests/bch/**.spec.js',
+      'tests/coin-selection.spec.js',
+      'tests/coin.spec.js',
+      // 'tests/keychain.spec.js',
+      'tests/signer.spec.js'
     ]
   };
 

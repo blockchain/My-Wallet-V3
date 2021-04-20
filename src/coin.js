@@ -1,4 +1,5 @@
 const { curry, clamp, split, length } = require('ramda');
+const Helpers = require('./helpers');
 
 class Coin {
   constructor (obj) {
@@ -43,6 +44,10 @@ class Coin {
     return !this.isFromAccount();
   }
 
+  type() {
+    return Helpers.getAddressType(this.address);
+  }
+
   static descentSort (coinA, coinB) {
     return coinB.value - coinA.value;
   }
@@ -59,7 +64,7 @@ class Coin {
       index: o.tx_output_n,
       change: o.change || false,
       priv: o.priv || (o.xpub ? `${o.xpub.index}-${o.xpub.path}` : undefined),
-      address: o.address
+      address: o.address ? o.address : Helpers.scriptToAddress(o.script)
     });
   }
 
@@ -76,12 +81,81 @@ Coin.TX_OUTPUT_PUBKEYHASH = 25;
 
 Coin.empty = Coin.of(0);
 
-Coin.inputBytes = (_input) => Coin.TX_INPUT_BASE + Coin.TX_INPUT_PUBKEYHASH;
+Coin.IO_TYPES = {
+  inputs: {
+    P2PKH: 148, // legacy
+    P2WPKH: 67.75 // native segwit
+  },
+  outputs: {
+    P2PKH: 34,
+    P2SH: 32,
+    P2WPKH: 31,
+    P2WSH: 43
+  }
+}
 
-Coin.outputBytes = (_output) => Coin.TX_OUTPUT_BASE + Coin.TX_OUTPUT_PUBKEYHASH;
+Coin.inputBytes = input => {
+  return Coin.IO_TYPES.inputs[input.type ? input.type() : 'P2PKH']
+}
+
+Coin.outputBytes = output => {
+  return Coin.IO_TYPES.outputs[output.type ? output.type() : 'P2PKH']
+}
 
 Coin.effectiveValue = curry((feePerByte, coin) =>
-  clamp(0, Infinity, coin.value - feePerByte * Coin.inputBytes(coin))
+  clamp(0, Infinity, Math.ceil(coin.value - feePerByte * Coin.inputBytes(coin)))
 );
+
+Coin.getByteCount = (inputs, outputs) => {
+  const VBYTES_PER_WEIGHT_UNIT = 4
+  var vBytesTotal = 0
+  var hasWitness = false
+  var inputCount = 0
+  var outputCount = 0
+  // assumes compressed pubkeys in all cases.
+
+  function checkUInt53(n) {
+    if (n < 0 || n > Number.MAX_SAFE_INTEGER || n % 1 !== 0)
+      throw new RangeError('value out of range')
+  }
+
+  function varIntLength(number) {
+    checkUInt53(number)
+
+    return number < 0xfd
+      ? 1
+      : number <= 0xffff
+      ? 3
+      : number <= 0xffffffff
+      ? 5
+      : 9
+  }
+
+  Object.keys(inputs).forEach(function(key) {
+    checkUInt53(inputs[key])
+    vBytesTotal += Coin.IO_TYPES.inputs[key] * inputs[key]
+    inputCount += inputs[key]
+    if (key.indexOf('W') >= 0) hasWitness = true
+  })
+
+  Object.keys(outputs).forEach(function(key) {
+    checkUInt53(outputs[key])
+    vBytesTotal += Coin.IO_TYPES.outputs[key] * outputs[key]
+    outputCount += outputs[key]
+  })
+
+  // segwit marker + segwit flag + witness element count
+  var overhead = hasWitness
+    ? 0.25 + 0.25 + varIntLength(inputCount) / VBYTES_PER_WEIGHT_UNIT
+    : 0
+
+  overhead += 4 // nVersion
+  overhead += varIntLength(inputCount)
+  overhead += varIntLength(outputCount)
+  overhead += 4 // nLockTime
+
+  vBytesTotal += overhead
+  return vBytesTotal
+}
 
 module.exports = Coin;

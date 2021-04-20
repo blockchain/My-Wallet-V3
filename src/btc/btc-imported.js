@@ -1,10 +1,10 @@
 /* eslint-disable semi */
-const BchSpendable = require('./bch-spendable')
+const BtcSpendable = require('./btc-spendable')
 const { compose, reduce, filter, add } = require('ramda')
 
 const sumNonNull = compose(reduce(add, 0), filter(x => x != null))
 
-class BchImported extends BchSpendable {
+class BtcImported extends BtcSpendable {
   get addresses () {
     return this._wallet.spendableActiveAddresses
   }
@@ -31,4 +31,4 @@ class BchImported extends BchSpendable {
   }
 }
 
-module.exports = BchImported
+module.exports = BtcImported

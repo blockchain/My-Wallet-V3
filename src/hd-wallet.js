@@ -7,6 +7,7 @@ var assert = require('assert');
 var R = require('ramda');
 var Helpers = require('./helpers');
 var HDAccount = require('./hd-account');
+var HDAccountV4 = require('./hd-account-v4');
 var BIP39 = require('bip39');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete
 var API = require('./api');
@@ -19,7 +20,8 @@ var constants = require('./constants');
 function HDWallet (object) {
   function addAccount (o, index) {
     o.index = index;
-    return HDAccount.factory(o);
+    // v4 Check
+    return o.derivations ? HDAccountV4.factory(o) : HDAccount.factory(o);
   }
 
   // private members
@@ -31,6 +33,7 @@ function HDWallet (object) {
   this._mnemonic_verified = obj.mnemonic_verified;
   this._default_account_idx = obj.default_account_idx;
   this._accounts = obj.accounts.map(addAccount);
+  this._is_upgraded_to_v4 = obj.accounts.some((a) => a.derivations && a.derivations.length)
 }
 
 Object.defineProperties(HDWallet.prototype, {
@@ -77,13 +80,28 @@ Object.defineProperties(HDWallet.prototype, {
   'xpubs': {
     configurable: false,
     get: function () {
-      return this._accounts.map(function (a) { return (a.extendedPublicKey); });
+      // v4 Check
+      return this.isUpgradedToV4 ? this._accounts.map(function (a) {
+        return a.derivations.map((d) => d.xpub);
+      }).flat() : this._accounts.map(function (a) { return (a.extendedPublicKey); });;
     }
   },
   'activeXpubs': {
     configurable: false,
     get: function () {
-      return this.activeAccounts.map(function (a) { return (a.extendedPublicKey); });
+      // v4 Check
+      return this.isUpgradedToV4 ? this.activeAccounts.map(function (a) {
+        return a.derivations.filter(d => d.type === 'legacy').map((d) => d.xpub);
+      }) : this.activeAccounts.map(function (a) { return (a.extendedPublicKey); });
+    }
+  },
+  'activeBech32Xpubs': {
+    configurable: false,
+    get: function () {
+      // v4 Check
+      return this.isUpgradedToV4 ? this.activeAccounts.map(function (a) {
+        return a.derivations.filter(d => d.type === 'bech32').map((d) => d.xpub);
+      }) : [];
     }
   },
   'balanceActiveAccounts': {
@@ -108,6 +126,13 @@ Object.defineProperties(HDWallet.prototype, {
       var isSeedUnEnc = Helpers.isSeedHex(this._seedHex);
       return isSeedUnEnc && this._accounts.map(function (a) { return a.isUnEncrypted; })
                              .reduce(Helpers.and, true);
+    }
+  },
+  // v4 Check
+  'isUpgradedToV4': {
+    configurable: false,
+    get: function () {
+      return this._is_upgraded_to_v4;
     }
   },
   'lastAccount': {
@@ -190,7 +215,7 @@ HDWallet.prototype.getMasterHDNode = function (cipher) {
 
   var masterhex = HDWallet.getMasterHex(this._seedHex, this._bip39Password, dec);
   var network = constants.getNetwork();
-  return Bitcoin.HDNode.fromSeedBuffer(masterhex, network);
+  return Bitcoin.bip32.fromSeed(masterhex, network);
 };
 
 HDWallet.prototype.newAccount = function (label, cipher) {
@@ -203,7 +228,7 @@ HDWallet.prototype.newAccount = function (label, cipher) {
 
   var masterkey = this.getMasterHDNode(cipher);
   var account = HDAccount.fromWalletMasterKey(masterkey, accIndex, label);
-  account.encrypt(enc).persist();
+  account.encrypt(enc);
   this._accounts.push(account);
   return this;
 };
@@ -235,8 +260,14 @@ HDWallet.prototype.verifyMnemonic = function (completionBlock, errorBlock) {
 };
 
 HDWallet.prototype.account = function (xpub) {
-  var f = this._accounts
+  var f
+  if (this.isUpgradedToV4) {
+    f = this._accounts
+              .filter(function (a) { return a.derivations.find(d => d.xpub === xpub); });
+  } else {
+    f = this._accounts
             .filter(function (a) { return a.extendedPublicKey === xpub; });
+  }
   var r = f.length === 0 ? null : f[0];
   return r;
 };
