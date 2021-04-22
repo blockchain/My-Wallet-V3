@@ -23,32 +23,8 @@ var isInitialized = false;
 MyWallet.wallet = undefined;
 MyWallet.ws = new BlockchainSocket(null, WebSocket);
 
-// 🚨🚨🚨🚨🚨 v4 Check 🚨🚨🚨🚨🚨
-// V4 FLAG, THIS FLAG SHOULD BE SWITCHED AFTER iOS V. IS AT >= 80% ADOPTION
-var SHOULD_PERFORM_V4_UPGRADE = true
-
-// used locally and overridden in iOS
 MyWallet.socketConnect = function () {
-  let socket = MyWallet.ws;
-  socket.on('open', onOpen);
-  socket.on('message', onMessage);
-  socket.on('close', onClose);
-  socket.connect();
-
-  var lastOnChange = { checksum: null };
-
-  function onMessage (message) {
-    MyWallet.getSocketOnMessage(message, lastOnChange);
-  }
-
-  function onOpen () {
-    WalletStore.sendEvent('ws_on_open');
-    socket.send(MyWallet.getSocketOnOpenMessage());
-  }
-
-  function onClose () {
-    WalletStore.sendEvent('ws_on_close');
-  }
+  throw new Error('MyWallet.socketConnect must be ovewritten by iOS.');
 };
 
 // used two times
@@ -106,6 +82,9 @@ MyWallet.getSocketOnMessage = function (message, lastOnChange) {
 
 // called by native websocket in iOS
 MyWallet.getSocketOnOpenMessage = function () {
+  if (!MyWallet.wallet) {
+    return null;
+  }
   var accounts = MyWallet.wallet.hdwallet ? MyWallet.wallet.hdwallet.activeXpubs : [];
   return BlockchainSocket.onOpenSub(MyWallet.wallet.guid, MyWallet.wallet.activeAddresses, accounts);
 };
@@ -146,46 +125,7 @@ MyWallet.getWallet = function (success, error) {
 };
 
 MyWallet.decryptAndInitializeWallet = function (success, error, decryptSuccess, buildHdSuccess) {
-  assert(success, 'Success callback required');
-  assert(error, 'Error callback required');
-  var encryptedWalletData = WalletStore.getEncryptedWalletData();
-
-  if (encryptedWalletData === undefined || encryptedWalletData === null || encryptedWalletData.length === 0) {
-    error('No Wallet Data To Decrypt');
-    return;
-  }
-  WalletCrypto.decryptWallet(
-    encryptedWalletData,
-    WalletStore.getPassword(),
-    function (obj, rootContainer) {
-      MyWallet.wallet = new Wallet(obj);
-
-      // this sanity check should be done on the load
-      // if (!sharedKey || sharedKey.length == 0 || sharedKey.length != 36) {
-      //   throw new Error('Shared Key is invalid');
-      // }
-
-      // TODO: pbkdf2 iterations should be stored correctly on wallet wrapper
-      if (rootContainer) {
-        WalletStore.setPbkdf2Iterations(rootContainer.pbkdf2_iterations);
-      }
-      // If we don't have a checksum then the wallet is probably brand new - so we can generate our own
-      var checkSum = WalletStore.getPayloadChecksum();
-      if (checkSum === undefined || checkSum === null || checkSum.length === 0) {
-        WalletStore.setPayloadChecksum(WalletStore.generatePayloadChecksum());
-      }
-      if (MyWallet.wallet.isUpgradedToHD === false) {
-        WalletStore.sendEvent('hd_wallets_does_not_exist');
-      }
-      if (SHOULD_PERFORM_V4_UPGRADE && !MyWallet.wallet.isUpgradedToV4)  {
-        WalletStore.sendEvent('perform_v4_payload_upgrade');
-      }
-      MyWallet.setIsInitialized();
-      decryptSuccess && decryptSuccess();
-      success();
-    },
-    error
-  );
+  throw new Error('MyWallet.decryptAndInitializeWallet must be ovewritten by iOS.');
 };
 
 MyWallet.handleDecryptAndInitializeWalletSuccess = function (obj, success, decryptSuccess) {

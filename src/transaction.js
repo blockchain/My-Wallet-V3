@@ -81,8 +81,8 @@ Transaction.prototype.addPrivateKeys = function (privateKeys) {
 
   for (var i = 0; i < privateKeys.length; i++) {
     let input = this.addressesOfInputs[i];
-    let pkAddress = privateKeys[i].getAddress();
-    assert.equal(input, pkAddress, 'Private key does not match bitcoin address ' + input + '!=' + pkAddress + ' while adding private key for input ' + i);
+    const { address } = Bitcoin.payments.p2pkh({ pubkey: privateKeys[i].publicKey })
+    assert.equal(input, address, 'Private key does not match bitcoin address ' + input + '!=' + address + ' while adding private key for input ' + i);
   }
 
   this.privateKeys = privateKeys;
@@ -93,23 +93,23 @@ Transaction.prototype.addPrivateKeys = function (privateKeys) {
  */
 
 Transaction.prototype.sortBIP69 = function () {
-  var compareInputs = function (a, b) {
-    var hasha = new Buffer(a[0].hash);
-    var hashb = new Buffer(b[0].hash);
-    var x = [].reverse.call(hasha);
-    var y = [].reverse.call(hashb);
-    return x.compare(y) || a[0].index - b[0].index;
-  };
+  // var compareInputs = function (a, b) {
+  //   var hasha = new Buffer(a[0].hash);
+  //   var hashb = new Buffer(b[0].hash);
+  //   var x = [].reverse.call(hasha);
+  //   var y = [].reverse.call(hashb);
+  //   return x.compare(y) || a[0].index - b[0].index;
+  // };
 
-  var compareOutputs = function (a, b) {
-    return (a.value - b.value) || (a.script).compare(b.script);
-  };
-  var mix = Helpers.zip3(this.transaction.tx.ins, this.privateKeys, this.addressesOfInputs);
-  mix.sort(compareInputs);
-  this.transaction.tx.ins = mix.map(function (a) { return a[0]; });
-  this.privateKeys = mix.map(function (a) { return a[1]; });
-  this.addressesOfInputs = mix.map(function (a) { return a[2]; });
-  this.transaction.tx.outs.sort(compareOutputs);
+  // var compareOutputs = function (a, b) {
+  //   return (a.value - b.value) || (a.script).compare(b.script);
+  // };
+  // var mix = Helpers.zip3(this.transaction.tx.ins, this.privateKeys, this.addressesOfInputs);
+  // mix.sort(compareInputs);
+  // this.transaction.tx.ins = mix.map(function (a) { return a[0]; });
+  // this.privateKeys = mix.map(function (a) { return a[1]; });
+  // this.addressesOfInputs = mix.map(function (a) { return a[2]; });
+  // this.transaction.tx.outs.sort(compareOutputs);
 };
 /**
  * Sign the transaction
@@ -118,21 +118,22 @@ Transaction.prototype.sortBIP69 = function () {
 Transaction.prototype.sign = function () {
   assert(this.privateKeys, 'Need private keys to sign transaction');
 
-  assert.equal(this.privateKeys.length, this.transaction.inputs.length, 'Number of private keys needs to match inputs');
+  // assert.equal(this.privateKeys.length, this.transaction.inputs.length, 'Number of private keys needs to match inputs');
 
   for (var i = 0; i < this.privateKeys.length; i++) {
-    assert.equal(this.addressesOfInputs[i], this.privateKeys[i].getAddress(), 'Private key does not match bitcoin address ' + this.addressesOfInputs[i] + '!=' + this.privateKeys[i].getAddress() + ' while signing input ' + i);
+    const { address } = Bitcoin.payments.p2pkh({ pubkey: this.privateKeys[i].publicKey })
+    assert.equal(this.addressesOfInputs[i], address, 'Private key does not match bitcoin address ' + this.addressesOfInputs[i] + '!=' + address + ' while signing input ' + i);
   }
 
   this.emitter.emit('on_begin_signing');
 
   var transaction = this.transaction;
 
-  for (var ii = 0; ii < transaction.inputs.length; ii++) {
+  for (var ii = 0; ii < transaction.__INPUTS.length; ii++) {
     this.emitter.emit('on_sign_progress', ii + 1);
     var key = this.privateKeys[ii];
     transaction.sign(ii, key);
-    assert(transaction.inputs[ii].signType === 'pubkeyhash', 'Error creating input script');
+    assert(transaction.__INPUTS[ii].signType === 'pubkeyhash', 'Error creating input script');
   }
 
   this.emitter.emit('on_finish_signing');
