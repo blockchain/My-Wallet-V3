@@ -93,23 +93,23 @@ Transaction.prototype.addPrivateKeys = function (privateKeys) {
  */
 
 Transaction.prototype.sortBIP69 = function () {
-  // var compareInputs = function (a, b) {
-  //   var hasha = new Buffer(a[0].hash);
-  //   var hashb = new Buffer(b[0].hash);
-  //   var x = [].reverse.call(hasha);
-  //   var y = [].reverse.call(hashb);
-  //   return x.compare(y) || a[0].index - b[0].index;
-  // };
+  var compareInputs = function (a, b) {
+    var hasha = new Buffer(a[0].hash);
+    var hashb = new Buffer(b[0].hash);
+    var x = [].reverse.call(hasha);
+    var y = [].reverse.call(hashb);
+    return x.compare(y) || a[0].index - b[0].index;
+  };
 
-  // var compareOutputs = function (a, b) {
-  //   return (a.value - b.value) || (a.script).compare(b.script);
-  // };
-  // var mix = Helpers.zip3(this.transaction.tx.ins, this.privateKeys, this.addressesOfInputs);
-  // mix.sort(compareInputs);
-  // this.transaction.tx.ins = mix.map(function (a) { return a[0]; });
-  // this.privateKeys = mix.map(function (a) { return a[1]; });
-  // this.addressesOfInputs = mix.map(function (a) { return a[2]; });
-  // this.transaction.tx.outs.sort(compareOutputs);
+  var compareOutputs = function (a, b) {
+    return (a.value - b.value) || (a.script).compare(b.script);
+  };
+  var mix = Helpers.zip3(this.transaction.__TX.ins, this.privateKeys, this.addressesOfInputs);
+  mix.sort(compareInputs);
+  this.transaction.__TX.ins = mix.map(function (a) { return a[0]; });
+  this.privateKeys = mix.map(function (a) { return a[1]; });
+  this.addressesOfInputs = mix.map(function (a) { return a[2]; });
+  this.transaction.__TX.outs.sort(compareOutputs);
 };
 /**
  * Sign the transaction
