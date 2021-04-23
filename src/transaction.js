@@ -118,7 +118,7 @@ Transaction.prototype.sortBIP69 = function () {
 Transaction.prototype.sign = function () {
   assert(this.privateKeys, 'Need private keys to sign transaction');
 
-  // assert.equal(this.privateKeys.length, this.transaction.inputs.length, 'Number of private keys needs to match inputs');
+  assert.equal(this.privateKeys.length, this.transaction.__INPUTS.length, 'Number of private keys needs to match inputs');
 
   for (var i = 0; i < this.privateKeys.length; i++) {
     const { address } = Bitcoin.payments.p2pkh({ pubkey: this.privateKeys[i].publicKey })
