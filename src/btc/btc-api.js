@@ -41,10 +41,19 @@ const apiGetUnspents = (as, asBech32, conf) => {
   );
 }
 
-const multiaddr = (addresses, n = 1) => {
-  const active = Helpers.toArrayFormat(addresses).join('|')
-  const data = { active, format: 'json', offset: 0, no_compact: true, n, language: 'en', no_buttons: true };
-  return fetch(`${API.API_ROOT_URL}multiaddr`, {
+const multiaddr = (addresses, bech32Addresses, n = 1) => {
+  const data = {
+    active: Helpers.toArrayFormat(addresses).join('|'),
+    activeBech32: Helpers.toArrayFormat(bech32Addresses).join('|'),
+    format: 'json', 
+    offset: 0,
+    no_compact: true, 
+    n: n,
+    language: 'en',
+    no_buttons: true
+  };
+
+  return fetch(`${API.API_ROOT_URL}btc/multiaddr`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: API.encodeFormData(data)

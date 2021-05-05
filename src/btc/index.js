@@ -9,6 +9,8 @@ const BtcImported = require("./btc-imported");
 const Helpers = require("../helpers");
 const BlockchainSocket = require("../blockchain-socket");
 
+const BCH_FORK_HEIGHT = 478558
+
 class BitcoinWallet {
   constructor(wallet) {
     this._wallet = wallet;
@@ -84,7 +86,8 @@ class BitcoinWallet {
     let addrs =
       this.importedAddresses == null ? [] : this.importedAddresses.addresses;
     let xpubs = this.activeAccounts.map((a) => a.xpub);
-    return BtcApi.multiaddr(addrs.concat(xpubs), 50).then(
+    
+    return BtcApi.multiaddr([], addrs.concat(xpubs), 50).then(
       this.updateWalletInfo.bind(this)
     );
   }
