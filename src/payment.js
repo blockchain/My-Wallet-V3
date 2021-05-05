@@ -6,7 +6,6 @@ var Transaction = require('./transaction');
 var API = require('./api');
 var Helpers = require('./helpers');
 var KeyRing = require('./keyring');
-var KeyRingV4 = require('./keyring-v4');
 var EventEmitter = require('events');
 var util = require('util');
 var constants = require('./constants');
@@ -550,29 +549,26 @@ function getXPRIV (wallet, password, accountIndex) {
     : WalletCrypto.decryptSecretWithSecondPassword(fromAccount.extendedPrivateKey, password, wallet.sharedKey, wallet.pbkdf2_iterations);
 }
 
-// getXPRIV :: wallet -> password -> index -> xpriv
-function getDerivationType (wallet, accountIndex) {
-  if (!MyWallet.wallet.isUpgradedToV4) {
-    return null;
+// getKeyForPath :: xpriv -> path -> BIP32
+function getKeyForPath (extendedPrivateKey, neededPrivateKeyPath) {
+  if (MyWallet.wallet.isUpgradedToV4) {
+    throw new Error('This payment flow should not be used by V4 wallets.');
   }
-  return wallet.hdwallet.accounts[accountIndex].defaultDerivation;
-}
-
-// getKeyForPath :: xpriv -> path -> ECPair
-function getKeyForPath (extendedPrivateKey, derivationType, neededPrivateKeyPath) {
-  var keyring = MyWallet.wallet.isUpgradedToV4 ? new KeyRingV4(extendedPrivateKey, null, null, derivationType) : new KeyRing(extendedPrivateKey);
-  return keyring.privateKeyFromPath(neededPrivateKeyPath).keyPair;
+  var keyring = new KeyRing(extendedPrivateKey);
+  return keyring.privateKeyFromPath(neededPrivateKeyPath);
 }
 
 // getPrivateKeys :: wallet -> password -> payment -> [private key]
 function getPrivateKeys (wallet, password, payment) {
+  if (MyWallet.wallet.isUpgradedToV4) {
+    throw new Error('This payment flow should not be used by V4 wallets.');
+  }
   var transaction = payment.transaction;
   var privateKeys = [];
   // if from Account
   if (Helpers.isPositiveInteger(payment.fromAccountIdx)) {
     var xpriv = getXPRIV(wallet, password, payment.fromAccountIdx);
-    var derivationType = getDerivationType(wallet, payment.fromAccountIdx);
-    privateKeys = transaction.pathsOfNeededPrivateKeys.map(getKeyForPath.bind(this, xpriv, derivationType));
+    privateKeys = transaction.pathsOfNeededPrivateKeys.map(getKeyForPath.bind(this, xpriv));
   }
   // if from Addresses or redeem code (private key)
   if (payment.from && payment.from.every(Helpers.isBitcoinAddress) && !payment.fromWatchOnly) {

@@ -51,7 +51,9 @@ KeyChain.prototype.init = function (extendedKey, index, cache) {
 
 KeyChain.prototype.getAddress = function (index) {
   assert(Helpers.isPositiveInteger(index), 'Address index must be integer >= 0');
-  return this._getKey(index).getAddress();
+  const hdNode = this._getKey(index);
+  const { address } = Bitcoin.payments.p2pkh({ pubkey: hdNode.publicKey })
+  return address
 };
 
 KeyChain.prototype.getPrivateKey = function (index) {

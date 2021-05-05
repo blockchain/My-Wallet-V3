@@ -30,10 +30,17 @@ const getKeyForAddress = (BitcoinLib, wallet, password, addr) => {
 };
 
 const getXPRIV = (wallet, password, accountIndex, derivationType) => {
-  const account = wallet.hdwallet.accounts[accountIndex].derivations.find((d) => d.type === derivationType);
-  return account.xpriv == null || password == null
-    ? account.xpriv
-    : WalletCrypto.decryptSecretWithSecondPassword(account.xpriv, password, wallet.sharedKey, wallet.pbkdf2_iterations);
+  var xpriv;
+  if (wallet.hdwallet.isUpgradedToV4) {
+    const account = wallet.hdwallet.accounts[accountIndex].derivations.find((d) => d.type === derivationType);
+    xpriv = account.xpriv;
+  } else {
+    const account = wallet.hdwallet.accounts[accountIndex];
+    xpriv = account.extendedPrivateKey;
+  }
+  return xpriv == null || password == null
+    ? xpriv
+    : WalletCrypto.decryptSecretWithSecondPassword(xpriv, password, wallet.sharedKey, wallet.pbkdf2_iterations);
 };
 
 const pathToKeyBtc = (BitcoinLib, wallet, password, coin) => {
