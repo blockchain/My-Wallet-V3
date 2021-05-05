@@ -59,8 +59,13 @@ class BtcAccount extends BtcSpendable {
   }
 
   get changeAddress () {
-    let { change } = this._btcWallet.getAccountIndexes(this.xpub)
-    return this._btcAccount.changeAddressAtIndex(change, 'bech32')
+    let { receive, change } = this._btcWallet.getAccountIndexes(this.xpub)
+    if (receive === 0) {
+      // Receive chain is empty, we must use the receive address in place of the change address.
+      return this._btcAccount.receiveAddressAtIndex(receive, 'bech32')
+    } else {
+      return this._btcAccount.changeAddressAtIndex(change, 'bech32')
+    }
   }
 
   get coinCode () {
