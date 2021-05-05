@@ -32,7 +32,7 @@ const apiGetUnspents = (as, asBech32, conf) => {
   const activeBech32 = asBech32.join('|')
   const confirmations = Helpers.isPositiveNumber(conf) ? conf : -1
   const format = 'json'
-  return fetch(`${API.ROOT_URL}unspent`, {
+  return fetch(`${API.API_ROOT_URL}btc/unspent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: API.encodeFormData({ active, activeBech32, confirmations, format })
