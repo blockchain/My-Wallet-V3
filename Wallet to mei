@@ -1,0 +1,16 @@
+"value": 942759,
+      "script": "76a9149fd84a59874f55b45e6ed0bb1099f2ef1e31b91c88ac",
+      "addresses": [
+        "1FaBYdANibsd1i7r9rqSx8eEXVg4hnSfhR"
+      ],
+      "script_type": "pay-to-pubkey-hash"
+    },
+  "block_hash": "000000000000000000029cbac1d345011a58cc46907fa34643b9f25880778f86",
+  block_height: 676135,
+  «block_index»: 432,
+  "hash": "20fc963633cf695c72a944ea9d99fa6eb1f059f6679b02c5018a0132e4544afe",
+  "Шестнадцатеричный": "010000000116a4f31593e8a5c5a563c9d572b1389054171cc40f2ce420e011fa293d2cc3cd010000006b4830450221009eb0406cf2edaf17c2243dc5a7cdc95bfcc6c1b6d0601d99c1edc3fab2f8165002203b7bdef2c3448dc12763ffff3d7b1dd14ac1b29877d498d74e189dcb8944fdec012103fba7d57a764e93303d33ff5705e7b84ba0733bd7c60dde2045b2fe36a71930beffffffff02a7620e00000000001976a9149fd84a59874f55b45e6ed0bb1099f2ef1e31b91c88ac876d4300000000001976a914a2ca8ecc44fcd3523e4d7eb19e43483eed4e176d88ac00000000",
+  "адреса": [
+    "1ALz3o7e3YCmt8Q6S39YJQ2oUJvZFwZRkd",
+    "1FaBYdANibsd1i7r9rqSx8eEXVg4hnSfhR",
+    "1Fqm83Hv78jkxxcya1zwdYyRgKa46kTda2" 
