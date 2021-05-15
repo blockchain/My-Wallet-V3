@@ -5,12 +5,11 @@ module.exports = function (config) {
     browsers: ['PhantomJS'],
     browserNoActivityTimeout: 180000,
     // reportSlowerThan: 50,
-    logLevel: config.LOG_WARN,
+    logLevel: config.LOG_DEBUG,
     client: {
       captureConsole: true
     },
     autoWatch: true,
-    // logLevel: karma.LOG_DEBUG,
     reporters: ['progress', 'coverage'],
 
     coverageReporter: {
@@ -51,7 +50,8 @@ module.exports = function (config) {
       'tests/coin-selection.spec.js',
       'tests/coin.spec.js',
       // 'tests/keychain.spec.js',
-      'tests/signer.spec.js'
+      'tests/signer.spec.js',
+      'tests/metadata.spec.js'
     ]
   };
 
