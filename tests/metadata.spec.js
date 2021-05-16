@@ -317,14 +317,14 @@ describe('Metadata', () => {
       const type0PrivateKey = Buffer.from('2e3bed41c30cff4c5f412d4bc0a5a1631b853e7b7b250b5ca843aabeb589f4b5', 'hex')
       const type1PrivateKey = Buffer([0, 0, 0, 10, 0, 0, 0, 20, 30]) // sha256(x).hex = 1dcc8d6e73cbceaf45e339c9937ccd8bb13e2cdfeacc490db66e2016f1625a76
       const expectedEncKeyBuffer = Buffer([10, 0, 0, 0, 20, 30]) // sha256(x).hex = 75cf98f0cf885f06f5a16f20cc944512bea300e34ee0ec49ea0cd87a154109c4
-      let m = Metadata.fromTypeIDDerivations(type0PrivateKey, type1PrivateKey, 9)
+      const m = Metadata.fromTypeIDDerivations(type0PrivateKey, type1PrivateKey, 9)
       expect(m._encKeyBufferPadded.toString('hex')).toEqual('1dcc8d6e73cbceaf45e339c9937ccd8bb13e2cdfeacc490db66e2016f1625a76')
       return expect(m._encKeyBuffer.toString('hex')).toEqual('75cf98f0cf885f06f5a16f20cc944512bea300e34ee0ec49ea0cd87a154109c4')
     })
     return it('should return Metadata with only _encKeyBuffer if type1PrivateKey has no 0 left padding', () => {
       const type0PrivateKey = Buffer.from('2e3bed41c30cff4c5f412d4bc0a5a1631b853e7b7b250b5ca843aabeb589f4b5', 'hex')
       const type1PrivateKey = Buffer([10, 0, 0, 0, 20, 30]) // sha256(x).hex = 75cf98f0cf885f06f5a16f20cc944512bea300e34ee0ec49ea0cd87a154109c4
-      let m = Metadata.fromTypeIDDerivations(type0PrivateKey, type1PrivateKey, 9)
+      const m = Metadata.fromTypeIDDerivations(type0PrivateKey, type1PrivateKey, 9)
       expect(m._typeId).toEqual(9)
       expect(m._encKeyBufferPadded).toBeNull()
       return expect(m._encKeyBuffer.toString('hex')).toEqual('75cf98f0cf885f06f5a16f20cc944512bea300e34ee0ec49ea0cd87a154109c4')

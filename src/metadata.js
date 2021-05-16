@@ -255,7 +255,7 @@ Metadata.fromTypeIDDerivations = function (type0PrivateKey, type1PrivateKey, typ
 
   // - New Format Encryption Key
 
-  var encryptionKeyNew = WalletCrypto.sha256(type1PrivateKey);
+  var encryptionKeyPadded = WalletCrypto.sha256(type1PrivateKey);
 
   // - Original Format Encryption Key
 
@@ -265,12 +265,12 @@ Metadata.fromTypeIDDerivations = function (type0PrivateKey, type1PrivateKey, typ
   // Generate SHA256   
   const encryptionKeyOriginal = WalletCrypto.sha256(type1PrivateKeyOriginal)
 
-  // Clear encryptionKeyNew if keys are equal.
-  if (encryptionKeyNew.equals(encryptionKeyOriginal)) {
-    encryptionKeyNew = null
+  // Clear encryptionKeyPadded if keys are equal.
+  if (encryptionKeyPadded.equals(encryptionKeyOriginal)) {
+    encryptionKeyPadded = null
   }
 
-  return new Metadata(keypair, encryptionKeyOriginal, encryptionKeyNew, typeId);
+  return new Metadata(keypair, encryptionKeyOriginal, encryptionKeyPadded, typeId);
 }
 
 // Remove all `00` leading nibbles from Buffer.
