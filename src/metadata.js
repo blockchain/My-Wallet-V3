@@ -14,9 +14,10 @@ var compose = require('ramda/src/compose');
 var prop = require('ramda/src/prop');
 
 class Metadata {
-  constructor (ecPair, encKeyBuffer, typeId) {
+  constructor (ecPair, encKeyBuffer, encKeyBufferPadded, typeId) {
     // ecPair :: ECPair object - bitcoinjs-lib
     // encKeyBuffer :: Buffer (nullable = no encrypted save)
+    // encKeyBufferPadded :: Buffer (nullable)
     // TypeId :: Int (nullable = default -1)
     this.VERSION = 1;
     this._typeId = typeId == null ? -1 : typeId;
@@ -24,6 +25,7 @@ class Metadata {
     this._address = Helpers.keyPairToAddress(ecPair);
     this._signKey = ecPair;
     this._encKeyBuffer = encKeyBuffer;
+    this._encKeyBufferPadded = encKeyBufferPadded;
     this._sequence = Promise.resolve();
   }
 
@@ -114,13 +116,31 @@ Metadata.verifyResponse = curry((address, res) => {
   return assoc('compute_new_magic_hash', M.magic(pB, mB), res);
 });
 
-Metadata.extractResponse = curry((encKey, res) => {
+
+// Tries to decrypt with `Metadata.decrypt(encKey)`. If it fails and encKey2 
+// is not null it tries to decrypt with `encKey2`.
+Metadata.decryptRetry = curry(
+  function (encKey, encKey2, payload) {
+    const tryOther = curry((obj) => {
+      if (obj && obj.length > 0) { 
+        return obj
+      } else if (encKey2) {
+        return Metadata.decrypt(encKey2, payload)
+      } else {
+        return obj
+      }
+    })
+    return compose(tryOther, Metadata.decrypt(encKey))(payload)
+  }
+);
+
+Metadata.extractResponse = curry((encKey, encKey2, res) => {
   const M = Metadata;
   if (res === null) {
     return res;
   } else {
     return encKey
-      ? compose(JSON.parse, M.decrypt(encKey), prop('payload'))(res)
+      ? compose(JSON.parse, M.decryptRetry(encKey, encKey2), prop('payload'))(res)
       : compose(JSON.parse, M.BufferToString, M.B64ToBuffer, prop('payload'))(res);
   }
 });
@@ -131,6 +151,7 @@ Metadata.prototype.create = function (payload) {
   const M = Metadata;
   payload = M.toImmutable(payload);
   return this.next(() => {
+    // Encrypt using encKeyBuffer on the original format.
     const encPayloadBuffer = this._encKeyBuffer
       ? compose(M.B64ToBuffer, M.encrypt(this._encKeyBuffer), JSON.stringify)(payload)
       : compose(M.StringToBuffer, JSON.stringify)(payload);
@@ -186,7 +207,7 @@ Metadata.prototype.fetch = function () {
 
     return M.GET(this._address).then(M.verifyResponse(this._address))
                                .then(saveMagicHash)
-                               .then(M.extractResponse(this._encKeyBuffer))
+                               .then(M.extractResponse(this._encKeyBuffer, this._encKeyBufferPadded))
                                .then(this.fromObject.bind(this))
                                .catch((e) => {
                                  console.error(`Failed to fetch metadata entry ${this._typeId} at ${this._address}:`, e);
@@ -210,17 +231,58 @@ Metadata.fromMetadataHDNode = function (metadataHDNode, typeId) {
   // 2: whats-new
   // 3: buy-sell
   // 4: contacts
-  const payloadTypeNode = metadataHDNode.deriveHardened(typeId);
-  // purpose' / type' / 0' : https://meta.blockchain.info/{address}
-  //                       signature used to authenticate
-  // purpose' / type' / 1' : sha256(private key) used as 256 bit AES key
-  const node = payloadTypeNode.deriveHardened(0);
-  const privateKey = payloadTypeNode.deriveHardened(1).privateKey
-  const keypair = Bitcoin.ECPair.fromPrivateKey(node.privateKey)
-  const encryptionKey = WalletCrypto.sha256(privateKey);
 
-  return new Metadata(keypair, encryptionKey, typeId);
+  const payloadTypeNode = metadataHDNode.deriveHardened(typeId);
+
+  // purpose' / type' / 0' : https://meta.blockchain.info/{address}
+  //                         signature used to authenticate
+  const type0PrivateKey = payloadTypeNode.deriveHardened(0).privateKey
+
+  // - purpose' / type' / 1' node Private Key
+  const type1PrivateKey = payloadTypeNode.deriveHardened(1).privateKey
+
+  return Metadata.fromTypeIDDerivations(type0PrivateKey, type1PrivateKey, typeId)
 };
+
+// CONSTRUCTORS
+// Used from Metadata.fromMetadataHDNode
+// type0PrivateKey: purpose' / typeId' / 0' derivation private key Buffer
+// type1PrivateKey: purpose' / typeId' / 1' derivation private key Buffer
+// typeId: String
+Metadata.fromTypeIDDerivations = function (type0PrivateKey, type1PrivateKey, typeId) {
+
+  const keypair = Bitcoin.ECPair.fromPrivateKey(type0PrivateKey)
+
+  // - New Format Encryption Key
+
+  var encryptionKeyPadded = WalletCrypto.sha256(type1PrivateKey);
+
+  // - Original Format Encryption Key
+
+  // Remove all `00` leading nibbles from privateKey Buffer.
+  const type1PrivateKeyOriginal = Metadata.sanitizeBuffer(type1PrivateKey) 
+  
+  // Generate SHA256   
+  const encryptionKeyOriginal = WalletCrypto.sha256(type1PrivateKeyOriginal)
+
+  // Clear encryptionKeyPadded if keys are equal.
+  if (encryptionKeyPadded.equals(encryptionKeyOriginal)) {
+    encryptionKeyPadded = null
+  }
+
+  return new Metadata(keypair, encryptionKeyOriginal, encryptionKeyPadded, typeId);
+}
+
+// Remove all `00` leading nibbles from Buffer.
+// Input [0, 0, 0, 10, 0, 20, 30]
+// Output [10, 0, 20, 30]]
+Metadata.sanitizeBuffer = function (aBuffer) {
+  var aBuffer = aBuffer
+  while (aBuffer.length > 0 && aBuffer.readUInt8(0) == 0) {
+    aBuffer = aBuffer.slice(1)
+  }
+  return aBuffer
+}
 
 Metadata.deriveMetadataNode = function (masterHDNode) {
   // BIP 43 purpose needs to be 31 bit or less. For lack of a BIP number
