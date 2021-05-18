@@ -136,12 +136,6 @@ describe('Metadata', () => {
   //   });
   // });
 
-  // describe('Metadata.extractResponse', () => {
-  //   it('should propagate null', () => {
-  //     let extracted = Metadata.extractResponse('encrypteionKey', null);
-  //     return expect(extracted).toBe(null);
-  //   });
-
   //   it('should extract encrypted data', () => {
   //     let wif = 'Kz5XipXFW4v4CVEd1N77q5rRdFFsgVovC2AuivvZ5MfDZhQBzuFA';
   //     let k = OriginalBitcoin.ECPair.fromWIF(wif);
@@ -186,21 +180,6 @@ describe('Metadata', () => {
   //     });
   //   })
   // );
-
-  // describe('read', () => {
-  //   it('should resolve with null for 404 entry', done => {
-  //     spyOn(Metadata, 'request').and.callFake((method, endpoint, data) => Promise.resolve(null));
-  //     let promise = Metadata.read('19ryWY7sn9G6yX74AJKSs83vnhdydcvDjA');
-  //     promise.then(res => expect(res).toBe(null));
-  //     return expect(promise).toBeResolved(done);
-  //   });
-
-  //   return it('should read non-encrypted data', done => {
-  //     spyOn(Metadata, 'request').and.callFake((method, endpoint, data) => new Promise(resolve => resolve(nonEncResponse)));
-  //     let promise = Metadata.read('19ryWY7sn9G6yX74AJKSs83vnhdydcvDjA');
-  //     return expect(promise).toBeResolvedWith(jasmine.objectContaining({hello: 'world'}), done);
-  //   });
-  // });
 
   // describe('API', () => {
   //   beforeEach(() => {
@@ -291,64 +270,74 @@ describe('Metadata', () => {
       const privateKey = Buffer.from('a91bf9af9cbf9dbd1de0a3a4867a42cb0bd398251b807c84a6b6ac68828a02d9', 'hex')
       const bip32 = OriginalBitcoin.bip32.fromPrivateKey(privateKey, chaincode)
       const m = Metadata.fromMetadataHDNode(bip32, 233)
-      expect(m._encKeyBufferPadded.toString('hex')).toEqual('d3d34a69c68bb0eee9bad63b204c5e0ff00b1a48f17bfabe73a7b6df58e6281a')
-      return expect(m._encKeyBuffer.toString('hex')).toEqual('e5a3804f14a79a69d2396c2e2359fa2439079d44379ab86d2a517533cc83a5d4')
+      expect(m._encKeyBufferUnpadded.toString('hex')).toEqual('e5a3804f14a79a69d2396c2e2359fa2439079d44379ab86d2a517533cc83a5d4')
+      return expect(m._encKeyBuffer.toString('hex')).toEqual('d3d34a69c68bb0eee9bad63b204c5e0ff00b1a48f17bfabe73a7b6df58e6281a')
     });
   });
 
-  describe('Metadata.decryptRetry', () => {
+  describe('Metadata.extractResponse', () => {
     it('should not decrypt if only a wrong key is provided', () => {
       const wrongKey = Buffer.from('00b19570486401f9a0bf780e2febd1c3a57488327da932a61e004b76389d7b38', 'hex')
       const payload = '/oS4Dl+R9e4DTfTY9eQv4b91lmpn7vEhk5DNpwWeiYfXlDWi7UsHi4miiA9AvKxP9UbHhs9DaJy6USc2MiSCRA=='
-      const expectedReturn = '{\"guid\":\"71ec5b95-7312-4f90-a834-bf78963395fb\"}'
-      return expect(Metadata.decryptRetry(wrongKey, null, payload)).toEqual('')
+      const res = {}
+      res.payload = payload
+      return expect(() => { Metadata.extractResponse(wrongKey, null, res) }).toThrow()
+    })
+    it('should not decrypt if two wrong keys are provided', () => {
+      const wrongKey = Buffer.from('00b19570486401f9a0bf780e2febd1c3a57488327da932a61e004b76389d7b38', 'hex')
+      const payload = '/oS4Dl+R9e4DTfTY9eQv4b91lmpn7vEhk5DNpwWeiYfXlDWi7UsHi4miiA9AvKxP9UbHhs9DaJy6USc2MiSCRA=='
+      const res = {}
+      res.payload = payload
+      return expect(() => { Metadata.extractResponse(wrongKey, wrongKey, res) }).toThrow()
     })
     return it('should decrypt successfully if a wrong key and a right key is provided', () => {
       const wrongKey = Buffer.from('00b19570486401f9a0bf780e2febd1c3a57488327da932a61e004b76389d7b38', 'hex')
       const rightKey = Buffer.from('e4b19570486401f9a0bf780e2febd1c3a57488327da932a61e004b76389d7b38', 'hex')
       const payload = '/oS4Dl+R9e4DTfTY9eQv4b91lmpn7vEhk5DNpwWeiYfXlDWi7UsHi4miiA9AvKxP9UbHhs9DaJy6USc2MiSCRA=='
-      const expectedReturn = '{\"guid\":\"71ec5b95-7312-4f90-a834-bf78963395fb\"}'
-      return expect(Metadata.decryptRetry(wrongKey, rightKey, payload)).toEqual(expectedReturn)
+      const res = {}
+      res.payload = payload
+      const expectedReturn = { "guid": "71ec5b95-7312-4f90-a834-bf78963395fb"}
+      expect(Metadata.extractResponse(wrongKey, rightKey, res)).toEqual(expectedReturn)
     })
   });
   
   describe('Metadata.fromTypeIDDerivations', () => {
-    it('should return Metadata with _encKeyBuffer and _encKeyBufferPadded if type1PrivateKey has any 0 left padding', () => {
+    it('should return Metadata with _encKeyBuffer and _encKeyBufferUnpadded if type1PrivateKey has any 0 left padding', () => {
       const type0PrivateKey = Buffer.from('2e3bed41c30cff4c5f412d4bc0a5a1631b853e7b7b250b5ca843aabeb589f4b5', 'hex')
       const type1PrivateKey = Buffer([0, 0, 0, 10, 0, 0, 0, 20, 30]) // sha256(x).hex = 1dcc8d6e73cbceaf45e339c9937ccd8bb13e2cdfeacc490db66e2016f1625a76
       const expectedEncKeyBuffer = Buffer([10, 0, 0, 0, 20, 30]) // sha256(x).hex = 75cf98f0cf885f06f5a16f20cc944512bea300e34ee0ec49ea0cd87a154109c4
       const m = Metadata.fromTypeIDDerivations(type0PrivateKey, type1PrivateKey, 9)
-      expect(m._encKeyBufferPadded.toString('hex')).toEqual('1dcc8d6e73cbceaf45e339c9937ccd8bb13e2cdfeacc490db66e2016f1625a76')
-      return expect(m._encKeyBuffer.toString('hex')).toEqual('75cf98f0cf885f06f5a16f20cc944512bea300e34ee0ec49ea0cd87a154109c4')
+      expect(m._encKeyBufferUnpadded.toString('hex')).toEqual('75cf98f0cf885f06f5a16f20cc944512bea300e34ee0ec49ea0cd87a154109c4')
+      return expect(m._encKeyBuffer.toString('hex')).toEqual('1dcc8d6e73cbceaf45e339c9937ccd8bb13e2cdfeacc490db66e2016f1625a76')
     })
     return it('should return Metadata with only _encKeyBuffer if type1PrivateKey has no 0 left padding', () => {
       const type0PrivateKey = Buffer.from('2e3bed41c30cff4c5f412d4bc0a5a1631b853e7b7b250b5ca843aabeb589f4b5', 'hex')
       const type1PrivateKey = Buffer([10, 0, 0, 0, 20, 30]) // sha256(x).hex = 75cf98f0cf885f06f5a16f20cc944512bea300e34ee0ec49ea0cd87a154109c4
       const m = Metadata.fromTypeIDDerivations(type0PrivateKey, type1PrivateKey, 9)
       expect(m._typeId).toEqual(9)
-      expect(m._encKeyBufferPadded).toBeNull()
+      expect(m._encKeyBufferUnpadded).toBeNull()
       return expect(m._encKeyBuffer.toString('hex')).toEqual('75cf98f0cf885f06f5a16f20cc944512bea300e34ee0ec49ea0cd87a154109c4')
     });
   });
   
-  return describe('Sanitize Buffer', () => {
+  return describe('Remove Zero Padding', () => {
     it('should remove all leading 0 values from the input Buffer but not 0 sequences not in the middle of the buffer', () => {
       const input = Buffer([0, 0, 0, 10, 0, 0, 0, 20, 30])
       const expectedOutput =  Buffer([10, 0, 0, 0, 20, 30])
-      return expect(Metadata.sanitizeBuffer(input).equals(expectedOutput))
+      return expect(Metadata.removeZeroPadding(input).equals(expectedOutput))
     });
     it('should not trailing 0 values from the buffer', () => {
       const input = Buffer([10, 0, 0, 0])
-      return expect(Metadata.sanitizeBuffer(input).equals(input))
+      return expect(Metadata.removeZeroPadding(input).equals(input))
     });
     it('should remove all leading 0 values from the input Buffer', () => {
       const input = Buffer([0, 0, 0, 10, 0, 20, 30])
       const expectedOutput =  Buffer([10, 0, 20, 30])
-      return expect(Metadata.sanitizeBuffer(input).equals(expectedOutput))
+      return expect(Metadata.removeZeroPadding(input).equals(expectedOutput))
     });
     return it('should do nothing if there is no leading 0 values in the input Buffer', () => {
       const input = Buffer([10, 0, 0, 0, 20, 30])
-      return expect(Metadata.sanitizeBuffer(input).equals(input))
+      return expect(Metadata.removeZeroPadding(input).equals(input))
     });
   });
 });
