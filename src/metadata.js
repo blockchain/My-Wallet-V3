@@ -14,10 +14,10 @@ var compose = require('ramda/src/compose');
 var prop = require('ramda/src/prop');
 
 class Metadata {
-  constructor (ecPair, encKeyBuffer, encKeyBufferPadded, typeId) {
+  constructor (ecPair, encKeyBuffer, encKeyBufferUnpadded, typeId) {
     // ecPair :: ECPair object - bitcoinjs-lib
-    // encKeyBuffer :: Buffer (nullable = no encrypted save)
-    // encKeyBufferPadded :: Buffer (nullable)
+    // encKeyBuffer :: Buffer
+    // encKeyBufferUnpadded :: Buffer (nullable)
     // TypeId :: Int (nullable = default -1)
     this.VERSION = 1;
     this._typeId = typeId == null ? -1 : typeId;
@@ -25,7 +25,7 @@ class Metadata {
     this._address = Helpers.keyPairToAddress(ecPair);
     this._signKey = ecPair;
     this._encKeyBuffer = encKeyBuffer;
-    this._encKeyBufferPadded = encKeyBufferPadded;
+    this._encKeyBufferUnpadded = encKeyBufferUnpadded;
     this._sequence = Promise.resolve();
   }
 
@@ -64,16 +64,10 @@ Metadata.request = function (method, endpoint, data) {
 
 Metadata.GET = function (e, d) { return Metadata.request('GET', e, d); };
 Metadata.PUT = function (e, d) { return Metadata.request('PUT', e, d); };
-Metadata.read = (address) => Metadata.request('GET', address)
-                                      .then(Metadata.extractResponse(null));
 
-// //////////////////////////////////////////////////////////////////////////////
 Metadata.encrypt = curry((key, data) => WalletCrypto.encryptDataWithKey(data, key));
 Metadata.decrypt = curry((key, data) => WalletCrypto.decryptDataWithKey(data, key));
 Metadata.B64ToBuffer = (base64) => Buffer.from(base64, 'base64');
-Metadata.BufferToB64 = (buff) => buff.toString('base64');
-Metadata.StringToBuffer = (base64) => Buffer.from(base64);
-Metadata.BufferToString = (buff) => buff.toString();
 
 // Metadata.message :: Buffer -> Buffer -> Base64String
 Metadata.message = curry(
@@ -116,32 +110,21 @@ Metadata.verifyResponse = curry((address, res) => {
   return assoc('compute_new_magic_hash', M.magic(pB, mB), res);
 });
 
-
-// Tries to decrypt with `Metadata.decrypt(encKey)`. If it fails and encKey2 
-// is not null it tries to decrypt with `encKey2`.
-Metadata.decryptRetry = curry(
-  function (encKey, encKey2, payload) {
-    const tryOther = curry((obj) => {
-      if (obj && obj.length > 0) { 
-        return obj
-      } else if (encKey2) {
-        return Metadata.decrypt(encKey2, payload)
-      } else {
-        return obj
-      }
-    })
-    return compose(tryOther, Metadata.decrypt(encKey))(payload)
-  }
-);
-
-Metadata.extractResponse = curry((encKey, encKey2, res) => {
-  const M = Metadata;
+Metadata.extractResponse = curry((encKey, encKeyUnpadded, res) => {
   if (res === null) {
     return res;
   } else {
-    return encKey
-      ? compose(JSON.parse, M.decryptRetry(encKey, encKey2), prop('payload'))(res)
-      : compose(JSON.parse, M.BufferToString, M.B64ToBuffer, prop('payload'))(res);
+    try {
+      // First try padded encryption key
+      return compose(JSON.parse, Metadata.decrypt(encKey), prop('payload'))(res)
+    } catch (e) {
+      // If padded key fails try the unpadded key that
+      // was used before bitcoinjs-lib update to v5 on ios/web
+      if (encKeyUnpadded === null) {
+        throw e
+      }
+      return compose(JSON.parse, Metadata.decrypt(encKeyUnpadded), prop('payload'))(res)
+    }
   }
 });
 
@@ -151,10 +134,8 @@ Metadata.prototype.create = function (payload) {
   const M = Metadata;
   payload = M.toImmutable(payload);
   return this.next(() => {
-    // Encrypt using encKeyBuffer on the original format.
-    const encPayloadBuffer = this._encKeyBuffer
-      ? compose(M.B64ToBuffer, M.encrypt(this._encKeyBuffer), JSON.stringify)(payload)
-      : compose(M.StringToBuffer, JSON.stringify)(payload);
+    // Encrypt using encKeyBuffer (fixed length format).
+    const encPayloadBuffer = compose(M.B64ToBuffer, M.encrypt(this._encKeyBuffer), JSON.stringify)(payload)
     const signatureBuffer = M.computeSignature(this._signKey, encPayloadBuffer, this._magicHash);
     const body = {
       'version': this.VERSION,
@@ -203,16 +184,15 @@ Metadata.prototype.fetch = function () {
   };
 
   return this.next(() => {
-    const M = Metadata;
-
-    return M.GET(this._address).then(M.verifyResponse(this._address))
-                               .then(saveMagicHash)
-                               .then(M.extractResponse(this._encKeyBuffer, this._encKeyBufferPadded))
-                               .then(this.fromObject.bind(this))
-                               .catch((e) => {
-                                 console.error(`Failed to fetch metadata entry ${this._typeId} at ${this._address}:`, e);
-                                 return Promise.reject('METADATA_FETCH_FAILED');
-                               });
+    return Metadata.GET(this._address)
+      .then(Metadata.verifyResponse(this._address))
+      .then(saveMagicHash)
+      .then(Metadata.extractResponse(this._encKeyBuffer, this._encKeyBufferUnpadded))
+      .then(this.fromObject.bind(this))
+      .catch((e) => {
+        console.error(`Failed to fetch metadata entry ${this._typeId} at ${this._address}:`, e);
+        return Promise.reject('METADATA_FETCH_FAILED');
+      });
   });
 };
 
@@ -231,16 +211,20 @@ Metadata.fromMetadataHDNode = function (metadataHDNode, typeId) {
   // 2: whats-new
   // 3: buy-sell
   // 4: contacts
-
+  // 5: ethereum
+  // 6: shapeshift
+  // 7: bch
+  // 8: btc
+  // 9: lockbox
+  // 10: userCredentials
+  // 11: xlm
+  // 12: walletCredentials
   const payloadTypeNode = metadataHDNode.deriveHardened(typeId);
-
   // purpose' / type' / 0' : https://meta.blockchain.info/{address}
   //                         signature used to authenticate
   const type0PrivateKey = payloadTypeNode.deriveHardened(0).privateKey
-
   // - purpose' / type' / 1' node Private Key
   const type1PrivateKey = payloadTypeNode.deriveHardened(1).privateKey
-
   return Metadata.fromTypeIDDerivations(type0PrivateKey, type1PrivateKey, typeId)
 };
 
@@ -250,33 +234,20 @@ Metadata.fromMetadataHDNode = function (metadataHDNode, typeId) {
 // type1PrivateKey: purpose' / typeId' / 1' derivation private key Buffer
 // typeId: String
 Metadata.fromTypeIDDerivations = function (type0PrivateKey, type1PrivateKey, typeId) {
-
   const keypair = Bitcoin.ECPair.fromPrivateKey(type0PrivateKey)
-
-  // - New Format Encryption Key
-
-  var encryptionKeyPadded = WalletCrypto.sha256(type1PrivateKey);
-
-  // - Original Format Encryption Key
-
-  // Remove all `00` leading nibbles from privateKey Buffer.
-  const type1PrivateKeyOriginal = Metadata.sanitizeBuffer(type1PrivateKey) 
-  
-  // Generate SHA256   
-  const encryptionKeyOriginal = WalletCrypto.sha256(type1PrivateKeyOriginal)
-
-  // Clear encryptionKeyPadded if keys are equal.
-  if (encryptionKeyPadded.equals(encryptionKeyOriginal)) {
-    encryptionKeyPadded = null
+  const encKeyBuffer = WalletCrypto.sha256(type1PrivateKey);
+  var encKeyBufferUnpadded = WalletCrypto.sha256(Metadata.removeZeroPadding(type1PrivateKey))
+  // Clear encKeyBufferUnpadded if keys are equal.
+  if (encKeyBuffer.equals(encKeyBufferUnpadded)) {
+    encKeyBufferUnpadded = null
   }
-
-  return new Metadata(keypair, encryptionKeyOriginal, encryptionKeyPadded, typeId);
+  return new Metadata(keypair, encKeyBuffer, encKeyBufferUnpadded, typeId);
 }
 
 // Remove all `00` leading nibbles from Buffer.
 // Input [0, 0, 0, 10, 0, 20, 30]
 // Output [10, 0, 20, 30]]
-Metadata.sanitizeBuffer = function (aBuffer) {
+Metadata.removeZeroPadding = function (aBuffer) {
   var aBuffer = aBuffer
   while (aBuffer.length > 0 && aBuffer.readUInt8(0) == 0) {
     aBuffer = aBuffer.slice(1)
