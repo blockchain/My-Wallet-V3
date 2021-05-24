@@ -4,8 +4,9 @@ const Coin = require('./coin.js');
 const fold = curry((empty, xs) => reduce((acc, x) => acc.concat(x), empty, xs));
 const foldCoins = fold(Coin.empty);
 
-const dustThreshold = (feeRate) => Math.ceil((Coin.inputBytes({}) + Coin.outputBytes({})) * feeRate);
-const changeBytes = () => Coin.TX_OUTPUT_BASE + Coin.TX_OUTPUT_PUBKEYHASH
+const changeBytes = (type) => Coin.IO_TYPES.outputs[type]
+const dustThreshold = (feeRate, change) =>
+  Math.ceil((Coin.inputBytes(change) + Coin.outputBytes(change)) * feeRate)
 
 const transactionBytes = (inputs, outputs) => {
   const coinTypeReducer = (acc, coin) => {
@@ -51,16 +52,16 @@ const findTarget = (targets, feePerByte, coins, changeAddress) => {
       // not enough money to satisfy target
       return { fee: fee, inputs: [], outputs: targets };
     } else {
+      const change = Coin.fromJS({
+        address: changeAddress,
+        change: true,
+        value: extraWithChangeFee,
+      })
+
       const extra = maxBalance - target - fee
-      const feeChange = changeBytes() * feePerByte
+      const feeChange = changeBytes(change.type()) * feePerByte
       const extraWithChangeFee = extra - feeChange
-      if (extraWithChangeFee >= dustThreshold(feePerByte)) {
-        // add change
-        const change = Coin.fromJS({
-          value: extraWithChangeFee,
-          address: changeAddress,
-          change: true
-        })
+      if (extraWithChangeFee >= dustThreshold(feePerByte, change)) 
         return {
           fee: fee + feeChange,
           inputs: selectedCoins,
