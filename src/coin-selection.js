@@ -4,9 +4,10 @@ const Coin = require('./coin.js');
 const fold = curry((empty, xs) => reduce((acc, x) => acc.concat(x), empty, xs));
 const foldCoins = fold(Coin.empty);
 
-const changeBytes = (type) => Coin.IO_TYPES.outputs[type]
 const dustThreshold = (feeRate, change) =>
   Math.ceil((Coin.inputBytes(change) + Coin.outputBytes(change)) * feeRate)
+
+const changeBytes = (type) => Coin.IO_TYPES.outputs[type]
 
 const transactionBytes = (inputs, outputs) => {
   const coinTypeReducer = (acc, coin) => {
