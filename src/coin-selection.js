@@ -7,8 +7,6 @@ const foldCoins = fold(Coin.empty);
 const dustThreshold = (feeRate, change) =>
   Math.ceil((Coin.inputBytes(change) + Coin.outputBytes(change)) * feeRate)
 
-const changeBytes = (type) => Coin.IO_TYPES.outputs[type]
-
 const transactionBytes = (inputs, outputs) => {
   const coinTypeReducer = (acc, coin) => {
     const type = coin.type ? coin.type() : 'P2PKH'
@@ -53,18 +51,15 @@ const findTarget = (targets, feePerByte, coins, changeAddress) => {
       // not enough money to satisfy target
       return { fee: fee, inputs: [], outputs: targets };
     } else {
+      const extra = maxBalance - target - fee
       const change = Coin.fromJS({
         address: changeAddress,
         change: true,
-        value: extraWithChangeFee,
+        value: extra,
       })
-
-      const extra = maxBalance - target - fee
-      const feeChange = changeBytes(change.type()) * feePerByte
-      const extraWithChangeFee = extra - feeChange
-      if (extraWithChangeFee >= dustThreshold(feePerByte, change)) 
+      if (extra >= dustThreshold(feePerByte, change)) 
         return {
-          fee: fee + feeChange,
+          fee: fee,
           inputs: selectedCoins,
           outputs: [...targets, change]
         }
