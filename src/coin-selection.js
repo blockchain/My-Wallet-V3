@@ -58,9 +58,9 @@ const findTarget = (targets, feePerByte, coins, changeAddress) => {
         value: extra,
       })
       if (extra >= dustThreshold(feePerByte, change)) 
-        const feeForChange = changeBytes(change.type()) * feePerByte
+        const feeForAdditionalChangeOutput = changeBytes(change.type()) * feePerByte
         return {
-          fee: fee + feeForChange,
+          fee: fee + feeForAdditionalChangeOutput,
           inputs: selectedCoins,
           outputs: [...targets, change]
         }
