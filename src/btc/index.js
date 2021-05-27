@@ -83,16 +83,14 @@ class BitcoinWallet {
   }
 
   getHistory() {
-    var imported
+    const imported = this.importedAddresses == null ? [] : this.importedAddresses.addresses
     var active
     var activeBech32
     if (this._wallet.hdwallet.isUpgradedToV4) {
-      imported = this.importedAddresses == null ? [] : this.importedAddresses.addresses
       const derivations = this.activeAccounts.flatMap((a) => a._btcAccount.derivations)
       active = derivations.filter((d) => d.type === "legacy").map((d) => d.xpub)
       activeBech32 = derivations.filter((d) => d.type === "bech32").map((d) => d.xpub)
     } else {
-      imported = this.importedAddresses == null ? [] : this.importedAddresses.addresses
       active = this.activeAccounts.map(a => a.xpub)
       activeBech32 = []
     }
