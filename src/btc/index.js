@@ -83,11 +83,19 @@ class BitcoinWallet {
   }
 
   getHistory() {
-    let imported = this.importedAddresses == null ? [] : this.importedAddresses.addresses;
-    let derivations = this.activeAccounts.flatMap((a) => a._btcAccount.derivations);
-    let active = derivations.filter((d) => d.type === "legacy").map((d) => d.xpub)
-    let activeBech32 = derivations.filter((d) => d.type === "bech32").map((d) => d.xpub)
-
+    var imported
+    var active
+    var activeBech32
+    if (this._wallet.hdwallet.isUpgradedToV4) {
+      imported = this.importedAddresses == null ? [] : this.importedAddresses.addresses
+      const derivations = this.activeAccounts.flatMap((a) => a._btcAccount.derivations)
+      active = derivations.filter((d) => d.type === "legacy").map((d) => d.xpub)
+      activeBech32 = derivations.filter((d) => d.type === "bech32").map((d) => d.xpub)
+    } else {
+      imported = this.importedAddresses == null ? [] : this.importedAddresses.addresses
+      active = this.activeAccounts.map(a => a.xpub)
+      activeBech32 = []
+    }
     return BtcApi.multiaddr(active.concat(imported), activeBech32, 50).then(
       this.updateWalletInfo.bind(this)
     );
