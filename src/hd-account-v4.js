@@ -256,17 +256,33 @@ HDAccount.prototype.getLabels = function () {
 HDAccount.prototype.receiveAddressAtIndex = function (index, type) {
   assert(Helpers.isPositiveInteger(index), 'Error: address index must be a positive integer');
   var preferredDerivation = type || this.defaultDerivation
-  var derivations = this.derivations
-  var keyRing = derivations.find((d) => d.type === preferredDerivation).keyRing
-  return keyRing.receive.getAddress(index);
+  const derivation = this.derivations.find((d) => d.type === preferredDerivation)
+  const { publicKey } = Bitcoin.bip32.fromBase58(derivation.xpub).derivePath(`0/${index}`)
+
+  switch (preferredDerivation) {
+    case 'bech32':
+      return Bitcoin.payments.p2wpkh({ pubkey: publicKey }).address
+    case 'legacy':
+      return Bitcoin.payments.p2pkh({ pubkey: publicKey }).address
+    default:
+      throw new Error('unrecognized derivation type')
+  }
 };
 
 HDAccount.prototype.changeAddressAtIndex = function (index, type) {
   assert(Helpers.isPositiveInteger(index), 'Error: change index must be a positive integer');
   var preferredDerivation = type || this.defaultDerivation
-  var derivations = this.derivations
-  var keyRing = derivations.find((d) => d.type === preferredDerivation).keyRing
-  return keyRing.change.getAddress(index);
+  const derivation = this.derivations.find((d) => d.type === preferredDerivation)
+  const { publicKey } = Bitcoin.bip32.fromBase58(derivation.xpub).derivePath(`1/${index}`)
+
+  switch (preferredDerivation) {
+    case 'bech32':
+      return Bitcoin.payments.p2wpkh({ pubkey: publicKey }).address
+    case 'legacy':
+      return Bitcoin.payments.p2pkh({ pubkey: publicKey }).address
+    default:
+      throw new Error('unrecognized derivation type')
+  }
 };
 
 HDAccount.prototype.encrypt = function (cipher) {
