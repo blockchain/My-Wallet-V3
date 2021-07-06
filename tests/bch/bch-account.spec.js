@@ -33,7 +33,7 @@ describe('BchAccount', () => {
   })
 
   it('should have: label', () => {
-    expect(account.label).toEqual('My Bitcoin Cash Wallet')
+    expect(account.label).toEqual('Private Key Wallet')
   })
 
   it('should have: coinCode=bch', () => {
@@ -47,11 +47,11 @@ describe('BchAccount', () => {
   })
 
   it('should have: receiveAddress', () => {
-    spyOn(bch, 'getAccountIndexes').and.returnValue({ receive: 10 })
+    spyOn(bch, 'getAccountIndexes').and.returnValue({ receive: 10, type: 'legacy' })
     spyOn(btcAcc, 'receiveAddressAtIndex').and.returnValue('1asdf')
     expect(account.receiveAddress).toEqual('1asdf')
     expect(bch.getAccountIndexes).toHaveBeenCalledWith('xpub1')
-    expect(btcAcc.receiveAddressAtIndex).toHaveBeenCalledWith(10)
+    expect(btcAcc.receiveAddressAtIndex).toHaveBeenCalledWith(10, 'legacy')
   })
 
   it('should have: changeAddress', () => {
@@ -59,7 +59,7 @@ describe('BchAccount', () => {
     spyOn(btcAcc, 'changeAddressAtIndex').and.returnValue('1asdf')
     expect(account.changeAddress).toEqual('1asdf')
     expect(bch.getAccountIndexes).toHaveBeenCalledWith('xpub1')
-    expect(btcAcc.changeAddressAtIndex).toHaveBeenCalledWith(10)
+    expect(btcAcc.changeAddressAtIndex).toHaveBeenCalledWith(10, 'legacy')
   })
 
   it('should be able to get the available balance', () => {

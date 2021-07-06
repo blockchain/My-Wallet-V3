@@ -25,31 +25,44 @@ let config = {
             ]
           }
         }
-      },
-      {
-        test: /hdnode\.js$/,
-        loader: StringReplacePlugin.replace({
-          replacements: [
-            {
-              pattern: /curve\.validate\(Q\)/g,
-              replacement: function (match, p1, offset, string) {
+    },
+    {
+      test: /hdnode\.js$/,
+      loader: StringReplacePlugin.replace({
+        replacements: [
+        {
+          pattern: /curve\.validate\(Q\)/g,
+          replacement: function (match, p1, offset, string) {
                 // comment out value validation in fromBuffer to speed up node
                 // creation from cached xpub/xpriv values
-                return '    // curve.validate(Q)';
+                return '// curve.validate(Q)';
               }
             }
-          ]})
-      }
+            ]})
+    },
+    {
+      test: /node_modules\/bip39\/index\.js$/,
+      loader: StringReplacePlugin.replace({
+        replacements: [
+        {
+          pattern: /validateMnemonic\: validateMnemonic/g,
+          replacement: function (match, p1, offset, string) {
+                // Expose salt function to be used by iOS app.
+                return 'validateMnemonic: validateMnemonic,\n  salt: salt';
+              }
+            }
+            ]})
+    }
     ]
   },
   node: {
     fs: 'empty'
   },
   plugins: [
-    new StringReplacePlugin(),
-    new webpack.EnvironmentPlugin({
-      NODE_ENV: 'prod'
-    })
+  new StringReplacePlugin(),
+  new webpack.EnvironmentPlugin({
+    NODE_ENV: 'prod'
+  })
   ]
 };
 

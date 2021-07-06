@@ -36,9 +36,6 @@
     "test": "./node_modules/.bin/karma start karma.conf.js",
     "test:chrome": "./node_modules/.bin/karma start karma.conf.js --browsers ChromeHeadless"
   },
-  "browser": {
-    "ws": "./src/ws-browser.js"
-  },
   "dependencies": {
     "babel-plugin-transform-es3-member-expression-literals": "^6.22.0",
     "babel-plugin-transform-es3-property-literals": "^6.22.0",
@@ -49,9 +46,6 @@
     "bigi": "1.4.*",
     "bignumber.js": "^4.0.2",
     "bip39": "2.1.*",
-    "bitcoin-coinify-client": "^0.10.0",
-    "bitcoin-sfox-client": "^0.2.6",
-    "bitcoin-unocoin-client": "^0.3.6",
     "bitcoinforksjs-lib": "git://github.com/blockchain/bitcoinjs-lib.git#opt-in-bitcoincash-sighash",
     "bitcoinjs-lib": "5.1.6",
     "bitcoinjs-message": "2.0.0",
@@ -60,9 +54,8 @@
     "core-js": "^2.4.1",
     "ecdsa": "0.7.0",
     "es6-promise": "^3.0.2",
-    "ethereumjs-tx": "^1.3.1",
-    "ethereumjs-util": "^5.1.2",
-    "ethereumjs-wallet": "^0.6.0",
+    "ethereumjs-util": "4.5.0",
+    "ethereumjs-wallet": "0.6.0",
     "isomorphic-fetch": "^2.2.1",
     "jwt-decode": "^2.1.0",
     "pbkdf2": "^3.0.12",
@@ -70,8 +63,7 @@
     "ramda-lens": "^0.1.2",
     "randombytes": "^2.0.1",
     "unorm": "^1.4.1",
-    "uuid": "^3.0.1",
-    "ws": "2.0.*"
+    "uuid": "^3.0.1"
   },
   "devDependencies": {
     "babel-cli": "~6.24.0",
@@ -98,12 +90,16 @@
     "karma-jasmine": "1.1.*",
     "karma-osx-reporter": "0.2.*",
     "karma-phantomjs-launcher": "1.0.*",
+    "karma-safari-launcher": "1.0.*",
     "phantomjs-prebuilt": "2.1.*",
     "proxyquireify": "3.2.*",
     "semistandard": "8.*",
     "string-replace-webpack-plugin": "0.0.5",
     "watchify": "~3.9.0",
     "webpack": "2.5.*"
+  },
+  "resolutions": {
+    "ethereumjs-util": "4.5.0"
   },
   "semistandard": {
     "ignore": [],

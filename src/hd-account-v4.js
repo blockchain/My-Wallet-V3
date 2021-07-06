@@ -6,7 +6,6 @@ var Helpers = require('./helpers');
 var Derivation = require('./derivation');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete?
 var API = require('./api');
-var Transaction = require('./transaction');
 var constants = require('./constants');
 
 // HDAccount Class

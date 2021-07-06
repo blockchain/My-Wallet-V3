@@ -23,11 +23,9 @@ var External = require('./external');
 var AccountInfo = require('./account-info');
 var Metadata = require('./metadata');
 var constants = require('./constants');
-var Payment = require('./payment');
 var Labels = require('./labels');
 var EthWallet = require('./eth/eth-wallet');
 var Bitcoin = require('bitcoinjs-lib');
-var EthSocket = require('./eth/eth-socket');
 var BitcoinWallet = require('./btc');
 var BitcoinCash = require('./bch');
 var RetailCore = require('./retail-core');
@@ -461,11 +459,6 @@ Wallet.prototype.getHistory = function () {
     .then(this._updateWalletInfo.bind(this));
 };
 
-Wallet.prototype.fetchTransactions = function () {
-  return API.getHistory(this.context, 0, this.txList.fetched, this.txList.loadNumber)
-    .then(this._updateWalletInfo.bind(this));
-};
-
 Wallet.prototype.getBalancesForArchived = function () {
   var updateBalance = function (key) {
     if (this.containsLegacyAddress(key.address)) {
@@ -515,7 +508,6 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
     var watchOnlyKey = this._addresses[addr];
     if (newKey.address !== watchOnlyKey.address) {
       if (!this.containsLegacyAddress(newKey.address)) {
-        console.log(newKey);
         return this.importLegacyAddress(privateKey, null, secPass, bipPass);
       } else {
         if (this.key(newKey.address).isWatchOnly) {
@@ -561,7 +553,6 @@ Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) 
       ad.encrypt(cipher).persist();
     }
     this._addresses[ad.address] = ad;
-    MyWallet.ws.subscribeToAddresses(ad.address);
     MyWallet.syncWallet();
     this.getHistory();
     return ad;
@@ -861,9 +852,6 @@ Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosav
     cipher = this.createCipher(pw);
   }
   var newAccount = this._hd_wallets[index].newAccount(label, cipher).lastAccount;
-  try { // MyWallet.ws.send can fail when restoring from mnemonic because it is not initialized.
-    MyWallet.ws.subscribeToXpubs(newAccount.extendedPublicKey);
-  } catch (e) {}
   if (!(nosave === true)) MyWallet.syncWallet();
   typeof (success) === 'function' && success();
   return newAccount;
@@ -1021,9 +1009,7 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
 
   var fetchBchWallet = function () {
     this._bch = BitcoinCash.fromBlockchainWallet(this);
-    let wsUrl = MyWallet.ws.wsUrl.replace('/inv', '/bch/inv');
-    return this._bch.fetch()
-      .then(() => this._bch.connect(wsUrl));
+    return Promise.resolve();
   };
 
   var fetchRetailCore = function () {
@@ -1069,11 +1055,6 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
   return Promise.all(promises).then(objc_metadata_loaded());
 };
 
-Wallet.prototype.useEthSocket = function (socket) {
-  socket = socket || new EthSocket(MyWallet.ws.wsUrl.replace('/inv', '/eth/inv'));
-  this._eth.connect(socket);
-};
-
 Wallet.prototype.incStats = function () {
   API.incrementSecPassStats(this.isDoubleEncrypted);
   return true;
@@ -1097,10 +1078,6 @@ Wallet.prototype.saveGUIDtoMetadata = function () {
   } else {
     return Promise.reject();
   }
-};
-
-Wallet.prototype.createPayment = function (initialState) {
-  return new Payment(this, initialState);
 };
 
 Wallet.prototype.MDIDregistration = function (method, signedMDID) {

@@ -30,7 +30,7 @@ describe('KeyRing', () => {
   });
 
   it('should generate key from path when private keyring', () => {
-    let pkey = Base58.encode(privateKR.privateKeyFromPath('M/1/101').keyPair.d.toBuffer(32));
+    let pkey = Base58.encode(privateKR.privateKeyFromPath('M/1/101').__D);
     expect(pkey).toEqual('FsY7NFHZNQJL6LzNt7zGqthrMBpfNuDkGwQUCBhQCpTv');
   });
 

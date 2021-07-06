@@ -1,14 +1,11 @@
-const WebSocket = require('ws');
 const EthHd = require('ethereumjs-wallet/hdkey');
 const { construct } = require('ramda');
 const { isPositiveNumber, asyncOnce, dedup } = require('../helpers');
 const API = require('../api');
-const EthTxBuilder = require('./eth-tx-builder');
 const EthAccount = require('./eth-account');
 const EthWalletTx = require('./eth-wallet-tx');
 
 const METADATA_TYPE_ETH = 5;
-const DERIVATION_PATH = "m/44'/60'/0'/0";
 
 class EthWallet {
   constructor (wallet, metadata) {
@@ -24,14 +21,6 @@ class EthWallet {
     this._lastTxTimestamp = null;
     this._erc20 = {};
     this.sync = asyncOnce(this.sync.bind(this), 250);
-  }
-
-  get wei () {
-    return this.defaultAccount ? this.defaultAccount.wei : null;
-  }
-
-  get balance () {
-    return this.defaultAccount ? this.defaultAccount.balance : null;
   }
 
   get hasSeen () {
@@ -80,28 +69,9 @@ class EthWallet {
     return this._erc20;
   }
 
-  get defaults () {
-    return {
-      GAS_PRICE: EthTxBuilder.GAS_PRICE,
-      GAS_LIMIT: EthTxBuilder.GAS_LIMIT
-    };
-  }
-
   get txs () {
     let accounts = this.activeAccountsWithLegacy;
     return dedup(accounts.map(a => a.txs), 'hash').sort(EthWalletTx.txTimeSort);
-  }
-
-  getApproximateBalance () {
-    if (!this.defaultAccount && !this.legacyAccount) return null;
-    let balance = 0;
-    if (this.defaultAccount) {
-      balance += parseFloat(this.defaultAccount.getApproximateBalance());
-    }
-    if (this.legacyAccount) {
-      balance += parseFloat(this.legacyAccount.getApproximateBalance());
-    }
-    return balance.toFixed(8);
   }
 
   getAccount (index) {
@@ -115,33 +85,9 @@ class EthWallet {
     this.sync();
   }
 
-  archiveAccount (account) {
-    if (account === this.defaultAccount) {
-      throw new Error('Cannot archive default account');
-    }
-    account.archived = true;
-    this.sync();
-  }
-
-  unarchiveAccount (account) {
-    account.archived = false;
-    this._socket.subscribeToAccount(this, account);
-    this.sync();
-  }
-
   createAccount (label, secPass) {
     let accountNode = this.deriveChild(this.accounts.length, secPass);
     let account = EthAccount.fromWallet(accountNode.getWallet(), this);
-    account.label = label || EthAccount.defaultLabel(this.accounts.length);
-    account.markAsCorrect();
-    this._accounts.push(account);
-    // this._socket.subscribeToAccount(this, account, this.legacyAccount);
-    return this.sync();
-  }
-
-  createAccountFromPrivateKey (privateKey, label) {
-    let wallet = Wallet.fromPrivateKey(privateKey);
-    let account = EthAccount.fromWallet(wallet, this);
     account.label = label || EthAccount.defaultLabel(this.accounts.length);
     account.markAsCorrect();
     this._accounts.push(account);
@@ -262,42 +208,6 @@ class EthWallet {
     };
   }
 
-  fetchHistory () {
-    return Promise.all([this.fetchBalance(), this.fetchTransactions()])
-      .then(() => this.getLatestBlock());
-  }
-
-  fetchBalance () {
-    let accounts = this.activeAccountsWithLegacy;
-    if (!accounts.length) return Promise.resolve();
-    let addresses = accounts.map(a => a.address);
-    return fetch(`${API.API_ROOT_URL}eth/account/${addresses.join()}/balance`)
-      .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
-      .then(data => accounts.forEach(a => a.setData(data[a.address])));
-  }
-
-  fetchTransactions () {
-    let accounts = this.activeAccountsWithLegacy;
-    if (!accounts.length) return Promise.resolve();
-    let addresses = accounts.map(a => a.address);
-    return fetch(`${API.API_ROOT_URL}eth/account/${addresses.join()}`)
-      .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
-      .then(data => {
-        accounts.forEach(a => a.setTransactions(data[a.address]));
-        this.updateTxs();
-      });
-  }
-
-  fetchFees () {
-    return EthTxBuilder.fetchFees();
-  }
-
-  isContractAddress (address) {
-    return fetch(`${API.API_ROOT_URL}eth/account/${address}/isContract`)
-      .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
-      .then(({ contract }) => contract);
-  }
-
   getLatestBlock () {
     return fetch(`${API.API_ROOT_URL}eth/latestblock`)
       .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
@@ -309,32 +219,8 @@ class EthWallet {
     this.updateTxs();
   }
 
-  connect (socket) {
-    if (this._socket) return;
-    this._socket = socket;
-    if (!this._socket) return;
-    this._socket.subscribeToBlocks(this);
-    this.activeAccounts.forEach(a => this._socket.subscribeToAccount(a));
-}
-
-  setSocketHandlers () {
-    if (!this._socket) return;
-    this._socket.subscribeToBlocks(this);
-    this.activeAccounts.forEach(a => this._socket.subscribeToAccount(this, a, this.legacyAccount));
-  }
-
   updateTxs () {
     this.activeAccountsWithLegacy.forEach(a => a.updateTxs(this));
-  }
-
-  getPrivateKeyForAccount (account, secPass) {
-    let index = this.accounts.indexOf(account);
-    let wallet = this.deriveChild(index, secPass).getWallet();
-    let privateKey = wallet.getPrivateKey();
-    if (!account.isCorrectPrivateKey(privateKey)) {
-      throw new Error('Failed to derive correct private key');
-    }
-    return privateKey;
   }
 
   deriveChild (index, secPass) {
@@ -356,58 +242,6 @@ class EthWallet {
 
   /* start legacy */
 
-  getPrivateKeyForLegacyAccount (secPass) {
-    let account = this._legacyAccount;
-    if (!account) {
-      throw new Error('Wallet does not contain a beta account');
-    }
-    let wallet = this.deriveChildLegacy(0, secPass).getWallet();
-    let privateKey = wallet.getPrivateKey();
-    if (!account.isCorrectPrivateKey(privateKey)) {
-      throw new Error('Failed to derive correct private key');
-    }
-    return privateKey;
-  }
-
-  deriveChildLegacy (index, secPass) {
-    let w = this._wallet;
-    if (w.isDoubleEncrypted && !secPass) {
-      throw new Error('Second password required to derive ethereum wallet');
-    }
-    let getSeedHex = w.isDoubleEncrypted ? w.createCipher(secPass, 'dec') : x => x;
-    let seed = getSeedHex(w.hdwallet.seedHex);
-    return EthHd.fromMasterSeed(seed).derivePath(DERIVATION_PATH).deriveChild(index);
-  }
-
-  needsTransitionFromLegacy () {
-    let shouldSweepAccount = (account) => (
-      account.fetchBalance()
-        .then(() => account.getAvailableBalance())
-        .then(({ amount }) => amount > 0)
-    );
-
-    if (this.defaultAccount && !this.defaultAccount.isCorrect) {
-      /*
-        If user has an eth account and the account is not marked as
-        correct, check if they should sweep.
-      */
-      return shouldSweepAccount(this.defaultAccount);
-    } else if (this.legacyAccount) {
-      /*
-        If user has a legacy eth account saved, we should still check
-        if the account needs to be swept in case funds were received after
-        the previous transition.
-      */
-      return shouldSweepAccount(this.legacyAccount);
-    } else {
-      /*
-        Default account is up to date and there is no legacy account,
-        do nothing.
-      */
-      return Promise.resolve(false);
-    }
-  }
-
   transitionFromLegacy () {
     if (this.defaultAccount && !this.defaultAccount.isCorrect) {
       this._legacyAccount = this.getAccount(0);
@@ -416,43 +250,6 @@ class EthWallet {
     } else {
       return Promise.resolve();
     }
-  }
-
-  sweepLegacyAccount (secPass, { gasPrice = EthTxBuilder.GAS_PRICE, gasLimit = EthTxBuilder.GAS_LIMIT } = {}) {
-    if (!this.legacyAccount) {
-      return Promise.reject(new Error('Must transition from Beta account first'));
-    }
-
-    let defaultAccountP = this.defaultAccount == null
-      ? Promise.resolve().then(() => this.createAccount(void 0, secPass))
-      : Promise.resolve();
-
-    return defaultAccountP
-      .then(() => this.legacyAccount.getAvailableBalance())
-      .then(({ amount }) => {
-        if (amount > 0) {
-          let payment = this.legacyAccount.createPayment();
-          let privateKey = this.getPrivateKeyForLegacyAccount(secPass);
-          payment.setGasPrice(gasPrice);
-          payment.setGasLimit(gasLimit);
-          payment.setTo(this.defaultAccount.address);
-          payment.setSweep();
-          payment.sign(privateKey);
-          return payment.publish();
-        } else {
-          throw new Error('No funds in account to sweep');
-        }
-      });
-  }
-
-  __transitionToLegacy (secPass) {
-    delete this._legacyAccount;
-    let accountNode = this.deriveChildLegacy(0, secPass);
-    let account = EthAccount.fromWallet(accountNode.getWallet(), this);
-    account.label = EthAccount.defaultLabel(0);
-    this._accounts = [account];
-    this._socket.subscribeToAccount(this, account);
-    return this.sync();
   }
 
   /* end legacy */

@@ -37,7 +37,6 @@ module.exports = {
   MyWallet: require('./wallet'),
   WalletStore: require('./wallet-store'),
   WalletCrypto: require('./wallet-crypto'),
-  Payment: require('./payment'),
   ImportExport: require('./import-export'),
   BlockchainSettingsAPI: require('./blockchain-settings-api'),
   Helpers: require('./helpers'),
@@ -46,18 +45,14 @@ module.exports = {
   WalletTokenEndpoints: require('./wallet-token-endpoints'),
   WalletNetwork: require('./wallet-network'),
   RNG: require('./rng'),
-  Transaction: require('./transaction'),
   Address: require('./address'),
   Metadata: require('./metadata'),
   Bitcoin: require('bitcoinjs-lib'),
   External: require('./external'),
-  BuySell: require('./buy-sell'),
   constants: require('./constants'),
   BigInteger: require('bigi/lib'),
   BIP39: require('bip39'),
   Networks: require('bitcoinjs-lib/src/networks'),
   ECDSA: require('ecdsa'),
-  EthSocket: require('./eth/eth-socket'),
-  R: require('ramda'),
-  BlockchainSocket: require('./blockchain-socket')
+  R: require('ramda')
 };

@@ -103,19 +103,19 @@ describe('EthWalletTx', () => {
 
     describe('.update()', () => {
       it('should update the confirmations', () => {
-        let ethWallet = { latestBlock: 125, getTxNote () {} }
+        let ethWallet = { latestBlock: 125, getTxNote () {}, getTxMeta () {} }
         tx.update(ethWallet)
         expect(tx.confirmations).toEqual(3)
       })
 
       it('should not set confirmations to less than 0', () => {
-        let ethWallet = { latestBlock: 100, getTxNote () {} }
+        let ethWallet = { latestBlock: 100, getTxNote () {}, getTxMeta () {} }
         tx.update(ethWallet)
         expect(tx.confirmations).toEqual(0)
       })
 
       it('should set the tx note', () => {
-        let ethWallet = { latestBlock: 100, getTxNote () {} }
+        let ethWallet = { latestBlock: 100, getTxNote () {}, getTxMeta () {} }
         spyOn(ethWallet, 'getTxNote').and.returnValue('note')
         tx.update(ethWallet)
         expect(tx.note).toEqual('note')

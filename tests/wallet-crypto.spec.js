@@ -294,21 +294,13 @@ describe('WalletCrypto', () => {
       )
     );
 
-    describe('non-existing wallet v4', () =>
+    describe('wallet v4', () =>
       walletData.v4.forEach(wallet =>
-        it(`should not decrypt ${wallet.mode}, ${wallet.padding}, ${wallet.iterations} iterations`, () => {
-          let observers = {
-            success () {},
-            error () {}
-          };
-
-          spyOn(observers, 'success').and.callThrough();
-          spyOn(observers, 'error').and.callThrough();
-
-          expect(() => WalletCrypto.decryptWalletSync(wallet.enc, wallet.password)).toThrow(Error('Wallet version 4 not supported.'));
-          WalletCrypto.decryptWallet(wallet.enc, wallet.password, observers.success, observers.error);
-          expect(observers.success).not.toHaveBeenCalled();
-          expect(observers.error).toHaveBeenCalled();
+        it(`should decrypt ${wallet.guid}`, () => {
+          let dec = WalletCrypto.decryptWalletSync(wallet.enc, wallet.password);
+          console.log('pppppp')
+          console.log(JSON.stringify(dec))
+          expect(dec.guid).toEqual("15506a26-fa63-4158-a898-63e6f81aaf9f");
         })
       )
     );

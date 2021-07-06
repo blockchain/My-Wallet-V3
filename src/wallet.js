@@ -1,6 +1,5 @@
 var MyWallet = module.exports = {};
 
-var WebSocket = require('ws');
 var assert = require('assert');
 var Buffer = require('buffer').Buffer;
 var WalletStore = require('./wallet-store');
@@ -11,7 +10,6 @@ var API = require('./api');
 var Wallet = require('./blockchain-wallet');
 var WalletCredentials = require('./walletcredentials');
 var Helpers = require('./helpers');
-var BlockchainSocket = require('./blockchain-socket');
 var RNG = require('./rng.js');
 var BIP39 = require('bip39');
 var Bitcoin = require('bitcoinjs-lib');
@@ -21,11 +19,6 @@ var range = require('ramda/src/range');
 
 var isInitialized = false;
 MyWallet.wallet = undefined;
-MyWallet.ws = new BlockchainSocket(null, WebSocket);
-
-MyWallet.socketConnect = function () {
-  throw new Error('MyWallet.socketConnect must be ovewritten by iOS.');
-};
 
 // used two times
 function didDecryptWallet (success) {
@@ -33,61 +26,6 @@ function didDecryptWallet (success) {
   MyWallet.getWallet();
   success();
 }
-
-// called by native websocket in iOS
-MyWallet.getSocketOnMessage = function (message, lastOnChange) {
-  var obj = null;
-  try {
-    obj = JSON.parse(message);
-  } catch (e) {
-    console.log('Websocket error: could not parse message data as JSON: ' + message);
-    return;
-  }
-
-  if (obj.op === 'on_change') {
-    var oldChecksum = WalletStore.generatePayloadChecksum();
-    var newChecksum = obj.x.checksum;
-
-    if (lastOnChange.checksum !== newChecksum && oldChecksum !== newChecksum) {
-      lastOnChange.checksum = newChecksum;
-
-      MyWallet.getWallet(function () {
-        WalletStore.sendEvent('on_change');
-      });
-    }
-  } else if (obj.op === 'utx') {
-    WalletStore.sendEvent('on_tx_received', obj.x);
-    var sendOnTx = WalletStore.sendEvent.bind(null, 'on_tx');
-    MyWallet.wallet.getHistory().then(sendOnTx);
-  } else if (obj.op === 'block') {
-    if (MyWallet.wallet.latestBlock && obj.x.prevBlockIndex !== MyWallet.wallet.latestBlock.blockIndex && MyWallet.wallet.latestBlock.blockIndex !== 0) {
-      // there is a reorg
-      MyWallet.wallet.getHistory();
-    } else {
-      // there is no reorg
-      MyWallet.wallet.latestBlock = obj.x;
-      var up = function (t) {
-        t.updateConfirmationsOnBlock(obj.x.txIndexes);
-      };
-      MyWallet.wallet.txList._transactions.forEach(up);
-    }
-    WalletStore.sendEvent('on_block');
-  } else if (obj.op === 'email_verified') {
-    MyWallet.wallet.accountInfo.isEmailVerified = Boolean(obj.x);
-    WalletStore.sendEvent('on_email_verified', obj.x);
-  } else if (obj.op === 'wallet_logout') {
-    WalletStore.sendEvent('wallet_logout', obj.x);
-  }
-};
-
-// called by native websocket in iOS
-MyWallet.getSocketOnOpenMessage = function () {
-  if (!MyWallet.wallet) {
-    return null;
-  }
-  var accounts = MyWallet.wallet.hdwallet ? MyWallet.wallet.hdwallet.activeXpubs : [];
-  return BlockchainSocket.onOpenSub(MyWallet.wallet.guid, MyWallet.wallet.activeAddresses, accounts);
-};
 
 // Fetch a new wallet from the server
 // success(modified true/false)
@@ -218,27 +156,6 @@ MyWallet.loginFromJSON = function (stringWallet, stringExternal, magicHashHexExt
     external: externalJSON
   }, {
     external: magicHashHexExternal ? Buffer.from(magicHashHexExternal, 'hex') : null
-  });
-};
-
-MyWallet.checkForCompletedTrades = function (stringWallet, stringExternal, magicHashHexExternal, password, callback) {
-  MyWallet.loginFromJSON(stringWallet, stringExternal, magicHashHexExternal, password).then(() => {
-    let external = MyWallet.wallet.external;
-    let exchange = external.coinify.hasAccount
-      ? external.coinify : external.sfox.hasAccount
-      ? external.sfox : null;
-
-    if (exchange) {
-      exchange.debug = true;
-      let trades = exchange.trades;
-      if (trades.length) {
-        let pendingTrades = trades.filter(t => !t.bitcoinReceived);
-        pendingTrades.forEach((t) => t.watchAddress().then(() => callback(t)));
-        exchange._TradeClass._checkOnce(pendingTrades, exchange._delegate).then(() => {
-          external.save();
-        });
-      }
-    }
   });
 };
 
