@@ -298,8 +298,6 @@ describe('WalletCrypto', () => {
       walletData.v4.forEach(wallet =>
         it(`should decrypt ${wallet.guid}`, () => {
           let dec = WalletCrypto.decryptWalletSync(wallet.enc, wallet.password);
-          console.log('pppppp')
-          console.log(JSON.stringify(dec))
           expect(dec.guid).toEqual("15506a26-fa63-4158-a898-63e6f81aaf9f");
         })
       )

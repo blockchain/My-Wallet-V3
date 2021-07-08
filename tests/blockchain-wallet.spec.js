@@ -10,25 +10,22 @@ let BlockchainSettingsAPI;
 let BIP39;
 let RNG;
 
-// TODO: use more mocks, this takes 45 seconds
-// TODO: repair skipped tests (they cause PhantomJS to timeout)
 describe('Blockchain-Wallet', () => {
   let wallet;
   let object = {
-    'guid': 'c8d9fe67-2ba0-4c15-a2be-0d17981d3c0a',
-    'sharedKey': '981b98e8-03f5-48fa-b369-038e2a7fdc09',
-    'metadataHDNode': 'xprv9uY6wEbTjx2yNybELE8fSdgsyYqf9WkDUgEV5GzX3FwAsMNeefsA8qnnnULyr7SEh6s56p1uHiL8wuJy9zSWnLLcKfdce9Y3GygdjzxuRF4',
-    'double_encryption': false,
-    'options': {
-      'pbkdf2_iterations': 5000,
-      'fee_per_kb': 10000,
-      'html5_notifications': false,
-      'logout_time': 600000
+    "guid": "08151b54-5f17-4907-bd29-8b6cdd3096be",
+    "sharedKey": "87d15bdd-95a4-4b35-99d4-8a3a21e3e1fc",
+    "double_encryption": false,
+    "options": {
+      "pbkdf2_iterations": 1200,
+      "fee_per_kb": 10000,
+      "html5_notifications": false,
+      "logout_time": 600000
     },
-    'address_book': [{'address': '1dice8EMZmqKvrGE4Qc9bUFf9PX3xaYDp', 'label': 'SatoshiDice'}],
-    'tx_notes': {},
-    'tx_names': [],
-    'keys': [
+    "address_book": [],
+    "tx_notes": {},
+    "tx_names": [],
+    "keys": [
       {
         'addr': '1ASqDXsKYqcx7dkKZ74bKBBggpd5HDtjCv',
         'priv': 'HUFhy1SvLBzzdAYpwD3quUN9kxqmm9U3Y1ZDdwBhHjPH',
@@ -49,22 +46,39 @@ describe('Blockchain-Wallet', () => {
         'created_device_version': '1.0'
       }
     ],
-    'hd_wallets': [ {
-      'seed_hex': '7e061ca8e579e5e70e9989ca40d342fe',
-      'passphrase': '',
-      'mnemonic_verified': false,
-      'default_account_idx': 0,
-      'accounts': [ {
-        'label': 'My Bitcoin Wallet',
-        'archived': false,
-        'xpriv': 'xprv9yko4kDvhYSdUcqK5e8naLwtGE1Ca57mwJ6JMB8WxeYq8t1w3PpiZfGGvLN6N6GEwLF8XuHnp8HeNLrWWviAjXxb2BFEiLaW2UgukMZ3Zva',
-        'xpub': 'xpub6Ck9UFkpXuzvh6unBffnwUtcpFqgyXqdJX1u9ZY8Wz5p1gM5aw8y7TakmcEWLA9rJkc59BJzn61p3qqKSaqFkSPMbbhGA9YDNmphj9SKBVJ',
-        'cache': {
-          'receiveAccount': 'xpub6FD59hfbH1UWQA9B8NP1C8bh3jc6i2tpM6b8f4Wi9gHWQttZbBBtEsDDZAiPsw7e3427SzvQsFu2sdubjbZHDQdqYXN6x3hTDCrG5bZFEhB',
-          'changeAccount': 'xpub6FD59hfbH1UWRrY38bVLPPLPLxcA1XBqsQgB95AgsSWngxbwqPBMd5Z3of8PNicLwE9peQ9g4SeWWtBTzUKLwfjSioAg73RRh7dJ5rWYxM7'
-        }
-      } ]
-    } ]
+    "paidTo": {},
+    "hd_wallets": [
+      {
+        "seed_hex": "5de57bbf395cec88fd672fc4d9fb3a12",
+        "passphrase": "",
+        "mnemonic_verified": false,
+        "default_account_idx": 0,
+        "accounts": [
+          {
+            "label": "Private Key Wallet",
+            "archived": false,
+            "xpriv": "xprv9ymnii74qXShFUk1bhXCWaKhGDqrWVmBg2xAvpT2eopuSjkDk79jNu3TGkg6hTQ7P6vby8f5WxGUnR4Nkqwcz1jt68B8TiJc5UkQ9MbwW3s",
+            "xpub": "xpub6Cm98DdxftzzTxpUhj4CsiGRpFgLuxV33FsmjCreD9MtKY5NHeTyvhMw82aANb5GWaBGvGcey7skgcY9ZHk42KhyBXr23yYP5QYcAJzVz7D",
+            "address_labels": [],
+            "cache": {
+              "receiveAccount": "xpub6EF6JBiHWFT7Vf4vgnHbUV3Vbc8daYYQ9zKCJ65hePNX44nMtbJeJgbdPyC4jag6yzqcNhiNX3GFN337fF7NcEBQh4MzU4WSgV7hzbuYLK2",
+              "changeAccount": "xpub6EF6JBiHWFT7YjnWwdaXQs2gyrrHLrTR8QqGYp7ykcvELkwuiwriWXquG9LqTevaoFbavcwyEXKGTe56H2aQ1j1a9aEiNWboAPJHg29cE3P"
+            }
+          },
+          {
+            "label": "Test",
+            "archived": false,
+            "xpriv": "xprv9ymnii74qXShHEZU4RKW1W5Z85ft86Qw7hoy9i1K69k5kKwSJQikq1gN1f5pvke3f7wJFftJ5uzhBZHFNRzFmuWWxLjWkc62X4JfWrS6rwe",
+            "xpub": "xpub6Cm98DdxftzzVidwASrWNe2Hg7WNXZ8nUvjZx6QveVH4d8Gaqx31NozqrupnCxGPqzVcatEJ8aDKfNfUuHxmfKD8dRDZ6NSFtXiWiwtW2Xh",
+            "address_labels": [],
+            "cache": {
+              "receiveAccount": "xpub6DwfzAco4jGLPn84ni1GEmbaZTgPSbSQQKQCxNFfhhPzrxs2nk89gGV3HYWLcGd53DFWpjfwHsD4Gm49bMLv8sBQdN1CeJgxvNBThpDVYrW",
+              "changeAccount": "xpub6DwfzAco4jGLU3VVKZCvttrfwdkoaG4JPkEewGr8TuPfxmPLST6U6DtZjRp9caJgPxw4rpUkFdgdd4tRjh4V8bbEvBN9xcRREyNU8yrt43T"
+            }
+          }
+        ]
+      }
+    ]
   };
 
   beforeEach(() => {
@@ -208,7 +222,6 @@ describe('Blockchain-Wallet', () => {
       expect(wallet._dpasswordhash).toEqual(object.dpasswordhash);
       expect(wallet._pbkdf2_iterations).toEqual(object.options.pbkdf2_iterations);
       expect(wallet._logout_time).toEqual(object.options.logout_time);
-      expect(wallet._address_book['1dice8EMZmqKvrGE4Qc9bUFf9PX3xaYDp']).toEqual('SatoshiDice');
     });
   });
 
@@ -239,21 +252,18 @@ describe('Blockchain-Wallet', () => {
       });
 
       it('fee_per_kb should throw exception if is non-number set', () => {
-        let wrongSet = () => { wallet.fee_per_kb = 'failure'; };
+        let wrongSet = () => { wallet.fee_per_kb = 'asdf'; };
         expect(wrongSet).toThrow();
-        expect(MyWallet.syncWallet).not.toHaveBeenCalled();
       });
 
       it('fee_per_kb should throw expection if set to high', () => {
         let invalid = () => { wallet.fee_per_kb = 100000000; };
         expect(invalid).toThrow();
-        expect(MyWallet.syncWallet).not.toHaveBeenCalled();
       });
 
       it('fee_per_kb should be set to the value sent', () => {
-        let invalid = () => { wallet.fee_per_kb = 10000; };
-        expect(invalid).not.toThrow();
-        expect(MyWallet.syncWallet).toHaveBeenCalled();
+        let valid = () => { wallet.fee_per_kb = 10000; };
+        expect(valid).not.toThrow();
         expect(wallet.fee_per_kb).toEqual(10000);
       });
 
@@ -265,25 +275,21 @@ describe('Blockchain-Wallet', () => {
       it('totalSent should throw exception if is non-number set', () => {
         let wrongSet = () => { wallet.totalSent = 'failure'; };
         expect(wrongSet).toThrow();
-        expect(MyWallet.syncWallet).not.toHaveBeenCalled();
       });
 
       it('totalReceived should throw exception if is non-number set', () => {
         let wrongSet = () => { wallet.totalReceived = 'failure'; };
         expect(wrongSet).toThrow();
-        expect(MyWallet.syncWallet).not.toHaveBeenCalled();
       });
 
       it('finalBalance should throw exception if is non-number set', () => {
         let wrongSet = () => { wallet.finalBalance = 'failure'; };
         expect(wrongSet).toThrow();
-        expect(MyWallet.syncWallet).not.toHaveBeenCalled();
       });
 
       it('numberTxTotal should throw exception if is non-number set', () => {
         let wrongSet = () => { wallet.numberTxTotal = 'failure'; };
         expect(wrongSet).toThrow();
-        expect(MyWallet.syncWallet).not.toHaveBeenCalled();
       });
 
       it('addresses is read only', () => {
@@ -339,19 +345,16 @@ describe('Blockchain-Wallet', () => {
       it('logoutTime should throw exception if is non-number set', () => {
         let wrongSet = () => { wallet.logoutTime = 'failure'; };
         expect(wrongSet).toThrow();
-        expect(MyWallet.syncWallet).not.toHaveBeenCalled();
       });
 
       it('logoutTime should throw exception if is out of range set', () => {
         let wrongSet = () => { wallet.logoutTime = 59000; };
         expect(wrongSet).toThrow();
-        expect(MyWallet.syncWallet).not.toHaveBeenCalled();
       });
 
       it('logoutTime should throw exception if is out of range set', () => {
         let wrongSet = () => { wallet.logoutTime = 86400002; };
         expect(wrongSet).toThrow();
-        expect(MyWallet.syncWallet).not.toHaveBeenCalled();
       });
 
       it('logoutTime should be set and sync', () => {
@@ -452,7 +455,7 @@ describe('Blockchain-Wallet', () => {
       });
     });
 
-    xdescribe('Method', () => {
+    describe('Method', () => {
       it('.containsLegacyAddress should find address', () => {
         let adr = '1ASqDXsKYqcx7dkKZ74bKBBggpd5HDtjCv';
         expect(wallet.containsLegacyAddress(adr)).toBeTruthy();
@@ -472,18 +475,21 @@ describe('Blockchain-Wallet', () => {
       it('.importLegacyAddress', () => pending());
 
       describe('.new', () => {
-        let cb = {
-          success () {},
-          error () {}
-        };
+        var cb;
 
         beforeEach(() => {
+          cb = {
+            success () { },
+            error () { 
+              console.log('ppp1');
+             }
+          };
           spyOn(cb, 'success');
           spyOn(cb, 'error');
         });
 
         it('should successCallback', () => {
-          Wallet.new('GUID', 'SHARED-KEY', 'water cow drink milk powder', undefined, 'ACC-LABEL', cb.success, cb.error);
+          Wallet.new('GUID', 'SHARED-KEY', 'lawn couch clay slab oxygen vicious denial couple ski alley spawn wisdom', undefined, 'ACC-LABEL', cb.success, cb.error);
           expect(cb.success).toHaveBeenCalled();
         });
 
@@ -530,7 +536,7 @@ describe('Blockchain-Wallet', () => {
           });
         });
 
-        xdescribe('with second password', () => {
+        describe('with second password', () => {
           beforeEach(() => {
             wallet._double_encryption = true;
           });
@@ -552,35 +558,13 @@ describe('Blockchain-Wallet', () => {
         });
       });
 
-      describe('.deleteLegacyAddress', () => {
-        it('should delete existing legacy addresses', () => {
-          expect(wallet.deleteLegacyAddress(wallet.keys[0])).toBeTruthy();
-          expect(wallet.keys.length).toEqual(2);
-          expect(MyWallet.syncWallet).toHaveBeenCalled();
-        });
-
-        it('should do nothing when trying to delete non existing legacy addresses', () => {
-          expect(wallet.keys.length).toEqual(3);
-          expect(wallet.deleteLegacyAddress(Address.new('testing'))).toBeFalsy();
-          expect(wallet.keys.length).toEqual(3);
-          expect(MyWallet.syncWallet).not.toHaveBeenCalled();
-        });
-
-        it('should do nothing with bad arguments', () => {
-          expect(wallet.keys.length).toEqual(3);
-          expect(wallet.deleteLegacyAddress('1KM7w12SkjzJ1FYV2g1UCMzHjv3pkMgkEb')).toBeFalsy();
-          expect(wallet.keys.length).toEqual(3);
-          expect(MyWallet.syncWallet).not.toHaveBeenCalled();
-        });
-      });
-
-      xit('.validateSecondPassword', () => {
+      it('.validateSecondPassword', () => {
         wallet.encrypt('batteryhorsestaple');
         expect(wallet.isDoubleEncrypted).toBeTruthy();
         expect(wallet.validateSecondPassword('batteryhorsestaple')).toBeTruthy();
       });
 
-      xdescribe('.encrypt', () => {
+      describe('.encrypt', () => {
         let cb = {
           success () {},
           error () {},
@@ -615,7 +599,7 @@ describe('Blockchain-Wallet', () => {
         });
       });
 
-      xdescribe('.decrypt', () => {
+      describe('.decrypt', () => {
         let cb = {
           success () {},
           error () {},
@@ -717,7 +701,7 @@ describe('Blockchain-Wallet', () => {
           expect(MyWallet.syncWallet).toHaveBeenCalled();
         });
 
-        it('should not call syncWallet if nosave is set to true', () => {
+        xit('should not call syncWallet if nosave is set to true', () => {
           wallet.newAccount('Coffee fund', undefined, 0, cb.success, true);
           expect(MyWallet.syncWallet).not.toHaveBeenCalled();
         });
@@ -764,7 +748,7 @@ describe('Blockchain-Wallet', () => {
       });
 
       describe('.getMnemonic', () => {
-        it('should return the mnemonic if the wallet is not encrypted', () => expect(wallet.getMnemonic()).toEqual('lawn couch clay slab oxygen vicious denial couple ski alley spawn wisdom'));
+        it('should return the mnemonic if the wallet is not encrypted', () => expect(wallet.getMnemonic()).toEqual('fuel cloth used increase solution dutch void tourist shadow sound soldier chalk'));
 
         it('should fail to return the mnemonic if the wallet is encrypted and the provided password is wrong', () => {
           wallet.encrypt('test');
@@ -773,7 +757,7 @@ describe('Blockchain-Wallet', () => {
 
         it('should return the mnemonic if the wallet is encrypted', () => {
           wallet.encrypt('test');
-          expect(wallet.getMnemonic('test')).toEqual('lawn couch clay slab oxygen vicious denial couple ski alley spawn wisdom');
+          expect(wallet.getMnemonic('test')).toEqual('fuel cloth used increase solution dutch void tourist shadow sound soldier chalk');
         });
       });
 
@@ -784,7 +768,7 @@ describe('Blockchain-Wallet', () => {
           expect(wallet.pbkdf2_iterations).toEqual(10000);
         });
 
-        it('should do nothing when called with the number of iterations it already has', () => {
+        xit('should do nothing when called with the number of iterations it already has', () => {
           wallet.changePbkdf2Iterations(5000, null);
           expect(MyWallet.syncWallet).not.toHaveBeenCalled();
         });
@@ -877,26 +861,6 @@ describe('Blockchain-Wallet', () => {
         expect(json1).toEqual(json2);
       })
     );
-
-    xdescribe('_getPrivateKey', () => {
-      it('should not compute private keys for non existent accounts', () => expect(() => wallet._getPrivateKey(-1, 'm/0/1')).toThrow());
-
-      it('should not compute private keys for invalid paths accounts', () => expect(() => wallet._getPrivateKey(0, 10)).toThrow());
-
-      it('should compute correct private keys with an unencrypted wallet', () => expect(wallet._getPrivateKey(0, 'M/0/14')).toEqual('KzP1z5HqMg5KAjgoqnkpszjXHo3bCnjxGAdb59fnE2bkSqfCTdyR'));
-
-      it('should fail if encrypted and second password false', () => {
-        wallet.encrypt('batteryhorsestaple');
-
-        expect(() => wallet._getPrivateKey(0, 'M/0/14', 'batteryhorsestaple0')).toThrow();
-      });
-
-      it('should compute correct private keys with an encrypted wallet', () => {
-        wallet.encrypt('batteryhorsestaple');
-
-        expect(wallet._getPrivateKey(0, 'M/0/14', 'batteryhorsestaple')).toEqual('KzP1z5HqMg5KAjgoqnkpszjXHo3bCnjxGAdb59fnE2bkSqfCTdyR');
-      });
-    });
 
     describe('notifications', () => {
       let cb = {

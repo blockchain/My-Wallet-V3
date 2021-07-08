@@ -25,12 +25,12 @@ module.exports = function (config) {
     },
 
     browserify: {
-      configure (bundle) {
+      configure(bundle) {
         bundle.once('prebundle', function () {
           bundle.transform('browserify-istanbul'); // Must go first
           bundle.transform('babelify', {
             presets: ['env', 'es2015'],
-            ignore: [ ],
+            ignore: [],
             global: true,
             sourceMap: 'inline'
           });
@@ -55,10 +55,11 @@ module.exports = function (config) {
       'tests/api.spec.js',
       // 'tests/bip38.spec.js',
       'tests/blockchain-settings-api.spec.js',
-      // 'tests/blockchain-wallet.spec.js',
+      'tests/blockchain-wallet.spec.js',
       'tests/coin-selection.spec.js',
       'tests/coin.spec.js',
       'tests/external.spec.js',
+      'tests/hd-account-v4.spec.js',
       'tests/hd-account.spec.js',
       // 'tests/hd-wallet.spec.js',
       // 'tests/helpers.spec.js',
@@ -74,8 +75,8 @@ module.exports = function (config) {
       'tests/wallet-network.spec.js',
       'tests/wallet-signup.spec.js',
       'tests/wallet-token-endpoints.spec.js',
-      'tests/wallet-transaction.spec.js'
-      // 'tests/wallet.spec.js'
+      'tests/wallet-transaction.spec.js',
+      'tests/wallet.spec.js'
     ]
   };
 

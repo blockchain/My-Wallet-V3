@@ -1,29 +1,49 @@
 let proxyquire = require('proxyquireify')(require);
 let MyWallet;
-let HDAccount;
+let HDAccountV4;
 
-describe('HDAccount', () => {
+// TODO: use more mocks, this file takes 7 seconds to run
+describe('HDAccountV4', () => {
   let account, object;
 
   let maxLabeledReceiveIndex = -1;
 
   beforeEach(() => {
     object = {
-      'label': 'My great wallet',
-      'archived': false,
-      'xpriv': 'xprv9zJ1cTHnqzgBXr9Uq9jXrdbk2LwApa3Vu6dquzhmckQyj1hvK9xugPNsycfveTGcTy2571Rq71daBpe1QESUsjX7d2ZHVVXEwJEwDiiMD7E',
-      'xpub': 'xpub6DHN1xpggNEUkLDwwBGYDmYUaNmfE2mMGKZSiP7PB5wxbp34rhHAEBhMpsjHEwZWsHY2kPmPPD1w6gxGSBe3bXQzCn2WV8FRd7ZKpsiGHMq',
-      'address_labels': [{'index': 3, 'label': 'Hello'}],
-      'cache': {
-        'receiveAccount': 'xpub6FMWuMox3fJxEv2TSLN6jYQg6tHZBS7tKRSu7w4Q7F9K2UsSu4RxtwxfeHVhUv3csTSCRkKREpiVdr8EquBPXfBDZSMe84wmN9LzR3rwNZP',
-        'changeAccount': 'xpub6FMWuMox3fJxGARtaDVY6e9st4Hk5j8Ui6r7XLnBPFXPXkajXNiAfiEqBakuDKYYeRf4ERtPm1TawBqKaBWj2dsHNJT4rSsugssTnaDsz2m'
-      }
+      "label": "Private Key Wallet",
+      "archived": false,
+      "default_derivation": "bech32",
+      "derivations": [
+        {
+          "type": "legacy",
+          "purpose": 44,
+          "xpriv": "xprv9xrdr5KSDuFjMRZsFtYo7kzBLqX5wabxLkrVZab6iLEN2fmwRFuTyBYXrz93QaxXAivmseXpaxLWX1nnTwCao93MARAGMA8kvNwRaWvmEcn",
+          "xpub": "xpub6BqzFarL4Gp2ZueLMv5oUtvutsMaM3Kohyn6MxziGfmLuU75xoDiWys1iGnrQwqQT3PJRAkE2ZPyoPSLq8GVVStSi8DnCAxDKXUttnfH2Wu",
+          'address_labels': [{ 'index': 3, 'label': 'Hello legacy' }],
+          "cache": {
+            "receiveAccount": "xpub6EvRwUVEmxMkYReJ2d1korWa9R2AriQhXeyJB55ns4G6mmF7JoBPABuSS9FLti5B3Ddk6XJ4HU2sXW5AGDYZLPVMEXLaM4pNLhZ8DFVgEnN",
+            "changeAccount": "xpub6EvRwUVEmxMka4otnrSt8ssFxNWcNb5pDc479E9H1zKxwMTFz9BRxkHdiFYG4EmLafU4bzj6w713haUibQ5qF4atDYYEnLXa44CCWE6KAg3"
+          }
+        },
+        {
+          "type": "bech32",
+          "purpose": 84,
+          "xpriv": "xprv9zLDGVY4mCN8Sb5j21Kp3dd87muJnudZkDDV17JFGMuYicNbhtcJtbZH3ZaZCZAvFqJvVMqtiTEQrXo21UygzyXUkVRXbKcLTgLwxUMe4xz",
+          "xpub": "xpub6DKZg14xbZvRf5AC82rpQmZrfojoCNMR7S95oVhrphSXbQhkFRvZSPsktqgL3j74h9MhQwCy8DKrgr24JbZA9kTYHXUmEpU8DHHhKHLnAvP",
+          'address_labels': [{ 'index': 4, 'label': 'Hello bech32' }],
+          "cache": {
+            "receiveAccount": "xpub6EySek8QXBddHiR5aRwi1qf5G2SaRkcWK1vyGGiYxYcdfdKso99UfiuX4YW4m5Bd9D1oNyxZxDuz8yLRNadNBGjFivskxnSzpa5H25JMYRR",
+            "changeAccount": "xpub6EySek8QXBddJjr1GHeTJTSakdZX4RCo2bDBdfccyNjmKAMPRRM8ZBTk3qS6x1we2CyDLCGopQFY234LvvEAKLw3AFVSfo2gvjXR2hjwNJa"
+          }
+        }
+      ],
+      "index": 0
     };
 
     MyWallet = {
-      syncWallet () {},
+      syncWallet() { },
       wallet: {
-        getHistory () {},
+        getHistory() { },
         labels: {
           maxLabeledReceiveIndex: () => maxLabeledReceiveIndex
         }
@@ -37,51 +57,34 @@ describe('HDAccount', () => {
   describe('Constructor', () => {
     describe('without arguments', () => {
       beforeEach(() => {
-        let KeyRing = () => ({init () {}});
+        let KeyRing = () => ({ init() { } });
         let KeyChain = {};
         let stubs = { './wallet': MyWallet, './keyring': KeyRing, './keychain': KeyChain };
-        HDAccount = proxyquire('../src/hd-account', stubs);
+        HDAccountV4 = proxyquire('../src/hd-account-v4', stubs);
       });
 
-      it('should create an empty HDAccount with default options', () => {
-        account = new HDAccount();
-        expect(account.balance).toEqual(null);
+      it('should create an empty HDAccountV4 with default options', () => {
+        account = new HDAccountV4();
+        expect(account.balance).toEqual(0);
         expect(account.archived).not.toBeTruthy();
         expect(account.active).toBeTruthy();
-        expect(account.receiveIndex).toEqual(0, 'Unexpected receive index');
-        expect(account.changeIndex).toEqual(0, 'Unexpected change index');
+        expect(account.receiveIndex).toEqual(0);
+        expect(account.changeIndex).toEqual(0);
       });
 
-      it('should create an HDAccount from AccountMasterKey', () => {
-        let accountZero = {
-          toBase58 () { return 'accountZeroBase58'; },
-          neutered () {
-            return {
-              toBase58 () { return 'accountZeroNeuteredBase58'; }
-            };
-          }
-        };
-
-        let a = HDAccount.fromAccountMasterKey(accountZero, 0, 'label');
-
-        expect(a.label).toEqual('label');
-        expect(a._xpriv).toEqual('accountZeroBase58');
-        expect(a._xpub).toEqual('accountZeroNeuteredBase58');
-      });
-
-      it('should create an HDAccount from Wallet master key', () => {
+      it('should create an HDAccountV4 from Wallet master key', () => {
         let masterkey = {
-          deriveHardened (i) {
+          deriveHardened(i) {
             return {
-              deriveHardened (j) {
+              deriveHardened(j) {
                 return {
-                  deriveHardened (k) {
+                  deriveHardened(k) {
                     return {
-                      toBase58 () {
+                      toBase58() {
                         return `m/${i}/${j}/${k}`;
                       },
-                      neutered () {
-                        return {toBase58 () {}};
+                      neutered() {
+                        return { toBase58() { } };
                       }
                     };
                   }
@@ -91,54 +94,70 @@ describe('HDAccount', () => {
           }
         };
 
-        let a = HDAccount.fromWalletMasterKey(masterkey, 0, 'label');
+        let account = HDAccountV4.fromWalletMasterKey(masterkey, 0, 'label');
 
-        expect(a._xpriv).toEqual('m/44/0/0');
-        expect(a.label).toEqual('label');
+        expect(account.label).toEqual('label')
+        expect(account.derivations.length).toEqual(2)
+        expect(account.derivations[0].type).toEqual('legacy')
+        expect(account.derivations[0]._xpriv).toEqual('m/44/0/0')
+        expect(account.derivations[0]._purpose).toEqual(44)
+        expect(account.derivations[1].type).toEqual('bech32')
+        expect(account.derivations[1]._xpriv).toEqual('m/84/0/0')
+        expect(account.derivations[1]._purpose).toEqual(84)
       });
     });
 
-    it('should transform an Object to an HDAccount', () => {
+    it('should transform an Object to an HDAccountV4', () => {
       let stubs = { './wallet': MyWallet };
-      HDAccount = proxyquire('../src/hd-account', stubs);
-      account = new HDAccount(object);
-      expect(account.extendedPublicKey).toEqual(object.xpub);
-      expect(account.extendedPrivateKey).toEqual(object.xpriv);
-      expect(account.label).toEqual(object.label);
+      HDAccountV4 = proxyquire('../src/hd-account-v4', stubs);
+      account = new HDAccountV4(object);
+
+      expect(account.label).toEqual(object.label)
       expect(account.archived).toEqual(object.archived);
-      expect(account.receiveIndex).toEqual(0);
+      expect(account.derivations.length).toEqual(2)
+      expect(account.derivations.length).toEqual(object.derivations.length)
+      expect(account.derivations[0].type).toEqual(object.derivations[0].type)
+      expect(account.derivations[0]._xpriv).toEqual(object.derivations[0].xpriv)
+      expect(account.derivations[0]._purpose).toEqual(object.derivations[0].purpose)
+      expect(account.derivations[1].type).toEqual(object.derivations[1].type)
+      expect(account.derivations[1]._xpriv).toEqual(object.derivations[1].xpriv)
+      expect(account.derivations[1]._purpose).toEqual(object.derivations[1].purpose)
+
+
+      expect(account.extendedPublicKey).toEqual(object.derivations[1].xpub);
+      expect(account.extendedPrivateKey).toEqual(object.derivations[1].xpriv);
+      expect(account.receiveIndex).toEqual(5);
       expect(account.changeIndex).toEqual(0);
       expect(account.n_tx).toEqual(0);
-      expect(account.balance).toEqual(null);
-      expect(account.keyRing).toBeDefined();
-      expect(account.receiveAddress).toBeDefined();
-      expect(account.changeAddress).toBeDefined();
+      expect(account.balance).toEqual(0);
+      expect(account.receiveAddress).toBeDefined()
+      expect(account.changeAddress).toBeDefined()
     });
   });
 
   describe('instance', () => {
     beforeEach(() => {
       let stubs = { './wallet': MyWallet };
-      HDAccount = proxyquire('../src/hd-account', stubs);
-      account = new HDAccount(object);
+      HDAccountV4 = proxyquire('../src/hd-account-v4', stubs);
+      account = new HDAccountV4(object);
     });
 
     describe('JSON serializer', () => {
       it('should hold: fromJSON . toJSON = id', () => {
         let json1 = JSON.stringify(account, null, 2);
-        let racc = JSON.parse(json1, HDAccount.reviver);
+        let racc = JSON.parse(json1, HDAccountV4.reviver);
         let json2 = JSON.stringify(racc, null, 2);
         expect(json1).toEqual(json2);
       });
 
       describe('labeled_addresses', () => {
         it('should resave original if KV store is read-only', () => {
-          expect(account.toJSON()).toEqual(jasmine.objectContaining({
+          expect(account.toJSON().derivations).toContain(jasmine.objectContaining({
             address_labels: [{
-              index: 3,
-              label: 'Hello'
+              index: 4,
+              label: 'Hello bech32'
             }]
-          }));
+          }))
         });
       });
     });
@@ -170,28 +189,6 @@ describe('HDAccount', () => {
         expect(MyWallet.syncWallet).toHaveBeenCalled();
       });
 
-      it('balance should be set and not sync wallet', () => {
-        account.balance = 100;
-        expect(account.balance).toEqual(100);
-        expect(MyWallet.syncWallet).not.toHaveBeenCalled();
-      });
-
-      it('balance should throw exception if is non-Number set', () => {
-        let wrongSet = () => { account.balance = 'failure'; };
-        expect(wrongSet).toThrow();
-      });
-
-      it('n_tx should be set and not sync wallet', () => {
-        account.n_tx = 100;
-        expect(account.n_tx).toEqual(100);
-        expect(MyWallet.syncWallet).not.toHaveBeenCalled();
-      });
-
-      it('n_tx should throw exception if is non-Number set', () => {
-        let wrongSet = () => { account.n_tx = 'failure'; };
-        expect(wrongSet).toThrow();
-      });
-
       it('label should be set and sync wallet', () => {
         account.label = 'my label';
         expect(account.label).toEqual('my label');
@@ -201,6 +198,16 @@ describe('HDAccount', () => {
       it('label should be valid', () => {
         let test = () => { account.label = 0; };
         expect(test).toThrow();
+      });
+
+      it('balance is read only', () => {
+        let wrongSet = () => { account.balance = 1; };
+        expect(wrongSet).toThrow();
+      });
+
+      it('n_tx is read only', () => {
+        let wrongSet = () => { account.n_tx = 1; };
+        expect(wrongSet).toThrow();
       });
 
       it('xpriv is read only', () => {
@@ -224,37 +231,18 @@ describe('HDAccount', () => {
       });
 
       it('index is read only', () => {
-        let wrongSet = () => { account.index = 'not allowed'; };
+        let wrongSet = () => { account.index = 1; };
         expect(wrongSet).toThrow();
       });
 
-      it('KeyRing is read only', () => {
-        let wrongSet = () => { account.keyRing = 'not allowed'; };
+      it('lastUsedReceiveIndex is read only', () => {
+        let wrongSet = () => { account.lastUsedReceiveIndex = 1; };
         expect(wrongSet).toThrow();
       });
 
-      it('lastUsedReceiveIndex must be an integer or null', () => {
-        let invalid = () => { account.lastUsedReceiveIndex = '1'; };
-        let valid = () => { account.lastUsedReceiveIndex = 1; };
-        expect(invalid).toThrow();
-        expect(account.lastUsedReceiveIndex).toEqual(null);
-        expect(valid).not.toThrow();
-        expect(account.lastUsedReceiveIndex).toEqual(1);
-      });
-
-      it('receiveIndex is max(used, labeled) + 1', () => {
-        account.lastUsedReceiveIndex = 2;
-        expect(account.receiveIndex).toEqual(3);
-
-        maxLabeledReceiveIndex = 3;
-        expect(account.receiveIndex).toEqual(4);
-      });
-
-      it('receiveIndex falls back to legacy labels if Labels doesn\'t work', () => {
-        maxLabeledReceiveIndex = 3;
-        MyWallet.wallet.labels = null;
-        account.lastUsedReceiveIndex = 2;
-        expect(account.receiveIndex).toEqual(4);
+      it('receiveIndex is read only', () => {
+        let wrongSet = () => { account.receiveIndex = 1; };
+        expect(wrongSet).toThrow();
       });
 
       it('changeIndex must be a number', () => {
@@ -273,44 +261,20 @@ describe('HDAccount', () => {
       });
     });
 
-    describe('Getter', () => {
-    });
-
     describe('Labeled addresses', () => {
       describe('getLabels()', () => {
-        it('should return a copy of _address_labels', () => {
-          expect(account.getLabels()).toEqual(account._address_labels);
+        it('should return a copy of default derivation._address_labels', () => {
+          expect(account.getLabels()).toEqual(account.derivations[1]._address_labels);
         });
         it('should sort _address_labels by index', () => {
-          account._address_labels = [{index: 1, label: 'One'}, {index: 0, label: 'Zero'}];
-          expect(account.getLabels()).toEqual([{index: 0, label: 'Zero'}, {index: 1, label: 'One'}]);
-        });
-      });
-
-      describe('setLabel()', () => {
-        it('should update existing label entry', () => {
-          account.setLabel(3, 'Updated Label');
-          expect(account._address_labels[0].label).toEqual('Updated Label');
-        });
-
-        it('should push a label entry if none exists', () => {
-          let before = account._address_labels.length;
-          account.setLabel(2, 'New Label');
-          expect(account._address_labels.length).toEqual(before + 1);
-        });
-      });
-
-      describe('removeLabel()', () => {
-        it('should remove a label entry', () => {
-          let before = account._address_labels.length;
-          account.removeLabel(3);
-          expect(account._address_labels.length).toEqual(before - 1);
+          account.derivations[1]._address_labels = [{ index: 1, label: 'One' }, { index: 0, label: 'Zero' }];
+          expect(account.getLabels()).toEqual([{ index: 0, label: 'Zero' }, { index: 1, label: 'One' }]);
         });
       });
     });
 
     describe('.encrypt', () => {
-      beforeEach(() => { account = new HDAccount(object); });
+      beforeEach(() => { account = new HDAccountV4(object); });
 
       it('should fail and don\'t sync when encryption fails', () => {
         let wrongEnc = () => account.encrypt(() => null);
@@ -321,13 +285,15 @@ describe('HDAccount', () => {
       it('should write in a temporary field and let the original key intact', () => {
         let originalKey = account.extendedPrivateKey;
         account.encrypt(() => 'encrypted key');
-        expect(account._temporal_xpriv).toEqual('encrypted key');
+        expect(account.derivations[0]._temporal_xpriv).toEqual('encrypted key');
+        expect(account.derivations[1]._temporal_xpriv).toEqual('encrypted key');
         expect(account.extendedPrivateKey).toEqual(originalKey);
         expect(MyWallet.syncWallet).not.toHaveBeenCalled();
       });
 
       it('should do nothing if watch only account', () => {
-        account._xpriv = null;
+        account.derivations[0]._xpriv = null;
+        account.derivations[1]._xpriv = null;
         account.encrypt(() => 'encrypted key');
         expect(account.extendedPrivateKey).toEqual(null);
         expect(MyWallet.syncWallet).not.toHaveBeenCalled();
@@ -342,7 +308,7 @@ describe('HDAccount', () => {
     });
 
     describe('.decrypt', () => {
-      beforeEach(() => { account = new HDAccount(object); });
+      beforeEach(() => { account = new HDAccountV4(object); });
 
       it('should fail and don\'t sync when decryption fails', () => {
         let wrongEnc = () => account.decrypt(() => null);
@@ -353,13 +319,15 @@ describe('HDAccount', () => {
       it('should write in a temporary field and let the original key intact', () => {
         let originalKey = account.extendedPrivateKey;
         account.decrypt(() => 'decrypted key');
-        expect(account._temporal_xpriv).toEqual('decrypted key');
+        expect(account.derivations[0]._temporal_xpriv).toEqual('decrypted key');
+        expect(account.derivations[1]._temporal_xpriv).toEqual('decrypted key');
         expect(account.extendedPrivateKey).toEqual(originalKey);
         expect(MyWallet.syncWallet).not.toHaveBeenCalled();
       });
 
       it('should do nothing if watch only account', () => {
-        account._xpriv = null;
+        account.derivations[0]._xpriv = '0';
+        account.derivations[1]._xpriv = null;
         account.decrypt(() => 'decrypted key');
         expect(account.extendedPrivateKey).toEqual(null);
         expect(MyWallet.syncWallet).not.toHaveBeenCalled();
@@ -374,7 +342,7 @@ describe('HDAccount', () => {
     });
 
     describe('.persist', () => {
-      beforeEach(() => { account = new HDAccount(object); });
+      beforeEach(() => { account = new HDAccountV4(object); });
 
       it('should do nothing if temporary is empty', () => {
         let originalKey = account.extendedPrivateKey;
@@ -384,18 +352,19 @@ describe('HDAccount', () => {
       });
 
       it('should swap and delete if we have a temporary value', () => {
-        account._temporal_xpriv = 'encrypted key';
-        let temp = account._temporal_xpriv;
+        account.derivations[0]._temporal_xpriv = 'encrypted key 0';
+        account.derivations[1]._temporal_xpriv = 'encrypted key 1';
         account.persist();
-        expect(account.extendedPrivateKey).toEqual(temp);
-        expect(account._temporal_xpriv).not.toBeDefined();
+        expect(account.extendedPrivateKey).toEqual('encrypted key 1');
+        expect(account.derivations[0]._temporal_xpriv).not.toBeDefined();
+        expect(account.derivations[1]._temporal_xpriv).not.toBeDefined();
         expect(MyWallet.syncWallet).not.toHaveBeenCalled();
       });
     });
 
     describe('.factory', () =>
       it('should not touch already instanciated objects', () => {
-        let fromFactory = HDAccount.factory(account);
+        let fromFactory = HDAccountV4.factory(account);
         expect(account).toEqual(fromFactory);
       })
     );

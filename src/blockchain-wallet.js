@@ -135,15 +135,14 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () { return this._fee_per_kb; },
     set: function (value) {
-      switch (true) {
-        case !Helpers.isPositiveNumber(value):
-          throw new Error('wallet.fee_per_kb must be a positive number');
-        case value > 1000000:  // 0.01 btc
-          throw new Error('wallet.fee_per_kb too high (0.01 btc limit)');
-        default:
-          this._fee_per_kb = value;
-          MyWallet.syncWallet();
+      if (!Helpers.isPositiveNumber(value)) {
+          throw new Error('wallet.fee_per_kb must be a positive number')
       }
+      if (value > 1000000) {// 0.01 btc
+        throw new Error('wallet.fee_per_kb too high (0.01 btc limit)')
+      }
+      this._fee_per_kb = value
+      MyWallet.syncWallet()
     }
   },
   'pbkdf2_iterations': {
@@ -584,22 +583,6 @@ Wallet.prototype.newLegacyAddress = function (label, pw, success, error) {
   return ad;
 };
 
-Wallet.prototype.deleteLegacyAddress = function (a) {
-  assert(a, 'Error: address needed');
-  if (this.containsLegacyAddress(a)) {
-    delete this._addresses[a.address];
-    MyWallet.syncWallet();
-    return true;
-  }
-  return false;
-};
-
-// Wallet.prototype.setDefaultPbkdf2Iterations = function () {
-//   this._pbkdf2_iterations = 5000;
-//   MyWallet.syncWallet();
-//   return this;
-// };
-
 Wallet.prototype.validateSecondPassword = function (inputString) {
   if (!this._pbkdf2_iterations) {
     var passHash1 = WalletCrypto.hashNTimes(this._sharedKey + inputString, 1);
@@ -760,22 +743,25 @@ Wallet.prototype.disableNotifications = function (success, error) {
 
 // creating a new wallet object
 Wallet.new = function (guid, sharedKey, mnemonic, bip39Password, firstAccountLabel, success, error) {
-  assert(mnemonic, 'BIP 39 mnemonic required');
-
-  var object = {
+  assert(mnemonic, 'BIP 39 mnemonic required')
+  const object = {
     guid: guid,
     sharedKey: sharedKey,
     double_encryption: false,
     options: constants.getDefaultWalletOptions()
-  };
-  MyWallet.wallet = new Wallet(object);
-  var label = firstAccountLabel || 'Private Key Wallet';
+  }
+  const label = firstAccountLabel || 'Private Key Wallet'
   try {
-    var hd = HDWallet.new(mnemonic, bip39Password);
-    MyWallet.wallet._hd_wallets.push(hd);
-    hd.newAccount(label);
-  } catch (e) { error(e); return; }
-  success(MyWallet.wallet);
+    var wallet = new Wallet(object)
+    var hdWallet = HDWallet.new(mnemonic, bip39Password)
+    wallet._hd_wallets.push(hdWallet)
+    hdWallet.newAccount(label)
+    MyWallet.wallet = wallet
+    success(MyWallet.wallet)
+  } catch (e) {
+    MyWallet.wallet = undefined
+    error(e)
+  }
 };
 
 // Adds an HD wallet to an existing wallet, used by frontend and iOs
@@ -941,16 +927,6 @@ Wallet.prototype.getWIFForAddress = function (address, secondPassword) {
     return null;
   }
 };
-Wallet.prototype._getPrivateKey = function (accountIndex, path, secondPassword) {
-  assert(this.hdwallet.isValidAccountIndex(accountIndex), 'Error: account non-existent');
-  assert(Helpers.isString(path), 'Error: path must be an string of the form \'M/0/27\'');
-  var maybeXpriv = this.hdwallet.accounts[accountIndex].extendedPrivateKey;
-  var xpriv = this.isDoubleEncrypted
-      ? WalletCrypto.decryptSecretWithSecondPassword(maybeXpriv, secondPassword, this.sharedKey, this.pbkdf2_iterations)
-      : maybeXpriv;
-  var kr = new KeyRing(xpriv, null);
-  return kr.privateKeyFromPath(path).keyPair.toWIF();
-};
 
 Wallet.prototype.fetchAccountInfo = function () {
   var parentThis = this;
@@ -1051,8 +1027,14 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     // Labels currently don't use the KV Store, so this should never fail.
     promises.push(fetchLabels.call(this));
   }
+
+  var finished = function () {
+    if (typeof objc_metadata_loaded == 'function') { 
+      objc_metadata_loaded(); 
+    }
+  }
   
-  return Promise.all(promises).then(objc_metadata_loaded());
+  return Promise.all(promises).then(finished());
 };
 
 Wallet.prototype.incStats = function () {

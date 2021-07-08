@@ -185,21 +185,6 @@ HDAccount.fromWalletMasterKey = function (masterkey, index, label) {
   return HDAccount.fromAccountMasterKey(accountZero, index, label);
 };
 
-HDAccount.fromExtPublicKey = function (extPublicKey, index, label) {
-  // this is creating a read-only account
-  assert(Helpers.isXpubKey(extPublicKey), 'Extended public key must be given to create an account.');
-  var accountZero = Bitcoin.bip32.fromBase58(extPublicKey, constants.getNetwork());
-  var a = HDAccount.fromAccountMasterKey(accountZero, index, label);
-  a._xpriv = null;
-  return a;
-};
-
-HDAccount.fromExtPrivateKey = function (extPrivateKey, index, label) {
-  assert(Helpers.isXprivKey(extPrivateKey), 'Extended private key must be given to create an account.');
-  var accountZero = Bitcoin.bip32.fromBase58(extPrivateKey, constants.getNetwork());
-  return HDAccount.fromAccountMasterKey(accountZero, index, label);
-};
-
 HDAccount.factory = function (o) {
   if (o instanceof Object && !(o instanceof HDAccount)) {
     return new HDAccount(o);
@@ -265,19 +250,6 @@ HDAccount.prototype.persist = function () {
 
 HDAccount.prototype._orderedAddressLabels = function () {
   return this._address_labels.sort((a, b) => a.index - b.index);
-};
-
-HDAccount.prototype.addLabel = function (receiveIndex, label) {
-  assert(Helpers.isPositiveInteger(receiveIndex));
-
-  let labels = this._address_labels;
-
-  let labelEntry = {
-    index: receiveIndex,
-    label: label
-  };
-
-  labels.push(labelEntry);
 };
 
 HDAccount.prototype.getLabels = function () {

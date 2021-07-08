@@ -227,7 +227,7 @@ HDWallet.prototype.newAccount = function (label, cipher) {
   }
 
   var masterkey = this.getMasterHDNode(cipher);
-  var account = HDAccount.fromWalletMasterKey(masterkey, accIndex, label);
+  var account = HDAccountV4.fromWalletMasterKey(masterkey, accIndex, label);
   account.encrypt(enc);
   this._accounts.push(account);
   return this;
