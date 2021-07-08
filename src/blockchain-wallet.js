@@ -135,14 +135,15 @@ Object.defineProperties(Wallet.prototype, {
     configurable: false,
     get: function () { return this._fee_per_kb; },
     set: function (value) {
-      if (!Helpers.isPositiveNumber(value)) {
-          throw new Error('wallet.fee_per_kb must be a positive number')
+      switch (true) {
+        case !Helpers.isPositiveNumber(value):
+          throw new Error('wallet.fee_per_kb must be a positive number');
+        case value > 1000000:  // 0.01 btc
+          throw new Error('wallet.fee_per_kb too high (0.01 btc limit)');
+        default:
+          this._fee_per_kb = value;
+          MyWallet.syncWallet();
       }
-      if (value > 1000000) {// 0.01 btc
-        throw new Error('wallet.fee_per_kb too high (0.01 btc limit)')
-      }
-      this._fee_per_kb = value
-      MyWallet.syncWallet()
     }
   },
   'pbkdf2_iterations': {
