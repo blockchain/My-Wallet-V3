@@ -81,7 +81,7 @@ Derivation.prototype.toJSON = function () {
     purpose: this._purpose,
     xpriv: this._xpriv,
     xpub: this._xpub,
-    cache: this._keyRing.toJSON(),
+    cache: this._keyRing,
     address_labels: this._address_labels
   };
 

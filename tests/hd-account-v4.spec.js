@@ -150,9 +150,17 @@ describe('HDAccountV4', () => {
         expect(json1).toEqual(json2);
       });
 
+      it('toJSON() has the expected behaviour', () => {
+        let json1 = JSON.stringify(account, null, 2);
+        let result = JSON.parse(json1);
+        expect(result).toContain(object);
+      });
+
       describe('labeled_addresses', () => {
         it('should resave original if KV store is read-only', () => {
-          expect(account.toJSON().derivations).toContain(jasmine.objectContaining({
+          let json1 = JSON.stringify(account);
+          let result = JSON.parse(json1);
+          expect(result.derivations).toContain(jasmine.objectContaining({
             address_labels: [{
               index: 4,
               label: 'Hello bech32'

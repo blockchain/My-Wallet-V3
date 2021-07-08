@@ -225,7 +225,7 @@ HDAccount.prototype.toJSON = function () {
   var hdaccount = {
     label: this._label,
     archived: this._archived,
-    derivations: this._derivations.map(function(o) { return o.toJSON() }),
+    derivations: this._derivations,
     default_derivation: this._default_derivation
   };
 
@@ -279,7 +279,7 @@ HDAccount.prototype.changeAddressAtIndex = function (index, type) {
 
 HDAccount.prototype.encrypt = function (cipher) {
   if (!this._derivations) return this;
-  this._derivations.forEach((d) => d.encrypt(cipher));
+  this._derivations.forEach((d) => d.encrypt(cipher).persist());
   return this;
 };
 
@@ -289,12 +289,10 @@ HDAccount.prototype.decrypt = function (cipher) {
   return this;
 };
 
-HDAccount.prototype.persist = function () {
-  if (!this._derivations) return;
-  this._derivations.forEach((d) => d.persist());
-};
-
 // No longer supported by HDAccount class
+HDAccount.prototype.persist = function () {
+  console.log('Not supported')
+};
 HDAccount.prototype.setLabel = function (receiveIndex, label) {
   console.log('Not supported')
 };
