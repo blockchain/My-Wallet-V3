@@ -988,7 +988,7 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
 
   var fetchBchWallet = function () {
     this._bch = BitcoinCash.fromBlockchainWallet(this);
-    return Promise.resolve();
+    return this._bch.fetch();
   };
 
   var fetchRetailCore = function () {
