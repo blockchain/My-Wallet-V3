@@ -752,17 +752,19 @@ Wallet.new = function (guid, sharedKey, mnemonic, bip39Password, firstAccountLab
     options: constants.getDefaultWalletOptions()
   }
   const label = firstAccountLabel || 'Private Key Wallet'
+  var wallet;
   try {
-    var wallet = new Wallet(object)
+    wallet = new Wallet(object)
     var hdWallet = HDWallet.new(mnemonic, bip39Password)
     wallet._hd_wallets.push(hdWallet)
     hdWallet.newAccount(label)
-    MyWallet.wallet = wallet
-    success(MyWallet.wallet)
   } catch (e) {
     MyWallet.wallet = undefined
     error(e)
+    return
   }
+  MyWallet.wallet = wallet
+  success(MyWallet.wallet)
 };
 
 // Adds an HD wallet to an existing wallet, used by frontend and iOs
