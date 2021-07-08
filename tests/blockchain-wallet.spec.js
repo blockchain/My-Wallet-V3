@@ -480,9 +480,7 @@ describe('Blockchain-Wallet', () => {
         beforeEach(() => {
           cb = {
             success () { },
-            error () { 
-              console.log('ppp1');
-             }
+            error () { }
           };
           spyOn(cb, 'success');
           spyOn(cb, 'error');
