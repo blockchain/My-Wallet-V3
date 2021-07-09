@@ -1,6 +1,5 @@
 /* eslint-disable semi */
 const EthAccount = require('../../src/eth/eth-account')
-const EthTxBuilder = require('../../src/eth/eth-tx-builder')
 const EthWalletTx = require('../../src/eth/eth-wallet-tx')
 
 describe('EthAccount', () => {
@@ -9,11 +8,16 @@ describe('EthAccount', () => {
       return Buffer.from('6858f113ba3bf55880105726c0d9f0495756321b45f821bc228fca2adacbb87b', 'hex')
     }
   }
+  const ethWwallet = {
+    sync () {
+      return
+    }
+  }
 
   describe('instance', () => {
     let account
     beforeEach(() => {
-      account = EthAccount.fromWallet(wallet)
+      account = EthAccount.fromWallet(wallet, ethWwallet)
       account.label = 'Test Account'
     })
 
@@ -23,24 +27,12 @@ describe('EthAccount', () => {
       })
 
       it('should have: privateKey', () => {
-        let accountWithPriv = new EthAccount({ priv: wallet.getPrivateKey() })
+        let accountWithPriv = new EthAccount({ priv: wallet.getPrivateKey() }, ethWwallet)
         expect(accountWithPriv.privateKey.toString('hex')).toEqual('6858f113ba3bf55880105726c0d9f0495756321b45f821bc228fca2adacbb87b')
-      })
-
-      it('should have: wei', () => {
-        expect(account.wei.toString()).toEqual('0')
-      })
-
-      it('should have: balance', () => {
-        expect(account.balance).toEqual('0')
       })
 
       it('should have: txs', () => {
         expect(account.txs).toEqual([])
-      })
-
-      it('should have: nonce', () => {
-        expect(account.nonce).toEqual(0)
       })
 
       it('should have: label', () => {
@@ -49,32 +41,6 @@ describe('EthAccount', () => {
 
       it('should have: archived', () => {
         expect(account.archived).toEqual(false)
-      })
-    })
-
-    describe('.getApproximateBalance()', () => {
-      it('should get the balance at 8 decimals', () => {
-        account.setData({ balance: '12345678900000000' })
-        expect(account.getApproximateBalance(8)).toEqual('0.01234568')
-      })
-    })
-
-    describe('.createPayment()', () => {
-      it('should create a new EthTxBuilder', () => {
-        let payment = account.createPayment()
-        expect(payment.constructor).toEqual(EthTxBuilder)
-      })
-    })
-
-    describe('.setData()', () => {
-      it('should set the account balance', () => {
-        account.setData({ balance: '10000000000000000' })
-        expect(account.balance).toEqual('0.01')
-      })
-
-      it('should set the account nonce', () => {
-        account.setData({ nonce: 10 })
-        expect(account.nonce).toEqual(10)
       })
     })
 
@@ -131,8 +97,6 @@ describe('EthAccount', () => {
       it('should create an EthAccount instance', () => {
         let account = EthAccount.fromWallet(wallet)
         expect(account.constructor).toEqual(EthAccount)
-        expect(account.balance).toEqual('0')
-        expect(account.nonce).toEqual(0)
         expect(account.address).toEqual('0xD70073f72621FB90060Ac257f38cF2FF566Ea6bB')
       })
     })

@@ -2,7 +2,6 @@ let proxyquire = require('proxyquireify')(require);
 let MyWallet;
 let HDAccount;
 
-// TODO: use more mocks, this file takes 7 seconds to run
 describe('HDAccount', () => {
   let account, object;
 
@@ -288,14 +287,6 @@ describe('HDAccount', () => {
         });
       });
 
-      describe('addLabel()', () => {
-        it('should push a label entry', () => {
-          let before = account._address_labels.length;
-          account.addLabel(2, 'New Label');
-          expect(account._address_labels.length).toEqual(before + 1);
-        });
-      });
-
       describe('setLabel()', () => {
         it('should update existing label entry', () => {
           account.setLabel(3, 'Updated Label');
@@ -400,29 +391,6 @@ describe('HDAccount', () => {
         expect(account._temporal_xpriv).not.toBeDefined();
         expect(MyWallet.syncWallet).not.toHaveBeenCalled();
       });
-    });
-
-    describe('.fromExtPublicKey', () => {
-      it('should import a correct key', () => {
-        account = HDAccount.fromExtPublicKey('xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8', 0, 'New account');
-        expect(account._xpriv).toEqual(null);
-        expect(account.label).toEqual('New account');
-      });
-
-      it('should not import a truncated key', () => expect(() => HDAccount.fromExtPublicKey('xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGh', 0, 'New account')).toThrowError('Invalid checksum'));
-    });
-
-    describe('.fromExtPrivateKey', () => {
-      it('should import a correct key', () => {
-        account = HDAccount.fromExtPrivateKey('xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi', undefined, 'Another new account');
-        expect(account.label).toEqual('Another new account');
-        expect(account._xpub).toEqual('xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8');
-        expect(account.isEncrypted).toBeFalsy();
-        expect(account.isUnEncrypted).toBeTruthy();
-        expect(account.index).toEqual(null);
-      });
-
-      it('should not import a truncated key', () => expect(() => HDAccount.fromExtPrivateKey('xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6', undefined, 'Another new account')).toThrowError('Invalid checksum'));
     });
 
     describe('.factory', () =>

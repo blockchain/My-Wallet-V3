@@ -18,10 +18,10 @@ describe('KeyChain constructor', () => {
   });
 
   it('should construct from extended private key and get key for index', () => {
-    let xpriv = 'xprv9zJ1cTHnqzgBXr9Uq9jXrdbk2LwApa3Vu6dquzhmckQyj1hvK9xugPNsycfveTGcTy2571Rq71daBpe1QESUsjX7d2ZHVVXEwJEwDiiMD7E';
-    let kc = new KeyChain(xpriv, 0, null);
-    let pkey = Base58.encode(kc.getPrivateKey(100).keyPair.d.toBuffer(32));
-    expect(pkey).toEqual('ETsc7CKyRYFNzHPVfR4GDPj3NyJBMLiACRrXg814tJ5w');
+    let xpriv = 'xprv9zJ1cTHnqzgBXr9Uq9jXrdbk2LwApa3Vu6dquzhmckQyj1hvK9xugPNsycfveTGcTy2571Rq71daBpe1QESUsjX7d2ZHVVXEwJEwDiiMD7E'
+    let kc = new KeyChain(xpriv, 0, null)
+    let encoded = Base58.encode(kc.getPrivateKey(100).__D)
+    expect(encoded).toEqual('ETsc7CKyRYFNzHPVfR4GDPj3NyJBMLiACRrXg814tJ5w')
   });
 
   it('should not print xpriv when you ask for xpub', () => {

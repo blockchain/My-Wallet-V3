@@ -145,34 +145,6 @@ class Labels {
     return entry.label;
   }
 
-  addLabel (accountIndex, maxGap, label) {
-    assert(Helpers.isPositiveInteger(accountIndex), 'specify accountIndex');
-    assert(Helpers.isString(label), 'specify label');
-    assert(Helpers.isPositiveInteger(maxGap) && maxGap <= 20, 'Max gap must be less than 20');
-
-    let receiveIndex = this._wallet.hdwallet.accounts[accountIndex].receiveIndex;
-    let lastUsedReceiveIndex = this._wallet.hdwallet.accounts[accountIndex].lastUsedReceiveIndex;
-
-    if (!Helpers.isValidLabel(label)) {
-      return Promise.reject('NOT_ALPHANUMERIC');
-    } else if (receiveIndex - lastUsedReceiveIndex >= maxGap) {
-      // Exceeds BIP 44 unused address gap limit
-      return Promise.reject('GAP');
-    }
-
-    let addr = this.getAddress(accountIndex, receiveIndex);
-
-    addr.label = label;
-    addr.used = false;
-
-    // Update wallet:
-    this._wallet.hdwallet.accounts[accountIndex].addLabel(receiveIndex, label);
-
-    return this._syncWallet().then(() => {
-      return addr;
-    });
-  }
-
   // address: either an AddressHD object or a receive index Integer
   setLabel (accountIndex, address, label) {
     assert(

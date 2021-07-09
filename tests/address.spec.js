@@ -50,6 +50,12 @@ Bitcoin = {
   }
 };
 
+BitcoinMessage = {
+  sign: function (keyPair, message) {
+    return `${message}_signed`;
+  }
+};
+
 let Base58 = {
   encode: function (v) {
     return v;
@@ -139,7 +145,7 @@ let stubs = {
   './wallet-crypto': WalletCrypto,
   './helpers': Helpers,
   'bitcoinjs-lib': Bitcoin,
-  'bs58': Base58
+  'bitcoinjs-message': BitcoinMessage
 };
 
 let Address = proxyquire('../src/address', stubs);
@@ -196,11 +202,6 @@ describe('Address', () => {
       it('should return an address', () => {
         let a = Address['new']('My New Address');
         expect(a.label).toEqual('My New Address');
-      });
-
-      it('should generate a random private key', () => {
-        let a = Address['new']('My New Address');
-        expect(a.priv).toBe('1111111111111111111111111111111H');
       });
 
       it('should generate a random address', () => {

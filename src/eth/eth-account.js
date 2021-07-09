@@ -1,5 +1,4 @@
 const ethUtil = require('ethereumjs-util');
-const EthTxBuilder = require('./eth-tx-builder');
 const EthWalletTx = require('./eth-wallet-tx');
 const API = require('../api');
 const { isValidLabel, toBigNumber, toWei, fromWei } = require('../helpers');
@@ -11,10 +10,6 @@ class EthAccount {
     this._label = obj.label;
     this.archived = obj.archived || false;
     this._correct = Boolean(obj.correct);
-    this._wei = null;
-    this._balance = null;
-    this._approximateBalance = null;
-    this._nonce = null;
     this._txs = [];
     this._sync = () => ethWallet.sync()
   }
@@ -47,20 +42,8 @@ class EthAccount {
     return this._correct;
   }
 
-  get wei () {
-    return this._wei;
-  }
-
-  get balance () {
-    return this._balance;
-  }
-
   get txs () {
     return this._txs;
-  }
-
-  get nonce () {
-    return this._nonce;
   }
 
   get coinCode () {
@@ -71,47 +54,10 @@ class EthAccount {
     this._correct = true;
   }
 
-  getApproximateBalance () {
-    return this._approximateBalance;
-  }
-
-  createPayment () {
-    return new EthTxBuilder(this);
-  }
-
-  fetchHistory () {
-    return Promise.all([
-      this.fetchBalance(),
-      this.fetchTransactions()
-    ]).then(([data, txs]) => (
-      Object.assign(data, { txs })
-    ));
-  }
-
-  fetchBalance () {
-    return fetch(`${API.API_ROOT_URL}eth/account/${this.address}/balance`)
-      .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
-      .then(data => this.setData(data[this.address]));
-  }
-
-  fetchTransactions () {
-    return fetch(`${API.API_ROOT_URL}eth/account/${this.address}`)
-      .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
-      .then(data => this.setTransactions(data[this.address]));
-  }
-
   fetchTransaction (hash) {
     return fetch(`${API.API_ROOT_URL}eth/tx/${hash}`)
       .then(r => r.status === 200 ? r.json() : r.json().then(e => Promise.reject(e)))
       .then(tx => this.appendTransaction(tx));
-  }
-
-  setData ({ balance, nonce } = {}) {
-    this._wei = toBigNumber(balance);
-    this._balance = fromWei(this.wei, 'ether').toString();
-    this._approximateBalance = fromWei(this.wei, 'ether').round(8).toString();
-    this._nonce = nonce;
-    return { balance, nonce };
   }
 
   appendTransaction (txJson) {
@@ -147,15 +93,6 @@ class EthAccount {
     return EthAccount.privateKeyToAddress(privateKey) === this.address;
   }
 
-  getAvailableBalance (gasLimit = EthTxBuilder.GAS_LIMIT, gasPrice = EthTxBuilder.GAS_PRICE) {
-    return new Promise(resolve => {
-      let fee = toBigNumber(gasLimit).mul(toWei(gasPrice, 'gwei'));
-      let available = Math.max(parseFloat(this.wei.sub(fee)), 0);
-      let amount = parseFloat(fromWei(available, 'ether'));
-      resolve({ amount, fee: fromWei(fee, 'ether') });
-    });
-  }
-
   static privateKeyToAddress (privateKey) {
     return ethUtil.toChecksumAddress(ethUtil.privateToAddress(privateKey).toString('hex'));
   }
@@ -168,7 +105,6 @@ class EthAccount {
   static fromWallet (wallet, ethWallet) {
     let addr = EthAccount.privateKeyToAddress(wallet.getPrivateKey());
     let account = new EthAccount({ addr }, ethWallet);
-    account.setData({ balance: '0', nonce: 0 });
     return account;
   }
 }

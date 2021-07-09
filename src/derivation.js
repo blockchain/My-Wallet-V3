@@ -15,6 +15,7 @@ function Derivation (obj) {
   // computed properties
   this._lastUsedReceiveIndex = null;
   this._balance = 0;
+  this._n_tx = 0;
 }
 
 Object.defineProperties(Derivation.prototype, {

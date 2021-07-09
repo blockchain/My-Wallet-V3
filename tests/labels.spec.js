@@ -36,7 +36,6 @@ describe('Labels', () => {
       receiveIndex: 2,
       lastUsedReceiveIndex: 1,
       getLabels: () => [{index: 1, label: 'Hello'}],
-      addLabel: () => {},
       setLabel: () => {},
       removeLabel: () => {}
     };
@@ -194,20 +193,6 @@ describe('Labels', () => {
         spyOn(l, '_syncWallet');
         l.setLabel(0, 1, 'Hello');
         expect(l._syncWallet).not.toHaveBeenCalled();
-      });
-    });
-
-    describe('addLabel()', () => {
-      it('should call account.addLabel()', () => {
-        spyOn(account, 'addLabel').and.callThrough();
-        l.addLabel(0, 15, 'New Label');
-        expect(account.addLabel).toHaveBeenCalledWith(2, 'New Label');
-      });
-
-      it('should call _syncWallet()', () => {
-        spyOn(l, '_syncWallet').and.callThrough();
-        l.addLabel(0, 15, 'New Label');
-        expect(l._syncWallet).toHaveBeenCalled();
       });
     });
 

@@ -23,11 +23,9 @@ var External = require('./external');
 var AccountInfo = require('./account-info');
 var Metadata = require('./metadata');
 var constants = require('./constants');
-var Payment = require('./payment');
 var Labels = require('./labels');
 var EthWallet = require('./eth/eth-wallet');
 var Bitcoin = require('bitcoinjs-lib');
-var EthSocket = require('./eth/eth-socket');
 var BitcoinWallet = require('./btc');
 var BitcoinCash = require('./bch');
 var RetailCore = require('./retail-core');
@@ -461,28 +459,6 @@ Wallet.prototype.getHistory = function () {
     .then(this._updateWalletInfo.bind(this));
 };
 
-Wallet.prototype.fetchTransactions = function () {
-  return API.getHistory(this.context, 0, this.txList.fetched, this.txList.loadNumber)
-    .then(this._updateWalletInfo.bind(this));
-};
-
-Wallet.prototype.getBalancesForArchived = function () {
-  var updateBalance = function (key) {
-    if (this.containsLegacyAddress(key.address)) {
-      this.key(key.address).balance = key.final_balance;
-    }
-  };
-  var updateBalances = function (obj) {
-    obj.addresses.forEach(updateBalance.bind(this));
-    return obj;
-  };
-  var archivedAddrs = this.addresses.filter(function (addr) {
-    return MyWallet.wallet.key(addr).archived === true;
-  });
-
-  return API.getHistory(archivedAddrs, 0, 0, 1).then(updateBalances.bind(this));
-};
-
 Wallet.prototype.toJSON = function () {
   function addressBookToJSON (addressBook) {
     return Object.keys(addressBook)
@@ -515,7 +491,6 @@ Wallet.prototype.addKeyToLegacyAddress = function (privateKey, addr, secPass, bi
     var watchOnlyKey = this._addresses[addr];
     if (newKey.address !== watchOnlyKey.address) {
       if (!this.containsLegacyAddress(newKey.address)) {
-        console.log(newKey);
         return this.importLegacyAddress(privateKey, null, secPass, bipPass);
       } else {
         if (this.key(newKey.address).isWatchOnly) {
@@ -561,7 +536,6 @@ Wallet.prototype.importLegacyAddress = function (addr, label, secPass, bipPass) 
       ad.encrypt(cipher).persist();
     }
     this._addresses[ad.address] = ad;
-    MyWallet.ws.subscribeToAddresses(ad.address);
     MyWallet.syncWallet();
     this.getHistory();
     return ad;
@@ -592,22 +566,6 @@ Wallet.prototype.newLegacyAddress = function (label, pw, success, error) {
   MyWallet.syncWallet(success, error);
   return ad;
 };
-
-Wallet.prototype.deleteLegacyAddress = function (a) {
-  assert(a, 'Error: address needed');
-  if (this.containsLegacyAddress(a)) {
-    delete this._addresses[a.address];
-    MyWallet.syncWallet();
-    return true;
-  }
-  return false;
-};
-
-// Wallet.prototype.setDefaultPbkdf2Iterations = function () {
-//   this._pbkdf2_iterations = 5000;
-//   MyWallet.syncWallet();
-//   return this;
-// };
 
 Wallet.prototype.validateSecondPassword = function (inputString) {
   if (!this._pbkdf2_iterations) {
@@ -769,22 +727,27 @@ Wallet.prototype.disableNotifications = function (success, error) {
 
 // creating a new wallet object
 Wallet.new = function (guid, sharedKey, mnemonic, bip39Password, firstAccountLabel, success, error) {
-  assert(mnemonic, 'BIP 39 mnemonic required');
-
-  var object = {
+  assert(mnemonic, 'BIP 39 mnemonic required')
+  const object = {
     guid: guid,
     sharedKey: sharedKey,
     double_encryption: false,
     options: constants.getDefaultWalletOptions()
-  };
-  MyWallet.wallet = new Wallet(object);
-  var label = firstAccountLabel || 'Private Key Wallet';
+  }
+  const label = firstAccountLabel || 'Private Key Wallet'
+  var wallet;
   try {
-    var hd = HDWallet.new(mnemonic, bip39Password);
-    MyWallet.wallet._hd_wallets.push(hd);
-    hd.newAccount(label);
-  } catch (e) { error(e); return; }
-  success(MyWallet.wallet);
+    wallet = new Wallet(object)
+    var hdWallet = HDWallet.new(mnemonic, bip39Password)
+    wallet._hd_wallets.push(hdWallet)
+    hdWallet.newAccount(label)
+  } catch (e) {
+    MyWallet.wallet = undefined
+    error(e)
+    return
+  }
+  MyWallet.wallet = wallet
+  success(MyWallet.wallet)
 };
 
 // Adds an HD wallet to an existing wallet, used by frontend and iOs
@@ -861,9 +824,6 @@ Wallet.prototype.newAccount = function (label, pw, hdwalletIndex, success, nosav
     cipher = this.createCipher(pw);
   }
   var newAccount = this._hd_wallets[index].newAccount(label, cipher).lastAccount;
-  try { // MyWallet.ws.send can fail when restoring from mnemonic because it is not initialized.
-    MyWallet.ws.subscribeToXpubs(newAccount.extendedPublicKey);
-  } catch (e) {}
   if (!(nosave === true)) MyWallet.syncWallet();
   typeof (success) === 'function' && success();
   return newAccount;
@@ -953,16 +913,6 @@ Wallet.prototype.getWIFForAddress = function (address, secondPassword) {
     return null;
   }
 };
-Wallet.prototype._getPrivateKey = function (accountIndex, path, secondPassword) {
-  assert(this.hdwallet.isValidAccountIndex(accountIndex), 'Error: account non-existent');
-  assert(Helpers.isString(path), 'Error: path must be an string of the form \'M/0/27\'');
-  var maybeXpriv = this.hdwallet.accounts[accountIndex].extendedPrivateKey;
-  var xpriv = this.isDoubleEncrypted
-      ? WalletCrypto.decryptSecretWithSecondPassword(maybeXpriv, secondPassword, this.sharedKey, this.pbkdf2_iterations)
-      : maybeXpriv;
-  var kr = new KeyRing(xpriv, null);
-  return kr.privateKeyFromPath(path).keyPair.toWIF();
-};
 
 Wallet.prototype.fetchAccountInfo = function () {
   var parentThis = this;
@@ -1021,9 +971,7 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
 
   var fetchBchWallet = function () {
     this._bch = BitcoinCash.fromBlockchainWallet(this);
-    let wsUrl = MyWallet.ws.wsUrl.replace('/inv', '/bch/inv');
-    return this._bch.fetch()
-      .then(() => this._bch.connect(wsUrl));
+    return this._bch.fetch();
   };
 
   var fetchRetailCore = function () {
@@ -1065,13 +1013,14 @@ Wallet.prototype.loadMetadata = function (optionalPayloads, magicHashes) {
     // Labels currently don't use the KV Store, so this should never fail.
     promises.push(fetchLabels.call(this));
   }
-  
-  return Promise.all(promises).then(objc_metadata_loaded());
-};
 
-Wallet.prototype.useEthSocket = function (socket) {
-  socket = socket || new EthSocket(MyWallet.ws.wsUrl.replace('/inv', '/eth/inv'));
-  this._eth.connect(socket);
+  var finished = function () {
+    if (typeof objc_metadata_loaded == 'function') { 
+      objc_metadata_loaded(); 
+    }
+  }
+  
+  return Promise.all(promises).then(finished());
 };
 
 Wallet.prototype.incStats = function () {
@@ -1097,10 +1046,6 @@ Wallet.prototype.saveGUIDtoMetadata = function () {
   } else {
     return Promise.reject();
   }
-};
-
-Wallet.prototype.createPayment = function (initialState) {
-  return new Payment(this, initialState);
 };
 
 Wallet.prototype.MDIDregistration = function (method, signedMDID) {

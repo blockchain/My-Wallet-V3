@@ -6,7 +6,6 @@ var Helpers = require('./helpers');
 var Derivation = require('./derivation');
 var MyWallet = require('./wallet'); // This cyclic import should be avoided once the refactor is complete?
 var API = require('./api');
-var Transaction = require('./transaction');
 var constants = require('./constants');
 
 // HDAccount Class
@@ -20,12 +19,11 @@ function HDAccount (object) {
   // The highest receive index with transactions, as returned by the server:
   this._lastUsedReceiveIndex = null;
   this._changeIndex = 0;
-  this._n_tx = 0;
-  this._balance = null;
   this._index = Helpers.isPositiveInteger(obj.index) ? obj.index : null;
   // v4 properties
-  this._default_derivation = obj.default_derivation;
-  this._derivations = obj.derivations.map(function(o) { return Derivation.factory(o) });
+  this._default_derivation = obj.default_derivation
+  const derivations = obj.derivations || []
+  this._derivations = derivations.map(function(o) { return Derivation.factory(o) });
 }
 
 // PUBLIC PROPERTIES
@@ -100,7 +98,10 @@ Object.defineProperties(HDAccount.prototype, {
   'receiveIndex': {
     configurable: false,
     get: function () {
-      var derivation = this.derivations.find(x => x.type === this.defaultDerivation)
+      const derivation = this.derivations.find(x => x.type === this.defaultDerivation)
+      if (derivation == null) {
+        return 0
+      }
       var maxLabeledReceiveIndex = derivation._address_labels.length > 0
       ? derivation._address_labels[derivation._address_labels.length - 1].index
       : null
@@ -114,6 +115,9 @@ Object.defineProperties(HDAccount.prototype, {
     configurable: false,
     get: function () {
       var derivation = this.derivations.find(x => x.type === 'legacy')
+      if (derivation == null) {
+        return 0
+      }
       var maxLabeledReceiveIndex = derivation._address_labels.length > 0
       ? derivation._address_labels[derivation._address_labels.length - 1].index
       : null
@@ -181,45 +185,31 @@ Object.defineProperties(HDAccount.prototype, {
 
 // CONSTRUCTORS
 
-/* BIP 44 defines the following 5 levels in BIP32 path:
- * m / purpose' / coin_type' / account' / change / address_index
- * Apostrophe in the path indicates that BIP32 hardened derivation is used.
- *
- * Purpose is a constant set to 44' following the BIP43 recommendation
- * Registered coin types: 0' for Bitcoin
- */
-// TODO Segwit: new accounts
-HDAccount.fromAccountMasterKey = function (accountZero, index, label) {
-  assert(accountZero, 'Account MasterKey must be given to create an account.');
-  var account = new HDAccount();
-  account._index = Helpers.isPositiveInteger(index) ? index : null;
-  account._label = label;
-  account._xpriv = accountZero.toBase58();
-  account._xpub = accountZero.neutered().toBase58();
-  account._keyRing.init(account._xpub, null);
-  return account;
-};
-
 HDAccount.fromWalletMasterKey = function (masterkey, index, label) {
-  assert(masterkey, 'Wallet MasterKey must be given to create an account.');
-  assert(Helpers.isPositiveInteger(index), 'Derivation index must be a positive integer.');
-  var accountZero = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(index);
-  return HDAccount.fromAccountMasterKey(accountZero, index, label);
-};
+  assert(masterkey, 'Wallet MasterKey must be given to create an account.')
+  assert(Helpers.isPositiveInteger(index), 'Derivation index must be a positive integer.')
+  const legacyNode = masterkey.deriveHardened(44).deriveHardened(0).deriveHardened(index)
+  const bech32Node = masterkey.deriveHardened(84).deriveHardened(0).deriveHardened(index)
 
-HDAccount.fromExtPublicKey = function (extPublicKey, index, label) {
-  // this is creating a read-only account
-  assert(Helpers.isXpubKey(extPublicKey), 'Extended public key must be given to create an account.');
-  var accountZero = Bitcoin.bip32.fromBase58(extPublicKey, constants.getNetwork());
-  var a = HDAccount.fromAccountMasterKey(accountZero, index, label);
-  a._xpriv = null;
-  return a;
-};
+  const legacyDerivation = new Derivation({
+    type: 'legacy',
+    purpose: 44,
+    xpriv: legacyNode.toBase58(),
+    xpub: legacyNode.neutered().toBase58()
+  })
+  const bech32Derivation = new Derivation({
+    type: 'bech32',
+    purpose: 84,
+    xpriv: bech32Node.toBase58(),
+    xpub: bech32Node.neutered().toBase58()
+  })
 
-HDAccount.fromExtPrivateKey = function (extPrivateKey, index, label) {
-  assert(Helpers.isXprivKey(extPrivateKey), 'Extended private key must be given to create an account.');
-  var accountZero = Bitcoin.bip32.fromBase58(extPrivateKey, constants.getNetwork());
-  return HDAccount.fromAccountMasterKey(accountZero, index, label);
+  var account = new HDAccount()
+  account._index = index
+  account._label = label
+  account._default_derivation = 'bech32'
+  account.derivations = [legacyDerivation, bech32Derivation]
+  return account
 };
 
 HDAccount.factory = function (o) {
@@ -248,9 +238,11 @@ HDAccount.reviver = function (k, v) {
 };
 
 HDAccount.prototype.getLabels = function () {
-  return this._derivations.find(x => x.type === this._default_derivation)._address_labels
-          .sort((a, b) => a.index - b.index)
-          .map(o => ({index: o.index, label: o.label}));
+  return this._derivations
+    .find(x => x.type === this._default_derivation)
+    ._address_labels
+    .sort((a, b) => a.index - b.index)
+    .map(o => ({ index: o.index, label: o.label }));
 };
 
 HDAccount.prototype.receiveAddressAtIndex = function (index, type) {
@@ -298,18 +290,12 @@ HDAccount.prototype.decrypt = function (cipher) {
 };
 
 // No longer supported by HDAccount class
-// Address labels:
 HDAccount.prototype.persist = function () {
   console.log('Not supported')
 };
-HDAccount.prototype.addLabel = function (receiveIndex, label) {
-  console.log('Not supported')
-};
-
 HDAccount.prototype.setLabel = function (receiveIndex, label) {
   console.log('Not supported')
 };
-
 HDAccount.prototype.removeLabel = function (receiveIndex) {
   console.log('Not supported')
 };
