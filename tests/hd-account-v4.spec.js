@@ -36,8 +36,7 @@ describe('HDAccountV4', () => {
             "changeAccount": "xpub6EySek8QXBddJjr1GHeTJTSakdZX4RCo2bDBdfccyNjmKAMPRRM8ZBTk3qS6x1we2CyDLCGopQFY234LvvEAKLw3AFVSfo2gvjXR2hjwNJa"
           }
         }
-      ],
-      "index": 0
+      ]
     };
 
     MyWallet = {
@@ -151,9 +150,9 @@ describe('HDAccountV4', () => {
       });
 
       it('toJSON() has the expected behaviour', () => {
-        let json1 = JSON.stringify(account, null, 2);
+        let json1 = JSON.stringify(account);
         let result = JSON.parse(json1);
-        expect(result).toContain(object);
+        expect(result).toEqual(object);
       });
 
       describe('labeled_addresses', () => {
@@ -290,15 +289,6 @@ describe('HDAccountV4', () => {
         expect(MyWallet.syncWallet).not.toHaveBeenCalled();
       });
 
-      it('should write in a temporary field and let the original key intact', () => {
-        let originalKey = account.extendedPrivateKey;
-        account.encrypt(() => 'encrypted key');
-        expect(account.derivations[0]._temporal_xpriv).toEqual('encrypted key');
-        expect(account.derivations[1]._temporal_xpriv).toEqual('encrypted key');
-        expect(account.extendedPrivateKey).toEqual(originalKey);
-        expect(MyWallet.syncWallet).not.toHaveBeenCalled();
-      });
-
       it('should do nothing if watch only account', () => {
         account.derivations[0]._xpriv = null;
         account.derivations[1]._xpriv = null;
@@ -356,16 +346,6 @@ describe('HDAccountV4', () => {
         let originalKey = account.extendedPrivateKey;
         account.persist();
         expect(account.extendedPrivateKey).toEqual(originalKey);
-        expect(MyWallet.syncWallet).not.toHaveBeenCalled();
-      });
-
-      it('should swap and delete if we have a temporary value', () => {
-        account.derivations[0]._temporal_xpriv = 'encrypted key 0';
-        account.derivations[1]._temporal_xpriv = 'encrypted key 1';
-        account.persist();
-        expect(account.extendedPrivateKey).toEqual('encrypted key 1');
-        expect(account.derivations[0]._temporal_xpriv).not.toBeDefined();
-        expect(account.derivations[1]._temporal_xpriv).not.toBeDefined();
         expect(MyWallet.syncWallet).not.toHaveBeenCalled();
       });
     });
