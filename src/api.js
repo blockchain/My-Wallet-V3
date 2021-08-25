@@ -29,6 +29,14 @@ API.prototype.encodeFormData = function (data) {
   return encoded;
 };
 
+
+// Add API Code to object
+API.prototype.addAPICode = function (data) {
+  data = data || {}
+  if (this.API_CODE != null) data.api_code = this.API_CODE
+  return data
+}
+
 /* Permitted extra headers:
    sessionToken -> "Authorization Bearer <token>" */
 API.prototype.request = function (action, method, data, extraHeaders) {

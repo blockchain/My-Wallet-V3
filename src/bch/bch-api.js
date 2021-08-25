@@ -16,10 +16,11 @@ const scriptToAddress = coin => {
 
 const pushTx = (tx, lock_secret) => {
   const format = 'plain'
+  const data = API.addAPICode({ tx, lock_secret, format })
   return fetch(`${API.API_ROOT_URL}bch/pushtx`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: API.encodeFormData({ tx, lock_secret, format })
+    body: API.encodeFormData(data)
   }).then(r =>
     r.status === 200 ? r.text() : r.text().then(e => Promise.reject(e))
   ).then(r =>
@@ -31,10 +32,11 @@ const apiGetUnspents = (as, conf) => {
   const active = as.join('|');
   const confirmations = Helpers.isPositiveNumber(conf) ? conf : -1
   const format = 'json'
+  const data = API.addAPICode({ active, confirmations, format })
   return fetch(`${API.API_ROOT_URL}bch/unspent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: API.encodeFormData({ active, confirmations, format })
+    body: API.encodeFormData(data)
   }).then(r =>
     r.status === 200 ? r.json() : r.text().then(e => Promise.reject(e))
   );
@@ -42,7 +44,15 @@ const apiGetUnspents = (as, conf) => {
 
 const multiaddr = (addresses, n = 1) => {
   const active = Helpers.toArrayFormat(addresses).join('|')
-  const data = { active, format: 'json', offset: 0, no_compact: true, n, language: 'en', no_buttons: true };
+  const data = API.addAPICode({
+    active,
+    format: 'json',
+    offset: 0,
+    no_compact: true,
+    n,
+    language: 'en',
+    no_buttons: true
+  })
   return fetch(`${API.API_ROOT_URL}bch/multiaddr`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

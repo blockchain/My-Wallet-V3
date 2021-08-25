@@ -16,10 +16,11 @@ const scriptToAddress = coin => {
 
 const pushTx = (tx, lock_secret) => {
   const format = 'plain'
+  const data = API.addAPICode({ tx, lock_secret, format })
   return fetch(`${API.ROOT_URL}pushtx`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: API.encodeFormData({ tx, lock_secret, format })
+    body: API.encodeFormData(data)
   }).then(r =>
     r.status === 200 ? r.text() : r.text().then(e => Promise.reject(e))
   ).then(r =>
@@ -32,17 +33,18 @@ const apiGetUnspents = (as, asBech32, conf) => {
   const activeBech32 = asBech32.join('|')
   const confirmations = Helpers.isPositiveNumber(conf) ? conf : -1
   const format = 'json'
+  const data = API.addAPICode({ active, activeBech32, confirmations, format })
   return fetch(`${API.API_ROOT_URL}btc/unspent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: API.encodeFormData({ active, activeBech32, confirmations, format })
+    body: API.encodeFormData(data)
   }).then(r =>
     r.status === 200 ? r.json() : r.text().then(e => Promise.reject(e))
   );
 }
 
 const multiaddr = (addresses, bech32Addresses, n = 1) => {
-  const data = {
+  const data = API.addAPICode({
     active: Helpers.toArrayFormat(addresses).join('|'),
     activeBech32: Helpers.toArrayFormat(bech32Addresses).join('|'),
     format: 'json', 
@@ -51,7 +53,7 @@ const multiaddr = (addresses, bech32Addresses, n = 1) => {
     n: n,
     language: 'en',
     no_buttons: true
-  };
+  })
 
   return fetch(`${API.API_ROOT_URL}btc/multiaddr`, {
     method: 'POST',
