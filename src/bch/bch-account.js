@@ -58,6 +58,10 @@ class BchAccount extends BchSpendable {
     return this._btcAccount.receiveAddressAtIndex(receive, 'legacy')
   }
 
+  get firstReceiveAddress() {
+    return this._btcAccount.receiveAddressAtIndex(0, 'legacy')
+  }
+
   get changeAddress () {
     let { change } = this._bchWallet.getAccountIndexes(this.xpub)
     return this._btcAccount.changeAddressAtIndex(change, 'legacy')
