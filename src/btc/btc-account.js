@@ -58,6 +58,10 @@ class BtcAccount extends BtcSpendable {
     return this._btcAccount.receiveAddressAtIndex(receive, 'bech32')
   }
 
+  get firstReceiveAddress() {
+    return this._btcAccount.receiveAddressAtIndex(0, 'bech32')
+  }
+
   get changeAddress () {
     let { receive, change } = this._btcWallet.getAccountIndexes(this.xpub)
     if (receive === 0) {
